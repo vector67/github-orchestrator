@@ -106,7 +106,8 @@ serving over and deletes what it replaces.
    - Prove on the running system that the wall and an open board agree, and that a
      stopped manager's row shows as gone within 10 s.
 
-4. **The watcher's memory goes to disk.**
+4. **The watcher's memory goes to disk.** **Done** (`5883f9ad`, `d5528537`, `ba75676a`,
+   `75480182`, `eb16bd09` and the commit that records this)
 
    - The watcher writes the held list and its told flag each cycle, and the hub
      state when it changes. The hub's routes read them.
@@ -273,3 +274,48 @@ Each step adds its decisions here, under its number, with the reason for each.
      status write shows as neither queued nor live until the next tick.
    - **The preview's panel says its manager is answering,** since it stands in
      for a running one and has no status file.
+4. - **`ToldFiles` in `watcher/_told.py` owns `<data>/held.json` and
+     `<data>/hub_state`; the hub and `DashboardSource` read them through `Told`
+     in `board_api/interface.py`.** The watcher writes both, and the hub and the
+     manager cannot import the watcher. `Told` is provided with the switches, so
+     every container (manager, preview, hub) has it without the watcher's wiring.
+   - **The held list carries each PR's manager state, `ManagerPane`'s value, read
+     after `revive_pending`,** so a manager the cycle revived reads `running`. The
+     wall's `manager` column reads it, and `Holdings.manager` goes: a request no
+     longer asks the process table for each row.
+   - **The watcher writes `hub_state` and an empty, untold held list each time it
+     starts (`run_forever` or `wait_in`).** The state only changes by a restart,
+     and resetting the told flag keeps the wall's `watcher-starting` and
+     `not-watching` refusals as they were.
+   - **Both writes go through `Saving` (`began`, `polled`),** so a dry run writes
+     neither, as it writes no heartbeat.
+   - **A missing or unreadable `hub_state` reads as null; a missing or unreadable
+     `held.json` reads as told nothing.** `/api/health` reports a null `state`, as
+     its contract already allows, and the list answers `watcher-starting` rather
+     than `not-watching` while no state is told.
+   - **`Hub.show` goes and `Hub.start` no longer takes a state.** The hub reads
+     both from the files, so `Hub` has two methods.
+   - **The existing write helper is passed in.** `write_whole` lives in
+     `pr_manager/_files.py`, which the watcher may not import, so wiring hands it
+     to `ToldFiles` and `SetupFiles`; moving it would add an export to a package.
+   - **The standing rule takes the manager state as `laid_over(dashboard, manager=...)` from `DashboardSource`.** With no status file, `exited` or
+     `no-window` reads gone; `running`, `unreadable` or a PR the held list does not
+     name read starting, since nothing says that manager is not running. With a
+     status file the state is ignored, so a manager that ticked is answering
+     whatever the last cycle saw.
+   - **`SetupFiles` in `watcher/_setup_files.py` owns `<data>/setup/`:
+     `progress/<id>.json`, `listed/<login>.json` and `leave`.** Each write's
+     progress is written whole at every step, so its lock goes; one thread writes
+     each operation. An id or login that is not the shape setup makes reads as not
+     found, since both come from the URL.
+   - **The watcher takes the leave file on each wait before it reads the config,
+     and remembers it.** A watcher waiting in setup that saw the new config first
+     left the file for the next watcher, which then left at once. `Leaving` had no
+     other user and goes.
+   - **A leave file found when a watcher starts makes it leave once more.** The
+     service restarts it, which costs a restart; deleting the file at start would
+     lose a leave written between the config read and the delete.
+   - **Proved end to end in a scratch instance** (its own config, data directory
+     and port 18731): `/api/health` said `setup`, the repo listing and the
+     write's progress appeared under `setup/`, the write cloned, wrote the config
+     and the watcher exited on the leave file, which was gone after.
