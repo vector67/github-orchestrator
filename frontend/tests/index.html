@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Frontend Tests</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {{content-for "head"}}
+    {{content-for "test-head"}}
+
+    <link rel="stylesheet" href="/@embroider/virtual/vendor.css">
+    <link rel="stylesheet" href="/@embroider/virtual/app.css">
+    <link rel="stylesheet" href="/@embroider/virtual/test-support.css">
+
+    {{content-for "head-footer"}}
+    {{content-for "test-head-footer"}}
+  </head>
+  <body>
+    {{content-for "body"}}
+    {{content-for "test-body"}}
+
+    <div id="qunit"></div>
+    <div id="qunit-fixture">
+      <div id="ember-testing-container">
+        <div id="ember-testing"></div>
+      </div>
+    </div>
+
+    <script data-embroider-ignore>
+      (() => {
+        const clampedSetTimeout = window.setTimeout;
+        const clampedClearTimeout = window.clearTimeout;
+        const nextTask = new MessageChannel();
+        const waiting = new Map();
+        let nextId = 2_000_000_000;
+        nextTask.port1.onmessage = ({ data: id }) => {
+          const run = waiting.get(id);
+          waiting.delete(id);
+          run?.();
+        };
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay > 0 || typeof callback !== 'function') {
+            return clampedSetTimeout.call(window, callback, delay, ...args);
+          }
+          const id = (nextId += 1);
+          waiting.set(id, () => callback(...args));
+          nextTask.port2.postMessage(id);
+          return id;
+        };
+        window.clearTimeout = function (id) {
+          if (!waiting.delete(id)) clampedClearTimeout.call(window, id);
+        };
+      })();
+    </script>
+    <script src="/testem.js" integrity="" data-embroider-ignore></script>
+    <script src="/@embroider/virtual/vendor.js"></script>
+    <script src="/@embroider/virtual/test-support.js"></script>
+    <script type="module">import "ember-testing";</script>
+
+    <script type="module">
+      import { start } from './test-helper';
+      start({ availableModules: import.meta.glob("./**/*-test.{js,ts,gjs,gts}") });
+    </script>
+
+    {{content-for "body-footer"}}
+  </body>
+</html>

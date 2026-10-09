@@ -1,0 +1,244 @@
+import logging
+import queue
+import threading
+from collections.abc import Callable
+from pathlib import Path
+
+from github_orchestrator.agent_runs import History, PrWork, Run
+from github_orchestrator.board_api import BoardApi, Dashboard, ManagerPanel
+from github_orchestrator.change_detection import ChangeDetection, ReviewRequested
+from github_orchestrator.domain import Monotonic
+from github_orchestrator.github import PullRequests
+from github_orchestrator.pr_event_queue import Intake, Worklist
+from github_orchestrator.pr_manager._config import ManagerConfig
+from github_orchestrator.pr_manager._dashboard_source import Drawn
+from github_orchestrator.pr_manager._git_palette import (
+    SHELL,
+    argv_for,
+    open_in_terminal,
+    resolve,
+    run_captured,
+    shell_argv,
+)
+from github_orchestrator.pr_manager._git_palette import Run as GitRun
+from github_orchestrator.pr_processes import AgentChanges, PrProcesses
+from github_orchestrator.settings import Boards, Dismissals, Holds
+
+log = logging.getLogger(__name__)
+
+NOTICE_SECONDS = 4.0
+
+SHOWN_READ_ONLY = frozenset({"l", "d"})
+
+FROZEN = "refused: the worktree holds another PR's branch"
+
+
+class ManagerCommands(ManagerPanel):
+    def __init__(self, config: ManagerConfig, board: BoardApi, run: GitRun,
+                 monotonic: Monotonic, *, holds: Holds, dismissals: Dismissals,
+                 boards: Boards, worklist: Worklist,
+                 pull_requests: PullRequests, pr_work: PrWork, pr_processes: PrProcesses,
+                 agent_changes: AgentChanges, history: History,
+                 change_detection: ChangeDetection, intake: Intake) -> None:
+        self._config = config
+        self._board = board
+        self._run = run
+        self._monotonic = monotonic
+        self._holds = holds
+        self._dismissals = dismissals
+        self._boards = boards
+        self._worklist = worklist
+        self._pull_requests = pull_requests
+        self._pr_work = pr_work
+        self._pr_processes = pr_processes
+        self._agent_changes = agent_changes
+        self._history = history
+        self._change_detection = change_detection
+        self._intake = intake
+        self.active_run: Run | None = None
+        self._dismissed = False
+        self._notice: str | None = None
+        self._notice_at = 0.0
+        self._drawn: Drawn | None = None
+        self._loop: int | None = None
+        self._crossing: queue.SimpleQueue[tuple[str, Callable[[], None]]] = queue.SimpleQueue()
+        self._git_lock = threading.Lock()
+
+    def publish(self, drawn: Drawn) -> None:
+        self._loop = threading.get_ident()
+        self._drawn = drawn
+
+    def obey(self) -> None:
+        while True:
+            try:
+                what, act = self._crossing.get_nowait()
+            except queue.Empty:
+                return
+            self._carry_out(what, act)
+
+    @property
+    def dismissed(self) -> bool:
+        return self._dismissed
+
+    def notify(self, text: str) -> None:
+        self._notice = text
+        self._notice_at = self._monotonic()
+
+    def notice(self) -> str | None:
+        if self._notice is None:
+            return None
+        if self._monotonic() - self._notice_at >= NOTICE_SECONDS:
+            self._notice = None
+            return None
+        return self._notice
+
+    def dashboard(self) -> Dashboard | None:
+        drawn = self._drawn
+        return None if drawn is None else drawn.counted()
+
+    def changes(self) -> str | None:
+        return self._agent_changes.read(Path(self._config.worktree))
+
+    def agent_output(self, lines: int) -> list[tuple[str, bool]]:
+        return self._history.transcript_tail(self._config.pr, lines)
+
+    def set_on_hold(self, on_hold: bool) -> None:
+        self._on_the_loop("hold" if on_hold else "resume", lambda: self._set_on_hold(on_hold))
+
+    def carry_on(self) -> None:
+        self._on_the_loop("carry on", self._carry_on)
+
+    def start_review(self) -> None:
+        self._on_the_loop("start review", self._start_review)
+
+    def dismiss(self, forever: bool) -> None:
+        self._on_the_loop("dismiss forever" if forever else "dismiss until the next event",
+                          lambda: self._dismiss(forever))
+
+    def close(self) -> None:
+        self._on_the_loop("close", self._close)
+
+    def run_git(self, keys: str) -> tuple[int, list[str], float]:
+        command = resolve(keys)
+        if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):
+            raise ValueError(f"git palette keys {keys!r} name no command the page runs")
+        with self._git_lock:
+            refused = self._refusal(command.display)
+            if refused is not None:
+                return -1, [refused], 0.0
+            log.info("%s: git palette running %s", self._config.pr, command.display)
+            result = run_captured(command, argv_for(command, keys), self._config.worktree,
+                                  self._run, self._monotonic)
+        return result.exit_code, result.lines, result.duration
+
+    def open_terminal(self, keys: str) -> str | None:
+        config = self._config
+        pr, worktree = config.pr, config.worktree
+        command = resolve(keys)
+        if keys != SHELL and (command is None or command.mode == "captured"):
+            raise ValueError(f"terminal keys {keys!r} name nothing the terminal opens")
+        refused = self._refusal(f"a terminal for {keys!r}")
+        if refused is not None:
+            return refused
+        log.info("%s: opening %r in a terminal", pr, keys)
+        if command is None:
+            return self._pr_processes.split(pr, worktree, shell_argv())
+        return open_in_terminal(command, argv_for(command, keys), pr, worktree,
+                                self._pr_processes, self._pr_work)
+
+    def start_board(self) -> str | None:
+        pr = self._config.pr
+        facts = self._change_detection.facts(pr)
+        if facts is None or facts.is_author is None:
+            return None
+        url = self._board.start(pr, port=self._boards.board_port(pr), manager=self)
+        self._boards.want_board(pr, True)
+        return url
+
+    def _refusal(self, what: str) -> str | None:
+        drawn = self._drawn
+        if drawn is None or drawn.dashboard.frozen_on is None:
+            return None
+        log.info("%s: %s refused — frozen", self._config.pr, what)
+        return FROZEN
+
+    def _on_the_loop(self, what: str, act: Callable[[], None]) -> None:
+        if threading.get_ident() == self._loop:
+            self._carry_out(what, act)
+        else:
+            self._crossing.put((what, act))
+
+    def _carry_out(self, what: str, act: Callable[[], None]) -> None:
+        pr = self._config.pr
+        if self._dismissed:
+            log.info("%s: %s dropped — the manager is leaving", pr, what)
+            return
+        log.info("%s: %s", pr, what)
+        refused = self._refusal(what)
+        if refused is not None:
+            self.notify(refused)
+            return
+        try:
+            act()
+        except Exception:
+            log.exception("Error carrying out %s for %s", what, pr)
+
+    def _set_on_hold(self, on_hold: bool) -> None:
+        pr = self._config.pr
+        self._holds.set_on_hold(pr, on_hold)
+        log.info("%s: hold %s", pr, "ON" if on_hold else "OFF")
+
+    def _agent_refusal(self, what: str) -> bool:
+        config = self._config
+        if not config.agents_enabled:
+            log.info("%s %s: ignored — agents are disabled", what, config.pr)
+            self.notify("agents are disabled in config.toml")
+            return True
+        if self.active_run is not None and self.active_run.is_alive():
+            log.info("%s %s: ignored — an agent is already running", what, config.pr)
+            self.notify("an agent is already running")
+            return True
+        return False
+
+    def _start_review(self) -> None:
+        pr = self._config.pr
+        if self._agent_refusal("start review"):
+            return
+        facts = self._change_detection.facts(pr)
+        log.info("start review %s: queuing a review request", pr)
+        self._intake.add(pr, ReviewRequested(title=facts.title if facts else None,
+                                             url=facts.url if facts else None))
+
+    def _carry_on(self) -> None:
+        config = self._config
+        pr = config.pr
+        if self._agent_refusal("carry on"):
+            return
+        log.info("carry on %s: carrying on the last agent run", pr)
+        started = self._pr_work.carry_on(config.worktree, pr)
+        if isinstance(started, str):
+            self.notify(started)
+            return
+        self.active_run = started
+
+    def _dismiss(self, forever: bool) -> None:
+        pr = self._config.pr
+        if forever:
+            self._dismissals.dismiss_forever(pr)
+        else:
+            self._dismissals.dismiss_until_next_event(pr)
+        if self.active_run is not None:
+            self.active_run.terminate()
+        self._worklist.drop_in_flight(pr)
+        log.info("Dismissed %s %s — exiting; the watcher closes its window",
+                 "forever" if forever else "until the next event", pr)
+        self._dismissed = True
+
+    def _close(self) -> None:
+        pr = self._config.pr
+        refused = self._pull_requests.close(pr)
+        if refused is not None:
+            log.warning("close %s: GitHub refused — %s", pr, refused)
+            self.notify(refused)
+            return
+        log.info("Closed %s on GitHub; the watcher tears it down on its next poll", pr)

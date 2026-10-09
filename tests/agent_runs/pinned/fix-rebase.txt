@@ -1,0 +1,56 @@
+You are rebasing an already-reviewed fix for one PR review comment on acme/widgets#7 so it can land on the PR branch. Do the work and report the outcome yourself by running exactly one of the report commands below — do not ask questions; nobody is watching this run.
+
+Work ONLY in `/tmp/wt` — the isolated git worktree holding the fix. The fix is the commit(s) already on this branch. Since it was written the PR branch has moved to bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, and cherry-picking the fix onto it conflicted:
+
+```
+error: could not apply 1234abc... thread change
+```
+
+## The thread the fix addresses
+- Opened by: reviewer
+- Path: src/foo.py
+- Line: 4
+- Every comment, oldest first:
+```
+--- reviewer (2026-08-28T10:00:00Z)
+rename this
+```
+
+## Steps
+
+1. Run `git rebase bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`. Resolve each conflict so the fix still does what the
+   comment asks against the PR's current code. Keep the fix's own commit(s) and
+   touch nothing else: do not change the PR's commits, do not fold in unrelated
+   changes.
+2. Run the project's linter/formatter and the tests for the changed files
+   (check `Makefile`/`justfile`/`package.json`/`.github/workflows/` for the
+   commands).
+   Cap the test runner's own parallelism: pass `-n 2` to pytest, never `-n auto`, and use the equivalent for any other runner. Other agents are running their own test suites on this machine at the same time, and a runner that takes every core starves them and the user's own session.
+3. Report:
+
+    <python> -m github_orchestrator.cli thread ready --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <full 40-character sha of the rebased tip, as `git rev-parse HEAD` prints it> --tests passed|failed|unverified [--tests-note "..."] [--note "<one line: how the conflict was resolved>"] [--summary "<one line: what the fix does>"] [--confidence low|medium|high] [--confidence-note "<one sentence: why that level, in your own words>"]
+
+`--summary` is one line saying what the fix does. `--confidence` is how sure you are that the fix is what the reviewer wanted and that it breaks no caller, and `--confidence-note` is the one sentence behind that level: what you checked, or what you could not. Say `low` where you guessed at the ask, and say so. Pass all three every time you report: the brackets mean only that the CLI will not stop you.
+
+If the PR already does what the comment asked, run `git rebase --abort` and
+propose a reply instead, classified already-done:
+
+    <python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
+
+`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope, say the work belongs outside this pull request.
+
+If the fix no longer applies because the code it changed is gone, run
+`git rebase --abort` and report:
+
+    <python> -m github_orchestrator.cli thread fail --repo acme/widgets --pr 7 --thread-id PRRT_1 --reason "<why>"
+
+Tests that COULD NOT RUN — Docker not up, DB unreachable, or a port, database or
+lock held by another thread's run — are not a failure of the fix: report with
+`--tests unverified --tests-note "<infra reason>"`.
+
+## Hard rules
+
+- Never push — not this branch, not any branch.
+- Never commit to the PR branch.
+- When you report ready, this branch must be bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb plus the fix's commits and
+  nothing else.

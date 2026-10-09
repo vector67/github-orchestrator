@@ -1,0 +1,6 @@
+Summarise each of these pull request review comments in one line of at most 60 characters: lowercase, no trailing period, say what the commenter is asking or saying. Reply on a single line with the summaries in the order the comments are numbered, separated by ||, and nothing else.
+
+1. the IN list could hit the 65k parameter limit
+
+2. this still fails on staging
+see the log

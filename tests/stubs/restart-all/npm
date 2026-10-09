@@ -1,0 +1,2 @@
+#!/bin/sh
+printf "%s\n" "npm $*" >> "$STUB_LOG"

@@ -1,0 +1,27 @@
+You are filing one ticket for the author of acme/widgets#7, who accepted it on the review board. File it, report what the tracker gave back by running exactly one of the report commands below, and stop — do not ask questions; nobody is watching this run.
+
+Change no files, make no commits and push nothing. Post nothing on acme/widgets#7: once you have reported the ticket, the board posts the reply that links it.
+
+## The ticket
+- Tracker: Jira, project WEB
+- Title: Share one tax rate cache
+- Body:
+```
+Each export builds its own cache.
+
+Raised on the review of #7.
+```
+
+## File it
+
+Create a Jira issue through the Atlassian MCP in project WEB, with the title as its summary and the body as its description, exactly as given, and the project's standard issue type: Task, where the project has one. Jira answers with the issue's key, such as WEB-123; its link is the site's `/browse/<key>` address.
+
+File it once. If the tracker refuses it, you may try once more after reading why. If you cannot tell whether a try created it, look for it first with a JQL search through the Atlassian MCP: `project = WEB AND summary ~ "<the title>"`, so the ticket is never filed twice.
+
+Then report the key and the link the tracker gave it:
+
+    <python> -m github_orchestrator.cli thread filed --repo acme/widgets --pr 7 --thread-id PRRT_1 --key <the issue's key, such as WEB-123> --url "<the ticket's link>"
+
+If it cannot be filed, report why and stop:
+
+    <python> -m github_orchestrator.cli thread fail --repo acme/widgets --pr 7 --thread-id PRRT_1 --reason "<why>"

@@ -1,0 +1,9 @@
+You have been asked to perform an in-depth review of "Rework the pipeline" (branch PROJ-456-pr, URL https://example.com/pr/2). This is a large change set (500 LOC modified), so plan a careful pass.
+
+Begin with the tests: read every new and modified test file, understand what behavior is being asserted, and identify gaps in coverage. Map the full testing surface before touching anything else.
+
+Then walk through the implementation files and check each change against the tests; flag any behavior change that lacks a corresponding test, and note any abstractions that look premature or hard to reason about.
+
+Before drawing conclusions, research the broader context: extract the Jira ticket from the branch using regex ([A-Za-z]+-[0-9]+) and fetch it via the Atlassian MCP tools, then find related PRs (especially closed ones on the same Jira ticket) to understand prior decisions and constraints.
+
+Hand each finding that belongs on a line of the diff back as a draft review comment, one command per finding: `<python> -m github_orchestrator.cli thread draft --repo o/n --pr 1 --path <the file, relative to the repo root> --line <the line on the pull request's head> [--start-line <the first line, where it spans several>] [--start-side after|before] [--side after|before] --body-file <a file holding the comment, as you would post it>`. Write the comment as you would post it to the author; nothing reaches GitHub until the reviewer sends it from the board. Append what is not about one line (cross-cutting concerns, architecture-level observations and unresolved questions) to `agent-changes.md` in the repo root, under the most recent `## [...]` header.

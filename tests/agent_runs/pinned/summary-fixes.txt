@@ -1,0 +1,8 @@
+These pull request review comments have just been fixed. In at most 100 characters, say what the comments asked for and what the fixes do overall, the way a colleague would sum it up: 'general cleanup', 'missing tests and a rename'. Lowercase, no trailing period. Reply with the line alone.
+
+Ada: please rename the helper
+octocat: which one?
+fix: renamed the helper
+
+Reviewer B: add a test
+fix: no summary

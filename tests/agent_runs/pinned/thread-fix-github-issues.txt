@@ -1,0 +1,121 @@
+You are addressing one PR review thread on acme/widgets#7 as part of an autonomous feedback pass. Do the work and report the outcome yourself by running exactly one of the report commands below — do not ask questions; nobody is watching this run.
+
+Work ONLY in `/tmp/wt` — an isolated git worktree created for this one thread. Every file you read or change, every command you run, and the one commit you may make happen there, never anywhere else.
+
+## The thread
+- Opened by: reviewer
+- Path: src/foo.py  (`general` means non-anchored: locate the relevant code from the body, e.g. by grepping and reading `git diff main...HEAD`)
+- Line: 4
+- Every comment, oldest first:
+```
+--- reviewer (2026-08-28T10:00:00Z)
+rename this
+```
+
+The last comment is the most recent thing the reviewer said. Earlier comments are the context it was said in — read the whole thread before deciding what is being asked.
+
+## The tracker
+- Tickets are GitHub issues on acme/widgets
+- Repository: acme/widgets
+
+## Step 1 — classify the comment before doing any work
+
+- **safe** — address it. Examples: typos, missing types, a rename, extracting a
+  small helper, adding a test for a stated case, simplifying an expression,
+  fixing an obvious bug the reviewer points at.
+- **acknowledgement** — thanks, praise, a 👍, "LGTM" or any other pure ack: the
+  reviewer asks for nothing and nothing is left to do.
+- **question** — the reviewer asks the author something, says "consider for
+  future" or raises a general concern, and no code change is asked for.
+- **unclear** — the comment has multiple plausible
+  interpretations, or depends on information you don't have. Answer it with a
+  clarifying question to the reviewer.
+- **risky** — requires an architectural change, touches an unrelated module,
+  asks to remove a feature, add a new dependency, or change behavior without a
+  clear spec.
+- **out-of-scope** — the change belongs outside this pull request.
+- **already-done** — the branch already does what the comment asks.
+- **needs-human** — it needs a decision only the author can make.
+
+Classification rules:
+- `path: general` comments are usually a question, an acknowledgement or
+  architectural — be especially conservative with them. Only classify a general
+  comment as safe if it is clearly a small, locatable change.
+- Classify against the whole thread above, not its last comment alone: the
+  actionable ask often lives in an earlier comment and the last one only
+  qualifies it.
+- "I'll do X" from the PR author is NOT a reason to hold back: "I" is ambiguous
+  between the human and you acting as the human's hands. If the work is simple,
+  locatable and in scope, do it.
+- Be conservative on risk, not on action: when in doubt about WHAT to change,
+  ask a clarifying question rather than guess; do not hold back a clear, simple
+  change just because the author said "I'll".
+
+If the comment needs an answer and no code — **already-done**, **question**
+or **unclear** — change no code, write the reply and report
+it, then stop:
+
+    <python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
+
+`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope, name the ticket that already covers the work and link it.
+
+If the comment is **out-of-scope**, change no code. Search the tracker for a ticket that already covers the work: `gh issue list --repo acme/widgets --state all --search "<words that name the work>"`. If one you judge to be the same work exists, reply as above, classified out-of-scope, naming and linking it. If none does, propose a ticket and the reply that goes with it, then stop:
+
+    <python> -m github_orchestrator.cli thread ticket --repo acme/widgets --pr 7 --thread-id PRRT_1 --project acme/widgets --title "<the ticket's title>" --body "<the ticket's description>" --reply "<the reply to post on the comment>"
+
+`--title` and `--body` are the ticket as it will be filed: a title that names the work, and a body that says what was asked, why it belongs outside this pull request, and which comment raised it. `--reply` is posted on the comment once the author accepts; the ticket is filed first and its link is added below the reply, so leave the link out. The author can edit all four first. Never file the ticket yourself: nothing is created until the author accepts.
+
+If the comment is **risky**, **needs-human** or an **acknowledgement**, change
+no code and report, then stop:
+
+    <python> -m github_orchestrator.cli thread skip --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification risky|acknowledgement|needs-human --reason "<why>"
+
+## Step 2 — if safe, write down the steps before you touch any code
+
+Steps are how you think; one commit is how the fix lands. Say what you mean to do, one `--step` at a time, in the order you mean to do them:
+
+    <python> -m github_orchestrator.cli thread plan --repo acme/widgets --pr 7 --thread-id PRRT_1 --step "<the first thing you will do>" --file <the file it touches> --step "<the next thing>" --file <the file it touches>
+
+Pass one `--file` per `--step`, in the same order, or leave `--file` off altogether. Where only some of the steps have a file you can name yet, pass `--file ""` for the ones that do not. Declaring a plan again replaces the whole of the one before it.
+
+Mark each step the moment you finish it, so the board can watch the work go by:
+
+    <python> -m github_orchestrator.cli thread step --repo acme/widgets --pr 7 --thread-id PRRT_1 --done <the number of the step you have just finished>
+
+## Step 3 — make the change
+
+1. Locate the relevant code in the worktree. If the path is a real file, read
+   it and grep for the symbol or phrase the reviewer mentions.
+2. Make the MINIMAL change that addresses the comment. Do not refactor
+   surrounding code or improve things the reviewer did not mention.
+3. Run the project's linter/formatter and the tests for the changed files
+   (check `Makefile`/`justfile`/`package.json`/`.github/workflows/` for the
+   commands).
+   Cap the test runner's own parallelism: pass `-n 2` to pytest, never `-n auto`, and use the equivalent for any other runner. Other agents are running their own test suites on this machine at the same time, and a runner that takes every core starves them and the user's own session.
+4. Commit in this worktree with a message describing the change (not the
+   review comment), matching the repo's convention from recent `git log`. No
+   co-authors.
+5. Report:
+
+    <python> -m github_orchestrator.cli thread ready --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <full 40-character sha, as `git rev-parse HEAD` prints it> --tests passed|failed|unverified [--tests-note "..."] [--note "<one line: what changed>"] [--summary "<one line: what the fix does>"] [--confidence low|medium|high] [--confidence-note "<one sentence: why that level, in your own words>"]
+
+`--summary` is one line saying what the fix does. `--confidence` is how sure you are that the fix is what the reviewer wanted and that it breaks no caller, and `--confidence-note` is the one sentence behind that level: what you checked, or what you could not. Say `low` where you guessed at the ask, and say so. Pass all three every time you report: the brackets mean only that the CLI will not stop you.
+
+## Real failure vs infrastructure failure — opposite handling
+
+- Tests RAN and FAILED (your change is wrong) and you cannot trivially fix it:
+  revert your changes and report, committing nothing:
+
+      <python> -m github_orchestrator.cli thread fail --repo acme/widgets --pr 7 --thread-id PRRT_1 --reason "<why>"
+
+- Tests COULD NOT RUN — Docker not up, DB unreachable, or a port, database or
+  lock held by another thread's run happening concurrently; nothing to do
+  with your change — do NOT revert. Commit and report with
+  `--tests unverified --tests-note "<infra reason>"`. Never destroy correct
+  work because you could not verify it.
+
+## Hard rules
+
+- Never push — not this branch, not any branch.
+- Never commit to the PR branch. The only commit is the one in this worktree.
+- Exactly one commit when safe; zero commits when you reply, skip or fail.

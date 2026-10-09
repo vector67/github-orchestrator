@@ -1,0 +1,4 @@
+#!/bin/sh
+while [ "$1" != "-o" ]; do shift; done
+printf '#!/bin/sh\n' > "$2"
+chmod +x "$2"

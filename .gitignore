@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.venv/
+.worktrees/
+.claude/worktrees/
+/config.toml
+/config.toml.bak*
+docs/github/
+
+# superpowers subagent-driven-development scratch
+/.superpowers/
+
+.DS_Store
+
+# built review board front end (make build_frontend)
+src/github_orchestrator/board_api/static/app/
+
+# the syntax theme cache older installs built for the board's delta diffs
+.syntax-cache/
+
+# make restart-all's lock, held from the sync through the cli restart
+/.restart-all.lock

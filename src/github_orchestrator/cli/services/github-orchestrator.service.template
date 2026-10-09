@@ -1,0 +1,11 @@
+[Unit]
+Description=@DESCRIPTION@
+
+[Service]
+ExecStart=@PYTHON@ -m github_orchestrator.watcher --loop
+@ENVIRONMENT@
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

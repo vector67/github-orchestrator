@@ -1,0 +1,5 @@
+#!/bin/sh
+case "$1 $2" in
+    "--version ") echo "uv 0.9.0" ;;
+    "tool dir") if [ "${3:-}" = --bin ]; then echo "$TOOL_BIN"; else echo "$TOOL_BIN/.."; fi ;;
+esac

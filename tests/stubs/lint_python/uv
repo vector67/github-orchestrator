@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "$*" >> "$STUB_CALLS"
+[ "$2" = ruff ] && exit 1
+exit 0

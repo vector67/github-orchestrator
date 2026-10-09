@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+guard_partial() {
+	partial=$(git diff --name-only -- $1)
+	[ -n "$partial" ] || return 0
+	echo "pre-commit: these files are staged but also have unstaged edits:" >&2
+	echo "$partial" | sed 's/^/  /' >&2
+	echo "stage or discard them so the hook formats what you are committing." >&2
+	exit 1
+}
+
+restage() {
+	changed=$(git diff --name-only -- $1)
+	[ -n "$changed" ] || return 0
+	# shellcheck disable=SC2086
+	git add -- $changed
+	echo "pre-commit: $2 rewrote and re-staged:" >&2
+	echo "$changed" | sed 's/^/  /' >&2
+}
+
+md=$(git diff --cached --name-only --diff-filter=ACM -- '*.md' ':!:src/github_orchestrator/cli/skills/**')
+if [ -n "$md" ]; then
+	# shellcheck disable=SC2086
+	guard_partial "$md"
+	# shellcheck disable=SC2086
+	uv run --quiet mdformat $md
+	restage "$md" mdformat
+fi
+
+py=$(git diff --cached --name-only --diff-filter=ACM -- '*.py')
+if [ -n "$py" ]; then
+	# shellcheck disable=SC2086
+	guard_partial "$py"
+	# shellcheck disable=SC2086
+	uv run --quiet ruff check --fix --quiet $py || true
+	restage "$py" ruff
+	# shellcheck disable=SC2086
+	uv run --quiet ruff check $py
+	uv run --quiet mypy
+fi

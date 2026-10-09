@@ -1,0 +1,10 @@
+#!/bin/sh
+printf '%s\n' "$*" >> "$STUB_LOG"
+case "$1" in
+  print)
+    [ "$STUB_LOADED" = 1 ] && exit 0
+    echo 'Could not find service "com.github-orchestrator.watcher" in domain for user gui: 501' >&2
+    exit 113 ;;
+  bootout) exit 0 ;;
+esac
+exit 64

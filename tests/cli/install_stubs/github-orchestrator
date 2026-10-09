@@ -1,0 +1,4 @@
+#!/bin/sh
+printf '%s\n' "$*" >>"$CALLS"
+[ "$*" = "skill --status" ] && echo "$SKILL_STATE"
+exit 0

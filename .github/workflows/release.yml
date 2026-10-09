@@ -1,0 +1,232 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag names the version in pyproject.toml
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          case "${GITHUB_REF_NAME#v}" in
+            "$version" | "$version"-rc.*) echo "tag $GITHUB_REF_NAME releases $version" ;;
+            *) echo "tag $GITHUB_REF_NAME does not match version $version in pyproject.toml"; exit 1 ;;
+          esac
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build the board
+        run: make build_frontend
+
+      - name: Build the wheel
+        run: uv build --wheel --out-dir dist
+
+      - name: Check the wheel carries the board, the skill, the notifier and the unit template
+        run: |
+          python3 - dist/*.whl <<'EOF'
+          import sys
+          import zipfile
+
+          names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+          needed = [
+              "github_orchestrator/board_api/static/app/index.html",
+              "github_orchestrator/cli/skills/rebase-on-main/SKILL.md",
+              "github_orchestrator/desktop/notifier/build.sh",
+              "github_orchestrator/desktop/notifier/notify.swift",
+              "github_orchestrator/desktop/notifier/icon.swift",
+              "github_orchestrator/cli/services/github-orchestrator.service.template",
+          ]
+          missing = [name for name in needed if name not in names]
+          if not any(name.startswith("github_orchestrator/desktop/notifier/badges/") for name in names):
+              missing.append("github_orchestrator/desktop/notifier/badges/")
+          if not any(name.startswith("github_orchestrator/board_api/static/app/assets/") for name in names):
+              missing.append("github_orchestrator/board_api/static/app/assets/")
+          if missing:
+              sys.exit("the wheel lacks: " + ", ".join(missing))
+          print(f"{sys.argv[1]} carries all {len(needed) + 2} required paths")
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            dist/*.whl
+            install.sh
+          if-no-files-found: error
+
+  smoke-macos:
+    needs: build
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Install into a scratch HOME
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          mkdir -p "$HOME"
+          echo "HOME=$HOME" >> "$GITHUB_ENV"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub answers in setup and serves the setup page
+        run: |
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json; state = json.load(open("health.json"))["state"]; assert state == "setup", state'
+          curl -fsS http://127.0.0.1:8720/setup | grep -q '<div id="app"\|<script'
+
+      - name: doctor passes on a fresh install
+        run: |
+          set +e
+          "$HOME/.local/bin/github-orchestrator" doctor
+          code=$?
+          echo "doctor exited $code"
+          [ "$code" -eq 0 ]
+
+      - name: uninstall with yes leaves nothing behind
+        run: |
+          "$HOME/.local/bin/github-orchestrator" uninstall --yes
+          left=
+          for path in "$HOME/Library/LaunchAgents/com.github-orchestrator.watcher.plist" \
+                      "$HOME/.config/github-orchestrator" \
+                      "$HOME/.local/share/github-orchestrator" \
+                      "$HOME/.local/bin/github-orchestrator" \
+                      "$HOME/.local/share/uv/tools/github-orchestrator"; do
+            if [ -e "$path" ]; then echo "left behind: $path"; left=1; fi
+          done
+          if launchctl print "gui/$(id -u)/com.github-orchestrator.watcher" >/dev/null 2>&1; then
+            echo "launchd still holds com.github-orchestrator.watcher"; left=1
+          fi
+          if curl -fsS http://127.0.0.1:8720/api/health >/dev/null 2>&1; then
+            echo "the hub still answers"; left=1
+          fi
+          [ -z "$left" ]
+
+  smoke-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Give the runner a user manager
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
+
+      - name: Install
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub answers in setup and serves the setup page
+        run: |
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json; state = json.load(open("health.json"))["state"]; assert state == "setup", state'
+          curl -fsS http://127.0.0.1:8720/setup | grep -q '<div id="app"\|<script'
+
+      - name: doctor passes on a fresh install
+        run: |
+          set +e
+          "$HOME/.local/bin/github-orchestrator" doctor
+          code=$?
+          echo "doctor exited $code"
+          [ "$code" -eq 0 ]
+
+      - name: uninstall with yes leaves nothing behind
+        run: |
+          "$HOME/.local/bin/github-orchestrator" uninstall --yes
+          left=
+          for path in "$HOME/.config/systemd/user/github-orchestrator.service" \
+                      "$HOME/.config/github-orchestrator" \
+                      "$HOME/.local/share/github-orchestrator" \
+                      "$HOME/.local/bin/github-orchestrator" \
+                      "$HOME/.local/share/uv/tools/github-orchestrator"; do
+            if [ -e "$path" ]; then echo "left behind: $path"; left=1; fi
+          done
+          if systemctl --user list-units --all --no-legend | grep -q github-orchestrator; then
+            echo "systemd still lists the unit"; left=1
+          fi
+          if curl -fsS http://127.0.0.1:8720/api/health >/dev/null 2>&1; then
+            echo "the hub still answers"; left=1
+          fi
+          [ -z "$left" ]
+
+  publish:
+    needs: [test, smoke-macos, smoke-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) prerelease=--prerelease ;;
+            *) prerelease= ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" dist/*.whl install.sh \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes $prerelease
+
+  install-the-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Give the runner a user manager
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+
+      - name: Install the published release with its own install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern install.sh
+          sh install.sh -y --no-open --version "$GITHUB_REF_NAME"
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json; state = json.load(open("health.json"))["state"]; assert state == "setup", state'
+          "$HOME/.local/bin/github-orchestrator" uninstall --yes

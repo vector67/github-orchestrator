@@ -1,0 +1,51 @@
+Rework the fix for a review comment on acme/widgets#7 in this worktree.
+
+The comment, by reviewer on src/foo.py:4:
+
+rename this
+
+The last attempt proposed this ticket instead of a change:
+
+Project: PROJ
+Title: Cache tax rates across exports
+
+Each export reads its tax rate again.
+
+with this reply on the comment:
+
+That is outside this PR, so I've proposed a ticket for it.
+
+## The tracker
+- Tickets are Jira issues, reached through the Atlassian MCP
+- Default project: PROJ
+- Repository: acme/widgets
+- This branch's ticket, the work this pull request is for: PROJ-21
+
+Why the last attempt was sent back, in the words of the author of acme/widgets#7. This is what the rework is for — do this:
+
+This belongs in WEB, not PROJ.
+
+Any prior attempt is already committed in this worktree — start from what is here rather than redoing it.
+
+Steps are how you think; one commit is how the fix lands. Write down the steps this attempt will take before you touch any code:
+<python> -m github_orchestrator.cli thread plan --repo acme/widgets --pr 7 --thread-id PRRT_1 --step "<the first thing you will do>" --file <the file it touches> --step "<the next thing>" --file <the file it touches>
+Pass one `--file` per `--step`, in the same order, or leave `--file` off altogether. Where only some of the steps have a file you can name yet, pass `--file ""` for the ones that do not. Declaring a plan again replaces the whole of the one before it. Mark each step the moment you finish it:
+<python> -m github_orchestrator.cli thread step --repo acme/widgets --pr 7 --thread-id PRRT_1 --done <the number of the step you have just finished>
+
+Cap the test runner's own parallelism: pass `-n 2` to pytest, never `-n auto`, and use the equivalent for any other runner. Other agents are running their own test suites on this machine at the same time, and a runner that takes every core starves them and the user's own session.
+
+When you have committed a new attempt, run:
+<python> -m github_orchestrator.cli thread ready --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <full 40-character sha, as `git rev-parse HEAD` prints it> --tests passed|failed|unverified [--tests-note "..."] [--note "<one line: what changed>"] [--summary "<one line: what the fix does>"] [--confidence low|medium|high] [--confidence-note "<one sentence: why that level, in your own words>"]
+That command is re-runnable: if you amend the commit afterwards, run it again with the new sha and the board follows.
+
+`--summary` is one line saying what the fix does. `--confidence` is how sure you are that the fix is what the reviewer wanted and that it breaks no caller, and `--confidence-note` is the one sentence behind that level: what you checked, or what you could not. Say `low` where you guessed at the ask, and say so. Pass all three every time you report: the brackets mean only that the CLI will not stop you.
+
+If the comment needs an answer and no code, change no code and report the reply instead:
+<python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
+`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope, name the ticket that already covers the work and link it.
+
+If the comment is **out-of-scope**, change no code. Search the tracker for a ticket that already covers the work: a JQL search through the Atlassian MCP in the project you would file it in, such as `project = PROJ AND text ~ "<words that name the work>"`. If one you judge to be the same work exists, reply as above, classified out-of-scope, naming and linking it. If none does, propose a ticket and the reply that goes with it, then stop:
+
+    <python> -m github_orchestrator.cli thread ticket --repo acme/widgets --pr 7 --thread-id PRRT_1 --project "<PROJ, or the key of the project the work plainly belongs to>" --title "<the ticket's title>" --body "<the ticket's description>" --reply "<the reply to post on the comment>"
+
+`--title` and `--body` are the ticket as it will be filed: a title that names the work, and a body that says what was asked, why it belongs outside this pull request, and which comment raised it. `--reply` is posted on the comment once the author accepts; the ticket is filed first and its link is added below the reply, so leave the link out. The author can edit all four first. Never file the ticket yourself: nothing is created until the author accepts.

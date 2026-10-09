@@ -1,0 +1,6226 @@
+{
+ "paths": {
+  "/api/client-errors": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ConversationList"
+    },
+    "304": null
+   }
+  },
+  "/api/conversations/{key}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Conversation"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/comments": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/CommentList"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/comments/{comment_id}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Comment"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/OperationList"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations/{operation_id}": {
+   "get": {
+    "200": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:approve": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:confirm": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:defer": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:discard": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:edit-draft": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:enrol": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:fix": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:place": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:post-now": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:reject": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:reply": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:resolve": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:retry": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:rework": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:start-session": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:stop": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:unpark": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:withdraw-from-review": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/proposals": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ProposalList"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/proposals/{proposal_id}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Proposal"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/seen": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/dashboard": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Dashboard"
+    },
+    "304": null,
+    "503": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/dashboard/stream": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Dashboard"
+    }
+   }
+  },
+  "/api/diffs/{base}..{head}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Diff"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/files": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/FileLines"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "415": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/health": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Health"
+    }
+   }
+  },
+  "/api/manager/agent-output": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/AgentOutput"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager/agent-output/stream": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/AgentOutput"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager/changes": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ManagerChanges"
+    },
+    "304": null
+   }
+  },
+  "/api/manager/changes/stream": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ManagerChanges"
+    }
+   }
+  },
+  "/api/manager/git": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/GitRun"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:carry-on": {
+   "post": {
+    "202": {}
+   }
+  },
+  "/api/manager:close": {
+   "post": {
+    "202": {}
+   }
+  },
+  "/api/manager:dismiss": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:hold": {
+   "post": {
+    "202": {}
+   }
+  },
+  "/api/manager:resume": {
+   "post": {
+    "202": {}
+   }
+  },
+  "/api/manager:start-review": {
+   "post": {
+    "202": {}
+   }
+  },
+  "/api/operations": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/OperationList"
+    },
+    "304": null
+   }
+  },
+  "/api/operations/{operation_id}": {
+   "get": {
+    "200": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/operations:create-draft": {
+   "post": {
+    "202": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/operations:send-review": {
+   "post": {
+    "202": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/people": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/PersonList"
+    },
+    "304": null
+   }
+  },
+  "/api/people/{login}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Person"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-request": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/PullRequest"
+    },
+    "304": null
+   }
+  },
+  "/api/pull-request/diff": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Diff"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-request:fetch": {
+   "post": {
+    "204": null,
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-requests": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/HeldPullRequests"
+    },
+    "304": null,
+    "503": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-requests/{owner}/{name}/{number}:hold": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-requests/{owner}/{name}/{number}:release": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-requests/{owner}/{name}/{number}:resume": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/runs": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/RunLedger"
+    },
+    "304": null
+   }
+  },
+  "/api/setup": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Setup"
+    },
+    "304": null
+   },
+   "put": {
+    "202": {
+     "$ref": "#/components/schemas/SetupOperation"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "422": {
+     "$ref": "#/components/schemas/FieldErrors"
+    }
+   }
+  },
+  "/api/setup/accounts/{login}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/SetupAccount"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/setup/accounts/{login}/repos": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/SetupRepoChoices"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/setup/clones/{owner}/{name}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/SetupClone"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/setup/operations/{operation}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/SetupOperation"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/setup/repos/{owner}/{name}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/SetupRepoChoice"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/setup:move-aside": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/MovedAside"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/terminal/sessions": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/TerminalSessionList"
+    }
+   },
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/TerminalSessionList"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/tour": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Tour"
+    }
+   }
+  },
+  "/api/tour:seen": {
+   "post": {
+    "204": null
+   }
+  },
+  "/api/viewer": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Person"
+    }
+   }
+  },
+  "/pr/{owner}/{name}/{number}/api/{path}": {
+   "get": {
+    "200": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "503": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   },
+   "post": {
+    "200": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "503": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  }
+ },
+ "schemas": {
+  "AgentActivity": {
+   "properties": {
+    "elapsed_seconds": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "event": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "silent_seconds": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/AgentState"
+    }
+   },
+   "required": [
+    "name",
+    "enabled",
+    "state",
+    "event",
+    "elapsed_seconds",
+    "silent_seconds"
+   ],
+   "type": "object"
+  },
+  "AgentOutput": {
+   "properties": {
+    "lines": {
+     "items": {
+      "$ref": "#/components/schemas/OutputLine"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "lines"
+   ],
+   "type": "object"
+  },
+  "AgentState": {
+   "enum": [
+    "idle",
+    "working"
+   ],
+   "type": "string"
+  },
+  "Anchor": {
+   "properties": {
+    "is_outdated": {
+     "type": "boolean"
+    },
+    "line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "original_commit": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "original_line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "original_start_line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "path": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "side": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/DiffSide"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "start_line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "start_side": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/DiffSide"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "path",
+    "line",
+    "start_line",
+    "start_side",
+    "side",
+    "original_line",
+    "original_start_line",
+    "original_commit",
+    "is_outdated"
+   ],
+   "type": "object"
+  },
+  "ApproveOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "delete_comment": {
+     "type": "boolean"
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "approve",
+     "type": "string"
+    },
+    "landed_base": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "landed_sha": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "posted_comment": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "proposal": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply_note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "steps": {
+     "$ref": "#/components/schemas/LandingSteps"
+    },
+    "ticket_key": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "ticket_url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "reply",
+    "delete_comment",
+    "proposal",
+    "steps",
+    "landed_base",
+    "landed_sha",
+    "posted_comment",
+    "reply_note",
+    "ticket_key",
+    "ticket_url"
+   ],
+   "type": "object"
+  },
+  "ApproveRequest": {
+   "properties": {
+    "delete_comment": {
+     "type": "boolean"
+    },
+    "message": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "resolve": {
+     "type": "boolean"
+    },
+    "ticket": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Ticket"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "type": "object"
+  },
+  "AuthorKind": {
+   "enum": [
+    "mine",
+    "human",
+    "bot"
+   ],
+   "type": "string"
+  },
+  "Brief": {
+   "properties": {
+    "include": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "note": {
+     "type": "string"
+    },
+    "pointed": {
+     "items": {
+      "$ref": "#/components/schemas/PointedLine"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "note",
+    "pointed",
+    "include"
+   ],
+   "type": "object"
+  },
+  "BriefRequest": {
+   "properties": {
+    "include": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "note": {
+     "type": "string"
+    },
+    "pointed": {
+     "items": {
+      "$ref": "#/components/schemas/PointedLine"
+     },
+     "type": "array"
+    }
+   },
+   "type": "object"
+  },
+  "CapturedGit": {
+   "enum": [
+    "f",
+    "p",
+    "pra",
+    "s",
+    "l",
+    "d"
+   ],
+   "type": "string"
+  },
+  "Classification": {
+   "enum": [
+    "risky",
+    "unclear",
+    "out-of-scope",
+    "already-done",
+    "acknowledgement",
+    "question",
+    "needs-human"
+   ],
+   "type": "string"
+  },
+  "ClientError": {
+   "properties": {
+    "message": {
+     "maxLength": 4000,
+     "type": "string"
+    },
+    "stack": {
+     "anyOf": [
+      {
+       "maxLength": 20000,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "where": {
+     "maxLength": 200,
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "where",
+    "message"
+   ],
+   "type": "object"
+  },
+  "CloneState": {
+   "enum": [
+    "waiting",
+    "cloning",
+    "cloned",
+    "found",
+    "failed"
+   ],
+   "type": "string"
+  },
+  "CloseOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "delete_comment": {
+     "type": "boolean"
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "resolve",
+      "reject"
+     ],
+     "type": "string"
+    },
+    "posted_comment": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "reply",
+    "delete_comment",
+    "posted_comment"
+   ],
+   "type": "object"
+  },
+  "CloseRequest": {
+   "properties": {
+    "delete_comment": {
+     "type": "boolean"
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "type": "object"
+  },
+  "Comment": {
+   "properties": {
+    "author": {
+     "type": "string"
+    },
+    "body": {
+     "type": "string"
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "deleted": {
+     "type": "boolean"
+    },
+    "deleted_by_board": {
+     "type": "boolean"
+    },
+    "html_url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "posted_by_board": {
+     "type": "boolean"
+    },
+    "review_state": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReviewState"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "author",
+    "created_at",
+    "review_state",
+    "body",
+    "updated_at",
+    "html_url",
+    "posted_by_board",
+    "deleted",
+    "deleted_by_board"
+   ],
+   "type": "object"
+  },
+  "CommentList": {
+   "items": {
+    "$ref": "#/components/schemas/Comment"
+   },
+   "type": "array"
+  },
+  "CommentSummary": {
+   "properties": {
+    "author": {
+     "type": "string"
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "review_state": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReviewState"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "author",
+    "created_at",
+    "review_state"
+   ],
+   "type": "object"
+  },
+  "Commits": {
+   "properties": {
+    "base": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "head": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "base",
+    "head"
+   ],
+   "type": "object"
+  },
+  "ConfidenceLevel": {
+   "enum": [
+    "low",
+    "medium",
+    "high"
+   ],
+   "type": "string"
+  },
+  "Conversation": {
+   "properties": {
+    "anchor": {
+     "$ref": "#/components/schemas/Anchor"
+    },
+    "author_kind": {
+     "$ref": "#/components/schemas/AuthorKind"
+    },
+    "comments": {
+     "items": {
+      "$ref": "#/components/schemas/CommentSummary"
+     },
+     "type": "array"
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "etag": {
+     "type": "string"
+    },
+    "gist": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "github_node_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "github_removed": {
+     "type": "boolean"
+    },
+    "github_resolved": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "github_resolved_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "key": {
+     "pattern": "^[A-Za-z0-9_-]+$",
+     "type": "string"
+    },
+    "kind": {
+     "$ref": "#/components/schemas/ThreadKind"
+    },
+    "mention": {
+     "type": "boolean"
+    },
+    "operations": {
+     "items": {
+      "$ref": "#/components/schemas/OperationSummary"
+     },
+     "type": "array"
+    },
+    "record_state": {
+     "$ref": "#/components/schemas/RecordState"
+    },
+    "reopened": {
+     "type": "boolean"
+    },
+    "state": {
+     "$ref": "#/components/schemas/ConversationState"
+    },
+    "state_changed_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "unread": {
+     "type": "boolean"
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "key",
+    "github_node_id",
+    "kind",
+    "state",
+    "state_changed_at",
+    "reopened",
+    "etag",
+    "github_removed",
+    "github_resolved",
+    "github_resolved_at",
+    "created_at",
+    "anchor",
+    "gist",
+    "comments",
+    "operations",
+    "mention",
+    "updated_at",
+    "author_kind",
+    "unread",
+    "record_state"
+   ],
+   "type": "object"
+  },
+  "ConversationList": {
+   "properties": {
+    "conversations": {
+     "items": {
+      "$ref": "#/components/schemas/Conversation"
+     },
+     "type": "array"
+    },
+    "listed_at": {
+     "type": "string"
+    },
+    "unreadable": {
+     "items": {
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "conversations",
+    "unreadable",
+    "listed_at"
+   ],
+   "type": "object"
+  },
+  "ConversationState": {
+   "enum": [
+    "draft",
+    "enrolled",
+    "queued",
+    "working",
+    "in-session",
+    "rework",
+    "landing",
+    "ready",
+    "waiting",
+    "assumed-done",
+    "not-mine",
+    "deferred",
+    "done"
+   ],
+   "type": "string"
+  },
+  "Dashboard": {
+   "properties": {
+    "facts": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/PrFacts"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "frozen": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/FrozenWorktree"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "listed_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "manager": {
+     "$ref": "#/components/schemas/ManagerFlags"
+    },
+    "notice": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "polled": {
+     "type": "boolean"
+    },
+    "pr": {
+     "$ref": "#/components/schemas/DashboardPr"
+    },
+    "status": {
+     "$ref": "#/components/schemas/DashboardStatus"
+    },
+    "system": {
+     "$ref": "#/components/schemas/DashboardSystem"
+    },
+    "threads": {
+     "items": {
+      "$ref": "#/components/schemas/ThreadRow"
+     },
+     "type": "array"
+    },
+    "undismiss_command": {
+     "type": "string"
+    },
+    "unreadable": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "pr",
+    "polled",
+    "status",
+    "system",
+    "frozen",
+    "undismiss_command",
+    "notice",
+    "facts",
+    "manager",
+    "threads",
+    "unreadable",
+    "listed_at"
+   ],
+   "type": "object"
+  },
+  "DashboardPr": {
+   "properties": {
+    "author": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "ticket": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "title",
+    "url",
+    "branch",
+    "ticket",
+    "author"
+   ],
+   "type": "object"
+  },
+  "DashboardStatus": {
+   "properties": {
+    "approved_by": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "changed_files": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "checks_done": {
+     "type": "integer"
+    },
+    "checks_total": {
+     "type": "integer"
+    },
+    "detailed_reviewer": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "failed_checks": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "last_event_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "mergeable": {
+     "type": "boolean"
+    },
+    "needs_rebase": {
+     "type": "boolean"
+    },
+    "review_ready_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "since_you_last_acted": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SinceYouActed"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "you_are_the_detailed_reviewer": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "detailed_reviewer",
+    "you_are_the_detailed_reviewer",
+    "mergeable",
+    "needs_rebase",
+    "last_event_at",
+    "review_ready_at",
+    "since_you_last_acted",
+    "failed_checks",
+    "checks_done",
+    "checks_total",
+    "changed_files",
+    "approved_by"
+   ],
+   "type": "object"
+  },
+  "DashboardSystem": {
+   "properties": {
+    "agent": {
+     "$ref": "#/components/schemas/AgentActivity"
+    },
+    "last_run": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/LastRun"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "on_hold": {
+     "type": "boolean"
+    },
+    "queued_events": {
+     "type": "integer"
+    },
+    "threads": {
+     "$ref": "#/components/schemas/ThreadCounts"
+    },
+    "unpushed_commits": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "agent",
+    "last_run",
+    "queued_events",
+    "on_hold",
+    "unpushed_commits",
+    "threads"
+   ],
+   "type": "object"
+  },
+  "DeferOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "defer",
+     "type": "string"
+    },
+    "note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "until": {
+     "pattern": "^(manual|ci|push|pr:[0-9]+)$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "until",
+    "note"
+   ],
+   "type": "object"
+  },
+  "DeferRequest": {
+   "properties": {
+    "note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "until": {
+     "pattern": "^(manual|ci|push|pr:[0-9]+)$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "until"
+   ],
+   "type": "object"
+  },
+  "Diff": {
+   "properties": {
+    "base": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "files": {
+     "items": {
+      "$ref": "#/components/schemas/FileChange"
+     },
+     "type": "array"
+    },
+    "head": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "base",
+    "head",
+    "files"
+   ],
+   "type": "object"
+  },
+  "DiffFileStatus": {
+   "enum": [
+    "added",
+    "modified",
+    "removed",
+    "renamed",
+    "copied"
+   ],
+   "type": "string"
+  },
+  "DiffHunk": {
+   "properties": {
+    "lines": {
+     "items": {
+      "$ref": "#/components/schemas/DiffLine"
+     },
+     "type": "array"
+    },
+    "new_lines": {
+     "type": "integer"
+    },
+    "new_start": {
+     "type": "integer"
+    },
+    "old_lines": {
+     "type": "integer"
+    },
+    "old_start": {
+     "type": "integer"
+    },
+    "section": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "old_start",
+    "old_lines",
+    "new_start",
+    "new_lines",
+    "section",
+    "lines"
+   ],
+   "type": "object"
+  },
+  "DiffLine": {
+   "properties": {
+    "kind": {
+     "$ref": "#/components/schemas/DiffLineKind"
+    },
+    "new_line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "old_line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind",
+    "old_line",
+    "new_line",
+    "text"
+   ],
+   "type": "object"
+  },
+  "DiffLineKind": {
+   "enum": [
+    "context",
+    "added",
+    "removed"
+   ],
+   "type": "string"
+  },
+  "DiffSide": {
+   "enum": [
+    "LEFT",
+    "RIGHT"
+   ],
+   "type": "string"
+  },
+  "DiffSource": {
+   "enum": [
+    "origin",
+    "local"
+   ],
+   "type": "string"
+  },
+  "DismissRequest": {
+   "properties": {
+    "forever": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "forever"
+   ],
+   "type": "object"
+  },
+  "DraftBody": {
+   "properties": {
+    "body": {
+     "maxLength": 65536,
+     "minLength": 1,
+     "type": "string"
+    },
+    "line": {
+     "minimum": 1.0,
+     "type": "integer"
+    },
+    "path": {
+     "minLength": 1,
+     "type": "string"
+    },
+    "side": {
+     "$ref": "#/components/schemas/DiffSide"
+    },
+    "start_line": {
+     "anyOf": [
+      {
+       "minimum": 1.0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "start_side": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/DiffSide"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "body",
+    "path",
+    "line"
+   ],
+   "type": "object"
+  },
+  "DraftOperation": {
+   "properties": {
+    "anchor": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Anchor"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "body": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "create-draft",
+      "edit-draft",
+      "enrol",
+      "withdraw-from-review",
+      "discard",
+      "post-now"
+     ],
+     "type": "string"
+    },
+    "posted_comment": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "body",
+    "anchor",
+    "posted_comment"
+   ],
+   "type": "object"
+  },
+  "ErrorCode": {
+   "enum": [
+    "not-found",
+    "operation-outstanding",
+    "nothing-in-flight",
+    "work-in-flight",
+    "no-proposal",
+    "proposal-exists",
+    "nothing-committed",
+    "already-closed",
+    "parked",
+    "not-parked",
+    "still-a-draft",
+    "not-a-draft",
+    "already-enrolled",
+    "confirm-again",
+    "anchor-not-in-diff",
+    "empty-brief",
+    "malformed-request",
+    "empty-body",
+    "body-too-long",
+    "comment-gone",
+    "not-deletable",
+    "bad-wake-condition",
+    "precondition-failed",
+    "unreadable-record",
+    "range-inverted",
+    "range-too-wide",
+    "not-text",
+    "no-such-commit",
+    "no-such-path",
+    "review-in-flight",
+    "nothing-enrolled",
+    "git-failed",
+    "github-rejected",
+    "agents-disabled",
+    "internal-refusal",
+    "foreign-origin",
+    "manager-starting",
+    "watcher-starting",
+    "watcher-failing",
+    "not-watching",
+    "not-frozen",
+    "board-unreachable",
+    "terminal-refused",
+    "no-gh-token",
+    "repo-not-visible",
+    "setup-refused",
+    "not-broken",
+    "server-error"
+   ],
+   "type": "string"
+  },
+  "ErrorDetail": {
+   "properties": {
+    "code": {
+     "$ref": "#/components/schemas/ErrorCode"
+    },
+    "detail": {
+     "type": "string"
+    },
+    "status": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "status",
+    "code",
+    "detail"
+   ],
+   "type": "object"
+  },
+  "Errors": {
+   "properties": {
+    "errors": {
+     "items": {
+      "$ref": "#/components/schemas/ErrorDetail"
+     },
+     "minItems": 1,
+     "type": "array"
+    }
+   },
+   "required": [
+    "errors"
+   ],
+   "type": "object"
+  },
+  "FieldError": {
+   "properties": {
+    "code": {
+     "$ref": "#/components/schemas/ErrorCode"
+    },
+    "detail": {
+     "type": "string"
+    },
+    "field": {
+     "type": "string"
+    },
+    "status": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "status",
+    "code",
+    "detail",
+    "field"
+   ],
+   "type": "object"
+  },
+  "FieldErrors": {
+   "properties": {
+    "errors": {
+     "items": {
+      "$ref": "#/components/schemas/FieldError"
+     },
+     "minItems": 1,
+     "type": "array"
+    }
+   },
+   "required": [
+    "errors"
+   ],
+   "type": "object"
+  },
+  "FileChange": {
+   "properties": {
+    "added": {
+     "type": "integer"
+    },
+    "hunks": {
+     "items": {
+      "$ref": "#/components/schemas/DiffHunk"
+     },
+     "type": "array"
+    },
+    "is_binary": {
+     "type": "boolean"
+    },
+    "line_count": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "old_path": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "path": {
+     "type": "string"
+    },
+    "removed": {
+     "type": "integer"
+    },
+    "status": {
+     "$ref": "#/components/schemas/DiffFileStatus"
+    }
+   },
+   "required": [
+    "path",
+    "old_path",
+    "status",
+    "added",
+    "removed",
+    "is_binary",
+    "hunks"
+   ],
+   "type": "object"
+  },
+  "FileLine": {
+   "properties": {
+    "number": {
+     "type": "integer"
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "number",
+    "text"
+   ],
+   "type": "object"
+  },
+  "FileLines": {
+   "properties": {
+    "from_line": {
+     "type": "integer"
+    },
+    "lines": {
+     "items": {
+      "$ref": "#/components/schemas/FileLine"
+     },
+     "type": "array"
+    },
+    "path": {
+     "type": "string"
+    },
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "to_line": {
+     "type": "integer"
+    },
+    "truncated": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "sha",
+    "path",
+    "from_line",
+    "to_line",
+    "truncated",
+    "lines"
+   ],
+   "type": "object"
+  },
+  "FileOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "file",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
+   ],
+   "type": "object"
+  },
+  "FinishedRun": {
+   "properties": {
+    "board_url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "cost_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "elapsed_seconds": {
+     "type": "number"
+    },
+    "ended_at": {
+     "type": "string"
+    },
+    "event": {
+     "type": "string"
+    },
+    "exit_code": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "failed": {
+     "type": "boolean"
+    },
+    "number": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "repo": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "ended_at",
+    "repo",
+    "number",
+    "event",
+    "elapsed_seconds",
+    "exit_code",
+    "cost_usd",
+    "failed",
+    "board_url"
+   ],
+   "type": "object"
+  },
+  "FixOperation": {
+   "properties": {
+    "attempts": {
+     "type": "integer"
+    },
+    "attempts_allowed": {
+     "type": "integer"
+    },
+    "brief": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Brief"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "classification": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Classification"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "conflict": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "first",
+      "rebase",
+      "rework",
+      "retry"
+     ],
+     "type": "string"
+    },
+    "last_action": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "onto": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "plan": {
+     "items": {
+      "$ref": "#/components/schemas/PlanStep"
+     },
+     "type": "array"
+    },
+    "progress": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "proposal": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "attempts",
+    "attempts_allowed",
+    "last_action",
+    "progress",
+    "plan",
+    "onto",
+    "conflict",
+    "brief",
+    "proposal",
+    "classification"
+   ],
+   "type": "object"
+  },
+  "FrozenWorktree": {
+   "properties": {
+    "expected": {
+     "type": "string"
+    },
+    "here": {
+     "type": "string"
+    },
+    "release_requested": {
+     "type": "boolean"
+    },
+    "run_working": {
+     "type": "boolean"
+    },
+    "seconds_left": {
+     "type": "number"
+    },
+    "worktree": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "worktree",
+    "here",
+    "expected",
+    "seconds_left",
+    "run_working",
+    "release_requested"
+   ],
+   "type": "object"
+  },
+  "GitRequest": {
+   "properties": {
+    "keys": {
+     "$ref": "#/components/schemas/CapturedGit"
+    }
+   },
+   "required": [
+    "keys"
+   ],
+   "type": "object"
+  },
+  "GitRun": {
+   "properties": {
+    "exit_code": {
+     "type": "integer"
+    },
+    "lines": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "seconds": {
+     "type": "number"
+    },
+    "truncated": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "exit_code",
+    "lines",
+    "seconds",
+    "truncated"
+   ],
+   "type": "object"
+  },
+  "Health": {
+   "properties": {
+    "font_problem": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "hub_url": {
+     "type": "string"
+    },
+    "newest_release": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/NewestRelease"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pid": {
+     "type": "integer"
+    },
+    "serves": {
+     "enum": [
+      "board",
+      "hub"
+     ],
+     "type": "string"
+    },
+    "state": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/HubState"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "status": {
+     "const": "ok",
+     "type": "string"
+    },
+    "version": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "watcher": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/WatcherHealth"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "status",
+    "pid",
+    "serves",
+    "hub_url",
+    "font_problem",
+    "state",
+    "version",
+    "watcher",
+    "newest_release"
+   ],
+   "type": "object"
+  },
+  "HeldPullRequest": {
+   "properties": {
+    "board_answered": {
+     "type": "boolean"
+    },
+    "board_url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "dashboard": {
+     "$ref": "#/components/schemas/Dashboard"
+    },
+    "manager": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "manager",
+    "board_url",
+    "board_answered",
+    "dashboard"
+   ],
+   "type": "object"
+  },
+  "HeldPullRequests": {
+   "properties": {
+    "groups": {
+     "items": {
+      "$ref": "#/components/schemas/WallGroupName"
+     },
+     "type": "array"
+    },
+    "pull_requests": {
+     "items": {
+      "$ref": "#/components/schemas/HeldPullRequest"
+     },
+     "type": "array"
+    },
+    "watching": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "watching",
+    "groups",
+    "pull_requests"
+   ],
+   "type": "object"
+  },
+  "HubState": {
+   "enum": [
+    "setup",
+    "watching",
+    "broken"
+   ],
+   "type": "string"
+  },
+  "LandingSteps": {
+   "properties": {
+    "answered": {
+     "type": "boolean"
+    },
+    "filed": {
+     "type": "boolean"
+    },
+    "picked": {
+     "type": "boolean"
+    },
+    "pushed": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "filed",
+    "picked",
+    "pushed",
+    "answered"
+   ],
+   "type": "object"
+  },
+  "LastRun": {
+   "properties": {
+    "ended_at": {
+     "type": "string"
+    },
+    "event": {
+     "type": "string"
+    },
+    "exit_code": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "event",
+    "exit_code",
+    "ended_at"
+   ],
+   "type": "object"
+  },
+  "ManagerChanges": {
+   "properties": {
+    "markdown": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "markdown"
+   ],
+   "type": "object"
+  },
+  "ManagerFlags": {
+   "properties": {
+    "changed_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "frozen_on": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "hidden": {
+     "type": "boolean"
+    },
+    "on_hold": {
+     "type": "boolean"
+    },
+    "threads_live": {
+     "type": "integer"
+    },
+    "working_on": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "frozen_on",
+    "on_hold",
+    "working_on",
+    "hidden",
+    "threads_live",
+    "changed_at"
+   ],
+   "type": "object"
+  },
+  "MentionFact": {
+   "properties": {
+    "answered": {
+     "type": "boolean"
+    },
+    "at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "author": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "author",
+    "at",
+    "answered"
+   ],
+   "type": "object"
+  },
+  "MergeState": {
+   "enum": [
+    "clean",
+    "conflicts",
+    "behind",
+    "blocked",
+    "checks-failing",
+    "unknown",
+    "other"
+   ],
+   "type": "string"
+  },
+  "MovedAside": {
+   "properties": {
+    "moved_to": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "moved_to"
+   ],
+   "type": "object"
+  },
+  "NewestRelease": {
+   "properties": {
+    "checked_at": {
+     "type": "string"
+    },
+    "newer": {
+     "type": "boolean"
+    },
+    "version": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "version",
+    "checked_at",
+    "newer"
+   ],
+   "type": "object"
+  },
+  "OperationKind": {
+   "enum": [
+    "first",
+    "rebase",
+    "file",
+    "rework",
+    "retry",
+    "start-session",
+    "approve",
+    "stop",
+    "resolve",
+    "reject",
+    "defer",
+    "unpark",
+    "confirm",
+    "place",
+    "reply",
+    "create-draft",
+    "edit-draft",
+    "enrol",
+    "withdraw-from-review",
+    "discard",
+    "post-now",
+    "send-review",
+    "posted"
+   ],
+   "type": "string"
+  },
+  "OperationList": {
+   "items": {
+    "discriminator": {
+     "mapping": {
+      "approve": "#/components/schemas/ApproveOperation",
+      "confirm": "#/components/schemas/PlaceOperation",
+      "create-draft": "#/components/schemas/DraftOperation",
+      "defer": "#/components/schemas/DeferOperation",
+      "discard": "#/components/schemas/DraftOperation",
+      "edit-draft": "#/components/schemas/DraftOperation",
+      "enrol": "#/components/schemas/DraftOperation",
+      "file": "#/components/schemas/FileOperation",
+      "first": "#/components/schemas/FixOperation",
+      "place": "#/components/schemas/PlaceOperation",
+      "post-now": "#/components/schemas/DraftOperation",
+      "posted": "#/components/schemas/PostedOperation",
+      "rebase": "#/components/schemas/FixOperation",
+      "reject": "#/components/schemas/CloseOperation",
+      "reply": "#/components/schemas/ReplyOperation",
+      "resolve": "#/components/schemas/CloseOperation",
+      "retry": "#/components/schemas/FixOperation",
+      "rework": "#/components/schemas/FixOperation",
+      "send-review": "#/components/schemas/ReviewOperation",
+      "start-session": "#/components/schemas/SessionOperation",
+      "stop": "#/components/schemas/StopOperation",
+      "unpark": "#/components/schemas/UnparkOperation",
+      "withdraw-from-review": "#/components/schemas/DraftOperation"
+     },
+     "propertyName": "kind"
+    },
+    "oneOf": [
+     {
+      "$ref": "#/components/schemas/FixOperation"
+     },
+     {
+      "$ref": "#/components/schemas/SessionOperation"
+     },
+     {
+      "$ref": "#/components/schemas/ApproveOperation"
+     },
+     {
+      "$ref": "#/components/schemas/FileOperation"
+     },
+     {
+      "$ref": "#/components/schemas/StopOperation"
+     },
+     {
+      "$ref": "#/components/schemas/CloseOperation"
+     },
+     {
+      "$ref": "#/components/schemas/DeferOperation"
+     },
+     {
+      "$ref": "#/components/schemas/UnparkOperation"
+     },
+     {
+      "$ref": "#/components/schemas/PlaceOperation"
+     },
+     {
+      "$ref": "#/components/schemas/ReplyOperation"
+     },
+     {
+      "$ref": "#/components/schemas/DraftOperation"
+     },
+     {
+      "$ref": "#/components/schemas/ReviewOperation"
+     },
+     {
+      "$ref": "#/components/schemas/PostedOperation"
+     }
+    ]
+   },
+   "type": "array"
+  },
+  "OperationState": {
+   "enum": [
+    "pending",
+    "running",
+    "applied",
+    "refused",
+    "requeued"
+   ],
+   "type": "string"
+  },
+  "OperationSummary": {
+   "properties": {
+    "attempts": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "attempts_allowed": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "$ref": "#/components/schemas/OperationKind"
+    },
+    "lands": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ProposalKind"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "steps_done": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "steps_total": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "ticket_key": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "steps_done",
+    "steps_total",
+    "attempts",
+    "attempts_allowed",
+    "lands",
+    "ticket_key"
+   ],
+   "type": "object"
+  },
+  "Outcome": {
+   "properties": {
+    "conversation": {
+     "$ref": "#/components/schemas/Conversation"
+    },
+    "operation": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    }
+   },
+   "required": [
+    "operation",
+    "conversation"
+   ],
+   "type": "object"
+  },
+  "OutputLine": {
+   "properties": {
+    "run_boundary": {
+     "type": "boolean"
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "text",
+    "run_boundary"
+   ],
+   "type": "object"
+  },
+  "Person": {
+   "properties": {
+    "login": {
+     "type": "string"
+    },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "login",
+    "name"
+   ],
+   "type": "object"
+  },
+  "PersonList": {
+   "items": {
+    "$ref": "#/components/schemas/Person"
+   },
+   "type": "array"
+  },
+  "PlaceOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "confirm",
+      "place"
+     ],
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
+   ],
+   "type": "object"
+  },
+  "PlaceRequest": {
+   "properties": {
+    "to": {
+     "enum": [
+      "ready",
+      "waiting",
+      "not-mine",
+      "queued"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "to"
+   ],
+   "type": "object"
+  },
+  "PlanStep": {
+   "properties": {
+    "done": {
+     "type": "boolean"
+    },
+    "file": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "text",
+    "file",
+    "done"
+   ],
+   "type": "object"
+  },
+  "PointedLine": {
+   "properties": {
+    "file": {
+     "type": "string"
+    },
+    "line": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "file",
+    "line",
+    "text"
+   ],
+   "type": "object"
+  },
+  "PostedOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "github_node_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "posted",
+     "type": "string"
+    },
+    "posted_comment": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "review": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "review",
+    "posted_comment",
+    "github_node_id"
+   ],
+   "type": "object"
+  },
+  "PrFacts": {
+   "properties": {
+    "changes_requested_by": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "ci_status": {
+     "type": "string"
+    },
+    "draft": {
+     "type": "boolean"
+    },
+    "ended": {
+     "type": "boolean"
+    },
+    "is_author": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "mentioned": {
+     "type": "boolean"
+    },
+    "mentions": {
+     "items": {
+      "$ref": "#/components/schemas/MentionFact"
+     },
+     "type": "array"
+    },
+    "merge_state": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/MergeState"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "my_review": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "my_review_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pending_reviewers": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "polled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "review_decision": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "unresolved_threads": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "viewer_requested": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "polled_at",
+    "ended",
+    "is_author",
+    "changes_requested_by",
+    "pending_reviewers",
+    "ci_status",
+    "merge_state",
+    "draft",
+    "review_decision",
+    "my_review",
+    "my_review_at",
+    "viewer_requested",
+    "mentioned",
+    "mentions",
+    "unresolved_threads"
+   ],
+   "type": "object"
+  },
+  "Proposal": {
+   "properties": {
+    "agent_note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "commit_message": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "commits": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Commits"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ConfidenceLevel"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "confidence_note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "conversation": {
+     "pattern": "^[A-Za-z0-9_-]+$",
+     "type": "string"
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "directory": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "$ref": "#/components/schemas/ProposalKind"
+    },
+    "operation": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "summary": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "tests": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "tests_note": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "ticket": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Ticket"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "reply",
+    "ticket",
+    "operation",
+    "created_at",
+    "updated_at",
+    "commits",
+    "directory",
+    "summary",
+    "agent_note",
+    "confidence",
+    "confidence_note",
+    "tests",
+    "tests_note",
+    "commit_message"
+   ],
+   "type": "object"
+  },
+  "ProposalKind": {
+   "enum": [
+    "commit",
+    "reply",
+    "ticket"
+   ],
+   "type": "string"
+  },
+  "ProposalList": {
+   "items": {
+    "$ref": "#/components/schemas/Proposal"
+   },
+   "type": "array"
+  },
+  "PullRequest": {
+   "properties": {
+    "base_branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "head_sha": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "html_url": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "title",
+    "html_url",
+    "base_branch",
+    "branch",
+    "head_sha"
+   ],
+   "type": "object"
+  },
+  "ReasonCode": {
+   "enum": [
+    "withdrawn",
+    "agent-declined",
+    "max-attempts",
+    "agent-unavailable",
+    "conflict",
+    "nothing-committed",
+    "push-failed",
+    "reply-failed",
+    "file-failed",
+    "comment-gone",
+    "github-rejected",
+    "git-failed",
+    "anchor-not-in-diff",
+    "superseded",
+    "worktree-missing"
+   ],
+   "type": "string"
+  },
+  "RecordState": {
+   "enum": [
+    "open",
+    "waiting_on_reviewer",
+    "assumed_done",
+    "not_mine",
+    "confirmed",
+    "deferred",
+    "rejected",
+    "resolved",
+    "removed",
+    "draft",
+    "enrolled",
+    "discarded"
+   ],
+   "type": "string"
+  },
+  "ReplyOperation": {
+   "properties": {
+    "body": {
+     "type": "string"
+    },
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "reply",
+     "type": "string"
+    },
+    "posted_comment": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "body",
+    "posted_comment"
+   ],
+   "type": "object"
+  },
+  "ReplyRequest": {
+   "properties": {
+    "body": {
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "body"
+   ],
+   "type": "object"
+  },
+  "ResolveRequest": {
+   "properties": {
+    "delete_comment": {
+     "type": "boolean"
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "resolve": {
+     "type": "boolean"
+    },
+    "thumbs_up": {
+     "type": "boolean"
+    }
+   },
+   "type": "object"
+  },
+  "ReviewOperation": {
+   "properties": {
+    "body": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "drafts": {
+     "items": {
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "send-review",
+     "type": "string"
+    },
+    "posted_review": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "verdict": {
+     "$ref": "#/components/schemas/ReviewVerdict"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "verdict",
+    "body",
+    "drafts",
+    "posted_review"
+   ],
+   "type": "object"
+  },
+  "ReviewState": {
+   "enum": [
+    "APPROVED",
+    "CHANGES_REQUESTED",
+    "COMMENTED",
+    "DISMISSED",
+    "PENDING"
+   ],
+   "type": "string"
+  },
+  "ReviewVerdict": {
+   "enum": [
+    "APPROVE",
+    "REQUEST_CHANGES",
+    "COMMENT"
+   ],
+   "type": "string"
+  },
+  "RunLedger": {
+   "properties": {
+    "runs": {
+     "items": {
+      "$ref": "#/components/schemas/FinishedRun"
+     },
+     "type": "array"
+    },
+    "today": {
+     "$ref": "#/components/schemas/RunsToday"
+    },
+    "watcher": {
+     "$ref": "#/components/schemas/WatcherHealth"
+    }
+   },
+   "required": [
+    "watcher",
+    "today",
+    "runs"
+   ],
+   "type": "object"
+  },
+  "RunsToday": {
+   "properties": {
+    "cost_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "runs": {
+     "type": "integer"
+    },
+    "unpriced": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "runs",
+    "cost_usd",
+    "unpriced"
+   ],
+   "type": "object"
+  },
+  "SendReviewRequest": {
+   "properties": {
+    "body": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "verdict": {
+     "$ref": "#/components/schemas/ReviewVerdict"
+    }
+   },
+   "required": [
+    "verdict"
+   ],
+   "type": "object"
+  },
+  "SessionOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "start-session",
+     "type": "string"
+    },
+    "last_action": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "plan": {
+     "items": {
+      "$ref": "#/components/schemas/PlanStep"
+     },
+     "type": "array"
+    },
+    "progress": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "proposal": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "steer": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "steer",
+    "last_action",
+    "progress",
+    "plan",
+    "proposal"
+   ],
+   "type": "object"
+  },
+  "Setup": {
+   "properties": {
+    "active_account": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "agent_name": {
+     "type": "string"
+    },
+    "config_path": {
+     "type": "string"
+    },
+    "etag": {
+     "type": "string"
+    },
+    "gh_account": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "hub_port": {
+     "type": "integer"
+    },
+    "options": {
+     "$ref": "#/components/schemas/SetupOptions"
+    },
+    "problem": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "repos": {
+     "items": {
+      "$ref": "#/components/schemas/SetupRepo"
+     },
+     "type": "array"
+    },
+    "requirements": {
+     "items": {
+      "$ref": "#/components/schemas/SetupRequirement"
+     },
+     "type": "array"
+    },
+    "state": {
+     "$ref": "#/components/schemas/HubState"
+    }
+   },
+   "required": [
+    "state",
+    "etag",
+    "config_path",
+    "problem",
+    "active_account",
+    "gh_account",
+    "repos",
+    "options",
+    "hub_port",
+    "agent_name",
+    "requirements"
+   ],
+   "type": "object"
+  },
+  "SetupAccount": {
+   "properties": {
+    "login": {
+     "type": "string"
+    },
+    "scopes": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "login",
+    "scopes"
+   ],
+   "type": "object"
+  },
+  "SetupClone": {
+   "properties": {
+    "exists": {
+     "type": "boolean"
+    },
+    "is_clone": {
+     "type": "boolean"
+    },
+    "path": {
+     "type": "string"
+    },
+    "repo": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "path",
+    "exists",
+    "is_clone"
+   ],
+   "type": "object"
+  },
+  "SetupCloneProgress": {
+   "properties": {
+    "error": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "path": {
+     "type": "string"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "state": {
+     "$ref": "#/components/schemas/CloneState"
+    }
+   },
+   "required": [
+    "repo",
+    "path",
+    "state",
+    "error"
+   ],
+   "type": "object"
+  },
+  "SetupOperation": {
+   "properties": {
+    "archived": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "clones": {
+     "items": {
+      "$ref": "#/components/schemas/SetupCloneProgress"
+     },
+     "type": "array"
+    },
+    "error": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kept_worktrees": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "state": {
+     "$ref": "#/components/schemas/WriteState"
+    }
+   },
+   "required": [
+    "id",
+    "state",
+    "clones",
+    "error",
+    "archived",
+    "kept_worktrees"
+   ],
+   "type": "object"
+  },
+  "SetupOptions": {
+   "properties": {
+    "agent_model": {
+     "maxLength": 100,
+     "minLength": 1,
+     "type": "string"
+    },
+    "agents_enabled": {
+     "type": "boolean"
+    },
+    "max_thread_runs": {
+     "maximum": 64.0,
+     "minimum": 1.0,
+     "type": "integer"
+    }
+   },
+   "required": [
+    "agent_model",
+    "agents_enabled",
+    "max_thread_runs"
+   ],
+   "type": "object"
+  },
+  "SetupRepo": {
+   "properties": {
+    "local_path": {
+     "type": "string"
+    },
+    "new_worktree_command": {
+     "type": "string"
+    },
+    "repo": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "local_path"
+   ],
+   "type": "object"
+  },
+  "SetupRepoChoice": {
+   "properties": {
+    "can_push": {
+     "type": "boolean"
+    },
+    "default_branch": {
+     "type": "string"
+    },
+    "has_my_prs": {
+     "type": "boolean"
+    },
+    "repo": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "can_push",
+    "has_my_prs",
+    "default_branch"
+   ],
+   "type": "object"
+  },
+  "SetupRepoChoices": {
+   "properties": {
+    "login": {
+     "type": "string"
+    },
+    "repos": {
+     "items": {
+      "$ref": "#/components/schemas/SetupRepoChoice"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "login",
+    "repos"
+   ],
+   "type": "object"
+  },
+  "SetupRequest": {
+   "properties": {
+    "gh_account": {
+     "maxLength": 39,
+     "pattern": "^[A-Za-z0-9-]+$",
+     "type": "string"
+    },
+    "hub_port": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "options": {
+     "$ref": "#/components/schemas/SetupOptions"
+    },
+    "repos": {
+     "items": {
+      "$ref": "#/components/schemas/SetupRepo"
+     },
+     "maxItems": 100,
+     "minItems": 1,
+     "type": "array"
+    }
+   },
+   "required": [
+    "gh_account",
+    "repos",
+    "options"
+   ],
+   "type": "object"
+  },
+  "SetupRequirement": {
+   "properties": {
+    "fix": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "program": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "program",
+    "fix"
+   ],
+   "type": "object"
+  },
+  "SinceYouActed": {
+   "properties": {
+    "comments": {
+     "type": "integer"
+    },
+    "commits": {
+     "type": "integer"
+    },
+    "force_pushed": {
+     "type": "boolean"
+    },
+    "reviews": {
+     "type": "integer"
+    },
+    "threads_resolved": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "commits",
+    "force_pushed",
+    "reviews",
+    "comments",
+    "threads_resolved"
+   ],
+   "type": "object"
+  },
+  "StartSessionRequest": {
+   "properties": {
+    "include": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "pointed": {
+     "items": {
+      "$ref": "#/components/schemas/PointedLine"
+     },
+     "type": "array"
+    },
+    "steer": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "type": "object"
+  },
+  "StopOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "stop",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "stopped": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "stopped"
+   ],
+   "type": "object"
+  },
+  "TerminalRequest": {
+   "properties": {
+    "keys": {
+     "pattern": "^(new|a|c|r|i[0-9]+)$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "keys"
+   ],
+   "type": "object"
+  },
+  "TerminalSession": {
+   "properties": {
+    "argv": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "id": {
+     "type": "string"
+    },
+    "worktree": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "argv",
+    "worktree"
+   ],
+   "type": "object"
+  },
+  "TerminalSessionList": {
+   "properties": {
+    "sessions": {
+     "items": {
+      "$ref": "#/components/schemas/TerminalSession"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "sessions"
+   ],
+   "type": "object"
+  },
+  "ThreadCounts": {
+   "properties": {
+    "drafts": {
+     "type": "integer"
+    },
+    "live": {
+     "type": "integer"
+    },
+    "proposed": {
+     "type": "integer"
+    },
+    "queued": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "queued",
+    "live",
+    "proposed",
+    "drafts"
+   ],
+   "type": "object"
+  },
+  "ThreadKind": {
+   "enum": [
+    "draft",
+    "review",
+    "issue",
+    "review-summary",
+    "pr-body"
+   ],
+   "type": "string"
+  },
+  "ThreadRow": {
+   "properties": {
+    "author_kind": {
+     "$ref": "#/components/schemas/AuthorKind"
+    },
+    "key": {
+     "pattern": "^[A-Za-z0-9_-]+$",
+     "type": "string"
+    },
+    "record_state": {
+     "$ref": "#/components/schemas/RecordState"
+    },
+    "state": {
+     "$ref": "#/components/schemas/ConversationState"
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "key",
+    "state",
+    "record_state",
+    "author_kind",
+    "updated_at"
+   ],
+   "type": "object"
+  },
+  "Ticket": {
+   "properties": {
+    "body": {
+     "type": "string"
+    },
+    "project": {
+     "type": "string"
+    },
+    "title": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "project",
+    "title",
+    "body"
+   ],
+   "type": "object"
+  },
+  "Tour": {
+   "properties": {
+    "due": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "due"
+   ],
+   "type": "object"
+  },
+  "UnparkOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "unpark",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
+   ],
+   "type": "object"
+  },
+  "WallGroup": {
+   "enum": [
+    "needs-you",
+    "draft",
+    "agent-working",
+    "waiting-on-others",
+    "on-hold",
+    "mentioned"
+   ],
+   "type": "string"
+  },
+  "WallGroupName": {
+   "properties": {
+    "group": {
+     "$ref": "#/components/schemas/WallGroup"
+    },
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "group",
+    "name"
+   ],
+   "type": "object"
+  },
+  "WatcherHealth": {
+   "properties": {
+    "fix": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_error": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "next_poll_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "overdue": {
+     "type": "boolean"
+    },
+    "polled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "polled_at",
+    "next_poll_at",
+    "overdue",
+    "last_error",
+    "fix"
+   ],
+   "type": "object"
+  },
+  "WriteState": {
+   "enum": [
+    "cloning",
+    "failed",
+    "restarting"
+   ],
+   "type": "string"
+  }
+ }
+}

@@ -1,0 +1,1078 @@
+<meta charset="utf-8">
+<title>Orchestrator Wall and Window</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&display=swap">
+<style>
+:root {
+  --body-stack: "Manrope", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --page: #ffffff;
+  --doc: #f4f4f4;
+  --text: #000000;
+  --ink-2: #2b2b2b;
+  --muted: #5e5e5e;
+  --faint: #6b6b6b;
+  --hairline: #e0e0e0;
+  --strong: #000000;
+  --yellow: #ffd70c;
+  --selected: #fff7ce;
+  --red: #e5484d;
+  --red-fill: #fbe1e2;
+  --green: #3acb81;
+  --green-fill: #d8f5e6;
+  --blue: #3f59dc;
+  --grey: #b3b3b3;
+  --grey-fill: #f4f4f4;
+  --flag-bg: #3a3a3a;
+  --flag-text: #ffd70c;
+  --focus: #3f59dc;
+  --scrim: rgba(0,0,0,0.45);
+  --diff-add: #d8f5e6;
+  --diff-add-gutter: #b0eacd;
+  --diff-del: #f8d9db;
+  --diff-del-gutter: #f1b2b7;
+  --code-kw: #a3281f;
+  --code-fn: #4b2ea8;
+  --code-str: #876b00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #000000; --doc: #0b0b0b; --text: #ffffff; --ink-2: #e2e2e2; --muted: #a6a6a6; --faint: #9a9a9a;
+    --hairline: #262626; --strong: #ffffff; --selected: #332b02; --red-fill: #2c0d0f; --green-fill: #0c291a;
+    --grey: #4d4d4d; --grey-fill: #111111; --flag-bg: #3a3a3a; --focus: #798be7; --scrim: rgba(0,0,0,0.6);
+    --diff-add: #0c291a; --diff-add-gutter: #175134; --diff-del: #2c0d0f; --diff-del-gutter: #58191e;
+    --code-kw: #ff8a80; --code-fn: #b9a4ff; --code-str: #e6c35c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #000000; --doc: #0b0b0b; --text: #ffffff; --ink-2: #e2e2e2; --muted: #a6a6a6; --faint: #9a9a9a;
+  --hairline: #262626; --strong: #ffffff; --selected: #332b02; --red-fill: #2c0d0f; --green-fill: #0c291a;
+  --grey: #4d4d4d; --grey-fill: #111111; --flag-bg: #3a3a3a; --focus: #798be7; --scrim: rgba(0,0,0,0.6);
+  --diff-add: #0c291a; --diff-add-gutter: #175134; --diff-del: #2c0d0f; --diff-del-gutter: #58191e;
+  --code-kw: #ff8a80; --code-fn: #b9a4ff; --code-str: #e6c35c;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; padding-block: 40px 96px; padding-inline: 20px; font: 400 15px/1.6 var(--body-stack); color: var(--text); background: var(--doc); }
+.doc { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 64px; }
+.prose { max-width: 68ch; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 26px; font-weight: 700; padding-top: 14px; border-top: 2px solid var(--strong); }
+h3 { font-size: 18px; font-weight: 700; }
+p { margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.stack-lg { display: flex; flex-direction: column; gap: 28px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 18px; max-width: 64ch; }
+code, .mono { font-family: var(--mono); font-size: 0.88em; }
+a { color: inherit; }
+kbd { font-family: var(--mono); font-size: 11px; padding: 0 5px; border: 1px solid var(--strong); background: var(--page); line-height: 17px; display: inline-block; min-width: 18px; text-align: center; color: var(--text); }
+.note { font-size: 13px; color: var(--muted); }
+.grow { flex: 1; }
+.sq { width: 11px; height: 11px; display: inline-block; flex: none; border: 1.5px solid var(--strong); }
+.sq.ready { background: var(--yellow); border-color: var(--yellow); }
+.sq.work { background: transparent; }
+.sq.wait { border-style: dashed; border-color: var(--muted); }
+.sq.alarm { background: var(--red); border-color: var(--red); }
+.sq.park { background: var(--grey); border-color: var(--grey); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--strong); display: inline-block; flex: none; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+.flag { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; background: var(--flag-bg); color: var(--flag-text); margin-left: 8px; vertical-align: 1px; white-space: nowrap; }
+
+.changed { background: var(--page); border: 2px solid var(--strong); padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; max-width: 920px; }
+.changed ul { margin: 0; padding-left: 18px; }
+.changed li + li { margin-top: 4px; }
+details summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+details[open] summary { margin-bottom: 8px; }
+details p + p { margin-top: 8px; }
+
+.btn { font: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px; border: 1.5px solid var(--strong); background: var(--page); color: var(--text); cursor: pointer; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.btn.fill { background: var(--strong); color: var(--page); }
+.btn.fill kbd { background: transparent; color: inherit; border-color: currentColor; }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.btn kbd { border-color: currentColor; background: transparent; }
+.linkish { text-decoration: underline; font-size: 12px; color: var(--text); background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.tbl-wrap { overflow-x: auto; background: var(--page); border: 1px solid var(--hairline); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 780px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--hairline); }
+th { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--strong); }
+td:first-child { font-weight: 600; }
+.verdict { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.verdict.dec { background: var(--strong); color: var(--page); padding: 1px 5px; }
+.verdict.prop { border: 1.5px solid var(--strong); padding: 0 5px; }
+tr.drop td:nth-child(2) { color: var(--muted); }
+
+.ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); border: 1px solid var(--hairline); background: var(--page); }
+.rung { padding: 14px 16px; border-right: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 6px; }
+.rung:last-child { border-right: 0; }
+.rung .lab { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.step { font: inherit; font-size: 12.5px; padding: 4px 10px; border: 1.5px solid var(--strong); background: var(--page); color: var(--text); cursor: pointer; }
+.step[aria-pressed="true"] { background: var(--strong); color: var(--page); }
+.stateline { font-size: 13px; color: var(--muted); min-height: 1.6em; }
+
+.frame-wrap { overflow-x: auto; border: 2px solid var(--strong); background: var(--page); }
+.frame { min-width: 1320px; height: 820px; position: relative; overflow: hidden; font-size: 13px; line-height: 1.45; background: var(--page); }
+.view { position: absolute; inset: 0; background: var(--page); display: flex; flex-direction: column; transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 0s; }
+.view.off { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms; }
+#wallView.off { transform: translateX(-28px); }
+#prView.off { transform: translateX(28px); }
+@media (prefers-reduced-motion: reduce) { .view, .view.off, .drawer, .scrim { transition: none !important; } }
+.scroll { overflow: auto; flex: 1; min-height: 0; }
+
+.bar { display: flex; align-items: center; gap: 18px; padding: 10px 16px; border-bottom: 2px solid var(--strong); flex: none; }
+.logo { width: 26px; height: 26px; border-radius: 50%; background: repeating-linear-gradient(135deg, var(--strong) 0 2px, transparent 2px 5px); flex: none; }
+.bar .name { font-weight: 700; font-size: 14px; }
+.bar nav { display: flex; gap: 2px; }
+.bar nav span { padding: 3px 10px; border: 1.5px solid transparent; font-weight: 600; }
+.bar nav span.on { border-color: var(--strong); }
+.health { font-size: 12px; color: var(--muted); display: flex; gap: 16px; align-items: center; }
+
+/* wall */
+.wall-head, .wrow { display: grid; grid-template-columns: 16px minmax(360px, 1.8fr) minmax(200px, 1.2fr) 62px 46px 122px minmax(160px, 1fr) 84px 44px 44px; gap: 12px; align-items: baseline; padding: 8px 18px; }
+.wall-head { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--hairline); padding-block: 8px; }
+.wall-head .r, .wrow .r { text-align: right; font-variant-numeric: tabular-nums; }
+.group { display: flex; gap: 10px; align-items: baseline; padding: 16px 18px 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.group .c { color: var(--muted); font-weight: 600; }
+.wrow { border-bottom: 1px solid var(--hairline); cursor: pointer; }
+.wrow:hover { background: var(--grey-fill); }
+.wrow .sq { align-self: center; }
+.wrow .verb { display: block; }
+.wrow .ttl { display: block; }
+.wrow .meta { display: block; font-size: 11.5px; color: var(--muted); }
+.wrow .meta .mono { font-size: 11px; }
+.wrow .why { font-size: 12px; color: var(--muted); }
+.wrow .r b { white-space: nowrap; }
+.moved { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--strong); padding: 0 4px; margin-left: 8px; vertical-align: 1px; white-space: nowrap; }
+.v { white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.quiet { color: var(--muted); }
+.alarm-t { color: var(--text); font-weight: 700; }
+.lvl-needs .verb { font-size: 15px; font-weight: 800; color: var(--text); }
+.lvl-needs .ttl { font-size: 13px; color: var(--ink-2); }
+.lvl-working .verb { font-size: 13.5px; font-weight: 650; color: var(--text); }
+.lvl-working .ttl { font-size: 12.5px; color: var(--muted); }
+.lvl-waiting .verb { font-size: 13px; font-weight: 600; color: var(--muted); }
+.lvl-waiting .ttl { font-size: 12.5px; color: var(--muted); }
+.lvl-waiting { color: var(--muted); }
+.lvl-parked { color: var(--faint); font-size: 12px; }
+.lvl-parked .verb { font-size: 12.5px; font-weight: 600; color: var(--faint); }
+.lvl-parked .ttl { font-size: 12px; color: var(--faint); }
+.group.lvl-parked-h, .group.lvl-waiting-h { color: var(--muted); }
+.wall-foot { display: flex; gap: 24px; padding: 10px 18px; font-size: 12px; color: var(--muted); border-top: 2px solid var(--strong); flex: none; }
+
+/* PR view */
+.prbar { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--hairline); flex: none; }
+.switch-btn { font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border: 1.5px solid var(--strong); background: var(--page); color: var(--text); cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.switch-btn .n { background: var(--yellow); color: #000; padding: 0 5px; font-size: 11px; }
+.burger { width: 12px; height: 9px; border-block: 1.5px solid currentColor; position: relative; display: inline-block; }
+.burger::after { content: ""; position: absolute; left: 0; right: 0; top: 2.25px; border-top: 1.5px solid currentColor; }
+.prtitle { display: flex; flex-direction: column; min-width: 0; flex: 0 1 auto; max-width: 52%; }
+.prtitle .t { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prtitle .m { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.move { display: flex; flex-direction: column; gap: 0; padding: 4px 12px 5px; border-left: 4px solid var(--yellow); background: var(--grey-fill); min-width: 0; flex: 0 1 auto; }
+.move.alarm { border-left-color: var(--red); }
+.move.work { border-left-color: var(--strong); }
+.move.wait { border-left-color: var(--grey); }
+.move .lab { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.move .vb { font-size: 16px; font-weight: 800; white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+.prtabs { display: flex; align-items: flex-end; padding: 0 16px; border-bottom: 2px solid var(--strong); flex: none; }
+.tab { font: inherit; font-size: 14px; font-weight: 700; padding: 10px 18px 8px; border: 0; border-bottom: 4px solid transparent; margin-bottom: -2px; background: none; color: var(--muted); cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--strong); }
+.tab .count { font-size: 11px; background: var(--yellow); color: #000; padding: 0 5px; font-weight: 800; }
+.tab kbd { font-size: 10px; line-height: 15px; }
+.tabnext { margin-left: auto; padding-bottom: 9px; font-size: 12.5px; display: flex; gap: 14px; align-items: center; color: var(--muted); }
+.pane { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
+
+/* ===== the review board, copied from frontend/app/styles/app.css ===== */
+.rb { display: flex; flex-direction: column; flex: 1; min-height: 0; font: 350 15px/1.6 var(--body-stack); overflow-wrap: anywhere; }
+.rb-strip { display: flex; align-items: center; gap: 18px; padding: 8px 24px; border-bottom: 2px solid var(--strong); font-size: 13px; flex: none; }
+.rb-strip .counts { display: flex; gap: 18px; margin-left: auto; white-space: nowrap; }
+.rb-strip .counts b { font-weight: 600; }
+.rb-strip .rb-new { padding: 5px 14px; font-weight: 600; line-height: 1; border: 1px solid var(--strong); background: var(--page); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.rb-strip .send-review { padding: 5px 14px; font: inherit; font-size: 13px; font-weight: 600; border: 2px solid var(--strong); background: var(--page); color: var(--text); cursor: pointer; white-space: nowrap; }
+.rb-board { display: grid; grid-template-columns: 312px minmax(0, 1fr); flex: 1; min-height: 0; }
+.rb-rows { margin: 0; padding: 0; list-style: none; overflow-y: auto; border-right: 1px solid var(--hairline); }
+.rb .group-head { display: flex; justify-content: space-between; gap: 8px; padding: 18px 16px 7px 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.rb .group-count { font-weight: 350; color: var(--muted); }
+.rb .rail-row { display: flex; margin-left: 24px; padding: 9px 16px; cursor: pointer; border-top: 1px solid var(--hairline); box-shadow: inset 3px 0 0 var(--hairline); }
+.rb .rail-row[data-square="ready"] { box-shadow: inset 3px 0 0 var(--yellow); }
+.rb .rail-row[data-square="reopened"] { box-shadow: inset 3px 0 0 var(--text); }
+.rb .rail-row[data-square="working"] { box-shadow: inset 3px 0 0 var(--grey); }
+.rb .rail-row[data-square="rework"] { box-shadow: inset 3px 0 0 var(--blue); }
+.rb .rail-row[aria-selected="true"] { background: var(--selected); }
+.rb .rail-row[aria-selected="true"][data-square="reopened"] { background: var(--grey-fill); }
+.rb .rail-row-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rb .rail-row .gist, .rb .rail-row .path, .rb .rail-row .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rb .rail-row .gist { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.rb .rail-row[data-group="done"] .gist { text-decoration: line-through; }
+.rb .rail-row .path { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.rb .rail-row .meta { font-size: 11px; font-weight: 350; color: var(--muted); }
+.rb .square { flex: none; width: 12px; height: 12px; margin-top: 5px; background: transparent; }
+.rb .square[data-square="ready"], .rb .square[data-square="failed"] { background: var(--yellow); }
+.rb .square[data-square="working"] { border: 1.5px solid var(--text); }
+.rb .square[data-square="reopened"] { background: var(--text); }
+.rb .square[data-square="waiting"] { background: var(--grey); }
+.rb-panel { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+.rb-body { display: flex; flex-direction: column; flex-shrink: 0; gap: 14px; padding: 18px 32px 0; }
+.rb-top, .rb-work { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; }
+.rb-top { align-items: start; }
+.rb-work { padding-top: 16px; border-top: 2px solid var(--strong); }
+.rb-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.rb .panel-head { display: flex; gap: 14px; align-items: flex-start; }
+.rb .panel-head .square { width: 16px; height: 16px; }
+.rb .panel-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rb .panel-kicker { display: flex; align-items: baseline; gap: 4px; min-width: 0; font-size: 12px; font-weight: 350; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.rb .panel-kicker .where { overflow: hidden; text-overflow: ellipsis; }
+.rb .panel-name { font-size: 20px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
+.rb .panel-name .role-line { font-size: 14px; font-weight: 350; color: var(--muted); }
+.rb .panel-walk { display: flex; flex: none; gap: 4px; margin-left: auto; }
+.rb .walk { font: inherit; font-size: 13px; padding: 5px 10px; white-space: nowrap; cursor: pointer; color: var(--text); background: transparent; border: 1px solid var(--hairline); }
+.rb .thread { max-height: 190px; overflow-y: auto; }
+.rb .transcript-entry { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; padding: 10px 0; border-top: 1px solid var(--hairline); }
+.rb .entry-who { font-size: 13px; font-weight: 600; display: block; }
+.rb .entry-meta { font-size: 11px; font-weight: 350; color: var(--muted); display: block; }
+.rb .comment-body { font-size: 14px; line-height: 1.5; }
+.rb .comment-body p + p, .rb .comment-body h4 + p { margin-top: 10px; }
+.rb .comment-body h4 { margin: 10px 0 0; font-size: 14px; font-weight: 600; padding-left: 32px; }
+.rb .reply-open { align-self: flex-start; padding: 0; font: inherit; font-size: 13px; color: var(--text); text-decoration: underline; cursor: pointer; background: none; border: none; }
+.rb .ctx { border: 1px solid var(--hairline); background: var(--page); }
+.rb .ctx-file, .rb .diff-title, .rb .diff-file { font-family: var(--mono); font-size: 12px; padding: 7px 12px; background: var(--grey-fill); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; overflow: hidden; }
+.rb .diff-title .fs { font-family: var(--body-stack); text-decoration: underline; }
+.rb .cl { display: grid; grid-template-columns: 44px minmax(0, 1fr); font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre; }
+.rb .cl .n { color: var(--muted); text-align: right; padding-right: 12px; }
+.rb .cl.hl { background: var(--selected); }
+.rb .dl { display: grid; grid-template-columns: 44px 44px minmax(0, 1fr); font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre; overflow: hidden; }
+.rb .dl .n { color: var(--muted); text-align: right; padding-right: 10px; }
+.rb .dl.hunk { color: var(--muted); background: var(--grey-fill); padding-block: 3px; }
+.rb .dl.del { background: var(--diff-del); }
+.rb .dl.del .n { background: var(--diff-del-gutter); color: var(--text); }
+.rb .dl.add { background: var(--diff-add); }
+.rb .dl.add .n { background: var(--diff-add-gutter); color: var(--text); }
+.rb .kw { color: var(--code-kw); } .rb .fn { color: var(--code-fn); } .rb .st { color: var(--code-str); }
+.rb .fix-label { border-top: 0; padding-top: 0; line-height: 1.6; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.rb .fix-gist { margin: 0; font-size: 14px; line-height: 1.5; }
+.rb .plan { margin: 0; padding: 0; list-style: none; }
+.rb .plan-step { display: flex; gap: 12px; align-items: center; padding: 9px 0; font-size: 13px; border-bottom: 1px solid var(--hairline); }
+.rb .plan-mark { flex: none; width: 14px; height: 14px; border: 1.5px solid var(--text); }
+.rb .plan-step[data-done="1"] .plan-mark { background: var(--green); border-color: var(--green); }
+.rb .step-text { flex: 1; min-width: 0; }
+.rb .step-file { flex: none; max-width: 42%; overflow: hidden; font-family: var(--mono); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.rb .confidence { padding: 2px 0 2px 14px; font-size: 13px; line-height: 1.5; border-left: 3px solid var(--yellow); }
+.rb .confidence .kicker { display: block; margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.rb .fix-meta { display: flex; gap: 22px; font-size: 13px; }
+.rb .fix-meta span { text-decoration: underline; cursor: pointer; }
+.rb .notes { font-size: 14px; line-height: 1.5; }
+.rb .work-placeholder { color: var(--muted); font-size: 14px; margin: 0; }
+.rb .actions { display: flex; align-items: center; gap: 10px; position: sticky; bottom: 0; padding: 14px 0 16px; background: var(--page); border-top: 2px solid var(--strong); margin-top: 8px; }
+.rb .actions button { font: inherit; cursor: pointer; color: var(--text); background: var(--page); }
+.rb .actions .primary { height: 40px; padding: 0 18px; white-space: nowrap; color: var(--page); background: var(--text); border: none; }
+.rb .actions .secondary { height: 40px; padding: 0 18px; white-space: nowrap; border: 2px solid var(--strong); }
+.rb .actions .ghost { padding: 0; font-size: 13px; white-space: nowrap; text-decoration: underline; background: none; border: none; }
+.rb .actions .ghost.first { margin-left: auto; }
+.rb .actions .ghost + .ghost { margin-left: 6px; }
+.rb .draft-composer { display: flex; flex-direction: column; gap: 10px; }
+.rb .draft-composer textarea, .rb .draft-composer input, .rb .draft-composer select { font: inherit; font-size: 14px; padding: 6px 8px; color: var(--text); background: var(--page); border: 1px solid var(--hairline); }
+.rb .draft-composer textarea { width: 100%; min-height: 120px; resize: vertical; }
+.rb .draft-anchor { font-size: 12px; color: var(--muted); }
+.rb .draft-foot { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--muted); }
+.rb .reply-send { font: inherit; font-size: 14px; padding: 6px 14px; cursor: pointer; color: var(--text); background: var(--page); border: 1px solid var(--strong); }
+.rb .stand-in { padding: 24px 32px; color: var(--muted); max-width: 60ch; font-size: 14px; }
+/* dialogs, copied */
+.rb-dialog { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: var(--scrim); }
+.rb-dialog form { display: flex; flex-direction: column; gap: 12px; width: min(560px, calc(100% - 48px)); max-height: calc(100% - 64px); overflow-y: auto; padding: 24px 28px 22px; background: var(--page); border: 2px solid var(--strong); font: 350 15px/1.6 var(--body-stack); }
+.rb-dialog form.wide { width: min(1000px, calc(100% - 48px)); padding: 20px 22px; border-width: 1px; gap: 14px; }
+.rb-dialog .dialog-head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+.rb-dialog .question { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.rb-dialog form.wide .question { font-size: 17px; letter-spacing: 0; }
+.rb-dialog .dialog-close { padding: 0; font: inherit; font-size: 22px; line-height: 1; color: var(--text); cursor: pointer; background: none; border: 0; }
+.rb-dialog .dialog-kicker { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.rb-dialog .commit-head { display: flex; align-items: baseline; justify-content: space-between; }
+.rb-dialog .commit-edit { padding: 0; font: inherit; font-size: 12px; text-decoration: underline; background: none; border: none; color: var(--text); cursor: pointer; }
+.rb-dialog .commit-message { margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; background: var(--grey-fill); }
+.rb-dialog .commit-files { padding: 8px 12px; font-family: var(--mono); font-size: 12px; line-height: 1.6; background: var(--grey-fill); display: flex; justify-content: space-between; }
+.rb-dialog .commit-files .st { color: var(--muted); }
+.rb-dialog .note { margin: 0; font-size: 13px; color: var(--muted); }
+.rb-dialog textarea { width: 100%; font: inherit; font-size: 14px; padding: 8px; color: var(--text); background: var(--page); border: 1px solid var(--hairline); min-height: 72px; resize: vertical; }
+.rb-dialog .dialog-tick { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.rb-dialog .dialog-actions { display: flex; gap: 10px; align-items: center; padding-top: 6px; }
+.rb-dialog .dialog-actions button { font: inherit; padding: 6px 14px; cursor: pointer; color: var(--text); background: var(--page); border: 1px solid var(--hairline); }
+.rb-dialog .dialog-actions button.primary { border-color: var(--strong); font-weight: 600; }
+.rb-dialog .dialog-actions button.ghost { background: none; border-color: transparent; }
+.rb-dialog .dialog-actions .aside { margin-left: auto; font-size: 13px; color: var(--muted); }
+.rb-dialog .pointed { display: flex; gap: 18px; align-items: center; font-size: 13px; }
+.rb-dialog .pointed b { font-weight: 600; }
+.rb-dialog .pointed label { display: flex; gap: 6px; align-items: center; }
+
+/* dashboard */
+.dash { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.actionband { padding: 18px 24px 16px; border-bottom: 2px solid var(--strong); display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: end; flex: none; }
+.actionband .lab { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.actionband .big { font-size: 30px; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; }
+.actionband .detail { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.actionband .computed { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.actionband.frozen { background: var(--red-fill); border-bottom-color: var(--red); }
+.actionband.paused { background: var(--grey-fill); }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.confirm { background: var(--selected); padding: 12px 24px; border-bottom: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 10px 24px; align-items: start; font-size: 13px; flex: none; }
+.confirm .opt { display: flex; gap: 8px; max-width: 46ch; }
+.dgrid { display: grid; grid-template-columns: 420px 1fr; flex: 1; min-height: 0; }
+.dleft { border-right: 2px solid var(--strong); overflow: auto; }
+.blk { padding: 14px 24px; border-bottom: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 4px; }
+.blk .bh { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 10px; }
+.kv > span:first-child { color: var(--muted); }
+.blk.status .kv { font-size: 14px; }
+.blk.system { color: var(--muted); font-size: 12.5px; background: var(--grey-fill); }
+.blk.system .kv > span:last-child { color: var(--ink-2); }
+.blk.git { font-size: 12.5px; }
+.gitcmds { display: grid; grid-template-columns: 1fr; gap: 3px; }
+.gitcmds span { display: flex; gap: 8px; align-items: baseline; }
+.gitcmds .k { font-family: var(--mono); font-size: 11px; min-width: 64px; color: var(--muted); }
+.gitcmds .where { color: var(--muted); font-size: 11px; margin-left: auto; }
+.loud { background: var(--flag-bg); color: var(--flag-text); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; font-size: 12px; align-self: flex-start; }
+.since { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+.since span { font-weight: 600; }
+.dright { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.panehead { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px; border-bottom: 1px solid var(--hairline); font-size: 12px; color: var(--muted); gap: 12px; flex: none; }
+.seg { display: inline-flex; border: 1.5px solid var(--strong); }
+.seg button { font: inherit; font-size: 12px; font-weight: 600; border: 0; padding: 3px 10px; background: var(--page); color: var(--text); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--strong); color: var(--page); }
+.md { padding: 16px 26px 24px; max-width: 84ch; font-size: 14px; line-height: 1.6; overflow: auto; }
+.md h4 { margin: 18px 0 4px; font-size: 14.5px; }
+.md h4:first-child { margin-top: 0; }
+.md ul { margin: 4px 0; padding-left: 18px; }
+.md .fresh { background: var(--selected); margin-inline: -10px; padding: 4px 10px 8px; border-left: 3px solid var(--yellow); }
+.md code { background: var(--grey-fill); padding: 0 3px; }
+.tx { font-family: var(--mono); font-size: 12px; line-height: 1.65; padding: 14px 20px; white-space: pre-wrap; overflow: auto; }
+.tx .tool { color: var(--muted); }
+.tx .rule { color: var(--muted); display: block; border-top: 1px dashed var(--grey); margin: 8px 0 4px; padding-top: 4px; }
+
+/* terminal tab */
+.term { display: grid; grid-template-columns: 250px 1fr; flex: 1; min-height: 0; }
+.term-side { border-right: 2px solid var(--strong); overflow: auto; display: flex; flex-direction: column; }
+.term-side .h { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 14px 16px 6px; }
+.sess { display: flex; flex-direction: column; padding: 7px 16px; border-left: 3px solid transparent; cursor: default; }
+.sess.on { border-left-color: var(--strong); background: var(--selected); }
+.sess b { font-size: 13px; }
+.sess span { font-size: 11.5px; color: var(--muted); }
+.launch { display: grid; grid-template-columns: 70px 1fr; gap: 8px; padding: 5px 16px; font-size: 12.5px; align-items: baseline; }
+.launch .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.launch button { justify-self: start; }
+.tty { background: #0d0d0d; color: #e6e6e6; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; padding: 14px 18px; white-space: pre-wrap; overflow: auto; }
+.tty .p { color: #7fd7a2; } .tty .d { color: #8f8f8f; } .tty .y { color: #ffd70c; } .tty .r { color: #ff8a80; }
+.tty .cur { background: #e6e6e6; color: #0d0d0d; }
+
+/* sidebar */
+.scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; visibility: hidden; transition: opacity 180ms ease, visibility 0s linear 180ms; z-index: 10; }
+.scrim.on { opacity: 1; visibility: visible; transition: opacity 180ms ease; }
+.drawer { position: absolute; top: 0; bottom: 0; left: 0; width: 330px; background: var(--page); border-right: 2px solid var(--strong); transform: translateX(-104%); transition: transform 200ms ease; z-index: 11; display: flex; flex-direction: column; }
+.drawer.on { transform: none; }
+.drawer .dh { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 2px solid var(--strong); }
+.drawer .dh b { font-size: 14px; }
+.drawer .list { overflow: auto; flex: 1; }
+.drawer .sg { padding: 12px 14px 4px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.drawer .sg.dim { color: var(--muted); }
+.srow { display: grid; grid-template-columns: 12px 1fr; gap: 9px; padding: 7px 14px; cursor: pointer; border-left: 3px solid transparent; }
+.srow:hover { background: var(--grey-fill); }
+.srow.current { border-left-color: var(--strong); background: var(--selected); }
+.srow .sq { margin-top: 4px; }
+.srow .v1 { font-weight: 800; font-size: 13.5px; line-height: 1.3; }
+.srow .v2 { font-size: 11.5px; color: var(--muted); }
+.srow.lw .v1 { font-weight: 650; font-size: 13px; }
+.srow.lwait .v1 { font-weight: 600; font-size: 12.5px; color: var(--muted); }
+.srow.lp .v1 { font-weight: 600; font-size: 12.5px; color: var(--faint); }
+.srow.lp .v2 { color: var(--faint); }
+
+.overlay { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center; padding-top: 90px; z-index: 12; }
+.palette { width: 520px; background: var(--page); border: 2px solid var(--strong); padding: 14px 16px; font-family: var(--mono); font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+.palette .ph { font-family: var(--body-stack); font-weight: 700; font-size: 13px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.palette .p { display: grid; grid-template-columns: 64px 1fr 100px; gap: 6px; }
+.palette .p.dim { color: var(--muted); }
+.palette .buf { margin-top: 10px; font-weight: 700; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.card { background: var(--page); border: 1px solid var(--hairline); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.dirs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.dir { background: var(--page); border: 1px solid var(--hairline); padding: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.dir.chosen { border: 2px solid var(--strong); }
+.dir .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.qs { counter-reset: q; display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.qs li { background: var(--page); border: 1px solid var(--hairline); padding: 14px 18px 14px 52px; position: relative; counter-increment: q; }
+.qs li::before { content: counter(q); position: absolute; left: 18px; top: 13px; font-weight: 800; font-size: 18px; }
+.qs li b { display: block; margin-bottom: 2px; }
+.themebtn { position: fixed; right: 16px; top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 50; }
+@media (max-width: 640px) { h1 { font-size: 30px; } body { padding-inline: 16px; } }
+</style>
+
+<button class="btn themebtn" id="themeToggle" type="button">Dark</button>
+
+<main class="doc">
+
+<header class="stack-lg">
+  <div class="stack">
+    <span class="eyebrow">GitHub Orchestrator · browser design · version 3 · 28 Sep 2026</span>
+    <h1>A wall of PRs, then one PR at full width</h1>
+  </div>
+  <p class="lede">The browser version of the orchestrator, at one address, <code>127.0.0.1:8720</code>. It opens on a wall of every PR. Click one and the wall goes away. The PR takes the whole screen and always opens on its <b>Board</b>, with <b>Dashboard</b> and <b>Terminal</b> one tab over. A sidebar you open when you need it switches PRs without going back.</p>
+  <div class="changed">
+    <b>What changed since version 2</b>
+    <ul>
+      <li>The Board is now a faithful copy of the real review board. I took it from <code>frontend/app</code> and its stylesheet, the dev preview on made-up data, and two live boards (only looked at, nothing clicked): the rail's coloured left bars, group heads, three-line rows, the panel's header, thread, code, proposal, diff and actions, and the Accept and rework dialogs, with their wording. The only change from the real board is where its header goes.</li>
+      <li>A third tab, <b>Terminal</b>, is a real shell in the PR's worktree. Everything that used to open a terminal app now happens there: add -p, commit, rebase -i, <code>g r</code>, a free shell, and the board's "Open a session".</li>
+      <li>Opening a PR always lands on the Board, and so does clicking a desktop notification.</li>
+      <li>Your move now sits next to the PR title, large, instead of in small type at the far right.</li>
+      <li>"You are the detailed reviewer" is yellow text on a grey box, not red.</li>
+      <li>Faint text is darker, and paused and draft rows wrap like the rest instead of being squeezed onto one line. That also fixes the bug where their cells shifted one column left.</li>
+      <li>Two made-up PRs show the "Waiting on others" level on the wall and in the switcher, and one of them can be opened.</li>
+      <li>Your answers are written into the hierarchy rules and removed from the open questions.</li>
+    </ul>
+    <details>
+      <summary>Earlier versions, in short</summary>
+      <p><b>Version 2:</b> the wall as home. Clicking a PR hid the wall and showed the PR at full width with Board and Dashboard tabs, plus a PR switcher closed by default. Hierarchy rules appeared for the first time, as proposals. The Board was redrawn from memory rather than copied from the real one.</p>
+      <p><b>Version 1:</b> the wall as home, and a PR "window" copied from tmux: a PR list, a dashboard column and four tabs (Notes, Claude, Threads, Branch). The board got about 700px of width in the Threads tab.</p>
+    </details>
+  </div>
+  <p class="prose note">The PRs are twelve made-up ones in an invoicing app, with the roles, next actions, paused and queued counts a busy day brings, plus #71 and #58 to show "Waiting on others". On the Board, #16 and #41 follow the layout of a live board. Every title, branch, person, comment, file, CI result, timing, agent note, transcript and terminal line is made up. The styling is the board's own.</p>
+</header>
+
+<section class="stack-lg" id="hierarchy">
+  <h2>Hierarchy rules</h2>
+  <p class="prose">Rules marked <span class="verdict dec">Decided</span> are yours. Rules marked <span class="verdict prop">Proposal</span> are still mine or the coordinator's, and you haven't approved them.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th style="width:26%">Rule</th><th style="width:9%">Status</th><th>What the mockups do</th></tr></thead>
+    <tbody>
+      <tr><td>Each level answers one question. Wall: where am I needed? Dashboard: what is this PR's state and what's my move? Board: decide this thread.</td><td><span class="verdict prop">Proposal</span></td><td>Anything that doesn't serve the level's question gets quieter or moves. The PR header states "your move" next to the title, so it never drops out of sight whichever tab is open.</td></tr>
+      <tr><td>Rank by who holds the ball: needs you, then agent working, then waiting on others, then parked.</td><td><span class="verdict prop">Proposal</span></td><td>Needs you: 15px heavy verb at full ink. Agent working: 13.5px, no colour. It is below Needs you and uncoloured, which is enough (your call). Waiting: grey text. Parked (paused, drafts): smaller and grey, but still comfortably readable, wrapping like any other row.</td></tr>
+      <tr><td>Yellow means informational or a possible warning. Red means an error or something urgent.</td><td><span class="verdict dec">Decided</span></td><td>Yellow: the "ball is yours" square, the switcher's count, the tab counts, "You are the detailed reviewer" (yellow text on a grey box), the board's own ready bars and confidence rule. Red: failing CI, frozen, a failed run, and unmergeable when no agent is on it. Being fine is dim text, not green, and never blank, because a blank cell looks like "not known yet".</td></tr>
+      <tr><td>Grouping by urgency wins over rows staying put.</td><td><span class="verdict dec">Decided</span></td><td>A PR moves to its new group on the next poll. To soften that: it never moves under your keyboard selection, newcomers join the bottom of a group, and a moved row carries a "moved here" tag until you open it.</td></tr>
+      <tr><td>Lead each wall and sidebar row with the verb, then the title, with number and branch as small print.</td><td><span class="verdict prop">Proposal</span></td><td>When the ball isn't yours, the verb names who has it: "Agent is rebasing on main", "Waiting on alice". It is one computed string, shared by the wall, the switcher, the PR header and the action band.</td></tr>
+      <tr><td>Dashboard order: action first and largest, then status and "since you last acted", then system. Notes visible without a click.</td><td><span class="verdict prop">Proposal</span></td><td>A 30px action band across the top. When a PR is frozen or paused, that takes over the band. Notes fill the right 60% and follow the file as it grows.</td></tr>
+      <tr><td>Zero counts show as dots.</td><td><span class="verdict prop">Proposal</span></td><td>Queue 0, 0 commits ahead and 0 threads show as a dot, so a real count stands out in its column.</td></tr>
+      <tr><td>The Board keeps its own hierarchy.</td><td><span class="verdict dec">Decided</span></td><td>Copied as it is: groups in the board's order, the ready bar, the black reopened square, Accept filled black.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="ladder" aria-label="The four levels">
+    <div class="rung"><span class="lab">Needs you</span><span style="font-size:15px;font-weight:800">Decide 1 proposed fix</span><span style="font-size:13px;color:var(--ink-2)">Show voided invoices in the export feed</span></div>
+    <div class="rung"><span class="lab">Agent working</span><span style="font-size:13.5px;font-weight:650;display:flex;gap:6px;align-items:center"><span class="live-dot"></span>Agent is rebasing on main</span><span style="font-size:12.5px;color:var(--muted)">Make flat pricing behave like the other pricing rules</span></div>
+    <div class="rung"><span class="lab">Waiting on others</span><span style="font-size:13px;font-weight:600;color:var(--muted)">Waiting on alice</span><span style="font-size:12.5px;color:var(--muted)">Add an invoice diff endpoint</span></div>
+    <div class="rung"><span class="lab">Parked</span><span style="font-size:12.5px;font-weight:600;color:var(--faint)">Mark ready for review</span><span style="font-size:12px;color:var(--faint)">Pin line order in the PDF renderer</span></div>
+  </div>
+</section>
+
+<section class="stack-lg" id="prototype">
+  <h2>From the wall to one PR</h2>
+  <div class="prose stack">
+    <p>Click any row on the wall. The wall slides out and the PR fills the frame, on the Board. <b>Dashboard</b> and <b>Terminal</b> are the other tabs. <b>PRs</b> at the top left opens the switcher. Picking a PR there switches to it, and the switcher slides away. <b>Wall</b> goes back. On #16's Board, <b>Accept</b> and <b>Send back for rework</b> open copies of the real dialogs, and <b>Open a session</b> takes you to the Terminal tab.</p>
+    <p class="note">Since this version the PR view has a fourth tab, <b>Diff</b> on <kbd>4</kbd>, the PR's diff from its merge base to head as GitHub's Files changed draws it. A draft is anchored by selecting lines there, or in the same diff on the right of the board's draft panel, where #41's excerpt stands in below. The composer's file, from line, line and side form is gone, and a draft in your review is edited where it is. The mockups do not draw the tab; <a href="2026-09-28-pr-diff-tab-design.md">the PR diff tab spec</a> is the decision.</p>
+  </div>
+  <div class="steps" role="group" aria-label="Walk through">
+    <button class="step" type="button" data-step="wall">1 · Wall (before)</button>
+    <button class="step" type="button" data-step="open16">2 · Open #16 (after)</button>
+    <button class="step" type="button" data-step="dash16">3 · Dashboard tab</button>
+    <button class="step" type="button" data-step="term16">4 · Terminal tab</button>
+    <button class="step" type="button" data-step="sidebar">5 · Open the switcher</button>
+    <button class="step" type="button" data-step="pick24">6 · Pick #24 in it</button>
+    <button class="step" type="button" data-step="open41">A PR you review</button>
+    <button class="step" type="button" data-step="open71">Waiting on others</button>
+    <button class="step" type="button" data-step="open28">Frozen worktree</button>
+    <button class="step" type="button" data-step="open60">Paused PR</button>
+  </div>
+  <p class="stateline" id="stateline" aria-live="polite"></p>
+  <div class="frame-wrap">
+    <div class="frame" id="frame">
+
+      <div class="view" id="wallView">
+        <div class="bar">
+          <span class="logo"></span>
+          <span class="name">Orchestrator</span>
+          <nav><span class="on">Wall</span><span>Runs</span></nav>
+          <span class="note">acme/widgets</span>
+          <span class="grow"></span>
+          <span class="health"><span>polled 14:32:05, next in 41s</span><span>12 runs today · ~$8.14</span></span>
+        </div>
+        <div class="wall-head">
+          <span></span><span>Your move, then the PR</span><span>Why</span><span>CI</span><span>Merge</span><span>Review</span><span>Claude</span><span class="r">Threads</span><span class="r">Ahead</span><span class="r">Queue</span>
+        </div>
+        <div class="scroll" id="wallBody"></div>
+        <div class="wall-foot"><span>Hidden: none</span><span class="grow"></span><span><kbd>j</kbd> <kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>p</kbd> pause · <kbd>x</kbd> dismiss · <kbd>?</kbd> keys</span></div>
+      </div>
+
+      <div class="view off" id="prView" aria-hidden="true">
+        <div class="prbar">
+          <button class="switch-btn" type="button" id="openDrawer"><span class="burger"></span>PRs <span class="n" id="needsCount"></span> <kbd>s</kbd></button>
+          <button class="linkish" type="button" id="backWall">Wall <kbd>Esc</kbd></button>
+          <div class="prtitle"><span class="t" id="prT"></span><span class="m" id="prM"></span></div>
+          <div class="move" id="prMove"><span class="lab">Your move</span><span class="vb" id="prMoveVerb"></span></div>
+          <span class="grow"></span>
+          <span id="prFlags" class="health"></span>
+          <a class="linkish" href="https://github.com/acme/widgets/pulls" id="prGh">GitHub <kbd>o</kbd></a>
+        </div>
+        <div class="prtabs" role="tablist">
+          <button class="tab" role="tab" type="button" data-tab="board" aria-selected="true">Board <span class="count" id="boardCount" hidden></span><kbd>1</kbd></button>
+          <button class="tab" role="tab" type="button" data-tab="dashboard" aria-selected="false">Dashboard <span id="dashLive"></span><kbd>2</kbd></button>
+          <button class="tab" role="tab" type="button" data-tab="terminal" aria-selected="false">Terminal <kbd>3</kbd></button>
+          <div class="tabnext" id="tabNext"></div>
+        </div>
+        <div class="pane" id="boardPane"></div>
+        <div class="pane" id="dashPane" hidden></div>
+        <div class="pane" id="termPane" hidden></div>
+      </div>
+
+      <div class="scrim" id="scrim"></div>
+      <aside class="drawer" id="drawer" aria-hidden="true">
+        <div class="dh"><b>Switch PR</b><button class="linkish" type="button" id="closeDrawer">Close <kbd>Esc</kbd></button></div>
+        <div class="list" id="drawerList"></div>
+      </aside>
+
+      <div class="overlay" id="palette" hidden>
+        <div class="palette">
+          <span class="ph"><span id="palT">Git</span><span class="note">Esc closes</span></span>
+          <div class="p"><span>g f</span><span>git push --force-with-lease</span><span class="note">runs here</span></div>
+          <div class="p"><span>g p</span><span>git push</span><span class="note">runs here</span></div>
+          <div class="p"><span>g pra</span><span>git pull --rebase --autostash</span><span class="note">runs here</span></div>
+          <div class="p dim"><span>g s</span><span>git status</span><span>runs here</span></div>
+          <div class="p dim"><span>g l</span><span>git log</span><span>shown</span></div>
+          <div class="p dim"><span>g d</span><span>git diff HEAD</span><span>shown</span></div>
+          <div class="p dim"><span>g a</span><span>git add -p</span><span>Terminal tab</span></div>
+          <div class="p dim"><span>g c</span><span>git commit</span><span>Terminal tab</span></div>
+          <div class="p dim"><span>g i&lt;N&gt;</span><span>git rebase -i HEAD~N</span><span>Terminal tab</span></div>
+          <div class="p dim"><span>g r</span><span>claude "/rebase-on-main"</span><span>Terminal tab</span></div>
+          <div class="buf">&gt; g p</div>
+          <div class="note" style="font-family:var(--mono)">will run: git push · Enter run · Esc cancel</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="card"><h3>The Board, copied</h3><p>The real board is a 312px rail and a panel in two bands. The top band is the thread with the code it points at. The bottom band is the agent's proposal with its diff. The action bar is pinned underneath. Inside a PR it already fills the screen, so full width means leaving it alone. Its header had the logo, title, Board/Queue/Manager and the theme button, and the PR bar replaces all of those. What stays is a thin strip with the board's counts, New draft and Send review.</p></div>
+    <div class="card"><h3>The switcher is not a second wall</h3><p>It shows one thing per PR, the verb, stepped down by level. It has no CI and no columns. It is closed by default and closes itself after you pick, so it never takes width from the board.</p></div>
+  </div>
+</section>
+
+<section class="stack-lg" id="terminal">
+  <h2>The Terminal tab</h2>
+  <div class="prose stack">
+    <p>A real terminal (xterm.js over a pty) whose working directory is the PR's worktree. It replaces the free shell pane, the git palette's commands that need a TTY, the <code>g r</code> session and the board's "Open a session". Sessions are listed on its left, so a Claude session you are steering and a shell can sit side by side. Starting one from elsewhere (the palette, the Dashboard's git block, the board's button) switches you to this tab with the command already running.</p>
+    <p>tmux mode stays. So the dashboard's fields, and the verb, need one definition that both the tmux dashboard and the web dashboard render. Otherwise the two drift apart the first time someone adds a field.</p>
+  </div>
+</section>
+
+<section class="stack-lg" id="dashboard-inventory">
+  <h2>Everything the terminal dashboard showed, and where it sits now</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Terminal dashboard</th><th>Web</th><th>Also on</th></tr></thead>
+    <tbody>
+      <tr><td>Action and detail, READY TO MERGE</td><td>Dashboard action band, 30px, first. Your move is the headline, with the computed action under it when the two differ.</td><td>PR header (next to the title), wall verb, switcher</td></tr>
+      <tr><td>PR, whose, Jira and title, branch, URL</td><td>PR header</td><td>Wall row</td></tr>
+      <tr><td>Detailed reviewer, or YOU ARE THE DETAILED REVIEWER</td><td>Status block. The "you" case is yellow text on a grey box</td><td>Wall row and PR header, same style</td></tr>
+      <tr><td>CI, mergeable, review decision, your review, last event, review ready</td><td>Status block. Fine values dim, exceptions red</td><td>Wall columns (CI, merge, review)</td></tr>
+      <tr><td>Since you last acted</td><td>Its own block, on PRs you review</td><td>Wall "why" line</td></tr>
+      <tr><td>Queue, threads, unpushed, Claude timing or last run and exit, last refresh</td><td>System block, third, on grey</td><td>Wall columns</td></tr>
+      <tr><td>PAUSED</td><td>Takes over the action band, with Resume</td><td>Paused group on the wall</td></tr>
+      <tr><td>Dismiss confirm</td><td>A yellow strip under the action band, u / f / Esc</td><td>Wall's selected row</td></tr>
+      <tr><td>Freeze screen</td><td>Takes over the action band in red, Release now (<kbd>w</kbd>)</td><td>Wall row with Release</td></tr>
+      <tr><td>Claude output, agent-changes.md</td><td>Dashboard right pane, Notes or Claude output</td><td>·</td></tr>
+      <tr><td>Git palette</td><td>Palette on <kbd>g</kbd> and the Dashboard's git block. TTY commands open in the Terminal tab</td><td>·</td></tr>
+      <tr><td>Free shell pane</td><td>Terminal tab</td><td>·</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="stack-lg" id="directions">
+  <h2>The directions I compared first</h2>
+  <div class="dirs">
+    <article class="dir"><span class="tag">A · Inbox first</span><p>One queue of decisions across all PRs. A working agent isn't an inbox item, so the dashboard and live notes would end up in a drawer. Rejected. Its ordering lives on as the wall's first group.</p></article>
+    <article class="dir"><span class="tag">B · Control room tiles</span><p>Every PR as a tile at once. At 12 PRs each tile cuts off what you wanted to read, and there's no room to decide threads. Rejected. Its live line per working agent lives on in the wall's Claude column.</p></article>
+    <article class="dir chosen"><span class="tag">C · Wall, then the PR (chosen)</span><p>A dense wall as home, and one PR at a time at full width: Board, Dashboard, Terminal.</p></article>
+  </div>
+</section>
+
+<section class="stack-lg" id="runs">
+  <h2>Runs</h2>
+  <p class="prose">A third page beside the wall: <code>runs.jsonl</code> as a table (ended, PR, event, time taken, exit, cost) plus the watcher's health, so <code>status</code>, <code>runs</code> and a first look at <code>logs</code> don't need a terminal. Each row opens that run's transcript in its PR's Dashboard. A failed run is red; a run that went fine is plain text.</p>
+</section>
+
+<section class="stack-lg" id="keys">
+  <h2>Keys</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Key</th><th>Where</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>j</kbd> <kbd>k</kbd> · <kbd>Enter</kbd></td><td>wall</td><td>Move between PRs; open one on its Board</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>PR view</td><td>Close the switcher, palette or dialog if one is open, otherwise back to the wall. Inside the Terminal tab, Esc goes to the shell</td></tr>
+      <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>PR view</td><td>Board, Dashboard, Terminal, Diff</td></tr>
+      <tr><td><kbd>s</kbd> · <kbd>[</kbd> <kbd>]</kbd></td><td>PR view</td><td>Open the switcher; previous or next PR in wall order</td></tr>
+      <tr><td><kbd>p</kbd> <kbd>x</kbd> then <kbd>u</kbd>/<kbd>f</kbd></td><td>wall, Dashboard</td><td>Pause or resume; dismiss until the next event or forever</td></tr>
+      <tr><td><kbd>r</kbd></td><td>Dashboard</td><td>Carry on (claude --continue). On the Board, <kbd>r</kbd> keeps the board's own meaning</td></tr>
+      <tr><td><kbd>C</kbd> · <kbd>g</kbd>…<kbd>Enter</kbd> · <kbd>t</kbd></td><td>Dashboard</td><td>Notes or Claude output; git palette; Terminal tab</td></tr>
+      <tr><td><kbd>w</kbd></td><td>frozen PR</td><td>Release the worktree now</td></tr>
+      <tr><td><kbd>o</kbd> <kbd>y</kbd></td><td>everywhere</td><td>Open the PR on GitHub; copy its URL</td></tr>
+      <tr><td>The board's keys</td><td>Board</td><td>Unchanged: <kbd>j</kbd> <kbd>k</kbd> walk threads, the panel's action keys, <kbd>?</kbd></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="stack-lg" id="mapping">
+  <h2>Where every current feature goes</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Today</th><th>In this design</th></tr></thead>
+    <tbody>
+      <tr><td>Hub page</td><td>The wall.</td></tr>
+      <tr><td>Per-PR board on its own port</td><td>The Board tab, at one address. Its header moves into the PR bar; its counts, New draft and Send review stay in a thin strip.</td></tr>
+      <tr><td>Board / Queue / Manager tabs</td><td>Board, Dashboard, Terminal.</td></tr>
+      <tr><td>Dashboard fields</td><td>All kept; see the inventory above. One definition shared with tmux mode.</td></tr>
+      <tr><td><kbd>p</kbd> <kbd>r</kbd> <kbd>x</kbd> <kbd>u</kbd> <kbd>f</kbd> <kbd>w</kbd> <kbd>C</kbd> <kbd>o</kbd> <kbd>y</kbd> <kbd>g</kbd></td><td>Same letters; see Keys.</td></tr>
+      <tr class="drop"><td><kbd>m</kbd> <kbd>M</kbd> preview, <kbd>v</kbd> <kbd>V</kbd></td><td>Dropped. The notes pane is the preview, and the Board is always there.</td></tr>
+      <tr><td>Free shell, split git commands, <code>g r</code>, the board's "Open a session"</td><td>Terminal tab, in the worktree.</td></tr>
+      <tr><td><code>cli undismiss</code></td><td>An Undismiss button in the wall's Hidden group; the CLI stays.</td></tr>
+      <tr><td><code>status</code>, <code>runs</code>, <code>logs</code>, <code>queue</code></td><td>Runs page, the wall's health line, queue counts. The CLI stays.</td></tr>
+      <tr><td>Desktop notifications</td><td>Clicking one opens that PR on its Board. It needs a notifier that can carry a link; <code>osascript</code> can't.</td></tr>
+      <tr><td>tmux mode</td><td>Stays, next to browser mode.</td></tr>
+      <tr class="drop"><td>setup, install, restart, config</td><td>CLI only. They run before the server exists or restart it.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="stack-lg" id="underneath">
+  <h2>What this asks of the plumbing</h2>
+  <div class="two">
+    <div class="card"><h3>One origin</h3><p>Wall and every PR live at 8720. The hub proxies <code>/pr/24/api/…</code> to that PR's board port, so the board API stays as it is. The PR view is a route of the same Ember app, so the wall disappears without a page load, and a notification can link straight to <code>/pr/24</code>.</p></div>
+    <div class="card"><h3>One definition, two renderers</h3><p>Both the tmux dashboard and the web dashboard render the dashboard's fields and the "your move" verb. Compute them once, server-side, as data (not as terminal lines), and have <code>render_dashboard</code> and the web app both draw from it. The verb also folds in the board's state (fixes ready, drafts, answered threads) and frozen or paused.</p></div>
+    <div class="card"><h3>A wall feed and streams</h3><p>The wall needs every PR's dashboard facts, its manager's snapshot and its group in one request. Today <code>/api/pull-requests</code> has five fields. Notes, Claude output and the terminal want streams (server-sent events, a websocket for the pty) rather than polling. The feed should say when a PR changed group, so the page can tag it.</p></div>
+    <div class="card"><h3>A pty per worktree</h3><p>The Terminal tab needs a server-side pty in the worktree, carried over a websocket to xterm.js. It replaces <code>split</code> in browser mode. Whether sessions outlive the page is question 2.</p></div>
+  </div>
+</section>
+
+<section class="stack-lg" id="questions">
+  <h2>Questions still open</h2>
+  <ol class="qs">
+    <li><b>Draft pull requests, the ones whose next step is "mark ready for review": where do they go on the wall?</b> This is about whole PRs still in draft on GitHub, not draft review comments. Five of your twelve PRs are like that. Here they sit in a "Drafts" group at the bottom, below Paused. They could instead be hidden until something happens on them, or count as needing you.</li>
+    <li><b>Should Terminal tab sessions outlive the browser tab?</b> If a session runs inside tmux (one tmux window per PR, which tmux mode already has), it survives closing the page and reloading the manager, and you can attach to it from a real terminal too. A plain pty dies with the page.</li>
+    <li><b>Keep the board's counts strip inside the Board tab?</b> I kept it, with New draft and Send review, because it belongs to the board. The PR header and the tab count already cover part of it.</li>
+  </ol>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  function isDark() {
+    var t = root.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function label() { toggle.textContent = isDark() ? 'Light' : 'Dark'; }
+  label();
+  toggle.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); label(); });
+
+  var GROUPS = [
+    { key: 'needs', name: 'Needs you', lvl: 'needs' },
+    { key: 'working', name: 'Agent working', lvl: 'working' },
+    { key: 'waiting', name: 'Waiting on others', lvl: 'waiting' },
+    { key: 'paused', name: 'Paused', lvl: 'parked' },
+    { key: 'drafts', name: 'Drafts', lvl: 'parked' }
+  ];
+  var draftBase = { whose: 'your PR', group: 'drafts', verb: 'Mark ready for review', why: 'Draft PR, not mergeable until marked ready', ci: 'passing', merge: 'yes', review: 'pending', claude: 'idle', threads: 0, ahead: 0, queue: 0, computed: 'Mark ready for review', computedDetail: 'Draft PR, not mergeable until marked ready for review', dr: null, lastEvent: '1d ago', reviewReady: '·', notes: 'none', board: 'none' };
+  function draft(n, ticket, title, branch) { var o = Object.assign({}, draftBase); o.n = n; o.ticket = ticket; o.title = title; o.branch = branch; return o; }
+  var PRS = [
+    { n: 16, whose: 'your PR', ticket: 'PROJ-46', title: 'Show voided invoices in the export feed', branch: 'PROJ-46-voided-in-export', group: 'needs', verb: 'Decide 1 proposed fix', why: 'Alice Example replied again on export_service.py:314', moved: 'moved here 3m ago', ci: 'passing', merge: 'yes', review: 'pending', claude: 'idle · last thread fix ok 14m ago', threads: 1, threadsLabel: '1 ready', ahead: 0, queue: 0, computed: 'Waiting for review', computedDetail: 'Waiting on: alice', dr: 'alice', lastEvent: '3m ago', reviewReady: '2d ago', notes: 'n16', board: 'b16', sys: { claude: 'idle, last thread fix ended 14m ago, ok', threads: '0 queued, 0 working, 1 ready' } },
+    { n: 41, whose: "carol's PR", reviewing: true, ticket: 'PROJ-43', title: 'Count credit notes in the invoice totals', branch: 'PROJ-43-credit-note-totals', group: 'needs', verb: 'Send your review, 3 drafts', why: '3 draft comments from the review agent · 23 files changed', ci: 'passing', merge: 'yes', review: 'pending', myReview: 'none yet', claude: 'idle · review ok 2d ago', threads: 3, threadsLabel: '3 drafts', ahead: null, queue: 0, computed: 'Review this PR', computedDetail: 'CI passing · 23 files changed · no reviews yet', dr: 'you', since: ['4 commits', '1 review', '3 comments'], lastEvent: '2d ago', reviewReady: '2d ago', notes: 'n41', board: 'b41', sys: { claude: 'idle, last review-requested ended 2d ago, ok', threads: '3 in your review, 0 answered' } },
+    { n: 29, whose: "dave's PR", reviewing: true, ticket: 'PROJ-35', title: 'Log the rows the CSV import skips', branch: 'PROJ-35-import-skip-log', group: 'needs', verb: 'Re-review: 2 threads answered', why: 'Since you acted: 3 commits, 2 comments', ci: 'passing', merge: 'yes', review: 'changes requested', myReview: 'changes requested', claude: 'idle', threads: 2, threadsLabel: '2 answered', ahead: null, queue: 0, computed: 'Review this PR', computedDetail: 'Re-review requested · CI passing', dr: null, since: ['3 commits', '2 comments'], lastEvent: '5h ago', reviewReady: '4d ago', notes: 'none', board: 'b29', sys: { claude: 'idle, last pushed-since-review ended 5h ago, ok', threads: '2 answered' } },
+    { n: 50, whose: "bob's PR", reviewing: true, ticket: 'proj-51', title: 'Publish a changelog with each release', branch: 'proj-51-release-changelog', group: 'needs', verb: 'Re-review after a force-push', why: 'Since you acted: force-pushed', ci: 'pending', merge: 'yes', review: 'pending', myReview: 'commented', claude: 'idle', threads: 0, ahead: null, queue: 0, computed: 'Review this PR', computedDetail: 'Re-review requested · CI pending', dr: 'alice', since: ['force-pushed'], lastEvent: '1h ago', reviewReady: '3d ago', notes: 'none', board: 'none' },
+    { n: 28, whose: 'your PR', ticket: 'PROJ-31', title: 'Use one summary shape for invoice lists', branch: 'PROJ-31-shared-summary', group: 'needs', verb: 'Release the worktree', why: 'Wrong branch checked out (PROJ-31-split-2) · detaches in 38m', frozen: true, ci: 'failing', merge: 'no', review: 'pending', claude: 'frozen · no run', threads: 0, ahead: 2, queue: 1, computed: 'Fix CI failures', computedDetail: 'Failed: unit-tests', dr: 'bob', lastEvent: '2h ago', reviewReady: '6d ago', notes: 'n28', board: 'frozen', sys: { claude: 'idle, last became-unmergeable ended 2h ago, killed (SIGKILL)', threads: '0 queued, 0 working, 0 ready' } },
+    { n: 24, whose: 'your PR', ticket: 'PROJ-44', title: 'Make flat pricing behave like the other pricing rules', branch: 'replace-fixed-pricing-factory-with-flat-pricing', group: 'working', verb: 'Agent is rebasing on main', why: '"resolving conflict in test_pricing.py"', live: true, ci: 'passing', merge: 'no', mergeHandled: true, review: 'approved', claude: 'became-unmergeable · 2m14s · 6s quiet', threads: 0, ahead: 0, queue: 0, computed: 'Rebase on main', computedDetail: 'Merge conflicts detected', dr: 'alice', lastEvent: '3m ago', reviewReady: '1d ago', notes: 'n24', board: 'b24', sys: { claude: 'working on became-unmergeable, running 2m14s, 6s since last output', threads: '0 queued, 0 working, 0 ready' } },
+    { n: 71, whose: 'your PR', mock: true, ticket: 'PROJ-48', title: 'Add an invoice diff endpoint', branch: 'PROJ-48-invoice-diff', group: 'waiting', verb: 'Waiting on alice', why: 'Review requested 1d ago · nothing for you to do', ci: 'passing', merge: 'yes', review: 'pending', claude: 'idle · last ci-failed ok 1d ago', threads: 0, ahead: 0, queue: 0, computed: 'Waiting for review', computedDetail: 'Waiting on: alice', dr: 'alice', lastEvent: '1d ago', reviewReady: '1d ago', notes: 'n71', board: 'b71', sys: { claude: 'idle, last ci-failed ended 1d ago, ok', threads: '0 queued, 0 working, 0 ready' } },
+    { n: 58, whose: "dave's PR", mock: true, reviewing: true, ticket: 'PROJ-36', title: 'Retry the nightly bank sync on a timeout', branch: 'PROJ-36-bank-sync-retry', group: 'waiting', verb: 'Waiting on dave', why: 'You requested changes 2d ago · 3 unresolved comments', ci: 'passing', merge: 'yes', review: 'changes requested', myReview: 'changes requested', claude: 'idle', threads: 0, ahead: null, queue: 0, computed: 'Waiting for author', computedDetail: 'You requested changes | 3 unresolved comments', dr: null, since: ['nothing new'], lastEvent: '2d ago', reviewReady: '5d ago', notes: 'none', board: 'none' },
+    { n: 60, whose: 'your PR', ticket: 'PROJ-37', title: 'Check the invoice PDFs in CI against recorded checksums', branch: 'ci-invoice-pdf-check', group: 'paused', verb: 'Paused, 10 events held', why: 'Fix CI failures: pdf-checksums, unit-tests', paused: true, ci: 'failing', merge: 'yes', review: 'pending', claude: 'paused', threads: 0, ahead: 5, queue: 10, computed: 'Fix CI failures', computedDetail: 'Failed: pdf-checksums, unit-tests', dr: null, lastEvent: '40m ago', reviewReady: '·', notes: 'n60', board: 'none', sys: { claude: 'idle, last ci-failed ended 3h ago, exit 1', threads: '0 queued, 0 working, 0 ready' } },
+    draft(19, 'PROJ-37', 'Add a local PDF repro rig', 'PROJ-37-repro-rig'),
+    draft(56, 'PROJ-46', 'Merge duplicate payments on import', 'PROJ-46-merge-duplicates'),
+    draft(62, null, 'Pin line order in the PDF renderer', 'pin-line-order'),
+    draft(63, null, 'Render the PDFs with a Rust binary', 'rust-pdf-binary'),
+    draft(64, 'PROJ-47', 'Refuse a refund larger than its payment', 'PROJ-47-refuse-overrefund')
+  ];
+  var BY = {}; PRS.forEach(function (p) { BY[p.n] = p; });
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function sqClass(p) {
+    if (p.frozen) return 'alarm';
+    if (p.group === 'needs') return 'ready';
+    if (p.group === 'working') return 'work';
+    if (p.group === 'waiting') return 'wait';
+    return 'park';
+  }
+  function titleOf(p) { return (p.ticket ? p.ticket + ' · ' : '') + p.title; }
+  function dot(v) { return (v === 0 || v === null) ? '<span class="quiet">·</span>' : '<b>' + esc(v) + '</b>'; }
+  function ciCell(p) {
+    if (p.ci === 'failing') return '<span class="v alarm-t"><i class="sq alarm"></i>failing</span>';
+    if (p.ci === 'pending') return '<span class="v">pending</span>';
+    return '<span class="v quiet">passing</span>';
+  }
+  function mergeCell(p) {
+    if (p.merge === 'no' && !p.mergeHandled) return '<span class="v alarm-t"><i class="sq alarm"></i>no</span>';
+    if (p.merge === 'no') return '<span class="v">no</span>';
+    return '<span class="v quiet">yes</span>';
+  }
+  function reviewCell(p) {
+    if (p.review === 'approved' || p.review === 'pending') return '<span class="v quiet">' + esc(p.review) + '</span>';
+    return '<span class="v">' + esc(p.review) + '</span>';
+  }
+  function claudeCell(p) {
+    if (p.live) return '<span class="v mono" style="font-size:11.5px"><span class="live-dot"></span>' + esc(p.claude) + '</span>';
+    return '<span class="quiet mono" style="font-size:11.5px">' + esc(p.claude) + '</span>';
+  }
+  function mockTag(p) { return p.mock ? ' <span class="quiet" style="font-size:11px">(made up)</span>' : ''; }
+
+  function renderWall() {
+    var html = '';
+    GROUPS.forEach(function (g) {
+      var rows = PRS.filter(function (p) { return p.group === g.key; });
+      if (!rows.length) return;
+      var hcls = g.lvl === 'parked' ? ' lvl-parked-h' : (g.lvl === 'waiting' ? ' lvl-waiting-h' : '');
+      html += '<div class="group' + hcls + '"><span>' + g.name + '</span><span class="c">' + rows.length + '</span></div>';
+      rows.forEach(function (p) {
+        var flag = p.dr === 'you' ? '<span class="flag">You are the detailed reviewer</span>' : '';
+        var moved = p.moved ? '<span class="moved">' + esc(p.moved) + '</span>' : '';
+        var live = p.live ? '<span class="live-dot" style="margin-right:6px;vertical-align:2px"></span>' : '';
+        html += '<div class="wrow lvl-' + g.lvl + '" tabindex="0" role="button" data-open="' + p.n + '">' +
+          '<i class="sq ' + sqClass(p) + '"></i>' +
+          '<span><span class="verb">' + live + esc(p.verb) + flag + moved + '</span><span class="ttl">' + esc(titleOf(p)) + mockTag(p) + '</span><span class="meta">#' + p.n + ' · ' + esc(p.whose) + ' · <span class="mono">' + esc(p.branch) + '</span></span></span>' +
+          '<span class="why">' + esc(p.why) + '</span>' +
+          ciCell(p) + mergeCell(p) + reviewCell(p) + claudeCell(p) +
+          '<span class="r">' + (p.threads ? '<b>' + esc(p.threadsLabel) + '</b>' : '<span class="quiet">·</span>') + '</span>' +
+          '<span class="r">' + dot(p.ahead) + '</span><span class="r">' + dot(p.queue) + '</span></div>';
+      });
+    });
+    document.getElementById('wallBody').innerHTML = html;
+  }
+
+  function renderDrawer(current) {
+    var html = '';
+    GROUPS.forEach(function (g) {
+      var rows = PRS.filter(function (p) { return p.group === g.key; });
+      if (!rows.length) return;
+      var dim = g.lvl === 'parked' || g.lvl === 'waiting';
+      html += '<div class="sg' + (dim ? ' dim' : '') + '">' + g.name + ' · ' + rows.length + '</div>';
+      rows.forEach(function (p) {
+        var cls = { needs: '', working: ' lw', waiting: ' lwait', parked: ' lp' }[g.lvl];
+        var live = p.live ? '<span class="live-dot" style="margin-right:6px;vertical-align:1px"></span>' : '';
+        html += '<div class="srow' + cls + (p.n === current ? ' current' : '') + '" tabindex="0" role="button" data-switch="' + p.n + '">' +
+          '<i class="sq ' + sqClass(p) + '"></i><div><div class="v1">' + live + esc(p.verb) + '</div><div class="v2">#' + p.n + ' ' + esc(p.title) + '</div></div></div>';
+      });
+    });
+    document.getElementById('drawerList').innerHTML = html;
+  }
+
+  var NOTES = {
+    n24: '<h4>CI fix: unit-tests (25 Sep, 16:40)</h4><ul><li>The failure was <code>test_flat_pricing_allows_zero</code> asserting the old <code>FixedPricing</code> repr.</li><li>Updated the assertion to <code>FlatPricing()</code>. No production change. Committed <code>7c4e1a2</code>, pushed.</li></ul><h4>Thread activity (26 Sep, 09:12)</h4><ul><li>alice approved. No open threads.</li></ul><div class="fresh"><h4>Rebase on main (27 Sep, 14:30), in progress</h4><ul><li>main moved 14 commits since the branch point. The conflict is in <code>pricing.py</code> and <code>test_pricing.py</code>.</li><li>main added <code>TieredPricing</code> next to the pricing factory this PR removes. Keeping main\'s class, dropping the factory, pointing <code>TieredPricing</code> at <code>FlatPricing</code>\'s base.</li><li>Next: <code>uv run pytest tests/unit/pricing -n 2</code>, then force-push with lease.</li></ul></div>',
+    n16: '<h4>Thread: voided invoices (27 Sep, 13:44)</h4><ul><li>bob\'s reply raises a design question about how voided invoices should read in the feed, with no concrete code ask.</li><li>No new commit. The tip already keeps voided line items hidden.</li></ul><div class="fresh"><h4>Proposal ready (27 Sep, 13:58)</h4><ul><li>Waiting on your decision on the Board.</li></ul></div>',
+    n41: '<h4>Review requested (25 Sep, 09:36)</h4><ul><li>Read the 23 changed files against PROJ-43.</li><li>Three findings, written as drafts on the Board.</li></ul><div class="fresh"><h4>Pushed since review (27 Sep, 11:02)</h4><ul><li>4 new commits.</li></ul></div>',
+    n28: '<h4>Rebase on main (27 Sep, 12:20)</h4><ul><li>Started <code>/rebase-on-main</code>. The run was killed (SIGKILL) after 41s.</li></ul><div class="fresh"><h4>Frozen (27 Sep, 12:31)</h4><ul><li>The worktree now holds <code>PROJ-31-split-2</code>. Dispatch is frozen until the expected branch is back or you release it.</li></ul></div>',
+    n60: '<h4>CI fix: pdf-checksums (27 Sep, 11:40)</h4><ul><li>The recorded checksums differ for 3 of 212 invoices. The line order changed, not the amounts.</li><li>Stopped without a fix: needs #62 (pin line order) first. Exit 1.</li></ul>',
+    n71: '<h4>CI fix: lint (26 Sep, 15:10)</h4><ul><li>ruff E711 in <code>invoice_diff.py</code>. Fixed and pushed <code>5d3f9b8</code>.</li></ul>',
+    none: '<p class="note">No agent notes on this PR yet.</p>'
+  };
+  var TX = '<span class="rule">── new run · became-unmergeable · 14:30:01</span>The branch conflicts with main. Starting /rebase-on-main.\n<span class="tool">● Bash  git fetch origin main &amp;&amp; git rebase origin/main</span>\n<span class="tool">  CONFLICT (content): Merge conflict in src/widgets/app/pricing.py</span>\n<span class="tool">● Read  src/widgets/app/pricing.py (lines 1-140)</span>\nmain added TieredPricing beside the factory this PR removes. I will keep TieredPricing and point it at FlatPricing\'s base.\n<span class="tool">● Edit  src/widgets/app/pricing.py  +12 −31</span>\n<span class="tool">● Bash  uv run pytest tests/unit/pricing -n 2 -q</span>\n<span class="tool">  ........................  24 passed in 3.1s</span>\nresolving conflict in test_pricing.py';
+
+  function railRow(sq, group, gist, path, meta, on) {
+    return '<li class="rail-row" data-square="' + sq + '" data-group="' + group + '" aria-selected="' + (on ? 'true' : 'false') + '"><span class="rail-row-text"><span class="gist">' + esc(gist) + '</span><span class="path">' + esc(path) + '</span><span class="meta">' + esc(meta) + '</span></span></li>';
+  }
+  function gh(name, n) { return '<li class="group-head"><span>' + name + '</span><span class="group-count">' + n + '</span></li>'; }
+  function strip(counts, sendLabel) {
+    return '<div class="rb-strip"><span class="counts">' + counts.map(function (c) { return '<span><b>' + c[0] + '</b> ' + c[1] + '</span>'; }).join('') + '</span><button class="rb-new" type="button">New draft</button><button class="send-review" type="button">' + sendLabel + '</button></div>';
+  }
+  function cl(n, code, hl) { return '<div class="cl' + (hl ? ' hl' : '') + '"><span class="n">' + n + '</span><span>' + code + '</span></div>'; }
+  function dl(kind, a, b, code) { return '<div class="dl ' + kind + '"><span class="n">' + a + '</span><span class="n">' + b + '</span><span>' + code + '</span></div>'; }
+
+  function boardHtml(p) {
+    if (p.board === 'b16') {
+      var rail = '<ul class="rb-rows">' + gh('Ready for you', 1) +
+        railRow('reopened', 'ready', 'reconsider how voided invoices show in the feed', '…/services/exports/export_service.py:314', 'Alice Example · 2 of 2 changes · revised', true) +
+        gh('Waiting on reviewer', 1) +
+        railRow('waiting', 'waiting', 'one way to tell a void from a refund', '…/adapters/repositories/invoices.py:107', 'You replied', false) +
+        gh('Done', 48) +
+        railRow('done', 'done', 'rename to `is_voided_at`', '…/adapters/repositories/invoices.py:145', 'Pushed', false) +
+        railRow('done', 'done', 'track the follow-ups separately', 'review summary', 'Resolved on GitHub', false) +
+        railRow('done', 'done', 'approve the naming and the module split', '…/widgets/domain/invoice.py:269', 'Resolved on GitHub', false) +
+        railRow('done', 'done', 'clarify the void-then-reissue branch in…', '…/test_export_feed_endpoint.py:412', 'Pushed', false) +
+        railRow('done', 'done', 'consider direct tests for status_of…', 'review summary', 'Pushed', false) +
+        railRow('done', 'done', 'look the customers up once, not per lin…', '…/widgets/adapters/orm/session.py:358', 'Resolved on GitHub', false) + '</ul>';
+      var ctx = '<div class="ctx"><div class="ctx-file">src/widgets/services/exports/export_service.py</div>' +
+        cl(304, '            invoice = invoices_by_id.get(line.invoice_id)') + cl(305, '            <span class="kw">if</span> invoice <span class="kw">is</span> <span class="kw">None</span>:') + cl(306, '                <span class="kw">raise</span> <span class="fn">RuntimeError</span>(') +
+        cl(307, '                    <span class="st">f"invoice {line.invoice_id} is in the feed "</span>', true) + cl(308, '                    <span class="st">"but not readable for its account"</span>', true) + cl(309, '                )', true) +
+        cl(310, '            row = line.export_row(', true) + cl(311, '                status=status_of(invoice),', true) + cl(312, '                customer=line.customer,', true) + cl(313, '            )', true) + cl(314, '            feed.append(', true) + '</div>';
+      var diff = '<div class="ctx"><div class="diff-title"><span>Previous proposal</span><span class="fs">Full screen</span></div><div class="diff-file">src/widgets/adapters/orm/session.py</div>' +
+        dl('hunk', '↑', '', '@@ -56,12 +56,23 @@ from widgets.domain.invoices import') +
+        dl('', 56, 56, '<span class="kw">from</span> widgets.domain.errors <span class="kw">import</span> NotFoundError') + dl('', 57, 57, '') +
+        dl('', 58, 58, '#: Query option that returns every invoice') +
+        dl('del', 59, '', '#: whatever its status, not only OPEN, for') + dl('del', 60, '', '#: the whole query and every lazy load it starts') +
+        dl('add', '', 59, '#: whatever its status, not only OPEN.') + dl('add', '', 60, '#: Lazy loads of the invoices it finds see it') +
+        dl('add', '', 61, '#: too, but only open line items, so a voided') + dl('add', '', 62, '#: invoice keeps its lines hidden. Invoices it finds') +
+        dl('add', '', 63, '#: keep the options of the load that first read them; pass it') + dl('add', '', 64, '#: alongside to relax their line loads too.') +
+        dl('', 61, 65, 'INCLUDE_VOIDED = <span class="st">"include_voided"</span>') + dl('', 62, 66, '') + dl('', 63, 67, '') + '</div>';
+      var panel = '<div class="rb-panel"><div class="rb-body">' +
+        '<div class="rb-top"><div class="rb-col">' +
+        '<header class="panel-head"><span class="square" data-square="reopened"></span><span class="panel-who"><span class="panel-kicker"><span>Re-opened · top of queue</span><span>·</span><span class="where">src/widgets/services/exports/export_service.py line 314 ↗</span></span><span class="panel-name">Alice Example <span class="role-line">replied again</span></span></span><span class="panel-walk"><button class="walk" type="button">← Prev</button><button class="walk" type="button">Next ready →</button></span></header>' +
+        '<section class="thread"><article class="transcript-entry"><div><span class="entry-who">Alice Example</span><span class="entry-meta">commented · 2d ago</span></div><div class="comment-body"><p>The review agent raised this and I can reproduce it:</p><h4>The export feed returns 500 when a voided invoice\'s customer is archived</h4><p>Steps to reproduce: void a draft invoice, then archive its customer. Then call GET /accounts/{id}/export or GET /accounts/{id}/exports/{eid}/lines.</p></div></article>' +
+        '<article class="transcript-entry"><div><span class="entry-who">octocat</span><span class="entry-meta">2d ago</span></div><div class="comment-body"><p>Reply, not shown on this copy.</p></div></article></section>' +
+        '<button class="reply-open" type="button">Reply to Alice</button></div>' +
+        '<div class="rb-col">' + ctx + '</div></div>' +
+        '<div class="rb-work"><div class="rb-col"><h2 class="fix-label">Agent proposal · 2 of 2 changes</h2>' +
+        '<p class="fix-gist">Carries include_voided into the line loads of invoices while keeping voided line items hidden</p>' +
+        '<ol class="plan"><li class="plan-step" data-done="1"><span class="plan-mark"></span><span class="step-text">Squash 4c1d2e9 into 9a7b3f0 as one commit on the thread branch</span><span class="step-file"></span></li><li class="plan-step" data-done="1"><span class="plan-mark"></span><span class="step-text">Verify the squashed tree matches 4c1d2e9 and report the new sha</span><span class="step-file"></span></li></ol>' +
+        '<div class="confidence"><span class="kicker">Confidence: medium</span><p class="note" style="margin:0">The tip fixes both reproduced bugs and its tests pass, but bob\'s open question about how voided invoices should read in the feed is for the humans to settle, so the fix may still need rethinking</p></div>' +
+        '<div class="fix-meta"><span>Tests passed</span><span>3 files</span></div>' +
+        '<p class="notes">No new commit: bob\'s reply raises a design question (how voided invoices should read in the feed) with no concrete code ask; the tip already keeps voided line items hidden.</p></div>' +
+        '<div class="rb-col">' + diff + '</div></div>' +
+        '<footer class="actions"><button class="primary" type="button" data-dialog="accept">Accept</button><button class="secondary" type="button" data-dialog="rework">Send back for rework</button><button class="ghost first" type="button">Defer</button><button class="ghost" type="button">Reject</button><button class="ghost" type="button">Resolve on GitHub</button><button class="ghost" type="button" data-session>Open a session</button></footer>' +
+        '</div></div>';
+      return '<div class="rb">' + strip([[1, 'ready'], [1, 'waiting on reviewer'], [48, 'done']], 'Send review') + '<div class="rb-board">' + rail + panel + '</div></div>';
+    }
+    if (p.board === 'b41') {
+      var rail2 = '<ul class="rb-rows">' + gh('Your review', 3) +
+        railRow('ready', 'review', '`TotalPart` is a closed union, so…', '…/repositories/invoice_total_queries.py:48', 'Draft', true) +
+        railRow('ready', 'review', 'This docstring says a third part…', '…/repositories/invoice_total_queries.py:16', 'Draft', false) +
+        railRow('ready', 'review', 'Summing the parts by kind and then…', '…/repositories/invoice_total_queries.py:65', 'Draft', false) + '</ul>';
+      var ctx2 = '<div class="ctx"><div class="ctx-file">src/widgets/adapters/repositories/invoice_total_queries.py</div>' +
+        cl(45, '            .join(part.model, part.invoice_id_column == part') + cl(46, '            .where(part.model.invoice_id.in_(invoice_ids') + cl(47, '        )') +
+        cl(48, '    <span class="kw">raise</span> <span class="fn">NotImplementedError</span>(<span class="st">f"No total query for {type(par</span>', true) + cl(49, '') + cl(50, '') + cl(51, '<span class="kw">def</span> <span class="fn">invoice_total_query</span>(') + '</div>';
+      var panel2 = '<div class="rb-panel"><div class="rb-body"><div class="rb-top"><div class="rb-col draft-composer">' +
+        '<header class="panel-head"><span class="square" data-square="ready"></span><span class="panel-who"><span class="panel-kicker"><span>Your review</span><span>·</span><span class="where">src/widgets/adapters/repositories/invoice_total_queries.py ↗</span></span><span class="panel-name">octocat <span class="role-line">your thread</span></span></span><span class="panel-walk"><button class="walk" type="button">← Prev</button><button class="walk" type="button">Next answered →</button></span></header>' +
+        '<textarea id="draftText" aria-label="Draft comment">`TotalPart` is a closed union (`LineItemPart | CreditNotePart`, total_parts.py:82), so mypy already considers this line unreachable. Using `typing.assert_never(part)` here and at line 85 moves the check to type-check time: when someone adds a third part to the union, `make lint` fails at both dispatch sites before any code runs.</textarea>' +
+        '<div class="draft-anchor">invoice_total_queries.py +48</div>' +
+        '<div class="draft-foot"><button class="reply-send" type="button">Save draft</button><span>Nothing reaches GitHub until you post it or send the review it is in.</span></div>' +
+        '</div><div class="rb-col">' + ctx2 + '</div></div>' +
+        '<div class="rb-work" style="min-height:24px"></div>' +
+        '<footer class="actions"><button class="primary" type="button">Add to review</button><button class="secondary" type="button">Post now</button><button class="ghost first" type="button">Discard</button></footer></div></div>';
+      return '<div class="rb">' + strip([[3, 'in your review']], 'Send review') + '<div class="rb-board">' + rail2 + panel2 + '</div></div>';
+    }
+    var railMin, note;
+    if (p.board === 'frozen') return '<div class="rb"><div class="stand-in"><b>The board is down while the worktree is frozen.</b> Release it from the Dashboard and the board comes back with a fresh worktree.</div></div>';
+    if (p.board === 'b29') { railMin = gh('Answered', 2) + railRow('ready', 'answered', 'log why the row was skipped, not just its number', '…/imports/skipped.py:88', 'dave replied', true) + railRow('ready', 'answered', 'level for the per-row line', '…/imports/skipped.py:102', 'dave replied', false) + gh('Done', 5); note = 'On a PR you review, the lower half of the panel says "What the author did lands here" until the author has acted. See #16 and #41 for the full copy.'; }
+    else if (p.board === 'b24') { railMin = gh('Done', 12) + railRow('done', 'done', 'rename the factory', '…/app/pricing.py:41', 'Pushed', false); note = 'Nothing open on this PR. See #16 and #41 for the full copy of the board.'; }
+    else if (p.board === 'b71') { railMin = gh('Done', 2) + railRow('done', 'done', 'a lint nit on the diff builder', '…/invoices/invoice_diff.py:40', 'Pushed', false); note = 'Nothing open on this PR. See #16 and #41 for the full copy of the board.'; }
+    else { railMin = ''; note = 'No review threads on this PR yet.'; }
+    return '<div class="rb">' + strip([], 'Send review') + '<div class="rb-board"><ul class="rb-rows">' + railMin + '</ul><div class="rb-panel"><div class="stand-in">' + note + '</div></div></div></div>';
+  }
+
+  function acceptDialog() {
+    return '<div class="rb-dialog" id="rbDialog"><form onsubmit="return false"><div class="dialog-head"><p class="question">Accept: push 2 changes to PROJ-46-voided-in-export</p><button class="dialog-close" type="button" data-close>×</button></div>' +
+      '<p class="note">One commit on the PR branch. Decide here how Alice hears about it.</p>' +
+      '<div class="commit-head"><p class="dialog-kicker">Commit</p><button class="commit-edit" type="button">Edit message</button></div>' +
+      '<p class="commit-message">Carry include_voided into the line loads of invoices</p>' +
+      '<div class="commit-files"><span>src/widgets/adapters/orm/session.py</span><span class="st">+11 −2</span></div>' +
+      '<p class="dialog-kicker">Reply to Alice on GitHub</p><textarea id="acceptReply" placeholder="Optional. Posted to the thread with the commit linked. Leave empty to push silently."></textarea>' +
+      '<p class="dialog-kicker">On GitHub, also:</p><label class="dialog-tick"><input type="checkbox" id="acceptResolve"> Resolve the thread</label>' +
+      '<div class="dialog-actions"><button class="primary" type="button" data-close>Push commit</button><button class="ghost" type="button" data-close>Cancel</button></div></form></div>';
+  }
+  function reworkDialog() {
+    return '<div class="rb-dialog" id="rbDialog"><form class="wide" onsubmit="return false"><div class="dialog-head"><p class="question">Send back for rework</p><button class="dialog-close" type="button" data-close>×</button></div>' +
+      '<textarea id="reworkBrief" placeholder="Tell the agent what to change and why…"></textarea>' +
+      '<div class="pointed"><b>0 lines pointed</b><label><input type="checkbox" id="incK"> Include Alice\'s replies</label><label><input type="checkbox" id="incA"> Include bob\'s replies</label></div>' +
+      '<p class="dialog-kicker">Click lines to point the agent at them</p>' +
+      '<div class="ctx"><div class="diff-file">src/widgets/adapters/orm/session.py</div>' +
+      dl('hunk', '↑', '', '@@ -56,12 +56,23 @@') + dl('', 58, 58, '#: Query option that returns every invoice') +
+      dl('del', 59, '', '#: whatever its status, not only OPEN, for') + dl('add', '', 59, '#: whatever its status, not only OPEN.') +
+      dl('add', '', 60, '#: Lazy loads of the invoices it finds see it') + dl('', 61, 65, 'INCLUDE_VOIDED = <span class="st">"include_voided"</span>') + '</div>' +
+      '<div class="dialog-actions"><button class="primary" type="button" data-close>Send to agent for rework</button><button class="ghost" type="button" data-close>Cancel</button><span class="aside">Comment moves to "Sent back for rework"; the agent re-runs with your note and the pointed lines.</span></div></form></div>';
+  }
+
+  function statusRow(label, value, alarm, quiet) {
+    var v = alarm ? '<span class="v alarm-t"><i class="sq alarm"></i>' + esc(value) + '</span>' : (quiet ? '<span class="quiet">' + esc(value) + '</span>' : '<b style="font-weight:600">' + esc(value) + '</b>');
+    return '<div class="kv"><span>' + label + '</span>' + v + '</div>';
+  }
+  function dashHtml(p) {
+    var band;
+    if (p.frozen) {
+      band = '<div class="actionband frozen"><div><div class="lab">Your move · frozen</div><div class="big">Release the worktree</div><div class="detail">The worktree at <span class="mono">~/repositories/widgets/PROJ-31-shared-summary</span> holds <b class="mono">PROJ-31-split-2</b>, not <b class="mono">PROJ-31-shared-summary</b>.</div><div class="computed">Event dispatch is frozen. No Claude run is going. The watcher detaches it in 38m and builds a fresh one. Nothing in the directory is removed.</div></div><div class="controls"><button class="btn fill" type="button">Release now <kbd>w</kbd></button><button class="btn" type="button" data-goterm>Terminal <kbd>t</kbd></button></div></div>';
+    } else if (p.paused) {
+      band = '<div class="actionband paused"><div><div class="lab">Your move · paused</div><div class="big">Paused, 10 events held</div><div class="detail">Underneath: ' + esc(p.computed) + '. ' + esc(p.computedDetail) + '.</div></div><div class="controls"><button class="btn fill" type="button">Resume <kbd>p</kbd></button><button class="btn" type="button">Carry on <kbd>r</kbd></button><button class="btn" type="button" data-palette>Git <kbd>g</kbd></button><button class="btn" type="button" data-goterm>Terminal <kbd>t</kbd></button><button class="btn" type="button" data-dismiss>Dismiss <kbd>x</kbd></button></div></div>';
+    } else {
+      var differs = p.computed !== p.verb;
+      var carry = p.live ? '<button class="btn" type="button" disabled title="A run is alive">Carry on <kbd>r</kbd></button>' : '<button class="btn" type="button">Carry on <kbd>r</kbd></button>';
+      band = '<div class="actionband"><div><div class="lab">Your move</div><div class="big">' + (p.live ? '<span class="live-dot" style="width:10px;height:10px;margin-right:10px;vertical-align:5px"></span>' : '') + esc(p.verb) + '</div><div class="detail">' + esc(p.why) + '</div>' + (differs ? '<div class="computed">PR state: ' + esc(p.computed) + ' · ' + esc(p.computedDetail) + '</div>' : '<div class="computed">' + esc(p.computedDetail) + '</div>') + '</div>' +
+        '<div class="controls">' + (p.threads ? '<button class="btn fill" type="button" data-goboard>Open the Board <kbd>1</kbd></button>' : '') + '<button class="btn" type="button">Pause <kbd>p</kbd></button>' + carry + '<button class="btn" type="button" data-palette>Git <kbd>g</kbd></button><button class="btn" type="button" data-goterm>Terminal <kbd>t</kbd></button><button class="btn" type="button" data-dismiss>Dismiss <kbd>x</kbd></button></div></div>';
+    }
+    var confirm = '<div class="confirm" id="dismissConfirm" hidden><b>Dismiss #' + p.n + '?</b><span class="opt"><kbd>u</kbd><span><b>Until the next event.</b> It moves to Hidden on the wall; the worktree and queue stay.</span></span><span class="opt"><kbd>f</kbd><span><b>Forever.</b> Stops the run, removes the worktree, purges the queue, stops the watcher tracking it. Undismiss from Hidden.</span></span><span class="opt"><kbd>Esc</kbd><span>Cancel</span></span></div>';
+    var status = '<div class="blk status"><div class="bh"><span>Status</span></div>' +
+      (p.dr === 'you' ? '<span class="loud">You are the detailed reviewer</span>' : '<div class="kv"><span>Detailed reviewer</span>' + (p.dr ? '<span>@' + esc(p.dr) + '</span>' : '<span class="quiet">not assigned</span>') + '</div>') +
+      statusRow('CI', p.ci, p.ci === 'failing', p.ci === 'passing') +
+      statusRow('Mergeable', p.merge === 'no' && p.mergeHandled ? 'no, agent rebasing' : p.merge, p.merge === 'no' && !p.mergeHandled, p.merge === 'yes') +
+      statusRow('Review', p.review, false, p.review === 'pending' || p.review === 'approved') +
+      (p.reviewing ? statusRow('Your review', p.myReview || 'none yet', false, !p.myReview) : '') +
+      '<div class="kv"><span>Last event</span><span>' + esc(p.lastEvent) + '</span></div><div class="kv"><span>Review ready</span><span class="quiet">' + esc(p.reviewReady) + '</span></div></div>';
+    var since = p.reviewing ? '<div class="blk"><div class="bh"><span>Since you last acted</span></div><div class="since">' + p.since.map(function (s) { return '<span>' + esc(s) + '</span>'; }).join('') + '</div></div>' : '';
+    var sys = p.sys || { claude: 'idle', threads: '0 queued, 0 working, 0 ready' };
+    var system = '<div class="blk system"><div class="bh"><span>System</span><span>refreshed 14:32:05</span></div>' +
+      '<div class="kv"><span>Claude</span><span>' + esc(sys.claude) + '</span></div>' +
+      '<div class="kv"><span>Queue</span><span>' + (p.queue ? p.queue + ' pending' : 'empty') + '</span></div>' +
+      '<div class="kv"><span>Threads</span><span>' + esc(sys.threads) + '</span></div>' +
+      (p.ahead === null ? '' : '<div class="kv"><span>Unpushed</span><span>' + (p.ahead ? p.ahead + ' commits ahead' : 'up to date') + '</span></div>') + '</div>';
+    var git = '<div class="blk git"><div class="bh"><span>Git</span><button class="linkish" type="button" data-palette>palette <kbd>g</kbd></button></div><div class="gitcmds">' +
+      '<span><span class="k">g p</span>push<span class="where">runs here</span></span><span><span class="k">g f</span>force-push with lease<span class="where">runs here</span></span>' +
+      '<span><span class="k">g pra</span>pull --rebase --autostash<span class="where">runs here</span></span><span><span class="k">g s</span>status<span class="where">runs here</span></span>' +
+      '<span><span class="k">g l · g d</span>log, diff HEAD<span class="where">shown here</span></span>' +
+      '<span><span class="k">g a · g c</span>add -p, commit<span class="where">Terminal tab</span></span><span><span class="k">g i · g r</span>rebase -i, /rebase-on-main<span class="where">Terminal tab</span></span>' +
+      '</div></div>';
+    var left = p.frozen ? status + system : status + since + system + git;
+    var right = '<div class="dright"><div class="panehead"><span class="seg"><button type="button" aria-pressed="true" data-pane="notes">Notes</button><button type="button" aria-pressed="false" data-pane="claude">Claude output <kbd style="margin-left:4px">C</kbd></button></span><span>agent-changes.md · ' + (p.live ? 'updated 6s ago · following the end' : 'updated ' + esc(p.lastEvent)) + '</span></div>' +
+      '<div class="md" data-panebody="notes">' + (NOTES[p.notes] || NOTES.none) + (p.notes !== 'none' ? '<p class="note">Example notes.</p>' : '') + '</div>' +
+      '<div class="tx" data-panebody="claude" hidden>' + (p.live ? TX : '<span class="rule">── last run · ' + esc(sys.claude) + '</span>Transcript of the last run, and every earlier run on this PR, picked from a list above it.') + '</div></div>';
+    return '<div class="dash">' + band + confirm + '<div class="dgrid"><div class="dleft">' + left + '</div>' + right + '</div></div>';
+  }
+  function termHtml(p, session) {
+    var wt = '~/repositories/widgets/' + p.branch;
+    var steer = session === 'steer';
+    var body = steer
+      ? '<span class="d">$ cd ' + esc(wt) + '/../thread-worktrees/voided-invoices</span>\n<span class="p">$</span> claude --resume thread-voided-invoices\n\n<span class="y">●</span> Resumed the rework session for "reconsider how voided invoices show in the feed".\n  The proposal is on the thread branch. Tell me what to change.\n\n<span class="p">&gt;</span> <span class="cur"> </span>'
+      : '<span class="d">Last login: Sun Sep 28 09:02 on ttys004</span>\n<span class="p">' + esc(p.branch) + ' $</span> git status -sb\n## ' + esc(p.branch) + '...origin/' + esc(p.branch) + '\n<span class="p">' + esc(p.branch) + ' $</span> git log --oneline -3\n7c4e1a2 Update FlatPricing repr assertion\n2b9d6f1 Replace FixedPricingFactory with FlatPricing\ne0a5c37 Add FlatPricing with the same interface as other pricing rules\n<span class="p">' + esc(p.branch) + ' $</span> <span class="cur"> </span>';
+    return '<div class="term"><div class="term-side"><div class="h">Sessions</div>' +
+      '<div class="sess' + (steer ? '' : ' on') + '"><b>shell</b><span>' + esc(wt) + '</span></div>' +
+      (steer ? '<div class="sess on"><b>claude · rework, voided invoices</b><span>started from the Board\'s "Open a session"</span></div>' : '') +
+      '<div class="h">Start</div>' +
+      '<div class="launch"><span class="k">new</span><button class="linkish" type="button">Shell in the worktree</button></div>' +
+      '<div class="launch"><span class="k">g a</span><button class="linkish" type="button">git add -p</button></div>' +
+      '<div class="launch"><span class="k">g c</span><button class="linkish" type="button">git commit</button></div>' +
+      '<div class="launch"><span class="k">g i&lt;N&gt;</span><button class="linkish" type="button">git rebase -i HEAD~N</button></div>' +
+      '<div class="launch"><span class="k">g r</span><button class="linkish" type="button">claude "/rebase-on-main", steered by you</button></div>' +
+      '<p class="note" style="padding:12px 16px">A real pty in this PR\'s worktree. The board\'s "Open a session" starts its steered Claude session here.</p>' +
+      '</div><div class="tty">' + body + '</div></div>';
+  }
+
+  var state = { view: 'wall', pr: null, tab: 'board', drawer: false };
+  var frame = document.getElementById('frame');
+  var wallView = document.getElementById('wallView');
+  var prView = document.getElementById('prView');
+  var drawer = document.getElementById('drawer');
+  var scrim = document.getElementById('scrim');
+  var palette = document.getElementById('palette');
+  var stateline = document.getElementById('stateline');
+  var panes = { board: document.getElementById('boardPane'), dashboard: document.getElementById('dashPane'), terminal: document.getElementById('termPane') };
+
+  function setTab(tab) {
+    state.tab = tab;
+    prView.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-selected', String(t.getAttribute('data-tab') === tab)); });
+    Object.keys(panes).forEach(function (k) { panes[k].hidden = k !== tab; });
+    describe();
+  }
+  function setDrawer(on) {
+    state.drawer = on;
+    drawer.classList.toggle('on', on);
+    scrim.classList.toggle('on', on);
+    drawer.setAttribute('aria-hidden', String(!on));
+    if (on) renderDrawer(state.pr);
+    describe();
+  }
+  function openPr(n, tab) {
+    var p = BY[n];
+    state.pr = n;
+    state.view = 'pr';
+    document.getElementById('prT').textContent = '#' + p.n + '  ' + titleOf(p);
+    document.getElementById('prM').textContent = p.whose + ' · ' + p.branch + ' · acme/widgets#' + p.n + (p.mock ? ' · made up' : '');
+    document.getElementById('prGh').href = 'https://github.com/acme/widgets/pull/' + p.n;
+    var mv = document.getElementById('prMove');
+    mv.className = 'move ' + ({ alarm: 'alarm', work: 'work', wait: 'wait', park: 'wait', ready: '' }[sqClass(p)]);
+    document.getElementById('prMoveVerb').innerHTML = (p.live ? '<span class="live-dot"></span>' : '') + esc(p.verb);
+    document.getElementById('prFlags').innerHTML = (p.ci === 'failing' ? '<span class="v alarm-t"><i class="sq alarm"></i>CI failing</span>' : '') + (p.dr === 'you' ? '<span class="flag" style="margin:0">You are the detailed reviewer</span>' : '');
+    document.getElementById('dashLive').innerHTML = p.live ? '<span class="live-dot"></span>' : '';
+    var bc = document.getElementById('boardCount');
+    bc.hidden = !p.threads;
+    bc.textContent = p.threads ? p.threadsLabel : '';
+    panes.board.innerHTML = boardHtml(p);
+    panes.dashboard.innerHTML = dashHtml(p);
+    panes.terminal.innerHTML = termHtml(p, null);
+    palette.hidden = true;
+    wallView.classList.add('off'); wallView.setAttribute('aria-hidden', 'true');
+    prView.classList.remove('off'); prView.setAttribute('aria-hidden', 'false');
+    setDrawer(false);
+    setTab(tab || 'board');
+  }
+  function toWall() {
+    state.view = 'wall'; state.pr = null;
+    setDrawer(false);
+    palette.hidden = true;
+    prView.classList.add('off'); prView.setAttribute('aria-hidden', 'true');
+    wallView.classList.remove('off'); wallView.setAttribute('aria-hidden', 'false');
+    describe();
+  }
+  function describe() {
+    var s;
+    if (state.view === 'wall') s = 'Showing: the wall, the home view. Click a row to open that PR on its Board.';
+    else {
+      var p = BY[state.pr];
+      s = 'Showing: #' + p.n + ' at full width, ' + { board: 'Board', dashboard: 'Dashboard', terminal: 'Terminal' }[state.tab] + ' tab' + (state.drawer ? ', switcher open over it' : '') + '. The wall is gone until Wall or Esc.';
+    }
+    stateline.textContent = s;
+    var active;
+    if (state.view === 'wall') active = 'wall';
+    else if (state.drawer) active = 'sidebar';
+    else if (state.pr === 16) active = { board: 'open16', dashboard: 'dash16', terminal: 'term16' }[state.tab];
+    else if (state.pr === 24) active = 'pick24';
+    else active = 'open' + state.pr;
+    document.querySelectorAll('.step').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-step') === active)); });
+  }
+  function closeDialog() { var d = document.getElementById('rbDialog'); if (d) d.remove(); }
+
+  function onActivate(sel, attr, fnc) {
+    var el = document.getElementById(sel);
+    el.addEventListener('click', function (e) { var r = e.target.closest('[' + attr + ']'); if (r) fnc(+r.getAttribute(attr)); });
+    el.addEventListener('keydown', function (e) { if (e.key !== 'Enter') return; var r = e.target.closest('[' + attr + ']'); if (r) fnc(+r.getAttribute(attr)); });
+  }
+  onActivate('wallBody', 'data-open', function (n) { openPr(n); });
+  onActivate('drawerList', 'data-switch', function (n) { openPr(n); });
+  document.getElementById('openDrawer').addEventListener('click', function () { setDrawer(true); });
+  document.getElementById('closeDrawer').addEventListener('click', function () { setDrawer(false); });
+  scrim.addEventListener('click', function () { setDrawer(false); });
+  document.getElementById('backWall').addEventListener('click', toWall);
+  prView.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { setTab(t.getAttribute('data-tab')); }); });
+  panes.board.addEventListener('click', function (e) {
+    var d = e.target.closest('[data-dialog]');
+    if (d) { closeDialog(); panes.board.insertAdjacentHTML('beforeend', d.getAttribute('data-dialog') === 'accept' ? acceptDialog() : reworkDialog()); return; }
+    if (e.target.closest('[data-close]')) { closeDialog(); return; }
+    if (e.target.closest('[data-session]')) { panes.terminal.innerHTML = termHtml(BY[state.pr], 'steer'); setTab('terminal'); }
+  });
+  panes.dashboard.addEventListener('click', function (e) {
+    if (e.target.closest('[data-palette]')) { document.getElementById('palT').textContent = 'Git · #' + state.pr; palette.hidden = false; return; }
+    if (e.target.closest('[data-dismiss]')) { var c = document.getElementById('dismissConfirm'); if (c) c.hidden = !c.hidden; return; }
+    if (e.target.closest('[data-goboard]')) { setTab('board'); return; }
+    if (e.target.closest('[data-goterm]')) { setTab('terminal'); return; }
+    var seg = e.target.closest('[data-pane]');
+    if (seg) {
+      var which = seg.getAttribute('data-pane');
+      panes.dashboard.querySelectorAll('[data-pane]').forEach(function (b) { b.setAttribute('aria-pressed', String(b === seg)); });
+      panes.dashboard.querySelectorAll('[data-panebody]').forEach(function (b) { b.hidden = b.getAttribute('data-panebody') !== which; });
+    }
+  });
+  palette.addEventListener('click', function () { palette.hidden = true; });
+  frame.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('rbDialog')) { closeDialog(); return; }
+    if (!palette.hidden) { palette.hidden = true; return; }
+    if (state.drawer) { setDrawer(false); return; }
+    var c = document.getElementById('dismissConfirm');
+    if (c && !c.hidden) { c.hidden = true; return; }
+    if (state.view === 'pr') toWall();
+  });
+  document.querySelectorAll('.step').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.getAttribute('data-step');
+      if (s === 'wall') toWall();
+      else if (s === 'open16') openPr(16, 'board');
+      else if (s === 'dash16') openPr(16, 'dashboard');
+      else if (s === 'term16') openPr(16, 'terminal');
+      else if (s === 'sidebar') { if (state.view !== 'pr') openPr(16); setDrawer(true); }
+      else openPr(+s.replace('open', '').replace('pick', ''));
+    });
+  });
+
+  renderWall();
+  document.getElementById('needsCount').textContent = PRS.filter(function (p) { return p.group === 'needs'; }).length + ' need you';
+  describe();
+})();
+</script>

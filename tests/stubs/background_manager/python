@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "cwd=$(pwd)"
+echo "data=$GITHUB_ORCHESTRATOR_DATA_DIR"
+echo "args=$*"
+if [ -t 0 ]; then echo "stdin=terminal"; elif read -r line; then echo "stdin=$line"; else echo "stdin=empty"; fi
+trap 'exit 0' TERM
+while :; do sleep 1 & wait $!; done

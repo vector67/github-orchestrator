@@ -1,0 +1,2 @@
+#!/bin/sh
+printf "%s\n" "uv $*" >> "$STUB_LOG"

@@ -1,0 +1,9 @@
+You have been asked to re-review "Fix bug" (branch PROJ-123-fix, URL https://example.com/pr/1). You reviewed it before and the author has asked for your review again. Review what changed since your last review rather than the whole pull request afresh.
+
+Your last review on GitHub: commented. None of your reviews carried a summary.
+
+The commit you last reviewed or commented on, 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b, is not in this branch's history: the branch was most likely rebased or force-pushed. Review the whole branch against its base, and if `git fetch origin 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b` brings the old commit back, compare the two with `git range-diff`.
+
+None of the threads you opened has a reply.
+
+Check each point you raised before: was it addressed by a commit, answered in a reply, or left open? Do not raise a point again when the author's answer settles it. Then look for new problems in the code that changed. Hand each finding that belongs on a line of the diff back as a draft review comment, one command per finding: `<python> -m github_orchestrator.cli thread draft --repo o/n --pr 1 --path <the file, relative to the repo root> --line <the line on the pull request's head> [--start-line <the first line, where it spans several>] [--start-side after|before] [--side after|before] --body-file <a file holding the comment, as you would post it>`. Write the comment as you would post it to the author; nothing reaches GitHub until the reviewer sends it from the board. Append anything that is not about one line to `agent-changes.md` in the repo root, under the most recent `## [...]` header.

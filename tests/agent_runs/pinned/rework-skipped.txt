@@ -1,0 +1,26 @@
+Rework the fix for a review comment on acme/widgets#7 in this worktree.
+
+The comment, by reviewer on src/foo.py:4:
+
+rename this
+
+It was classified ambiguous and skipped: two plausible readings
+
+Any prior attempt is already committed in this worktree — start from what is here rather than redoing it.
+
+Steps are how you think; one commit is how the fix lands. Write down the steps this attempt will take before you touch any code:
+<python> -m github_orchestrator.cli thread plan --repo acme/widgets --pr 7 --thread-id PRRT_1 --step "<the first thing you will do>" --file <the file it touches> --step "<the next thing>" --file <the file it touches>
+Pass one `--file` per `--step`, in the same order, or leave `--file` off altogether. Where only some of the steps have a file you can name yet, pass `--file ""` for the ones that do not. Declaring a plan again replaces the whole of the one before it. Mark each step the moment you finish it:
+<python> -m github_orchestrator.cli thread step --repo acme/widgets --pr 7 --thread-id PRRT_1 --done <the number of the step you have just finished>
+
+Cap the test runner's own parallelism: pass `-n 2` to pytest, never `-n auto`, and use the equivalent for any other runner. Other agents are running their own test suites on this machine at the same time, and a runner that takes every core starves them and the user's own session.
+
+When you have committed a new attempt, run:
+<python> -m github_orchestrator.cli thread ready --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <full 40-character sha, as `git rev-parse HEAD` prints it> --tests passed|failed|unverified [--tests-note "..."] [--note "<one line: what changed>"] [--summary "<one line: what the fix does>"] [--confidence low|medium|high] [--confidence-note "<one sentence: why that level, in your own words>"]
+That command is re-runnable: if you amend the commit afterwards, run it again with the new sha and the board follows.
+
+`--summary` is one line saying what the fix does. `--confidence` is how sure you are that the fix is what the reviewer wanted and that it breaks no caller, and `--confidence-note` is the one sentence behind that level: what you checked, or what you could not. Say `low` where you guessed at the ask, and say so. Pass all three every time you report: the brackets mean only that the CLI will not stop you.
+
+If the comment needs an answer and no code, change no code and report the reply instead:
+<python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
+`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope, say the work belongs outside this pull request.

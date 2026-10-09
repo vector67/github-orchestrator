@@ -1,0 +1,185 @@
+# GitHub Orchestrator Configuration
+#
+# Copy this file to ~/.config/github-orchestrator/config.toml (or anywhere,
+# and point GITHUB_ORCHESTRATOR_CONFIG at it).
+#
+# gh_account below and the [[repos]] entry at the end are the ones you must
+# set, and the placeholders they ship with are not values: every entry point
+# watches nothing until they name your own account, repos and clones.
+# `github-orchestrator setup` opens the board's setup page, which asks for them,
+# checks gh can reach them, and writes this file (without these comments).
+# Everything else is commented at its default.
+#
+# Every top-level key comes before the first [[repos]]: TOML puts each key
+# after a table header into that table.
+
+# Your GitHub username — auth is `gh auth token --user <account>`, so this
+# account must be logged in with `gh auth login`.
+gh_account = "your-github-username"
+
+# Run once in each worktree the orchestrator cuts, to initialize it: every
+# PR's worktree and every review thread's worktree under thread-worktrees/. Empty by
+# default, so nothing runs. It is executed with `sh -c` in the new worktree,
+# with the clone it was cut from in $GITHUB_ORCHESTRATOR_SOURCE_REPO — the
+# untracked files a checkout does not carry live there:
+# new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env ."
+#
+# Mind what you trust here: the worktree is checked out at a PR head, and the
+# orchestrator cuts one for every PR it watches, including PRs other people
+# authored and requested your review on. So a command that trusts repository
+# contents — `direnv allow`, or anything that invokes the project's build —
+# executes that PR's code before you have read its diff:
+# new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env . && direnv allow"
+#
+# It never runs for a worktree that already existed and was reused, and a
+# failure is logged and notified but never removes the worktree. It is killed
+# after 300 seconds. Its output is captured, so `&` alone does not detach a
+# slow warmup — the background job keeps the pipes open and the whole thing
+# still waits out the timeout. End it with `>/dev/null 2>&1 &` instead — and
+# note this example invokes the project's build, so the caveat above applies:
+# new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env . && (uv sync >/dev/null 2>&1 &)"
+#
+# This one is the default for every [[repos]] entry that sets none of its own.
+
+# The port of the hub on 127.0.0.1: the wall of every PR the watcher holds,
+# each PR's page with its board, dashboard and terminal, and the Runs page. The
+# resident watcher serves it; `github-orchestrator status`
+# prints its address. It must sit outside 8730-8829, where the boards' ports
+# come from.
+# hub_port = 8720
+
+# How often each PR's agent manager looks at its queue and its board, in seconds
+# dashboard_refresh_interval = 1
+
+# Watcher poll interval in seconds
+# watcher_poll_interval = 60
+
+# How long one agent run may take, in seconds
+# agent_timeout = 3600
+
+# Which agent this instance runs: "claude" (Claude Code) or "codex" (the Codex
+# CLI). Each instance runs one; the command and both models below default to
+# that agent's own.
+# agent = "claude"
+
+# The model every orchestrator-started run is pinned to, passed straight
+# through as `claude --model <this>` or `codex exec -m <this>`. Without it a run
+# would inherit whatever the CLI happens to default to, so changing your model
+# in any session would silently change what every agent here runs on. Covers
+# every headless run the agent runs module starts: the per-event worker,
+# carrying on from the board, and the per-thread agents. The two interactive
+# sessions, which open in the Terminal tab, are not pinned - the board's steered
+# session and the git palette's rebase - because those are an agent you sit in
+# front of, taking whatever your CLI default is. Claude's default is "opus",
+# Codex's "gpt-6-luna".
+# agent_model = "opus"
+
+# The command every agent the orchestrator starts runs as: the headless runs,
+# the gists and both interactive sessions. It is split like a shell line, and any
+# leading NAME=value settings are handed to it through `env`, with `~` filled
+# in, so "CLAUDE_CONFIG_DIR=~/.claude-work claude" runs claude on another
+# config directory. Shell aliases are never looked up, so name the real command.
+# Codex's default is the `codex` on PATH, or else the one the ChatGPT app
+# bundles.
+# agent_command = "claude"
+
+# The model that writes the one-line gist under each row on the review board,
+# passed to a short one-shot run of the agent per new thread, and once more
+# whenever a reply reopens one. It reads a thread and answers one line, so the
+# cheapest model is the right one. `agents_enabled = false` skips it and rows
+# show the comment's own first line instead. Claude's default is "haiku",
+# Codex's "gpt-6-luna".
+# summary_model = "haiku"
+
+# The GitHub account every `gh` call is made as: the token comes from
+# `gh auth token --user <this>`, the PR searches' `@me` resolves to it, and the
+# poller decides author-vs-reviewer by comparing against it. Naming an account
+# `gh auth` is not logged in as kills every watcher cycle in the log. It is set
+# at the top of this file, since it has no usable default.
+
+# Log level for watcher.log and agent-manager.log (DEBUG, INFO, WARNING, ERROR).
+# Both logs rotate at 10MB x 5 backups regardless. Bump to DEBUG when
+# investigating; the per-iteration loop chatter is DEBUG-level and voluminous.
+# log_level = "INFO"
+
+# Unknown keys and wrong types are rejected at load, naming this file and the
+# key, so a typo or a quoted bool fails loudly instead of being ignored. So is
+# a [[repos]] repo that is not `owner/name`: it is spent as the search API's
+# `repo:` qualifier, which 422s rather than filtering loosely, and the watcher
+# would poll every 60s forever finding nothing. So is a gh_account, repo or
+# local_path left at its placeholder: a config nobody edited would otherwise
+# poll somebody else's repo as somebody else's identity every 60s and say
+# nothing.
+# `github-orchestrator config` prints the effective values and where each came
+# from.
+
+# Set false to run the orchestrator without ever launching an agent — events that
+# would normally spawn an agent (ci-failed, became-unmergeable, thread-activity,
+# review-requested) instead notify, append a skip note to agent-changes.md, and
+# drain; the review board's per-thread agents do not start, its queued
+# threads wait (they run when you flip this back on), and the button to send
+# back for rework opens no session (the board hides it and says why at the top
+# of the page). Everything else (polling, the board, cleanup) runs unchanged.
+# It covers runs the orchestrator starts, not the git palette's rebase, which is
+# an agent session you start and steer by hand.
+# agents_enabled = true
+
+# A directory holding one typeface's .otf files, which the review board serves
+# itself at /fonts/<name>.otf and declares as @font-face under the family name
+# "Board Face". No typeface ships in this repo — point this at your own copy.
+# Only names matching <Family>-<Style>.otf are served, and nothing else in the
+# directory is reachable. Unset or empty, the board asks for Board Face anyway and
+# the browser falls back to Helvetica Neue and Arial; every size and spacing
+# rule is the same either way, so the layout does not move.
+# board_font_dir = "~/design/fonts"
+
+# What the review board's "Not fixed" reply is pre-filled with on a PR you are
+# reviewing. It is only an opener: the dialog hands you the words and you say
+# the rest before it is posted.
+# not_fixed_opener = "Not fixed — "
+
+# Name people on the review board by the first word of their GitHub name only:
+# "Ada Lovelace King" reads as "Ada". Off, the board uses the whole name.
+# first_names_only = false
+
+# Where the comment agent searches for tickets and proposes new ones, for work
+# a review comment asks for that belongs outside the pull request: "github"
+# for issues on the pull request's repo, "jira" for a Jira project through the Atlassian
+# MCP, or "none". With "none" the agent proposes a reply that says the work
+# belongs elsewhere, and never a ticket.
+# tracker = "none"
+
+# The Jira project tickets go to by default, as its key. Needed with
+# tracker = "jira" and refused with any other tracker. The agent may still pick
+# another project when the comment plainly belongs to one.
+# tracker_project = "PROJ"
+
+# Once a day the hub asks GitHub for the newest release and the board's top bar
+# shows "Update available" when it is newer than this one. false stops the
+# check; status and update still ask when you run them.
+# check_for_updates = true
+
+# Cap on concurrent per-thread agents.
+# max_thread_runs = 4
+
+# Worker count the agents are told to give their own test runner (pytest -n N).
+# Multiplies with max_thread_runs: that many agents each taking every core
+# locks the machine up. Keep max_thread_runs * pytest_workers at or under
+# your core count.
+# pytest_workers = 2
+
+# How long a worktree may sit on the wrong branch before the watcher keeps it
+# aside and cuts a fresh one, and how long a managed Claude run may go without output before it
+# stops counting as work in flight that extends the grace.
+# mismatch_grace_seconds = 3600
+# mismatch_run_idle_seconds = 300
+
+# One [[repos]] entry per repo to watch: the watcher searches all of them for
+# PRs by and for gh_account, and the hub shows them together. `repo` is
+# owner/name; `local_path` is your clone of it, where its PRs' worktrees are cut
+# from. An entry may set its own new_worktree_command, which replaces the
+# top-level one for that repo's worktrees.
+[[repos]]
+repo = "owner/repo"
+local_path = "~/repositories/repo"
+# new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env ."
