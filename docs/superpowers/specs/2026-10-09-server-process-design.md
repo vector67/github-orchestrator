@@ -235,11 +235,11 @@ With the load average above 80, the proposal diff's p90 is under 1 s and
 `/health`'s max is under 1 s. A board keeps answering while its manager is
 stopped, and shows it as gone.
 
-## Open questions
+## Settled at review
 
-- `server_workers`: 4 is a guess. A worker serves many connections at once on
-  its event loop, so open event streams do not use up workers. But each stream
-  re-reads its source in that worker's threads every 0.5 s, and those reads share
-  the worker's GIL with the requests it serves.
-- `status_stale_seconds`: 10 s is three of today's 1 s ticks plus slack. A
-  manager stalled in a long tick will show as gone for that long.
+- `server_workers` is 4. A worker serves many connections at once on its event
+  loop, so open event streams do not use up workers. Each stream still re-reads
+  its source in that worker's threads every 0.5 s, sharing the worker's GIL with
+  the requests it serves.
+- `status_stale_seconds` is 10: three of today's 1 s ticks plus slack. A manager
+  stalled in a long tick shows as gone until it writes again.
