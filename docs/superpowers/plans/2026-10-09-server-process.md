@@ -166,6 +166,10 @@ serving over and deletes what it replaces.
      with the load average above 80, the diff's p90 and `/health`'s max are both
      under 1 s, and a stopped manager's board still answers and shows it as gone.
 
+   **Not passed.** The pointers are in. The load test misses both targets; the
+   numbers are in the spec under "Result, 2026-10-09". The stopped-manager part
+   passes.
+
 ## Decisions
 
 Each step adds its decisions here, under its number, with the reason for each.
@@ -201,6 +205,7 @@ Each step adds its decisions here, under its number, with the reason for each.
    - **A status file that cannot be parsed, or whose `written_at` is missing or
      garbled, reads as gone, with a warning.** It says nothing about a live
      manager, and gone is what a reader shows when it cannot tell.
+
 2. - **A refusal at the handler is `409 manager-refused` with the rule's sentence
      as its detail.** The 202 cannot carry a refusal and the server cannot set
      the manager's notice. The page already toasts a refused command's detail, so
@@ -240,6 +245,7 @@ Each step adds its decisions here, under its number, with the reason for each.
    - **Writing a file whole and the flock moved to `pr_manager/_files.py`,** used
      by the status file, the command file and the palette lock. `pr_manager`
      cannot reach `thread_records`' private lock.
+
 3. - **The one function is `DashboardSource.dashboard(pr)`, which lays the status
      file over the rebuild itself (`StatusFiles.laid_over`).** The board's
      `ManagerCommands.dashboard()` and the wall's rows both call it through
@@ -277,6 +283,7 @@ Each step adds its decisions here, under its number, with the reason for each.
      status write shows as neither queued nor live until the next tick.
    - **The preview's panel says its manager is answering,** since it stands in
      for a running one and has no status file.
+
 4. - **`ToldFiles` in `watcher/_told.py` owns `<data>/held.json` and
      `<data>/hub_state`; the hub and `DashboardSource` read them through `Told`
      in `board_api/interface.py`.** The watcher writes both, and the hub and the
@@ -322,6 +329,7 @@ Each step adds its decisions here, under its number, with the reason for each.
      and port 18731): `/api/health` said `setup`, the repo listing and the
      write's progress appeared under `setup/`, the write cloned, wrote the config
      and the watcher exited on the leave file, which was gone after.
+
 5. - **`FilePanel` in `pr_manager/_panel.py` is the one `ManagerPanel`.** It reads the
      dashboard through `DashboardSource`, the notes and transcript from disk, writes
      the command file and runs the git palette under its file lock. The manager hands
@@ -385,6 +393,7 @@ Each step adds its decisions here, under its number, with the reason for each.
      a heartbeat; a second server left on the held lock, one on 8720 left on the
      taken port; on SIGTERM every worker was gone and the data directory gained no
      file.
+
 6. - **`ServerProcess` in `server/_process.py` keeps, reads and stops the server;**
      the watcher reaches it as `Server` (`keep_running`), the CLI as `ServerControl`
      (`pid`, `stop`), both private protocols wired to the one class. The supervisor
@@ -462,3 +471,10 @@ Each step adds its decisions here, under its number, with the reason for each.
      to the supervisor in 2.5 s with no worker left behind; after the watcher was
      stopped the server kept answering; stopping it left port 18780 free and no
      process behind.
+
+7. Step 7, done by the coordinator:
+
+   - **The diff timed is `/diffs/<base>..<head>`** for a proposal's commits. The proposal diff route the spec names was replaced by it before this plan began.
+   - **A second run put the spinners at `nice 20`,** to test whether CPU priority explains the remaining delay. It did not: requests were no faster.
+   - **A killed server comes back on the watcher's next cycle,** up to 60 s while watching (measured 50-77 s), not the 2-3 s seen in setup state, where the watcher waits 2 s at a time.
+   - **Under load the watcher's cycle runs long:** a manager stopped during the load test was not revived within 90 s.

@@ -235,6 +235,31 @@ With the load average above 80, the proposal diff's p90 is under 1 s and
 `/health`'s max is under 1 s. A board keeps answering while its manager is
 stopped, and shows it as gone.
 
+### Result, 2026-10-09: not met
+
+Measured after step 6, through the hub port, with the load average above 80:
+
+|                                                               | median | p90    | max    |
+| ------------------------------------------------------------- | ------ | ------ | ------ |
+| spinners at normal priority (peak load 182): `/health`        | 0.87 s | 2.9 s  | 12.7 s |
+| the same: `/viewer` on a board                                | 2.3 s  | 10 s   | 29 s   |
+| spinners at `nice 20` (peak load 146): `/health`              | 1.3 s  | 5.3 s  | 5.3 s  |
+| the same: `/viewer`                                           | 2.8 s  | 13 s   | 13 s   |
+| the same: a proposal's diff (`/diffs/<base>..<head>`)         | 50 s   | 81 s   | 81 s   |
+| a one-thread probe outside the server, late from a 5 ms sleep | 1–3 ms | 1–3 ms | 65 ms  |
+
+At a load average of 3, the same requests take 1–5 ms, and the diff 137 ms.
+
+Compared with before the change (`/health` median 9 s, max 30 s; `/viewer`
+median 23 s, max 40 s), medians fell by about ten times, but the targets are
+missed. The probe outside stayed fast throughout, so the delay is inside the
+server's workers. Lowering the spinners' priority did not help, so CPU priority
+alone does not explain it. The diff run at normal priority used a route that no
+longer exists and is not in the table.
+
+A stopped manager's board kept answering under load and showed it as gone 9 s
+after the stop, which is met.
+
 ## Settled at review
 
 - `server_workers` is 4. A worker serves many connections at once on its event

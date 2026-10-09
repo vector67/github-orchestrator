@@ -96,6 +96,9 @@ frozen manager stops its board. Each board links back to the hub. The CLI's
 `status` prints the hub's address. The hub runs in both modes. A one-cycle run
 of the watcher (cron, `--dry-run`) serves no hub.
 
+Since 2026-10-09 one server process serves the hub and every board, the watcher
+only keeps it running, and a frozen manager no longer stops a board: see [the server process spec](2026-10-09-server-process-design.md).
+
 ## Out of scope
 
 - A terminal in the browser (xterm.js over a pty) for the interactive

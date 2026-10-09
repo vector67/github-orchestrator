@@ -114,6 +114,9 @@ the same Ember app, so opening a PR loads no new page and a notification can
 link to `/pr/<number>`. The per-PR board API itself does not change shape for
 the move; the boards stay reachable on their own ports.
 
+Since 2026-10-09 there is no proxy and no board port: one server process serves
+every board under `/pr/...` itself. See [the server process spec](2026-10-09-server-process-design.md).
+
 ## Out of scope
 
 Anything off `127.0.0.1`, more than one watched repo, and changes to the board's

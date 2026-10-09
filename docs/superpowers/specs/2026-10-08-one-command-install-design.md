@@ -363,7 +363,9 @@ under each step saying what it is for, as above.
 
 ### Three states
 
-The watcher process runs the hub in every state. `ConfigFile.check()` no longer
+The watcher process runs the hub in every state (since 2026-10-09 the watcher
+starts and revives a separate server process that serves it, in every state;
+see [the server process spec](2026-10-09-server-process-design.md)). `ConfigFile.check()` no longer
 stops it; it chooses the state.
 
 | State      | When                                                            | What runs                                                     |
