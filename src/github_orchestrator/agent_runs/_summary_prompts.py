@@ -82,3 +82,32 @@ def verdict_prompt(comments: Sequence[tuple[str, str, str]], *, viewer: str, pr_
 def verdict_in(answer: str, answers: Mapping[str, str]) -> str | None:
     word = answer.strip().lower()
     return word if word in answers else None
+
+
+def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str | None,
+                        line: int | None, sha: str, patch: str,
+                        answers: Mapping[str, str]) -> str:
+    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
+                          for label, login, body in comments)
+    where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
+    offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
+    return (
+        "You check a pull request review for one person, the viewer, who is reviewing "
+        "someone else's pull request. The viewer left a review comment; a later reply "
+        "names a commit as the answer to it. Read the viewer's comments, then the "
+        "commit, and decide whether the commit does what the viewer asked. Each comment "
+        "is labelled: `you` is the viewer, `PR author` wrote the pull request, "
+        "`colleague` is anyone else, `bot` is a review bot.\n\n"
+        f"Answer on a single line: one of these words, then {SEPARATOR}, then one or two "
+        "sentences saying what the commit does about the viewer's comment and what, if "
+        "anything, it leaves undone. Nothing else.\n"
+        f"{offered}\n\n"
+        f"The thread on {where}, oldest comment first:\n\n{thread}\n\n"
+        f"Commit {sha}, its message and its diff:\n\n{patch}"
+    )
+
+
+def commit_check_in(answer: str, answers: Mapping[str, str]) -> tuple[str, str] | None:
+    word, _, reasoning = answer.partition(SEPARATOR)
+    found = verdict_in(word, answers)
+    return None if found is None else (found, reasoning.strip())

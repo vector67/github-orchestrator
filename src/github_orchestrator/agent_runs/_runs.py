@@ -39,6 +39,8 @@ from github_orchestrator.agent_runs._summaries import Run, Summaries
 from github_orchestrator.agent_runs._summary_prompts import (
     comment_gist_prompt,
     comments_prompt,
+    commit_check_in,
+    commit_check_prompt,
     fixes_prompt,
     gists_in,
     thread_gist_prompt,
@@ -293,6 +295,7 @@ class AgentRuns:
         self._runs_log = runs_log
         self._lines: CommandLines = command_lines_of(agent)
         self._summaries = Summaries(run, self._command, summary_model, self._lines)
+        self._checks = Summaries(run, self._command, model, self._lines)
         self._pr_runs: dict[Pr, AgentRun] = {}
 
     def _transcript(self, pr: Pr) -> Path:
@@ -483,5 +486,18 @@ class AgentRuns:
                            mentions_viewer=mentions_viewer, kind=kind, answers=answers),
             given, label=key)
 
+    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                     path: str | None, line: int | None, sha: str, patch: str,
+                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
+        def given(answer: str) -> None:
+            checked = commit_check_in(answer, answers)
+            if checked is not None:
+                done(*checked)
+
+        self._checks.summarize(
+            commit_check_prompt(comments, path=path, line=line, sha=sha, patch=patch,
+                                answers=answers),
+            given, label=key)
+
     def drain_summaries(self, timeout: float) -> bool:
-        return self._summaries.drain(timeout)
+        return self._summaries.drain(timeout) and self._checks.drain(timeout)

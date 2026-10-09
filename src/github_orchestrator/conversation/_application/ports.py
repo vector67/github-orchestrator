@@ -7,6 +7,7 @@ from github_orchestrator.conversation._application.settings import ThreadsConfig
 from github_orchestrator.conversation._domain.conversation import (
     Brief,
     Comment,
+    CommitVerdict,
     Conversation,
     PointedLine,
     ThreadVerdict,
@@ -172,6 +173,9 @@ class Summaries(Protocol):
 
     def ask_verdict(self, conversation: Conversation,
                     done: Callable[[ThreadVerdict], None]) -> None: ...
+
+    def check_commit(self, conversation: Conversation, sha: Sha, patch: str,
+                     done: Callable[[CommitVerdict, str], None]) -> None: ...
 
 
 class Clock(Protocol):

@@ -15,6 +15,8 @@ from github_orchestrator.conversation._domain.conversation import (
     Brief,
     Classification,
     Comment,
+    CommitCheck,
+    CommitVerdict,
     ConfidenceLevel,
     Conversation,
     Fix,
@@ -219,7 +221,27 @@ def encode(conversation: Conversation) -> Document:
         "verdict_asked_for": conversation.verdict_asked_for,
         "verdict_asks": conversation.verdict_asks,
         "verdict_asked_at": conversation.verdict_asked_at,
+        "commit_check": _commit_check_document(conversation.commit_check),
+        "commit_check_asked_for": conversation.commit_check_asked_for,
+        "commit_check_asks": conversation.commit_check_asks,
+        "commit_check_asked_at": conversation.commit_check_asked_at,
     }
+
+
+def _commit_check_document(check: CommitCheck | None) -> Document | None:
+    if check is None:
+        return None
+    return {"on": check.on, "sha": str(check.sha), "parent": str(check.parent),
+            "verdict": check.verdict.value, "reasoning": check.reasoning}
+
+
+def _commit_check(document: Document | None) -> CommitCheck | None:
+    if document is None:
+        return None
+    return CommitCheck(on=document["on"], sha=Sha(document["sha"]),
+                       parent=Sha(document["parent"]),
+                       verdict=CommitVerdict(document["verdict"]),
+                       reasoning=document["reasoning"])
 
 
 def _brief(brief: Document | None) -> Brief | None:
@@ -371,6 +393,10 @@ def _decoded(document: Document) -> Conversation:
         verdict_asked_for=document["verdict_asked_for"],
         verdict_asks=document["verdict_asks"],
         verdict_asked_at=document["verdict_asked_at"],
+        commit_check=_commit_check(document["commit_check"]),
+        commit_check_asked_for=document["commit_check_asked_for"],
+        commit_check_asks=document["commit_check_asks"],
+        commit_check_asked_at=document["commit_check_asked_at"],
     )
 
 

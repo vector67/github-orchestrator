@@ -1,4 +1,5 @@
 import difflib
+import hashlib
 import itertools
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -500,6 +501,16 @@ class FakeWorkingCopies:
         resolved = self._resolve(str(sha))
         return None if resolved is None else self.commits[resolved].message
 
+    def _commit_patch(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
+        resolved = self._resolve(sha) if self._has_commit(worktree, sha) else None
+        commit = None if resolved is None else self.commits[resolved]
+        if commit is None or commit.parent is None:
+            return None
+        old = self.commits[commit.parent].tree
+        printed = "".join(_unified(path, old.get(path), commit.tree.get(path))
+                          for path in _changed_paths(old, commit.tree))
+        return commit.sha, commit.parent, f"{commit.message}\n\n{printed}"
+
     def _diff_files(self, worktree: str, base: str,
                     head: str) -> tuple[FileDiff, ...] | None:
         if self._diff_shown:
@@ -544,7 +555,7 @@ class FakeWorkingCopies:
         return self._store(parent, tree, message)
 
     def _store(self, parent: str | None, tree: dict[str, str], message: str) -> str:
-        sha = f"{next(self._numbers):040x}"
+        sha = hashlib.sha1(f"commit {next(self._numbers)}".encode()).hexdigest()
         self.commits[sha] = FakeCommit(sha=sha, parent=parent, message=message, tree=tree)
         return sha
 

@@ -28,6 +28,7 @@ from github_orchestrator.conversation._application.decide import decide
 from github_orchestrator.conversation._application.drafts import open_draft
 from github_orchestrator.conversation._application.poll import (
     RoleUnknown,
+    ask_due_commit_checks,
     ask_due_verdicts,
     known_role,
     materialise,
@@ -611,6 +612,10 @@ class _ConversationManager:
             ask_due_verdicts(ports)
         except Exception:
             log.exception("loop %s: the threads waiting on a verdict could not be asked", pr)
+        try:
+            ask_due_commit_checks(ports)
+        except Exception:
+            log.exception("loop %s: the commits named in threads could not be checked", pr)
         for settled in self._pr.runs.pump_and_schedule(pr, ports, schedule=not on_hold):
             _announce_settled(news, pr, settled)
 

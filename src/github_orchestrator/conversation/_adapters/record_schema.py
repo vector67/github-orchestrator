@@ -36,6 +36,7 @@ from github_orchestrator.conversation._domain.conversation import (
     RUNNING,
     WAITING_ON_REVIEWER,
     Classification,
+    CommitVerdict,
     ConfidenceLevel,
     OperationKind,
     OperationState,
@@ -55,6 +56,8 @@ CONVERSATION_STATES = frozenset({OPEN, WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MI
                                  ENROLLED, DISCARDED})
 
 VERDICTS = frozenset(ThreadVerdict)
+
+COMMIT_VERDICTS = frozenset(CommitVerdict)
 
 FIX_STATES = frozenset({QUEUED, RUNNING, DECLINED, FAILED, PROPOSED,
                         IN_SESSION, LANDING, LANDED, ABSENT})
@@ -361,6 +364,17 @@ def _verdict(document: Document) -> str | None:
     return str(verdict)
 
 
+def _commit_check(document: Document) -> Document | None:
+    check = document.get("commit_check")
+    if check is None:
+        return None
+    if check.get("verdict") not in COMMIT_VERDICTS:
+        raise ValueError(f"commit check {check.get('verdict')!r} is no answer this board takes")
+    return {"on": str(check.get("on") or ""), "sha": _sha(check, "sha"),
+            "parent": _sha(check, "parent"), "verdict": check["verdict"],
+            "reasoning": str(check.get("reasoning") or "")}
+
+
 def _confidence(document: Document) -> str | None:
     written = document.get("confidence")
     return str(written) if written in CONFIDENCE_LEVELS else None
@@ -515,6 +529,10 @@ def _migrated(version: int, document: Document) -> Document:
         "verdict_asked_for": document.get("verdict_asked_for"),
         "verdict_asks": int(document.get("verdict_asks") or 0),
         "verdict_asked_at": document.get("verdict_asked_at"),
+        "commit_check": _commit_check(document),
+        "commit_check_asked_for": document.get("commit_check_asked_for"),
+        "commit_check_asks": int(document.get("commit_check_asks") or 0),
+        "commit_check_asked_at": document.get("commit_check_asked_at"),
     }
 
 

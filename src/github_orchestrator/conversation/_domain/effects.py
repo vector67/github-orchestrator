@@ -92,6 +92,12 @@ class AskVerdict:
     pass
 
 
+@dataclass(frozen=True)
+class AskCommitCheck:
+    on: str
+    candidates: tuple[str, ...]
+
+
 Effect = (
       StartRun
     | StopRun
@@ -106,4 +112,5 @@ Effect = (
     | PostDraft
     | WriteGist
     | AskVerdict
+    | AskCommitCheck
 )

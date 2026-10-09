@@ -17,10 +17,13 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
 )
 from github_orchestrator.conversation._domain.conversation import (
+    CommitCheck,
+    CommitVerdict,
     Conversation,
     ThreadVerdict,
 )
 from github_orchestrator.conversation._domain.effects import (
+    AskCommitCheck,
     AskVerdict,
     CutWorkspace,
     DeleteComment,
@@ -46,6 +49,7 @@ from github_orchestrator.conversation._domain.events import (
     ClosingCommentDeleted,
     ClosingFailed,
     ClosingReplyPosted,
+    CommitChecked,
     DraftPosted,
     DraftPostFailed,
     GistWritten,
@@ -79,6 +83,7 @@ from github_orchestrator.conversation._domain.operations import Asked
 from github_orchestrator.conversation._domain.standing import ErrorCode
 from github_orchestrator.conversation._domain.steps import Land
 from github_orchestrator.conversation._domain.verdict import newest_said
+from github_orchestrator.domain import Sha
 
 MAX_RESUME_PASSES = 8
 
@@ -222,6 +227,28 @@ def _verdict_recorder(ports: Ports,
     return record
 
 
+def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommitCheck) -> None:
+    named = (Sha.parse(candidate) for candidate in effect.candidates)
+    commit = next((found for found in (ports.git.commit_patch(sha) for sha in named if sha)
+                   if found is not None), None)
+    if commit is None:
+        return
+    key, sha, parent = conversation.key, commit.sha, commit.parent
+
+    def record(verdict: CommitVerdict, reasoning: str) -> None:
+        check = CommitCheck(on=effect.on, sha=sha, parent=parent, verdict=verdict,
+                            reasoning=reasoning)
+        with ports.records.update(key) as update:
+            stored = update.conversation
+            if stored is None:
+                return
+            outcome = run(ports, stored, CommitChecked(check=check))
+            if outcome.conversation != stored:
+                update.conversation = outcome.conversation
+
+    ports.summaries.check_commit(conversation, sha, commit.text, record)
+
+
 def _unpick_outcome(ports: Ports, conversation: Conversation) -> Change:
     fix = conversation.fix
     if fix.landed_base is None or fix.landed_sha is None:
@@ -303,6 +330,9 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return None
         case AskVerdict():
             ports.summaries.ask_verdict(conversation, _verdict_recorder(ports, conversation))
+            return None
+        case AskCommitCheck():
+            _ask_commit_check(ports, conversation, effect)
             return None
     raise NotImplementedError(type(effect).__name__)
 

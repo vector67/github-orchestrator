@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from github_orchestrator.conversation._domain.conversation import (
     Anchor,
     Comment,
+    CommitCheck,
     ThreadVerdict,
 )
 from github_orchestrator.domain import Sha
@@ -182,6 +183,16 @@ class VerdictDue:
 
 
 @dataclass(frozen=True)
+class CommitCheckDue:
+    viewer: str
+
+
+@dataclass(frozen=True)
+class CommitChecked:
+    check: CommitCheck
+
+
+@dataclass(frozen=True)
 class ThreadResolved:
     at: str
 
@@ -259,6 +270,8 @@ Event = (
     | GistWritten
     | VerdictGiven
     | VerdictDue
+    | CommitCheckDue
+    | CommitChecked
     | ThreadResolved
     | ThreadResolveFailed
     | ThreadUnresolved

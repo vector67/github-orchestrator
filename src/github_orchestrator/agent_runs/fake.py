@@ -18,7 +18,11 @@ from github_orchestrator.agent_runs._ledger import (
 )
 from github_orchestrator.agent_runs._pr_prompts import REBASE_ON_MAIN
 from github_orchestrator.agent_runs._runs import CARRY_ON, WONT_START, open_session_in
-from github_orchestrator.agent_runs._summary_prompts import gists_in, verdict_in
+from github_orchestrator.agent_runs._summary_prompts import (
+    commit_check_in,
+    gists_in,
+    verdict_in,
+)
 from github_orchestrator.agent_runs._transcript import display_rows, summarize_event
 from github_orchestrator.agent_runs.interface import (
     FinishedRun,
@@ -159,7 +163,18 @@ class VerdictAsked:
     kind: str
 
 
-Asked = CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
+@dataclass(frozen=True)
+class CommitCheckAsked:
+    key: str
+    comments: tuple[tuple[str, str, str], ...]
+    path: str | None
+    line: int | None
+    sha: str
+    patch: str
+
+
+Asked = (CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
+         | CommitCheckAsked)
 
 
 class FakeRun:
@@ -409,10 +424,21 @@ class FakeAgentRuns:
         if word is not None:
             done(word)
 
+    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                     path: str | None, line: int | None, sha: str, patch: str,
+                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, patch))
+        answer = self._answered()
+        checked = commit_check_in(answer, answers) if isinstance(answer, str) else None
+        if checked is not None:
+            done(*checked)
+
 
 @dataclass
 class HeldVerdicts(FakeAgentRuns):
     held: list[tuple[str, Mapping[str, str], Callable[[str], None]]] = field(
+        default_factory=list)
+    held_checks: list[tuple[Mapping[str, str], Callable[[str, str], None]]] = field(
         default_factory=list)
 
     def judge_thread(self, key: str, comments: Sequence[tuple[str, str, str]], *,
@@ -423,8 +449,22 @@ class HeldVerdicts(FakeAgentRuns):
                                        viewer_commented, mentions_viewer, kind))
         self.held.append((key, answers, done))
 
+    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                     path: str | None, line: int | None, sha: str, patch: str,
+                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, patch))
+        self.held_checks.append((answers, done))
+
     def verdicts_asked(self) -> list[VerdictAsked]:
         return [asked for asked in self.asked if isinstance(asked, VerdictAsked)]
+
+    def commit_checks_asked(self) -> list[CommitCheckAsked]:
+        return [asked for asked in self.asked if isinstance(asked, CommitCheckAsked)]
+
+    def give_check(self, word: str, reasoning: str) -> None:
+        answers, done = self.held_checks.pop()
+        assert word in answers
+        done(word, reasoning)
 
     def give(self, word: str, *, key: str | None = None, at: int = -1) -> None:
         waiting = [one for one in self.held if key is None or one[0] == key]

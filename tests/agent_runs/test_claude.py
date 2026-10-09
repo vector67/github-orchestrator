@@ -13,6 +13,7 @@ from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.support import (
+    MODEL,
     SUMMARY_MODEL,
     finish,
     pump_until,
@@ -373,6 +374,18 @@ def test_a_gist_is_asked_of_the_summary_model_away_from_any_checkout(runs, world
     assert asked.timeout == 300
     assert asked.cwd_existed
     assert asked.cwd != os.getcwd()
+
+
+def test_a_commit_check_is_asked_of_the_fix_model_not_the_summary_model(runs, world, claude):
+    world.answer("addressed || it renames the helper")
+
+    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+                      sha="abc1234def", patch="-old\n+new", answers={"addressed": "yes"},
+                      done=lambda word, reasoning: None)
+    assert runs.drain_summaries(10)
+
+    [asked] = claude.asked
+    assert asked.argv == ["claude", "--print", "--model", MODEL]
 
 
 def test_no_gist_is_asked_for_when_no_summary_model_is_configured(world, claude, tmp_path):

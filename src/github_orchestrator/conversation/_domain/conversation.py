@@ -116,6 +116,21 @@ class ThreadVerdict(StrEnum):
     NOT_MINE = "not-mine"
 
 
+class CommitVerdict(StrEnum):
+    ADDRESSED = "addressed"
+    PARTLY = "partly"
+    NOT_ADDRESSED = "not-addressed"
+
+
+@dataclass(frozen=True)
+class CommitCheck:
+    on: str
+    sha: Sha
+    parent: Sha
+    verdict: CommitVerdict
+    reasoning: str
+
+
 class ConfidenceLevel(StrEnum):
     """How sure the agent is of the fix it proposes."""
 
@@ -528,6 +543,10 @@ class Conversation:
     verdict_asked_for: str | None = None
     verdict_asks: int = 0
     verdict_asked_at: str | None = None
+    commit_check: CommitCheck | None = None
+    commit_check_asked_for: str | None = None
+    commit_check_asks: int = 0
+    commit_check_asked_at: str | None = None
     unread: bool = False
 
     @property

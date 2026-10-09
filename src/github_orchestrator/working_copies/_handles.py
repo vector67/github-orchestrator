@@ -4,6 +4,7 @@ from typing import Protocol
 from github_orchestrator.domain import Pr, Sha
 from github_orchestrator.working_copies._layout import thread_branch
 from github_orchestrator.working_copies.interface import (
+    CommitPatch,
     Cut,
     FileDiff,
     Picked,
@@ -55,6 +56,8 @@ class Git(Protocol):
     def _progress_of(self, path: str | None, base_sha: str | None) -> str | None: ...
 
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
+
+    def _commit_patch(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
 
     def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
 
@@ -178,6 +181,14 @@ class BoundCheckout:
     def commit_message(self, sha: Sha) -> str | None:
         path = self._path()
         return None if path is None else self.git._commit_message(path, str(sha))
+
+    def commit_patch(self, sha: Sha) -> CommitPatch | None:
+        path = self._path()
+        read = None if path is None else self.git._commit_patch(path, str(sha))
+        if read is None:
+            return None
+        full, parent, text = read
+        return CommitPatch(Sha(full), Sha(parent), text)
 
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None:
         path = self._path()

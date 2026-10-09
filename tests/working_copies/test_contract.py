@@ -424,6 +424,22 @@ def test_the_commits_since_a_sha_name_each_commit_on_head_after_it(world, pr_wor
     assert world.copies.commits_since(pr_worktree, "0" * 40) is None
 
 
+def test_a_commit_named_by_a_short_hash_reads_as_its_parent_message_and_diff(
+        world, pr_worktree, pr_checkout):
+    parent = world.head_of(pr_worktree)
+    sha = world.commit(pr_worktree, {"h": "renamed\n"}, "Rename the helper")
+
+    patch = pr_checkout.commit_patch(Sha(sha[:7]))
+
+    assert (patch.sha, patch.parent) == (Sha(sha), Sha(parent))
+    assert "Rename the helper" in patch.text
+    assert "+renamed" in patch.text
+
+
+def test_a_hash_the_checkout_does_not_hold_reads_as_no_commit(world, pr_checkout):
+    assert pr_checkout.commit_patch(Sha("abcdef1")) is None
+
+
 def test_a_thread_gets_its_own_worktree_at_the_pr_head(world, pr_worktree, cut):
     checkout = cut.path
 
