@@ -113,6 +113,7 @@ from github_orchestrator.pr_manager._dashboard_source import ConfigOf, Dashboard
 from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
+from github_orchestrator.pr_manager._panel import FilePanel
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes._background import BackgroundPrProcesses
@@ -917,6 +918,17 @@ class PrManagerProvider(Provider):
     config = from_context(provides=ManagerConfig, scope=Scope.APP)
     run = from_context(provides=GitRun, scope=Scope.APP)
     commands = provide(ManagerCommands)
+
+    @provide
+    def panel(self, config: ManagerConfig, run: GitRun, monotonic: Monotonic,
+              status_files: StatusFiles, command_files: CommandFiles, dashboards: DashboardSource,
+              agent_changes: AgentChanges, history: History, pr_processes: PrProcesses,
+              pr_work: PrWork) -> FilePanel:
+        return FilePanel(config.pr, lambda: config.worktree, agents_enabled=config.agents_enabled,
+                         run=run, monotonic=monotonic, status_files=status_files,
+                         command_files=command_files, dashboards=dashboards,
+                         agent_changes=agent_changes, history=history, pr_processes=pr_processes,
+                         pr_work=pr_work)
     events = provide(EventCarryOut)
     pr_manager = provide(ManagerLoop, provides=PrManager)
 
