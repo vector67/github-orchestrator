@@ -26,6 +26,9 @@ from github_orchestrator.board_api.fake import (
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Held,
+    Holdings,
+    ManagerPanels,
+    ServerApp,
     SetupDesk,
     Told,
     TourMarker,
@@ -38,10 +41,13 @@ from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings import ConfigFile
 from github_orchestrator.settings.fake import fake_settings
-from github_orchestrator.terminal_sessions import TerminalSessions
-from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
+from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
+from github_orchestrator.terminal_sessions.fake import (
+    FakeTerminals,
+    FakeTerminalSessions,
+)
 from github_orchestrator.watcher import Health, Releases, WatcherHealth
-from github_orchestrator.wiring import BoardApiWiring, HubWiring, wire
+from github_orchestrator.wiring import BoardApiWiring, HubWiring, ServerAppWiring, wire
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -353,3 +359,60 @@ class Events:
 
     def close(self) -> None:
         self.connection.close()
+
+
+@dataclass
+class CountedPanels:
+    panel: FakeManagerPanel
+    asked: list[Pr]
+
+    def of(self, pr: Pr) -> ManagerPanel:
+        self.asked.append(pr)
+        return self.panel
+
+
+SERVER_PID = 4242
+
+
+@dataclass
+class OneServer:
+    client: TestClient
+    panels: CountedPanels
+    told: FakeTold
+    holdings: FakeHoldings
+    terminals: FakeTerminals
+
+
+def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
+               host: str | None = None) -> OneServer:
+    fake = fake_threads()
+    _placed(fake.working_copies)
+    fake.watch(THE_PR, is_author=True, title=TITLE, base_branch="main", head_sha="8f73fe8",
+               branch="rename-the-helper")
+    hear(fake.of(THE_PR))
+    panels = CountedPanels(FakeManagerPanel(), [])
+    told = holding(*held)
+    holdings = FakeHoldings()
+    terminals = FakeTerminals()
+    server: ServerApp = wire(
+        fake_provider(Told, told),
+        fake_provider(Holdings, holdings),
+        fake_provider(Releases, NoReleaseYet()),
+        fake_provider(Dashboards, FakeDashboards()),
+        fake_provider(SetupDesk, FakeSetupDesk()),
+        fake_provider(TourMarker, FakeTour()),
+        fake_provider(History, FakeAgentRuns(FakePrProcesses())),
+        fake_provider(WatcherHealth, Pulse(POLLED)),
+        fake_provider(ConfigFile, Words(None)),
+        fake_provider(ConversationManagerFactory, fake),
+        fake_provider(WorkingCopies, fake.working_copies),
+        fake_provider(Terminals, terminals),
+        fake_provider(ManagerPanels, panels),
+        clocks_of(at(MOMENT)),
+        ServerAppWiring(app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
+                        version="0.1.0", check_presence=False, first_names_only=False,
+                        check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
+    client = TestClient(server.app(port, SERVER_PID),
+                        base_url=f"http://{host or f'127.0.0.1:{port}'}")
+    return OneServer(client=client, panels=panels, told=told, holdings=holdings,
+                     terminals=terminals)

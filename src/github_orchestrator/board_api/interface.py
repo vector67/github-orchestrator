@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Protocol
 
+from starlette.types import ASGIApp
+
 from github_orchestrator.domain import HubState, Mention, Pr, Repo, ThreadRow
 
 
@@ -118,6 +120,10 @@ class ManagerPanel(Protocol):
     def run_git(self, keys: str) -> tuple[int, list[str], float]: ...
 
     def open_terminal(self, keys: str) -> str | None: ...
+
+
+class ManagerPanels(Protocol):
+    def of(self, pr: Pr) -> ManagerPanel: ...
 
 
 class Dashboards(Protocol):
@@ -236,6 +242,10 @@ class Hub(Protocol):
     def start(self, port: int, holdings: Holdings) -> str: ...
 
     def stop(self) -> bool: ...
+
+
+class ServerApp(Protocol):
+    def app(self, port: int, pid: int) -> ASGIApp: ...
 
 
 class BoardApi(Protocol):

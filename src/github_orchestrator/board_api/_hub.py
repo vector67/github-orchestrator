@@ -2,7 +2,7 @@ import dataclasses
 import logging
 import os
 import threading
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request, Response, WebSocket
 from fastapi import Path as PathParameter
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
+from starlette.routing import BaseRoute
 
 from github_orchestrator.board_api import _etag as etag
 from github_orchestrator.board_api import _routes as routes
@@ -93,6 +94,7 @@ class Desk:
     setup: SetupDesk
     releases: ReleaseRecord
     tour: TourMarker
+    pid: int
 
 
 async def desk_of(request: Request) -> Desk:
@@ -165,7 +167,7 @@ def read_runs(request: Request, desk: Serving) -> Response:
 @reads.get("/health", tags=["hub"], operation_id="readHubHealth",
            summary="Whether the hub is serving, and from which process.")
 async def read_health(desk: Serving) -> Health:
-    return Health(status="ok", pid=os.getpid(), serves="hub", hub_url=desk.url,
+    return Health(status="ok", pid=desk.pid, serves="hub", hub_url=desk.url,
                   font_problem=desk.fonts.problem, state=desk.told.state(), version=desk.version,
                   watcher=watcher_read(desk.pulse.health(), desk.clock()),
                   newest_release=_newest(desk))
@@ -311,6 +313,23 @@ proxy.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", forward_to_bo
 proxy.add_api_websocket_route("/pr/{owner}/{name}/{number}/api/{path:path}", carry_to_board)
 
 
+def refuse_unheld(owner: Owner, name: Name, number: int, path: str) -> Response:
+    raise Refusal(404, ErrorCode.NOT_FOUND,
+                  f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")
+
+
+async def hang_up_unheld(websocket: WebSocket, owner: Owner, name: Name, number: int,
+                         path: str) -> None:
+    await websocket.accept()
+    await websocket.close(GONE, f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")
+
+
+unheld = APIRouter(tags=["hub"])
+unheld.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", refuse_unheld,
+                     methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
+unheld.add_api_websocket_route("/pr/{owner}/{name}/{number}/api/{path:path}", hang_up_unheld)
+
+
 page = APIRouter()
 
 
@@ -322,7 +341,7 @@ async def serve_the_page(request: Request, desk: Serving) -> Response:
         failed=b"<p>hub error \xe2\x80\x94 see the watcher's log</p>")
 
 
-def hub_app(desk: Desk, port: int) -> FastAPI:
+def hub_app(desk: Desk, port: int, boards: Sequence[BaseRoute]) -> FastAPI:
     app = RefusingApp(
         title="Hub",
         version="1.0.0",
@@ -330,7 +349,7 @@ def hub_app(desk: Desk, port: int) -> FastAPI:
         description=DESCRIPTION,
         openapi_url=None, docs_url=None, redoc_url=None,
         routes=[*writes.routes, *setup.writes.routes, *setup.reads.routes, *reads.routes,
-                *proxy.routes, *page.routes],
+                *boards, *page.routes],
     )
     app.state.desk = desk
     add_refusal_handlers(app)
@@ -373,8 +392,8 @@ class ServedHub:
                         app_root=self._app_root, fonts=self._fonts,
                         streams=anyio.CapacityLimiter(self._open_streams),
                         version=self._version, problem=self._problem, setup=self._setup,
-                        releases=self._releases, tour=self._tour)
-            listening.serve(hub_app(desk, listening.port))
+                        releases=self._releases, tour=self._tour, pid=os.getpid())
+            listening.serve(hub_app(desk, listening.port, proxy.routes))
             self._listening, self._url = listening, url
             return url
 

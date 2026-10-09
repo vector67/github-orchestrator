@@ -6,7 +6,7 @@ from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel
 from github_orchestrator.domain import Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
-from github_orchestrator.pr_manager._dashboard_source import DashboardSource
+from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
 from github_orchestrator.pr_manager._files import locked
 from github_orchestrator.pr_manager._git_palette import (
     SHELL,
@@ -109,3 +109,28 @@ class FilePanel(ManagerPanel):
         if refused is None:
             self._command_files.write(self._pr, command)
         return refused
+
+
+class FilePanels:
+    def __init__(self, config_of: ConfigOf, run: GitRun, monotonic: Monotonic, *,
+                 status_files: StatusFiles, command_files: CommandFiles,
+                 dashboards: DashboardSource, agent_changes: AgentChanges, history: History,
+                 pr_processes: PrProcesses, pr_work: PrWork) -> None:
+        self._config_of = config_of
+        self._run = run
+        self._monotonic = monotonic
+        self._status_files = status_files
+        self._command_files = command_files
+        self._dashboards = dashboards
+        self._agent_changes = agent_changes
+        self._history = history
+        self._pr_processes = pr_processes
+        self._pr_work = pr_work
+
+    def of(self, pr: Pr) -> ManagerPanel:
+        return FilePanel(pr, lambda: self._pr_processes.manager_path(pr) or "",
+                         agents_enabled=self._config_of(pr, "").agents_enabled, run=self._run,
+                         monotonic=self._monotonic, status_files=self._status_files,
+                         command_files=self._command_files, dashboards=self._dashboards,
+                         agent_changes=self._agent_changes, history=self._history,
+                         pr_processes=self._pr_processes, pr_work=self._pr_work)

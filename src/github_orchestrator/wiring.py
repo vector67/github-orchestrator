@@ -37,6 +37,9 @@ from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
     Dashboards,
+    Holdings,
+    ManagerPanels,
+    ServerApp,
     SetupDesk,
     Told,
     TourMarker,
@@ -113,7 +116,7 @@ from github_orchestrator.pr_manager._dashboard_source import ConfigOf, Dashboard
 from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
-from github_orchestrator.pr_manager._panel import FilePanel
+from github_orchestrator.pr_manager._panel import FilePanel, FilePanels
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes._background import BackgroundPrProcesses
@@ -714,6 +717,10 @@ class WatcherProvider(Provider):
     seams = from_context(provides=SetupSeams, scope=Scope.APP)
     releases_api = from_context(provides=ReleasesApi, scope=Scope.APP)
     holdings = provide(WatchedHoldings)
+
+    @provide
+    def board_holdings(self, holdings: WatchedHoldings) -> Holdings:
+        return holdings
     setup = provide(ConfigSetup, provides=SetupDesk)
     tour = provide(TourFile, provides=TourMarker)
     placement = provide(WindowPlacement, provides=Placement)
@@ -901,6 +908,59 @@ class HubProvider(Provider):
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
                          told=told, open_streams=wiring.open_streams)
+
+
+class ManagerPanelsProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def panels(self, config_of: ConfigOf, monotonic: Monotonic, status_files: StatusFiles,
+               command_files: CommandFiles, dashboards: DashboardSource,
+               agent_changes: AgentChanges, history: History, pr_processes: PrProcesses,
+               pr_work: PrWork) -> ManagerPanels:
+        return FilePanels(config_of, subprocess.run, monotonic, status_files=status_files,
+                          command_files=command_files, dashboards=dashboards,
+                          agent_changes=agent_changes, history=history,
+                          pr_processes=pr_processes, pr_work=pr_work)
+
+
+@dataclass(frozen=True)
+class ServerAppWiring(Wiring):
+    _: KW_ONLY
+    app_root: Path
+    font_dir: str | None
+    watching: Collection[Repo]
+    version: str | None
+    check_presence: bool
+    first_names_only: bool
+    heartbeat_seconds: float = HEARTBEAT_SECONDS
+    check_seconds: float = STREAM_CHECK_SECONDS
+
+
+@wires(ServerAppWiring)
+class ServerAppProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=ServerAppWiring, scope=Scope.APP)
+
+    @provide
+    def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
+                   history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
+                   setup: SetupDesk, releases: Releases, tour: TourMarker, told: Told,
+                   holdings: Holdings, conversation_managers: ConversationManagerFactory,
+                   working_copies: WorkingCopies, terminals: Terminals,
+                   panels: ManagerPanels) -> ServerApp:
+        from github_orchestrator.board_api._one_server import OneServer
+        return OneServer(app_root=wiring.app_root, font_dir=wiring.font_dir,
+                         dashboards=dashboards, ledger=history, pulse=watcher_health,
+                         clock=clock, watching=wiring.watching, version=wiring.version,
+                         problem=config_file.check, setup=setup, releases=releases, tour=tour,
+                         told=told, holdings=holdings,
+                         conversation_managers=conversation_managers,
+                         working_copies=working_copies, terminals=terminals, panels=panels,
+                         check_presence=wiring.check_presence,
+                         first_names_only=wiring.first_names_only,
+                         heartbeat_seconds=wiring.heartbeat_seconds,
+                         check_seconds=wiring.check_seconds)
 
 
 @dataclass(frozen=True)
@@ -1354,7 +1414,12 @@ def make_container(env: Mapping[str, str], home: Path,
                        first_names_only=settings.config.first_names_only),
         HubWiring(listen_on_loopback, app_root=APP_ROOT, font_dir=board_font_dir(settings),
                   watching=tuple(settings.repos), version=installed_version()),
+        ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
+                        watching=tuple(settings.repos), version=installed_version(),
+                        check_presence=check_presence,
+                        first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        ManagerPanelsProvider,
         *managers,
         *(dry_run_parts(settings) if dry_run else []),
     )

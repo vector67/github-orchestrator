@@ -155,6 +155,7 @@ class Board:
     clock: UtcClock
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
+    prefix: str = ""
 
 
 async def board_of(request: Request) -> Board:
@@ -570,10 +571,10 @@ HANDED_TO_THE_MANAGER: dict[int | str, dict[str, Any]] = {202: {
           "model": Errors}}
 
 
-def _handed_over(refused: str | None) -> Response:
+def _handed_over(board: Board, refused: str | None) -> Response:
     if refused is not None:
         raise Refusal(409, ErrorCode.MANAGER_REFUSED, refused)
-    return Response(status_code=202, headers={"Location": f"{PREFIX}/dashboard"})
+    return Response(status_code=202, headers={"Location": f"{board.prefix}{PREFIX}/dashboard"})
 
 
 @writes.post("/manager:hold", status_code=202, tags=["manager"],
@@ -583,7 +584,7 @@ def hold_manager(board: Serving) -> Response:
     """The dashboard's `p` on a pull request not on hold. On one on hold it
     leaves it on hold.
     """
-    return _handed_over(board.manager.set_on_hold(True))
+    return _handed_over(board, board.manager.set_on_hold(True))
 
 
 @writes.post("/manager:resume", status_code=202, tags=["manager"],
@@ -593,7 +594,7 @@ def resume_manager(board: Serving) -> Response:
     """The dashboard's `p` on a pull request on hold. On one not on hold it
     does nothing.
     """
-    return _handed_over(board.manager.set_on_hold(False))
+    return _handed_over(board, board.manager.set_on_hold(False))
 
 
 @writes.post("/manager:carry-on", status_code=202, tags=["manager"],
@@ -604,7 +605,7 @@ def carry_on(board: Serving) -> Response:
     """The dashboard's `r`. Refused when agents are disabled or a run is
     already going.
     """
-    return _handed_over(board.manager.carry_on())
+    return _handed_over(board, board.manager.carry_on())
 
 
 @writes.post("/manager:start-review", status_code=202, tags=["manager"],
@@ -616,7 +617,7 @@ def start_review(board: Serving) -> Response:
     wrong. A re-review when you have reviewed before. Refused when agents
     are disabled or a run is already going.
     """
-    return _handed_over(board.manager.start_review())
+    return _handed_over(board, board.manager.start_review())
 
 
 @writes.post("/manager:dismiss", status_code=202, tags=["manager"],
@@ -627,7 +628,7 @@ def dismiss_manager(board: Serving, asked: DismissRequest) -> Response:
     """The dashboard's `x u` and `x f`. The manager records the dismissal,
     stops its run and exits, so this board stops answering soon after.
     """
-    return _handed_over(board.manager.dismiss(asked.forever))
+    return _handed_over(board, board.manager.dismiss(asked.forever))
 
 
 @writes.post("/manager:close", status_code=202, tags=["manager"],
@@ -638,7 +639,7 @@ def close_pull_request(board: Serving) -> Response:
     or puts GitHub's refusal in the status's notice; the watcher's next poll
     sees it closed and tears it down.
     """
-    return _handed_over(board.manager.close())
+    return _handed_over(board, board.manager.close())
 
 
 MAX_GIT_LINES = 2000
@@ -756,10 +757,11 @@ def _minted() -> str:
     return f"op_{secrets.token_hex(6)}"
 
 
-def _accepted(answer: Operation | Outcome, operation_id: str, key: str) -> Response:
+def _accepted(board: Board, answer: Operation | Outcome, operation_id: str,
+              key: str) -> Response:
     return JSONResponse(
         status_code=202, content=answer.model_dump(mode="json"),
-        headers={"Location": f"{PREFIX}/conversations/{key}/operations/"
+        headers={"Location": f"{board.prefix}{PREFIX}/conversations/{key}/operations/"
                              f"{operation_id}"})
 
 
@@ -781,7 +783,7 @@ def _queued(board: Board, conversation: domain.Conversation, if_match: str,
     waiting = _thread(board, key)
     account = board.conversations.facts().account
     operation = newest_operation(board.conversations, waiting)
-    return _accepted(Outcome(
+    return _accepted(board, Outcome(
         operation=operation,
         conversation=conversation_of(projected, account).model_copy(
             update={"etag": conversation_of(waiting, account).etag})), operation.id, key)
@@ -1109,7 +1111,7 @@ def create_draft(board: Serving, asked: DraftBody) -> Response:
     if isinstance(drafted, Denied):
         raise _denied(drafted)
     made = newest_operation(board.conversations, drafted)
-    return _accepted(made, made.id, drafted.key)
+    return _accepted(board, made, made.id, drafted.key)
 
 
 @writes.post("/conversations/{key}/operations:edit-draft", status_code=202,
@@ -1226,7 +1228,7 @@ def send_review(board: Serving, asked: SendReviewRequest) -> Response:
     sent = next(one for one in reviews_of(board.conversations) if one.id == review.id)
     return JSONResponse(
         status_code=202, content=sent.model_dump(mode="json"),
-        headers={"Location": f"{PREFIX}/operations/{review.id}"})
+        headers={"Location": f"{board.prefix}{PREFIX}/operations/{review.id}"})
 
 
 def _dashboard(board: Board) -> Dashboard:
