@@ -70,16 +70,15 @@ def _answered_with_a_commit(settings, reply="Fixed in {sha}"):
     return board.tick_after(), sha
 
 
-def test_a_reply_naming_a_commit_asks_whether_that_commit_answers_the_comment(settings):
+def test_a_reply_naming_a_commit_asks_about_that_commit_in_the_prs_checkout(settings):
     board, sha = _answered_with_a_commit(settings)
 
     [asked] = board.agent_runs.commit_checks_asked()
 
-    assert (asked.key, asked.sha, asked.path, asked.line) == (KEY, sha, "helpers.py", 1)
+    assert (asked.key, asked.sha, asked.path, asked.line, asked.worktree) == (
+        KEY, sha, "helpers.py", 1, WORKTREE)
     assert asked.comments == (("you", ME, "rename old_name"),
                               ("PR author", AUTHOR, f"Fixed in {sha[:7]}"))
-    assert "Rename the helper" in asked.patch
-    assert "+def new_name():" in asked.patch
 
 
 def test_a_commit_link_is_checked_like_a_bare_hash(settings):

@@ -146,7 +146,7 @@ class Summaries(Protocol):
                      done: Callable[[str], None]) -> None: ...
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, patch: str,
+                     path: str | None, line: int | None, sha: str, worktree: str,
                      answers: Mapping[str, str], done: Callable[[str, str], None]) -> None: ...
 
 

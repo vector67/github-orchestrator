@@ -170,7 +170,7 @@ class CommitCheckAsked:
     path: str | None
     line: int | None
     sha: str
-    patch: str
+    worktree: str
 
 
 Asked = (CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
@@ -425,9 +425,9 @@ class FakeAgentRuns:
             done(word)
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, patch: str,
+                     path: str | None, line: int | None, sha: str, worktree: str,
                      answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
-        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, patch))
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, worktree))
         answer = self._answered()
         checked = commit_check_in(answer, answers) if isinstance(answer, str) else None
         if checked is not None:
@@ -450,9 +450,9 @@ class HeldVerdicts(FakeAgentRuns):
         self.held.append((key, answers, done))
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, patch: str,
+                     path: str | None, line: int | None, sha: str, worktree: str,
                      answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
-        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, patch))
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, worktree))
         self.held_checks.append((answers, done))
 
     def verdicts_asked(self) -> list[VerdictAsked]:

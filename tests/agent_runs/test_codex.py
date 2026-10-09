@@ -112,6 +112,20 @@ def test_a_gist_is_a_read_only_ephemeral_exec_on_the_summary_model(runs, world, 
     assert written == ["rename it"]
 
 
+def test_a_commit_check_is_a_read_only_ephemeral_exec_in_the_checkout_on_the_model(
+        runs, world, codex, tmp_path):
+    world.answer("addressed || it renames the helper")
+
+    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+                      sha="abc1234def", worktree=str(tmp_path), answers={"addressed": "yes"},
+                      done=lambda word, reasoning: None)
+    assert runs.drain_summaries(10)
+
+    [asked] = codex.asked
+    assert asked.argv == ["codex", "exec", "--ephemeral", "-s", "read-only", "-m", MODEL, "-"]
+    assert asked.cwd == str(tmp_path)
+
+
 def test_a_run_never_sees_the_platform_api_key(runs, codex, tmp_path, monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 

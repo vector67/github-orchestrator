@@ -97,16 +97,16 @@
    ]
   },
   "tests.preview.test_preview.client_for_preview:8917fe3d": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"b41c0d2^{commit}\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"b41c0d2^{commit}\"], null, null]": [
     {
      "argv": [
       "git",
       "--no-optional-locks",
       "-C",
       "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
-      "show",
-      "--format=%H %P%n%B",
-      "--patch",
+      "log",
+      "-1",
+      "--format=%H %P",
       "--end-of-options",
       "b41c0d2^{commit}"
      ],
@@ -120,16 +120,16 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"caf5180^{commit}\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"caf5180^{commit}\"], null, null]": [
     {
      "argv": [
       "git",
       "--no-optional-locks",
       "-C",
       "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
-      "show",
-      "--format=%H %P%n%B",
-      "--patch",
+      "log",
+      "-1",
+      "--format=%H %P",
       "--end-of-options",
       "caf5180^{commit}"
      ],
@@ -139,7 +139,7 @@
       "b64": ""
      },
      "stdout": {
-      "b64": "Y2FmNTE4MDZhODNhZGNkZTljNzRmODZiMmI2ODk4Mjc1NWU3ZGU2OSBlMDA1ZTdkZDMyMjE4NjNkNTQ5NjMyMTNiZTA4YzgzMmFiYjZmMThmClNwZWxsIHRoZSB1bml0cyBvdXQKCgpkaWZmIC0tZ2l0IGEvYmlsbGluZy91bml0cy5weSBiL2JpbGxpbmcvdW5pdHMucHkKaW5kZXggOTA4ODhlZS4uYzhmMTFkOCAxMDA2NDQKLS0tIGEvYmlsbGluZy91bml0cy5weQorKysgYi9iaWxsaW5nL3VuaXRzLnB5CkBAIC0yMCw3ICsyMCw3IEBAIGRlZiBzdGVwXzAxOChsaW5lX2l0ZW1zKToKIAogZGVmIHN0ZXBfMDIxKGxpbmVfaXRlbXMpOgogICAgIHJldHVybiBzb3J0ZWQobGluZV9pdGVtcykKLQorICAgIHJldHVybiBbaXRlbS5pbl91bml0cygpIGZvciBpdGVtIGluIGxpbmVfaXRlbXNdCiBkZWYgc3RlcF8wMjQobGluZV9pdGVtcyk6CiAgICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAyNF0KIAo="
+      "b64": "Y2FmNTE4MDZhODNhZGNkZTljNzRmODZiMmI2ODk4Mjc1NWU3ZGU2OSBlMDA1ZTdkZDMyMjE4NjNkNTQ5NjMyMTNiZTA4YzgzMmFiYjZmMThmCg=="
      }
     }
    ],
@@ -13545,6 +13545,23 @@
    ]
   },
   "tests/preview/test_preview.py::test_every_seeded_thread_answers_every_read_its_card_makes[reviewed]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_queued\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -13580,23 +13597,6 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "0\n"
-    }
-   ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
     }
    ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined\", \"rev-list\", \"--count\", \"--end-of-options\", \"bf28ebab48849dd2fb6209786b228ab35815519f..HEAD\"], null, null]": [
@@ -14916,17 +14916,17 @@
     }
    ]
   },
-  "tests/working_copies/test_contract.py::test_a_commit_named_by_a_short_hash_reads_as_its_parent_message_and_diff[git]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"d31d954^{commit}\"], null, null]": [
+  "tests/working_copies/test_contract.py::test_a_commit_named_by_a_short_hash_reads_as_its_hash_its_parent_and_where_it_is[git]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"d31d954^{commit}\"], null, null]": [
     {
      "argv": [
       "git",
       "--no-optional-locks",
       "-C",
       "<TMP>/feature",
-      "show",
-      "--format=%H %P%n%B",
-      "--patch",
+      "log",
+      "-1",
+      "--format=%H %P",
       "--end-of-options",
       "d31d954^{commit}"
      ],
@@ -14936,7 +14936,7 @@
       "b64": ""
      },
      "stdout": {
-      "b64": "ZDMxZDk1NGYzMWY0ZjVlNGVkMDk0MmQ1OGQ0NmQ1N2ZiYTk0ZDJhYiA5NzEzNDZkOTQyMzE4OTVmY2Y2MmJkNjZiYjliMTk4ZWRkZTNjZjY3ClJlbmFtZSB0aGUgaGVscGVyCgoKZGlmZiAtLWdpdCBhL2ggYi9oCm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAuLmIyOTdhYjUKLS0tIC9kZXYvbnVsbAorKysgYi9oCkBAIC0wLDAgKzEgQEAKK3JlbmFtZWQK"
+      "b64": "ZDMxZDk1NGYzMWY0ZjVlNGVkMDk0MmQ1OGQ0NmQ1N2ZiYTk0ZDJhYiA5NzEzNDZkOTQyMzE4OTVmY2Y2MmJkNjZiYjliMTk4ZWRkZTNjZjY3Cg=="
      }
     }
    ],
@@ -17941,16 +17941,16 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_hash_the_checkout_does_not_hold_reads_as_no_commit[git]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"abcdef1^{commit}\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"abcdef1^{commit}\"], null, null]": [
     {
      "argv": [
       "git",
       "--no-optional-locks",
       "-C",
       "<TMP>/feature",
-      "show",
-      "--format=%H %P%n%B",
-      "--patch",
+      "log",
+      "-1",
+      "--format=%H %P",
       "--end-of-options",
       "abcdef1^{commit}"
      ],

@@ -76,10 +76,10 @@ class PrDiff:
 
 
 @dataclass(frozen=True)
-class CommitPatch:
+class NamedCommit:
     sha: Sha
     parent: Sha
-    text: str
+    worktree: str
 
 
 @dataclass(frozen=True)
@@ -130,7 +130,7 @@ class PrCheckout(Protocol):
 
     def commit_message(self, sha: Sha) -> str | None: ...
 
-    def commit_patch(self, sha: Sha) -> CommitPatch | None: ...
+    def named_commit(self, sha: Sha) -> NamedCommit | None: ...
 
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None: ...
 

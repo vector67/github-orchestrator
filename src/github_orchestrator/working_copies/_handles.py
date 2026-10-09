@@ -4,9 +4,9 @@ from typing import Protocol
 from github_orchestrator.domain import Pr, Sha
 from github_orchestrator.working_copies._layout import thread_branch
 from github_orchestrator.working_copies.interface import (
-    CommitPatch,
     Cut,
     FileDiff,
+    NamedCommit,
     Picked,
     PrDiff,
     ThreadGitError,
@@ -57,7 +57,7 @@ class Git(Protocol):
 
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
 
-    def _commit_patch(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
+    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str] | None: ...
 
     def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
 
@@ -182,13 +182,13 @@ class BoundCheckout:
         path = self._path()
         return None if path is None else self.git._commit_message(path, str(sha))
 
-    def commit_patch(self, sha: Sha) -> CommitPatch | None:
+    def named_commit(self, sha: Sha) -> NamedCommit | None:
         path = self._path()
-        read = None if path is None else self.git._commit_patch(path, str(sha))
-        if read is None:
+        read = None if path is None else self.git._named_commit(path, str(sha))
+        if path is None or read is None:
             return None
-        full, parent, text = read
-        return CommitPatch(Sha(full), Sha(parent), text)
+        full, parent = read
+        return NamedCommit(Sha(full), Sha(parent), path)
 
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None:
         path = self._path()
