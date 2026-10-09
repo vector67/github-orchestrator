@@ -110,3 +110,23 @@ def _alive(pid):
     except ProcessLookupError:
         return False
     return True
+
+
+def test_the_workers_of_a_server_killed_outright_leave_and_free_its_port(instance, tmp_path):
+    own, port = tmp_path / "own", _free_port()
+    server = subprocess.Popen([sys.executable, "-m", "github_orchestrator.server",
+                               "--port", str(port), "--files-in", str(own)],
+                              env=os.environ.copy(), start_new_session=True)
+    workers = []
+    try:
+        assert until(lambda: _health(port) is not None, STARTED_WITHIN_SECONDS)
+        workers = _children(server.pid)
+        server.send_signal(signal.SIGKILL)
+        server.wait(timeout=30)
+
+        assert until(lambda: not any(_alive(pid) for pid in workers), 15)
+        assert _health(port) is None
+    finally:
+        for pid in workers:
+            if _alive(pid):
+                os.kill(pid, signal.SIGKILL)
