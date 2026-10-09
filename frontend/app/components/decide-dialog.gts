@@ -133,7 +133,11 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
   }
 
   get offersThumbsUp(): boolean {
-    return Boolean(this.args.spec.thumbsUp) && !this.typed.trim();
+    return (
+      Boolean(this.args.spec.thumbsUp) &&
+      !this.typed.trim() &&
+      (!this.offersResolve || this.resolving)
+    );
   }
 
   get offersGithubTicks(): boolean {

@@ -188,7 +188,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.strictEqual(board().posted[0]!.verb, 'resolve');
     assert.deepEqual(board().posted[0]!.body, {
       delete_comment: false,
-      resolve: true,
+      resolve: false,
     });
   });
 
@@ -256,29 +256,63 @@ module('Acceptance | reviewer panel', function (hooks) {
       );
   });
 
-  test('an empty resolve says on its button that it puts 👍 on the newest reply', async function (assert) {
+  test('resolve opens with resolving on GitHub unticked and resolves on the board alone', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     await click('[data-test-decision="resolve"]');
 
+    assert.dom('[data-test-resolve]').isNotChecked();
+    assert.dom('[data-test-thumbs-up]').doesNotExist();
     assert
       .dom('[data-test-dialog-submit]')
-      .hasText('Resolve and put 👍 on the newest reply');
+      .hasText('Resolve, posting nothing to GitHub');
+
+    await click('[data-test-dialog-submit]');
+
+    assert.deepEqual(board().posted[0]!.body, {
+      delete_comment: false,
+      resolve: false,
+    });
+  });
+
+  test('a reply with resolving on GitHub unticked says it resolves on the board', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-decision="resolve"]');
+
+    await fillIn('[data-test-dialog-body]', 'Not for me to answer.');
+
+    assert
+      .dom('[data-test-dialog-submit]')
+      .hasText('Post reply and resolve on the board');
+  });
+
+  test('an empty resolve on GitHub says on its button that it puts 👍 on the newest reply', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    await click('[data-test-decision="resolve"]');
+    await click('[data-test-resolve]');
+
+    assert
+      .dom('[data-test-dialog-submit]')
+      .hasText('Resolve on GitHub and put 👍 on the newest reply');
 
     await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
 
-    assert.dom('[data-test-dialog-submit]').hasText('Reply and resolve');
+    assert
+      .dom('[data-test-dialog-submit]')
+      .hasText('Reply and resolve on GitHub');
   });
 
   test('unticking the 👍 resolves with no reaction', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
     await click('[data-test-decision="resolve"]');
+    await click('[data-test-resolve]');
 
     assert.dom('[data-test-thumbs-up]').isChecked();
 
     await click('[data-test-thumbs-up]');
 
-    assert.dom('[data-test-dialog-submit]').hasText('Resolve');
+    assert.dom('[data-test-dialog-submit]').hasText('Resolve on GitHub');
 
     await click('[data-test-dialog-submit]');
 
@@ -292,6 +326,7 @@ module('Acceptance | reviewer panel', function (hooks) {
   test('a written reply is the thanks, so the 👍 tick goes away', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
     await click('[data-test-decision="resolve"]');
+    await click('[data-test-resolve]');
 
     await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
 

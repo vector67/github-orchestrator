@@ -392,7 +392,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
       .hasAttribute('data-weight', 'primary');
     assert
       .dom('[data-test-decision="resolve"]')
-      .hasAttribute('title', /thumbs-up on the newest reply/);
+      .hasAttribute('title', /resolved on GitHub too/);
   });
 
   test('no agent verb reaches a reviewer', async function (assert) {
