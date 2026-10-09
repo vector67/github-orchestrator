@@ -52,6 +52,19 @@ def test_a_server_whose_port_is_taken_leaves_with_a_line_in_its_log(instance):
     assert f"port {port} is taken" in (instance / "logs" / "server.log").read_text()
 
 
+def test_a_server_told_no_port_serves_the_configs_hub_port(instance, tmp_path):
+    config = tmp_path / "config.toml"
+    with socket.socket() as taken:
+        taken.bind(("127.0.0.1", 0))
+        taken.listen()
+        port = taken.getsockname()[1]
+        config.write_text(f"hub_port = {port}\n" + config.read_text())
+
+        assert main([]) == 1
+
+    assert f"port {port} is taken" in (instance / "logs" / "server.log").read_text()
+
+
 def test_a_server_that_finds_the_lock_held_leaves_with_a_line_in_its_log(instance):
     instance.mkdir(parents=True)
     with open(instance / "server.lock", "a") as held:
