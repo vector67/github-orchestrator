@@ -13,9 +13,21 @@ serving over and deletes what it replaces.
 
 - Every change follows `.claude/skills/normal-workflow`, including its private
   information and public-root checks before each merge. Load `tdd` for anything
-  that changes behaviour and `refactor` for reshaping.
+  that changes behaviour and `refactor` for reshaping. The user has approved
+  running the steps straight through without stopping to confirm.
 - Each step gets its own branch in its own worktree, cut from local `main`. It
   is merged and restarted before the next step starts.
+- **Who proves what.** A step agent proves its step with tests, and where the
+  step says so, with a scratch instance (its own data directory and port) or a
+  server on a spare port. Against the live data directory it sends only GET
+  requests. It never runs `make restart-all`, never stops or signals the live
+  watcher, managers or server, and never writes under the live data directory.
+  The coordinator merges, restarts and does each step's "prove on the running
+  system" check.
+- **Every decision goes in the plan.** A choice the spec left open, a leftover
+  and the constraint that holds it, a budget call: each gets a line under its
+  step in "Decisions" at the end of this plan, with its reason, in the step's
+  last commit.
 - Run `make lint-python` and `make test-python` before each commit. When the
   commit touches `frontend/`, run the full `make lint` and `make test` as well,
   and report the pass counts. A falling count fails the check unless the commit
@@ -146,3 +158,7 @@ serving over and deletes what it replaces.
      through the hub port. Record the numbers in the spec. The step passes when,
      with the load average above 80, the diff's p90 and `/health`'s max are both
      under 1 s, and a stopped manager's board still answers and shows it as gone.
+
+## Decisions
+
+Each step adds its decisions here, under its number, with the reason for each.
