@@ -2,7 +2,7 @@ import dataclasses
 import logging
 import os
 import threading
-from collections.abc import Callable, Collection, Sequence
+from collections.abc import Callable, Collection
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
@@ -48,6 +48,7 @@ from github_orchestrator.board_api.interface import (
     Holdings,
     ReleaseRecord,
     SetupDesk,
+    Told,
     TourMarker,
     WatcherPulse,
 )
@@ -78,8 +79,7 @@ HANDED_TO_THE_WATCHER: dict[int | str, dict[str, Any]] = {
 @dataclasses.dataclass(frozen=True)
 class Desk:
     holdings: Holdings
-    held: Callable[[], tuple[Pr, ...]]
-    told: Callable[[], bool]
+    told: Told
     wall: Wall
     ledger: Ledger
     pulse: WatcherPulse
@@ -88,7 +88,6 @@ class Desk:
     app_root: Path
     fonts: routes.Fonts
     streams: anyio.CapacityLimiter
-    state: HubState
     version: str | None
     problem: Callable[[], str | None]
     setup: SetupDesk
@@ -132,16 +131,18 @@ def list_pull_requests(request: Request, desk: Serving) -> Response:
     they joined it, so a row that changes group goes to the bottom of its
     new one and says where it came from.
     """
-    if not desk.told():
+    held = desk.told.held()
+    if not held.told:
         raise _unheld(desk)
-    return etag.answered(request, desk.wall.read(desk.held(), desk.holdings))
+    return etag.answered(request, desk.wall.read(held, desk.holdings))
 
 
 def _unheld(desk: Desk) -> Refusal:
     again = {"Retry-After": "1"}
-    if desk.state is not HubState.WATCHING:
+    state = desk.told.state()
+    if state is not None and state is not HubState.WATCHING:
         return Refusal(503, ErrorCode.NOT_WATCHING,
-                       desk.problem() or f"the hub is in {desk.state} state", headers=again)
+                       desk.problem() or f"the hub is in {state} state", headers=again)
     failed = desk.pulse.health().last_error
     if failed is not None:
         return Refusal(503, ErrorCode.WATCHER_FAILING, failed, headers=again)
@@ -157,15 +158,15 @@ def read_runs(request: Request, desk: Serving) -> Response:
     in the last seven days, newest first, how many ended today and what they
     cost, and when the watcher last polled and polls next.
     """
-    return etag.answered(request, ledger_read(desk.ledger, desk.pulse, desk.held(),
-                                              desk.clock()))
+    return etag.answered(request, ledger_read(desk.ledger, desk.pulse,
+                                              tuple(desk.told.held().managers), desk.clock()))
 
 
 @reads.get("/health", tags=["hub"], operation_id="readHubHealth",
            summary="Whether the hub is serving, and from which process.")
 async def read_health(desk: Serving) -> Health:
     return Health(status="ok", pid=os.getpid(), serves="hub", hub_url=desk.url,
-                  font_problem=desk.fonts.problem, state=desk.state, version=desk.version,
+                  font_problem=desk.fonts.problem, state=desk.told.state(), version=desk.version,
                   watcher=watcher_read(desk.pulse.health(), desk.clock()),
                   newest_release=_newest(desk))
 
@@ -198,7 +199,7 @@ def read_contract(request: Request) -> Response:
 
 def _held(desk: Desk, owner: str, name: str, number: int) -> Pr:
     pr = Pr(Repo(owner, name), number)
-    if pr not in desk.held():
+    if pr not in desk.told.held().managers:
         raise Refusal(404, ErrorCode.NOT_FOUND,
                       f"the watcher holds no pull request {pr}")
     return pr
@@ -342,8 +343,9 @@ class ServedHub:
                  dashboards: Dashboards, ledger: Ledger, pulse: WatcherPulse,
                  clock: UtcClock, watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, open_streams: int) -> None:
+                 tour: TourMarker, told: Told, open_streams: int) -> None:
         self._listen = listen
+        self._told = told
         self._releases = releases
         self._tour = tour
         self._setup = setup
@@ -357,29 +359,24 @@ class ServedHub:
         self._fonts = routes.served_fonts(font_dir)
         self._wall = Wall(dashboards, watching)
         self._lock = threading.Lock()
-        self._held: tuple[Pr, ...] | None = None
         self._listening: Listening | None = None
         self._url: str | None = None
 
-    def start(self, port: int, holdings: Holdings, state: HubState) -> str:
+    def start(self, port: int, holdings: Holdings) -> str:
         with self._lock:
             if self._listening is not None and self._url is not None:
                 return self._url
             listening = self._listen(port)
             url = loopback_url(listening.port)
-            desk = Desk(holdings=holdings, held=self._shown, told=self._told, wall=self._wall,
+            desk = Desk(holdings=holdings, told=self._told, wall=self._wall,
                         ledger=self._ledger, pulse=self._pulse, clock=self._clock, url=url,
                         app_root=self._app_root, fonts=self._fonts,
-                        streams=anyio.CapacityLimiter(self._open_streams), state=state,
+                        streams=anyio.CapacityLimiter(self._open_streams),
                         version=self._version, problem=self._problem, setup=self._setup,
                         releases=self._releases, tour=self._tour)
             listening.serve(hub_app(desk, listening.port))
             self._listening, self._url = listening, url
             return url
-
-    def show(self, prs: Sequence[Pr]) -> None:
-        with self._lock:
-            self._held = tuple(dict.fromkeys(prs))
 
     def stop(self) -> bool:
         with self._lock:
@@ -389,11 +386,3 @@ class ServedHub:
             self._listening, self._url = None, None
         listening.close()
         return True
-
-    def _shown(self) -> tuple[Pr, ...]:
-        with self._lock:
-            return self._held or ()
-
-    def _told(self) -> bool:
-        with self._lock:
-            return self._held is not None

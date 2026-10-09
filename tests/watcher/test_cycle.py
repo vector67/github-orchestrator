@@ -179,7 +179,7 @@ def test_one_pr_that_cannot_be_polled_does_not_stop_the_rest(settings, pr_proces
     assert list(pr_processes.managers) == [a_pr(2, REPO)]
 
 
-def test_a_cycle_polls_then_reaps_then_revives(settings):
+def test_a_cycle_polls_then_reaps_then_revives_then_tells_the_hub_each_managers_state(settings):
     github = watching(settings)
     _mine(github, 1)
     disk_change_detection(settings.state_dir).close(a_pr(7, REPO))
@@ -188,7 +188,8 @@ def test_a_cycle_polls_then_reaps_then_revives(settings):
 
     watcher_over(settings, github=github, pr_processes=windows).run_cycle()
 
-    assert windows.calls == [("manager", 1), ("manager", 7), ("close", 7), ("manager", 9)]
+    assert windows.calls == [("manager", 1), ("manager", 7), ("close", 7), ("manager", 9),
+                             ("manager", 1)]
 
 
 def test_a_save_that_fails_raises_nothing_until_the_next_poll_saves(monkeypatch, settings):

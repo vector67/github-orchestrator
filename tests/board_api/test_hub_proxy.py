@@ -15,7 +15,6 @@ from websockets.exceptions import ConnectionClosed, InvalidStatus
 from websockets.sync.client import connect
 
 from github_orchestrator.board_api.fake import FakeHoldings
-from github_orchestrator.domain import HubState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
 from github_orchestrator.wiring import listen_on_loopback
@@ -27,6 +26,7 @@ from tests.board_api.support import (
     board_on,
     fake_threads,
     heard_on,
+    holding,
     hub_contract,
     hub_on,
     running,
@@ -201,9 +201,8 @@ def test_an_answer_the_board_streams_reaches_the_page_a_piece_at_a_time():
     release = threading.Event()
     upstream = listen_on_loopback(0)
     upstream.serve(dripping(release))
-    hub = hub_on(listen_on_loopback)
-    hub.show([THE_PR])
-    url = hub.start(0, FakeHoldings(ports={THE_PR: upstream.port}), HubState.WATCHING)
+    hub = hub_on(listen_on_loopback, told=holding(THE_PR))
+    url = hub.start(0, FakeHoldings(ports={THE_PR: upstream.port}))
     page = http.client.HTTPConnection("127.0.0.1", int(url.rsplit(":", 1)[1]), timeout=5)
     try:
         page.request("GET", "/pr/acme/widgets/54/api/events")
@@ -255,9 +254,8 @@ def chunked_event_stream(asked):
 
 
 def hub_before_dropping(dropping):
-    hub = hub_on(listen_on_loopback)
-    hub.show([THE_PR])
-    url = hub.start(0, FakeHoldings(ports={THE_PR: dropping.port}), HubState.WATCHING)
+    hub = hub_on(listen_on_loopback, told=holding(THE_PR))
+    url = hub.start(0, FakeHoldings(ports={THE_PR: dropping.port}))
     return hub, url
 
 
@@ -314,9 +312,8 @@ def test_a_board_going_away_mid_terminal_closes_the_page_saying_it_is_unreachabl
 
 @pytest.fixture
 def hub_streams(board):
-    hub = hub_on(listen_on_loopback)
-    hub.show([THE_PR])
-    url = hub.start(0, FakeHoldings(ports={THE_PR: port_of(board)}), HubState.WATCHING)
+    hub = hub_on(listen_on_loopback, told=holding(THE_PR))
+    url = hub.start(0, FakeHoldings(ports={THE_PR: port_of(board)}))
     streams = []
 
     def open_stream(path, headers=None):
@@ -368,9 +365,8 @@ def test_fifty_open_streams_leave_the_wall_and_a_pr_page_answering_promptly(hub_
 
 
 def test_a_stream_the_page_closed_gives_its_place_to_the_next_one_at_once(board):
-    hub = hub_on(listen_on_loopback, open_streams=1)
-    hub.show([THE_PR])
-    port = int(hub.start(0, FakeHoldings(ports={THE_PR: port_of(board)}), HubState.WATCHING).rsplit(":", 1)[1])
+    hub = hub_on(listen_on_loopback, open_streams=1, told=holding(THE_PR))
+    port = int(hub.start(0, FakeHoldings(ports={THE_PR: port_of(board)})).rsplit(":", 1)[1])
     first = Events(port, "/pr/acme/widgets/54/api/manager/changes/stream")
     first.event()
     first.close()
@@ -467,9 +463,8 @@ def test_another_sites_page_cannot_reach_a_terminal_through_the_hub(hub_streams,
 
 
 def test_a_terminal_of_a_pr_whose_board_is_down_closes_the_page_saying_so(sessions):
-    hub = hub_on(listen_on_loopback)
-    hub.show([THE_PR])
-    url = hub.start(0, FakeHoldings(ports={}), HubState.WATCHING)
+    hub = hub_on(listen_on_loopback, told=holding(THE_PR))
+    url = hub.start(0, FakeHoldings(ports={}))
     try:
         with connect(f"ws{url.removeprefix('http')}/pr/acme/widgets/54/api/terminal/sessions/one",
                      origin=url, open_timeout=5) as page:

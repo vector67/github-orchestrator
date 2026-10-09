@@ -4,6 +4,7 @@ import logging
 import pytest
 
 from github_orchestrator.board_api.fake import FakeHub
+from github_orchestrator.board_api.interface import Told
 from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.github.fake import FakeGitHub
@@ -54,6 +55,10 @@ def _prepared(monkeypatch, tmp_path, argv, *, config=CONFIGURED, error=None, des
     return github, logs
 
 
+def told(tmp_path):
+    return watcher_container(fake_settings(tmp_path)).get(Told)
+
+
 def _held(path):
     lock = open(path, "w")
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -89,7 +94,7 @@ def test_a_resident_watcher_without_a_complete_config_serves_the_hub_and_polls_n
 
     watcher_main.main()
 
-    assert hub.states == [state]
+    assert told(tmp_path).state() is state
     assert github.searched == []
 
 
@@ -112,7 +117,7 @@ def test_a_broken_config_moved_aside_drops_the_hub_into_setup_by_a_restart(tmp_p
 
     watcher_main.main()
 
-    assert (hub.states, hub.port) == ([HubState.BROKEN], None)
+    assert (told(tmp_path).state(), hub.port) == (HubState.BROKEN, None)
 
 
 def test_a_resident_watcher_without_a_complete_config_takes_the_lock_first(
@@ -128,7 +133,7 @@ def test_a_resident_watcher_without_a_complete_config_takes_the_lock_first(
         lock.close()
 
     assert excinfo.value.code == 0
-    assert hub.states == []
+    assert (hub.starts, told(tmp_path).state()) == (0, None)
 
 
 @pytest.mark.parametrize(("config", "said"), [

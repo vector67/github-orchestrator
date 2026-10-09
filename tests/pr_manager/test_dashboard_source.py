@@ -6,10 +6,10 @@ from fastapi.testclient import TestClient
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.fake import FakeBoardApi, FakeHoldings
 from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
-from github_orchestrator.domain import AuthorKind, HubState
+from github_orchestrator.domain import AuthorKind
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
-from tests.board_api.support import HUB_PORT, served_board, served_hub
+from tests.board_api.support import HUB_PORT, holding, served_board, served_hub
 from tests.conversation.support import (
     at,
     fake_conversation_managers,
@@ -304,9 +304,9 @@ def test_a_stopped_managers_dashboard_reads_gone_once_its_status_is_ten_seconds_
 def test_the_wall_and_an_open_board_give_the_same_dashboard(settings, tmp_path):
     seed(settings, POLLED)
     manager, board = _working(settings, tmp_path)
-    hub, on_the_hub = served_hub(dashboards=manager.container.get(Dashboards))
-    hub_url = hub.start(HUB_PORT, FakeHoldings(managers={THE_PR: "running"}), HubState.WATCHING)
-    hub.show([THE_PR])
+    hub, on_the_hub = served_hub(dashboards=manager.container.get(Dashboards),
+                                 told=holding(THE_PR))
+    hub_url = hub.start(HUB_PORT, FakeHoldings())
     served, on_the_board = served_board(manager.conversation_managers, manager.working_copies)
     board_url = served.start(THE_PR, port=0, manager=board.panel)
 

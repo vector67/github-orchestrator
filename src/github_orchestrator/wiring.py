@@ -38,6 +38,7 @@ from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
     Dashboards,
     SetupDesk,
+    Told,
     TourMarker,
 )
 from github_orchestrator.change_detection import ChangeDetection
@@ -109,6 +110,7 @@ from github_orchestrator.pr_manager._command_file import CommandFiles
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
+from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
 from github_orchestrator.pr_manager._status import StatusFiles
@@ -170,6 +172,7 @@ from github_orchestrator.watcher._releases import (
 from github_orchestrator.watcher._saving import CycleSaving, Saving
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
 from github_orchestrator.watcher._teardown import PrTeardown, Teardown
+from github_orchestrator.watcher._told import ToldFiles
 from github_orchestrator.watcher._tour import TourFile
 from github_orchestrator.watcher._would import (
     WouldDeliver,
@@ -299,6 +302,7 @@ class SwitchesWiring(Wiring):
     on_hold_dir: Path
     dismissed_dir: Path
     board_dir: Path
+    data_dir: Path
 
 
 @wires(SwitchesWiring)
@@ -317,6 +321,14 @@ class SwitchesProvider(Provider):
     @provide
     def boards(self, wiring: SwitchesWiring) -> Boards:
         return FlagFileBoards(wiring.board_dir)
+
+    @provide
+    def told_files(self, wiring: SwitchesWiring) -> ToldFiles:
+        return ToldFiles(wiring.data_dir, write_whole)
+
+    @provide
+    def told(self, files: ToldFiles) -> Told:
+        return files
 
 
 @dataclass(frozen=True)
@@ -878,13 +890,13 @@ class HubProvider(Provider):
     @provide
     def hub(self, wiring: HubWiring, clock: UtcClock, dashboards: Dashboards,
             history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
-            setup: SetupDesk, releases: Releases, tour: TourMarker) -> Hub:
+            setup: SetupDesk, releases: Releases, tour: TourMarker, told: Told) -> Hub:
         from github_orchestrator.board_api._hub import ServedHub
         return ServedHub(wiring.listen, app_root=wiring.app_root, font_dir=wiring.font_dir,
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         open_streams=wiring.open_streams)
+                         told=told, open_streams=wiring.open_streams)
 
 
 @dataclass(frozen=True)
@@ -1137,7 +1149,8 @@ def logs_wiring(settings: Settings) -> LogsWiring:
 
 
 def switches_wiring(settings: Settings) -> SwitchesWiring:
-    return SwitchesWiring(settings.on_hold_dir, settings.dismissed_dir, settings.board_dir)
+    return SwitchesWiring(settings.on_hold_dir, settings.dismissed_dir, settings.board_dir,
+                          settings.data_dir)
 
 
 def pr_event_queue_wiring(settings: Settings) -> PrEventQueueWiring:

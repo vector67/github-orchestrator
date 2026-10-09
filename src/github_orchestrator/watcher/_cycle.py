@@ -103,8 +103,9 @@ class PollingWatcher:
 
     def run_forever(self) -> None:
         log.info("--- watcher daemon started (interval=%ss) ---", self._config.poll_interval)
+        self._saving.began(HubState.WATCHING)
         while not self._leaving.asked():
-            self._serve_hub(HubState.WATCHING)
+            self._serve_hub()
             self._releases.check_if_due()
             try:
                 self._polled()
@@ -117,23 +118,24 @@ class PollingWatcher:
 
     def wait_in(self, state: HubState, current: Callable[[], HubState]) -> None:
         log.info("--- watcher serving the hub alone, in %s ---", state)
+        self._saving.began(state)
         try:
             clear_failures(self._config.failures)
         except OSError as exc:
             log.warning("Could not clear %s: %s", self._config.failures, exc)
         while (now := current()) is state and not self._leaving.asked():
-            self._serve_hub(state)
+            self._serve_hub()
             self._releases.check_if_due()
             self._sleep(CONFIG_CHECK_SECONDS)
         log.info("the config is %s now; stopping so the service starts the watcher again", now)
         self._hub.stop()
 
-    def _serve_hub(self, state: HubState) -> None:
+    def _serve_hub(self) -> None:
         if self._hub_url is not None:
             return
         port = self._config.hub_port
         try:
-            self._hub_url = self._hub.start(port, self._holdings, state)
+            self._hub_url = self._hub.start(port, self._holdings)
         except OSError as exc:
             if str(exc) != self._hub_refused:
                 log.error("the hub will not start on %s (%s); trying again until it does",
@@ -355,9 +357,8 @@ class PollingWatcher:
         total_events = self._poll_all_prs(held)
         torn_down = (self._detect_closed_prs(set(found), endings)
                      + self._tear_down_dismissed(found))
-        self._hub.show(list(held))
         self._placement.revive_pending()
-        self._saving.polled()
+        self._saving.polled({pr: self._pr_processes.manager(pr) for pr in held})
         log.debug("--- watcher end ---")
 
         summary = (f"Polled {len(set(found))} PRs, {total_events} events queued, "

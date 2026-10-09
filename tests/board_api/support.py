@@ -20,12 +20,19 @@ from github_orchestrator.board_api.fake import (
     FakeHoldings,
     FakeManagerPanel,
     FakeSetupDesk,
+    FakeTold,
     FakeTour,
 )
-from github_orchestrator.board_api.interface import Dashboards, SetupDesk, TourMarker
+from github_orchestrator.board_api.interface import (
+    Dashboards,
+    Held,
+    SetupDesk,
+    Told,
+    TourMarker,
+)
 from github_orchestrator.conversation import Conversation, ConversationManagerFactory
 from github_orchestrator.conversation.fake import FakeConversationManagerFactory
-from github_orchestrator.domain import HubState, Repo
+from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.github import ThreadComment
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -155,8 +162,9 @@ def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | No
            pulse: WatcherHealth | None = None, config_file: Words = Words(None),
            watching: Collection[Repo] = (Repo("acme", "widgets"),),
            setup: SetupDesk | None = None, releases: Any = None,
-           tour: TourMarker | None = None) -> Hub:
+           tour: TourMarker | None = None, told: Told | None = None) -> Hub:
     hub: Hub = wire(
+        fake_provider(Told, told or FakeTold()),
         fake_provider(Releases, releases or NoReleaseYet()),
         fake_provider(Dashboards, dashboards or FakeDashboards()),
         fake_provider(SetupDesk, setup or FakeSetupDesk()),
@@ -174,6 +182,11 @@ def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | No
 class NoReleaseYet:
     def recorded(self) -> None:
         return None
+
+
+def holding(*prs: Pr, managers: dict[Pr, str] | None = None) -> FakeTold:
+    return FakeTold(Held(told=True, managers={pr: (managers or {}).get(pr, "running")
+                                              for pr in prs}))
 
 
 def served_hub(app_root: Path = UNBUILT, **wall: Any) -> tuple[Hub, InProcess]:
@@ -301,7 +314,7 @@ def board_contract() -> Any:
 @functools.cache
 def hub_contract() -> Any:
     hub, listening = served_hub()
-    url = hub.start(HUB_PORT, FakeHoldings(), HubState.WATCHING)
+    url = hub.start(HUB_PORT, FakeHoldings())
     return TestClient(listening.app, base_url=url).get("/api/openapi.json").json()
 
 

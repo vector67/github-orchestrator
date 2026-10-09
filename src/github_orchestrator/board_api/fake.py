@@ -1,11 +1,12 @@
-from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
 from github_orchestrator.board_api.interface import (
+    NOTHING_HELD,
     CloneSpot,
     Dashboard,
     FieldRefusal,
+    Held,
     Holdings,
     ManagerPanel,
     ManagerStanding,
@@ -140,15 +141,23 @@ class FakeDashboards:
 
 
 @dataclass
+class FakeTold:
+    now: Held = NOTHING_HELD
+    hub_state: HubState | None = HubState.WATCHING
+
+    def held(self) -> Held:
+        return self.now
+
+    def state(self) -> HubState | None:
+        return self.hub_state
+
+
+@dataclass
 class FakeHoldings:
-    managers: dict[Pr, str] = field(default_factory=dict)
     ports: dict[Pr, int] = field(default_factory=dict)
     frozen: set[Pr] = field(default_factory=set)
     on_hold: set[Pr] = field(default_factory=set)
     released: set[Pr] = field(default_factory=set)
-
-    def manager(self, pr: Pr) -> str:
-        return self.managers.get(pr, "no-window")
 
     def board_port(self, pr: Pr) -> int | None:
         return self.ports.get(pr)
@@ -171,22 +180,16 @@ class FakeHub:
     taken: set[int] = field(default_factory=set)
     port: int | None = None
     holdings: Holdings | None = None
-    shown: list[Pr] = field(default_factory=list)
     starts: int = 0
-    states: list[HubState] = field(default_factory=list)
 
-    def start(self, port: int, holdings: Holdings, state: HubState) -> str:
+    def start(self, port: int, holdings: Holdings) -> str:
         if self.port is None:
             if port in self.taken:
                 raise OSError(f"port {port} is already in use")
             self.port = port or 8720
             self.holdings = holdings
             self.starts += 1
-            self.states.append(state)
         return f"http://127.0.0.1:{self.port}"
-
-    def show(self, prs: Sequence[Pr]) -> None:
-        self.shown = list(prs)
 
     def stop(self) -> bool:
         if self.port is None:

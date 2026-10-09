@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from github_orchestrator.agent_runs import Agent
-from github_orchestrator.board_api.fake import FakeHoldings
+from github_orchestrator.board_api.fake import FakeHoldings, FakeTold
 from github_orchestrator.board_api.interface import SetupDesk, TourMarker
 from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.github import PullRequestState
@@ -108,8 +108,9 @@ def serve(world: World, config: str | None = None, *, state=HubState.SETUP,
         requirements=lambda: [("gh", None), ("claude", "install claude")])
     world.watcher = container.get(Watcher)
     listening = InProcess()
-    hub = hub_on(listening, setup=container.get(SetupDesk), tour=container.get(TourMarker))
-    url = hub.start(HUB_PORT, FakeHoldings(), state)
+    hub = hub_on(listening, setup=container.get(SetupDesk), tour=container.get(TourMarker),
+                 told=FakeTold(hub_state=state))
+    url = hub.start(HUB_PORT, FakeHoldings())
     world.client = TestClient(listening.app, base_url=url)
     return world
 

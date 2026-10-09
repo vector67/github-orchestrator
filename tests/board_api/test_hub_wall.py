@@ -8,10 +8,10 @@ from github_orchestrator.board_api.fake import (
     FakeHoldings,
     FakeManagerPanel,
 )
-from github_orchestrator.domain import HubState
 from tests.board_api.support import (
     HUB_PORT,
     client_for,
+    holding,
     served_hub,
 )
 from tests.builders import a_pr
@@ -33,10 +33,10 @@ def snapshot(pr, **fields):
     return replace(IDLE, pr=pr, **fields)
 
 
-def wall(holdings=None, dashboards=None, *prs):
-    hub, listening = served_hub(dashboards=dashboards or FakeDashboards())
-    url = hub.start(HUB_PORT, holdings or FakeHoldings(), HubState.WATCHING)
-    hub.show(list(prs))
+def wall(holdings=None, dashboards=None, *prs, managers=None):
+    hub, listening = served_hub(dashboards=dashboards or FakeDashboards(),
+                                told=holding(*prs, managers=managers))
+    url = hub.start(HUB_PORT, holdings or FakeHoldings())
     return TestClient(listening.app, base_url=url), hub
 
 
@@ -50,8 +50,8 @@ def served_as_a_board_serves(dashboard):
 
 def test_each_row_carries_the_dashboard_built_from_what_is_on_disk():
     rebuilt = snapshot(SECOND, on_hold=True)
-    web, _ = wall(FakeHoldings(managers={SECOND: "exited"}),
-                  FakeDashboards({SECOND: rebuilt}), SECOND)
+    web, _ = wall(FakeHoldings(), FakeDashboards({SECOND: rebuilt}), SECOND,
+                  managers={SECOND: "exited"})
 
     assert rows(web) == [{
         "repo": REPO, "number": 54, "manager": "exited", "board_url": None,
@@ -60,8 +60,7 @@ def test_each_row_carries_the_dashboard_built_from_what_is_on_disk():
 
 
 def test_a_row_whose_manager_wants_a_board_links_to_it():
-    web, _ = wall(FakeHoldings(managers={SECOND: "running"}, ports={SECOND: 8757}),
-                  FakeDashboards(), SECOND)
+    web, _ = wall(FakeHoldings(ports={SECOND: 8757}), FakeDashboards(), SECOND)
 
     [row] = rows(web)
 

@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -124,9 +124,22 @@ class Dashboards(Protocol):
     def dashboard(self, pr: Pr) -> Dashboard: ...
 
 
-class Holdings(Protocol):
-    def manager(self, pr: Pr) -> str: ...
+@dataclass(frozen=True)
+class Held:
+    told: bool
+    managers: Mapping[Pr, str]
 
+
+NOTHING_HELD = Held(told=False, managers={})
+
+
+class Told(Protocol):
+    def held(self) -> Held: ...
+
+    def state(self) -> HubState | None: ...
+
+
+class Holdings(Protocol):
     def board_port(self, pr: Pr) -> int | None: ...
 
     def hold(self, pr: Pr) -> None: ...
@@ -220,9 +233,7 @@ class TourMarker(Protocol):
 
 
 class Hub(Protocol):
-    def start(self, port: int, holdings: Holdings, state: HubState) -> str: ...
-
-    def show(self, prs: Sequence[Pr]) -> None: ...
+    def start(self, port: int, holdings: Holdings) -> str: ...
 
     def stop(self) -> bool: ...
 

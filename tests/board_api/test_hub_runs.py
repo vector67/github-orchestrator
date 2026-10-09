@@ -4,10 +4,9 @@ from fastapi.testclient import TestClient
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
 from github_orchestrator.board_api.fake import FakeHoldings
-from github_orchestrator.domain import HubState
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.watcher import Health
-from tests.board_api.support import HUB_PORT, Pulse, served_hub
+from tests.board_api.support import HUB_PORT, Pulse, holding, served_hub
 from tests.builders import a_pr
 
 REPO = "acme/widgets"
@@ -26,9 +25,9 @@ def ledger():
 
 
 def runs_read(runs=None, health=POLLING, *held):
-    hub, listening = served_hub(ledger=runs or ledger(), pulse=Pulse(health), clock=lambda: NOW)
-    url = hub.start(HUB_PORT, FakeHoldings(), HubState.WATCHING)
-    hub.show(list(held))
+    hub, listening = served_hub(ledger=runs or ledger(), pulse=Pulse(health), clock=lambda: NOW,
+                                told=holding(*held))
+    url = hub.start(HUB_PORT, FakeHoldings())
     return TestClient(listening.app, base_url=url).get("/api/runs")
 
 
@@ -113,7 +112,7 @@ def test_a_watcher_that_never_polled_says_no_time():
 
 def test_the_runs_are_not_modified_while_nothing_changes():
     hub, listening = served_hub(ledger=ledger(), pulse=Pulse(POLLING), clock=lambda: NOW)
-    url = hub.start(HUB_PORT, FakeHoldings(), HubState.WATCHING)
+    url = hub.start(HUB_PORT, FakeHoldings())
     web = TestClient(listening.app, base_url=url)
     first = web.get("/api/runs")
 

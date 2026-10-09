@@ -4,7 +4,6 @@ import pytest
 
 from github_orchestrator.board_api import Hub
 from github_orchestrator.board_api.fake import FakeHoldings, FakeHub
-from github_orchestrator.domain import HubState
 from github_orchestrator.wiring import listen_on_loopback
 from tests.board_api.support import hub_on
 
@@ -26,7 +25,7 @@ def hub(kind):
 
 
 def start(hub, port=0):
-    return hub.start(port, FakeHoldings(), HubState.WATCHING)
+    return hub.start(port, FakeHoldings())
 
 
 def test_a_started_hub_answers_on_loopback(hub):
@@ -53,12 +52,6 @@ def test_a_hub_that_was_never_started_has_nothing_to_stop(hub):
 def test_a_stopped_hub_starts_again(hub):
     start(hub)
     hub.stop()
-
-    assert start(hub).startswith("http://127.0.0.1:")
-
-
-def test_a_hub_takes_the_prs_it_is_shown_before_it_starts(hub):
-    hub.show([])
 
     assert start(hub).startswith("http://127.0.0.1:")
 

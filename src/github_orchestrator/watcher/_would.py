@@ -1,8 +1,9 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping
 from datetime import datetime
 
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Worklist
+from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._poll import Fetched
@@ -48,10 +49,13 @@ class WouldTearDown:
 
 
 class WouldSave:
+    def began(self, state: HubState) -> None:
+        pass
+
     def threads_seen(self, pr: Pr, fetched: Fetched) -> None:
         pass
 
-    def polled(self) -> None:
+    def polled(self, managers: Mapping[Pr, ManagerPane]) -> None:
         pass
 
     def failed(self, exc: BaseException) -> None:
@@ -62,12 +66,9 @@ class WouldServeHub:
     def __init__(self, say: Callable[[str], None]) -> None:
         self._say = say
 
-    def start(self, port: int, holdings: object, state: object) -> str:
+    def start(self, port: int, holdings: object) -> str:
         self._say(f"would serve the hub on port {port}")
         return f"port {port}, not served on a dry run"
-
-    def show(self, prs: Sequence[Pr]) -> None:
-        pass
 
     def stop(self) -> bool:
         return False

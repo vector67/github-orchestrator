@@ -16,9 +16,6 @@ class WatchedHoldings:
         self._boards = boards
         self._working_copies = working_copies
 
-    def manager(self, pr: Pr) -> str:
-        return self._pr_processes.manager(pr).value
-
     def board_port(self, pr: Pr) -> int | None:
         return self._boards.board_port(pr) if self._boards.board_wanted(pr) else None
 

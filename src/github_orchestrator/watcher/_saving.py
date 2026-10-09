@@ -1,9 +1,11 @@
 import logging
+from collections.abc import Mapping
 from typing import Protocol
 
-from github_orchestrator.domain import Pr, UtcClock
+from github_orchestrator.domain import HubState, Pr, UtcClock
 from github_orchestrator.github import Access
 from github_orchestrator.notifications import Polling, ThreadNews
+from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._failures import (
@@ -12,6 +14,7 @@ from github_orchestrator.watcher._failures import (
     record_failure,
 )
 from github_orchestrator.watcher._poll import Fetched
+from github_orchestrator.watcher._told import ToldFiles
 
 log = logging.getLogger(__name__)
 
@@ -19,29 +22,37 @@ LOG_IN = "Log in with `gh auth login`, then this page retries."
 
 
 class Saving(Protocol):
+    def began(self, state: HubState) -> None: ...
+
     def threads_seen(self, pr: Pr, fetched: Fetched) -> None: ...
 
-    def polled(self) -> None: ...
+    def polled(self, managers: Mapping[Pr, ManagerPane]) -> None: ...
 
     def failed(self, exc: BaseException) -> None: ...
 
 
 class CycleSaving:
     def __init__(self, config: WatcherConfig, clock: UtcClock, *, dismissals: Dismissals,
-                 thread_news: ThreadNews, polling: Polling, access: Access) -> None:
+                 thread_news: ThreadNews, polling: Polling, access: Access,
+                 told: ToldFiles) -> None:
         self._config = config
+        self._told = told
         self._access = access
         self._clock = clock
         self._dismissals = dismissals
         self._thread_news = thread_news
         self._polling = polling
 
+    def began(self, state: HubState) -> None:
+        self._told.begin(state)
+
     def threads_seen(self, pr: Pr, fetched: Fetched) -> None:
         fetched.commit()
         if not self._dismissals.is_dismissed_forever(pr):
             fetched.announce(self._thread_news)
 
-    def polled(self) -> None:
+    def polled(self, managers: Mapping[Pr, ManagerPane]) -> None:
+        self._told.show(managers)
         config = self._config
         try:
             config.heartbeat.write_text(self._clock().isoformat())
