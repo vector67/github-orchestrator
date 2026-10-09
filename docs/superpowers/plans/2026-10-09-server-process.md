@@ -136,7 +136,9 @@ serving over and deletes what it replaces.
      (including a terminal websocket and an event stream), and comparing answers
      with the hub's.
 
-6. **The watcher runs the server; managers and the hub stop serving.**
+6. **The watcher runs the server; managers and the hub stop serving.** **Done**
+   (`90fecd9f`, `bcba2b64`, `ec0237d9`, `051d9f9f`, `28b82c3c`, `08649dae` and the
+   commit that records this)
 
    - On every loop iteration, in every state, the watcher starts the server
      detached if `server.lock` is free. The watcher no longer serves the hub, and
@@ -383,3 +385,80 @@ Each step adds its decisions here, under its number, with the reason for each.
      a heartbeat; a second server left on the held lock, one on 8720 left on the
      taken port; on SIGTERM every worker was gone and the data directory gained no
      file.
+6. - **`ServerProcess` in `server/_process.py` keeps, reads and stops the server;**
+     the watcher reaches it as `Server` (`keep_running`), the CLI as `ServerControl`
+     (`pid`, `stop`), both private protocols wired to the one class. The supervisor
+     still writes `server.lock` and `server.pid`; no other package names the files.
+   - **The watcher starts the server when `server.lock` is free and the server it
+     started last has exited (`poll()`), not merely when the lock is free.** A
+     server takes a second or more to import and take the lock, longer than the
+     2 s wait in setup, so a lock check alone started a second server that left
+     with an error line. `poll()` also reaps the child it started.
+   - **The server is started as `[sys.executable, "-m", "github_orchestrator.server"]`
+     with the watcher's environment and `Settings.child_environment()` laid over
+     it**, as managers are, so a named instance's server gets that instance's
+     `GITHUB_ORCHESTRATOR_CONFIG` and `GITHUB_ORCHESTRATOR_DATA_DIR`, whatever
+     `HOME` and `GITHUB_ORCHESTRATOR_INSTANCE` say. Proved by
+     `test_a_watcher_of_another_instance_starts_that_instances_server_and_leaves_it_running`,
+     which runs a real watcher under a named instance and a temporary `HOME`.
+   - **The server's stdout and stderr are appended to `server.log`,** so a crash
+     before logging is configured is still on disk.
+   - **A dry run says once that it would start the server, and starts none.**
+   - **A worker leaves when its supervisor is gone** (`os.getppid()` checked each
+     second, then SIGTERM to itself). A supervisor killed with SIGKILL otherwise
+     left its workers serving the port, with no lock, and every server the watcher
+     started after left on the taken port.
+   - **Routing a request to a board runs on its own 8-thread limiter.** On the
+     default limiter, a board's `/api/health` waited for a worker thread, which the
+     test that takes every worker thread caught once the board tests ran through
+     the server.
+   - **`Holdings.board_port`, `Hub`, `BoardApi`, `Boards` and their fakes go**, so
+     `board_api` exports 2 names (was 4) and `settings` 5 (was 6); `Front` has 2
+     methods (was 3). The board test harness builds the server app and serves a
+     board under `/pr/acme/widgets/54` on port 8888; stream and raw-request tests
+     serve that app with uvicorn on a free port.
+   - **The manager container builds no panel.** `ManagerPanelsWiring(run)` hands
+     `FilePanels` its git run, so manager tests drive the server's panel for their
+     PR, with the worktree read from the manager's record.
+   - **A held PR whose manager has no record (no worktree) refuses the git palette
+     and terminals.** Its empty worktree ran git and took the palette lock in the
+     server's working directory; before this step only a manager's own board could
+     reach the panel.
+   - **`restart` and `restart-all` stop the server after the managers and before
+     the watcher, then wait up to 120 s (60 polls, 2 s apart) for `/api/health` to
+     answer from the pid in `server.pid`, a different one from the server they
+     stopped, before the managers' wait.** They wait in setup and broken states
+     too, since the server runs in every state. A server that never answers fails
+     the restart naming `server.log`.
+   - **`stop` (and so `uninstall`) stops the server too, after the watcher,** so
+     nothing starts it again; the brief named only `uninstall`, which goes through
+     `stop`.
+   - **`stop` waits up to 30 s for `server.lock` to come free after SIGTERM.**
+   - **`doctor` says `no server holds its lock` when the hub answers but no
+     server does,** and its hub line now names the server, not the watcher.
+   - **The wall's `board_url` is a required string,** the hub path for every held
+     row; `board-unreachable` leaves the contract, since nothing raises it. A wall
+     row is live when its dashboard says `answering`.
+   - **`hub_port` may be any port from 1 to 65535.** The boards' range is gone.
+   - **The page's board-unreachable screen and `unreachable()` go;** a rail read
+     that fails is an error like any other. The `serves` field of `/api/health`
+     stays, as the board's own health under the prefix still says `board`.
+   - **The preview builds the server app with stand-ins for the hub's parts
+     (`PreviewHub`) and serves it with uvicorn on its port, printing the PR's page
+     under `/pr`.** Its wall reads the PR as answering, as its panel does.
+   - **Board and git failure texts name the server's log,** where a board's
+     traceback now goes.
+   - **Leftovers.** The stale `<data>/board/` port and flag files stay on disk;
+     nothing reads them. The dashboard's not-live texts still speak of "the
+     manager's board", and the PR page is live whenever its dashboard stream is
+     open, whether or not the manager runs. The wall poll and the rail's poll can
+     land together, and the second flip clears the move mark the first set; the
+     two motion tests now watch for the mark during the poll. `github-orchestrator logs` has no `server` choice. On Linux, systemd's default `KillMode` still
+     stops the server (and the managers) with the unit.
+   - **Proved in a scratch instance** (its own config, data directory and port
+     18780, in setup state): the watcher started the server as its child, and
+     `/api/health` answered `serves: hub`, `state: setup` from the pid in
+     `server.pid`; SIGTERM to the server brought a new pid back in 2.8 s, SIGKILL
+     to the supervisor in 2.5 s with no worker left behind; after the watcher was
+     stopped the server kept answering; stopping it left port 18780 free and no
+     process behind.

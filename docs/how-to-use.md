@@ -5,13 +5,21 @@ the two processes fit together, every setting, and what each screen does.
 
 ## How it works
 
-Two processes:
+Three processes:
 
 - **Watcher** (`watcher`) polls the GitHub API, diffs state, queues events.
-  Run resident (`--loop`, as launchd runs it), it also serves the
-  [hub](#the-hub).
+  Run resident (`--loop`, as launchd runs it), it also keeps the server running:
+  on every cycle, in every state, it starts the server when nothing holds
+  `server.lock` in the data dir.
+- **Server** (`server`) serves the [hub](#the-hub) and every held PR's board on
+  `hub_port`, from a few worker processes. It logs to `server.log` and writes its
+  pid to `server.pid`.
 - **Agent manager** (`pr_manager`) runs one per PR as a background process,
-  consumes that PR's queue, spawns Claude runs and serves that PR's board.
+  consumes that PR's queue and spawns Claude runs. It writes a status file each
+  tick, which the board reads, and carries out the commands the board writes.
+
+The managers and the server outlive a watcher restart; the watcher stops
+nothing when it exits.
 
 Events are JSON files in per-PR queue directories. The watcher writes them, the
 agent manager reads them one at a time.
@@ -123,8 +131,11 @@ program and `PATH`.
 `github-orchestrator restart-all` restarts every instance: it migrates each
 instance's config if an older release wrote it (see
 [Upgrading an older config](#upgrading-an-older-config)), stops every agent
-manager, rewrites and reloads the daemon, and the fresh daemon's first cycle
-relaunches the managers straight away rather than a minute later. In a checkout,
+manager and the server, rewrites and reloads the daemon, waits for the hub's
+`/api/health` to answer from the new server's pid (the one in `server.pid`), and
+the fresh daemon's first cycle relaunches the managers straight away rather than
+a minute later. `stop` and `uninstall` stop the server too, after the watcher, so
+nothing starts it again. In a checkout,
 `make restart-all` first runs `uv sync`, `make build_frontend` and
 `make notifier_apps`, then the same restart with the checkout's `.venv` python.
 A stage that fails stops the run with its exit code.
@@ -202,8 +213,7 @@ and every page's top bar says `Board font missing`, with the reason in its
 tooltip.
 
 `hub_port` (default 8720) is the port of the [hub](#the-hub), which serves the
-wall, each PR's page and the Runs page. It has to sit outside 8730-8829, where
-the boards' ports come from.
+wall, each PR's page with its board, and the Runs page.
 
 `tracker` says where the comment agent looks for and proposes tickets when a
 comment asks for work that belongs outside the pull request: `"github"` for
@@ -236,8 +246,8 @@ labelled `com.github-orchestrator.watcher.work` on macOS and
 `github-orchestrator-work.service` on Linux, and comes back after a reboot.
 `restart-all` restarts and confirms the default instance followed by each of the
 others in name order, under headings ending `for <name>`; `stop --all` and
-`uninstall` cover every instance. All instances take their boards' ports from
-the same 8730-8829 range.
+`uninstall` cover every instance. Each instance's watcher starts that instance's
+server, with the instance's config and data dir, on its own `hub_port`.
 
 Auth goes through `gh auth token --user <account>`, so there are no token files
 to manage. The installer runs `gh auth login` when gh has no login yet. A
@@ -314,16 +324,17 @@ serving a board, which is the pid on that board's lines.
 
 ## The hub
 
-Each PR's agent manager runs as a background process with no terminal, its
-board is always up, and you work in the browser. A manager's own output goes to
+Each PR's agent manager runs as a background process with no terminal, and you
+work in the browser. A manager's own output goes to
 `logs/pr_managers/<owner>/<repo>/<pr>.log` under the data dir, beside the lines
 it writes to `agent-manager.log`.
 
 Start at the hub, `http://127.0.0.1:8720` (`hub_port`).
-`github-orchestrator status` prints its address. The resident watcher serves
-it. Everything is on that one address: the hub passes `/pr/<owner>/<name>/<number>/api/...`
-on to that PR's board, so opening a PR loads no new page. The boards still
-answer on their own ports too.
+`github-orchestrator status` prints its address. The server serves it, and the
+resident watcher keeps the server running. Everything is on that one address:
+each held PR's board answers under `/pr/<owner>/<name>/<number>/api/...`, so
+opening a PR loads no new page, and a board keeps answering while its manager
+is stopped, saying so. A PR the watcher does not hold is not found.
 
 ### The wall
 
@@ -413,8 +424,7 @@ its move is outlined in grey, never yellow, since yellow means it needs you now.
 | `o` / `y` | open the PR on GitHub / copy its link     |
 
 The switcher slides in from the left with every PR's verb, grouped as on the
-wall, and slides away once you pick one. A board opened on its own port shows
-the same page without the switcher, and its **Wall** link goes to the hub.
+wall, and slides away once you pick one.
 
 **Board** is the [review board](#review-board) at full width. A thin strip at
 the top holds its counts, **New draft** and **Send review**.

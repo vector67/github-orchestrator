@@ -20,7 +20,8 @@ browser.
   analysis on a review request, a re-review of what changed when you are asked
   again after reviewing, a fix per failing check, `/rebase-on-main` when the
   branch stops merging.
-- Serves a review board: one row per review thread on your PR, each with a fix
+- Serves a review board, from one server process for every PR: one row per
+  review thread on your PR, each with a fix
   an agent wrote for it in its own worktree, approved or rejected one at a time.
 - Lands an approved fix as a single commit on the PR branch and replies on the
   thread in your words.
