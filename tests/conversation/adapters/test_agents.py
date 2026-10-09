@@ -80,7 +80,7 @@ def test_a_queued_thread_s_run_starts_in_the_fix_s_workspace(settings):
     [started] = here.agent_runs.started
     assert started.worktree == here.working_copies.thread_checkout(THE_PR, KEY)
     assert isinstance(_work(here), FixingThread)
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
     assert _conversation(threads).standing is ConversationState.WORKING
 
 
@@ -104,7 +104,7 @@ def test_runs_are_kept_per_thread(settings):
     copies = here.working_copies
     assert sorted(started.worktree for started in here.agent_runs.started) == sorted(
         copies.thread_checkout(THE_PR, key) for key in (KEY, "PRRT_2"))
-    assert threads.counts().live == 2
+    assert len(threads.counts().live) == 2
 
 
 class _Refusing(FakeAgentRuns):
@@ -117,7 +117,7 @@ def test_a_run_that_will_not_start_leaves_no_live_run(settings):
 
     threads.tick(FakeNotifications(), on_hold=False)
 
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
     assert _conversation(threads).standing is not ConversationState.WORKING
 
 
@@ -131,7 +131,7 @@ def test_pumping_publishes_what_the_run_is_doing(settings):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert threads.activity(_conversation(threads)).last_action == "● Read loop.py"
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
 
 @pytest.mark.parametrize(("elapsed", "live", "exit_codes"), [
@@ -149,18 +149,18 @@ def test_a_run_is_timed_from_when_it_started(tmp_path, elapsed, live, exit_codes
 
     threads.tick(FakeNotifications(), on_hold=True)
 
-    assert threads.counts().live == live
+    assert len(threads.counts().live) == live
     assert [entry["exit_code"] for entry in agent_runs.ledger] == exit_codes
 
 
 def test_a_run_that_has_exited_leaves_the_live_count(settings):
     _, threads = _heard(settings)
     threads.tick(FakeNotifications(), on_hold=False)
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
     threads.tick(FakeNotifications(), on_hold=True)
 
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_a_stop_intent_terminates_the_thread_s_run(settings):
@@ -173,7 +173,7 @@ def test_a_stop_intent_terminates_the_thread_s_run(settings):
     drain(threads)
 
     assert [entry["exit_code"] for entry in here.agent_runs.ledger] == [TERMINATED]
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
     assert _conversation(threads).fix.has_failed
 
 
@@ -210,7 +210,7 @@ def test_a_run_that_could_not_be_killed_is_still_a_live_run(settings):
 
     drain(threads)
 
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
     assert agent_runs.ledger == []
 
 

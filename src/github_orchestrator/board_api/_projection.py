@@ -457,7 +457,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             on_hold=dashboard.on_hold,
             unpushed_commits=dashboard.unpushed_commits,
             threads=contract.ThreadCounts(
-                queued=dashboard.threads_queued, live=dashboard.threads_live,
+                queued=dashboard.threads_queued, live=len(dashboard.threads_live),
                 proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts)),
         frozen=None if frozen_on is None or expected is None or left is None
         else contract.FrozenWorktree(
@@ -470,7 +470,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
         manager=contract.ManagerFlags(
             frozen_on=dashboard.frozen_on, on_hold=dashboard.on_hold,
             working_on=dashboard.working_on, hidden=dashboard.hidden,
-            threads_live=dashboard.threads_live, changed_at=dashboard.flags_changed_at),
+            threads_live=len(dashboard.threads_live), changed_at=dashboard.flags_changed_at),
         threads=[contract.ThreadRow(
             key=row.key, state=domain.ConversationState(row.standing),
             record_state=contract.RecordState(row.state), author_kind=row.author_kind,

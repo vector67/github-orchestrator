@@ -74,7 +74,7 @@ class Dashboard:
     on_hold: bool
     unpushed_commits: int | None
     threads_queued: int
-    threads_live: int
+    threads_live: frozenset[str]
     threads_proposed: int
     threads_drafts: int
     frozen_on: str | None
@@ -115,6 +115,16 @@ class ManagerPanel(Protocol):
 
 class Dashboards(Protocol):
     def dashboard(self, pr: Pr) -> Dashboard: ...
+
+
+class ManagerStanding(StrEnum):
+    STARTING = "starting"
+    ANSWERING = "answering"
+    GONE = "gone"
+
+
+class ManagerStatuses(Protocol):
+    def standing(self, pr: Pr) -> ManagerStanding: ...
 
 
 class Holdings(Protocol):

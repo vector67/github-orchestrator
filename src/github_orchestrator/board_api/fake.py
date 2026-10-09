@@ -33,7 +33,7 @@ IDLE = Dashboard(
     working_on=None,
     elapsed_seconds=None, silent_seconds=None, last_run_event=None,
     last_run_exit_code=None, last_run_ended_at=None, queued_events=0, on_hold=False,
-    unpushed_commits=0, threads_queued=0, threads_live=0, threads_proposed=0,
+    unpushed_commits=0, threads_queued=0, threads_live=frozenset(), threads_proposed=0,
     threads_drafts=0, frozen_on=None, expected_branch=None,
     seconds_left=None, run_working=False, release_requested=False,
     hidden=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,

@@ -373,7 +373,7 @@ def test_a_thread_run_started_on_one_tick_is_not_started_again_on_the_next(setti
     manager.run()
     assert len(runs.started) == 1
     shown = _shown(manager)
-    assert (shown.threads_queued, shown.threads_live, shown.threads_proposed) == (0, 1, 0)
+    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (0, 1, 0)
 
 
 def test_thread_runs_are_started_up_to_max_thread_runs(settings, tmp_path):
@@ -395,7 +395,7 @@ def test_on_hold_starts_no_thread_runs(settings, tmp_path):
     manager.run()
     assert runs.started == []
     shown = _shown(manager)
-    assert (shown.threads_queued, shown.threads_live, shown.threads_proposed) == (1, 0, 0)
+    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 0, 0)
 
 
 def test_frozen_on_the_wrong_branch_starts_no_thread_runs(settings, tmp_path):
@@ -423,4 +423,4 @@ def test_the_dashboard_counts_queued_working_and_ready_threads(settings, tmp_pat
     runs.script(Outcome(finishes=False))
     manager.run()
     shown = _shown(manager)
-    assert (shown.threads_queued, shown.threads_live, shown.threads_proposed) == (1, 0, 1)
+    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 0, 1)

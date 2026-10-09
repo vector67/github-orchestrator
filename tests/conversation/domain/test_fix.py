@@ -363,7 +363,7 @@ def test_a_run_killed_for_its_timeout_is_stopped_and_fails_or_retries(bench):
     fix = bench.stored().fix
     assert fix.has_failed
     assert fix.reason.startswith("run exceeded agent_timeout")
-    assert bench.threads.counts().live == 0
+    assert len(bench.threads.counts().live) == 0
     assert bench.agent_runs.ledger[-1]["exit_code"] == TERMINATED
 
 
@@ -374,7 +374,7 @@ def test_a_run_inside_its_timeout_is_left_running(bench):
     bench.tick()
 
     assert bench.stored().standing is ConversationState.WORKING
-    assert bench.threads.counts().live == 1
+    assert len(bench.threads.counts().live) == 1
 
 
 def test_a_run_that_exited_leaving_a_commit_proposes_it_unverified(bench):
@@ -439,7 +439,7 @@ def test_a_run_that_exited_settles_nothing_on_a_fix_that_was_not_running(bench, 
 
     bench.tick(on_hold=True)
 
-    assert bench.threads.counts().live == 0
+    assert len(bench.threads.counts().live) == 0
     assert _shape(bench) == before
 
 

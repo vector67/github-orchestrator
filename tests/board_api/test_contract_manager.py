@@ -8,7 +8,7 @@ WORKING = replace(
     IDLE, working_on="new-comments", elapsed_seconds=75.0, silent_seconds=4.0,
     queued_events=2, on_hold=True, unpushed_commits=3, last_run_event="ci-failed",
     last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
-    threads_live=2, threads_proposed=4, threads_drafts=0, needs_rebase=True,
+    threads_live=frozenset({"PRRT_one", "PRRT_two"}), threads_proposed=4, threads_drafts=0, needs_rebase=True,
     notice="an agent is already running")
 
 FROZEN = replace(IDLE, frozen_on="PROJ-31-split-2", expected_branch="PROJ-34-remove-changes",

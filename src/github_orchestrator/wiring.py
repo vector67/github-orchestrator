@@ -35,7 +35,12 @@ from github_orchestrator.board_api._app_files import APP_ROOT
 from github_orchestrator.board_api._loopback import Listen, Listening, loopback_url
 from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
-from github_orchestrator.board_api.interface import Dashboards, SetupDesk, TourMarker
+from github_orchestrator.board_api.interface import (
+    Dashboards,
+    ManagerStatuses,
+    SetupDesk,
+    TourMarker,
+)
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.change_detection._disk import DiskChangeDetection
 from github_orchestrator.change_detection._would import WouldSaveChangeDetection
@@ -106,6 +111,7 @@ from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
+from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes._background import BackgroundPrProcesses
 from github_orchestrator.pr_processes._background import Run as ManagerRun
@@ -905,20 +911,30 @@ class PrManagerProvider(Provider):
 @dataclass(frozen=True)
 class DashboardSourceWiring(Wiring):
     config_of: ConfigOf
+    data_dir: Path
 
     def context(self) -> Mapping[object, object]:
-        return {ConfigOf: self.config_of}
+        return {ConfigOf: self.config_of, DashboardSourceWiring: self}
 
 
 @wires(DashboardSourceWiring)
 class DashboardSourceProvider(Provider):
     scope = Scope.APP
     config_of = from_context(provides=ConfigOf, scope=Scope.APP)
+    wiring = from_context(provides=DashboardSourceWiring, scope=Scope.APP)
     source = provide(DashboardSource)
 
     @provide
     def dashboards(self, source: DashboardSource) -> Dashboards:
         return source
+
+    @provide
+    def status_files(self, wiring: DashboardSourceWiring, clock: UtcClock) -> StatusFiles:
+        return StatusFiles(wiring.data_dir, clock)
+
+    @provide
+    def manager_statuses(self, status_files: StatusFiles) -> ManagerStatuses:
+        return status_files
 
 
 class EveryTerminal:
@@ -1060,7 +1076,8 @@ def manager_config(settings: Settings, managed: ManagedPr) -> ManagerConfig:
 
 def dashboard_source_wiring(settings: Settings) -> DashboardSourceWiring:
     return DashboardSourceWiring(
-        lambda pr, worktree: manager_config(settings, ManagedPr(pr=pr, worktree=worktree)))
+        lambda pr, worktree: manager_config(settings, ManagedPr(pr=pr, worktree=worktree)),
+        settings.data_dir)
 
 
 def installed_version() -> str | None:

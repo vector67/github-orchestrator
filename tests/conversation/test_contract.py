@@ -163,7 +163,7 @@ def test_a_tick_starts_a_run_on_a_queued_conversation(stage):
 
     assert _standing(threads) is ConversationState.WORKING
     assert len(stage.agent_runs.started) == 1
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
 
 def test_a_comment_deleted_on_github_is_found_removed_on_a_recheck(stage):

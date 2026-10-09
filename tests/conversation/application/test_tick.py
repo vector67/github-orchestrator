@@ -159,7 +159,7 @@ def test_the_cap_holds_and_the_next_starts_when_a_slot_frees(tmp_path):
 
     threads.tick(FakeNotifications(), on_hold=False)
 
-    assert threads.counts().live == 4
+    assert len(threads.counts().live) == 4
     assert threads.counts().queued == 1
     assert _started_in(agent_runs) == [_checkout(here, key) for key in keys[:4]]
     assert _read(threads, "PRRT_1").standing is ConversationState.WORKING
@@ -168,7 +168,7 @@ def test_the_cap_holds_and_the_next_starts_when_a_slot_frees(tmp_path):
     _reported(here, threads, "PRRT_1")
     threads.tick(FakeNotifications(), on_hold=False)
 
-    assert threads.counts().live == 4
+    assert len(threads.counts().live) == 4
     assert threads.counts().queued == 0
     assert _started_in(agent_runs)[-1] == _checkout(here, "PRRT_5")
 
@@ -229,7 +229,7 @@ def test_a_launch_failure_retries_that_fix_and_starts_the_rest(settings):
     assert failed.standing is ConversationState.QUEUED
     assert failed.fix.reason == "failed to launch the agent run"
     assert _read(threads, "PRRT_2").standing is ConversationState.WORKING
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
 
 def test_a_launch_failure_leaves_the_reason_in_the_log(settings, caplog):
@@ -267,7 +267,7 @@ def test_nothing_is_spawned_while_claude_is_disabled(settings):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert agent_runs.started == []
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
     assert _read(threads, "PRRT_1").standing is ConversationState.QUEUED
 
 
@@ -317,7 +317,7 @@ def test_a_running_fix_with_a_live_run_is_left_alone(settings):
     assert _read(threads) == started
     assert len(agent_runs.started) == 1
     assert _exits(agent_runs) == []
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
 
 def test_a_run_that_exited_without_reporting_is_retried_before_it_is_failed(settings):
@@ -365,7 +365,7 @@ def test_a_run_past_the_claude_timeout_is_terminated_and_retried(tmp_path):
     assert settled.fix.attempts == 1, "the attempt it timed out on stays spent"
     assert "agent_timeout" in settled.fix.reason
     assert _exits(agent_runs) == [TERMINATED]
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_a_run_timed_out_for_good_stamps_the_managers_own_clock(tmp_path):
@@ -402,7 +402,7 @@ def test_a_run_past_the_timeout_is_stopped_even_after_the_agent_reported_ready(t
     threads.tick(FakeNotifications(), on_hold=True)
 
     assert _exits(agent_runs) == [TERMINATED]
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_a_run_past_the_timeout_is_stopped_when_its_record_has_gone(tmp_path):
@@ -415,7 +415,7 @@ def test_a_run_past_the_timeout_is_stopped_when_its_record_has_gone(tmp_path):
     threads.tick(FakeNotifications(), on_hold=True)
 
     assert _exits(agent_runs) == [TERMINATED]
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_a_pass_that_falls_over_does_not_take_the_loop_down(settings):
@@ -439,7 +439,7 @@ def test_an_exception_settling_one_run_does_not_stop_the_others(settings):
 
     assert "without reporting" in _read(threads, "PRRT_2").fix.reason
     assert _read(threads, "PRRT_1").standing is ConversationState.WORKING
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_an_exception_pumping_one_run_stops_that_run_and_no_other(settings):
@@ -452,7 +452,7 @@ def test_an_exception_pumping_one_run_stops_that_run_and_no_other(settings):
 
     assert _exits(agent_runs, "PRRT_1") == [TERMINATED]
     assert _exits(agent_runs, "PRRT_2") == []
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
 
 
 def test_the_runs_latest_action_is_published(settings):
@@ -475,7 +475,7 @@ def test_an_action_that_will_not_be_written_does_not_cost_the_run(settings):
     threads.tick(FakeNotifications(), on_hold=True)
 
     assert threads.activity(_read(threads)).last_action is None
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
     assert _read(threads).standing is ConversationState.WORKING
 
 
@@ -706,5 +706,5 @@ def test_the_counts_say_what_is_queued_live_and_proposed(settings):
     before = threads.counts()
     threads.tick(FakeNotifications(), on_hold=False)
 
-    assert (before.queued, before.live, before.proposed) == (2, 0, 1)
-    assert (threads.counts().queued, threads.counts().live) == (0, 2)
+    assert (before.queued, len(before.live), before.proposed) == (2, 0, 1)
+    assert (threads.counts().queued, len(threads.counts().live)) == (0, 2)

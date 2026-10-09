@@ -37,7 +37,7 @@ def test_the_panel_answers_the_status_the_manager_last_drew(settings, tmp_path):
     status = board.panel.dashboard()
     assert (status.agents_enabled, status.working_on, status.on_hold, status.queued_events,
             status.url, status.notice) == (True, None, True, 0, URL, None)
-    assert (status.threads_queued, status.threads_live, status.threads_proposed) == (0, 0, 0)
+    assert (status.threads_queued, len(status.threads_live), status.threads_proposed) == (0, 0, 0)
 
 
 def test_the_panel_names_the_agent_this_instance_runs(settings, tmp_path):

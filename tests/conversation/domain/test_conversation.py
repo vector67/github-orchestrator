@@ -1230,7 +1230,7 @@ def test_stop_halts_a_running_agent_and_hands_the_thread_back(settings):
 
     assert not isinstance(outcome, Denied)
     assert _held(threads).fix.has_failed
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_reject_refuses_a_run_still_in_flight(settings):
@@ -1316,7 +1316,7 @@ def test_defer_stops_a_running_agent_first(settings):
 
     assert not isinstance(outcome, Denied)
     assert _held(threads).standing is ConversationState.DEFERRED
-    assert threads.counts().live == 0
+    assert len(threads.counts().live) == 0
 
 
 def test_defer_parks_a_conversation_that_was_waiting_on_the_other_party(settings):

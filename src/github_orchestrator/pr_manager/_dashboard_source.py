@@ -78,7 +78,7 @@ class DashboardSource:
 
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,
-                 dashboard.hidden, dashboard.threads_live)
+                 dashboard.hidden, len(dashboard.threads_live))
         seen = self._flags_seen.get(dashboard.pr)
         if seen is None or seen[0] != flags:
             seen = (flags, self._clock().strftime(_STAMP))

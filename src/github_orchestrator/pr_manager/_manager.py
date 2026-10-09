@@ -13,6 +13,7 @@ from github_orchestrator.pr_manager._carry_out import EventCarryOut
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import DashboardSource
+from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_manager.interface import Front
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
@@ -29,7 +30,8 @@ class ManagerLoop:
                  thread_news: ThreadNews, events: EventCarryOut,
                  worklist: Worklist, working_copies: WorkingCopies, history: History,
                  conversation_managers: ConversationManagerFactory,
-                 change_detection: ChangeDetection, dashboards: DashboardSource) -> None:
+                 change_detection: ChangeDetection, dashboards: DashboardSource,
+                 status_files: StatusFiles) -> None:
         self._config = config
         self._front = front
         self._commands = commands
@@ -42,6 +44,7 @@ class ManagerLoop:
         self._conversation_managers = conversation_managers
         self._change_detection = change_detection
         self._dashboards = dashboards
+        self._status_files = status_files
         self._interrupted = False
         self._should_exit = False
         self._frozen_on: str | None = None
@@ -58,6 +61,7 @@ class ManagerLoop:
         is_author = self._is_author()
         log.info("Agent manager started for %s in %s (role: %s)", pr, config.worktree,
                  "unknown" if is_author is None else "author" if is_author else "reviewer")
+        self._status_files.begin(pr)
         self._worklist.recover(pr)
         interrupted = self._history.interrupted(pr)
         self._interrupted = interrupted is not None and interrupted != CiFailed.kind
@@ -201,6 +205,7 @@ class ManagerLoop:
                                        run=self._commands.active_run,
                                        notice=self._commands.notice())
         self._commands.publish(drawn)
+        self._status_files.write(drawn.dashboard)
         if wrong is not None:
             return
 

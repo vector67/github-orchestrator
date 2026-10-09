@@ -54,7 +54,7 @@ def test_a_handle_keeps_the_runs_it_started_between_passes(settings):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert len(here.agent_runs.started) == 1
-    assert threads.counts().live == 1
+    assert len(threads.counts().live) == 1
     assert threads.counts().queued == 0
     assert threads.get(KEY).standing is ConversationState.WORKING
 
@@ -65,7 +65,7 @@ def test_each_handle_starts_with_no_runs_of_its_own(settings):
     here.agent_runs.script(RunOutcome(finishes=False))
     first.tick(FakeNotifications(), on_hold=False)
 
-    assert here.conversation_managers.of(THE_PR).counts().live == 0
+    assert len(here.conversation_managers.of(THE_PR).counts().live) == 0
 
 
 def test_a_refusal_names_the_rule_a_command_breaks(settings):
