@@ -4,6 +4,9 @@ Date: 2026-10-08. Issue #222. Visual version, with today's behaviour below the
 target: (private design page) (rule IDs C, S, A,
 D, W describe today; T1–T4 the target).
 
+[The 2026-10-09 design](2026-10-09-thread-verdict-jev-design.md) moves the
+verdict to Jev, adds needs-verification and holds the test cases.
+
 ## Problem
 
 On someone else's PR the board said "Waiting on author · You replied" on
