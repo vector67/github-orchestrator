@@ -66,7 +66,8 @@ serving over and deletes what it replaces.
 
 ## Steps
 
-1. **The manager writes its status file.**
+1. **The manager writes its status file.** **Done** (`ed567d91` and the commit
+   that records this)
 
    - Each tick, after it publishes `_drawn`, the manager writes the status file:
      `written_at`, `active_run` (event, started at, last output at), `notice`,
@@ -162,3 +163,28 @@ serving over and deletes what it replaces.
 ## Decisions
 
 Each step adds its decisions here, under its number, with the reason for each.
+
+1. - **A run is the life of the file.** The manager deletes its status file when
+     it starts, before its first tick, so no file means this run has not drawn
+     yet. A reader needs no pid or run id to tell runs apart, and nothing else
+     has to publish one.
+   - **`StatusFiles` lives in `pr_manager/_status.py`; readers reach it through
+     `ManagerStatuses` in `board_api/interface.py`.** That is how the board and
+     the wall already reach `DashboardSource` through `Dashboards`, and it adds
+     no export to either package.
+   - **Staleness is read from `written_at`, against the reader's UTC clock.**
+     The file's own stamp keeps the rule testable with a manual clock, and both
+     sides run on the same machine.
+   - **`status_stale_seconds` is a constant, `STATUS_STALE_SECONDS = 10.0`, not a
+     config key.** The spec settled the value at review and nothing asks to
+     change it per instance.
+   - **`Dashboard.threads_live` and `Counts.live` hold the live keys instead of
+     their count.** `pr_manager` cannot name `Counts`, and carrying the keys on
+     the dashboard counts the threads once a tick. The contract and the flags
+     stamp take the length, so what the board shows is unchanged.
+   - **`active_run`'s `started_at` and `last_output_at` are `written_at` minus the
+     run's elapsed and silent seconds**, stamped like `flags_changed_at`
+     (`%Y-%m-%dT%H:%M:%S.%fZ`, UTC).
+   - **The frozen fields are the dashboard's own:** `frozen_on`,
+     `expected_branch`, `seconds_left`, `run_working` and `release_requested`.
+     They are what the board shows of a freeze today.
