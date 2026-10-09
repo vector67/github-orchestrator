@@ -9,10 +9,13 @@ from github_orchestrator.board_api.interface import Dashboard, ManagerStanding
 from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._refusals import NOTHING_KNOWN, Conditions
+from github_orchestrator.pr_processes import ManagerPane
 
 log = logging.getLogger(__name__)
 
 STATUS_STALE_SECONDS = 10.0
+
+NOT_RUNNING = frozenset({ManagerPane.NO_WINDOW.value, ManagerPane.EXITED.value})
 
 _STAMP = "%Y-%m-%dT%H:%M:%S.%fZ"
 
@@ -49,12 +52,13 @@ class StatusFiles:
         except OSError as error:
             log.warning("could not write the status file %s: %s", path, error)
 
-    def laid_over(self, dashboard: Dashboard) -> Dashboard:
+    def laid_over(self, dashboard: Dashboard, *, manager: str | None) -> Dashboard:
         path = self._path(dashboard.pr)
         try:
             content = path.read_bytes()
         except FileNotFoundError:
-            return replace(dashboard, standing=ManagerStanding.STARTING)
+            return replace(dashboard, standing=ManagerStanding.GONE if manager in NOT_RUNNING
+                           else ManagerStanding.STARTING)
         except OSError as error:
             log.warning("could not read the status file %s: %s", path, error)
             return replace(dashboard, standing=ManagerStanding.GONE)

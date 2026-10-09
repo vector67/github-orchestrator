@@ -38,6 +38,31 @@ def test_a_manager_that_ticked_is_answering(settings, tmp_path):
     assert _standing(manager) is ManagerStanding.ANSWERING
 
 
+def _held_with_its_manager(settings, manager):
+    (settings.data_dir / "held.json").write_text(json.dumps({"told": True, "held": [
+        {"repo": REPO, "number": THE_PR.number, "manager": manager}]}))
+
+
+@pytest.mark.parametrize(("manager", "standing"), [
+    ("exited", ManagerStanding.GONE),
+    ("no-window", ManagerStanding.GONE),
+    ("running", ManagerStanding.STARTING),
+])
+def test_a_manager_that_never_ticked_is_gone_unless_the_watcher_saw_it_running(
+        settings, tmp_path, manager, standing):
+    held = _manager(settings, worktree=tmp_path)
+    _held_with_its_manager(settings, manager)
+
+    assert _standing(held) is standing
+
+
+def test_a_manager_that_ticked_is_answering_whatever_the_watcher_last_saw(settings, tmp_path):
+    manager = _manager(settings, worktree=tmp_path).run()
+    _held_with_its_manager(settings, "no-window")
+
+    assert _standing(manager) is ManagerStanding.ANSWERING
+
+
 class _Unready:
     def __init__(self, later):
         self.ready = False

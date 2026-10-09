@@ -3,6 +3,7 @@ from dataclasses import replace
 
 from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
+from github_orchestrator.board_api.interface import Told
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -30,8 +31,9 @@ class DashboardSource:
                  history: History, worklist: Worklist, holds: Holds,
                  dismissals: Dismissals, working_copies: WorkingCopies,
                  conversation_managers: ConversationManagerFactory, pr_processes: PrProcesses,
-                 status_files: StatusFiles) -> None:
+                 status_files: StatusFiles, told: Told) -> None:
         self._config_of = config_of
+        self._told = told
         self._clock = clock
         self._change_detection = change_detection
         self._history = history
@@ -50,7 +52,8 @@ class DashboardSource:
         drawn = self.drawn(self._config_of(pr, worktree), self._conversation_managers.of(pr),
                            wrong=wrong, run=None, notice=None)
         return self._status_files.laid_over(
-            replace(drawn, unpushed_commits=self._unpushed(worktree, pr)))
+            replace(drawn, unpushed_commits=self._unpushed(worktree, pr)),
+            manager=self._told.held().managers.get(pr))
 
     def drawn(self, config: ManagerConfig, threads: ConversationManager, *,
               wrong: WrongBranch | None, run: Run | None, notice: str | None) -> Dashboard:
