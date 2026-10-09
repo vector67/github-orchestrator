@@ -24,7 +24,15 @@ description: Use for any change to this repository — the branch, worktree, tes
    which are what refuse a new import, export or test file. A commit that only
    marks items done in a spec belongs in the same commit as the code it records.
 4. Commit with a lowercase imperative subject and no prefix, no co-author trailer.
-5. Merge into `main` only a tree that has already passed. In the worktree, first
+5. Check the branch for private information before it reaches `main`: the repo is
+   public, and whatever merges is pushed. Read `git diff main...<branch>` and
+   `git log main..<branch>` for anything CLAUDE.md's public rule forbids — the
+   employer, clients, colleagues, ticket keys, home or temp paths, real emails,
+   secrets, private claude.ai links, real node ids, PRs or comments copied from
+   work — and fix each finding in the worktree. `git rev-list --max-parents=0 <branch>`
+   must print only `d9021cb5977b00acf1e6aa9a3b2f8387b8e7c510`: a branch cut before the public commit
+   carries the old history, and merging it publishes that history.
+6. Merge into `main` only a tree that has already passed. In the worktree, first
    read `git diff --stat main...<branch>` and the pass count each check printed:
    a deletion you did not intend, or a count that fell in a commit that only adds
    tests, is a failed check even though every run was green. A count that fell
@@ -38,7 +46,7 @@ description: Use for any change to this repository — the branch, worktree, tes
    `git merge --ff-only <branch>` — `EnterWorktree` names the branch
    `worktree-<name>`. When `--ff-only` refuses, `main` moved again: re-enter the
    worktree with `EnterWorktree` and its `path`, and catch up again.
-6. `make restart-all` — always, even for a one-line change. It syncs, rebuilds the
+7. `make restart-all` — always, even for a one-line change. It syncs, rebuilds the
    front end and restarts the watcher and the agent managers, so what you merged is
    what is running. Skip it and the board keeps serving the old build. "Managers
    back up" is not proof the change works: run any CLI command the diff touched
@@ -49,9 +57,9 @@ description: Use for any change to this repository — the branch, worktree, tes
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
    fresh agent diagnose it from what the change produced.
-7. Remove the workspace the way the `using-git-worktrees` skill made it, then
+8. Remove the workspace the way the `using-git-worktrees` skill made it, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once
    `git branch --merged main` lists it).
-8. Close the issue with `gh issue close <n>` once the merge has passed step 6,
+9. Close the issue with `gh issue close <n>` once the merge has passed step 7,
    unless a pushed `Closes #<n>` already closed it. Prove it with
    `gh issue view <n> --json state`.
