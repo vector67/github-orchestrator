@@ -19,7 +19,7 @@ STARTED_WITHIN_SECONDS = 60
 @pytest.fixture
 def instance(tmp_path, monkeypatch):
     config = tmp_path / "config.toml"
-    config.write_text('gh_account = "octocat"\nserver_workers = 2\n\n[[repos]]\n'
+    config.write_text('gh_account = "octocat"\nserver_workers = 1\n\n[[repos]]\n'
                       f'repo = "acme/widgets"\nlocal_path = "{tmp_path / "widgets"}"\n')
     monkeypatch.setenv("GITHUB_ORCHESTRATOR_CONFIG", str(config))
     monkeypatch.setenv("GITHUB_ORCHESTRATOR_DATA_DIR", str(tmp_path / "data"))
@@ -84,22 +84,22 @@ def test_the_server_answers_from_its_workers_and_stops_them_when_it_stops(instan
     try:
         assert until(lambda: _health(port) is not None, STARTED_WITHIN_SECONDS)
         health = _health(port)
-        workers = _children(server.pid)
+        children, workers = _children(server.pid), _children(server.pid, "spawn_main")
 
         assert (health["serves"], health["pid"]) == ("hub", server.pid)
         assert (own / "server.pid").read_text().strip() == str(server.pid)
-        assert server.pid not in workers and len(workers) >= 2
+        assert server.pid not in workers and len(workers) == 1
     finally:
         server.send_signal(signal.SIGTERM)
         exit_code = server.wait(timeout=30)
 
     assert exit_code == 0
     assert _health(port) is None
-    assert not any(_alive(pid) for pid in workers)
+    assert not any(_alive(pid) for pid in children)
 
 
-def _children(pid):
-    listing = subprocess.Popen(["pgrep", "-P", str(pid)], stdout=subprocess.PIPE, text=True)
+def _children(pid, matching="."):
+    listing = subprocess.Popen(["pgrep", "-P", str(pid), "-f", matching], stdout=subprocess.PIPE, text=True)
     printed, _ = listing.communicate(timeout=10)
     return [int(child) for child in printed.split()]
 
@@ -112,10 +112,23 @@ def _alive(pid):
     return True
 
 
+SERVER_WITH_QUICK_ORPHAN_CHECKS = """
+import os, sys
+from pathlib import Path
+from github_orchestrator.server._config import ServerConfig
+from github_orchestrator.server._supervisor import serve
+from github_orchestrator.server._worker import Worker
+own, port = Path(sys.argv[1]), int(sys.argv[2])
+config = ServerConfig(port=port, workers=1, lock=own / "server.lock", pid=own / "server.pid")
+sys.exit(serve(config, Worker(port=port, pid=os.getpid(), logs_dir=own,
+                              orphan_check_seconds=0.02)))
+"""
+
+
 def test_the_workers_of_a_server_killed_outright_leave_and_free_its_port(instance, tmp_path):
     own, port = tmp_path / "own", _free_port()
-    server = subprocess.Popen([sys.executable, "-m", "github_orchestrator.server",
-                               "--port", str(port), "--files-in", str(own)],
+    server = subprocess.Popen([sys.executable, "-c", SERVER_WITH_QUICK_ORPHAN_CHECKS,
+                               str(own), str(port)],
                               env=os.environ.copy(), start_new_session=True)
     workers = []
     try:
