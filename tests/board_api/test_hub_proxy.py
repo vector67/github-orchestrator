@@ -14,7 +14,7 @@ import pytest
 from websockets.exceptions import ConnectionClosed, InvalidStatus
 from websockets.sync.client import connect
 
-from github_orchestrator.board_api.fake import FakeHoldings, FakeManagerPanel
+from github_orchestrator.board_api.fake import FakeHoldings
 from github_orchestrator.domain import HubState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
@@ -123,18 +123,6 @@ def test_a_write_through_the_hub_reaches_the_board_and_names_where_to_read_it_un
     assert answer.headers["Location"] == (
         f"/pr/acme/widgets/54/api/conversations/{KEY}/operations/{answer.json()['operation']['id']}")
     assert web.get(answer.headers["Location"]).json() == answer.json()["operation"]
-
-
-def test_a_manager_still_starting_asks_the_page_through_the_hub_to_come_back():
-    served = board_on(fake_threads(), manager=FakeManagerPanel(now=None), listening=OnLoopback())
-    try:
-        answer = hub_before(served).get("/pr/acme/widgets/54/api/dashboard")
-    finally:
-        served.api.stop()
-
-    assert answer.status_code == 503
-    assert answer.headers["Retry-After"] == "1"
-    assert answer.json()["errors"][0]["code"] == "manager-starting"
 
 
 def test_a_pr_the_hub_does_not_hold_is_not_found(board):

@@ -21,6 +21,12 @@ class WallGroup(StrEnum):
     MENTIONED = "mentioned"
 
 
+class ManagerStanding(StrEnum):
+    STARTING = "starting"
+    ANSWERING = "answering"
+    GONE = "gone"
+
+
 @dataclass(frozen=True)
 class Dashboard:
     pr: Pr
@@ -89,10 +95,11 @@ class Dashboard:
     threads_listed_at: str | None
     undismiss_command: str
     notice: str | None
+    standing: ManagerStanding
 
 
 class ManagerPanel(Protocol):
-    def dashboard(self) -> Dashboard | None: ...
+    def dashboard(self) -> Dashboard: ...
 
     def changes(self) -> str | None: ...
 
@@ -115,16 +122,6 @@ class ManagerPanel(Protocol):
 
 class Dashboards(Protocol):
     def dashboard(self, pr: Pr) -> Dashboard: ...
-
-
-class ManagerStanding(StrEnum):
-    STARTING = "starting"
-    ANSWERING = "answering"
-    GONE = "gone"
-
-
-class ManagerStatuses(Protocol):
-    def standing(self, pr: Pr) -> ManagerStanding: ...
 
 
 class Holdings(Protocol):

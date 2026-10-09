@@ -19,10 +19,6 @@ export const LIST_MS = 5000;
 export const OPERATIONS_MS = 1000;
 export const RESTART_MS = 500;
 
-export type Standing = 'answering' | 'starting' | 'gone';
-
-const MANAGER_STARTING = 'manager-starting';
-
 class Rail {
   @tracked loaded = false;
   starting: Promise<void> | null = null;
@@ -63,7 +59,6 @@ interface Streams {
 
 class Board {
   @tracked readAt: number | null = null;
-  @tracked polledStanding: Standing = 'answering';
   @tracked heard = false;
   @tracked streamed = false;
   @tracked streams: Streams | null = null;
@@ -365,12 +360,8 @@ export default class PollService extends Service {
     try {
       await board.bar.poll();
       board.heard = true;
-      board.polledStanding = 'answering';
       board.readAt = Date.now();
-    } catch (trouble) {
-      const starting =
-        trouble instanceof Refusal && trouble.code === MANAGER_STARTING;
-      board.polledStanding = starting ? 'starting' : 'gone';
+    } catch {
       board.forget();
     }
     this.now = Date.now();

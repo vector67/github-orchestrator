@@ -77,7 +77,7 @@ class ManagerLoop:
                         log.info("Agent manager for %s exiting after pr-closed", pr)
                         break
                     self._front.wait(config.refresh_interval)
-                    self._commands.obey()
+                    self._commands.obey(frozen=self._frozen_on is not None)
                     if self._commands.dismissed:
                         log.info("Agent manager for %s exiting after its dismissal", pr)
                         break
@@ -202,21 +202,19 @@ class ManagerLoop:
 
         wrong = self._freeze_on_wrong_branch(state.branch if state else None)
         waiting = self._worklist.waiting(pr)
-        drawn = self._dashboards.drawn(config, self._conversations(), wrong=wrong,
-                                       run=self._commands.active_run,
-                                       notice=self._commands.notice())
-        self._commands.publish(drawn)
-        self._status_files.write(drawn.dashboard)
+        dashboard = self._dashboards.drawn(config, self._conversations(), wrong=wrong,
+                                           run=self._commands.active_run,
+                                           notice=self._commands.notice())
+        self._status_files.write(dashboard)
         if wrong is not None:
             return
 
         self._front.serve_board()
-        dashboard = drawn.dashboard
 
         if self._interrupted:
             self._interrupted = False
             log.info("loop %s: the agent was interrupted by the last manager's end", pr)
-            self._commands.carry_out(Command.CARRY_ON)
+            self._commands.carry_out(Command.CARRY_ON, frozen=False)
 
         conversations = self._conversations()
         on_hold = dashboard.on_hold

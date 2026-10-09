@@ -20,6 +20,7 @@ import type {
   HeldPullRequests,
   ManagerChanges,
   ManagerFlags,
+  ManagerStanding,
   Operation,
   Outcome,
   MovedAside,
@@ -105,6 +106,7 @@ export interface Drawn {
   frozen: FrozenWorktree | null;
   undismiss_command: string;
   notice: string | null;
+  standing: ManagerStanding;
   drawn_at: string | null;
 }
 
@@ -120,7 +122,6 @@ export interface PrEntity {
   ticket: string | null;
   author: string | null;
   board_url: string | null;
-  board_answered: boolean;
   facts: PrFacts | null;
   flags: ManagerFlags | null;
   drawn: Drawn | null;
@@ -1005,6 +1006,7 @@ export default class StoreService extends Service {
       frozen: dashboard.frozen,
       undismiss_command: dashboard.undismiss_command,
       notice: dashboard.notice,
+      standing: dashboard.standing,
       drawn_at: listed_at,
     };
     this.changePr(repo, number, (held) => {
@@ -1043,7 +1045,6 @@ export default class StoreService extends Service {
       this.changePr(row.repo, row.number, (pr) => ({
         ...pr,
         board_url: row.board_url,
-        board_answered: row.board_answered,
       }));
       this.place(row.repo, row.number, true);
     }
@@ -1085,7 +1086,6 @@ export default class StoreService extends Service {
       ticket: null,
       author: null,
       board_url: null,
-      board_answered: false,
       facts: null,
       flags: null,
       drawn: null,

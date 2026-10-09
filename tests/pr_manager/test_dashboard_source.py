@@ -4,12 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
-from github_orchestrator.board_api.interface import Dashboards
-from github_orchestrator.domain import AuthorKind
+from github_orchestrator.board_api.fake import FakeBoardApi, FakeHoldings
+from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
+from github_orchestrator.domain import AuthorKind, HubState
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
-from tests.board_api.support import served_board
+from tests.board_api.support import HUB_PORT, served_board, served_hub
 from tests.conversation.support import (
     at,
     fake_conversation_managers,
@@ -248,3 +248,70 @@ def test_a_frozen_pr_dismissed_until_its_next_event_carries_both(
     _, unmanaged = _both(settings, tmp_path, working_copies=working_copies)
 
     assert (unmanaged.frozen_on, unmanaged.hidden) == ("another-pr", True)
+
+
+WORKING = {"type": "assistant", "message": {"content": [{"type": "text", "text": "reading the diff"}]}}
+
+
+def _working(settings, tmp_path):
+    clock = ManualClock()
+    agent_runs = FakeAgentRuns(FakePrProcesses(), clock=clock.monotonic).script(
+        Outcome(events=(WORKING,), finishes=False))
+    board = FakeBoardApi()
+    manager = manager_over(settings, lambda: clock.advance(5), lambda: clock.advance(5),
+                           worktree=tmp_path, clock=clock, agent_runs=agent_runs,
+                           is_author=True, board=board)
+    manager.event_queue.add(THE_PR, ci_failed("tests", "boom"))
+    return manager.run(), board
+
+
+def test_a_running_managers_live_run_shows_on_the_dashboard_from_disk(settings, tmp_path):
+    seed(settings, POLLED)
+    manager, _ = _working(settings, tmp_path)
+
+    dashboard = manager.container.get(Dashboards).dashboard(THE_PR)
+
+    assert (dashboard.working_on, dashboard.elapsed_seconds, dashboard.silent_seconds) == (
+        "ci-failed", 12.0, 6.0)
+
+
+def test_the_board_reads_the_same_dashboard_from_disk_as_the_wall(settings, tmp_path):
+    seed(settings, POLLED)
+    manager, board = _working(settings, tmp_path)
+    disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
+
+    on_the_board = board.panel.dashboard()
+
+    assert on_the_board == manager.container.get(Dashboards).dashboard(THE_PR)
+    assert (on_the_board.on_hold, on_the_board.working_on) == (True, "ci-failed")
+
+
+@pytest.mark.parametrize(("seconds", "standing", "working_on"), [
+    (9.9, ManagerStanding.ANSWERING, "ci-failed"),
+    (10, ManagerStanding.GONE, None),
+], ids=["just inside the window", "at the window"])
+def test_a_stopped_managers_dashboard_reads_gone_once_its_status_is_ten_seconds_old(
+        settings, tmp_path, seconds, standing, working_on):
+    seed(settings, POLLED)
+    manager, _ = _working(settings, tmp_path)
+
+    manager.clock.advance(seconds)
+    dashboard = manager.container.get(Dashboards).dashboard(THE_PR)
+
+    assert (dashboard.standing, dashboard.working_on) == (standing, working_on)
+
+
+def test_the_wall_and_an_open_board_give_the_same_dashboard(settings, tmp_path):
+    seed(settings, POLLED)
+    manager, board = _working(settings, tmp_path)
+    hub, on_the_hub = served_hub(dashboards=manager.container.get(Dashboards))
+    hub_url = hub.start(HUB_PORT, FakeHoldings(managers={THE_PR: "running"}), HubState.WATCHING)
+    hub.show([THE_PR])
+    served, on_the_board = served_board(manager.conversation_managers, manager.working_copies)
+    board_url = served.start(THE_PR, port=0, manager=board.panel)
+
+    wall = TestClient(on_the_hub.app, base_url=hub_url).get("/api/pull-requests").json()
+    opened = TestClient(on_the_board.app, base_url=board_url).get("/api/dashboard").json()
+
+    assert [row["dashboard"] for row in wall["pull_requests"]] == [opened]
+    assert (opened["standing"], opened["manager"]["working_on"]) == ("answering", "ci-failed")

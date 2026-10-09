@@ -150,7 +150,7 @@ class Words:
 
 
 def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | None = None,
-           clock: Callable[[], datetime] = at(MOMENT), board_seconds: float = 2.0,
+           clock: Callable[[], datetime] = at(MOMENT),
            open_streams: int = 200, ledger: History | None = None,
            pulse: WatcherHealth | None = None, config_file: Words = Words(None),
            watching: Collection[Repo] = (Repo("acme", "widgets"),),
@@ -166,7 +166,7 @@ def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | No
         fake_provider(ConfigFile, config_file),
         clocks_of(clock),
         HubWiring(listen, app_root=app_root, font_dir=None, watching=watching,
-                  version="0.1.0", board_seconds=board_seconds,
+                  version="0.1.0",
                   open_streams=open_streams)).get(Hub)
     return hub
 

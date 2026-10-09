@@ -1111,7 +1111,7 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('on a board’s own port a manager starting or a board gone says so', async function (assert) {
-    board().manager = null;
+    board().manager = dashboard({ standing: 'starting' });
     await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-standing]').hasText('The manager is starting…');

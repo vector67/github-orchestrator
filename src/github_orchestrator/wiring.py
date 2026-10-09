@@ -37,7 +37,6 @@ from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
     Dashboards,
-    ManagerStatuses,
     SetupDesk,
     TourMarker,
 )
@@ -857,7 +856,6 @@ class BoardApiProvider(Provider):
                               first_names_only=wiring.first_names_only, clock=clock)
 
 
-BOARD_READ_SECONDS = 2.0
 OPEN_STREAMS = 200
 
 
@@ -869,7 +867,6 @@ class HubWiring(Wiring):
     font_dir: str | None
     watching: Collection[Repo]
     version: str | None
-    board_seconds: float = BOARD_READ_SECONDS
     open_streams: int = OPEN_STREAMS
 
 
@@ -887,7 +884,7 @@ class HubProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         board_seconds=wiring.board_seconds, open_streams=wiring.open_streams)
+                         open_streams=wiring.open_streams)
 
 
 @dataclass(frozen=True)
@@ -932,10 +929,6 @@ class DashboardSourceProvider(Provider):
     @provide
     def status_files(self, wiring: DashboardSourceWiring, clock: UtcClock) -> StatusFiles:
         return StatusFiles(wiring.data_dir, clock)
-
-    @provide
-    def manager_statuses(self, status_files: StatusFiles) -> ManagerStatuses:
-        return status_files
 
     @provide
     def command_files(self, wiring: DashboardSourceWiring) -> CommandFiles:

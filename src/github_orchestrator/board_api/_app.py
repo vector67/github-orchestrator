@@ -1229,16 +1229,8 @@ def send_review(board: Serving, asked: SendReviewRequest) -> Response:
         headers={"Location": f"{PREFIX}/operations/{review.id}"})
 
 
-MANAGER_STARTING = {
-    "description": "The PR manager has not finished its first tick, so it has "
-                   "nothing to say yet. Ask again after `Retry-After` seconds.",
-    "headers": {"Retry-After": {"schema": {"type": "integer"}}},
-    "model": Errors}
-
-
-def _dashboard(board: Board) -> Dashboard | None:
-    dashboard = board.manager.dashboard()
-    return None if dashboard is None else dashboard_of(dashboard)
+def _dashboard(board: Board) -> Dashboard:
+    return dashboard_of(board.manager.dashboard())
 
 
 def _changes(board: Board) -> ManagerChanges:
@@ -1256,19 +1248,15 @@ OutputLines = Annotated[int, Query(ge=1, le=MAX_OUTPUT_LINES)]
 @reads.get("/dashboard", response_model=Dashboard, tags=["manager"],
            operation_id="readDashboard",
            summary="Everything the PR manager's dashboard shows, as data.",
-           responses={**etag.TAGGED, 503: MANAGER_STARTING})
+           responses=etag.TAGGED)
 def read_dashboard(request: Request, board: Serving) -> Response:
-    """The board is served by the PR manager's own process, so this is the
-    dashboard without the terminal: the same values the terminal dashboard
-    draws. The manager replaces it once a tick; a poll that sends the `ETag`
-    back is answered `304` while the manager is idle and nothing moves.
+    """Built on each read from what is on disk, with the PR manager's status
+    file laid over it: the same dashboard the hub's wall shows for this pull
+    request. The manager rewrites its status once a tick; a poll that sends
+    the `ETag` back is answered `304` while the manager is idle and nothing
+    moves.
     """
-    dashboard = _dashboard(board)
-    if dashboard is None:
-        raise Refusal(503, ErrorCode.MANAGER_STARTING,
-                      "the PR manager has not finished its first tick yet",
-                      headers={"Retry-After": "1"})
-    return etag.answered(request, dashboard)
+    return etag.answered(request, _dashboard(board))
 
 
 @reads.get("/manager/changes", response_model=ManagerChanges, tags=["manager"],
