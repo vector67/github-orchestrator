@@ -79,7 +79,8 @@ serving over and deletes what it replaces.
    - Nothing reads it yet in production. Prove it on the running system after
      the restart: the file appears for each manager and moves every tick.
 
-2. **Commands go through the command file.**
+2. **Commands go through the command file.** **Done** (`1d3732fa` and the commit
+   that records this)
 
    - Hold, resume, carry-on, start-review, dismiss and close write a command file
      and answer 202 as today. The manager drains the directory each tick in id
@@ -195,3 +196,42 @@ Each step adds its decisions here, under its number, with the reason for each.
    - **A status file that cannot be parsed, or whose `written_at` is missing or
      garbled, reads as gone, with a warning.** It says nothing about a live
      manager, and gone is what a reader shows when it cannot tell.
+2. - **A refusal at the handler is `409 manager-refused` with the rule's sentence
+     as its detail.** The 202 cannot carry a refusal and the server cannot set
+     the manager's notice. The page already toasts a refused command's detail, so
+     it needs no change; one new code keeps the rules' sentences as the reason.
+   - **The rules are one function, `refusal(conditions, command, agents_enabled)`
+     in `pr_manager/_refusals.py`.** The handler gives it the status file's
+     `frozen_on` and `active_run`; the drain gives it what the manager holds now
+     (this tick's `frozen_on`, a live run). On drain the status file is the tick
+     before, and a carry-on carried out earlier in the same drain is not in it
+     yet, so two agent commands handed over together must meet the live run.
+   - **A missing or unreadable status file rules nothing out at the handler**,
+     and a stale one is read as it is. The drain checks again, so a command let
+     through is never carried out against the rules.
+   - **The drain runs after each wait, before the tick, as `obey()` did, and a
+     file is deleted after its command is carried out.** A manager that dies
+     mid-command carries it out again on its next run: hold, resume and dismiss
+     repeat harmlessly, and a repeated close or carry-on does what a second click
+     would. Losing a command was the worse failure. Commands drained after a dismissal are dropped and deleted, as
+     the queue dropped them, so a later run does not act on them.
+   - **A command file that cannot be parsed or names no command is deleted with a
+     warning.** It can never be carried out, and left in place it would warn on
+     every tick.
+   - **Ids are `<nanoseconds since the epoch, 20 digits>-<pid>`, bumped past the
+     last id this process wrote.** They sort in write order within a process,
+     even within one clock tick, and the pid keeps two processes from writing the
+     same name.
+   - **A command carried out puts nothing in the notice; a refusal or GitHub's
+     refusal to close does, as before.** What a hold, resume, carry-on or review
+     did shows on the dashboard's own fields, and a notice for each would be a
+     change the spec did not ask for.
+   - **The interrupted run's carry-on is carried out on the tick, not written as
+     a file.** Writing it would let the same tick take a queued event first and
+     then refuse the carry-on.
+   - **`ManagerPanel`'s five command methods answer `str | None`, the refusal,**
+     like `open_terminal`. No method was added, and `ManagerCommands` is not
+     exported.
+   - **Writing a file whole and the flock moved to `pr_manager/_files.py`,** used
+     by the status file, the command file and the palette lock. `pr_manager`
+     cannot reach `thread_records`' private lock.
