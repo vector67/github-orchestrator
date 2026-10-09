@@ -1,3 +1,5 @@
+import logging
+
 from tests.board_api.support import SERVER_PID, THE_PR, one_server
 from tests.builders import a_pr
 
@@ -119,3 +121,11 @@ def test_a_page_path_under_a_prs_prefix_is_the_page(tmp_path):
 
     assert answer.status_code == 200
     assert "the board app" in answer.text
+
+
+def test_a_boards_request_is_logged_with_its_prs_path(caplog):
+    caplog.set_level(logging.INFO, logger="github_orchestrator.board_api._guarded")
+
+    one_server(THE_PR).client.get(f"{BOARD}/api/nothing-here")
+
+    assert f"GET {BOARD}/api/nothing-here -> 404" in caplog.text

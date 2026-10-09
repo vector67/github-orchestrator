@@ -32,7 +32,7 @@ from github_orchestrator.working_copies import WorkingCopies
 TERMINAL_THREADS = 64
 NO_PROXIED_STREAMS = 1
 
-_BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]+)(/api/.*)$")
+_BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]+)/api/")
 
 
 class _Boards:
@@ -60,14 +60,11 @@ class _Routed:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         found = _BOARD_PATH.match(scope["path"]) if scope["type"] in ("http", "websocket") else None
         if found is not None:
-            owner, name, number, rest = found.groups()
+            owner, name, number = found.groups()
             pr = Pr(Repo(owner, name), int(number))
             board = await anyio.to_thread.run_sync(self._boards.of, pr)
             if board is not None:
-                prefix = pr_page(pr)
-                raw: bytes = scope.get("raw_path") or scope["path"].encode()
-                await board({**scope, "path": rest, "raw_path": raw[len(prefix.encode()):],
-                             "root_path": scope.get("root_path", "") + prefix}, receive, send)
+                await board({**scope, "root_path": pr_page(pr)}, receive, send)
                 return
         await self._hub(scope, receive, send)
 
