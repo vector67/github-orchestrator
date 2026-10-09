@@ -94,7 +94,8 @@ serving over and deletes what it replaces.
      idle one) and that a command survives a manager restart in between write and
      drain.
 
-3. **The dashboard comes from disk.**
+3. **The dashboard comes from disk.** **Done** (`6fd4ecb5` and the commit that
+   records this)
 
    - The board's `dashboard()` is `DashboardSource.dashboard(pr)` with the status
      file's fields laid over it. Nothing on the board reads `_drawn` any more.
@@ -235,3 +236,40 @@ Each step adds its decisions here, under its number, with the reason for each.
    - **Writing a file whole and the flock moved to `pr_manager/_files.py`,** used
      by the status file, the command file and the palette lock. `pr_manager`
      cannot reach `thread_records`' private lock.
+3. - **The one function is `DashboardSource.dashboard(pr)`, which lays the status
+     file over the rebuild itself (`StatusFiles.laid_over`).** The board's
+     `ManagerCommands.dashboard()` and the wall's rows both call it through
+     `Dashboards`, so there is no second copy to drift.
+   - **The status fields are laid over only while the manager is answering.** A
+     gone manager's file still names its last run and notice; laying them over
+     would show a dead manager as working. Starting and gone show what is on
+     disk without it, as the wall's fallback did.
+   - **Elapsed and silent seconds are the reader's clock minus the file's
+     `started_at` and `last_output_at`.** They keep counting between ticks.
+   - **The standing is a top-level `standing` on the dashboard contract, and the
+     domain `Dashboard` carries it.** The page's store keeps it with the drawn
+     dashboard, which the newer `listed_at` replaces; on `manager` flags it would
+     be kept by `changed_at`, which does not move when a manager goes.
+   - **`ManagerStatuses` and `StatusFiles.standing` go.** Nothing read them but
+     tests, and the standing now arrives on the dashboard.
+   - **`Drawn` and `ManagerCommands._drawn`/`publish` go.** The drain's frozen
+     check takes the freeze the loop found this tick (`obey(frozen=...)`), which
+     is what `_drawn` held. Unpushed commits are counted only on a read, as
+     before.
+   - **`board_answered` leaves the wall row; `board_url` stays.** Until step 6 a
+     board answers only where its manager started one, so the page still needs to
+     know whether there is a board to route to. A row is live when it has a
+     `board_url` and its dashboard is `answering`.
+   - **A board never refuses its dashboard as `manager-starting` now, so the code
+     goes from the contract and the page now, not in step 6.** It could no longer
+     be raised, and the page's board standing reads the dashboard's `standing`.
+   - **The page shows "The manager is starting…" in place of the dashboard while
+     the dashboard it holds says `starting`,** as it did for the old refusal. Gone
+     is shown as before: the not-live line when the board does not answer.
+   - **The wall builds its rows one after another in the request's thread.**
+     Each is disk reads and one git count, and the spec drops the pool.
+   - **A dashboard read now reflects the moment of the read, with live threads
+     and the run as of the last tick.** A thread scheduled after the tick's
+     status write shows as neither queued nor live until the next tick.
+   - **The preview's panel says its manager is answering,** since it stands in
+     for a running one and has no status file.
