@@ -15,10 +15,6 @@ export default class HubService extends Service {
 
   @tracked selected: string | null = null;
 
-  get onHub(): boolean {
-    return this.store.onHub;
-  }
-
   get now(): number {
     return this.loader.hubAt;
   }

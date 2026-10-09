@@ -25,7 +25,6 @@ module('Acceptance | hub', function (hooks) {
   const clock = setupFakeClock(hooks);
 
   function onTheHub(...held: ReturnType<typeof heldPr>[]): void {
-    board().serves = 'hub';
     board().held = held;
   }
 
@@ -41,19 +40,6 @@ module('Acceptance | hub', function (hooks) {
         .map((one) => one.url),
       [],
     );
-  });
-
-  test('a board still opens on its queue', async function (assert) {
-    await visit('/');
-
-    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
-  });
-
-  test('on its own port a board asks for its reads with no prefix', async function (assert) {
-    await visit('/pr/o/r/7/conversations');
-
-    assert.ok(board().askedFor(/^\/api\/conversations$/).length);
-    assert.deepEqual(board().askedFor(/^\/pr\//), []);
   });
 
   test('a pull request opens in the page, every one of its reads going through the hub under its number', async function (assert) {
@@ -163,12 +149,6 @@ module('Acceptance | hub', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/7');
     assert.dom('[data-test-old-link]').includesText('holds no #7');
     assert.dom('[data-test-old-link-choice]').doesNotExist();
-  });
-
-  test('an old link on a board’s own port opens its pull request', async function (assert) {
-    await visit('/pr/7/diff');
-
-    assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
   });
 
   test('a write under a pull request on the hub goes through the hub', async function (assert) {
@@ -317,17 +297,5 @@ module('Acceptance | hub', function (hooks) {
       .hasText('The board could not load: connection refused');
     await click('[data-test-wall-link]');
     assert.strictEqual(currentURL(), '/');
-  });
-
-  test('a held pull request whose board is not answering says so', async function (assert) {
-    onTheHub(heldPr({ board_url: null }));
-
-    await visit('/pr/o/r/7/conversations');
-
-    assert
-      .dom('[data-test-unreachable]')
-      .includesText(
-        'PR #7’s board is not answering. It may still be starting, be frozen on the wrong branch, or its manager may be down.',
-      );
   });
 });

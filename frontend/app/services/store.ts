@@ -313,10 +313,6 @@ export default class StoreService extends Service {
     });
   }
 
-  get onHub(): boolean {
-    return this.health?.serves === 'hub';
-  }
-
   pr(repo: string, number: number): PrEntity | undefined {
     return this.prs[keyOf(repo, number)];
   }
@@ -570,13 +566,6 @@ export default class StoreService extends Service {
   sawTour(): void {
     this.tour = { due: false };
     void waitForPromise(handed('/api/tour:seen').catch(() => undefined));
-  }
-
-  async readHome(): Promise<Numbered> {
-    const pull = await fetched<PullRequest>('/api/pull-request');
-    const pr = { repo: pull.repo, number: pull.number };
-    this.takePullRequest(pr, pull);
-    return pr;
   }
 
   async readThread(pr: Numbered, key: string): Promise<void> {

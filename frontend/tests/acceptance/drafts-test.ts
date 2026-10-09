@@ -147,7 +147,7 @@ module('Acceptance | drafts', function (hooks) {
     const sent = lastPost(board());
     assert.strictEqual(
       sent?.url,
-      `/api/conversations/${KEY}/operations:edit-draft`,
+      `/pr/o/r/7/api/conversations/${KEY}/operations:edit-draft`,
     );
     assert.strictEqual(sent?.ifMatch, '"d1"');
     assert.deepEqual(sent?.body, {
@@ -265,7 +265,7 @@ module('Acceptance | drafts', function (hooks) {
 
     assert.strictEqual(
       lastPost(board())?.url,
-      `/api/conversations/${KEY}/operations:enrol`,
+      `/pr/o/r/7/api/conversations/${KEY}/operations:enrol`,
     );
     assert.strictEqual(lastPost(board())?.ifMatch, '"d1"');
   });
@@ -301,7 +301,7 @@ module('Acceptance | drafts', function (hooks) {
     await click('[data-test-decision="discard"]');
     assert.strictEqual(
       lastPost(board())?.url,
-      `/api/conversations/${KEY}/operations:discard`,
+      `/pr/o/r/7/api/conversations/${KEY}/operations:discard`,
     );
 
     seed(board(), {
@@ -314,7 +314,7 @@ module('Acceptance | drafts', function (hooks) {
 
     assert.strictEqual(
       lastPost(board())?.url,
-      `/api/conversations/${KEY}/operations:unpark`,
+      `/pr/o/r/7/api/conversations/${KEY}/operations:unpark`,
     );
   });
 
@@ -330,7 +330,7 @@ module('Acceptance | drafts', function (hooks) {
 
     assert.strictEqual(
       lastPost(board())?.url,
-      `/api/conversations/${KEY}/operations:edit-draft`,
+      `/pr/o/r/7/api/conversations/${KEY}/operations:edit-draft`,
     );
   });
 
@@ -463,7 +463,7 @@ module('Acceptance | drafts', function (hooks) {
     await click('[data-test-draft-save]');
 
     const sent = lastPost(board());
-    assert.strictEqual(sent?.url, '/api/operations:create-draft');
+    assert.strictEqual(sent?.url, '/pr/o/r/7/api/operations:create-draft');
     assert.strictEqual(sent?.ifMatch, null);
     assert.deepEqual(sent?.body, {
       body: 'why not a context manager?',

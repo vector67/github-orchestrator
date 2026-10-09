@@ -1,6 +1,5 @@
 import type { TOC } from '@ember/component/template-only';
 import BoardStrip from 'frontend/components/board-strip';
-import BoardUnreachable from 'frontend/components/board-unreachable';
 import Rail from 'frontend/components/rail';
 import ToastRail from 'frontend/components/toast-rail';
 import type ThreadsService from 'frontend/services/threads';
@@ -21,8 +20,6 @@ const Conversations: TOC<ConversationsSignature> = <template>
         {{outlet}}
       </section>
     </div>
-  {{else}}
-    <BoardUnreachable />
   {{/if}}
   <ToastRail />
 </template>;

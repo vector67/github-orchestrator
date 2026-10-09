@@ -16,9 +16,8 @@ export default class DashboardService extends Service {
   }
 
   get isLive(): boolean {
-    const { streams, heard, streamed } = this.poll.board;
-    if (!streams) return heard;
-    return streams.dashboard.state === 'open' && streamed;
+    const { streams, streamed } = this.poll.board;
+    return streams?.dashboard.state === 'open' && streamed;
   }
 
   get standing(): Drawn['standing'] {
@@ -26,7 +25,7 @@ export default class DashboardService extends Service {
   }
 
   get missed(): boolean {
-    return this.poll.board.bar.missed || this.hub.missed;
+    return this.hub.missed;
   }
 
   get notesLive(): boolean {
@@ -39,7 +38,7 @@ export default class DashboardService extends Service {
 
   get onTheWall(): boolean {
     const pr = this.here.pr;
-    return this.store.onHub && pr !== null && !!this.hub.find(pr);
+    return pr !== null && !!this.hub.find(pr);
   }
 
   get shown(): ShownPr | null {
@@ -50,10 +49,7 @@ export default class DashboardService extends Service {
   }
 
   get refreshedAt(): number {
-    const { streams, readAt } = this.poll.board;
-    if (!this.isLive) return this.poll.hubAt;
-    if (streams) return this.poll.now;
-    return readAt ?? this.poll.hubAt;
+    return this.isLive ? this.poll.now : this.poll.hubAt;
   }
 
   get notes(): string | null {

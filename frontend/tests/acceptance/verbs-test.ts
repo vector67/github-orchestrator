@@ -534,10 +534,10 @@ module('Acceptance | verbs | a draft', function (hooks) {
     assert.deepEqual(
       board().posted.map((one) => [one.url, one.body]),
       [
-        ['/api/conversations/k0/operations:enrol', {}],
-        ['/api/conversations/k0/operations:discard', {}],
-        ['/api/conversations/k0/operations:post-now', {}],
-        ['/api/conversations/k1/operations:withdraw-from-review', {}],
+        ['/pr/o/r/7/api/conversations/k0/operations:enrol', {}],
+        ['/pr/o/r/7/api/conversations/k0/operations:discard', {}],
+        ['/pr/o/r/7/api/conversations/k0/operations:post-now', {}],
+        ['/pr/o/r/7/api/conversations/k1/operations:withdraw-from-review', {}],
       ],
     );
   });

@@ -32,7 +32,6 @@ module('Acceptance | wall', function (hooks) {
   const github = stubGitHub(hooks);
 
   function onTheHub(...held: ReturnType<typeof heldPr>[]): void {
-    board().serves = 'hub';
     board().held = held;
   }
 
@@ -905,7 +904,7 @@ module('Acceptance | wall', function (hooks) {
   test('x on a row whose board is not answering says dismiss waits for it and asks nothing', async function (assert) {
     onTheHub(
       heldPr({ dashboard: { standing: 'gone' } }),
-      heldPr({ number: 8, board_url: null, dashboard: { standing: 'gone' } }),
+      heldPr({ number: 8, dashboard: { standing: 'gone' } }),
     );
     await visit('/');
 
@@ -1003,9 +1002,7 @@ module('Acceptance | wall', function (hooks) {
     await press('j');
     await press('x');
     await press('f');
-    board().held = [
-      heldPr({ board_url: null, dashboard: { standing: 'gone' } }),
-    ];
+    board().held = [heldPr({ dashboard: { standing: 'gone' } })];
     await clock().tick(LIST);
 
     await visit('/pr/o/r/7/dashboard');
@@ -1205,7 +1202,6 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         manager: 'no-window',
-        board_url: null,
         dashboard: {
           standing: 'gone',
           pr: {

@@ -60,6 +60,31 @@ module('Acceptance | motion', function (hooks) {
     );
   }
 
+  async function markedDuring(
+    selector: string,
+    attribute: string,
+    run: () => Promise<void>,
+  ): Promise<string[]> {
+    const seen = new Set<string>();
+    const watching = new MutationObserver((changes) => {
+      for (const { target } of changes) {
+        if (
+          target instanceof Element &&
+          target.matches(`${selector}[data-moved]`)
+        )
+          seen.add(target.getAttribute(attribute)!);
+      }
+    });
+    watching.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-moved'],
+    });
+    await run();
+    watching.disconnect();
+    return [...seen];
+  }
+
   function inMotion(): void {
     document.documentElement.removeAttribute('data-still');
   }
@@ -385,7 +410,6 @@ module('Acceptance | motion', function (hooks) {
   });
 
   test('the switcher is all the way in once the page settles, with a live dot beside a working pull request', async function (assert) {
-    board().serves = 'hub';
     board().held = [
       heldPr({
         dashboard: {
@@ -433,9 +457,11 @@ module('Acceptance | motion', function (hooks) {
       board().threadIn('landed', { key: 'b' }),
       board().threadIn('landed', { key: 'c' }),
     ];
-    await clock().tick(LIST);
 
-    assert.deepEqual(marked('#rows [id]', 'id'), ['c-b']);
+    assert.deepEqual(
+      await markedDuring('#rows [id]', 'id', () => clock().tick(LIST)),
+      ['c-b'],
+    );
     assert.dom('[data-test-heading="waiting"]').doesNotExist();
     assert.deepEqual(document.getAnimations(), [], 'nothing is still moving');
   });
@@ -462,7 +488,6 @@ module('Acceptance | motion', function (hooks) {
   });
 
   test('a wall row that changes section after a poll is the one row marked as moved, and the section it left loses its heading', async function (assert) {
-    board().serves = 'hub';
     board().held = [
       heldPr({ number: 7, dashboard: { facts: factsFor('fix-ci') } }),
       heldPr({
@@ -512,9 +537,13 @@ module('Acceptance | motion', function (hooks) {
       board().threadIn('landed', { key: 'b' }),
       board().threadIn('landed', { key: 'c' }),
     ];
-    await clock().tick(LIST);
 
-    assert.deepEqual(marked('[data-test-card]', 'data-test-card'), ['b']);
+    assert.deepEqual(
+      await markedDuring('[data-test-card]', 'data-test-card', () =>
+        clock().tick(LIST),
+      ),
+      ['b'],
+    );
     assert.dom('[data-test-column="done"] [data-test-card="b"]').exists();
     assert.deepEqual(document.getAnimations(), [], 'nothing is still moving');
   });
@@ -545,7 +574,6 @@ module('Acceptance | motion', function (hooks) {
   });
 
   test('j on the wall slides the highlight from the row it leaves to the next one', async function (assert) {
-    board().serves = 'hub';
     board().held = [heldPr({ number: 1 }), heldPr({ number: 2 })];
     await visit('/');
     await press('j');
@@ -565,7 +593,6 @@ module('Acceptance | motion', function (hooks) {
   });
 
   test('the first selection on the wall draws its highlight in place', async function (assert) {
-    board().serves = 'hub';
     board().held = [heldPr({ number: 1 }), heldPr({ number: 2 })];
     await visit('/');
     inMotion();
@@ -597,7 +624,6 @@ module('Acceptance | motion', function (hooks) {
   });
 
   test('j past the bottom of a short wall scrolls the selected row into view, and k past the top scrolls it back', async function (assert) {
-    board().serves = 'hub';
     board().held = Array.from({ length: 12 }, (_, at) =>
       heldPr({ number: at + 1 }),
     );

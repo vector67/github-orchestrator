@@ -1269,32 +1269,6 @@
      "$ref": "#/components/schemas/Person"
     }
    }
-  },
-  "/pr/{owner}/{name}/{number}/api/{path}": {
-   "get": {
-    "200": {},
-    "400": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "404": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "503": {
-     "$ref": "#/components/schemas/Errors"
-    }
-   },
-   "post": {
-    "200": {},
-    "400": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "404": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "503": {
-     "$ref": "#/components/schemas/Errors"
-    }
-   }
   }
  },
  "schemas": {
@@ -3080,7 +3054,6 @@
     "watcher-failing",
     "not-watching",
     "not-frozen",
-    "board-unreachable",
     "terminal-refused",
     "manager-refused",
     "no-gh-token",
@@ -3750,14 +3723,7 @@
   "HeldPullRequest": {
    "properties": {
     "board_url": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ]
+     "type": "string"
     },
     "dashboard": {
      "$ref": "#/components/schemas/Dashboard"

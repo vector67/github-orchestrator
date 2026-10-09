@@ -46,13 +46,8 @@ export default class OldLinkRoute extends Route {
   }
 
   private async holding(number: number): Promise<PrEntity[]> {
-    if (this.hub.onHub) {
-      this.poll.startHub();
-      await this.poll.held();
-      return this.store.holding(number);
-    }
-    const home = await this.store.readHome();
-    const pr = this.store.pr(home.repo, home.number);
-    return pr && pr.number === number ? [pr] : [];
+    this.poll.startHub();
+    await this.poll.held();
+    return this.store.holding(number);
   }
 }

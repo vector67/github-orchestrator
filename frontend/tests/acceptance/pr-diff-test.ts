@@ -421,7 +421,6 @@ module('Acceptance | pr diff', function (hooks) {
     }
 
     test('on the hub Esc drops the selection before it leaves for the wall', async function (assert) {
-      board().serves = 'hub';
       board().held = [heldPr()];
       await visit('/pr/o/r/7/diff');
       await click(`${row('+20')} [data-test-new]`);

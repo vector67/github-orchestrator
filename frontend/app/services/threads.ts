@@ -12,7 +12,6 @@ import {
   type Role,
 } from 'frontend/data/groups';
 import type { Context, Details, Fix } from 'frontend/data/panel';
-import { unreachable } from 'frontend/data/refusal';
 import type { Numbered } from 'frontend/data/wall';
 import { rowOf, type Row, type Seen } from 'frontend/data/rows';
 import type HereService from 'frontend/services/here';
@@ -70,13 +69,8 @@ class PerPr {
     reachability: ReachabilityService,
     readonly scope: PrScope,
     readonly at: Numbered,
-    loaded: () => boolean,
   ) {
-    this.panel = reachability.reach(
-      'panel',
-      (trouble) => loaded() || !unreachable(trouble),
-      scope,
-    );
+    this.panel = reachability.reach('panel', () => true, scope);
   }
 }
 
@@ -87,7 +81,7 @@ export default class ThreadsService extends Service {
   @service declare store: StoreService;
 
   private fresh = (scope: PrScope): PerPr =>
-    new PerPr(this.reachability, scope, this.here.at, () => this.loaded);
+    new PerPr(this.reachability, scope, this.here.at);
 
   private get pr(): PerPr {
     return this.here.scope.of(this.fresh);

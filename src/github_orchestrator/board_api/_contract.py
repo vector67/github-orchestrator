@@ -57,9 +57,6 @@ class ErrorCode(StrEnum):
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
 
-    BOARD_UNREACHABLE is the hub holding a pull request whose board does not
-    answer: it has none yet, it is starting, its manager is frozen or down.
-
     TERMINAL_REFUSED is the PR manager not opening a terminal command: the
     worktree is frozen on another branch, or the command could not start.
 
@@ -123,7 +120,6 @@ class ErrorCode(StrEnum):
     WATCHER_FAILING = "watcher-failing"
     NOT_WATCHING = "not-watching"
     NOT_FROZEN = "not-frozen"
-    BOARD_UNREACHABLE = "board-unreachable"
     TERMINAL_REFUSED = "terminal-refused"
     MANAGER_REFUSED = "manager-refused"
     NO_GH_TOKEN = "no-gh-token"
@@ -1519,10 +1515,9 @@ class HeldPullRequest(BaseModel):
         description="What became of the PR manager: `running`, `exited`, "
                     "`no-window` when none was started or it was closed, or "
                     "`unreadable` when its record would not read.")
-    board_url: str | None = Field(
-        description="`/pr/<owner>/<name>/<number>` on the hub, where the pull request's board "
-                    "is carried, when one is wanted. It answers only while its "
-                    "PR manager runs.")
+    board_url: str = Field(
+        description="`/pr/<owner>/<name>/<number>` on the hub, where the server serves the "
+                    "pull request's board, whether or not its PR manager runs.")
     dashboard: Dashboard = Field(
         description="What `/api/dashboard` on its board answers for the same "
                     "files: built from what is on disk with the PR manager's "

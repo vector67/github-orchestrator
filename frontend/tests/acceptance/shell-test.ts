@@ -67,7 +67,6 @@ module('Acceptance | shell', function (hooks) {
   });
 
   test('the threads are read again on every tab of the pull request, and not once you have left it', async function (assert) {
-    board().serves = 'hub';
     board().held = [heldPr()];
     await visit('/pr/o/r/7/conversations');
     const lists = () => board().askedFor(/\/api\/conversations$/).length;
@@ -161,7 +160,6 @@ module('Acceptance | shell', function (hooks) {
   });
 
   test('the wall says so too', async function (assert) {
-    board().serves = 'hub';
     board().fontProblem =
       'board_font_dir /nowhere holds no <Family>-<Style>.otf face';
 
@@ -171,7 +169,6 @@ module('Acceptance | shell', function (hooks) {
   });
 
   test('a newer release the hub has seen shows a quiet badge naming it and the command', async function (assert) {
-    board().serves = 'hub';
     board().newestRelease = {
       version: '0.6.0',
       checked_at: '2026-10-09T08:00:00+00:00',
@@ -190,7 +187,6 @@ module('Acceptance | shell', function (hooks) {
   });
 
   test('a release no newer than the running one shows no badge', async function (assert) {
-    board().serves = 'hub';
     board().newestRelease = {
       version: '0.1.0',
       checked_at: '2026-10-09T08:00:00+00:00',

@@ -119,7 +119,6 @@ module('Acceptance | next move', function (hooks) {
   const board = setupFakeBoard(hooks);
 
   function serve(over: DashboardOver): void {
-    board().serves = 'hub';
     board().held = [heldPr({ dashboard: over })];
     board().manager = dashboard(over);
   }
@@ -358,7 +357,6 @@ module('Acceptance | next move', function (hooks) {
   }
 
   test('the people a waiting move names travel with it', async function (assert) {
-    board().serves = 'hub';
     board().held = [
       heldPr({
         dashboard: {

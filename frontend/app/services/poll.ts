@@ -4,7 +4,7 @@ import type RouterService from '@ember/routing/router-service';
 import { tracked } from '@glimmer/tracking';
 import { registerDestructor } from '@ember/destroyable';
 import { waitForPromise } from '@ember/test-waiters';
-import { Refusal, unheldBy, unreachable } from 'frontend/data/refusal';
+import { unheldBy } from 'frontend/data/refusal';
 import type { Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
@@ -35,11 +35,8 @@ class Rail {
     readonly scope: PrScope,
     pr: Numbered,
   ) {
-    const counts = (trouble: unknown): boolean =>
-      this.loaded || !unreachable(trouble);
     const polled = (where: string, feed: Feed, flipped = false) =>
       reachability.polled(where, (tag) => store.ask(feed, tag), {
-        counts,
         flipped,
         scope,
       });
@@ -58,25 +55,10 @@ interface Streams {
 }
 
 class Board {
-  @tracked readAt: number | null = null;
-  @tracked heard = false;
   @tracked streamed = false;
   @tracked streams: Streams | null = null;
-  reading: Promise<void> | null = null;
 
-  readonly bar: Polled;
-
-  constructor(
-    reachability: ReachabilityService,
-    store: StoreService,
-    scope: PrScope,
-    pr: Numbered,
-  ) {
-    this.bar = reachability.polled(
-      'dashboard',
-      (tag) => store.ask({ kind: 'dashboard', pr }, tag),
-      { counts: (trouble) => !(trouble instanceof Refusal), scope },
-    );
+  constructor(scope: PrScope) {
     registerDestructor(scope, () => this.unfollow());
   }
 
@@ -88,11 +70,6 @@ class Board {
     streams.output.close();
     this.streams = null;
     this.streamed = false;
-  }
-
-  forget(): void {
-    this.bar.forget();
-    this.heard = false;
   }
 }
 
@@ -116,7 +93,6 @@ export default class PollService extends Service {
   private listTimer: ReturnType<typeof setInterval> | null = null;
   private dashboardTimer: ReturnType<typeof setInterval> | null = null;
   private hubTimer: ReturnType<typeof setInterval> | null = null;
-  private barTimer: ReturnType<typeof setInterval> | null = null;
   private restartTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(owner: Owner) {
@@ -140,8 +116,7 @@ export default class PollService extends Service {
   private freshRail = (scope: PrScope): Rail =>
     new Rail(this.reachability, this.store, scope, this.here.at);
 
-  private freshBoard = (scope: PrScope): Board =>
-    new Board(this.reachability, this.store, scope, this.here.at);
+  private freshBoard = (scope: PrScope): Board => new Board(scope);
 
   get rail(): Rail {
     return this.here.scope.of(this.freshRail);
@@ -204,18 +179,6 @@ export default class PollService extends Service {
     this.hubTimer = null;
   }
 
-  startBar(): void {
-    this.barTimer ??= setInterval(
-      () => void waitForPromise(this.refreshLive()),
-      LIST_MS,
-    );
-  }
-
-  stopBar(): void {
-    if (this.barTimer) clearInterval(this.barTimer);
-    this.barTimer = null;
-  }
-
   followRestart(): void {
     this.restartTimer ??= setInterval(
       () => void waitForPromise(this.tickRestart()),
@@ -247,7 +210,6 @@ export default class PollService extends Service {
     this.stopList();
     this.stopDashboard();
     this.stopHub();
-    this.stopBar();
   }
 
   private async tick(): Promise<void> {
@@ -333,9 +295,7 @@ export default class PollService extends Service {
   }
 
   leave(): void {
-    const board = this.board;
-    board.unfollow();
-    if (this.store.onHub) board.forget();
+    this.board.unfollow();
   }
 
   private tickDashboard(): void {
@@ -345,25 +305,5 @@ export default class PollService extends Service {
     streams.dashboard.reopen();
     streams.notes.reopen();
     streams.output.reopen();
-  }
-
-  read(): Promise<void> {
-    const board = this.board;
-    board.reading ??= this.refreshLive().finally(() => {
-      board.reading = null;
-    });
-    return board.reading;
-  }
-
-  async refreshLive(): Promise<void> {
-    const board = this.board;
-    try {
-      await board.bar.poll();
-      board.heard = true;
-      board.readAt = Date.now();
-    } catch {
-      board.forget();
-    }
-    this.now = Date.now();
   }
 }

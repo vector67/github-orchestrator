@@ -246,9 +246,8 @@ module('Acceptance | keyboard', function (hooks) {
   });
 
   test('question mark shows the key help on the dashboard', async function (assert) {
-    board().serves = 'hub';
     board().manager = dashboard();
-    board().held = [heldPr({ board_url: '/pr/o/r/7' })];
+    board().held = [heldPr()];
     await visit('/pr/o/r/7/dashboard');
 
     await triggerEvent(document, 'keydown', { key: '?' });
@@ -260,7 +259,6 @@ module('Acceptance | keyboard', function (hooks) {
   });
 
   test('question mark shows the key help on the wall', async function (assert) {
-    board().serves = 'hub';
     board().held = [heldPr()];
     await visit('/');
 

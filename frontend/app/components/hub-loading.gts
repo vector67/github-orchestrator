@@ -12,9 +12,7 @@ export default class HubLoading extends Component<HubLoadingSignature> {
   @service declare hub: HubService;
 
   <template>
-    {{#if this.hub.onHub}}
-      <HubBar @on={{@on}} />
-    {{/if}}
+    <HubBar @on={{@on}} />
     <div class="page-loading">
       <p class="work-placeholder" data-test-loading={{@on}}>
         Loading the

@@ -37,7 +37,7 @@ export default class HereService extends Service {
     return this.pr === null ? '' : this.prefixOf(this.pr);
   }
 
-  prefixOf = (pr: Numbered): string => (this.store.onHub ? pageOf(pr) : '');
+  prefixOf = (pr: Numbered): string => pageOf(pr);
 
   api = (path: string): string => `${this.prefix}${path}`;
 

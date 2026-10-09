@@ -21,7 +21,7 @@ module('Acceptance | preload', function (hooks) {
       thread({ key: 'c' }),
     ];
 
-    await visit('/');
+    await visit('/pr/o/r/7/conversations');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/b');
     assert.dom('#c-b').hasAttribute('aria-selected', 'true');

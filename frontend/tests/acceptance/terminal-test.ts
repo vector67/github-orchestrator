@@ -33,7 +33,6 @@ module('Acceptance | terminal', function (hooks) {
   const clock = setupFakeClock(hooks);
 
   function onTheHub(): void {
-    board().serves = 'hub';
     board().manager = dashboard();
     board().held = [heldPr()];
   }
@@ -216,18 +215,6 @@ module('Acceptance | terminal', function (hooks) {
       .hasAttribute('aria-current', 'true');
   });
 
-  test('on a board’s own port a Terminal tab whose board stops answering says so', async function (assert) {
-    await visit('/pr/o/r/7/terminal');
-
-    board().down = true;
-    await clock().tick(5000);
-    await clock().tick(5000);
-
-    assert
-      .dom('[data-test-banner]')
-      .hasText('the board server is not answering');
-  });
-
   test('on the hub a Terminal tab whose hub stops answering says so', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');
@@ -295,7 +282,6 @@ module('Acceptance | terminal', function (hooks) {
   });
 
   function needingARebase(over: DashboardOver): void {
-    board().serves = 'hub';
     board().manager = dashboard(over);
     board().held = [heldPr({ dashboard: over })];
   }
@@ -635,7 +621,7 @@ module('Acceptance | terminal', function (hooks) {
 
   test('a board that does not answer says the terminal waits for it', async function (assert) {
     onTheHub();
-    board().held = [heldPr({ board_url: null })];
+    board().broken = /\/api\/terminal\/sessions$/;
 
     await visit('/pr/o/r/7/terminal');
 

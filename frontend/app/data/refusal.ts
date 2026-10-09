@@ -24,8 +24,6 @@ export class Refusal extends Error {
 
 export class Abandoned extends Error {}
 
-const UNREACHABLE = 'board-unreachable';
-
 const UNHELD = ['watcher-starting', 'watcher-failing', 'not-watching'] as const;
 
 export type Unheld = (typeof UNHELD)[number];
@@ -33,8 +31,4 @@ export type Unheld = (typeof UNHELD)[number];
 export function unheldBy(trouble: unknown): Unheld | null {
   if (!(trouble instanceof Refusal)) return null;
   return UNHELD.find((code) => code === trouble.code) ?? null;
-}
-
-export function unreachable(trouble: unknown): boolean {
-  return trouble instanceof Refusal && trouble.code === UNREACHABLE;
 }

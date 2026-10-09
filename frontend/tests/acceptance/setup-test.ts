@@ -17,7 +17,6 @@ module('Acceptance | setup', function (hooks) {
   const clock = setupFakeClock(hooks);
 
   function inSetup(): FakeSetup {
-    board().serves = 'hub';
     board().state = 'setup';
     const setup = board().setup;
     setup.choices = [

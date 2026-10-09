@@ -58,12 +58,9 @@ module('Acceptance | dashboard', function (hooks) {
   const board = setupFakeBoard(hooks);
   const clock = setupFakeClock(hooks);
 
-  function onTheHub(over: DashboardOver = {}, boardUp = true): void {
-    board().serves = 'hub';
+  function onTheHub(over: DashboardOver = {}): void {
     board().manager = dashboard(over);
-    board().held = [
-      heldPr({ dashboard: over, board_url: boardUp ? '/pr/o/r/7' : null }),
-    ];
+    board().held = [heldPr({ dashboard: over })];
   }
 
   async function press(key: string): Promise<void> {
@@ -871,21 +868,6 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(board().posted.at(-1)?.body, { forever: true });
   });
 
-  test('on a board’s own port a dismissal says the manager has exited instead of calling it broken', async function (assert) {
-    await visit('/pr/o/r/7/dashboard');
-
-    await press('x');
-    await press('f');
-    board().down = true;
-    await clock().tick(POLL);
-
-    assert
-      .dom('[data-test-standing]')
-      .hasText(
-        'Dismissed #7 forever. Its manager has exited. This page has nothing more to show.',
-      );
-  });
-
   test('c, which is Reply on the Board, closes nothing here', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
@@ -969,7 +951,8 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('close waits for the board while it is down', async function (assert) {
-    onTheHub({}, false);
+    onTheHub();
+    board().broken = /\/stream$/;
     await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-control="close"]').isDisabled();
@@ -999,7 +982,7 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('a frozen pull request’s band asks for the release, with where the worktree is and both branches', async function (assert) {
-    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } }, false);
+    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
 
     await visit('/pr/o/r/7/dashboard');
 
@@ -1031,7 +1014,8 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('w releases a frozen worktree through the hub, and the band then says it was asked for', async function (assert) {
-    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } }, false);
+    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
+    board().broken = /\/stream$/;
     await visit('/pr/o/r/7/dashboard');
 
     await press('w');
@@ -1051,7 +1035,7 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('while frozen only w acts: the other keys say so and send nothing', async function (assert) {
-    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } }, false);
+    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
     await visit('/pr/o/r/7/dashboard');
 
     await press('p');
@@ -1063,7 +1047,8 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('a board that is down shows the watcher’s dashboard, marked as not live, and holds through the hub', async function (assert) {
-    onTheHub({}, false);
+    onTheHub();
+    board().broken = /\/stream$/;
 
     await visit('/pr/o/r/7/dashboard');
 
@@ -1100,32 +1085,27 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('a board that comes back makes the tab live again', async function (assert) {
     const earlier = { system: { last_run: EARLIER_RUN } };
-    onTheHub(earlier, false);
+    onTheHub(earlier);
+    board().broken = /\/stream$/;
     await visit('/pr/o/r/7/dashboard');
 
-    board().held = [heldPr({ dashboard: earlier })];
+    board().broken = null;
     await clock().tick(LIST);
 
     assert.dom('[data-test-not-live]').doesNotExist();
     assert.dom('[data-test-control="carry-on"]').isNotDisabled();
   });
 
-  test('on a board’s own port a manager starting or a board gone says so', async function (assert) {
-    board().manager = dashboard({ standing: 'starting' });
+  test('a manager starting says so until its dashboard answers', async function (assert) {
+    onTheHub({ standing: 'starting' });
     await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-standing]').hasText('The manager is starting…');
 
-    board().manager = dashboard();
+    onTheHub();
     await streamed();
     assert.dom('[data-test-standing]').doesNotExist();
     assert.dom('[data-test-band-move]').hasText('Waiting on reviewers carol');
-
-    board().down = true;
-    board().dropStreams();
-    await clock().tick(LIST);
-    assert.dom('[data-test-standing]').hasText('Can’t reach the board server.');
-    assert.dom('[data-test-control]').doesNotExist();
   });
 
   test('the system block says when it was last read', async function (assert) {
@@ -1136,7 +1116,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.ok(/\d\d:\d\d:\d\d/.test(text('[data-test-refreshed]')));
   });
 
-  test('on a board’s own port a board that never answers still opens the tab, and one that comes back is shown again', async function (assert) {
+  test('a board that never answers still opens the tab, and one that comes back is shown again', async function (assert) {
     board().down = true;
     await visit('/pr/o/r/7/dashboard');
 

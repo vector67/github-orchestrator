@@ -33,7 +33,6 @@ module('Acceptance | pr view', function (hooks) {
   const github = stubGitHub(hooks);
 
   function onTheHub(...held: ReturnType<typeof heldPr>[]): void {
-    board().serves = 'hub';
     board().held = held;
   }
 
@@ -692,72 +691,5 @@ module('Acceptance | pr view', function (hooks) {
 
     assert.dom('[data-test-review]').doesNotExist();
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
-  });
-
-  test('a pull request whose board is down opens with its bar and says the board is unreachable', async function (assert) {
-    onTheHub(heldPr({ board_url: null }));
-    await visit('/');
-
-    await click('[data-test-wall-row="o/r#7"] [data-test-wall-lead]');
-
-    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
-    assert.dom('[data-test-pr-title]').hasText('#7 PROJ-7 · Fix the widget');
-    assert
-      .dom('[data-test-unreachable]')
-      .includesText('PR #7’s board is not answering.');
-
-    await clock().tick(LIST);
-
-    assert
-      .dom('[data-test-banner]')
-      .doesNotExist(
-        'the body already says it, and a banner would cover the bar',
-      );
-  });
-
-  test('leaving a pull request mid-read for one whose board is down raises no banner', async function (assert) {
-    onTheHub(heldPr(), heldPr({ number: 8, board_url: null }));
-    board().conversations = [thread({ key: 'k1' })];
-    await visit('/pr/o/r/7/conversations/k1');
-    board().hold(/^\/pr\/o\/r\/7\/api\//);
-    void clock().tick(LIST);
-
-    await visit('/pr/o/r/8');
-
-    assert.dom('[data-test-unreachable]').exists();
-    assert.dom('[data-test-banner]').doesNotExist();
-  });
-
-  test('a board that comes back fills the Board tab on the next poll', async function (assert) {
-    onTheHub(heldPr({ board_url: null }));
-    board().conversations = [thread({ key: 'k1' })];
-    await visit('/pr/o/r/7');
-
-    board().held = [heldPr()];
-    await clock().tick(LIST);
-
-    assert.dom('[data-test-unreachable]').doesNotExist();
-    assert.dom('#c-k1').exists();
-  });
-
-  test('on its own port a board shows its bar from its own dashboard, a way to the wall, and no switcher', async function (assert) {
-    await visit('/pr/o/r/7/conversations');
-
-    assert.dom('[data-test-pr-title]').hasText('#7 PROJ-7 · Fix the widget');
-    assert
-      .dom('[data-test-your-move]')
-      .hasText('Next Waiting on reviewers carol');
-    assert
-      .dom('[data-test-wall-link]')
-      .hasAttribute('href', 'http://127.0.0.1:8720');
-    assert.dom('[data-test-switcher-open]').doesNotExist();
-
-    await press('Escape');
-    await press('Escape');
-    assert.strictEqual(
-      currentURL(),
-      '/pr/o/r/7/conversations',
-      'Esc never leaves the board’s page',
-    );
   });
 });

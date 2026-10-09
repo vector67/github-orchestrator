@@ -15,7 +15,6 @@ module('Acceptance | loading', function (hooks) {
   const clock = setupFakeClock(hooks);
 
   function onTheHub(): void {
-    board().serves = 'hub';
     board().held = [heldPr()];
   }
 

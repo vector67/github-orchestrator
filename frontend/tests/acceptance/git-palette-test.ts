@@ -13,10 +13,9 @@ module('Acceptance | git palette', function (hooks) {
   const board = setupFakeBoard(hooks);
   setupFakeClock(hooks);
 
-  function onTheHub(boardUp = true): void {
-    board().serves = 'hub';
+  function onTheHub(): void {
     board().manager = dashboard();
-    board().held = [heldPr({ board_url: boardUp ? '/pr/o/r/7' : null })];
+    board().held = [heldPr()];
   }
 
   async function press(...keys: string[]): Promise<void> {
@@ -231,9 +230,9 @@ module('Acceptance | git palette', function (hooks) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
     board().refusal = {
-      status: 503,
-      code: 'board-unreachable',
-      detail: 'acme/widgets#7’s board is not answering',
+      status: 400,
+      code: 'malformed-request',
+      detail: 'the palette names no command for these keys',
     };
 
     await press('g', 's', 'Enter');
@@ -241,13 +240,14 @@ module('Acceptance | git palette', function (hooks) {
     assert
       .dom('[data-test-git-output-status]')
       .hasText(
-        'git status did not run: acme/widgets#7’s board is not answering',
+        'git status did not run: the palette names no command for these keys',
       );
     assert.deepEqual(board().reported, []);
   });
 
   test('with the board down git waits for it and the palette does not open', async function (assert) {
-    onTheHub(false);
+    onTheHub();
+    board().broken = /\/stream$/;
     await visit('/pr/o/r/7/dashboard');
 
     await press('g');

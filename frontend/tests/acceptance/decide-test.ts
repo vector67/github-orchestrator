@@ -28,7 +28,7 @@ module('Acceptance | decide', function (hooks) {
     assert.strictEqual(board().posted.length, 1);
     assert.strictEqual(
       board().posted[0]!.url,
-      '/api/conversations/k1/operations:unpark',
+      '/pr/o/r/7/api/conversations/k1/operations:unpark',
     );
     assert.strictEqual(board().posted[0]!.ifMatch, '"k1-v1"');
     assert.deepEqual(board().posted[0]!.body, {});

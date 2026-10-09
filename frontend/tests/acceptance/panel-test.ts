@@ -798,7 +798,7 @@ module('Acceptance | panel', function (hooks) {
 
     assert.strictEqual(
       lastFileRead(board()),
-      '/api/files?sha=a1b2c3d&path=src%2Ffoo.py&from_line=4&to_line=10',
+      '/pr/o/r/7/api/files?sha=a1b2c3d&path=src%2Ffoo.py&from_line=4&to_line=10',
     );
   });
 

@@ -1,6 +1,5 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
-import { unreachable } from 'frontend/data/refusal';
 import type BoardKeysService from 'frontend/services/board-keys';
 import type KeysService from 'frontend/services/keys';
 import type PollService from 'frontend/services/poll';
@@ -16,11 +15,7 @@ export default class BoardRoute extends Route {
 
   async model() {
     this.theme.restore();
-    try {
-      await this.poll.startRail();
-    } catch (trouble) {
-      if (!unreachable(trouble)) throw trouble;
-    }
+    await this.poll.startRail();
     return this.threads;
   }
 

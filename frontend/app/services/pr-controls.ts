@@ -178,7 +178,7 @@ export default class PrControlsService extends Service {
       move: row.summaries.move.code,
       yours: this.yours(row.repo, row.number),
       held: true,
-      live: row.board_url !== null && row.drawn.standing === 'answering',
+      live: row.drawn.standing === 'answering',
       showing: 'hub',
     };
   }
@@ -263,11 +263,9 @@ export default class PrControlsService extends Service {
     const how: Dismissal = forever ? 'forever' : 'until its next event';
     if (!(await this.throughTheManager(on, 'dismiss', { forever }))) return;
     this.dismissals = new Map(this.dismissals).set(keyOf(on.shown), how);
-    if (this.hub.onHub) {
-      this.toasts.say(dismissedSaying(on.number, how), 'done');
-      await this.loader.refreshHub();
-      void this.router.transitionTo('index');
-    }
+    this.toasts.say(dismissedSaying(on.number, how), 'done');
+    await this.loader.refreshHub();
+    void this.router.transitionTo('index');
   }
 
   private async throughTheManager(

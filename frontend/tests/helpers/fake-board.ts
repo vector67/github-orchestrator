@@ -647,7 +647,6 @@ export class FakeBoard {
   asked: Asked[] = [];
   reported: Reported[] = [];
   seen: string[] = [];
-  serves: 'board' | 'hub' = 'board';
   hubUrl = 'http://127.0.0.1:8720';
   fontProblem: string | null = null;
   newestRelease: NewestRelease | null = null;
@@ -656,7 +655,7 @@ export class FakeBoard {
   toursSeen = 0;
   pid = 4242;
   setup = new FakeSetup();
-  held: HeldPullRequest[] = [];
+  held: HeldPullRequest[] = [heldPr()];
   ledger: RunLedger = runLedger();
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
@@ -666,12 +665,9 @@ export class FakeBoard {
   private madeSessions = 0;
 
   get role(): 'author' | 'reviewer' {
-    const shown =
-      this.serves === 'hub'
-        ? this.boardOf(
-            `/pr/${this.pullRequest.repo}/${this.pullRequest.number}/api/dashboard`,
-          )
-        : this.manager;
+    const shown = this.boardOf(
+      `/pr/${this.pullRequest.repo}/${this.pullRequest.number}/api/dashboard`,
+    );
     return shown?.facts?.is_author === false ? 'reviewer' : 'author';
   }
 
@@ -890,17 +886,11 @@ export class FakeBoard {
       return Promise.reject(new Error('connection refused'));
     }
     const where = new URL(url, 'http://127.0.0.1');
-    const setup =
-      this.serves === 'hub'
-        ? this.setup.answer(init?.method ?? 'GET', where, init)
-        : null;
+    const setup = this.setup.answer(init?.method ?? 'GET', where, init);
     if (setup) return Promise.resolve(this.setupAnswered(setup));
-    const through =
-      this.serves === 'hub' ? THROUGH_THE_HUB.exec(where.pathname) : null;
+    const through = THROUGH_THE_HUB.exec(where.pathname);
     if (!through) {
-      return Promise.resolve(
-        this.served(url, where, init, headers, this.serves),
-      );
+      return Promise.resolve(this.served(url, where, init, headers, 'hub'));
     }
     return Promise.resolve(
       this.throughTheHub(
@@ -936,17 +926,6 @@ export class FakeBoard {
     if (!held) {
       return this.json(404, {
         errors: [{ status: 404, code: 'not-found', detail: 'not held' }],
-      });
-    }
-    if (!held.board_url) {
-      return this.json(503, {
-        errors: [
-          {
-            status: 503,
-            code: 'board-unreachable',
-            detail: `${held.repo}#${number}'s board is not answering`,
-          },
-        ],
       });
     }
     const answered = this.served(url, where, init, headers, 'board');
@@ -1107,17 +1086,13 @@ export class FakeBoard {
       return {
         status: 'ok',
         pid: this.pid,
-        serves: this.serves,
+        serves: 'hub',
         hub_url: this.hubUrl,
         font_problem: this.fontProblem,
-        ...(this.serves === 'hub'
-          ? {
-              state: this.state,
-              version: '0.1.0',
-              watcher: this.ledger.watcher,
-            }
-          : { state: null, version: null, watcher: null }),
-        newest_release: this.serves === 'hub' ? this.newestRelease : null,
+        state: this.state,
+        version: '0.1.0',
+        watcher: this.ledger.watcher,
+        newest_release: this.newestRelease,
       };
     }
     if (side === 'hub') {
@@ -1129,7 +1104,9 @@ export class FakeBoard {
             groups: WALL_GROUPS,
             pull_requests: this.held.map((one) => ({
               ...one,
-              dashboard: this.listing(one.dashboard),
+              dashboard: this.listing(
+                this.boardOf(`${one.board_url}/api/dashboard`),
+              ),
             })),
           }
         : undefined;
@@ -1347,7 +1324,7 @@ export class FakeBoard {
       this.refusal = null;
       return this.json(refusal.status, { errors: [refusal] });
     }
-    const shown = pr.dashboard;
+    const shown = this.boardOf(`${pr.board_url}/api/dashboard`);
     if (verb === 'release' && !shown.frozen) {
       return this.json(409, {
         errors: [{ status: 409, code: 'not-frozen', detail: 'not frozen' }],
@@ -1365,6 +1342,7 @@ export class FakeBoard {
             },
     };
     this.held = this.held.map((one, index) => (index === at ? changed : one));
+    if (shown === this.managed) this.managed = changed.dashboard;
     return respond(null, {
       status: 202,
       headers: { Location: '/api/pull-requests' },

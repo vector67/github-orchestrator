@@ -50,7 +50,7 @@ function seed(board: FakeBoard, key: string, diff: Diff) {
 
 function diffPath(board: FakeBoard, key: string): string {
   const diff = board.diffs[`${key}.1.proposal`]!;
-  return `/api/diffs/${diff.base}..${diff.head}`;
+  return `/pr/o/r/7/api/diffs/${diff.base}..${diff.head}`;
 }
 
 function diffAsks(board: FakeBoard, key: string) {

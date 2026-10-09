@@ -35,9 +35,11 @@ from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
+    Dashboard,
     Dashboards,
     Holdings,
     ManagerPanels,
+    ManagerStanding,
     ServerApp,
     SetupDesk,
     Told,
@@ -1301,6 +1303,14 @@ class PreviewHub(Wiring):
     panels: ManagerPanels
 
 
+class AnsweringInThePreview:
+    def __init__(self, source: DashboardSource) -> None:
+        self._source = source
+
+    def dashboard(self, pr: Pr) -> Dashboard:
+        return replace(self._source.dashboard(pr), standing=ManagerStanding.ANSWERING)
+
+
 class PolledInThePreview:
     def health(self) -> Health:
         return Health(alive=True, since_last_poll=timedelta(seconds=20), last_error=None,
@@ -1335,6 +1345,10 @@ class PreviewHubProvider(Provider):
     @provide
     def panels(self, hub: PreviewHub) -> ManagerPanels:
         return hub.panels
+
+    @provide
+    def dashboards(self, source: DashboardSource) -> Dashboards:
+        return AnsweringInThePreview(source)
 
     @provide
     def releases(self, settings: Settings, clock: UtcClock) -> Releases:

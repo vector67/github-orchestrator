@@ -44,8 +44,8 @@ def described(event: str, data: type[BaseModel]) -> dict[int | str, dict[str, An
         "description": (
             f"An endless `{EVENT_STREAM}`. It opens with `retry: {RETRY_MS}`, sends a "
             f"`{event}` event at once and again only when its data changes, and a "
-            "`: heartbeat` comment after 15 quiet seconds, so the hub's 75-second "
-            "read never times out. Each "
+            "`: heartbeat` comment after 15 quiet seconds, so a page can tell a quiet "
+            "stream from a dropped one. Each "
             "event's `id` is the `ETag` the matching read would answer, without its "
             "quotes; reconnect with it as `Last-Event-ID` and the stream sends "
             "nothing until the data moves past it."),

@@ -31,7 +31,6 @@ module('Acceptance | one store', function (hooks) {
   const clock = setupFakeClock(hooks);
 
   function onTheHub(...held: HeldOver[]): void {
-    board().serves = 'hub';
     board().held = held.map((one) => heldPr({ ...LAGGING, ...one }));
   }
 

@@ -44,7 +44,7 @@ module('Acceptance | code context', function (hooks) {
 
     assert.dom('[data-test-context]').containsText('return rows');
     assert.deepEqual(codeAsks(board()), [
-      '/api/files?sha=c0ffee1&path=src%2Ffoo.py&from_line=39&to_line=45',
+      '/pr/o/r/7/api/files?sha=c0ffee1&path=src%2Ffoo.py&from_line=39&to_line=45',
     ]);
   });
 
@@ -79,7 +79,7 @@ module('Acceptance | code context', function (hooks) {
 
     assert.dom('[data-test-context]').containsText('return old_rows');
     assert.deepEqual(codeAsks(board()), [
-      '/api/files?sha=a1b2c3d&path=src%2Ffoo.py&from_line=39&to_line=45',
+      '/pr/o/r/7/api/files?sha=a1b2c3d&path=src%2Ffoo.py&from_line=39&to_line=45',
     ]);
   });
 
@@ -107,7 +107,7 @@ module('Acceptance | code context', function (hooks) {
 
     assert.dom('[data-test-context]').containsText('"amount > 0"');
     assert.deepEqual(codeAsks(board()), [
-      '/api/files?sha=ba5e000&path=src%2Ffoo.py&from_line=38&to_line=45',
+      '/pr/o/r/7/api/files?sha=ba5e000&path=src%2Ffoo.py&from_line=38&to_line=45',
     ]);
   });
 

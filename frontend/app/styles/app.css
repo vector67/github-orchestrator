@@ -3188,21 +3188,6 @@ kbd {
   flex: none;
 }
 
-.board-unreachable {
-  max-width: 60ch;
-  padding: 32px;
-}
-
-.board-unreachable h2 {
-  margin: 0 0 8px;
-  font-size: var(--fs-xl);
-}
-
-.board-unreachable .why {
-  margin: 0;
-  color: var(--muted);
-}
-
 .switcher-scrim {
   position: fixed;
   inset: 0;

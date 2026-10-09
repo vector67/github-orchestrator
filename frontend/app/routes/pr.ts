@@ -38,18 +38,12 @@ export default class PrRoute extends Route {
     this.here.enter(pr);
     this.poll.startList();
     void waitForPromise(this.poll.startRail().catch(() => undefined));
-    if (this.hub.onHub) {
-      this.poll.startHub();
-      void waitForPromise(this.opened(pr));
-    } else {
-      this.poll.startBar();
-      void waitForPromise(this.poll.read());
-    }
+    this.poll.startHub();
+    void waitForPromise(this.opened(pr));
     return pr;
   }
 
   deactivate(): void {
-    this.poll.stopBar();
     this.poll.stopList();
   }
 

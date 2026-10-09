@@ -22,7 +22,6 @@ module('Acceptance | repo filter', function (hooks) {
   const needsYou = { threads: [threadRow('h1', 'ready', 'open', 'human')] };
 
   function twoRepos(): void {
-    board().serves = 'hub';
     board().watching = ['acme/gadgets', 'acme/widgets'];
     board().held = [
       heldPr({ repo: 'acme/widgets', number: 1, dashboard: needsYou }),
@@ -139,7 +138,6 @@ module('Acceptance | repo filter', function (hooks) {
   });
 
   test('the checkboxes build a selection, and All repos clears it', async function (assert) {
-    board().serves = 'hub';
     board().watching = ['acme/gadgets', 'acme/sprockets', 'acme/widgets'];
     board().held = [
       heldPr({ repo: 'acme/widgets', number: 1 }),
@@ -217,7 +215,6 @@ module('Acceptance | repo filter', function (hooks) {
   });
 
   test('a selection that leaves the wall empty says how many the other repos hold', async function (assert) {
-    board().serves = 'hub';
     board().watching = ['acme/gadgets', 'acme/widgets'];
     board().held = [
       heldPr({ repo: 'acme/gadgets', number: 2 }),
@@ -237,7 +234,6 @@ module('Acceptance | repo filter', function (hooks) {
   });
 
   test('with one repo watched the filter names it and holds that one name', async function (assert) {
-    board().serves = 'hub';
     board().watching = ['acme/widgets'];
     board().held = [heldPr({ repo: 'acme/widgets', number: 1 })];
     await visit('/');

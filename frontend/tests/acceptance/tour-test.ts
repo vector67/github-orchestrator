@@ -16,7 +16,6 @@ module('Acceptance | tour', function (hooks) {
   setupFakeClock(hooks);
 
   function onTheHub(due: boolean, held = [heldPr({ repo: 'acme/widgets' })]) {
-    board().serves = 'hub';
     board().watching = ['acme/widgets'];
     board().tourDue = due;
     board().held = held;

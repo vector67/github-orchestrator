@@ -186,7 +186,7 @@ module('Acceptance | send review', function (hooks) {
     await click('[data-test-review-send]');
 
     assert.strictEqual(sent().length, 1);
-    assert.strictEqual(sent()[0]?.url, '/api/operations:send-review');
+    assert.strictEqual(sent()[0]?.url, '/pr/o/r/7/api/operations:send-review');
     assert.strictEqual(sent()[0]?.ifMatch, null);
     assert.deepEqual(sent()[0]?.body, { verdict: 'APPROVE', body: null });
   });
@@ -294,7 +294,7 @@ module('Acceptance | send review', function (hooks) {
     const asked = board().posted.at(-1);
     assert.strictEqual(
       asked?.url,
-      '/api/conversations/draft_b/operations:withdraw-from-review',
+      '/pr/o/r/7/api/conversations/draft_b/operations:withdraw-from-review',
     );
     assert.strictEqual(asked?.ifMatch, '"draft_b-v1"');
   });
@@ -318,7 +318,7 @@ module('Acceptance | send review', function (hooks) {
     const asked = board().posted.at(-1);
     assert.strictEqual(
       asked?.url,
-      '/api/conversations/draft_c/operations:enrol',
+      '/pr/o/r/7/api/conversations/draft_c/operations:enrol',
     );
     assert.strictEqual(asked?.ifMatch, '"draft_c-v1"');
     assert.strictEqual(sent().length, 0, 'nothing is sent by adding');

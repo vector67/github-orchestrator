@@ -181,8 +181,6 @@ export default class PrView extends Component<PrViewSignature> {
       openOnGitHub(this.url);
     } else if (key === 'y') {
       void this.copy();
-    } else if (!this.hub.onHub) {
-      return false;
     } else if (key === 'Escape') {
       void this.router.transitionTo('index');
     } else if (key === SWITCHER_KEY) {
@@ -202,34 +200,25 @@ export default class PrView extends Component<PrViewSignature> {
   <template>
     <div id="pr-view" data-test-pr-view>
       <header class="prbar" data-test-pr-bar>
-        {{#if this.hub.onHub}}
-          <button
-            type="button"
-            class="switch-btn"
-            data-test-switcher-open
-            {{on "click" this.openSwitcher}}
-          ><span class="burger"></span>PRs
-            <span class="n">{{this.needs}}</span>
-            <kbd>\</kbd></button>
-          {{#if this.hub.poll}}
-            <span
-              class="pr-health"
-              title={{this.hub.poll.text}}
-              aria-label={{this.hub.poll.text}}
-              data-test-pr-health
-              data-test-health-alarm={{this.hub.poll.alarm}}
-            ><i class="sq {{if this.hub.poll.alarm 'alarm'}}"></i></span>
-          {{/if}}
-          <LinkTo @route="index" class="linkish" data-test-wall-link>Wall
-            <kbd>Esc</kbd></LinkTo>
-        {{else if this.hub.url}}
-          <a
-            class="linkish"
-            href={{this.hub.url}}
-            data-test-wall-link
-            title="the wall of every pull request lives on the hub"
-          >Wall</a>
+        <button
+          type="button"
+          class="switch-btn"
+          data-test-switcher-open
+          {{on "click" this.openSwitcher}}
+        ><span class="burger"></span>PRs
+          <span class="n">{{this.needs}}</span>
+          <kbd>\</kbd></button>
+        {{#if this.hub.poll}}
+          <span
+            class="pr-health"
+            title={{this.hub.poll.text}}
+            aria-label={{this.hub.poll.text}}
+            data-test-pr-health
+            data-test-health-alarm={{this.hub.poll.alarm}}
+          ><i class="sq {{if this.hub.poll.alarm 'alarm'}}"></i></span>
         {{/if}}
+        <LinkTo @route="index" class="linkish" data-test-wall-link>Wall
+          <kbd>Esc</kbd></LinkTo>
         <div class="prtitle" data-test-pr-heading>
           <span class="tline">{{#if this.reading.draft}}<span
                 class="draft-pill"
@@ -358,14 +347,12 @@ export default class PrView extends Component<PrViewSignature> {
       <div class="pane">
         {{yield}}
       </div>
-      {{#if this.hub.onHub}}
-        <Switcher
-          @open={{this.switching}}
-          @current={{@pr}}
-          @pick={{this.pick}}
-          @close={{this.closeSwitcher}}
-        />
-      {{/if}}
+      <Switcher
+        @open={{this.switching}}
+        @current={{@pr}}
+        @pick={{this.pick}}
+        @close={{this.closeSwitcher}}
+      />
     </div>
   </template>
 }
