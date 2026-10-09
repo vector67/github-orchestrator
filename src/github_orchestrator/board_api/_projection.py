@@ -121,6 +121,15 @@ def _summaries(conversation: Conversation) -> list[contract.OperationSummary]:
     return summaries
 
 
+def _commit_check_of(conversation: Conversation) -> contract.CommitCheck | None:
+    check = conversation.commit_check
+    if check is None:
+        return None
+    return contract.CommitCheck(sha=str(check.sha), parent=str(check.parent),
+                                verdict=contract.CommitVerdict(check.verdict.value),
+                                reasoning=check.reasoning)
+
+
 def conversation_of(conversation: Conversation, account: str) -> contract.Conversation:
     """One record as the contract's conversation, with its own etag.
 
@@ -153,6 +162,7 @@ def conversation_of(conversation: Conversation, account: str) -> contract.Conver
         author_kind=author_kind_of(conversation.author, account),
         unread=conversation.unread,
         record_state=contract.RecordState(conversation.state),
+        commit_check=_commit_check_of(conversation),
     )
     return drawn.model_copy(update={"etag": etag_of(
         drawn.model_dump_json(exclude={"updated_at"}).encode())})

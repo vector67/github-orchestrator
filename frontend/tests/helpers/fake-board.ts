@@ -81,6 +81,7 @@ export function thread(over: Partial<Conversation> = {}): Conversation {
     author_kind: 'human',
     unread: false,
     record_state: 'open',
+    commit_check: null,
     ...over,
   };
 }

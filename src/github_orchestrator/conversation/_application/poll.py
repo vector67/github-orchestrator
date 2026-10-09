@@ -5,13 +5,19 @@ from dataclasses import replace
 from github_orchestrator.conversation._application.ports import Ports
 from github_orchestrator.conversation._application.runner import perform, run
 from github_orchestrator.conversation._domain.apply import create
+from github_orchestrator.conversation._domain.commit_check import commit_check_due
 from github_orchestrator.conversation._domain.conversation import (
     ROLE_AUTHOR,
     Anchor,
     Comment,
     Conversation,
 )
-from github_orchestrator.conversation._domain.events import Refresh, Reopen, VerdictDue
+from github_orchestrator.conversation._domain.events import (
+    CommitCheckDue,
+    Refresh,
+    Reopen,
+    VerdictDue,
+)
 from github_orchestrator.conversation._domain.machine import Accepted, Deferred, Refused
 from github_orchestrator.conversation._domain.steps import First
 from github_orchestrator.conversation._domain.thread import FetchedThread
@@ -182,6 +188,20 @@ def ask_due_verdicts(ports: Ports) -> None:
             if conversation is None or not verdict_due(conversation, now):
                 continue
             outcome = run(ports, conversation, VerdictDue())
+            if outcome.conversation != conversation:
+                update.conversation = outcome.conversation
+
+
+def ask_due_commit_checks(ports: Ports) -> None:
+    now, viewer = ports.clock.now(), ports.config.gh_account
+    for listed in ports.records.list():
+        if listed.is_unreadable or not commit_check_due(listed, viewer, now):
+            continue
+        with ports.records.update(listed.key) as update:
+            conversation = update.conversation
+            if conversation is None or not commit_check_due(conversation, viewer, now):
+                continue
+            outcome = run(ports, conversation, CommitCheckDue(viewer=viewer))
             if outcome.conversation != conversation:
                 update.conversation = outcome.conversation
 

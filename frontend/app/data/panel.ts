@@ -1,5 +1,6 @@
 import type {
   Comment,
+  CommitVerdict,
   Conversation,
   Commits,
   DiffSide,
@@ -57,6 +58,11 @@ export interface Fold {
   commits: Commits;
   title: string;
   pointing_title: string;
+}
+
+export interface CommitCheckView {
+  verdict: string;
+  reasoning: string;
 }
 
 export interface ReplyBox {
@@ -178,6 +184,7 @@ export interface Panel {
   notes: Note[];
   fold: Fold | null;
   fold_placeholder: string;
+  commit_check: CommitCheckView | null;
 }
 
 export interface Details {
@@ -859,7 +866,35 @@ const NO_FIX = {
   accept: null,
   rework: null,
   agent_words: null,
+  commit_check: null,
 };
+
+const COMMIT_VERDICTS: Record<CommitVerdict, string> = {
+  addressed: 'Addressed',
+  partly: 'Partly addressed',
+  'not-addressed': 'Not addressed',
+};
+
+const NAMED_SHA = 7;
+
+function commitCheckOf(conversation: Conversation): {
+  commit_check: CommitCheckView | null;
+  fold: Fold | null;
+} {
+  const check = conversation.commit_check;
+  if (!check) return { commit_check: null, fold: null };
+  return {
+    commit_check: {
+      verdict: COMMIT_VERDICTS[check.verdict],
+      reasoning: check.reasoning,
+    },
+    fold: {
+      commits: { base: check.parent, head: check.sha },
+      title: `Commit ${check.sha.slice(0, NAMED_SHA)}`,
+      pointing_title: '',
+    },
+  };
+}
 
 export function panelOf(
   conversation: Conversation,
@@ -918,6 +953,7 @@ export function panelOf(
     return {
       ...top,
       ...NO_FIX,
+      ...commitCheckOf(conversation),
       notes: [
         ...deferralNotes(conversation, operations),
         ...draftNotes(conversation),
@@ -967,5 +1003,6 @@ export function panelOf(
       phase === 'declined'
         ? (newest(operations, RUN_KINDS)?.reason ?? null)
         : null,
+    commit_check: null,
   };
 }

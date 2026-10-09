@@ -2,14 +2,23 @@ from collections.abc import Callable
 
 from github_orchestrator.agent_runs import Summaries
 from github_orchestrator.conversation._domain.conversation import (
+    CommitVerdict,
     Conversation,
     ThreadVerdict,
 )
 from github_orchestrator.conversation._domain.effects import GIST_ROOT, GIST_THREAD
 from github_orchestrator.conversation._domain.gist import GIST_MAX_CHARS, clip
 from github_orchestrator.conversation._domain.verdict import MEANINGS, facts_of
+from github_orchestrator.domain import Sha
 
 ANSWERS = {verdict.value: MEANINGS[verdict] for verdict in ThreadVerdict}
+
+CHECK_ANSWERS = {
+    CommitVerdict.ADDRESSED.value: "the commit does what the viewer asked",
+    CommitVerdict.PARTLY.value: "the commit does some of what the viewer asked and "
+                                "leaves some undone",
+    CommitVerdict.NOT_ADDRESSED.value: "the commit does not do what the viewer asked",
+}
 
 
 class Gists:
@@ -30,6 +39,16 @@ class Gists:
             spoke_last=facts.spoke_last, viewer_commented=facts.viewer_commented,
             mentions_viewer=facts.mentions_viewer, kind=facts.kind, answers=ANSWERS,
             done=lambda word: done(ThreadVerdict(word)))
+
+    def check_commit(self, conversation: Conversation, sha: Sha, patch: str,
+                     done: Callable[[CommitVerdict, str], None]) -> None:
+        if not self.enabled:
+            return
+        facts = facts_of(conversation, self.viewer, self.pr_author())
+        self.summaries.check_commit(
+            conversation.key, facts.comments, path=conversation.path, line=conversation.line,
+            sha=str(sha), patch=patch, answers=CHECK_ANSWERS,
+            done=lambda word, reasoning: done(CommitVerdict(word), reasoning))
 
     def write_gist(self, conversation: Conversation, source: str,
                    done: Callable[[str], None]) -> None:

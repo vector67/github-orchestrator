@@ -145,6 +145,10 @@ class Summaries(Protocol):
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None: ...
 
+    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                     path: str | None, line: int | None, sha: str, patch: str,
+                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None: ...
+
 
 class ThreadWork(Protocol):
     def fix(self, fix: ThreadFix) -> Run | str: ...

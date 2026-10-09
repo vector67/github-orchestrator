@@ -32,6 +32,12 @@ from github_orchestrator.conversation._domain.commands import (
     WithdrawFromReview,
     WriteFix,
 )
+from github_orchestrator.conversation._domain.commit_check import (
+    checked,
+    commit_reference,
+    held_back,
+    with_a_check_ask,
+)
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     ANSWER,
@@ -87,6 +93,7 @@ from github_orchestrator.conversation._domain.diff import (
 from github_orchestrator.conversation._domain.effects import (
     GIST_ROOT,
     GIST_THREAD,
+    AskCommitCheck,
     AskVerdict,
     CutWorkspace,
     DeleteComment,
@@ -111,6 +118,8 @@ from github_orchestrator.conversation._domain.events import (
     ClosingCommentDeleted,
     ClosingFailed,
     ClosingReplyPosted,
+    CommitCheckDue,
+    CommitChecked,
     DraftPosted,
     DraftPostFailed,
     GistWritten,
@@ -292,7 +301,17 @@ def _verdict_given(conversation: Conversation, command: VerdictGiven) -> Accepte
     given = replace(conversation, verdict=command.verdict, verdict_for=command.on)
     if conversation.state not in PLACED_BY_A_VERDICT:
         return Accepted(given)
-    return Accepted(replace(given, state=STATE_OF_VERDICT[command.verdict]))
+    placed = OPEN if held_back(given) else STATE_OF_VERDICT[command.verdict]
+    return Accepted(replace(given, state=placed))
+
+
+def _commit_check_due(conversation: Conversation, command: CommitCheckDue,
+                      at: str | None) -> Accepted:
+    reference = commit_reference(conversation, command.viewer)
+    if reference is None:
+        return Accepted(conversation)
+    return Accepted(with_a_check_ask(conversation, reference.on, at),
+                    (AskCommitCheck(on=reference.on, candidates=reference.candidates),))
 
 
 def _decidable(conversation: Conversation, at: str | None) -> Conversation:
@@ -1028,6 +1047,10 @@ def _dispatch(conversation: Conversation, command: Change,
             return _verdict_given(conversation, command)
         case VerdictDue():
             return Accepted(conversation)
+        case CommitCheckDue():
+            return _commit_check_due(conversation, command, at)
+        case CommitChecked():
+            return Accepted(checked(conversation, command.check))
         case WorkspaceCut():
             return Accepted(with_fix(conversation, base_sha=command.base_sha))
         case DeclarePlan():

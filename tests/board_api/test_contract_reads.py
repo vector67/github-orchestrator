@@ -4,11 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.agent_runs.fake import FilingTicket, Outcome
+from github_orchestrator.agent_runs.fake import FilingTicket, HeldVerdicts, Outcome
 from github_orchestrator.conversation import Classification
 from github_orchestrator.github import CommentKind
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications.fake import FakeNotifications
+from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies import FileDiff
 from github_orchestrator.working_copies.fake import (
     DiffHunk,
@@ -186,6 +187,7 @@ def test_the_collection_answers_a_threads_stored_facts():
         "author_kind": "human",
         "unread": False,
         "record_state": "open",
+        "commit_check": None,
     }
     assert thread["etag"].startswith('"')
 
@@ -245,6 +247,25 @@ def test_a_thread_on_someone_elses_pr_with_no_verdict_yet_reads_as_not_yet_read(
 
     [thread] = answer.json()["conversations"]
     assert (thread["state"], thread["unread"]) == ("ready", True)
+
+
+def test_a_commit_a_reply_names_reads_with_what_the_check_made_of_it():
+    agent_runs = HeldVerdicts(FakePrProcesses())
+    board = board_on(fake_threads(agent_runs=agent_runs), is_author=False)
+    copies = board.stage.working_copies
+    parent = copies.head_of(WORKTREE)
+    sha = copies.commit(WORKTREE, {"f": "two\n"}, "Rename the helper")
+    on_github(board.stage.github, "PRRT_1", said(1, "rename this", author="octocat"),
+              said(2, f"fixed in {sha[:7]}", author="anna"), pr=THE_PR)
+    board.stage.hear(THE_PR)
+    drain(board)
+
+    agent_runs.give_check("partly", "renamed, but one caller still uses the old name")
+
+    [thread] = client_of(board).get("/api/conversations").json()["conversations"]
+    assert thread["commit_check"] == {
+        "sha": sha, "parent": parent, "verdict": "partly",
+        "reasoning": "renamed, but one caller still uses the old name"}
 
 
 def corrupt(tmp_path, key):

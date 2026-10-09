@@ -76,6 +76,13 @@ class PrDiff:
 
 
 @dataclass(frozen=True)
+class CommitPatch:
+    sha: Sha
+    parent: Sha
+    text: str
+
+
+@dataclass(frozen=True)
 class Cut:
     workspace: "ThreadWorkspace | None"
     failure: str = ""
@@ -122,6 +129,8 @@ class PrCheckout(Protocol):
     def local_head(self) -> Sha | None: ...
 
     def commit_message(self, sha: Sha) -> str | None: ...
+
+    def commit_patch(self, sha: Sha) -> CommitPatch | None: ...
 
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None: ...
 

@@ -97,10 +97,9 @@ def facts_of(conversation: Conversation, viewer: str, pr_author: str | None) -> 
         kind=KIND_WORDS.get(conversation.comment_type, conversation.comment_type))
 
 
-def _retry_due(conversation: Conversation, now: str | None) -> bool:
-    if conversation.verdict_asks >= MAX_VERDICT_ASKS or now is None:
+def retry_due(asks: int, asked_at: str | None, now: str | None) -> bool:
+    if asks >= MAX_VERDICT_ASKS or now is None:
         return False
-    asked_at = conversation.verdict_asked_at
     return (asked_at is None
             or datetime.fromisoformat(now) - datetime.fromisoformat(asked_at) >= RETRY_AFTER)
 
@@ -110,7 +109,8 @@ def verdict_due(conversation: Conversation, now: str | None) -> bool:
     if (conversation.role != ROLE_REVIEWER or conversation.state not in PLACED_BY_A_VERDICT
             or newest is None or conversation.verdict_for == newest):
         return False
-    return conversation.verdict_asked_for != newest or _retry_due(conversation, now)
+    return conversation.verdict_asked_for != newest or retry_due(
+        conversation.verdict_asks, conversation.verdict_asked_at, now)
 
 
 def with_an_ask(conversation: Conversation, at: str | None) -> Conversation:

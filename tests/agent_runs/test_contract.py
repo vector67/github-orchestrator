@@ -414,6 +414,48 @@ def test_no_verdict_is_handed_back_when_the_model_names_none_it_was_offered(worl
     assert given == []
 
 
+CHECKS = {"addressed": "it does what was asked", "not-addressed": "it does not"}
+
+
+def _check(world, done):
+    world.runs.check_commit(
+        "PRRT_x", [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
+        path="src/foo.py", line=4, sha="abc1234def", patch="-old\n+new", answers=CHECKS,
+        done=lambda word, reasoning: done((word, reasoning)))
+
+
+def test_a_commit_check_is_the_word_and_the_reasoning_on_the_first_line(world):
+    world.fake.answer("\n  Not-Addressed || it renames a different helper \nmore")
+    given = []
+
+    _check(world, given.append)
+
+    world.summaries_written()
+    assert given == [("not-addressed", "it renames a different helper")]
+
+
+def test_a_commit_check_without_reasoning_is_the_word_alone(world):
+    world.fake.answer("addressed")
+    given = []
+
+    _check(world, given.append)
+
+    world.summaries_written()
+    assert given == [("addressed", "")]
+
+
+@pytest.mark.parametrize("answer", [None, "maybe || it is hard to say", "the commit is fine"])
+def test_no_commit_check_is_handed_back_when_the_model_names_no_word_it_was_offered(
+        world, answer):
+    world.fake.answer(answer)
+    given = []
+
+    _check(world, given.append)
+
+    world.summaries_written()
+    assert given == []
+
+
 def test_a_batch_of_fixes_is_summed_up_in_one_line(world):
     world.fake.answer("general cleanup\n")
     written = []

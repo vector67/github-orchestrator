@@ -46,3 +46,21 @@ def blob(worktree: str, sha: str, path: str) -> bytes | None:
                     worktree, exc)
         return None
     return shown.stdout if shown.returncode == 0 else None
+
+
+def commit_patch(worktree: str, sha: str) -> tuple[str, str, str] | None:
+    if Sha.parse(sha) is None or not os.path.isdir(worktree):
+        return None
+    try:
+        shown = _git(worktree, "show", "--format=%H %P%n%B", "--patch",
+                     "--end-of-options", f"{sha}^{{commit}}")
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        log.warning("git show %s in %s failed to run: %s", sha, worktree, exc)
+        return None
+    if shown.returncode != 0:
+        return None
+    named, _, text = shown.stdout.decode("utf-8", "replace").partition("\n")
+    full, *parents = named.split()
+    if not parents:
+        return None
+    return full, parents[0], text

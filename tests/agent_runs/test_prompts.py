@@ -70,6 +70,19 @@ def test_the_verdict_on_a_thread(runs, claude):
     assert_pinned("verdict", _asked(runs, claude))
 
 
+def test_the_check_of_a_commit_against_a_thread(runs, claude):
+    runs.check_commit(
+        "PRRT_1",
+        [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
+        path="src/foo.py", line=4, sha="abc1234def",
+        patch="Rename the helper\n\ndiff --git a/src/foo.py b/src/foo.py\n-old\n+new",
+        answers={"addressed": "the commit does what was asked",
+                 "not-addressed": "it does not"},
+        done=lambda word, reasoning: None)
+
+    assert_pinned("commit-check", _asked(runs, claude))
+
+
 def test_the_summary_of_a_batch_of_fixes(runs, claude):
     runs.summarize_fixes([([("Ada", "please rename the helper"), ("octocat", "which one?")],
                            "renamed the helper"),
