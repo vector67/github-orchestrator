@@ -2,13 +2,16 @@ import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
 import { visit, click, fillIn } from '@ember/test-helpers';
 import {
+  added,
   comment,
+  diffOf,
   operation,
   proposal,
   setupFakeBoard,
   thread,
   type FakeBoard,
 } from 'frontend/tests/helpers/fake-board';
+import type { CommitVerdict } from 'frontend/data/api';
 
 const KEY = 'PRRT_aa';
 
@@ -517,6 +520,69 @@ module('Acceptance | mention card', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
     assert.dom('[data-test-kicker]').includesText('PR description');
+  });
+});
+
+module('Acceptance | a commit a reply names', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  function checked(verdict: CommitVerdict, reasoning: string) {
+    const diff = diffOf('src/tax.py', added(12, '    if rate is None: raise'));
+    board().diffs['named commit'] = diff;
+    board().conversations = [
+      {
+        ...board().conversations[0]!,
+        commit_check: {
+          sha: diff.head,
+          parent: diff.base,
+          verdict,
+          reasoning,
+        },
+      },
+    ];
+    return diff;
+  }
+
+  hooks.beforeEach(function () {
+    reviewing(board());
+  });
+
+  test('the panel says what the check made of the commit, where the placeholder was', async function (assert) {
+    checked('not-addressed', 'it moves the guard but still skips the rate');
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-work-placeholder]').doesNotExist();
+    assert
+      .dom('#panel-fix [data-test-commit-verdict]')
+      .hasText('Not addressed');
+    assert
+      .dom('#panel-fix [data-test-commit-reasoning]')
+      .hasText('it moves the guard but still skips the rate');
+  });
+
+  test('the panel draws the commit the reply names', async function (assert) {
+    const diff = checked('addressed', 'the guard now raises');
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('#panel-diff [data-test-fold-title]')
+      .hasText(`Commit ${diff.head.slice(0, 7)}`);
+    assert
+      .dom('#panel-diff [data-test-frame]')
+      .containsText('if rate is None: raise');
+  });
+
+  test('a partly addressed commit says so', async function (assert) {
+    checked('partly', 'one caller still skips it');
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('#panel-fix [data-test-commit-verdict]')
+      .hasText('Partly addressed');
   });
 });
 

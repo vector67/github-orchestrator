@@ -2059,6 +2059,39 @@
    ],
    "type": "object"
   },
+  "CommitCheck": {
+   "properties": {
+    "parent": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "reasoning": {
+     "type": "string"
+    },
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "verdict": {
+     "$ref": "#/components/schemas/CommitVerdict"
+    }
+   },
+   "required": [
+    "sha",
+    "parent",
+    "verdict",
+    "reasoning"
+   ],
+   "type": "object"
+  },
+  "CommitVerdict": {
+   "enum": [
+    "addressed",
+    "partly",
+    "not-addressed"
+   ],
+   "type": "string"
+  },
   "Commits": {
    "properties": {
     "base": {
@@ -2097,6 +2130,16 @@
       "$ref": "#/components/schemas/CommentSummary"
      },
      "type": "array"
+    },
+    "commit_check": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/CommitCheck"
+      },
+      {
+       "type": "null"
+      }
+     ]
     },
     "created_at": {
      "anyOf": [
@@ -2223,7 +2266,8 @@
     "updated_at",
     "author_kind",
     "unread",
-    "record_state"
+    "record_state",
+    "commit_check"
    ],
    "type": "object"
   },

@@ -196,6 +196,9 @@ COLLEAGUE = "tomas"
 COLLEAGUE_NAME = "Tomas Testcase"
 
 
+NAMED_FIX = ("billing/units.py", 22)
+
+
 def _answer(comment_id: int, body: str, when: str) -> ThreadComment:
     return _said(comment_id, PR_AUTHOR, PR_AUTHOR_NAME, body, when)
 
@@ -239,7 +242,7 @@ def reviewer_cards(viewer: str) -> tuple[Card, ...]:
         Card(9200008, "PRRT_assumed_done",
              "a thread of yours the author fixed, which an agent read as settled for "
              "you to confirm",
-             "billing/units.py", 22, author=viewer, author_name="",
+             *NAMED_FIX, author=viewer, author_name="",
              replies=(_answer(9200111, "Fixed in 3e1f0aa, thanks for spotting it.",
                               "2026-09-12T08:10:00Z"),)),
         Card(9200009, "PRRT_not_mine",
@@ -312,6 +315,10 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
     _git(root, "checkout", "-q", "-b", PR_BRANCH)
     _rewrite(root, anchors, "    return sorted(line_items)")
     _git(root, "commit", "-qam", "what the PR changed")
+    if reviewer:
+        _rewrite(root, (NAMED_FIX,), "    return [item.in_units() for item in line_items]",
+                 offset=1)
+        _git(root, "commit", "-qam", "Spell the units out")
     _git(root.parent, "init", "-q", "--bare", str(_origin(root)))
     _git(root, "remote", "add", "origin", str(_origin(root)))
     _git(root, "push", "-q", "-u", "origin", PR_BRANCH)
@@ -594,8 +601,14 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
         note="Look again once the guard is in."))
     seeding.ask(resolved, lambda conversation: conversation.resolve(
         reply="Confirmed, thanks.", resolve=True))
-    seeding.open(assumed_done)
+    named = _git(seeding.repo.worktree, "rev-parse", "--short=7", "HEAD").strip()
+    seeding.open(assumed_done, _answer(9200114, f"Spelled the units out too, in {named}.",
+                                       "2026-09-12T08:15:00Z"))
     seeding.placed(assumed_done, "assumed-done")
+    seeding.conversations.tick(seeding.news, on_hold=False)
+    seeding.outside.agent_runs.give_check(
+        "addressed", "Every line item now goes through in_units(), which is the "
+                     "conversion the comment asked for.")
     seeding.open(not_mine)
     seeding.placed(not_mine, "not-mine")
     seeding.open(not_yet_read)

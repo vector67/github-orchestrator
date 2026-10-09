@@ -490,6 +490,26 @@ class RecordState(StrEnum):
     DISCARDED = "discarded"
 
 
+class CommitVerdict(StrEnum):
+    """Whether the commit a reply names does what the viewer's comment asked."""
+
+    ADDRESSED = "addressed"
+    PARTLY = "partly"
+    NOT_ADDRESSED = "not-addressed"
+
+
+class CommitCheck(BaseModel):
+    """What the fix model made of the commit a reply names as the answer to
+    the viewer's comment. Its diff is `/diffs/{parent}..{sha}`."""
+
+    sha: Sha
+    parent: Sha
+    verdict: CommitVerdict
+    reasoning: str = Field(
+        description="A sentence or two on what the commit does about the comment "
+                    "and what it leaves undone. Empty when the model gave none.")
+
+
 class Conversation(BaseModel):
     """One comment thread, or one draft. Stored facts, plus its state, plus
     its comments and operations as summaries so a card can be drawn and read
@@ -553,6 +573,12 @@ class Conversation(BaseModel):
                     "has a newest comment nobody has read for them. False "
                     "everywhere else.")
     record_state: RecordState
+    commit_check: CommitCheck | None = Field(
+        description="On a pull request the viewer did not write, the check of the "
+                    "commit the newest reply after the viewer's comment names. "
+                    "Null until a check has come back. A `not-addressed` check "
+                    "holds the thread in the viewer's move while that reply is "
+                    "the newest comment.")
 
 
 class ConversationList(BaseModel):

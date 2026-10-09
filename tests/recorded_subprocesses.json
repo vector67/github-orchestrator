@@ -97,6 +97,52 @@
    ]
   },
   "tests.preview.test_preview.client_for_preview:8917fe3d": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"b41c0d2^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "show",
+      "--format=%H %P%n%B",
+      "--patch",
+      "--end-of-options",
+      "b41c0d2^{commit}"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IGFtYmlndW91cyBhcmd1bWVudCAnYjQxYzBkMl57Y29tbWl0fSc6IHVua25vd24gcmV2aXNpb24gb3IgcGF0aCBub3QgaW4gdGhlIHdvcmtpbmcgdHJlZS4KVXNlICctLScgdG8gc2VwYXJhdGUgcGF0aHMgZnJvbSByZXZpc2lvbnMsIGxpa2UgdGhpczoKJ2dpdCA8Y29tbWFuZD4gWzxyZXZpc2lvbj4uLi5dIC0tIFs8ZmlsZT4uLi5dJwo="
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--format=%H %P%n%B\", \"--patch\", \"--end-of-options\", \"caf5180^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "show",
+      "--format=%H %P%n%B",
+      "--patch",
+      "--end-of-options",
+      "caf5180^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Y2FmNTE4MDZhODNhZGNkZTljNzRmODZiMmI2ODk4Mjc1NWU3ZGU2OSBlMDA1ZTdkZDMyMjE4NjNkNTQ5NjMyMTNiZTA4YzgzMmFiYjZmMThmClNwZWxsIHRoZSB1bml0cyBvdXQKCgpkaWZmIC0tZ2l0IGEvYmlsbGluZy91bml0cy5weSBiL2JpbGxpbmcvdW5pdHMucHkKaW5kZXggOTA4ODhlZS4uYzhmMTFkOCAxMDA2NDQKLS0tIGEvYmlsbGluZy91bml0cy5weQorKysgYi9iaWxsaW5nL3VuaXRzLnB5CkBAIC0yMCw3ICsyMCw3IEBAIGRlZiBzdGVwXzAxOChsaW5lX2l0ZW1zKToKIAogZGVmIHN0ZXBfMDIxKGxpbmVfaXRlbXMpOgogICAgIHJldHVybiBzb3J0ZWQobGluZV9pdGVtcykKLQorICAgIHJldHVybiBbaXRlbS5pbl91bml0cygpIGZvciBpdGVtIGluIGxpbmVfaXRlbXNdCiBkZWYgc3RlcF8wMjQobGluZV9pdGVtcyk6CiAgICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAyNF0KIAo="
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"--bare\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree-origin.git\"], null, null]": [
     {
      "argv": [
@@ -162,6 +208,30 @@
       },
       "worktree/.git/refs/heads/rework-the-invoice-writer": {
        "text": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Spell the units out\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Spell the units out"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "caf51806a83adcde9c74f86b2b68982755e7de69\n"
       }
      },
      "returncode": 0,
@@ -288,6 +358,26 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"--short=7\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "--short=7",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "caf5180\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -304,7 +394,7 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "e005e7dd3221863d54963213be08c832abb6f18f\n"
+     "stdout": "caf51806a83adcde9c74f86b2b68982755e7de69\n"
     },
     {
      "argv": [
@@ -321,7 +411,7 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "e005e7dd3221863d54963213be08c832abb6f18f\n"
+     "stdout": "caf51806a83adcde9c74f86b2b68982755e7de69\n"
     },
     {
      "argv": [
@@ -338,10 +428,10 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "e005e7dd3221863d54963213be08c832abb6f18f\n"
+     "stdout": "caf51806a83adcde9c74f86b2b68982755e7de69\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"rev-list\", \"--oneline\", \"e005e7dd3221863d54963213be08c832abb6f18f..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"rev-list\", \"--oneline\", \"caf51806a83adcde9c74f86b2b68982755e7de69..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
@@ -349,7 +439,7 @@
       "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
       "rev-list",
       "--oneline",
-      "e005e7dd3221863d54963213be08c832abb6f18f..HEAD"
+      "caf51806a83adcde9c74f86b2b68982755e7de69..HEAD"
      ],
      "fs": {},
      "returncode": 0,
@@ -370,7 +460,7 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "worktree <TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\nHEAD e005e7dd3221863d54963213be08c832abb6f18f\nbranch refs/heads/rework-the-invoice-writer\n\n"
+     "stdout": "worktree <TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\nHEAD caf51806a83adcde9c74f86b2b68982755e7de69\nbranch refs/heads/rework-the-invoice-writer\n\n"
     }
    ]
   },
@@ -3952,6 +4042,9 @@
       "bf28ebab48849dd2fb6209786b228ab35815519f"
      ],
      "fs": {
+      "data": {
+       "dir": true
+      },
       "data/thread-worktrees": {
        "dir": true
       },
@@ -13407,7 +13500,7 @@
    ]
   },
   "tests/preview/test_preview.py::test_a_reviewer_card_can_read_the_code_its_comment_sits_on": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"e005e7dd3221863d54963213be08c832abb6f18f^{commit}\", \"--end-of-options\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"caf51806a83adcde9c74f86b2b68982755e7de69^{commit}\", \"--end-of-options\"], null, null]": [
     {
      "argv": [
       "git",
@@ -13416,7 +13509,7 @@
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
       "cat-file",
       "-e",
-      "e005e7dd3221863d54963213be08c832abb6f18f^{commit}",
+      "caf51806a83adcde9c74f86b2b68982755e7de69^{commit}",
       "--end-of-options"
      ],
      "fs": {},
@@ -13429,7 +13522,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"show\", \"e005e7dd3221863d54963213be08c832abb6f18f:billing/reader.py\", \"--end-of-options\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"show\", \"caf51806a83adcde9c74f86b2b68982755e7de69:billing/reader.py\", \"--end-of-options\"], null, null]": [
     {
      "argv": [
       "git",
@@ -13437,7 +13530,7 @@
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
       "show",
-      "e005e7dd3221863d54963213be08c832abb6f18f:billing/reader.py",
+      "caf51806a83adcde9c74f86b2b68982755e7de69:billing/reader.py",
       "--end-of-options"
      ],
      "fs": {},
@@ -13452,23 +13545,6 @@
    ]
   },
   "tests/preview/test_preview.py::test_every_seeded_thread_answers_every_read_its_card_makes[reviewed]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_queued\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -13504,6 +13580,23 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "0\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined\", \"rev-list\", \"--count\", \"--end-of-options\", \"bf28ebab48849dd2fb6209786b228ab35815519f..HEAD\"], null, null]": [
@@ -14279,6 +14372,95 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "what the agent proposes for PRRT_resolved\n\n"
+    }
+   ]
+  },
+  "tests/preview/test_preview.py::test_the_reviewer_preview_checks_the_commit_its_assumed_done_thread_names": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"caf51806a83adcde9c74f86b2b68982755e7de69^{commit}\", \"--end-of-options\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "cat-file",
+      "-e",
+      "caf51806a83adcde9c74f86b2b68982755e7de69^{commit}",
+      "--end-of-options"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"e005e7dd3221863d54963213be08c832abb6f18f^{commit}\", \"--end-of-options\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "cat-file",
+      "-e",
+      "e005e7dd3221863d54963213be08c832abb6f18f^{commit}",
+      "--end-of-options"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"diff\", \"--no-color\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"e005e7dd3221863d54963213be08c832abb6f18f\", \"caf51806a83adcde9c74f86b2b68982755e7de69\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "diff",
+      "--no-color",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "e005e7dd3221863d54963213be08c832abb6f18f",
+      "caf51806a83adcde9c74f86b2b68982755e7de69"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/billing/units.py b/billing/units.py\nindex 90888ee..c8f11d8 100644\n--- a/billing/units.py\n+++ b/billing/units.py\n@@ -20,7 +20,7 @@ def step_018(line_items):\n \n def step_021(line_items):\n     return sorted(line_items)\n-\n+    return [item.in_units() for item in line_items]\n def step_024(line_items):\n     return [item for item in line_items if item.id != 24]\n \n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"show\", \"caf51806a83adcde9c74f86b2b68982755e7de69:billing/units.py\", \"--end-of-options\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "show",
+      "caf51806a83adcde9c74f86b2b68982755e7de69:billing/units.py",
+      "--end-of-options"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "IiIiYmlsbGluZy91bml0cy5weSIiIgoKZGVmIHN0ZXBfMDAzKGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAzXQoKZGVmIHN0ZXBfMDA2KGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSA2XQoKZGVmIHN0ZXBfMDA5KGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSA5XQoKZGVmIHN0ZXBfMDEyKGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAxMl0KCmRlZiBzdGVwXzAxNShsaW5lX2l0ZW1zKToKICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gMTVdCgpkZWYgc3RlcF8wMTgobGluZV9pdGVtcyk6CiAgICByZXR1cm4gW2l0ZW0gZm9yIGl0ZW0gaW4gbGluZV9pdGVtcyBpZiBpdGVtLmlkICE9IDE4XQoKZGVmIHN0ZXBfMDIxKGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIHNvcnRlZChsaW5lX2l0ZW1zKQogICAgcmV0dXJuIFtpdGVtLmluX3VuaXRzKCkgZm9yIGl0ZW0gaW4gbGluZV9pdGVtc10KZGVmIHN0ZXBfMDI0KGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAyNF0KCmRlZiBzdGVwXzAyNyhsaW5lX2l0ZW1zKToKICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gMjddCgpkZWYgc3RlcF8wMzAobGluZV9pdGVtcyk6CiAgICByZXR1cm4gW2l0ZW0gZm9yIGl0ZW0gaW4gbGluZV9pdGVtcyBpZiBpdGVtLmlkICE9IDMwXQoKZGVmIHN0ZXBfMDMzKGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSAzM10KCmRlZiBzdGVwXzAzNihsaW5lX2l0ZW1zKToKICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gMzZdCgpkZWYgc3RlcF8wMzkobGluZV9pdGVtcyk6CiAgICByZXR1cm4gW2l0ZW0gZm9yIGl0ZW0gaW4gbGluZV9pdGVtcyBpZiBpdGVtLmlkICE9IDM5XQoKZGVmIHN0ZXBfMDQyKGxpbmVfaXRlbXMpOgogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSA0Ml0KCmRlZiBzdGVwXzA0NShsaW5lX2l0ZW1zKToKICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gNDVdCgogICAgcmV0dXJuIHNvcnRlZChsaW5lX2l0ZW1zKQogICAgcmV0dXJuIFtpdGVtIGZvciBpdGVtIGluIGxpbmVfaXRlbXMgaWYgaXRlbS5pZCAhPSA0OF0KCmRlZiBzdGVwXzA1MShsaW5lX2l0ZW1zKToKICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gNTFdCgpkZWYgc3RlcF8wNTQobGluZV9pdGVtcyk6Cg=="
+     }
     }
    ]
   },

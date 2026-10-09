@@ -87,11 +87,22 @@ const PanelView: TOC<PanelSignature> = <template>
     <div id="panel-work">
       <div id="panel-fix">
         {{#if @panel.draft}}{{else if (reviewing @panel)}}
-          {{#unless @panel.mention}}
+          {{#if @panel.commit_check}}
+            <div class="commit-check" data-test-commit-check>
+              <p class="kicker" data-test-commit-verdict>
+                {{@panel.commit_check.verdict}}
+              </p>
+              {{#if @panel.commit_check.reasoning}}
+                <p class="note" data-test-commit-reasoning>
+                  {{@panel.commit_check.reasoning}}
+                </p>
+              {{/if}}
+            </div>
+          {{else if @panel.mention}}{{else}}
             <p class="work-placeholder" data-test-work-placeholder>
               What the author did lands here
             </p>
-          {{/unless}}
+          {{/if}}
         {{else}}
           {{#if @panel.fix_label}}
             <h2 class="fix-label" data-test-fix-label>{{@panel.fix_label}}
@@ -207,19 +218,17 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
       <div id="panel-diff">
-        {{#unless (reviewing @panel)}}
-          {{#if @panel.fold}}
-            <DiffFold
-              @conversationId={{@panel.id}}
-              @fold={{@panel.fold}}
-              @anchor={{@panel.anchor}}
-            />
-          {{else if @panel.fold_placeholder}}
-            <p class="diff-placeholder" data-test-fold-placeholder>
-              {{@panel.fold_placeholder}}
-            </p>
-          {{/if}}
-        {{/unless}}
+        {{#if @panel.fold}}
+          <DiffFold
+            @conversationId={{@panel.id}}
+            @fold={{@panel.fold}}
+            @anchor={{@panel.anchor}}
+          />
+        {{else if @panel.fold_placeholder}}
+          <p class="diff-placeholder" data-test-fold-placeholder>
+            {{@panel.fold_placeholder}}
+          </p>
+        {{/if}}
       </div>
     </div>
     {{#if (offersAnything @panel)}}

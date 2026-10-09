@@ -121,6 +121,15 @@ export interface CommentSummary {
   review_state: ReviewState | null;
 }
 
+export interface CommitCheck {
+  sha: string;
+  parent: string;
+  verdict: CommitVerdict;
+  reasoning: string;
+}
+
+export type CommitVerdict = 'addressed' | 'partly' | 'not-addressed';
+
 export interface Commits {
   base: string;
   head: string;
@@ -149,6 +158,7 @@ export interface Conversation {
   author_kind: AuthorKind;
   unread: boolean;
   record_state: RecordState;
+  commit_check: CommitCheck | null;
 }
 
 export interface ConversationList {

@@ -121,6 +121,15 @@ def test_a_reviewer_card_can_read_the_code_its_comment_sits_on(reviewed):
     assert answer.json()["lines"][0]["text"] == "    return sorted(line_items)"
 
 
+def test_the_reviewer_preview_checks_the_commit_its_assumed_done_thread_names(reviewed):
+    check = reviewed.get("/api/conversations/PRRT_assumed_done").json()["commit_check"]
+
+    diff = reviewed.get(f"/api/diffs/{check['parent']}..{check['sha']}")
+
+    assert check["verdict"] == "addressed"
+    assert [file["path"] for file in diff.json()["files"]] == ["billing/units.py"]
+
+
 @pytest.mark.parametrize("fixture", ["seeded", "reviewed"])
 def test_every_seeded_thread_answers_every_read_its_card_makes(fixture,
                                                                request):
