@@ -339,24 +339,28 @@ const ENTRIES = {
     },
     reviewer: {
       title:
-        'marks this thread resolved on GitHub and moves the card to Done; ' +
-        'anything you write is posted as the reply first, and with nothing ' +
-        'written the board puts a thumbs-up on the newest reply instead',
+        'moves the card to Done and posts any reply you write — tick the box ' +
+        'in the dialog to mark the thread resolved on GitHub too',
       asks: {
-        question: 'Resolve this conversation on GitHub?',
+        question: 'Resolve this conversation?',
         note:
-          'Leave it empty and the board puts 👍 on the newest reply instead, ' +
-          'unless you untick it. ' +
-          'Either way the thread is marked resolved on GitHub and moves to ' +
-          'Done. Reopen is one click from there.',
+          'Anything you write is posted to GitHub as your reply. Tick the box ' +
+          'to mark the thread resolved there too; left empty, the board then ' +
+          'puts 👍 on the newest reply, unless you untick it. Either way the ' +
+          'card moves to Done. Reopen is one click from there.',
         reply: true,
+        resolves: true,
         thumbsUp: true,
-        submit: (typed, _resolving, thumbing) =>
-          typed
-            ? 'Reply and resolve'
-            : thumbing
-              ? 'Resolve and put 👍 on the newest reply'
-              : 'Resolve',
+        submit: (typed, resolving, thumbing) =>
+          resolving
+            ? typed
+              ? 'Reply and resolve on GitHub'
+              : thumbing
+                ? 'Resolve on GitHub and put 👍 on the newest reply'
+                : 'Resolve on GitHub'
+            : typed
+              ? 'Post reply and resolve on the board'
+              : 'Resolve, posting nothing to GitHub',
       },
       inPhase: {
         answered: { label: 'Resolve', weight: 'primary' },

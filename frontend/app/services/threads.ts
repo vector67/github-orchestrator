@@ -262,8 +262,18 @@ export default class ThreadsService extends Service {
     if (pr.asking[key] === version) delete pr.asking[key];
   }
 
+  private async loadBase(key: string): Promise<void> {
+    if (this.thread(key)?.anchor.side !== 'LEFT') return;
+    await this.store.readPrDiff(
+      this.pr.at,
+      'origin',
+      this.here.api('/api/pull-request/diff?source=origin'),
+      false,
+    );
+  }
+
   private async loadWatched(key: string): Promise<void> {
-    await this.loadDetails(key);
+    await Promise.all([this.loadDetails(key), this.loadBase(key)]);
     const commits = this.fixOf(key).proposal?.commits;
     if (commits) await this.loadDiff(commits);
   }

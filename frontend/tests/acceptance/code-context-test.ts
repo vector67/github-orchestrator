@@ -83,6 +83,34 @@ module('Acceptance | code context', function (hooks) {
     ]);
   });
 
+  test('a thread on removed lines reads them from the merge base the diff starts at', async function (assert) {
+    board().conversations = [
+      thread({
+        key: 'k1',
+        anchor: {
+          ...thread().anchor,
+          start_line: 41,
+          start_side: 'LEFT',
+          line: 42,
+          side: 'LEFT',
+          original_start_line: 41,
+          original_line: 42,
+        },
+      }),
+    ];
+    board().sources['ba5e000:src/foo.py'] = sourceWith({
+      41: 'CheckConstraint(',
+      42: '    "amount > 0"',
+    });
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-context]').containsText('"amount > 0"');
+    assert.deepEqual(codeAsks(board()), [
+      '/api/files?sha=ba5e000&path=src%2Ffoo.py&from_line=38&to_line=45',
+    ]);
+  });
+
   test('an outdated thread says so, and names the commit its code is from', async function (assert) {
     board().conversations = [
       thread({
