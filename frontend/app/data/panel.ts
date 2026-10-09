@@ -445,7 +445,12 @@ function codeOf(conversation: Conversation, context: Context): Code | null {
   if (!anchor.path || conversation.kind === 'issue') return null;
   const head = context.pullRequest?.head_sha;
   const current = !anchor.is_outdated && anchor.line !== null && head;
-  const sha = current ? head : anchor.original_commit;
+  const sha =
+    anchor.side === 'LEFT'
+      ? context.pullRequest?.diffs.origin?.base
+      : current
+        ? head
+        : anchor.original_commit;
   const last = current ? anchor.line : anchor.original_line;
   if (!sha || last === null) return null;
   const first =
