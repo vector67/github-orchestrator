@@ -23,6 +23,8 @@ from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 
 log = logging.getLogger(__name__)
 
+NO_WORKTREE = "refused: this pull request has no worktree yet, since its manager has not started"
+
 SHOWN_READ_ONLY = frozenset({"l", "d"})
 
 
@@ -74,6 +76,8 @@ class FilePanel(ManagerPanel):
         if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):
             raise ValueError(f"git palette keys {keys!r} name no command the page runs")
         worktree = self._worktree()
+        if not worktree:
+            return -1, [NO_WORKTREE], 0.0
         with locked(Path(f"{worktree}.git-palette.lock")):
             refused = self._refusal(command.display)
             if refused is not None:
@@ -88,6 +92,8 @@ class FilePanel(ManagerPanel):
         command = resolve(keys)
         if keys != SHELL and (command is None or command.mode == "captured"):
             raise ValueError(f"terminal keys {keys!r} name nothing the terminal opens")
+        if not worktree:
+            return NO_WORKTREE
         refused = self._refusal(f"a terminal for {keys!r}")
         if refused is not None:
             return refused

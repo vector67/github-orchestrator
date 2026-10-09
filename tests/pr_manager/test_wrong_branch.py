@@ -10,6 +10,7 @@ from tests.pr_manager.support import (
     PR,
     REPO,
     ServerPanel,
+    managed_in,
     manager_over,
     run_manager,
     seed_state,
@@ -211,7 +212,7 @@ def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, t
     working_copies = _checked_out(tmp_path, EXPECTED)
     run_manager(settings, _check_out(working_copies, tmp_path, HERE),
                 lambda: answers.append(board.panel.run_git("p")), None,
-                worktree=tmp_path, is_author=True, board=board,
+                worktree=tmp_path, is_author=True, board=board, pr_processes=managed_in(tmp_path),
                 working_copies=working_copies, run=lambda argv, **kwargs: ran.append(argv))
 
     [(exit_code, lines, _)] = answers
@@ -223,7 +224,7 @@ def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, t
 def test_a_terminal_from_the_board_while_frozen_is_refused_and_opens_nothing(settings, tmp_path):
     seed_state(settings, branch=EXPECTED)
     board = ServerPanel()
-    windows = FakePrProcesses()
+    windows = managed_in(tmp_path)
     answers = []
     working_copies = _checked_out(tmp_path, EXPECTED)
     run_manager(settings, _check_out(working_copies, tmp_path, HERE),
