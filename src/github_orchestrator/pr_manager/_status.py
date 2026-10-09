@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import tempfile
 from datetime import UTC, datetime, timedelta
@@ -6,6 +7,8 @@ from pathlib import Path
 
 from github_orchestrator.board_api.interface import Dashboard, ManagerStanding
 from github_orchestrator.domain import Pr, UtcClock
+
+log = logging.getLogger(__name__)
 
 STATUS_STALE_SECONDS = 10.0
 
@@ -18,7 +21,11 @@ class StatusFiles:
         self._clock = clock
 
     def begin(self, pr: Pr) -> None:
-        self._path(pr).unlink(missing_ok=True)
+        path = self._path(pr)
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as error:
+            log.warning("could not clear the status file %s: %s", path, error)
 
     def write(self, dashboard: Dashboard) -> None:
         now = self._clock()
@@ -34,14 +41,23 @@ class StatusFiles:
             "release_requested": dashboard.release_requested,
             "flags_changed_at": dashboard.flags_changed_at,
         }
-        _write_atomically(self._path(dashboard.pr), json.dumps(status).encode())
+        path = self._path(dashboard.pr)
+        try:
+            _write_atomically(path, json.dumps(status).encode())
+        except OSError as error:
+            log.warning("could not write the status file %s: %s", path, error)
 
     def standing(self, pr: Pr) -> ManagerStanding:
+        path = self._path(pr)
         try:
-            status = json.loads(self._path(pr).read_bytes())
+            content = path.read_bytes()
         except FileNotFoundError:
             return ManagerStanding.STARTING
-        written_at = datetime.strptime(status["written_at"], _STAMP).replace(tzinfo=UTC)
+        try:
+            written_at = datetime.strptime(json.loads(content)["written_at"], _STAMP).replace(tzinfo=UTC)
+        except (ValueError, KeyError, TypeError) as error:
+            log.warning("could not read the status file %s: %s", path, error)
+            return ManagerStanding.GONE
         if (self._clock() - written_at).total_seconds() < STATUS_STALE_SECONDS:
             return ManagerStanding.ANSWERING
         return ManagerStanding.GONE

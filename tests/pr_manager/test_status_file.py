@@ -141,3 +141,28 @@ def test_the_notice_a_refused_command_leaves_is_written(settings, tmp_path):
              is_author=True).run()
 
     assert _status(settings)["notice"] == "agents are disabled in config.toml"
+
+
+def test_a_status_file_that_cannot_be_written_leaves_the_tick_to_do_its_work(settings, tmp_path):
+    (settings.data_dir / "status").write_text("not a directory")
+    agent_runs = FakeAgentRuns(FakePrProcesses()).script(Outcome(finishes=False))
+    manager = _manager(settings, worktree=tmp_path, agent_runs=agent_runs, is_author=True)
+    manager.event_queue.add(THE_PR, ci_failed("tests", "boom"))
+
+    manager.run()
+
+    assert len(agent_runs.started) == 1
+
+
+@pytest.mark.parametrize("content", [
+    "{not json",
+    "{}",
+    '{"written_at": "yesterday"}',
+], ids=["bad json", "no written_at", "garbled written_at"])
+def test_a_status_file_that_cannot_be_read_is_gone(settings, tmp_path, content):
+    manager = _manager(settings, worktree=tmp_path)
+    path = settings.data_dir / "status" / "acme" / "widgets" / "7.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(content)
+
+    assert _standing(manager) is ManagerStanding.GONE
