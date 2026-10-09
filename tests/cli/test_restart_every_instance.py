@@ -32,8 +32,12 @@ def test_restart_all_restarts_every_other_instance_after_this_one(machine, run_c
         "0 agent manager(s) back up; no event has failed since the restart.\n"
         "==> Restarting the agent managers for second\n"
         "No agent manager processes running.\n"
+        "==> Stopping the server for second\n"
+        "Stopped the server, pid 4242.\n"
         "==> Restarting the watcher for second\n"
         "Restarted the watcher daemon. Agent managers were left running.\n"
+        "==> Confirming the server came back for second\n"
+        "The hub answers from the new server, pid 4243.\n"
         "==> Confirming the agent managers came back for second\n"
         "0 agent manager(s) back up; no event has failed since the restart.\n")
     assert _launchctl(machine)[4:] == [
@@ -70,8 +74,12 @@ def test_restart_restarts_only_this_instance(machine, run_cli, restartable):
     assert ran.out == (
         "==> Restarting the agent managers\n"
         "No agent manager processes running.\n"
+        "==> Stopping the server\n"
+        "Stopped the server, pid 4242.\n"
         "==> Restarting the watcher\n"
         "Restarted the watcher daemon. Agent managers were left running.\n"
+        "==> Confirming the server came back\n"
+        "The hub answers from the new server, pid 4243.\n"
         "==> Confirming the agent managers came back\n"
         "0 agent manager(s) back up; no event has failed since the restart.\n")
     assert SECOND not in " ".join(" ".join(call) for call in _launchctl(machine))
@@ -93,6 +101,7 @@ def test_restart_all_does_not_wait_for_a_poll_from_an_instance_in_setup(
         machine, run_cli, restartable):
     other, _ = _restartable_instance(machine, "second")
     other.config_path.write_text("hub_port = 8899\n")
+    other.hubs_down.add("http://127.0.0.1:8899")
 
     ran = run_cli("restart-all")
 

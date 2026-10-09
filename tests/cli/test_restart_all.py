@@ -37,8 +37,12 @@ def test_restart_all_restarts_without_syncing_or_building(machine, run_cli, rest
     assert ran.out == (
         "==> Restarting the agent managers\n"
         "No agent manager processes running.\n"
+        "==> Stopping the server\n"
+        "Stopped the server, pid 4242.\n"
         "==> Restarting the watcher\n"
         "Restarted the watcher daemon. Agent managers were left running.\n"
+        "==> Confirming the server came back\n"
+        "The hub answers from the new server, pid 4243.\n"
         "==> Confirming the agent managers came back\n"
         "0 agent manager(s) back up; no event has failed since the restart.\n")
     assert [call.cmd[:2] for call in machine.system.calls] == [

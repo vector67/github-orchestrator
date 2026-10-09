@@ -1,8 +1,9 @@
+import fcntl
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import NoReturn
+from typing import IO, NoReturn
 
 import dishka
 
@@ -55,6 +56,31 @@ def configured(extra: str) -> str:
     return ACCOUNT + extra + HELLO_WORLD
 
 NOW = datetime(2026, 9, 24, 12, 0, 0).astimezone()
+SERVER_PID = HUB_PID
+
+
+@dataclass
+class ScriptedServer:
+    data_dir: Callable[[], Path]
+    pid: int | None = None
+    holder: IO[str] | None = None
+    started: list[int] = field(default_factory=list)
+    signalled: list[int] = field(default_factory=list)
+
+    def start(self, pid: int) -> None:
+        data_dir = self.data_dir()
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / "server.pid").write_text(f"{pid}\n")
+        self.holder = open(data_dir / "server.lock", "a")
+        fcntl.flock(self.holder, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        self.pid = pid
+        self.started.append(pid)
+
+    def kill(self, pid: int, signal: int) -> None:
+        self.signalled.append(pid)
+        if pid == self.pid and self.holder is not None:
+            self.holder.close()
+            self.holder, self.pid = None, None
 
 
 @dataclass
@@ -99,12 +125,43 @@ class Machine:
     newest_release: Mapping[str, object] | None = None
     pinned_config: bool = True
     releases_api: ScriptedReleasesApi = field(default_factory=ScriptedReleasesApi)
+    server_comes_back: bool = True
+    server: ScriptedServer = field(init=False)
+
+    server_stopped_at: int | None = None
+    hubs_down: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        self.server = ScriptedServer(lambda: self.data_dir)
+
+    def stop_server(self, pid: int, signal: int) -> None:
+        self.server.kill(pid, signal)
+        self.server_stopped_at = len(self.system.calls)
+        self.hubs_down |= self.answering_hubs
+        self.answering_hubs.clear()
+
+    def serving(self, hub_url: str = "http://127.0.0.1:8720") -> None:
+        self.answering_hubs.add(hub_url)
+        self.server.start(SERVER_PID)
+
+    def _watcher_started_since_the_server_stopped(self) -> bool:
+        if self.server_stopped_at is None:
+            return False
+        return any(call.cmd[:2] == ["launchctl", "kickstart"]
+                   or call.cmd[:3] in (["systemctl", "--user", "start"], ["systemctl", "--user", "enable"],
+                                       ["systemctl", "--user", "restart"])
+                   for call in self.system.calls[self.server_stopped_at:])
 
     @property
     def tool_dir(self) -> Path:
         return self.home / ".local" / "share" / "uv" / "tools"
 
     def hub_health(self, hub_url: str) -> Mapping[str, object] | None:
+        if (self.server.pid is None and self.server_comes_back
+                and self._watcher_started_since_the_server_stopped()):
+            self.hub_pid = max(self.server.started, default=SERVER_PID - 1) + 1
+            self.server.start(self.hub_pid)
+            self.answering_hubs |= self.hubs_down
         if hub_url not in self.answering_hubs:
             return None
         return {"status": "ok", "pid": self.hub_pid, "serves": "hub", "hub_url": hub_url,
@@ -117,6 +174,7 @@ class Machine:
         other = Machine(data_dir=data_dir, home=self.home, system=self.system, now=self.now,
                         platform=self.platform, instance=name)
         other.configure()
+        other.serving()
         self.others[str(data_dir)] = other
         return other
 
@@ -191,7 +249,8 @@ class Machine:
             fake_provider(TerminalSessions, FakeTerminalSessions()),
             fake_provider(Terminals, self.terminals),
             ServerWiring(server_config(settings), python=self.python,
-                         environment=settings.child_environment(), spawn=self.spawn_server),
+                         environment=settings.child_environment(), spawn=self.spawn_server,
+                         kill=self.stop_server),
             fake_agent_runs_roles(self.runs()),
             watcher_wiring(settings, self.home, releases_api=self.releases_api),
             notifications_wiring(settings),

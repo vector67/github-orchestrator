@@ -1,3 +1,4 @@
+from github_orchestrator.cli._restart import stop_server
 from github_orchestrator.cli._restart_all import Instance, _heading
 from github_orchestrator.cli._setup import ReadLine
 
@@ -12,6 +13,8 @@ def _stop_instance(read_line: ReadLine, instance: Instance, *, force: bool) -> N
         print(f"Stopped {len(stopped)} agent manager(s): {', '.join(str(pr) for pr in sorted(stopped))}.")
     else:
         print("No agent manager processes running.")
+    _heading(f"Stopping the server{named}")
+    stop_server(instance.server)
     _heading(f"Closing the terminal sessions{named}")
     _close_terminals(instance, read_line, named, force=force)
 

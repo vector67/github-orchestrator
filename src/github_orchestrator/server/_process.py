@@ -19,6 +19,7 @@ class Started(Protocol):
 
 
 Spawn = Callable[[list[str], Mapping[str, str], Path], Started]
+Kill = Callable[[int, int], None]
 
 
 def detached(argv: list[str], env: Mapping[str, str], log_file: Path) -> Started:
@@ -30,7 +31,7 @@ def detached(argv: list[str], env: Mapping[str, str], log_file: Path) -> Started
 
 class ServerProcess:
     def __init__(self, *, lock: Path, pid_file: Path, log_file: Path, python: str,
-                 environment: Mapping[str, str], spawn: Spawn,
+                 environment: Mapping[str, str], spawn: Spawn, kill: Kill,
                  sleep: Callable[[float], None]) -> None:
         self._lock = lock
         self._pid_file = pid_file
@@ -38,6 +39,7 @@ class ServerProcess:
         self._python = python
         self._environment = environment
         self._spawn = spawn
+        self._kill = kill
         self._sleep = sleep
         self._started: Started | None = None
 
@@ -65,7 +67,7 @@ class ServerProcess:
         if pid is None:
             return None
         try:
-            os.kill(pid, signal.SIGTERM)
+            self._kill(pid, signal.SIGTERM)
         except ProcessLookupError:
             return None
         waited = 0.0

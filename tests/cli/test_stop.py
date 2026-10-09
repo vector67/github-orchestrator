@@ -1,6 +1,7 @@
 from github_orchestrator.pr_processes import ManagerPane
 from tests.builders import a_pr
 from tests.cli.scripted_system import Job
+from tests.cli.support import SERVER_PID
 
 WATCHER = "com.github-orchestrator.watcher"
 SECOND = "com.github-orchestrator.watcher.second"
@@ -36,6 +37,8 @@ def test_stop_unloads_the_watcher_and_then_stops_the_agent_managers(
         "Stopped the watcher daemon.\n"
         "==> Stopping the agent managers\n"
         "Stopped 1 agent manager(s): acme/app#12.\n"
+        "==> Stopping the server\n"
+        "Stopped the server, pid 4242.\n"
         "==> Closing the terminal sessions\n"
         "No terminal sessions open.\n")
     assert _launchctl(machine) == [
@@ -44,6 +47,18 @@ def test_stop_unloads_the_watcher_and_then_stops_the_agent_managers(
     assert machine.system.job is None
     assert machine.processes().manager(IN_APP) is ManagerPane.EXITED
     assert machine.prompts == []
+
+
+def test_stop_stops_the_server_once_the_watcher_cannot_start_it_again(
+        machine, run_cli, restartable):
+    machine.server.start(SERVER_PID)
+
+    ran = run_cli("stop")
+
+    assert ran.code == 0, ran.out
+    assert ran.under("Stopping the server") == f"Stopped the server, pid {SERVER_PID}.\n"
+    assert ran.out.index("==> Stopping the watcher") < ran.out.index("==> Stopping the server")
+    assert machine.server.pid is None
 
 
 def test_stop_says_so_when_the_watcher_was_not_running(machine, run_cli, restartable):
@@ -129,6 +144,8 @@ def test_stop_all_stops_every_other_instance_after_this_one(machine, run_cli, re
         "Stopped the watcher daemon.\n"
         "==> Stopping the agent managers for second\n"
         "Stopped 1 agent manager(s): acme/gadgets#22.\n"
+        "==> Stopping the server for second\n"
+        "Stopped the server, pid 4242.\n"
         "==> Closing the terminal sessions for second\n"
         "Closed 1 terminal session(s).\n")
     assert machine.system.jobs[SECOND] is None

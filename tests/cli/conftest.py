@@ -29,6 +29,7 @@ def restartable(machine):
     plist.write_text("<plist/>")
     machine.system.job = Job()
     machine.settings().watcher_heartbeat.write_text(machine.now.isoformat())
+    machine.serving()
     return plist
 
 

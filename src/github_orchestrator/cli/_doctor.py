@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from github_orchestrator.cli._config import CliConfig, Run, Which
+from github_orchestrator.cli._config import CliConfig, Run, ServerControl, Which
 from github_orchestrator.cli._findings import Finding, Level, fail, ok, warn
 from github_orchestrator.cli._hub import PROBE_SECONDS, HealthBody, HubHealth
 from github_orchestrator.cli._install_checks import (
@@ -74,8 +74,9 @@ def clone_problem(run: Run) -> Callable[[Repo, Path], str | None]:
 class InstanceChecks:
     def __init__(self, config: CliConfig, config_file: ConfigFile, which: Which, run: Run,
                  service: Service, hub_health: HubHealth, watcher_health: WatcherHealth,
-                 access: Access) -> None:
+                 access: Access, server: ServerControl) -> None:
         self._config = config
+        self._server = server
         self._access = access
         self._service = service
         self._hub_health = hub_health
@@ -87,14 +88,15 @@ class InstanceChecks:
     def findings(self) -> list[Finding]:
         service = self._service.check()
         answer = self._hub_health(self._config.hub_url)
+        server = self._server.pid()
         return [
             *self._parses(),
-            *self._hub_port(answer, service.pid),
+            *self._hub_port(answer, server),
             *(finding for requirement in requirements_for(self._config.agent)
               for finding in self._requirement(requirement, service.path)),
             *service.findings,
             *self._github(),
-            self._hub(answer, service.pid),
+            self._hub(answer, server),
             self._watcher(answer),
         ]
 
@@ -120,7 +122,7 @@ class InstanceChecks:
         port = urlsplit(self._config.hub_url).port or 0
         if answer is not None:
             if answer.get("pid") == pid:
-                return [ok(f"hub_port {port} is held by this instance's hub")]
+                return [ok(f"hub_port {port} is held by this instance's server")]
             return []
         if not _listening(port):
             return [ok(f"hub_port {port} is free")]
@@ -140,15 +142,15 @@ class InstanceChecks:
                         f"{RESTART}; github-orchestrator logs shows why")
         answering = answer.get("pid")
         if answering != pid:
-            started = "no watcher" if pid is None else f"pid {pid}"
-            return fail(f"the hub at {hub_url} answers from pid {answering}, not from the watcher "
-                        f"the service started ({started})",
+            started = "no server holds its lock" if pid is None else f"pid {pid}"
+            return fail(f"the hub at {hub_url} answers from pid {answering}, not from this "
+                        f"instance's server ({started})",
                         f"stop pid {answering}, then {RESTART}")
         state, expected = answer.get("state"), self._config_file.state()
         if state != expected:
             return fail(f"the hub at {hub_url} is in {state}, but its config is {expected} now",
                         RESTART)
-        return ok(f"the hub answers at {hub_url} from the watcher, pid {pid}, {state}")
+        return ok(f"the hub answers at {hub_url} from the server, pid {pid}, {state}")
 
     def _watcher(self, answer: HealthBody | None) -> Finding:
         if answer is not None and answer.get("state") != HubState.WATCHING:

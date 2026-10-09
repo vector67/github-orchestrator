@@ -124,7 +124,7 @@ from github_orchestrator.pr_processes._background import Run as ManagerRun
 from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
 from github_orchestrator.server._config import ServerConfig
-from github_orchestrator.server._process import ServerProcess, Spawn, detached
+from github_orchestrator.server._process import Kill, ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
     ConfigFile,
     Dismissals,
@@ -906,6 +906,7 @@ class ServerWiring(Wiring):
     python: str
     environment: Mapping[str, str]
     spawn: Spawn
+    kill: Kill = os.kill
 
     def context(self) -> Mapping[object, object]:
         return {ServerConfig: self.config, ServerWiring: self}
@@ -921,7 +922,8 @@ class ServerProvider(Provider):
     def process(self, wiring: ServerWiring, logs: Logs, sleep: Sleep) -> ServerProcess:
         return ServerProcess(lock=wiring.config.lock, pid_file=wiring.config.pid,
                              log_file=logs.path(Process.SERVER), python=wiring.python,
-                             environment=wiring.environment, spawn=wiring.spawn, sleep=sleep)
+                             environment=wiring.environment, spawn=wiring.spawn,
+                             kill=wiring.kill, sleep=sleep)
 
     @provide
     def server(self, process: ServerProcess) -> Server:
@@ -1049,7 +1051,9 @@ class ContainerInstances:
                         container.get(Queues), container.get(WatcherHealth),
                         container.get(OpenTerminals), container.get(Service),
                         container.get(InstanceChecks), container.get(ConfigFile),
-                        container.get(Settings).data_dir)
+                        container.get(Settings).data_dir, container.get(ServerControl),
+                        container.get(Logs).path(Process.SERVER), container.get(CliConfig).hub_url,
+                        container.get(HubHealth))
 
 
 @dataclass(frozen=True)

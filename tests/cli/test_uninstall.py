@@ -5,6 +5,7 @@ import pytest
 
 from github_orchestrator.desktop import Badge
 from tests.cli.scripted_system import Job
+from tests.cli.support import SERVER_PID
 
 AGENTS = ("Library", "LaunchAgents")
 BUILD = (Path(__file__).parents[2] / "src" / "github_orchestrator" / "desktop" / "notifier"
@@ -73,6 +74,15 @@ def test_uninstall_boots_out_and_removes_every_instance_s_launchagent_and_only_t
         "com.github-orchestrator.restart.plist"]
     assert machine.system.jobs["com.github-orchestrator.watcher"] is None
     assert machine.system.jobs["com.github-orchestrator.watcher.work"] is None
+
+
+def test_uninstall_stops_every_instance_s_server(machine, run_cli, two_instances):
+    machine.server.start(SERVER_PID)
+    machine.answers = ["n"]
+
+    ran = run_cli("uninstall")
+
+    assert (machine.server.pid, two_instances.server.pid) == (None, None), ran.out
 
 
 def test_uninstall_removes_the_command_with_uv_last(machine, run_cli, two_instances):

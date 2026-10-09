@@ -5,10 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Protocol
 
-from github_orchestrator.cli._config import CliConfig, OpenTerminals, Run
+from github_orchestrator.cli._config import CliConfig, OpenTerminals, Run, ServerControl
 from github_orchestrator.cli._doctor import InstanceChecks
+from github_orchestrator.cli._hub import HubHealth
 from github_orchestrator.cli._migrate import migrate
-from github_orchestrator.cli._restart import confirm_restart, restart, restart_watcher
+from github_orchestrator.cli._restart import (
+    await_server,
+    confirm_restart,
+    restart,
+    restart_watcher,
+    stop_server,
+)
 from github_orchestrator.cli._service import Service
 from github_orchestrator.domain import HubState, LocalClock, Sleep
 from github_orchestrator.pr_event_queue import Queues
@@ -30,6 +37,10 @@ class Instance:
     checks: InstanceChecks
     config_file: ConfigFile
     data_dir: Path
+    server: ServerControl
+    server_log: Path
+    hub_url: str
+    hub_health: HubHealth
 
 
 class OtherInstances(Protocol):
@@ -72,8 +83,13 @@ def _restart_instance(sleep: Sleep, clock: LocalClock, instance: Instance) -> No
     _heading(f"Restarting the agent managers{named}")
     restarted = clock()
     stopped = restart(instance.pr_processes)
+    _heading(f"Stopping the server{named}")
+    gone = stop_server(instance.server)
     _heading(f"Restarting the watcher{named}")
     restart_watcher(instance.service)
+    _heading(f"Confirming the server came back{named}")
+    await_server(instance.hub_url, instance.hub_health, instance.server, gone, sleep,
+                 log=instance.server_log)
     _heading(f"Confirming the agent managers came back{named}")
     state = instance.config_file.state()
     if state is not HubState.WATCHING:

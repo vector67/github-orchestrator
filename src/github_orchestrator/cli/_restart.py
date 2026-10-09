@@ -1,6 +1,9 @@
 import datetime
 import sys
+from pathlib import Path
 
+from github_orchestrator.cli._config import ServerControl
+from github_orchestrator.cli._hub import HubHealth
 from github_orchestrator.cli._service import Service
 from github_orchestrator.domain import LocalClock, Pr, Sleep
 from github_orchestrator.pr_event_queue import Queues
@@ -9,6 +12,7 @@ from github_orchestrator.watcher import Health, WatcherHealth
 
 WATCHER_ATTEMPTS = 450
 MANAGER_ATTEMPTS = 60
+SERVER_ATTEMPTS = 60
 POLL_SECONDS = 2.0
 
 
@@ -76,6 +80,27 @@ def confirm_restart(restarted: datetime.datetime, expected: set[Pr], clock: Loca
     if unpolled is not None or missing or failures:
         sys.exit(1)
     print(f"{len(expected)} agent manager(s) back up; no event has failed since the restart.")
+
+
+def stop_server(server: ServerControl) -> int | None:
+    stopped = server.stop()
+    print("No server running." if stopped is None else f"Stopped the server, pid {stopped}.")
+    return stopped
+
+
+def await_server(hub_url: str, hub_health: HubHealth, server: ServerControl, gone: int | None,
+                 sleep: Sleep, *, log: Path) -> None:
+    for attempt in range(SERVER_ATTEMPTS):
+        answer = hub_health(hub_url)
+        pid = server.pid()
+        if answer is not None and pid is not None and pid != gone and answer.get("pid") == pid:
+            print(f"The hub answers from the new server, pid {pid}.")
+            return
+        if attempt < SERVER_ATTEMPTS - 1:
+            sleep(POLL_SECONDS)
+    print(f"The hub at {hub_url} did not answer /api/health from a new server within "
+          f"{SERVER_ATTEMPTS * POLL_SECONDS:g}s; {log} says why.")
+    sys.exit(1)
 
 
 def restart_watcher(service: Service) -> None:

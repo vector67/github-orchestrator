@@ -51,6 +51,7 @@ def test_start_writes_the_unit_enables_it_and_waits_for_the_hub(linux, run_cli):
 def running(linux):
     linux.system.units[UNIT] = "active"
     linux.settings().watcher_heartbeat.write_text(linux.now.isoformat())
+    linux.serving()
     return linux
 
 

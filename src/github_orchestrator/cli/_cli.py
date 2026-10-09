@@ -9,6 +9,7 @@ from github_orchestrator.cli._config import (
     CliConfig,
     OpenTerminals,
     Run,
+    ServerControl,
     Which,
 )
 from github_orchestrator.cli._doctor import InstanceChecks, MachineChecks, report
@@ -52,6 +53,7 @@ from github_orchestrator.settings import (
     Dismissals,
     Holds,
     Logs,
+    Process,
 )
 from github_orchestrator.watcher import Releases, WatcherHealth
 
@@ -65,7 +67,7 @@ class OperatorCli:
                  watcher_health: WatcherHealth, hub_health: HubHealth, holds: Holds,
                  dismissals: Dismissals, others: OtherInstances,
                  terminals: OpenTerminals, service: Service, checks: InstanceChecks,
-                 machine: MachineChecks, releases: Releases) -> None:
+                 machine: MachineChecks, releases: Releases, server: ServerControl) -> None:
         self._config = config
         self._run = run
         self._sleep = sleep
@@ -90,6 +92,7 @@ class OperatorCli:
         self._checks = checks
         self._machine = machine
         self._releases = releases
+        self._server = server
 
     def main(self, argv: list[str]) -> int:
         self._argv = argv
@@ -104,7 +107,8 @@ class OperatorCli:
     def _this_instance(self) -> Instance:
         return Instance(self._config.instance, self._pr_processes,
                         self._queues, self._watcher_health, self._terminals, self._service,
-                        self._checks, self._config_file, self._config.data_dir)
+                        self._checks, self._config_file, self._config.data_dir, self._server,
+                        self._logs.path(Process.SERVER), self._config.hub_url, self._hub_health)
 
     def _every_instance(self) -> list[Instance]:
         return [self._this_instance(), *self._others.load()]

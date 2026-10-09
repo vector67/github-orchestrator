@@ -12,6 +12,7 @@ import pytest
 
 from github_orchestrator.domain import Repo
 from tests.cli.scripted_system import Job
+from tests.cli.support import SERVER_PID
 
 HUB = "http://127.0.0.1:8720"
 UNIT = "github-orchestrator.service"
@@ -125,6 +126,7 @@ def installed(machine, tmp_path):
 def started(machine, run_cli, installed):
     machine.answering_hubs.add(HUB)
     assert run_cli("start").code == 0
+    machine.server.start(SERVER_PID)
     return machine
 
 
@@ -227,6 +229,7 @@ def test_linux_without_the_unit_file_says_to_start(linux, run_cli):
 def started_on_linux(linux, run_cli, installed):
     linux.answering_hubs.add(HUB)
     assert run_cli("start").code == 0
+    linux.server.start(SERVER_PID)
     return linux
 
 
@@ -304,12 +307,22 @@ def test_lingering_on_is_ok(started_on_linux, run_cli):
     assert _finding(ran.out, "lingering is on").level == "ok"
 
 
-def test_a_hub_answering_from_the_services_watcher_is_ok(started, run_cli):
+def test_a_hub_answering_from_the_running_server_is_ok(started, run_cli):
     ran = run_cli("doctor")
 
-    assert _finding(ran.out, f"the hub answers at {HUB} from the watcher, pid 4242, "
+    assert _finding(ran.out, f"the hub answers at {HUB} from the server, pid {SERVER_PID}, "
                              "watching").level == "ok"
-    assert _finding(ran.out, "hub_port 8720 is held by this instance's hub").level == "ok"
+    assert _finding(ran.out, "hub_port 8720 is held by this instance's server").level == "ok"
+
+
+def test_a_hub_answering_while_no_server_holds_its_lock_says_so(started, run_cli):
+    started.server.kill(SERVER_PID, 15)
+
+    ran = run_cli("doctor")
+
+    stray = _finding(ran.out, "from pid 4242")
+    assert stray.level == "FAIL"
+    assert "no server" in stray.reason
 
 
 def test_a_hub_in_another_state_than_its_config_chooses_says_to_restart(started, run_cli):
@@ -812,6 +825,7 @@ def test_a_healthy_install_is_all_ok_and_exits_0(machine, run_cli, tmp_path, clo
     machine.system.exec_program = machine.python
     machine.answering_hubs.add(HUB)
     assert run_cli("start").code == 0
+    machine.server.start(SERVER_PID)
     _skill(machine).mkdir(parents=True)
     machine.system.mcp_list = CONNECTED
     _beat(machine, 34)
