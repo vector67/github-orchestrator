@@ -1,9 +1,8 @@
 import logging
 import secrets
-import threading
 from collections.abc import Callable, Sequence, Set
 from dataclasses import dataclass, replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 from typing import Protocol
 
@@ -27,7 +26,7 @@ from github_orchestrator.github import Access
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.settings import ConfigFile
 from github_orchestrator.watcher._config import WatcherConfig
-from github_orchestrator.watcher._leaving import Leaving
+from github_orchestrator.watcher._setup_files import SetupFiles
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +73,7 @@ def _parsed(repo: str) -> Repo | None:
 class ConfigSetup:
     def __init__(self, config: WatcherConfig, clock: UtcClock, seams: SetupSeams, *,
                  config_file: ConfigFile, access: Access, pr_processes: PrProcesses,
-                 archives: Archives, leaving: Leaving, tour: TourMarker) -> None:
+                 archives: Archives, files: SetupFiles, tour: TourMarker) -> None:
         self._config = config
         self._clock = clock
         self._seams = seams
@@ -82,11 +81,8 @@ class ConfigSetup:
         self._access = access
         self._pr_processes = pr_processes
         self._archives = archives
-        self._leaving = leaving
+        self._files = files
         self._tour = tour
-        self._lock = threading.Lock()
-        self._listed: dict[str, tuple[datetime, list[RepoChoice]]] = {}
-        self._progress: dict[str, SetupProgress] = {}
 
     def read(self) -> SetupRead:
         rows = {row.key: row for row in self._config_file.describe().rows}
@@ -115,8 +111,7 @@ class ConfigSetup:
 
     def repos(self, login: str) -> list[RepoChoice] | str:
         now = self._clock()
-        with self._lock:
-            kept = self._listed.get(login)
+        kept = self._files.listed(login)
         if kept is not None and now - kept[0] < LISTED_FOR:
             return kept[1]
         found = self._access.repos_of(login)
@@ -124,8 +119,7 @@ class ConfigSetup:
             return found
         choices = [RepoChoice(one.repo, one.can_push, one.has_my_prs, one.default_branch)
                    for one in found]
-        with self._lock:
-            self._listed[login] = (now, choices)
+        self._files.keep_listing(login, now, choices)
         return choices
 
     def repo(self, login: str, repo: Repo) -> RepoChoice | str:
@@ -152,22 +146,20 @@ class ConfigSetup:
             path = self._expanded(one.local_path)
             clones.append(CloneProgress(Repo.parse(one.repo), str(path),
                                         CloneState.FOUND if path.exists() else CloneState.WAITING))
-        with self._lock:
-            self._progress[operation] = SetupProgress(operation, WriteState.CLONING, tuple(clones))
-        self._seams.run_in(lambda: self._carried_out(operation, asked))
-        with self._lock:
-            return self._progress[operation]
+        started = SetupProgress(operation, WriteState.CLONING, tuple(clones))
+        self._files.record(started)
+        self._seams.run_in(lambda: self._carried_out(started, asked))
+        return self._files.progress(operation) or started
 
     def progress(self, operation: str) -> SetupProgress | None:
-        with self._lock:
-            return self._progress.get(operation)
+        return self._files.progress(operation)
 
     def move_aside(self) -> str | None:
         if self._config_file.state() is not HubState.BROKEN:
             return None
         moved = self._config_file.move_aside(self._clock())
         log.info("setup: moved the broken config aside to %s; restarting into setup", moved)
-        self._leaving.ask()
+        self._files.leave()
         return moved
 
     def _expanded(self, written: str) -> Path:
@@ -222,42 +214,42 @@ class ConfigSetup:
         return {repo: Clone(Path(one.local_path), one.new_worktree_command)
                 for one in asked.repos if (repo := _parsed(one.repo)) is not None}
 
-    def _moved(self, operation: str, state: WriteState, *, error: str | None = None,
-               archived: tuple[str, ...] = (), kept_worktrees: tuple[str, ...] = ()) -> None:
-        with self._lock:
-            self._progress[operation] = replace(
-                self._progress[operation], state=state, error=error, archived=archived,
-                kept_worktrees=kept_worktrees)
+    def _moved(self, progress: SetupProgress, state: WriteState, *, error: str | None = None,
+               archived: tuple[str, ...] = (), kept_worktrees: tuple[str, ...] = ()) -> SetupProgress:
+        moved = replace(progress, state=state, error=error, archived=archived,
+                        kept_worktrees=kept_worktrees)
+        self._files.record(moved)
+        return moved
 
-    def _cloned(self, operation: str, index: int, state: CloneState,
-                error: str | None = None) -> None:
-        with self._lock:
-            progress = self._progress[operation]
-            clones = list(progress.clones)
-            clones[index] = replace(clones[index], state=state, error=error)
-            self._progress[operation] = replace(progress, clones=tuple(clones))
+    def _cloned(self, progress: SetupProgress, index: int, state: CloneState,
+                error: str | None = None) -> SetupProgress:
+        clones = list(progress.clones)
+        clones[index] = replace(clones[index], state=state, error=error)
+        cloned = replace(progress, clones=tuple(clones))
+        self._files.record(cloned)
+        return cloned
 
-    def _carried_out(self, operation: str, asked: SetupWrite) -> None:
+    def _carried_out(self, started: SetupProgress, asked: SetupWrite) -> None:
         try:
-            self._carry_out(operation, asked)
+            self._carry_out(started, asked)
         except Exception as failed:
-            log.exception("setup: the write %s failed", operation)
-            self._moved(operation, WriteState.FAILED, error=str(failed))
+            log.exception("setup: the write %s failed", started.id)
+            self._moved(self._files.progress(started.id) or started, WriteState.FAILED,
+                        error=str(failed))
 
-    def _carry_out(self, operation: str, asked: SetupWrite) -> None:
-        with self._lock:
-            clones = self._progress[operation].clones
-        for index, clone in enumerate(clones):
+    def _carry_out(self, started: SetupProgress, asked: SetupWrite) -> None:
+        progress = started
+        for index, clone in enumerate(started.clones):
             if clone.state is CloneState.FOUND:
                 continue
-            self._cloned(operation, index, CloneState.CLONING)
+            progress = self._cloned(progress, index, CloneState.CLONING)
             refused = self._cloned_into(clone.repo, Path(clone.path))
             if refused is not None:
-                self._cloned(operation, index, CloneState.FAILED, refused)
-                self._moved(operation, WriteState.FAILED,
+                progress = self._cloned(progress, index, CloneState.FAILED, refused)
+                self._moved(progress, WriteState.FAILED,
                             error=f"could not clone {clone.repo}: {refused}")
                 return
-            self._cloned(operation, index, CloneState.CLONED)
+            progress = self._cloned(progress, index, CloneState.CLONED)
         repos = self._clones(asked)
         keep = set(repos)
         into = self._config.archive_dir / self._clock().strftime("%Y%m%d-%H%M%S")
@@ -269,11 +261,11 @@ class ConfigSetup:
             self._tour.arm()
         log.info("setup: wrote %s watching %s; restarting", self._config_file.location(),
                  ", ".join(str(repo) for repo in repos))
-        self._moved(operation, WriteState.RESTARTING,
+        self._moved(progress, WriteState.RESTARTING,
                     archived=tuple(str(path) for path in archived),
                     kept_worktrees=tuple(sorted(worktree for worktree in closed.values()
                                                 if worktree is not None)))
-        self._leaving.ask()
+        self._files.leave()
 
     def _cloned_into(self, repo: Repo, path: Path) -> str | None:
         try:

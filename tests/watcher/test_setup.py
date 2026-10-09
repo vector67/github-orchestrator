@@ -199,6 +199,16 @@ def test_the_account_s_repos_are_kept_for_a_minute(world):
     assert [one["repo"] for one in after] == ["octocat/hello-world"]
 
 
+def test_the_account_s_repos_are_kept_for_a_minute_for_every_process_that_serves_setup(world):
+    serve(world).web.get(f"/api/setup/accounts/{ME}/repos")
+    world.github.listed = [HELLO]
+
+    within = serve(world).web.get(f"/api/setup/accounts/{ME}/repos").json()["repos"]
+
+    assert [one["repo"] for one in within] == ["acme/gadgets", "acme/widgets",
+                                               "octocat/hello-world"]
+
+
 def test_a_repo_typed_by_name_is_looked_up_for_the_login(world):
     answer = serve(world).web.get("/api/setup/repos/octocat/hello-world", params={"login": ME})
 
@@ -255,6 +265,29 @@ def test_starting_to_watch_clones_what_is_missing_writes_the_config_and_restarts
                                "path": str(world.home / "repositories" / "widgets"),
                                "state": "cloned", "error": None}]
     assert world.left()
+
+
+def test_a_setup_write_is_followed_from_every_process_that_serves_setup(world):
+    operation = serve(world).put(request(("acme/widgets", "~/repositories/widgets", ""))).json()
+
+    read = serve(world).web.get(f"/api/setup/operations/{operation['id']}")
+
+    assert (read.status_code, read.json()["state"]) == (200, "restarting")
+
+
+def test_an_operation_no_setup_write_started_is_not_found(world):
+    answer = serve(world).web.get("/api/setup/operations/setup_000000000000")
+
+    assert answer.status_code == 404
+
+
+def test_a_setup_write_makes_the_watcher_leave_once_whichever_process_wrote_it(world):
+    serve(world).put(request(("acme/widgets", "~/repositories/widgets", "")))
+
+    left = serve(world).left()
+    started_again = serve(world).left()
+
+    assert (left, started_again) == (True, False)
 
 
 def test_the_first_setup_that_starts_watching_makes_the_board_s_tour_due_until_seen(world):

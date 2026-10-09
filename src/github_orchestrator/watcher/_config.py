@@ -12,6 +12,7 @@ class WatcherConfig:
     config_location: str
     agents_enabled: bool
     poll_interval: int
+    data_dir: Path
     heartbeat: Path
     lock: Path
     failures: Path

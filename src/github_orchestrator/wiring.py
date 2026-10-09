@@ -161,7 +161,6 @@ from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._cycle import PollingWatcher, Say, said_to_the_log
 from github_orchestrator.watcher._health import HealthFiles
 from github_orchestrator.watcher._holdings import WatchedHoldings
-from github_orchestrator.watcher._leaving import Leaving
 from github_orchestrator.watcher._placing import Placement, WindowPlacement
 from github_orchestrator.watcher._releases import (
     Get,
@@ -171,6 +170,7 @@ from github_orchestrator.watcher._releases import (
 )
 from github_orchestrator.watcher._saving import CycleSaving, Saving
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
+from github_orchestrator.watcher._setup_files import SetupFiles
 from github_orchestrator.watcher._teardown import PrTeardown, Teardown
 from github_orchestrator.watcher._told import ToldFiles
 from github_orchestrator.watcher._tour import TourFile
@@ -713,7 +713,6 @@ class WatcherProvider(Provider):
     seams = from_context(provides=SetupSeams, scope=Scope.APP)
     releases_api = from_context(provides=ReleasesApi, scope=Scope.APP)
     holdings = provide(WatchedHoldings)
-    leaving = provide(Leaving)
     setup = provide(ConfigSetup, provides=SetupDesk)
     tour = provide(TourFile, provides=TourMarker)
     placement = provide(WindowPlacement, provides=Placement)
@@ -725,6 +724,10 @@ class WatcherProvider(Provider):
     @provide
     def say(self) -> Say:
         return said_to_the_log
+
+    @provide
+    def setup_files(self, config: WatcherConfig) -> SetupFiles:
+        return SetupFiles(config.data_dir, write_whole)
 
     @provide
     def releases(self, config: WatcherConfig, api: ReleasesApi, clock: UtcClock) -> Releases:
@@ -1109,6 +1112,7 @@ def watcher_config(settings: Settings, home: Path, github_token: str | None) -> 
         config_location=str(settings.config_path),
         agents_enabled=config.agents_enabled,
         poll_interval=config.watcher_poll_interval,
+        data_dir=settings.data_dir,
         heartbeat=settings.watcher_heartbeat,
         lock=settings.watcher_lock,
         failures=settings.watcher_failures,

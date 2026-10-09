@@ -17,10 +17,10 @@ from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._failures import clear_failures
 from github_orchestrator.watcher._holdings import WatchedHoldings
-from github_orchestrator.watcher._leaving import Leaving
 from github_orchestrator.watcher._placing import Placement
 from github_orchestrator.watcher._poll import Fetched, fetch_pr_state
 from github_orchestrator.watcher._saving import Saving
+from github_orchestrator.watcher._setup_files import SetupFiles
 from github_orchestrator.watcher._teardown import Reason, Teardown
 from github_orchestrator.watcher.interface import Releases
 
@@ -51,7 +51,7 @@ class PollingWatcher:
                  pr_processes: PrProcesses, conversation_managers: ConversationManagerFactory,
                  change_detection: ChangeDetection, dismissals: Dismissals, hub: Hub,
                  holdings: WatchedHoldings, placement: Placement,
-                 teardown: Teardown, saving: Saving, say: Say, leaving: Leaving,
+                 teardown: Teardown, saving: Saving, say: Say, setup_files: SetupFiles,
                  releases: Releases) -> None:
         self._config = config
         self._clock = clock
@@ -77,7 +77,8 @@ class PollingWatcher:
         self._teardown = teardown
         self._saving = saving
         self._say = say
-        self._leaving = leaving
+        self._setup_files = setup_files
+        self._left = False
         self._releases = releases
 
     def run_cycle(self) -> None:
@@ -104,7 +105,7 @@ class PollingWatcher:
     def run_forever(self) -> None:
         log.info("--- watcher daemon started (interval=%ss) ---", self._config.poll_interval)
         self._saving.began(HubState.WATCHING)
-        while not self._leaving.asked():
+        while not self._leaving():
             self._serve_hub()
             self._releases.check_if_due()
             try:
@@ -123,12 +124,16 @@ class PollingWatcher:
             clear_failures(self._config.failures)
         except OSError as exc:
             log.warning("Could not clear %s: %s", self._config.failures, exc)
-        while (now := current()) is state and not self._leaving.asked():
+        while (now := current()) is state and not self._leaving():
             self._serve_hub()
             self._releases.check_if_due()
             self._sleep(CONFIG_CHECK_SECONDS)
         log.info("the config is %s now; stopping so the service starts the watcher again", now)
         self._hub.stop()
+
+    def _leaving(self) -> bool:
+        self._left = self._left or self._setup_files.taken_leave()
+        return self._left
 
     def _serve_hub(self) -> None:
         if self._hub_url is not None:
@@ -152,7 +157,7 @@ class PollingWatcher:
 
     def _rest(self) -> None:
         for _ in range(self._config.poll_interval // DELIVERY_INTERVAL):
-            if self._leaving.asked():
+            if self._leaving():
                 return
             self._deliver()
             before = self._clock()
