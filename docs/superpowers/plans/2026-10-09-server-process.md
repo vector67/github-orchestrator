@@ -66,8 +66,8 @@ serving over and deletes what it replaces.
 
 ## Steps
 
-1. **The manager writes its status file.** **Done** (`ed567d91` and the commit
-   that records this)
+1. **The manager writes its status file.** **Done** (`ed567d91`, `de2a3310` and
+   the commit that records this)
 
    - Each tick, after it publishes `_drawn`, the manager writes the status file:
      `written_at`, `active_run` (event, started at, last output at), `notice`,
@@ -188,3 +188,10 @@ Each step adds its decisions here, under its number, with the reason for each.
    - **The frozen fields are the dashboard's own:** `frozen_on`,
      `expected_branch`, `seconds_left`, `run_working` and `release_requested`.
      They are what the board shows of a freeze today.
+   - **A status file that cannot be cleared or written logs a warning with its
+     path and the error, and the manager carries on.** The file is optional, so
+     a refused write must not skip the rest of the tick or stop a manager
+     starting.
+   - **A status file that cannot be parsed, or whose `written_at` is missing or
+     garbled, reads as gone, with a warning.** It says nothing about a live
+     manager, and gone is what a reader shows when it cannot tell.
