@@ -235,7 +235,7 @@ PACKAGES = {
         pinned=frozenset({"BoardApi", "Hub", "Dashboard", "ManagerPanel"}),
         may_import=("conversation", "working_copies", "terminal_sessions", ROOT, LIBRARIES),
         role="the board serves one PR's review threads and its terminal sessions, and reaches the rest of the program only through them",
-        imported_by=("wiring", "pr_manager", "watcher", "preview"),
+        imported_by=("wiring", "pr_manager", "watcher", "preview", "server"),
         entries=frozenset({"interface", "fake"}),
     ),
     "change_detection": Package(
@@ -316,6 +316,14 @@ PACKAGES = {
         pinned=frozenset({"AgentChanges", "ManagerPane", "PrProcesses"}),
         may_import=("terminal_sessions",),
         role="PR windows run each PR's agent manager in the background and open its terminal sessions, and are handed the worktree by their callers",
+    ),
+    "server": Package(
+        pinned=frozenset(),
+        may_import=("settings", "board_api", LIBRARIES),
+        role="the server runs the board api's one app in worker processes on the hub's port, and only its entry point and its workers build the container",
+        imported_by=("wiring",),
+        entries=frozenset({"__main__"}),
+        builds_the_container=frozenset({"__main__", "_worker"}),
     ),
     "settings": Package(
         pinned=frozenset({"Boards", "ConfigFile", "Dismissals", "Logs", "Holds", "Process"}),

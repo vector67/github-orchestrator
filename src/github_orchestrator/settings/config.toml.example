@@ -48,6 +48,11 @@ gh_account = "your-github-username"
 # come from.
 # hub_port = 8720
 
+# How many worker processes the server answers the hub's port with. Each
+# serves many requests at once, and they share no lock with each other or with
+# any PR's agent manager.
+# server_workers = 4
+
 # How often each PR's agent manager looks at its queue and its board, in seconds
 # dashboard_refresh_interval = 1
 

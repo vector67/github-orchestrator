@@ -12,6 +12,7 @@ class Process(Enum):
     WATCHER = auto()
     PR_MANAGER = auto()
     LAUNCHD = auto()
+    SERVER = auto()
 
 
 class Logs(Protocol):

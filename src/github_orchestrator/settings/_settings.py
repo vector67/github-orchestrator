@@ -91,6 +91,14 @@ class Settings:
         return self.data_dir / "watcher.lock"
 
     @property
+    def server_lock(self) -> Path:
+        return self.data_dir / "server.lock"
+
+    @property
+    def server_pid(self) -> Path:
+        return self.data_dir / "server.pid"
+
+    @property
     def newest_release(self) -> Path:
         return self.data_dir / "newest_release.json"
 

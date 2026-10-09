@@ -123,6 +123,7 @@ from github_orchestrator.pr_processes._background import BackgroundPrProcesses
 from github_orchestrator.pr_processes._background import Run as ManagerRun
 from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
+from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.settings import (
     Boards,
     ConfigFile,
@@ -964,6 +965,25 @@ class ServerAppProvider(Provider):
 
 
 @dataclass(frozen=True)
+class ServerWiring(Wiring):
+    config: ServerConfig
+
+    def context(self) -> Mapping[object, object]:
+        return {ServerConfig: self.config}
+
+
+@wires(ServerWiring)
+class ServerProvider(Provider):
+    scope = Scope.APP
+    config = from_context(provides=ServerConfig, scope=Scope.APP)
+
+
+def server_config(settings: Settings) -> ServerConfig:
+    return ServerConfig(port=settings.config.hub_port, workers=settings.config.server_workers,
+                        lock=settings.server_lock, pid=settings.server_pid)
+
+
+@dataclass(frozen=True)
 class PrManagerWiring(Wiring):
     config: ManagerConfig
     run: GitRun
@@ -1369,7 +1389,8 @@ def mode_wirings(settings: Settings, managed: ManagedPr | None) -> list[Part]:
 
 def make_container(env: Mapping[str, str], home: Path,
                    managed: ManagedPr | None = None, *,
-                   check_presence: bool = True, dry_run: bool = False) -> dishka.Container:
+                   check_presence: bool = True, dry_run: bool = False,
+                   logs_dir: Path | None = None) -> dishka.Container:
     settings = load_settings(env, home)
     managers = [] if managed is None else [
         PrManagerWiring(manager_config(settings, managed), subprocess.run),
@@ -1377,7 +1398,7 @@ def make_container(env: Mapping[str, str], home: Path,
     return wire(
         SYSTEM_CLOCKS,
         SettingsWiring(settings),
-        logs_wiring(settings),
+        LogsWiring(logs_dir or settings.logs_dir, settings.config.log_level),
         switches_wiring(settings),
         GitHubWiring(settings.config.gh_account, subprocess.run),
         DesktopWiring(subprocess.run, home / "Applications", platform=sys.platform),
@@ -1420,6 +1441,7 @@ def make_container(env: Mapping[str, str], home: Path,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
         ManagerPanelsProvider,
+        ServerWiring(server_config(settings)),
         *managers,
         *(dry_run_parts(settings) if dry_run else []),
     )

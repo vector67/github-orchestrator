@@ -17,6 +17,7 @@ _FILE_NAMES = {
     Process.WATCHER: "watcher.log",
     Process.PR_MANAGER: "agent-manager.log",
     Process.LAUNCHD: "launchd.log",
+    Process.SERVER: "server.log",
 }
 
 
