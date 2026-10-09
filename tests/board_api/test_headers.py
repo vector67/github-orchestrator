@@ -3,7 +3,14 @@ from html.parser import HTMLParser
 
 import pytest
 
-from tests.board_api.support import PORT, SERVED_APP, board_for, client_for, client_of
+from tests.board_api.support import (
+    PORT,
+    SERVED_APP,
+    THE_ROOT,
+    board_for,
+    client_for,
+    client_of,
+)
 from tests.board_api.test_page import built_app
 
 POLICY = ("default-src 'self'; img-src 'self'; object-src 'none'; "
@@ -45,7 +52,7 @@ def answers(board):
     return {
         "a read": client.get("/api/pull-request"),
         "the page": client.get("/"),
-        "a stylesheet": client.get("/palette.css"),
+        "a stylesheet": client.get(f"{THE_ROOT}/palette.css"),
         "nothing there": client.get("/api/nothing"),
         "a refused write": client.post("/api/operations:send-review",
                                        headers={"Origin": "http://evil"},

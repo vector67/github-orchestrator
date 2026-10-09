@@ -1,5 +1,4 @@
 import logging
-import socket
 from collections.abc import Set
 from pathlib import Path
 
@@ -9,19 +8,8 @@ from github_orchestrator.settings.interface import Dismissal
 
 log = logging.getLogger(__name__)
 
-PORT_RANGE = range(8730, 8830)
 _STORED = {"until-event": Dismissal.UNTIL_NEXT_EVENT, "forever": Dismissal.FOREVER}
 _WORDS = {dismissal: word for word, dismissal in _STORED.items()}
-
-
-def _is_free(port: int) -> bool:
-    with socket.socket() as probe:
-        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            probe.bind(("127.0.0.1", port))
-        except OSError:
-            return False
-    return True
 
 
 def _flag_prs(flag_dir: Path) -> set[Pr]:
@@ -145,56 +133,3 @@ class FlagFileDismissals:
 
     def forget(self, pr: Pr) -> bool:
         return _remove(pr, _flag_file(self._dismissed_dir, pr))
-
-
-class FlagFileBoards:
-    def __init__(self, board_dir: Path) -> None:
-        self._board_dir = board_dir
-
-    def _port_file(self, pr: Pr) -> Path:
-        return repo_subdir(self._board_dir, pr.repo) / f"{pr.number}.port"
-
-    def board_wanted(self, pr: Pr) -> bool:
-        return _flag_file(self._board_dir, pr).exists()
-
-    def want_board(self, pr: Pr, wanted: bool) -> None:
-        flag = _flag_file(self._board_dir, pr)
-        if wanted:
-            _touch(flag)
-        else:
-            flag.unlink(missing_ok=True)
-
-    def _assigned_ports(self) -> set[int]:
-        ports = set()
-        for path in self._board_dir.glob("*/*/*.port"):
-            try:
-                ports.add(int(path.read_text().strip()))
-            except (OSError, ValueError):
-                continue
-        return ports
-
-    def _pick_port(self) -> int:
-        taken = self._assigned_ports()
-        for port in PORT_RANGE:
-            if port not in taken and _is_free(port):
-                return port
-        raise RuntimeError(
-            f"no free board port between {PORT_RANGE.start} and {PORT_RANGE.stop - 1}"
-        )
-
-    def board_port(self, pr: Pr) -> int:
-        path = self._port_file(pr)
-        try:
-            return int(path.read_text().strip())
-        except (OSError, ValueError):
-            pass
-        port = self._pick_port()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(str(port))
-        return port
-
-    def ports_in_use(self) -> tuple[int, int]:
-        return sum(not _is_free(port) for port in PORT_RANGE), len(PORT_RANGE)
-
-    def forget(self, pr: Pr) -> bool:
-        return _remove(pr, self._port_file(pr), _flag_file(self._board_dir, pr))

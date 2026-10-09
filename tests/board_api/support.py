@@ -1,7 +1,10 @@
 import functools
 import http.client
-from collections.abc import Callable, Collection
+import socket
+import threading
+from collections.abc import Callable, Collection, Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,11 +13,13 @@ from typing import Any, TypedDict, Unpack
 import anyio
 import anyio.to_thread
 import httpx2
+import uvicorn
 from fastapi.testclient import TestClient
+from starlette.types import ASGIApp
 
 from github_orchestrator.agent_runs import History
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api import BoardApi, Hub, ManagerPanel
+from github_orchestrator.board_api import ManagerPanel
 from github_orchestrator.board_api.fake import (
     FakeDashboards,
     FakeHoldings,
@@ -47,7 +52,7 @@ from github_orchestrator.terminal_sessions.fake import (
     FakeTerminalSessions,
 )
 from github_orchestrator.watcher import Health, Releases, WatcherHealth
-from github_orchestrator.wiring import BoardApiWiring, HubWiring, ServerAppWiring, wire
+from github_orchestrator.wiring import Part, ServerAppWiring, wire
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -64,6 +69,7 @@ from tests.conversation.support import (
     world,
 )
 from tests.thread_records.support import disk_thread_records
+from tests.waiting import until
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -76,6 +82,12 @@ HUB_PORT = 8720
 STREAM_CHECK_SECONDS = 0.05
 WORKERS_WAIT_SECONDS = 2
 UNBUILT = Path("/nonexistent/board-app")
+BOARD_PATH = "/pr/acme/widgets/54"
+THE_ROOT = f"http://127.0.0.1:{PORT}"
+
+
+def page_of(pr: Pr) -> str:
+    return f"/pr/{pr.repo}/{pr.number}"
 SERVED_APP = REPO_ROOT / "src" / "github_orchestrator" / "board_api" / "static" / "app"
 
 MOMENT = "2026-08-28T10:00:00Z"
@@ -97,49 +109,81 @@ def fake_threads(github: FakeGitHub | None = None,
                                clock=clock, **config)
 
 
-class InProcess:
-    def __init__(self) -> None:
-        self.app: Any = None
-        self.port = PORT
-
-    def __call__(self, port: int) -> "InProcess":
-        self.port = port or PORT
-        return self
-
-    def serve(self, app: Any) -> None:
-        self.app = app
-
-    def close(self) -> None:
-        self.app = None
-
-
 class Serving(TypedDict, total=False):
     check_presence: bool
     app_root: Path
     font_dir: str | None
     manager: ManagerPanel | None
-    listening: Any
     heartbeat_seconds: float
     sessions: TerminalSessions | None
     first_names_only: bool
     clock: Callable[[], datetime]
+    port: int
+    pr: Pr
+
+
+@dataclass
+class OneTerminal:
+    sessions: TerminalSessions
+
+    def of(self, pr: Pr) -> TerminalSessions:
+        return self.sessions
+
+    def everywhere(self) -> list[TerminalSessions]:
+        return [self.sessions]
+
+
+@dataclass
+class OnePanel:
+    panel: ManagerPanel
+
+    def of(self, pr: Pr) -> ManagerPanel:
+        return self.panel
+
+
+def board_app(conversation_managers: ConversationManagerFactory, working_copies: WorkingCopies,
+              **serving: Unpack[Serving]) -> ASGIApp:
+    server: ServerApp = wire(
+        fake_provider(Told, holding(serving.get("pr", THE_PR))),
+        *_hub_parts(),
+        fake_provider(ConversationManagerFactory, conversation_managers),
+        fake_provider(WorkingCopies, working_copies),
+        fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
+        fake_provider(ManagerPanels, OnePanel(serving.get("manager") or FakeManagerPanel())),
+        clocks_of(serving.get("clock", at(MOMENT))),
+        ServerAppWiring(app_root=serving.get("app_root", UNBUILT), font_dir=serving.get("font_dir"),
+                        watching=(Repo("acme", "widgets"),), version="0.1.0",
+                        check_presence=serving.get("check_presence", False),
+                        first_names_only=serving.get("first_names_only", False),
+                        heartbeat_seconds=serving.get("heartbeat_seconds", 15.0),
+                        check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
+    return server.app(serving.get("port", PORT), SERVER_PID)
+
+
+@contextmanager
+def on_loopback(app_at: Callable[[int], ASGIApp]) -> Iterator[int]:
+    listening = socket.socket()
+    listening.bind(("127.0.0.1", 0))
+    listening.listen()
+    port = int(listening.getsockname()[1])
+    server = uvicorn.Server(uvicorn.Config(app_at(port), log_config=None, access_log=False,
+                                           lifespan="off", timeout_graceful_shutdown=1))
+    serving = threading.Thread(target=server.run, kwargs={"sockets": [listening]}, daemon=True)
+    serving.start()
+    try:
+        assert until(lambda: server.started)
+        yield port
+    finally:
+        server.should_exit = True
+        serving.join(timeout=5)
+        listening.close()
 
 
 def served_board(conversation_managers: ConversationManagerFactory, working_copies: WorkingCopies,
-                 **serving: Unpack[Serving]) -> tuple[BoardApi, Any]:
-    listening = serving.get("listening") or InProcess()
-    board_api: BoardApi = wire(
-        fake_provider(ConversationManagerFactory, conversation_managers),
-        fake_provider(WorkingCopies, working_copies),
-        fake_provider(TerminalSessions, serving.get("sessions") or FakeTerminalSessions()),
-        clocks_of(serving.get("clock", at(MOMENT))),
-        BoardApiWiring(listening, app_root=serving.get("app_root", UNBUILT),
-                       font_dir=serving.get("font_dir"),
-                       check_presence=serving.get("check_presence", False), hub_port=HUB_PORT,
-                       heartbeat_seconds=serving.get("heartbeat_seconds", 15.0),
-                       check_seconds=STREAM_CHECK_SECONDS,
-                       first_names_only=serving.get("first_names_only", False))).get(BoardApi)
-    return board_api, listening
+                 **serving: Unpack[Serving]) -> TestClient:
+    return TestClient(board_app(conversation_managers, working_copies, **serving),
+                      base_url=f"http://127.0.0.1:{serving.get('port', PORT)}"
+                               f"{page_of(serving.get('pr', THE_PR))}")
 
 
 @dataclass
@@ -162,15 +206,13 @@ class Words:
         return self.problem
 
 
-def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | None = None,
-           clock: Callable[[], datetime] = at(MOMENT),
-           open_streams: int = 200, ledger: History | None = None,
-           pulse: WatcherHealth | None = None, config_file: Words = Words(None),
-           watching: Collection[Repo] = (Repo("acme", "widgets"),),
-           setup: SetupDesk | None = None, releases: Any = None,
-           tour: TourMarker | None = None, told: Told | None = None) -> Hub:
-    hub: Hub = wire(
-        fake_provider(Told, told or FakeTold()),
+def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None = None,
+               pulse: WatcherHealth | None = None, config_file: Words = Words(None),
+               setup: SetupDesk | None = None, releases: Any = None,
+               tour: TourMarker | None = None,
+               holdings: Holdings | None = None) -> list[Part]:
+    return [
+        fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),
         fake_provider(Dashboards, dashboards or FakeDashboards()),
         fake_provider(SetupDesk, setup or FakeSetupDesk()),
@@ -178,11 +220,25 @@ def hub_on(listen: Any, app_root: Path = UNBUILT, *, dashboards: Dashboards | No
         fake_provider(History, ledger or FakeAgentRuns(FakePrProcesses())),
         fake_provider(WatcherHealth, pulse or Pulse(POLLED)),
         fake_provider(ConfigFile, config_file),
+    ]
+
+
+def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(MOMENT),
+               watching: Collection[Repo] = (Repo("acme", "widgets"),),
+               told: Told | None = None, **wall: Any) -> TestClient:
+    fake = fake_threads()
+    server: ServerApp = wire(
+        fake_provider(Told, told or FakeTold()),
+        *_hub_parts(**wall),
+        fake_provider(ConversationManagerFactory, fake),
+        fake_provider(WorkingCopies, fake.working_copies),
+        fake_provider(Terminals, FakeTerminals()),
+        fake_provider(ManagerPanels, OnePanel(FakeManagerPanel())),
         clocks_of(clock),
-        HubWiring(listen, app_root=app_root, font_dir=None, watching=watching,
-                  version="0.1.0",
-                  open_streams=open_streams)).get(Hub)
-    return hub
+        ServerAppWiring(app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
+                        check_presence=False, first_names_only=False,
+                        check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
+    return TestClient(server.app(HUB_PORT, SERVER_PID), base_url=f"http://127.0.0.1:{HUB_PORT}")
 
 
 class NoReleaseYet:
@@ -195,18 +251,12 @@ def holding(*prs: Pr, managers: dict[Pr, str] | None = None) -> FakeTold:
                                               for pr in prs}))
 
 
-def served_hub(app_root: Path = UNBUILT, **wall: Any) -> tuple[Hub, InProcess]:
-    listening = InProcess()
-    return hub_on(listening, app_root, **wall), listening
-
-
 @dataclass
 class Served:
     threads: Any
     client: TestClient
     stage: Stage
     manager: ManagerPanel
-    api: BoardApi
 
 
 def _placed(working_copies: FakeWorkingCopies) -> None:
@@ -217,12 +267,9 @@ def _placed(working_copies: FakeWorkingCopies) -> None:
 
 def _served(conversation_managers: ConversationManagerFactory, stage: Stage, threads: Any,
             **serving: Unpack[Serving]) -> Served:
-    port = PORT if serving.get("listening") is None else 0
-    board_api, listened = served_board(conversation_managers, stage.working_copies, **serving)
-    manager = serving.get("manager") or FakeManagerPanel()
-    url = board_api.start(THE_PR, port=port, manager=manager)
-    return Served(threads=threads, client=TestClient(listened.app, base_url=url), stage=stage,
-                  manager=manager, api=board_api)
+    manager = serving["manager"] = serving.get("manager") or FakeManagerPanel()
+    client = served_board(conversation_managers, stage.working_copies, **serving)
+    return Served(threads=threads, client=client, stage=stage, manager=manager)
 
 
 def board_on(fake: FakeConversationManagerFactory, *, is_author: bool = True, title: str | None = TITLE,
@@ -273,6 +320,11 @@ def board_for(pr_title: str | None = TITLE, base_branch: str | None = "main",
                     **serving)
 
 
+def followed(web: TestClient, answer: httpx2.Response) -> httpx2.Response:
+    return web.get(f"{web.base_url.scheme}://{web.base_url.netloc.decode()}"
+                   f"{answer.headers['Location']}")
+
+
 def client_of(board: Served) -> TestClient:
     return board.client
 
@@ -319,9 +371,7 @@ def board_contract() -> Any:
 
 @functools.cache
 def hub_contract() -> Any:
-    hub, listening = served_hub()
-    url = hub.start(HUB_PORT, FakeHoldings())
-    return TestClient(listening.app, base_url=url).get("/api/openapi.json").json()
+    return served_hub().get("/api/openapi.json").json()
 
 
 def _block_after(css: str, selector: str) -> str:
@@ -396,14 +446,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
     terminals = FakeTerminals()
     server: ServerApp = wire(
         fake_provider(Told, told),
-        fake_provider(Holdings, holdings),
-        fake_provider(Releases, NoReleaseYet()),
-        fake_provider(Dashboards, FakeDashboards()),
-        fake_provider(SetupDesk, FakeSetupDesk()),
-        fake_provider(TourMarker, FakeTour()),
-        fake_provider(History, FakeAgentRuns(FakePrProcesses())),
-        fake_provider(WatcherHealth, Pulse(POLLED)),
-        fake_provider(ConfigFile, Words(None)),
+        *_hub_parts(holdings=holdings),
         fake_provider(ConversationManagerFactory, fake),
         fake_provider(WorkingCopies, fake.working_copies),
         fake_provider(Terminals, terminals),

@@ -80,7 +80,7 @@ class ErrorCode(StrEnum):
     which is never moved from the page.
 
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
-    traceback is in the PR manager's log under the board process's pid.
+    traceback is in the server's log under the pid of the worker that answered.
     """
 
     NOT_FOUND = "not-found"
@@ -287,7 +287,7 @@ class Health(BaseModel):
 
 
 class ClientError(BaseModel):
-    """An error the board's own page hit, for the agent manager's log."""
+    """An error the board's own page hit, for the server's log."""
 
     where: Annotated[str, StringConstraints(min_length=1, max_length=200)] = Field(
         description="Which part of the page was working when it failed.")
@@ -1601,7 +1601,7 @@ class FieldError(ErrorDetail):
     field: str = Field(
         description="Which part of the setup write this refuses: `gh_account`, "
                     "`repos[<index>].repo`, `repos[<index>].local_path`, or `config` for the "
-                    "file as a whole, such as a `hub_port` among the boards' ports.")
+                    "file as a whole, such as a `hub_port` that is no port.")
 
 
 class FieldErrors(BaseModel):

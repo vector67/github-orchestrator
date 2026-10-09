@@ -11,7 +11,7 @@ from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import polled_on_disk, seen
-from tests.disk_layout import board_port_file, dismissed_file
+from tests.disk_layout import dismissed_file
 from tests.pr_event_queue.support import (
     ci_failed,
     closed,
@@ -34,7 +34,6 @@ GRACE = 3600
 RUN_IDLE = 300
 NOW = 100_000.0
 RETRY_SECONDS = 20 * 60
-BOARD_PORTS = range(8730, 8830)
 
 
 @pytest.fixture
@@ -102,20 +101,10 @@ def test_a_new_pr_gets_a_window_in_its_worktree(settings, world, copies, notific
     assert world.manager_path(THE_PR) == str(worktree)
 
 
-def test_a_new_window_is_given_its_board_port(settings, world, copies, notifications, tmp_path):
-    checked_out(copies, tmp_path / EXPECTED, EXPECTED)
-
-    _cycle(settings, world, copies, notifications)
-
-    port = board_port_file(settings.board_dir, THE_PR).read_text().strip()
-    assert int(port) in BOARD_PORTS
-
-
 def test_a_pr_whose_worktree_cannot_be_cut_gets_no_window(settings, world, copies, notifications):
     _cycle(settings, world, copies, notifications)
 
     assert world.manager(THE_PR) is ManagerPane.NO_WINDOW
-    assert not board_port_file(settings.board_dir, THE_PR).exists()
 
 
 def test_a_pr_dismissed_until_its_next_event_stays_closed_while_nothing_waits(

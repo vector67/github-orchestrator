@@ -1,6 +1,5 @@
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.conversation import (
     ConversationState,
     Denied,
@@ -20,15 +19,15 @@ from tests.conversation.support import (
     repo_at,
     said,
 )
-from tests.disk_layout import board_port_file
 from tests.pr_manager.support import (
     PR,
     REPO,
+    ServerPanel,
     manager_over,
     run_manager,
     seed_state,
 )
-from tests.settings.support import disk_boards, disk_holds
+from tests.settings.support import disk_holds
 
 THE_PR = a_pr(PR, REPO)
 
@@ -37,56 +36,6 @@ KEY = "PRRT_1"
 
 def _carry_on(board):
     return lambda: board.panel.carry_on()
-
-
-def test_the_board_starts_on_the_port_the_window_was_given(settings, tmp_path):
-    port = board_port_file(settings.board_dir, THE_PR)
-    port.parent.mkdir(parents=True, exist_ok=True)
-    port.write_text("8742")
-    board = FakeBoardApi()
-    run_manager(settings, is_author=True, worktree=tmp_path, board=board)
-    assert board.starts[0]["port"] == 8742
-
-
-def test_a_restarted_manager_brings_the_board_back_as_it_was(tmp_path):
-    settings = fake_settings(tmp_path)
-    disk_boards(settings.data_dir).want_board(THE_PR, True)
-    board_port_file(settings.board_dir, THE_PR).write_text("8742")
-    seed_state(settings, title="Fix the frobnicator", base_branch="main", is_author=False)
-    board = FakeBoardApi()
-    manager = run_manager(settings, worktree=tmp_path, is_author=False, board=board)
-    assert len(board.starts) == 1
-    assert board.starts[0]["port"] == 8742
-    assert manager.desktop.opened == []
-    assert board.running is True
-
-
-def test_a_restarted_manager_leaves_the_board_down_until_a_poll_says_whose_pr_this_is(
-        settings, tmp_path):
-    disk_boards(settings.data_dir).want_board(THE_PR, True)
-    board = FakeBoardApi()
-    run_manager(settings, None, None, worktree=tmp_path, board=board)
-    assert board.starts == []
-
-
-def test_a_board_that_will_not_bind_does_not_take_the_manager_down(settings, tmp_path):
-    disk_boards(settings.data_dir).want_board(THE_PR, True)
-    seed_state(settings, title="Fix the frobnicator")
-    board = FakeBoardApi(taken={disk_boards(settings.data_dir).board_port(THE_PR)})
-    reached = []
-    run_manager(settings, lambda: reached.append(True), is_author=True, worktree=tmp_path,
-                board=board)
-    assert reached == [True]
-    assert board.running is False
-
-
-def test_freezing_on_the_wrong_branch_leaves_the_board_running(settings, tmp_path):
-    seed_state(settings, branch="expected-branch")
-    working_copies = FakeWorkingCopies()
-    working_copies.add_worktree(tmp_path, "other-branch")
-    board = FakeBoardApi(running=True)
-    run_manager(settings, is_author=True, worktree=tmp_path, board=board, working_copies=working_copies)
-    assert board.stops == 0
 
 
 def _proposed(tmp_path, pr_processes=None):
@@ -102,7 +51,7 @@ def _proposed(tmp_path, pr_processes=None):
 
 def _manager_over(settings, fake, *script, worktree, board=None):
     return manager_over(settings, *script, is_author=True, worktree=worktree,
-                        board=board or FakeBoardApi(),
+                        board=board or ServerPanel(),
                         pr_processes=fake.agent_runs.pr_processes, agent_runs=fake.agent_runs,
                         github=fake.github, working_copies=fake.working_copies,
                         conversation_managers=fake)
@@ -142,7 +91,7 @@ def test_the_drain_knows_a_claude_run_is_live(settings, tmp_path):
     fake = _proposed(tmp_path)
     fake.agent_runs.script(Outcome(finishes=False))
 
-    board = FakeBoardApi()
+    board = ServerPanel()
     _manager_over(settings, fake, _carry_on(board), lambda: _approved(fake), worktree=tmp_path,
                   board=board).run()
 

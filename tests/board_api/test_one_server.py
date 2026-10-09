@@ -39,6 +39,16 @@ def test_a_held_prs_board_is_built_on_its_first_request_and_kept():
     assert (built_before, server.panels.asked) == ([], [THE_PR])
 
 
+def test_two_held_prs_with_one_number_are_reached_each_under_its_own_repo():
+    gadgets = a_pr(54, "acme/gadgets")
+    server = one_server(THE_PR, gadgets)
+
+    server.client.get(f"{BOARD}/api/dashboard")
+    server.client.get("/pr/acme/gadgets/54/api/dashboard")
+
+    assert server.panels.asked == [THE_PR, gadgets]
+
+
 def test_a_manager_command_points_at_the_dashboard_under_the_prs_prefix():
     web = one_server(THE_PR).client
 

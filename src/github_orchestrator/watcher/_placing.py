@@ -5,7 +5,7 @@ from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_event_queue import Queues, Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
-from github_orchestrator.settings import Boards, Dismissals
+from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.working_copies import WorkingCopies
 
@@ -22,7 +22,7 @@ class WindowPlacement:
     def __init__(self, config: WatcherConfig, clock: UtcClock, *,
                  worklist: Worklist, queues: Queues, pr_processes: PrProcesses,
                  working_copies: WorkingCopies, change_detection: ChangeDetection,
-                 dismissals: Dismissals, boards: Boards) -> None:
+                 dismissals: Dismissals) -> None:
         self._repos = config.repos
         self._clock = clock
         self._worklist = worklist
@@ -31,7 +31,6 @@ class WindowPlacement:
         self._working_copies = working_copies
         self._change_detection = change_detection
         self._dismissals = dismissals
-        self._boards = boards
 
     def ensure(self, pr: Pr, *, fetch: bool = False) -> None:
         if self._dismissals.is_hidden(pr, events_waiting=bool(self._worklist.waiting(pr).count)):
@@ -71,7 +70,6 @@ class WindowPlacement:
                                                others=self._other_windows(pr))
         if sharing is not None and not sharing.hands_off:
             return
-        self._boards.board_port(pr)
         self._pr_processes.open(pr, worktree)
 
     def revive_pending(self) -> None:

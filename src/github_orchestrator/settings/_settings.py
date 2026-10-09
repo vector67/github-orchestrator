@@ -67,10 +67,6 @@ class Settings:
         return self.data_dir / "thread-worktrees"
 
     @property
-    def board_dir(self) -> Path:
-        return self.data_dir / "board"
-
-    @property
     def archive_dir(self) -> Path:
         return self.data_dir / "archive"
 

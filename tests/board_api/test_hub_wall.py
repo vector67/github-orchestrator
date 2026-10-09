@@ -1,7 +1,5 @@
 from dataclasses import replace
 
-from fastapi.testclient import TestClient
-
 from github_orchestrator.board_api.fake import (
     IDLE,
     FakeDashboards,
@@ -9,7 +7,6 @@ from github_orchestrator.board_api.fake import (
     FakeManagerPanel,
 )
 from tests.board_api.support import (
-    HUB_PORT,
     client_for,
     holding,
     served_hub,
@@ -34,10 +31,8 @@ def snapshot(pr, **fields):
 
 
 def wall(holdings=None, dashboards=None, *prs, managers=None):
-    hub, listening = served_hub(dashboards=dashboards or FakeDashboards(),
-                                told=holding(*prs, managers=managers))
-    url = hub.start(HUB_PORT, holdings or FakeHoldings())
-    return TestClient(listening.app, base_url=url), hub
+    return served_hub(dashboards=dashboards or FakeDashboards(),
+                      told=holding(*prs, managers=managers), holdings=holdings or FakeHoldings())
 
 
 def rows(web):
@@ -50,17 +45,17 @@ def served_as_a_board_serves(dashboard):
 
 def test_each_row_carries_the_dashboard_built_from_what_is_on_disk():
     rebuilt = snapshot(SECOND, on_hold=True)
-    web, _ = wall(FakeHoldings(), FakeDashboards({SECOND: rebuilt}), SECOND,
+    web = wall(FakeHoldings(), FakeDashboards({SECOND: rebuilt}), SECOND,
                   managers={SECOND: "exited"})
 
     assert rows(web) == [{
-        "repo": REPO, "number": 54, "manager": "exited", "board_url": None,
+        "repo": REPO, "number": 54, "manager": "exited", "board_url": "/pr/acme/widgets/54",
         "dashboard": served_as_a_board_serves(rebuilt),
     }]
 
 
-def test_a_row_whose_manager_wants_a_board_links_to_it():
-    web, _ = wall(FakeHoldings(ports={SECOND: 8757}), FakeDashboards(), SECOND)
+def test_every_row_links_to_its_pull_requests_page_on_the_hub():
+    web = wall(FakeHoldings(), FakeDashboards(), SECOND, managers={SECOND: "no-window"})
 
     [row] = rows(web)
 
@@ -68,13 +63,13 @@ def test_a_row_whose_manager_wants_a_board_links_to_it():
 
 
 def test_the_wall_lists_its_groups_in_order_with_their_names():
-    web, _ = wall()
+    web = wall()
 
     assert web.get("/api/pull-requests").json()["groups"] == GROUPS
 
 
 def test_the_wall_is_not_modified_while_nothing_changes():
-    web, _ = wall(FakeHoldings(), FakeDashboards(), SECOND)
+    web = wall(FakeHoldings(), FakeDashboards(), SECOND)
     first = web.get("/api/pull-requests")
 
     again = web.get("/api/pull-requests", headers={"If-None-Match": first.headers["ETag"]})

@@ -1,9 +1,11 @@
+import subprocess
+
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
 from github_orchestrator.board_api.interface import ManagerPanels
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.wiring import ManagerPanelsProvider, dashboard_source_wiring
+from github_orchestrator.wiring import ManagerPanelsWiring, dashboard_source_wiring
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -27,7 +29,7 @@ def panels_over(settings, windows):
         fake_github(github),
         fake_provider(WorkingCopies, FakeWorkingCopies(github)),
         dashboard_source_wiring(settings),
-        ManagerPanelsProvider)
+        ManagerPanelsWiring(subprocess.run))
     panels: ManagerPanels = container.get(ManagerPanels)
     return panels
 

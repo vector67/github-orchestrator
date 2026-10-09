@@ -3,9 +3,8 @@ from fastapi.testclient import TestClient
 
 from github_orchestrator import preview
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, HeldVerdicts
-from github_orchestrator.board_api import BoardApi
 from github_orchestrator.board_api.fake import IDLE
-from github_orchestrator.board_api.interface import Dashboards
+from github_orchestrator.board_api.interface import Dashboards, ServerApp
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -16,7 +15,7 @@ from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
 from github_orchestrator.wiring import dashboard_source_wiring, preview_container
 from github_orchestrator.working_copies import WorkingCopies
-from tests.board_api.support import PORT, served_board
+from tests.board_api.support import served_board
 from tests.conftest import (
     build_container,
     fake_agent_runs_roles,
@@ -53,16 +52,15 @@ def client_for_preview(tmp_path, reviewer):
     outside = preview.Outside(here.github, here.agent_runs, here.pr_processes,
                               here.change_detection)
     preview.seed(here.conversation_managers, outside, "octocat", repo, reviewer)
-    board_api, listening = served_board(here.conversation_managers, here.working_copies)
     dashboards = build_container(
         settings, fake_github(here.github), fake_provider(PrProcesses, here.pr_processes),
         fake_agent_runs_roles(here.agent_runs), fake_provider(WorkingCopies, here.working_copies),
         fake_provider(ChangeDetection, here.change_detection),
         fake_provider(ConversationManagerFactory, here.conversation_managers),
         dashboard_source_wiring(settings)).get(Dashboards)
-    url = board_api.start(preview.PR, port=PORT, manager=preview.manager_panel(
-        preview.running(dashboards.dashboard(preview.PR))))
-    return TestClient(listening.app, base_url=url)
+    return served_board(here.conversation_managers, here.working_copies, pr=preview.PR,
+                        manager=preview.manager_panel(
+                            preview.running(dashboards.dashboard(preview.PR))))
 
 
 RUN_KINDS = {"first", "rebase", "rework", "retry", "start-session"}
@@ -142,16 +140,20 @@ def test_every_seeded_thread_answers_every_read_its_card_makes(fixture,
             assert answer.status_code == 200, (key, read)
 
 
-def test_the_previews_own_container_builds_a_board_and_its_threads(tmp_path):
+def test_the_previews_own_container_serves_its_pr_on_the_server_app(tmp_path):
     pr_processes = FakePrProcesses()
     container, _ = preview_container({}, tmp_path, data_dir=tmp_path, repo=preview.PR.repo,
                                      local_path=preview.worktree_in(tmp_path),
                                      github=FakeGitHub(), desktop=FakeDesktop(),
                                      agent_runs=FakeAgentRuns(pr_processes),
-                                     pr_processes=pr_processes, agents_enabled=True)
+                                     pr_processes=pr_processes, agents_enabled=True,
+                                     hub=preview.preview_hub(preview.PreviewPanels()))
+    web = TestClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
 
-    assert container.get(BoardApi) is not None
-    assert container.get(ConversationManagerFactory) is not None
+    [row] = web.get("/api/pull-requests").json()["pull_requests"]
+
+    assert row["board_url"] == f"/pr/{preview.PR.repo}/{preview.PR.number}"
+    assert web.get(f"{row['board_url']}/api/health").json()["serves"] == "board"
 
 
 def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_every_launcher(tmp_path):

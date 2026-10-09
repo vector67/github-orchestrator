@@ -2,8 +2,7 @@ import fcntl
 import subprocess
 import threading
 
-from github_orchestrator.board_api.fake import FakeBoardApi
-from tests.pr_manager.support import run_manager
+from tests.pr_manager.support import ServerPanel, managed_in, run_manager
 
 
 class RecordingRun:
@@ -31,14 +30,15 @@ def git_repo(tmp_path):
 
 
 def _ran(settings, worktree, *keys, run=None):
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers = []
 
     def ask():
         answers.extend(board.panel.run_git(each) for each in keys)
 
     modules = {} if run is None else {"run": run}
-    run_manager(settings, ask, worktree=worktree, is_author=True, board=board, **modules)
+    run_manager(settings, ask, worktree=worktree, is_author=True, board=board,
+                pr_processes=managed_in(worktree), **modules)
     return answers
 
 
@@ -94,7 +94,7 @@ def test_a_captured_command_that_times_out_says_so(settings, tmp_path):
 
 def test_a_command_waits_while_another_process_runs_git_in_the_same_worktree(settings, tmp_path):
     worktree = tmp_path / "wt"
-    board = FakeBoardApi()
+    board = ServerPanel()
     started = threading.Event()
     seen = []
 
@@ -112,5 +112,6 @@ def test_a_command_waits_while_another_process_runs_git_in_the_same_worktree(set
         seen.append(started.is_set())
 
     run_manager(settings, ask_while_the_palette_is_busy, worktree=worktree, is_author=True,
+                pr_processes=managed_in(worktree),
                 board=board, run=run)
     assert seen == [False, True]

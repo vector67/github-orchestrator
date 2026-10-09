@@ -330,8 +330,8 @@ def test_the_hub_listens_on_a_port_below_the_boards_by_default(tmp_path):
     assert load_config(write_config(tmp_path)).hub_port == 8720
 
 
-@pytest.mark.parametrize("port", [8730, 8829, 0, 65536])
-def test_a_hub_port_a_board_could_take_or_no_port_at_all_is_refused(tmp_path, port):
+@pytest.mark.parametrize("port", [0, 65536])
+def test_a_hub_port_that_is_no_port_at_all_is_refused(tmp_path, port):
     toml_file = write_config(tmp_path, f"hub_port = {port}\n")
     with pytest.raises(ConfigProblem) as e:
         load_config(toml_file)
@@ -511,9 +511,9 @@ def test_a_write_that_would_not_read_back_is_refused_and_writes_nothing(tmp_path
     config_file = read_from(toml_file).get(ConfigFile)
 
     refused = config_file.check_write(
-        {"hub_port": 8731}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
+        {"hub_port": 70000}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
 
-    assert refused is not None and "hub_port" in refused and "8730-8829" in refused
+    assert refused is not None and "hub_port" in refused and "1 to 65535" in refused
     assert toml_file.read_text() == before
 
 

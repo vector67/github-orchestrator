@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from tests.board_api.support import client_for, css_variables
+from tests.board_api.support import THE_ROOT, client_for, css_variables
 from tests.contrast import WCAG_AA_NORMAL_TEXT, contrast_ratio
 
 APP_CSS = (Path(__file__).parents[2] / "frontend" / "app" / "styles" / "app.css")
@@ -70,7 +70,7 @@ THEMES = ("light", "dark")
 
 
 def test_every_pair_the_board_sets_type_in_clears_aa():
-    bound = css_variables(client_for().get("/palette.css").text)
+    bound = css_variables(client_for().get(f"{THE_ROOT}/palette.css").text)
 
     under_aa = [
         f"{what} is {ratio:.2f}:1 in {theme}"

@@ -677,13 +677,6 @@ def test_ready_notifications_are_ok(machine, run_cli):
     assert _finding(ran.out, "desktop notifications are set up").level == "ok"
 
 
-def test_the_board_ports_in_use_are_reported(machine, run_cli):
-    ran = run_cli("doctor")
-
-    assert re.fullmatch(r"\d+ of 100 board ports are in use",
-                        _finding(ran.out, "board ports").reason)
-
-
 def test_each_instance_is_checked_under_its_own_name(machine, run_cli):
     work = machine.another_instance("work")
 
@@ -693,7 +686,7 @@ def test_each_instance_is_checked_under_its_own_name(machine, run_cli):
     assert "Default instance\n" in default
     assert f"config {work.config_path} parses" in named
     assert f"config {machine.config_path} parses" in default
-    assert "board ports" not in named
+    assert "desktop notifications" not in named
 
 
 INSTALLER = ("curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/"

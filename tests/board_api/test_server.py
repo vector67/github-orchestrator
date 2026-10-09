@@ -1,14 +1,17 @@
 import json
 import socket
-import time
 import urllib.parse
 import urllib.request
 
 import pytest
 
-from github_orchestrator.board_api.fake import FakeManagerPanel
-from tests.board_api.support import THE_PR, fake_threads
-from tests.board_api.test_contract import served
+from tests.board_api.support import (
+    BOARD_PATH,
+    THE_PR,
+    board_app,
+    fake_threads,
+    on_loopback,
+)
 from tests.board_api.test_page import built_app
 from tests.conversation.support import hear, on_github, said
 
@@ -23,26 +26,25 @@ def app_root(tmp_path):
 @pytest.fixture
 def started(app_root):
     fake = fake_threads()
-    board_api = served(fake, fake.working_copies, app_root)
+    with on_loopback(lambda port: board_app(fake, fake.working_copies, app_root=app_root,
+                                            port=port)) as port:
+        def start(is_author=True, base_branch="main"):
+            fake.watch(THE_PR, is_author=is_author, title="T", base_branch=base_branch)
+            return f"http://127.0.0.1:{port}"
 
-    def start(is_author=True, base_branch="main"):
-        fake.watch(THE_PR, is_author=is_author, title="T", base_branch=base_branch)
-        return board_api.start(THE_PR, port=0, manager=FakeManagerPanel())
+        def queued():
+            url = start()
+            on_github(fake.github, "PRRT_2314159", said(2314159, "please rename this helper"),
+                      pr=THE_PR)
+            hear(fake.of(THE_PR))
+            return url
 
-    def queued():
-        url = start()
-        on_github(fake.github, "PRRT_2314159", said(2314159, "please rename this helper"),
-                  pr=THE_PR)
-        hear(fake.of(THE_PR))
-        return url
-
-    start.board_api = board_api
-    start.queued = queued
-    yield start
-    board_api.stop()
+        start.queued = queued
+        yield start
 
 
-def _raw(url, headers, body=b"", request_line="POST /api/conversations/PRRT_2314159/operations:stop",
+def _raw(url, headers, body=b"",
+         request_line=f"POST {BOARD_PATH}/api/conversations/PRRT_2314159/operations:stop",
          whole=False):
     host, _, port = urllib.parse.urlsplit(url).netloc.partition(":")
     request = (f"{request_line} HTTP/1.1\r\n"
@@ -82,15 +84,6 @@ def test_a_post_that_names_no_length_is_refused(started):
 
 def test_a_post_whose_length_is_not_a_number_is_refused(started):
     assert b"400" in _raw_post(started.queued(), [("Content-Length", "lots")])
-
-
-def test_stop_returns_promptly(started):
-    started()
-    begun = time.monotonic()
-
-    started.board_api.stop()
-
-    assert time.monotonic() - begun < 0.25
 
 
 def test_the_app_route_climbs_out_of_no_directory(tmp_path, started):

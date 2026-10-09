@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field, replace
-from typing import Any
 
 from github_orchestrator.board_api.interface import (
     NOTHING_HELD,
@@ -7,8 +6,6 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     FieldRefusal,
     Held,
-    Holdings,
-    ManagerPanel,
     ManagerStanding,
     RepoChoice,
     SetupOptions,
@@ -103,36 +100,6 @@ class FakeManagerPanel:
 
 
 @dataclass
-class FakeBoardApi:
-    url: str = "http://127.0.0.1:4321"
-    taken: set[int] = field(default_factory=set)
-    running: bool = False
-    starts: list[dict[str, Any]] = field(default_factory=list)
-    stops: int = 0
-    panel: ManagerPanel | None = None
-
-    def start(self, pr: Pr, *, port: int, manager: ManagerPanel) -> str:
-        if self.running:
-            return self.url
-        if port in self.taken:
-            raise OSError(f"port {port} is already in use")
-        self.starts.append({"pr": pr, "port": port})
-        self.panel = manager
-        self.running = True
-        return self.url
-
-    def stop(self) -> bool:
-        if not self.running:
-            return False
-        self.running = False
-        self.stops += 1
-        return True
-
-    def is_running(self) -> bool:
-        return self.running
-
-
-@dataclass
 class FakeDashboards:
     prs: dict[Pr, Dashboard] = field(default_factory=dict)
 
@@ -154,13 +121,9 @@ class FakeTold:
 
 @dataclass
 class FakeHoldings:
-    ports: dict[Pr, int] = field(default_factory=dict)
     frozen: set[Pr] = field(default_factory=set)
     on_hold: set[Pr] = field(default_factory=set)
     released: set[Pr] = field(default_factory=set)
-
-    def board_port(self, pr: Pr) -> int | None:
-        return self.ports.get(pr)
 
     def hold(self, pr: Pr) -> None:
         self.on_hold.add(pr)
@@ -172,29 +135,6 @@ class FakeHoldings:
         if pr not in self.frozen:
             return False
         self.released.add(pr)
-        return True
-
-
-@dataclass
-class FakeHub:
-    taken: set[int] = field(default_factory=set)
-    port: int | None = None
-    holdings: Holdings | None = None
-    starts: int = 0
-
-    def start(self, port: int, holdings: Holdings) -> str:
-        if self.port is None:
-            if port in self.taken:
-                raise OSError(f"port {port} is already in use")
-            self.port = port or 8720
-            self.holdings = holdings
-            self.starts += 1
-        return f"http://127.0.0.1:{self.port}"
-
-    def stop(self) -> bool:
-        if self.port is None:
-            return False
-        self.port = None
         return True
 
 

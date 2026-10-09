@@ -1,16 +1,14 @@
 import logging
 
 from github_orchestrator.agent_runs import PrWork, Run
-from github_orchestrator.board_api import BoardApi
 from github_orchestrator.change_detection import ChangeDetection, ReviewRequested
 from github_orchestrator.domain import Monotonic
 from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
-from github_orchestrator.pr_manager._panel import FilePanel
 from github_orchestrator.pr_manager._refusals import Conditions, refusal
-from github_orchestrator.settings import Boards, Dismissals, Holds
+from github_orchestrator.settings import Dismissals, Holds
 
 log = logging.getLogger(__name__)
 
@@ -18,19 +16,15 @@ NOTICE_SECONDS = 4.0
 
 
 class ManagerCommands:
-    def __init__(self, config: ManagerConfig, board: BoardApi, panel: FilePanel,
-                 monotonic: Monotonic, *, holds: Holds, dismissals: Dismissals,
-                 boards: Boards, worklist: Worklist,
+    def __init__(self, config: ManagerConfig, monotonic: Monotonic, *, holds: Holds, dismissals: Dismissals,
+                 worklist: Worklist,
                  pull_requests: PullRequests, pr_work: PrWork,
                  change_detection: ChangeDetection, intake: Intake,
                  command_files: CommandFiles) -> None:
         self._config = config
-        self._board = board
-        self._panel = panel
         self._monotonic = monotonic
         self._holds = holds
         self._dismissals = dismissals
-        self._boards = boards
         self._worklist = worklist
         self._pull_requests = pull_requests
         self._pr_work = pr_work
@@ -80,15 +74,6 @@ class ManagerCommands:
             self._notice = None
             return None
         return self._notice
-
-    def start_board(self) -> str | None:
-        pr = self._config.pr
-        facts = self._change_detection.facts(pr)
-        if facts is None or facts.is_author is None:
-            return None
-        url = self._board.start(pr, port=self._boards.board_port(pr), manager=self._panel)
-        self._boards.want_board(pr, True)
-        return url
 
     def _act(self, command: Command) -> None:
         match command:

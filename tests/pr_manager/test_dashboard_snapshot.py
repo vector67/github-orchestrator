@@ -1,11 +1,10 @@
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.pr_manager.polls import POLLED, REVIEWED, polled_pr, seed
-from tests.pr_manager.support import run_manager, seed_state
+from tests.pr_manager.support import ServerPanel, run_manager, seed_state
 
 
 def _drawn(settings, tmp_path, *script, is_author=True, **modules):
-    board = modules.pop("board", None) or FakeBoardApi()
+    board = modules.pop("board", None) or ServerPanel()
     run_manager(settings, *(script or (None,)), worktree=tmp_path, is_author=is_author,
                 board=board, **modules)
     return board.panel.dashboard()

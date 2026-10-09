@@ -4,10 +4,10 @@ import subprocess
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi, FakeManagerPanel
+from github_orchestrator.board_api.fake import FakeManagerPanel
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
-from tests.pr_manager.support import PR, REPO, run_manager
+from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager
 
 THE_PR = a_pr(PR, REPO)
 
@@ -72,7 +72,7 @@ class ManagerSide:
         return subprocess.CompletedProcess(argv, exit_code, stdout, stderr)
 
     def settle(self, *commands):
-        board = FakeBoardApi()
+        board = ServerPanel()
 
         def ask():
             for command in commands:

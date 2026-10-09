@@ -13,6 +13,7 @@ from tests.board_api.support import (
     board_on,
     client_of,
     fake_threads,
+    followed,
     heard_on,
     proposed,
 )
@@ -86,7 +87,7 @@ def test_a_session_runs_while_its_pane_is_open_and_settles_when_claude_reports()
     with board.threads.editing(KEY) as editable:
         editable.ready(sha=commit_fix(board.stage, KEY, {"f": "session\n"}, pr=THE_PR),
                        summary="renamed it in the session")
-    settled = client.get(asked.headers["Location"]).json()
+    settled = followed(client, asked).json()
     [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
 
     assert (session["id"], session["kind"], session["state"]) == (

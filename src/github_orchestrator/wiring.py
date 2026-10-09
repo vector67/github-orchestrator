@@ -6,7 +6,7 @@ import sys
 import time
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from importlib import metadata
 from pathlib import Path
 from threading import Lock, Thread
@@ -30,9 +30,8 @@ from github_orchestrator.agent_runs._runs import (
 )
 from github_orchestrator.agent_runs._runs import Popen as AgentPopen
 from github_orchestrator.agent_runs._summaries import Run as GistRun
-from github_orchestrator.board_api import BoardApi, Hub
 from github_orchestrator.board_api._app_files import APP_ROOT
-from github_orchestrator.board_api._loopback import Listen, Listening, loopback_url
+from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
@@ -117,7 +116,7 @@ from github_orchestrator.pr_manager._dashboard_source import ConfigOf, Dashboard
 from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
-from github_orchestrator.pr_manager._panel import FilePanel, FilePanels
+from github_orchestrator.pr_manager._panel import FilePanels
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes._background import BackgroundPrProcesses
@@ -127,7 +126,6 @@ from github_orchestrator.pr_processes._places import Places
 from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._process import ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
-    Boards,
     ConfigFile,
     Dismissals,
     Holds,
@@ -154,7 +152,6 @@ from github_orchestrator.settings._logging import (
 )
 from github_orchestrator.settings._settings import Settings
 from github_orchestrator.settings._switches import (
-    FlagFileBoards,
     FlagFileDismissals,
     FlagFileHolds,
 )
@@ -163,7 +160,7 @@ from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
-from github_orchestrator.watcher import Releases, Watcher, WatcherHealth
+from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._cycle import PollingWatcher, Say, said_to_the_log
 from github_orchestrator.watcher._health import HealthFiles
@@ -309,7 +306,6 @@ class LogsProvider(Provider):
 class SwitchesWiring(Wiring):
     on_hold_dir: Path
     dismissed_dir: Path
-    board_dir: Path
     data_dir: Path
 
 
@@ -325,10 +321,6 @@ class SwitchesProvider(Provider):
     @provide
     def dismissals(self, wiring: SwitchesWiring) -> Dismissals:
         return FlagFileDismissals(wiring.dismissed_dir)
-
-    @provide
-    def boards(self, wiring: SwitchesWiring) -> Boards:
-        return FlagFileBoards(wiring.board_dir)
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:
@@ -843,86 +835,26 @@ class BrowserFrontProvider(Provider):
     front = provide(BrowserFront, provides=Front)
 
 
-def listen_on_loopback(port: int) -> Listening:
-    from github_orchestrator.board_api._server import listen_on_loopback as listen
-    return listen(port)
-
-
 HEARTBEAT_SECONDS = 15.0
 STREAM_CHECK_SECONDS = 0.5
 
 
 @dataclass(frozen=True)
-class BoardApiWiring(Wiring):
-    listen: Listen
-    _: KW_ONLY
-    app_root: Path
-    font_dir: str | None
-    check_presence: bool
-    hub_port: int
-    first_names_only: bool
-    heartbeat_seconds: float = HEARTBEAT_SECONDS
-    check_seconds: float = STREAM_CHECK_SECONDS
+class ManagerPanelsWiring(Wiring):
+    run: GitRun
 
 
-@wires(BoardApiWiring)
-class BoardApiProvider(Provider):
-    scope = Scope.APP
-    wiring = from_context(provides=BoardApiWiring, scope=Scope.APP)
-
-    @provide
-    def board_api(self, wiring: BoardApiWiring, conversation_managers: ConversationManagerFactory,
-                  working_copies: WorkingCopies, terminals: TerminalSessions,
-                  clock: UtcClock) -> BoardApi:
-        from github_orchestrator.board_api._server import ServedBoardApi
-        return ServedBoardApi(wiring.listen, conversation_managers, working_copies, terminals,
-                              app_root=wiring.app_root, font_dir=wiring.font_dir,
-                              check_presence=wiring.check_presence, hub_port=wiring.hub_port,
-                              heartbeat_seconds=wiring.heartbeat_seconds,
-                              check_seconds=wiring.check_seconds,
-                              first_names_only=wiring.first_names_only, clock=clock)
-
-
-OPEN_STREAMS = 200
-
-
-@dataclass(frozen=True)
-class HubWiring(Wiring):
-    listen: Listen
-    _: KW_ONLY
-    app_root: Path
-    font_dir: str | None
-    watching: Collection[Repo]
-    version: str | None
-    open_streams: int = OPEN_STREAMS
-
-
-@wires(HubWiring)
-class HubProvider(Provider):
-    scope = Scope.APP
-    wiring = from_context(provides=HubWiring, scope=Scope.APP)
-
-    @provide
-    def hub(self, wiring: HubWiring, clock: UtcClock, dashboards: Dashboards,
-            history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
-            setup: SetupDesk, releases: Releases, tour: TourMarker, told: Told) -> Hub:
-        from github_orchestrator.board_api._hub import ServedHub
-        return ServedHub(wiring.listen, app_root=wiring.app_root, font_dir=wiring.font_dir,
-                         dashboards=dashboards, ledger=history, pulse=watcher_health,
-                         clock=clock, watching=wiring.watching, version=wiring.version,
-                         problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         told=told, open_streams=wiring.open_streams)
-
-
+@wires(ManagerPanelsWiring)
 class ManagerPanelsProvider(Provider):
     scope = Scope.APP
+    wiring = from_context(provides=ManagerPanelsWiring, scope=Scope.APP)
 
     @provide
-    def panels(self, config_of: ConfigOf, monotonic: Monotonic, status_files: StatusFiles,
-               command_files: CommandFiles, dashboards: DashboardSource,
-               agent_changes: AgentChanges, history: History, pr_processes: PrProcesses,
-               pr_work: PrWork) -> ManagerPanels:
-        return FilePanels(config_of, subprocess.run, monotonic, status_files=status_files,
+    def panels(self, wiring: ManagerPanelsWiring, config_of: ConfigOf, monotonic: Monotonic,
+               status_files: StatusFiles, command_files: CommandFiles,
+               dashboards: DashboardSource, agent_changes: AgentChanges, history: History,
+               pr_processes: PrProcesses, pr_work: PrWork) -> ManagerPanels:
+        return FilePanels(config_of, wiring.run, monotonic, status_files=status_files,
                           command_files=command_files, dashboards=dashboards,
                           agent_changes=agent_changes, history=history,
                           pr_processes=pr_processes, pr_work=pr_work)
@@ -1008,29 +940,17 @@ def server_config(settings: Settings) -> ServerConfig:
 @dataclass(frozen=True)
 class PrManagerWiring(Wiring):
     config: ManagerConfig
-    run: GitRun
 
     def context(self) -> Mapping[object, object]:
-        return {ManagerConfig: self.config, GitRun: self.run}
+        return {ManagerConfig: self.config}
 
 
 @wires(PrManagerWiring)
 class PrManagerProvider(Provider):
     scope = Scope.APP
     config = from_context(provides=ManagerConfig, scope=Scope.APP)
-    run = from_context(provides=GitRun, scope=Scope.APP)
     commands = provide(ManagerCommands)
 
-    @provide
-    def panel(self, config: ManagerConfig, run: GitRun, monotonic: Monotonic,
-              status_files: StatusFiles, command_files: CommandFiles, dashboards: DashboardSource,
-              agent_changes: AgentChanges, history: History, pr_processes: PrProcesses,
-              pr_work: PrWork) -> FilePanel:
-        return FilePanel(config.pr, lambda: config.worktree, agents_enabled=config.agents_enabled,
-                         run=run, monotonic=monotonic, status_files=status_files,
-                         command_files=command_files, dashboards=dashboards,
-                         agent_changes=agent_changes, history=history, pr_processes=pr_processes,
-                         pr_work=pr_work)
     events = provide(EventCarryOut)
     pr_manager = provide(ManagerLoop, provides=PrManager)
 
@@ -1267,7 +1187,7 @@ def logs_wiring(settings: Settings) -> LogsWiring:
 
 
 def switches_wiring(settings: Settings) -> SwitchesWiring:
-    return SwitchesWiring(settings.on_hold_dir, settings.dismissed_dir, settings.board_dir,
+    return SwitchesWiring(settings.on_hold_dir, settings.dismissed_dir,
                           settings.data_dir)
 
 
@@ -1368,10 +1288,60 @@ class PreviewFakesProvider(Provider):
         return wiring.pr_processes
 
 
+@dataclass(frozen=True)
+class PreviewHub(Wiring):
+    told: Told
+    holdings: Holdings
+    setup: SetupDesk
+    tour: TourMarker
+    panels: ManagerPanels
+
+
+class PolledInThePreview:
+    def health(self) -> Health:
+        return Health(alive=True, since_last_poll=timedelta(seconds=20), last_error=None,
+                      fix=None, polls_every=timedelta(minutes=1))
+
+
+@wires(PreviewHub)
+class PreviewHubProvider(Provider):
+    scope = Scope.APP
+    hub = from_context(provides=PreviewHub, scope=Scope.APP)
+
+    @provide
+    def told(self, hub: PreviewHub) -> Told:
+        return hub.told
+
+    @provide
+    def holdings(self, hub: PreviewHub) -> Holdings:
+        return hub.holdings
+
+    @provide
+    def setup(self, hub: PreviewHub) -> SetupDesk:
+        return hub.setup
+
+    @provide
+    def tour(self, hub: PreviewHub) -> TourMarker:
+        return hub.tour
+
+    @provide
+    def watcher_health(self) -> WatcherHealth:
+        return PolledInThePreview()
+
+    @provide
+    def panels(self, hub: PreviewHub) -> ManagerPanels:
+        return hub.panels
+
+    @provide
+    def releases(self, settings: Settings, clock: UtcClock) -> Releases:
+        return GitHubReleases(http_get, settings.newest_release, clock, enabled=False,
+                              token=None)
+
+
 def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                       repo: Repo, local_path: Path, github: PreviewGitHub, desktop: Desktop,
                       agent_runs: PreviewAgentRuns, pr_processes: PrProcesses,
-                      agents_enabled: bool) -> tuple[dishka.Container, str]:
+                      agents_enabled: bool, hub: PreviewHub) -> tuple[dishka.Container, str]:
     loaded = load_settings(env, home)
     settings = replace(loaded, data_dir=data_dir,
                        config=replace(loaded.config, agents_enabled=agents_enabled,
@@ -1390,11 +1360,11 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         conversation_wiring(settings),
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
-        BoardApiWiring(listen_on_loopback, app_root=APP_ROOT,
-                       font_dir=board_font_dir(settings), check_presence=False,
-                       hub_port=settings.config.hub_port,
-                       first_names_only=settings.config.first_names_only),
+        ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
+                        watching=(repo,), version=installed_version(), check_presence=False,
+                        first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        hub,
     ), settings.config.gh_account
 
 
@@ -1415,7 +1385,7 @@ def make_container(env: Mapping[str, str], home: Path,
                    logs_dir: Path | None = None) -> dishka.Container:
     settings = load_settings(env, home)
     managers = [] if managed is None else [
-        PrManagerWiring(manager_config(settings, managed), subprocess.run),
+        PrManagerWiring(manager_config(settings, managed)),
     ]
     return wire(
         SYSTEM_CLOCKS,
@@ -1451,18 +1421,12 @@ def make_container(env: Mapping[str, str], home: Path,
                                  env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"))),
                   subprocess.run, input, which, hub_health),
         OtherInstancesWiring(env, home, lambda environment: make_container(environment, home)),
-        BoardApiWiring(listen_on_loopback, app_root=APP_ROOT,
-                       font_dir=board_font_dir(settings), check_presence=check_presence,
-                       hub_port=settings.config.hub_port,
-                       first_names_only=settings.config.first_names_only),
-        HubWiring(listen_on_loopback, app_root=APP_ROOT, font_dir=board_font_dir(settings),
-                  watching=tuple(settings.repos), version=installed_version()),
         ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
                         watching=tuple(settings.repos), version=installed_version(),
                         check_presence=check_presence,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
-        ManagerPanelsProvider,
+        ManagerPanelsWiring(subprocess.run),
         ServerWiring(server_config(settings), python=sys.executable,
                      environment=settings.child_environment(), spawn=detached),
         *managers,

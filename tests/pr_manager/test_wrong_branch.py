@@ -1,14 +1,19 @@
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.pr_event_queue.support import ci_failed, pending_of
 from tests.pr_manager.scripted_terminal import NOW, ManualClock
-from tests.pr_manager.support import PR, REPO, manager_over, run_manager, seed_state
-from tests.settings.support import disk_boards
+from tests.pr_manager.support import (
+    PR,
+    REPO,
+    ServerPanel,
+    manager_over,
+    run_manager,
+    seed_state,
+)
 
 THE_PR = a_pr(PR, REPO)
 
@@ -45,15 +50,6 @@ def test_a_wrong_branch_writes_the_flag(settings, tmp_path):
     verdict = _trouble(working_copies)
     assert (verdict.here, verdict.expected, verdict.worktree) == (HERE, EXPECTED, str(tmp_path))
     assert (verdict.hands_off, verdict.seconds_left, verdict.run_working) == (False, 3600, False)
-
-
-def test_a_board_is_not_served_while_frozen(settings, tmp_path):
-    seed_state(settings, branch=EXPECTED)
-    board = FakeBoardApi()
-    run_manager(settings, None, worktree=tmp_path, is_author=True, board=board,
-                working_copies=_checked_out(tmp_path, HERE))
-    assert board.starts == []
-    assert not disk_boards(settings.data_dir).board_wanted(THE_PR)
 
 
 def test_a_wrong_branch_leaves_the_queue_alone(settings, tmp_path):
@@ -210,7 +206,7 @@ def test_the_right_branch_drops_a_release_request(settings, tmp_path):
 def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, tmp_path):
     seed_state(settings, branch=EXPECTED)
     ran = []
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers = []
     working_copies = _checked_out(tmp_path, EXPECTED)
     run_manager(settings, _check_out(working_copies, tmp_path, HERE),
@@ -226,7 +222,7 @@ def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, t
 
 def test_a_terminal_from_the_board_while_frozen_is_refused_and_opens_nothing(settings, tmp_path):
     seed_state(settings, branch=EXPECTED)
-    board = FakeBoardApi()
+    board = ServerPanel()
     windows = FakePrProcesses()
     answers = []
     working_copies = _checked_out(tmp_path, EXPECTED)

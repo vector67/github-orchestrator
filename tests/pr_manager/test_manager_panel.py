@@ -10,14 +10,13 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import Dismissal
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.pr_manager.scripted_terminal import ScriptEnded
-from tests.pr_manager.support import PR, REPO, run_manager, seed_state
+from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager, seed_state
 from tests.settings.support import disk_dismissals, disk_holds
 
 THE_PR = a_pr(PR, REPO)
@@ -31,7 +30,7 @@ def _runs(*outcomes):
 def test_the_panel_answers_the_status_the_manager_last_drew(settings, tmp_path):
     seed_state(settings, title="t", url=URL)
     disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     run_manager(settings, None, worktree=tmp_path, is_author=True, board=board)
 
@@ -45,7 +44,7 @@ def test_the_panel_names_the_agent_this_instance_runs(settings, tmp_path):
     seed_state(settings, title="t", url=URL)
     codex = dataclasses.replace(settings, config=dataclasses.replace(settings.config,
                                                                       agent=Agent.CODEX))
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     run_manager(codex, None, worktree=tmp_path, is_author=True, board=board)
 
@@ -56,7 +55,7 @@ def test_the_panel_answers_the_last_run_on_the_ledger(settings, tmp_path):
     seed_state(settings, title="t", url=URL)
     runs = _runs(Outcome(exit_code=-9))
     runs.fix_check("/wt", THE_PR, "ci-failed", check="tests", summary=None, push=True).pump()
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     run_manager(settings, None, worktree=tmp_path, is_author=True, board=board,
                 agent_runs=runs)
@@ -68,7 +67,7 @@ def test_the_panel_answers_the_last_run_on_the_ledger(settings, tmp_path):
 
 def test_the_panel_answers_the_run_going(settings, tmp_path):
     seed_state(settings, title="t", url=URL)
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     run_manager(settings, lambda: board.panel.carry_on(), None, worktree=tmp_path,
                 is_author=True, board=board, agent_runs=_runs(Outcome(finishes=False)))
@@ -85,7 +84,7 @@ def _without_claude(settings):
 
 
 def _on_the_browser_front(settings, tmp_path, *script, **modules):
-    board = modules.pop("board", None) or FakeBoardApi()
+    board = modules.pop("board", None) or ServerPanel()
     run_manager(settings, *script, worktree=tmp_path, is_author=True, board=board,
                 **modules)
     return board
@@ -128,7 +127,7 @@ def test_a_board_read_counts_the_commits_made_since_the_last_tick(settings, tmp_
 
 
 def test_hold_from_the_board_holds_the_pr_and_the_next_status_says_so(settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.set_on_hold(True),
               lambda: seen.append(board.panel.dashboard().on_hold), board=board)
@@ -137,7 +136,7 @@ def test_hold_from_the_board_holds_the_pr_and_the_next_status_says_so(settings, 
 
 
 def test_a_command_from_the_boards_thread_waits_for_the_loop_to_carry_it_out(settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
 
     def from_the_boards_thread():
@@ -154,7 +153,7 @@ def test_a_command_from_the_boards_thread_waits_for_the_loop_to_carry_it_out(set
 
 def test_a_hold_given_while_the_manager_is_down_is_carried_out_when_it_next_runs(
         settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     def hold_then_stop():
         board.panel.set_on_hold(True)
@@ -169,14 +168,14 @@ def test_a_hold_given_while_the_manager_is_down_is_carried_out_when_it_next_runs
 
 def test_hold_from_the_board_leaves_a_held_pr_on_hold(settings, tmp_path):
     disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
-    board = FakeBoardApi()
+    board = ServerPanel()
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.set_on_hold(True), None, board=board)
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is True
 
 
 def test_resume_from_the_board_resumes_a_pr_on_hold(settings, tmp_path):
     disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.set_on_hold(False),
               lambda: seen.append(board.panel.dashboard().on_hold), board=board)
@@ -186,7 +185,7 @@ def test_resume_from_the_board_resumes_a_pr_on_hold(settings, tmp_path):
 
 def test_carry_on_from_the_board_starts_claude_continue_as_r_does(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.carry_on(),
               lambda: seen.append(board.panel.dashboard().working_on), board=board,
@@ -199,7 +198,7 @@ def test_carry_on_from_the_board_starts_claude_continue_as_r_does(settings, tmp_
 def test_carry_on_from_the_board_is_refused_with_rs_notice_when_claude_is_disabled(
         settings, tmp_path):
     runs = _runs()
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers = []
     _on_the_browser_front(_without_claude(settings), tmp_path,
                           lambda: answers.append(board.panel.carry_on()), None, board=board,
@@ -211,7 +210,7 @@ def test_carry_on_from_the_board_is_refused_with_rs_notice_when_claude_is_disabl
 def _reviewer_of(settings, tmp_path, *script, **modules):
     seed_state(settings, title="Fix bug", url=URL, author="alice", branch="PROJ-123-fix",
                is_author=False)
-    board = modules.pop("board", None) or FakeBoardApi()
+    board = modules.pop("board", None) or ServerPanel()
     run_manager(settings, *script, worktree=tmp_path, is_author=False, board=board,
                 **modules)
     return board
@@ -220,7 +219,7 @@ def _reviewer_of(settings, tmp_path, *script, **modules):
 def test_start_review_from_the_board_starts_the_review_agent_a_review_request_would(
         settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
     _reviewer_of(settings, tmp_path, lambda: board.panel.start_review(), None,
                  lambda: seen.append(board.panel.dashboard().working_on), board=board,
@@ -232,7 +231,7 @@ def test_start_review_from_the_board_starts_the_review_agent_a_review_request_wo
 
 def test_start_review_from_the_board_is_refused_while_claude_is_running(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers = []
     _reviewer_of(settings, tmp_path, lambda: board.panel.carry_on(),
                  lambda: answers.append(board.panel.start_review()), None, board=board,
@@ -244,7 +243,7 @@ def test_start_review_from_the_board_is_refused_while_claude_is_running(settings
 def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manager_drains_it(
         settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers, seen = [], []
 
     def both_at_once():
@@ -260,7 +259,7 @@ def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manage
 
 def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings, tmp_path):
     runs = _runs()
-    board = FakeBoardApi()
+    board = ServerPanel()
     answers = []
     _reviewer_of(_without_claude(settings), tmp_path,
                  lambda: answers.append(board.panel.start_review()), None, board=board,
@@ -275,7 +274,7 @@ def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings
 ])
 def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_path, forever,
                                                                   dismissal):
-    board = FakeBoardApi()
+    board = ServerPanel()
     reached = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.dismiss(forever),
               lambda: reached.append(True), board=board)
@@ -286,14 +285,14 @@ def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_p
 def test_close_from_the_board_closes_the_pr_on_github(settings, tmp_path):
     github = FakeGitHub()
     github.add_pr(THE_PR)
-    board = FakeBoardApi()
+    board = ServerPanel()
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.close(), None, board=board,
                           github=github)
     assert github.is_closed(THE_PR) is True
 
 
 def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.close(),
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
@@ -306,7 +305,7 @@ def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_br
     seed_state(settings, branch="expected-branch")
     working_copies = FakeWorkingCopies()
     working_copies.add_worktree(tmp_path, "expected-branch")
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     answers = []
     run_manager(settings, lambda: working_copies.add_worktree(tmp_path, "other-branch"),
@@ -317,7 +316,7 @@ def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_br
 
 
 def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
 
     def dismiss_then_hold():
         board.panel.dismiss(False)

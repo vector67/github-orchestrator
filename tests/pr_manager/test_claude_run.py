@@ -3,10 +3,9 @@ import dataclasses
 import pytest
 
 from github_orchestrator.agent_runs.fake import CarryingOn, FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
-from tests.pr_manager.support import manager_over, run_manager, seed_state
+from tests.pr_manager.support import ServerPanel, manager_over, run_manager, seed_state
 
 TERMINATED = -15
 
@@ -26,7 +25,7 @@ def _carry_on(board):
 
 def test_the_script_running_out_terminates_a_live_run(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     run_manager(settings, _carry_on(board), worktree=tmp_path, is_author=True, board=board,
                 agent_runs=runs)
     assert runs.last_run(a_pr(1, "o/n")).exit_code == TERMINATED
@@ -34,7 +33,7 @@ def test_the_script_running_out_terminates_a_live_run(settings, tmp_path):
 
 def test_sigterm_terminates_a_live_run(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     manager = manager_over(settings, _carry_on(board), SystemExit("terminated by signal 15"),
                            worktree=tmp_path, is_author=True, board=board, agent_runs=runs)
     with pytest.raises(SystemExit):
@@ -83,7 +82,7 @@ def test_a_manager_leaves_an_interrupted_run_alone_while_claude_is_disabled(sett
 
 def test_sigterm_leaves_the_live_run_for_the_next_manager_to_carry_on(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     manager = manager_over(settings, _carry_on(board), SystemExit("terminated by signal 15"),
                            worktree=tmp_path, is_author=True, board=board, agent_runs=runs)
     with pytest.raises(SystemExit):
@@ -93,7 +92,7 @@ def test_sigterm_leaves_the_live_run_for_the_next_manager_to_carry_on(settings, 
 
 def test_dismissing_ends_the_live_run_for_good(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     run_manager(settings, _carry_on(board), lambda: board.panel.dismiss(False),
                 worktree=tmp_path, is_author=True, board=board, agent_runs=runs)
     assert runs.restarted().interrupted(a_pr(1, "o/n")) is None

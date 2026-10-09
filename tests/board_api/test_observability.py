@@ -2,7 +2,12 @@ import logging
 import os
 
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
-from tests.board_api.support import asked_with_every_worker_taken, client_for
+from tests.board_api.support import (
+    BOARD_PATH,
+    PORT,
+    asked_with_every_worker_taken,
+    client_for,
+)
 
 SHA = "a" * 40
 
@@ -29,7 +34,7 @@ def test_an_unexpected_failure_is_answered_in_the_contracts_shape():
     assert answer.status_code == 500
     [error] = answer.json()["errors"]
     assert (error["status"], error["code"]) == (500, "server-error")
-    assert "the PR manager's log" in error["detail"]
+    assert "the server's log" in error["detail"]
 
 
 def test_an_unexpected_failure_leaves_its_traceback_and_request_in_the_log(caplog):
@@ -37,7 +42,7 @@ def test_an_unexpected_failure_leaves_its_traceback_and_request_in_the_log(caplo
         _read_a_file()
 
     [failure] = [r for r in caplog.records if r.exc_info]
-    assert "GET /api/files" in failure.getMessage()
+    assert f"GET {BOARD_PATH}/api/files" in failure.getMessage()
     assert "git exploded" in caplog.text
 
 
@@ -45,7 +50,7 @@ def test_a_refused_request_is_logged_with_its_answer(caplog):
     with caplog.at_level(logging.INFO):
         client_for().get("/api/proposals")
 
-    assert "GET /api/proposals -> 404" in _boards_own(caplog)
+    assert f"GET {BOARD_PATH}/api/proposals -> 404" in _boards_own(caplog)
 
 
 def test_an_ordinary_request_stays_out_of_the_log_at_info(caplog):
@@ -60,7 +65,7 @@ def test_health_names_the_process_serving_the_board():
 
     assert answer.status_code == 200
     assert answer.json() == {"status": "ok", "pid": os.getpid(), "serves": "board",
-                             "hub_url": "http://127.0.0.1:8720", "font_problem": None, "state": None,
+                             "hub_url": f"http://127.0.0.1:{PORT}", "font_problem": None, "state": None,
                              "version": None, "watcher": None, "newest_release": None}
 
 

@@ -13,7 +13,7 @@ from github_orchestrator.watcher import Watcher
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import polled_on_disk, seen
-from tests.settings.support import disk_boards, disk_dismissals, disk_holds
+from tests.settings.support import disk_dismissals, disk_holds
 from tests.watcher.support import (
     ServerSpawns,
     health,
@@ -176,17 +176,6 @@ def _holdings(settings, **modules):
     return watcher_container(settings, **modules).get(Holdings)
 
 
-def test_a_board_has_a_port_to_link_to_only_while_it_is_wanted(settings):
-    holdings = _holdings(settings)
-    boards = disk_boards(settings.data_dir)
-
-    unwanted = holdings.board_port(MINE)
-    boards.want_board(MINE, True)
-
-    assert unwanted is None
-    assert holdings.board_port(MINE) == boards.board_port(MINE)
-
-
 def test_hold_and_resume_from_the_hub_set_the_hold_switch_every_process_reads(settings):
     holdings = _holdings(settings)
 
@@ -217,10 +206,6 @@ def holdings(request, settings):
 
 def test_a_pr_that_is_not_frozen_has_nothing_to_release(holdings):
     assert holdings.release(NOBODYS) is False
-
-
-def test_a_pr_nothing_has_described_has_no_board_to_reach(holdings):
-    assert holdings.board_port(NOBODYS) is None
 
 
 def test_a_hub_waiting_in_setup_drops_the_error_of_cycles_it_no_longer_runs(settings):

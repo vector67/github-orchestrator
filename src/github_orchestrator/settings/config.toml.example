@@ -43,9 +43,8 @@ gh_account = "your-github-username"
 
 # The port of the hub on 127.0.0.1: the wall of every PR the watcher holds,
 # each PR's page with its board, dashboard and terminal, and the Runs page. The
-# resident watcher serves it; `github-orchestrator status`
-# prints its address. It must sit outside 8730-8829, where the boards' ports
-# come from.
+# server serves it, and the watcher keeps the server running;
+# `github-orchestrator status` prints its address.
 # hub_port = 8720
 
 # How many worker processes the server answers the hub's port with. Each

@@ -6,7 +6,7 @@ from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
-from github_orchestrator.settings import Boards, Dismissals, Holds
+from github_orchestrator.settings import Dismissals, Holds
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.working_copies import WorkingCopies
@@ -27,7 +27,7 @@ class PrTeardown:
     def __init__(self, config: WatcherConfig, *, worklist: Worklist, pr_processes: PrProcesses,
                  working_copies: WorkingCopies, thread_records: ThreadRecords,
                  change_detection: ChangeDetection, holds: Holds,
-                 dismissals: Dismissals, boards: Boards) -> None:
+                 dismissals: Dismissals) -> None:
         self._repos = config.repos
         self._worklist = worklist
         self._pr_processes = pr_processes
@@ -36,7 +36,6 @@ class PrTeardown:
         self._change_detection = change_detection
         self._holds = holds
         self._dismissals = dismissals
-        self._boards = boards
 
     def reap(self, pr: Pr, reason: Reason) -> bool:
         if self._manager_still_running(pr, reason):
@@ -52,7 +51,7 @@ class PrTeardown:
             ok = False
         if not self._worklist.forget(pr):
             ok = False
-        forgotten = [self._holds.forget(pr), self._boards.forget(pr)]
+        forgotten = [self._holds.forget(pr)]
         if reason is Reason.CLOSED:
             forgotten.append(self._dismissals.forget(pr))
         if not all(forgotten):

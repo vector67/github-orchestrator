@@ -1,6 +1,6 @@
 from github_orchestrator.github.fake import FakeGitHub, GhError
 from github_orchestrator.notifications.fake import FakeNotifications
-from tests.board_api.support import ACCOUNT, THE_PR, client_of
+from tests.board_api.support import ACCOUNT, THE_PR, client_of, followed
 from tests.board_api.test_contract_drafts import (
     _board,
     _drafted,
@@ -53,7 +53,7 @@ def test_six_enrolled_drafts_go_out_as_one_review_and_each_is_posted():
                                                       "a few things")
     assert sorted(draft.comment.body for draft in drafts) == [
         f"finding {number}" for number in range(6)]
-    review = client.get(answer.headers["Location"]).json()
+    review = followed(client, answer).json()
     assert (review["state"], review["verdict"], review["body"],
             review["posted_review"]) == ("applied", "REQUEST_CHANGES",
                                          "a few things", review_id)
@@ -121,7 +121,7 @@ def test_a_review_github_rejects_leaves_every_draft_enrolled_with_its_words():
 
     for key in keys:
         assert _read(client, key)["state"] == "enrolled"
-    review = client.get(answer.headers["Location"]).json()
+    review = followed(client, answer).json()
     assert (review["state"], review["reason_code"]) == (
         "refused", "github-rejected")
     assert "Can not approve your own pull request" in review["reason"]

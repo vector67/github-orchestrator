@@ -209,8 +209,6 @@ class ManagerLoop:
         if wrong is not None:
             return
 
-        self._front.serve_board()
-
         if self._interrupted:
             self._interrupted = False
             log.info("loop %s: the agent was interrupted by the last manager's end", pr)

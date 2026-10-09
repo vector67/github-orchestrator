@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from tests.board_api.support import client_for, css_variables
+from tests.board_api.support import THE_ROOT, client_for, css_variables
 from tests.contrast import contrast_ratio, relative_luminance
 
 HEX = re.compile(r"^#[0-9a-f]{6}$")
@@ -25,7 +25,7 @@ def over(primary: str, alpha: float, ground: str) -> str:
 
 @pytest.fixture
 def bound():
-    return css_variables(client_for().get("/palette.css").text)
+    return css_variables(client_for().get(f"{THE_ROOT}/palette.css").text)
 
 
 def _neutral(colour):

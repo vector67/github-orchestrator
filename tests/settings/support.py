@@ -5,14 +5,12 @@ import dishka
 
 from github_orchestrator.domain import Pr
 from github_orchestrator.settings import (
-    Boards,
     ConfigFile,
     Dismissals,
     Holds,
 )
 from github_orchestrator.settings.fake import (
     ConfigRow,
-    FakeBoards,
     FakeDismissals,
     FakeHolds,
     OrchestratorConfig,
@@ -39,30 +37,24 @@ def disk_dismissals(data_dir: Path) -> Dismissals:
     return dismissals
 
 
-def disk_boards(data_dir: Path) -> Boards:
-    boards: Boards = _switches(data_dir).get(Boards)
-    return boards
-
-
 @dataclass
 class AllSwitches:
     holds: Holds
     dismissals: Dismissals
-    boards: Boards
 
     def forget(self, pr: Pr) -> bool:
-        return all([role.forget(pr) for role in (self.holds, self.dismissals, self.boards)])
+        return all([role.forget(pr) for role in (self.holds, self.dismissals)])
 
     def flagged(self) -> set[Pr]:
         return self.holds.on_hold_prs() | self.dismissals.dismissed_prs()
 
 
 def disk_switches(data_dir: Path) -> AllSwitches:
-    return AllSwitches(disk_holds(data_dir), disk_dismissals(data_dir), disk_boards(data_dir))
+    return AllSwitches(disk_holds(data_dir), disk_dismissals(data_dir))
 
 
 def fake_switches() -> AllSwitches:
-    return AllSwitches(FakeHolds(), FakeDismissals(), FakeBoards())
+    return AllSwitches(FakeHolds(), FakeDismissals())
 
 
 def read_from(config_path: Path, data_dir: Path | None = None) -> dishka.Container:

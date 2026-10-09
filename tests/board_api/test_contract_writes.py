@@ -10,6 +10,7 @@ from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.board_api.support import (
     ACCOUNT,
+    BOARD_PATH,
     BODY,
     COMMENT_ID,
     KEY,
@@ -20,6 +21,7 @@ from tests.board_api.support import (
     client_of,
     disk_board,
     fake_threads,
+    followed,
     heard_on,
     proposed,
     running,
@@ -102,14 +104,14 @@ def test_stop_answers_the_operation_it_queued(at_work):
         "state": "pending", "reason": None, "reason_code": None,
         "requested_at": NOW, "settled_at": None, "stopped": f"{KEY}.1"}
     assert answer.headers["Location"] == (
-        f"/api/conversations/{KEY}/operations/{operation_id}")
+        f"{BOARD_PATH}/api/conversations/{KEY}/operations/{operation_id}")
 
 
 def test_the_operation_a_202_names_can_be_read_before_the_drain_takes_it(at_work):
     client = client_of(at_work)
     answer = asked(client, "stop")
 
-    read = client.get(answer.headers["Location"])
+    read = followed(client, answer)
 
     assert read.status_code == 200
     assert read.json() == answer.json()["operation"]
@@ -120,7 +122,7 @@ def test_the_drain_records_the_operation_under_the_id_the_202_gave(at_work):
     answer = asked(client, "stop")
 
     drained(at_work)
-    settled = client.get(answer.headers["Location"])
+    settled = followed(client, answer)
 
     assert settled.status_code == 200
     assert settled.json()["state"] == "applied"

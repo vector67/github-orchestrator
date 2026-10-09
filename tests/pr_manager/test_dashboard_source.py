@@ -1,15 +1,13 @@
 from datetime import datetime, timezone
 
 import pytest
-from fastapi.testclient import TestClient
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi, FakeHoldings
 from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
 from github_orchestrator.domain import AuthorKind
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
-from tests.board_api.support import HUB_PORT, holding, served_board, served_hub
+from tests.board_api.support import holding, served_board, served_hub
 from tests.conversation.support import (
     at,
     fake_conversation_managers,
@@ -29,7 +27,7 @@ from tests.pr_manager.polls import (
     seed,
 )
 from tests.pr_manager.scripted_terminal import ManualClock
-from tests.pr_manager.support import POLLED_AT, THE_PR, manager_over
+from tests.pr_manager.support import POLLED_AT, THE_PR, ServerPanel, manager_over
 from tests.settings.support import disk_dismissals, disk_holds
 
 
@@ -40,7 +38,7 @@ def _windows_at(worktree):
 
 
 def _both(settings, tmp_path, *events, is_author=True, **modules):
-    board = FakeBoardApi()
+    board = ServerPanel()
     modules.setdefault("pr_processes", _windows_at(tmp_path))
     manager = manager_over(settings, None, worktree=tmp_path, is_author=is_author,
                            board=board, **modules)
@@ -151,16 +149,15 @@ def test_the_dashboard_and_the_board_list_name_the_same_threads(settings, tmp_pa
     fake.thread_records.pr(THE_PR).save("json", "PRRT_bad", b"{not json")
     fake.working_copies.check_out(tmp_path, BRANCH)
 
-    board = FakeBoardApi()
+    board = ServerPanel()
     manager = manager_over(settings, None, worktree=tmp_path, is_author=True, board=board,
                            pr_processes=_windows_at(tmp_path),
                            conversation_managers=fake, agent_runs=fake.agent_runs,
                            github=fake.github, working_copies=fake.working_copies)
     manager.run()
     assert board.panel is not None
-    real, listening = served_board(fake, fake.working_copies, clock=at(LISTED_AT))
-    url = real.start(THE_PR, port=0, manager=board.panel)
-    web = TestClient(listening.app, base_url=url)
+    web = served_board(fake, fake.working_copies, clock=at(LISTED_AT), manager=board.panel,
+                       pr=THE_PR)
 
     drawn = web.get("/api/dashboard").json()
     listed = web.get("/api/conversations").json()
@@ -257,7 +254,7 @@ def _working(settings, tmp_path):
     clock = ManualClock()
     agent_runs = FakeAgentRuns(FakePrProcesses(), clock=clock.monotonic).script(
         Outcome(events=(WORKING,), finishes=False))
-    board = FakeBoardApi()
+    board = ServerPanel()
     manager = manager_over(settings, lambda: clock.advance(5), lambda: clock.advance(5),
                            worktree=tmp_path, clock=clock, agent_runs=agent_runs,
                            is_author=True, board=board)
@@ -304,14 +301,12 @@ def test_a_stopped_managers_dashboard_reads_gone_once_its_status_is_ten_seconds_
 def test_the_wall_and_an_open_board_give_the_same_dashboard(settings, tmp_path):
     seed(settings, POLLED)
     manager, board = _working(settings, tmp_path)
-    hub, on_the_hub = served_hub(dashboards=manager.container.get(Dashboards),
-                                 told=holding(THE_PR))
-    hub_url = hub.start(HUB_PORT, FakeHoldings())
-    served, on_the_board = served_board(manager.conversation_managers, manager.working_copies)
-    board_url = served.start(THE_PR, port=0, manager=board.panel)
+    on_the_hub = served_hub(dashboards=manager.container.get(Dashboards), told=holding(THE_PR))
+    on_the_board = served_board(manager.conversation_managers, manager.working_copies,
+                                manager=board.panel, pr=THE_PR)
 
-    wall = TestClient(on_the_hub.app, base_url=hub_url).get("/api/pull-requests").json()
-    opened = TestClient(on_the_board.app, base_url=board_url).get("/api/dashboard").json()
+    wall = on_the_hub.get("/api/pull-requests").json()
+    opened = on_the_board.get("/api/dashboard").json()
 
     assert [row["dashboard"] for row in wall["pull_requests"]] == [opened]
     assert (opened["standing"], opened["manager"]["working_on"]) == ("answering", "ci-failed")

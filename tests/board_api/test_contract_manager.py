@@ -5,7 +5,7 @@ import pytest
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import ManagerStanding
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
-from tests.board_api.support import board_contract, client_for
+from tests.board_api.support import BOARD_PATH, board_contract, client_for
 
 WORKING = replace(
     IDLE, working_on="new-comments", elapsed_seconds=75.0, silent_seconds=4.0,
@@ -190,7 +190,7 @@ def test_hold_is_accepted_and_handed_to_the_manager():
     answer = client_for(manager=panel).post("/api/manager:hold")
 
     assert answer.status_code == 202
-    assert answer.headers["Location"] == "/api/dashboard"
+    assert answer.headers["Location"] == f"{BOARD_PATH}/api/dashboard"
     assert panel.dashboard().on_hold is True
 
 

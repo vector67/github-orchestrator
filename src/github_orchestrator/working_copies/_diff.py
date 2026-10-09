@@ -55,7 +55,7 @@ def _run_git(worktree: str, *args: str) -> subprocess.CompletedProcess[str]:
     except (subprocess.TimeoutExpired, OSError) as exc:
         log.warning("git %s failed to run in %s: %s", args[0], worktree, exc)
         raise _GitUnavailable(
-            "git failed to run, check the PR manager's log for details") from exc
+            "git failed to run, check the server's log for details") from exc
 
 
 def _last_stderr_line(result: subprocess.CompletedProcess[str]) -> str:
@@ -81,7 +81,7 @@ def raw_diff(source: DiffSource, unified: int) -> tuple[str | None, str]:
         detail = _last_stderr_line(diff)
         log.warning("git diff %s..%s exited %d: %s",
                     source.left, source.right, diff.returncode, detail)
-        return None, "git diff failed, check the PR manager's log for details"
+        return None, "git diff failed, check the server's log for details"
     return diff.stdout, ""
 
 

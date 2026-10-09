@@ -127,7 +127,6 @@ def test_every_data_file_keeps_its_place_under_the_data_dir(tmp_path):
         "worktree_conflicts": settings.worktree_conflicts_dir,
         "threads": settings.threads_dir,
         "thread-worktrees": settings.thread_worktrees_dir,
-        "board": settings.board_dir,
         "runs.jsonl": settings.runs_log,
         "watcher.heartbeat": settings.watcher_heartbeat,
         "watcher.failures.json": settings.watcher_failures,
@@ -135,7 +134,7 @@ def test_every_data_file_keeps_its_place_under_the_data_dir(tmp_path):
     } == {name: tmp_path / name for name in (
         "state", "queues", "transcripts", "logs", "on_hold", "dismissed",
         "mismatched", "pr_managers", "worktree_conflicts", "threads",
-        "thread-worktrees", "board", "runs.jsonl",
+        "thread-worktrees", "runs.jsonl",
         "watcher.heartbeat", "watcher.failures.json", "watcher.lock",
     )}
 

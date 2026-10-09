@@ -127,7 +127,7 @@ PREFIX = "/api"
 AS_OF_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 SERVER_ERROR_DETAIL = ("the board failed unexpectedly; the traceback is in "
-                       "the PR manager's log")
+                       "the server's log")
 
 DESCRIPTION = """
 One pull request's comment threads, and what the agent wrote for them, on
@@ -186,7 +186,7 @@ def _thread(board: Board, key: str) -> domain.Conversation:
                       f"this board has no thread called {key}")
     if conversation.is_unreadable:
         raise Refusal(500, ErrorCode.UNREADABLE_RECORD,
-                      f"thread {key} will not read; the PR manager's log says why")
+                      f"thread {key} will not read; the server's log says why")
     return conversation
 
 
@@ -791,7 +791,7 @@ def _queued(board: Board, conversation: domain.Conversation, if_match: str,
 
 @writes.post("/client-errors", status_code=204, tags=["board"],
              operation_id="reportClientError",
-             summary="Write an error the page hit into the agent manager's log.")
+             summary="Write an error the page hit into the server's log.")
 def report_client_error(asked: ClientError) -> Response:
     """The page runs in a browser nobody is watching, so what goes wrong
     there is otherwise seen by no one who reads the logs afterwards.
@@ -1327,7 +1327,7 @@ async def serve_the_page(request: Request, board: Serving) -> Response:
     return await run_in_threadpool(
         page_at, board.fonts, board.app_root, target(request),
         request.headers.get("Accept-Encoding"),
-        failed=b"<p>board error \xe2\x80\x94 see the PR manager's log</p>")
+        failed=b"<p>board error \xe2\x80\x94 see the server's log</p>")
 
 
 def board_app(board: Board) -> FastAPI:

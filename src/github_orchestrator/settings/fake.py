@@ -28,7 +28,6 @@ def fake_settings(data_dir: Path, **config: Any) -> Settings:
     )
 
 
-FIRST_BOARD_PORT = 8730
 
 
 class FakeHolds:
@@ -88,38 +87,6 @@ class FakeDismissals:
 
     def forget(self, pr: Pr) -> bool:
         self._dismissed.pop(pr, None)
-        return True
-
-
-class FakeBoards:
-    def __init__(self) -> None:
-        self._wanted: set[Pr] = set()
-        self._ports: dict[Pr, int] = {}
-
-    def board_wanted(self, pr: Pr) -> bool:
-        return pr in self._wanted
-
-    def want_board(self, pr: Pr, wanted: bool) -> None:
-        if wanted:
-            self._wanted.add(pr)
-        else:
-            self._wanted.discard(pr)
-
-    def board_port(self, pr: Pr) -> int:
-        if pr not in self._ports:
-            taken = set(self._ports.values())
-            self._ports[pr] = next(
-                port for port in range(FIRST_BOARD_PORT, FIRST_BOARD_PORT + len(taken) + 1)
-                if port not in taken
-            )
-        return self._ports[pr]
-
-    def ports_in_use(self) -> tuple[int, int]:
-        return len(self._ports), 100
-
-    def forget(self, pr: Pr) -> bool:
-        self._wanted.discard(pr)
-        self._ports.pop(pr, None)
         return True
 
 

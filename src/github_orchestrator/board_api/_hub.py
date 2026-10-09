@@ -1,18 +1,14 @@
 import dataclasses
 import logging
-import os
-import threading
-from collections.abc import Callable, Collection, Sequence
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
 
-import anyio
 from fastapi import APIRouter, Depends, FastAPI, Request, Response, WebSocket
 from fastapi import Path as PathParameter
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
-from starlette.routing import BaseRoute
 
 from github_orchestrator.board_api import _etag as etag
 from github_orchestrator.board_api import _routes as routes
@@ -38,14 +34,10 @@ from github_orchestrator.board_api._errors import (
     add_refusal_handlers,
 )
 from github_orchestrator.board_api._guarded import guard, page_at, target
-from github_orchestrator.board_api._loopback import Listen, Listening, loopback_url
-from github_orchestrator.board_api._pages import pr_page
-from github_orchestrator.board_api._proxy import forwarded
 from github_orchestrator.board_api._runs import ledger_read, watcher_read
-from github_orchestrator.board_api._terminal import GONE, relayed
+from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
-    Dashboards,
     Holdings,
     ReleaseRecord,
     SetupDesk,
@@ -54,15 +46,16 @@ from github_orchestrator.board_api.interface import (
     WatcherPulse,
 )
 from github_orchestrator.board_api.interface import RunLedger as Ledger
-from github_orchestrator.domain import HubState, Pr, Repo, UtcClock
+from github_orchestrator.domain import HubState, Pr, Repo
 
 log = logging.getLogger(__name__)
 
-FAILED = "the hub failed unexpectedly; the traceback is in the watcher's log"
+FAILED = "the hub failed unexpectedly; the traceback is in the server's log"
 
 DESCRIPTION = """
 Every pull request the watcher holds, with hold, resume and release, on
-loopback with no authentication. The watcher serves it while it runs resident.
+loopback with no authentication. The server serves it with every held pull
+request's board under `/pr/{owner}/{name}/{number}`.
 """
 
 NOT_FROZEN = {"description": "The pull request's manager is not frozen on the "
@@ -88,7 +81,6 @@ class Desk:
     url: str
     app_root: Path
     fonts: routes.Fonts
-    streams: anyio.CapacityLimiter
     version: str | None
     problem: Callable[[], str | None]
     setup: SetupDesk
@@ -136,7 +128,7 @@ def list_pull_requests(request: Request, desk: Serving) -> Response:
     held = desk.told.held()
     if not held.told:
         raise _unheld(desk)
-    return etag.answered(request, desk.wall.read(held, desk.holdings))
+    return etag.answered(request, desk.wall.read(held))
 
 
 def _unheld(desk: Desk) -> Refusal:
@@ -235,8 +227,7 @@ def resume(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
              responses={**HANDED_TO_THE_WATCHER, 409: NOT_FROZEN},
              summary="Let go of the worktree a frozen pull request's manager is on.")
 def release(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
-    """The frozen dashboard's `w`. A frozen manager stops its board, so this
-    is the only page left that can ask. The watcher keeps the old worktree
+    """The frozen dashboard's `w`. The watcher keeps the old worktree
     under another name and builds a fresh one on its next cycle.
     """
     pr = _held(desk, owner, name, number)
@@ -249,68 +240,12 @@ def release(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
 writes.add_api_route(
     "/client-errors", report_client_error, methods=["POST"], status_code=204,
     operation_id="reportHubClientError",
-    summary="Write an error the page hit into the watcher's log.")
+    summary="Write an error the page hit into the server's log.")
 
 
 @reads.api_route("/{unknown:path}", methods=["GET", "POST"], include_in_schema=False)
 def read_nothing(unknown: str) -> Response:
     raise Refusal(404, ErrorCode.NOT_FOUND, f"the hub serves nothing at {PREFIX}/{unknown}")
-
-
-async def forward_to_board(owner: Owner, name: Name, number: int, path: str,
-                           request: Request, desk: Serving) -> Response:
-    """Whatever the pull request's board answers at `/api/{path}`: its
-    status, body and headers, with `Location` moved under
-    `/pr/{owner}/{name}/{number}`.
-    """
-    pr = _held(desk, owner, name, number)
-    port = desk.holdings.board_port(pr)
-    prefix = pr_page(pr)
-    body = await request.body()
-    answer = None if port is None else await run_in_threadpool(
-        forwarded, port, prefix, request.method, target(request)[len(prefix):],
-        request.headers, body, desk.streams)
-    if answer is None:
-        raise Refusal(503, ErrorCode.BOARD_UNREACHABLE, f"{pr}'s board is not answering")
-    return answer
-
-
-async def carry_to_board(websocket: WebSocket, owner: Owner, name: Name, number: int,
-                         path: str) -> None:
-    """A connection to a held pull request's board at `/api/{path}`, both
-    ways, closed as the board closes it.
-    """
-    desk: Desk = websocket.app.state.desk
-    try:
-        pr = _held(desk, owner, name, number)
-    except Refusal as refused:
-        await websocket.accept()
-        await websocket.close(GONE, str(refused))
-        return
-    port = await run_in_threadpool(desk.holdings.board_port, pr)
-    prefix = pr_page(pr)
-    await relayed(websocket, port, target(websocket)[len(prefix):],
-                  f"{pr}'s board is not answering")
-
-
-PROXIED: dict[int | str, dict[str, Any]] = {
-    404: {"description": "The watcher holds no pull request with this number in this repo.",
-          "model": Errors},
-    503: {"description": "The watcher holds the pull request, but its board does not "
-                         "answer: it has none yet, it is starting, or its manager is "
-                         "frozen or down. The code is `board-unreachable`.",
-          "model": Errors}}
-
-proxy = APIRouter(tags=["hub"])
-proxy.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", forward_to_board, methods=["GET"],
-                    operation_id="readThroughTheHub", responses=PROXIED,
-                    summary="A read of a held pull request's board, on the hub's address.")
-proxy.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", forward_to_board, methods=["POST"],
-                    operation_id="writeThroughTheHub", responses=PROXIED,
-                    summary="A write to a held pull request's board, on the hub's address.")
-proxy.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", forward_to_board,
-                    methods=["PUT", "PATCH", "DELETE"], include_in_schema=False)
-proxy.add_api_websocket_route("/pr/{owner}/{name}/{number}/api/{path:path}", carry_to_board)
 
 
 def refuse_unheld(owner: Owner, name: Name, number: int, path: str) -> Response:
@@ -338,10 +273,10 @@ async def serve_the_page(request: Request, desk: Serving) -> Response:
     return await run_in_threadpool(
         page_at, desk.fonts, desk.app_root, target(request),
         request.headers.get("Accept-Encoding"),
-        failed=b"<p>hub error \xe2\x80\x94 see the watcher's log</p>")
+        failed=b"<p>hub error \xe2\x80\x94 see the server's log</p>")
 
 
-def hub_app(desk: Desk, port: int, boards: Sequence[BaseRoute]) -> FastAPI:
+def hub_app(desk: Desk, port: int) -> FastAPI:
     app = RefusingApp(
         title="Hub",
         version="1.0.0",
@@ -349,59 +284,9 @@ def hub_app(desk: Desk, port: int, boards: Sequence[BaseRoute]) -> FastAPI:
         description=DESCRIPTION,
         openapi_url=None, docs_url=None, redoc_url=None,
         routes=[*writes.routes, *setup.writes.routes, *setup.reads.routes, *reads.routes,
-                *boards, *page.routes],
+                *unheld.routes, *page.routes],
     )
     app.state.desk = desk
     add_refusal_handlers(app)
     guard(app, port, name="hub", failed=FAILED)
     return app
-
-
-class ServedHub:
-    def __init__(self, listen: Listen, *, app_root: Path, font_dir: str | None,
-                 dashboards: Dashboards, ledger: Ledger, pulse: WatcherPulse,
-                 clock: UtcClock, watching: Collection[Repo], version: str | None,
-                 problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, told: Told, open_streams: int) -> None:
-        self._listen = listen
-        self._told = told
-        self._releases = releases
-        self._tour = tour
-        self._setup = setup
-        self._version = version
-        self._problem = problem
-        self._open_streams = open_streams
-        self._ledger = ledger
-        self._pulse = pulse
-        self._clock = clock
-        self._app_root = app_root
-        self._fonts = routes.served_fonts(font_dir)
-        self._wall = Wall(dashboards, watching)
-        self._lock = threading.Lock()
-        self._listening: Listening | None = None
-        self._url: str | None = None
-
-    def start(self, port: int, holdings: Holdings) -> str:
-        with self._lock:
-            if self._listening is not None and self._url is not None:
-                return self._url
-            listening = self._listen(port)
-            url = loopback_url(listening.port)
-            desk = Desk(holdings=holdings, told=self._told, wall=self._wall,
-                        ledger=self._ledger, pulse=self._pulse, clock=self._clock, url=url,
-                        app_root=self._app_root, fonts=self._fonts,
-                        streams=anyio.CapacityLimiter(self._open_streams),
-                        version=self._version, problem=self._problem, setup=self._setup,
-                        releases=self._releases, tour=self._tour, pid=os.getpid())
-            listening.serve(hub_app(desk, listening.port, proxy.routes))
-            self._listening, self._url = listening, url
-            return url
-
-    def stop(self) -> bool:
-        with self._lock:
-            if self._listening is None:
-                return False
-            listening = self._listening
-            self._listening, self._url = None, None
-        listening.close()
-        return True

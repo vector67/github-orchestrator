@@ -10,7 +10,6 @@ from github_orchestrator.agent_runs.fake import (
     FixingCheck,
     Outcome,
 )
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.board_api.interface import Dashboards
 from github_orchestrator.desktop import Badge
 from github_orchestrator.github import PullRequestState
@@ -31,7 +30,7 @@ from tests.pr_event_queue.support import (
     queue_of,
     unmergeable,
 )
-from tests.pr_manager.support import manager_over, seed_state
+from tests.pr_manager.support import ServerPanel, manager_over, seed_state
 from tests.settings.support import disk_holds
 
 WORKING = {"type": "assistant", "message": {"content": [{"type": "text", "text": "working"}]}}
@@ -79,7 +78,7 @@ CARRY_ON = "carry on from the board"
 
 
 def _over(settings, *script, **modules):
-    board = FakeBoardApi()
+    board = ServerPanel()
     script = tuple((lambda: board.panel.carry_on()) if item == CARRY_ON else item
                    for item in script)
     return manager_over(settings, *script, board=board, **modules)

@@ -1,15 +1,16 @@
 import argparse
 import dataclasses
 import os
+import socket
 import subprocess
 import tempfile
-import threading
 import time
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
 import dishka
+import uvicorn
 
 from github_orchestrator.agent_runs.fake import (
     FixingThread,
@@ -18,9 +19,20 @@ from github_orchestrator.agent_runs.fake import (
     Reworking,
 )
 from github_orchestrator.agent_runs.fake import Outcome as RunOutcome
-from github_orchestrator.board_api import BoardApi, Dashboard
-from github_orchestrator.board_api.fake import FakeManagerPanel
-from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
+from github_orchestrator.board_api import Dashboard, ManagerPanel
+from github_orchestrator.board_api.fake import (
+    FakeHoldings,
+    FakeManagerPanel,
+    FakeSetupDesk,
+    FakeTold,
+    FakeTour,
+)
+from github_orchestrator.board_api.interface import (
+    Dashboards,
+    Held,
+    ManagerStanding,
+    ServerApp,
+)
 from github_orchestrator.change_detection import ChangeDetection, Poll
 from github_orchestrator.conversation import (
     Classification,
@@ -44,8 +56,8 @@ from github_orchestrator.github import (
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.terminal_sessions import TerminalSessions
-from github_orchestrator.wiring import preview_container
+from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
+from github_orchestrator.wiring import PreviewHub, preview_container
 
 __all__: list[str] = []
 
@@ -653,13 +665,31 @@ def worktree_in(directory: Path) -> Path:
     return directory / "worktree"
 
 
-def serve(directory: Path, viewer: str, outside: Outside, port: int = 0,
-          reviewer: bool = False, *, conversation_managers: ConversationManagerFactory,
-          dashboards: Dashboards, board_api: BoardApi, sessions: TerminalSessions) -> str:
+@dataclasses.dataclass
+class PreviewPanels:
+    panel: ManagerPanel = dataclasses.field(default_factory=FakeManagerPanel)
+
+    def of(self, pr: Pr) -> ManagerPanel:
+        return self.panel
+
+
+def preview_hub(panels: PreviewPanels) -> PreviewHub:
+    return PreviewHub(told=FakeTold(Held(told=True, managers={PR: "running"})),
+                      holdings=FakeHoldings(), setup=FakeSetupDesk(), tour=FakeTour(),
+                      panels=panels)
+
+
+def page_of(port: int) -> str:
+    return f"http://127.0.0.1:{port}/pr/{PR.repo}/{PR.number}/"
+
+
+def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False, *,
+          conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
+          panels: PreviewPanels, sessions: TerminalSessions) -> None:
     repo = build_repo(worktree_in(directory), reviewer)
     seed(conversation_managers, outside, viewer, repo, reviewer)
-    return board_api.start(PR, port=port, manager=manager_panel(
-        running(dashboards.dashboard(PR)), sessions=sessions, worktree=repo.worktree))
+    panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
+                                 worktree=repo.worktree)
 
 
 def running(dashboard: Dashboard) -> Dashboard:
@@ -690,26 +720,31 @@ def main(argv: list[str] | None = None) -> int:
     agent_runs = HeldVerdicts(pr_processes)
     desktop = FakeDesktop()
 
+    panels = PreviewPanels()
+
     def container(agents_enabled: bool) -> tuple[dishka.Container, str]:
         return preview_container(os.environ, Path.home(), data_dir=directory, repo=PR.repo,
                                  local_path=worktree_in(directory), github=github,
                                  desktop=desktop, agent_runs=agent_runs,
-                                 pr_processes=pr_processes, agents_enabled=agents_enabled)
+                                 pr_processes=pr_processes, agents_enabled=agents_enabled,
+                                 hub=preview_hub(panels))
 
     seeding, viewer = container(True)
     serving = container(False)[0] if args.agents_disabled else seeding
     github.account = viewer
     outside = Outside(github, agent_runs, pr_processes, seeding.get(ChangeDetection))
-    board_api = serving.get(BoardApi)
-    url = serve(directory, viewer, outside, port=args.port,
-                reviewer=args.reviewer,
-                conversation_managers=seeding.get(ConversationManagerFactory),
-                dashboards=seeding.get(Dashboards), board_api=board_api,
-                sessions=serving.get(TerminalSessions))
-    print(url, flush=True)
-    try:
-        threading.Event().wait()
-    except KeyboardInterrupt:
-        board_api.stop()
+    serve(directory, viewer, outside, reviewer=args.reviewer,
+          conversation_managers=seeding.get(ConversationManagerFactory),
+          dashboards=seeding.get(Dashboards), panels=panels,
+          sessions=serving.get(Terminals).of(PR))
+    listening = socket.socket()
+    listening.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listening.bind(("127.0.0.1", args.port))
+    listening.listen()
+    port = int(listening.getsockname()[1])
+    print(page_of(port), flush=True)
+    app = serving.get(ServerApp).app(port, os.getpid())
+    uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, lifespan="off",
+                                  timeout_graceful_shutdown=1)).run(sockets=[listening])
     return 0
 

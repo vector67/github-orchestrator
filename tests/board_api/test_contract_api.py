@@ -4,6 +4,7 @@ from github_orchestrator.conversation import ErrorCode
 from tests.board_api.support import (
     PR,
     REPO,
+    THE_ROOT,
     board_contract,
     client_for,
 )
@@ -160,7 +161,7 @@ def test_a_refusal_the_shared_sentence_covers_keeps_the_shared_one(contract):
 
 
 def test_a_page_asset_is_gzipped_for_a_client_that_takes_it():
-    answer = client_for().get("/palette.css",
+    answer = client_for().get(f"{THE_ROOT}/palette.css",
                                       headers={"Accept-Encoding": "gzip"})
 
     assert answer.headers["content-encoding"] == "gzip"
@@ -176,21 +177,21 @@ def test_a_page_asset_is_gzipped_for_a_client_that_takes_it():
 ])
 def test_a_page_asset_is_gzipped_only_for_a_client_that_takes_gzip(accepted,
                                                                     encoding):
-    answer = client_for().get("/palette.css", headers={"Accept-Encoding": accepted})
+    answer = client_for().get(f"{THE_ROOT}/palette.css", headers={"Accept-Encoding": accepted})
 
     assert answer.headers.get("content-encoding") == encoding
     assert answer.text.startswith(":root")
 
 
 def test_an_answer_too_short_to_win_is_not_gzipped():
-    answer = client_for().get("/fonts.css", headers={"Accept-Encoding": "gzip"})
+    answer = client_for().get(f"{THE_ROOT}/fonts.css", headers={"Accept-Encoding": "gzip"})
 
     assert len(answer.content) < 256
     assert "content-encoding" not in answer.headers
 
 
 def test_an_old_path_the_board_does_not_serve_is_still_a_plain_404():
-    answer = client_for().get("/fonts/nothing-here.otf")
+    answer = client_for().get(f"{THE_ROOT}/fonts/nothing-here.otf")
 
     assert answer.status_code == 404
     assert answer.headers["content-type"] == "text/plain; charset=utf-8"

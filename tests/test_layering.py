@@ -232,7 +232,7 @@ PACKAGES = {
         role="agent runs hear about review threads and the PR manager only through the requests their callers fill in",
     ),
     "board_api": Package(
-        pinned=frozenset({"BoardApi", "Hub", "Dashboard", "ManagerPanel"}),
+        pinned=frozenset({"Dashboard", "ManagerPanel"}),
         may_import=("conversation", "working_copies", "terminal_sessions", ROOT, LIBRARIES),
         role="the board serves one PR's review threads and its terminal sessions, and reaches the rest of the program only through them",
         imported_by=("wiring", "pr_manager", "watcher", "preview", "server"),
@@ -302,7 +302,7 @@ PACKAGES = {
         may_import=("settings", "desktop", "notifications", "pr_event_queue", "working_copies",
                     "pr_processes", "agent_runs", "conversation", "change_detection", "board_api",
                     "github"),
-        role="the PR manager takes its work from the event_queue, carries it out through agent runs, review threads and the desktop, writes to the PR itself through GitHub, starts the board only through the board API, and only its entry point builds the container",
+        role="the PR manager takes its work from the event_queue, carries it out through agent runs, review threads and the desktop, writes to the PR itself through GitHub, answers the board only through the board API's panel and dashboard types, and only its entry point builds the container",
         imported_by=("wiring",),
         entries=frozenset({"__main__"}),
         builds_the_container=frozenset({"__main__"}),
@@ -326,7 +326,7 @@ PACKAGES = {
         builds_the_container=frozenset({"__main__", "_worker"}),
     ),
     "settings": Package(
-        pinned=frozenset({"Boards", "ConfigFile", "Dismissals", "Logs", "Holds", "Process"}),
+        pinned=frozenset({"ConfigFile", "Dismissals", "Logs", "Holds", "Process"}),
         wiring_skips=frozenset({"_paths"}),
     ),
     "terminal_sessions": Package(
@@ -345,7 +345,7 @@ PACKAGES = {
         may_import=("settings", "github", "desktop", "notifications", "pr_event_queue", "pr_processes",
                     "conversation", "change_detection", "working_copies", "thread_records",
                     "board_api"),
-        role="the watcher polls through GitHub, change detection and review threads, hands events to the event_queue and windows to PR windows, serves the board api's hub, and only its entry point builds the container",
+        role="the watcher polls through GitHub, change detection and review threads, hands events to the event_queue and windows to PR windows, keeps the server running, and only its entry point builds the container",
         imported_by=("wiring", "cli._cli", "cli._status", "cli._restart", "cli._restart_all",
                      "cli._doctor", "cli._update"),
         entries=frozenset({"__main__"}),

@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from github_orchestrator.agent_runs import Agent
-from github_orchestrator.board_api.fake import FakeHoldings, FakeTold
+from github_orchestrator.board_api.fake import FakeTold
 from github_orchestrator.board_api.interface import SetupDesk, TourMarker
 from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.github import PullRequestState
@@ -16,7 +16,7 @@ from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.watcher import Watcher
-from tests.board_api.support import HUB_PORT, InProcess, hub_on
+from tests.board_api.support import served_hub
 from tests.builders import a_pr
 from tests.settings.support import disk_holds
 from tests.watcher.support import watcher_container
@@ -108,11 +108,8 @@ def serve(world: World, config: str | None = None, *, state=HubState.SETUP,
         home=world.home, clone_problem=world.clone_problem,
         requirements=lambda: [("gh", None), ("claude", "install claude")])
     world.watcher = container.get(Watcher)
-    listening = InProcess()
-    hub = hub_on(listening, setup=container.get(SetupDesk), tour=container.get(TourMarker),
-                 told=FakeTold(hub_state=state))
-    url = hub.start(HUB_PORT, FakeHoldings())
-    world.client = TestClient(listening.app, base_url=url)
+    world.client = served_hub(setup=container.get(SetupDesk), tour=container.get(TourMarker),
+                              told=FakeTold(hub_state=state))
     return world
 
 
@@ -372,14 +369,14 @@ def test_a_write_names_each_field_it_refuses_and_writes_and_clones_nothing(world
     answer = world.put({**request(("acme/typo", "~/repositories/typo", ""),
                                   ("acme/gadgets", str(there), ""),
                                   ("not-a-repo", "~/repositories/x", "")),
-                        "hub_port": 8731})
+                        "hub_port": 70000})
 
     assert answer.status_code == 422
     refused = {error["field"]: error["detail"] for error in answer.json()["errors"]}
     assert set(refused) == {"repos[0].repo", "repos[1].local_path", "repos[2].repo", "config"}
     assert "acme/typo" in refused["repos[0].repo"]
     assert "not a git repository" in refused["repos[1].local_path"]
-    assert "8730-8829" in refused["config"]
+    assert "1 to 65535" in refused["config"]
     assert {error["code"] for error in answer.json()["errors"]} == {"setup-refused"}
     assert (world.config.exists(), world.github.cloned) == (False, [])
 

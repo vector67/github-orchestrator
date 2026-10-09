@@ -15,7 +15,6 @@ from typing import Any
 from github_orchestrator.agent_runs import Agent
 from github_orchestrator.domain import Clone, HubState, Repo
 from github_orchestrator.settings._renamed_keys import RENAMED_KEYS, doubled, renamed
-from github_orchestrator.settings._switches import PORT_RANGE
 from github_orchestrator.settings.interface import ConfigDescription, ConfigRow
 from github_orchestrator.settings.interface import RepoEntry as RepoEntry
 
@@ -151,8 +150,7 @@ def _read(config_path: Path) -> dict[str, Any]:
     hub_port = data.get("hub_port")
     if hub_port is not None and not _takes(hub_port):
         raise ConfigError(
-            f"{config_path}: hub_port must be a port from 1 to 65535 outside the boards' "
-            f"{PORT_RANGE.start}-{PORT_RANGE.stop - 1}, got {hub_port}"
+            f"{config_path}: hub_port must be a port from 1 to 65535, got {hub_port}"
         )
     _check_tracker(config_path, data.get("tracker", Tracker.NONE), data.get("tracker_project", ""))
     return data
@@ -275,7 +273,7 @@ def _parse(config_path: Path) -> dict[str, Any]:
 
 
 def _takes(hub_port: int) -> bool:
-    return hub_port not in PORT_RANGE and 0 < hub_port < 65536
+    return 0 < hub_port < 65536
 
 
 def _hub_port_of(config_path: Path) -> int:

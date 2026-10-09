@@ -58,11 +58,3 @@ def on_hold_file(on_hold_dir: Path, pr: Pr) -> Path:
 
 def dismissed_file(dismissed_dir: Path, pr: Pr) -> Path:
     return _repo_dir(dismissed_dir, pr) / f"{pr.number}.flag"
-
-
-def board_port_file(board_dir: Path, pr: Pr) -> Path:
-    return _repo_dir(board_dir, pr) / f"{pr.number}.port"
-
-
-def board_flag_file(board_dir: Path, pr: Pr) -> Path:
-    return _repo_dir(board_dir, pr) / f"{pr.number}.flag"

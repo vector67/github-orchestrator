@@ -1,5 +1,4 @@
 from github_orchestrator.settings.interface import (
-    Boards,
     ConfigFile,
     Dismissals,
     Holds,
@@ -8,7 +7,6 @@ from github_orchestrator.settings.interface import (
 )
 
 __all__ = [
-    "Boards",
     "ConfigFile",
     "Dismissals",
     "Logs",

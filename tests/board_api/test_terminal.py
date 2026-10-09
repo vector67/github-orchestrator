@@ -5,7 +5,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from github_orchestrator.board_api.fake import FakeManagerPanel
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
-from tests.board_api.support import PORT, WORKTREE, board_for
+from tests.board_api.support import BOARD_PATH, PORT, WORKTREE, board_for
 from tests.waiting import until
 
 HERE = f"http://127.0.0.1:{PORT}"
@@ -27,7 +27,7 @@ def web(sessions, manager):
 
 
 def _socket(web, session, origin=HERE, host=f"127.0.0.1:{PORT}"):
-    return web.websocket_connect(f"/api/terminal/sessions/{session}",
+    return web.websocket_connect(f"ws://127.0.0.1:{PORT}{BOARD_PATH}/api/terminal/sessions/{session}",
                                  headers={"Origin": origin, "Host": host})
 
 
@@ -93,7 +93,7 @@ def test_a_page_resuming_after_what_it_saw_is_sent_only_what_came_after(web, ses
     sessions.print(session, b"seen ")
     sessions.print(session, b"missed")
 
-    with web.websocket_connect(f"/api/terminal/sessions/{session}?after=5",
+    with web.websocket_connect(f"ws://127.0.0.1:{PORT}{BOARD_PATH}/api/terminal/sessions/{session}?after=5",
                                headers={"Origin": HERE, "Host": f"127.0.0.1:{PORT}"}) as page:
         assert page.receive_bytes() == b"missed"
 
@@ -161,7 +161,7 @@ def test_a_connection_that_names_no_origin_is_refused(web, sessions):
     session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
 
     with pytest.raises(WebSocketDisconnect) as refused:
-        with web.websocket_connect(f"/api/terminal/sessions/{session}",
+        with web.websocket_connect(f"ws://127.0.0.1:{PORT}{BOARD_PATH}/api/terminal/sessions/{session}",
                                    headers={"Host": f"127.0.0.1:{PORT}"}):
             pass
 

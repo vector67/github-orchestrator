@@ -9,7 +9,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from github_orchestrator.board_api import _routes as routes
 from github_orchestrator.board_api._app import Board, board_app
-from github_orchestrator.board_api._hub import Desk, hub_app, unheld
+from github_orchestrator.board_api._hub import Desk, hub_app
 from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import pr_page
 from github_orchestrator.board_api._wall import Wall
@@ -30,7 +30,7 @@ from github_orchestrator.terminal_sessions import Terminals
 from github_orchestrator.working_copies import WorkingCopies
 
 TERMINAL_THREADS = 64
-NO_PROXIED_STREAMS = 1
+ROUTING_THREADS = 8
 
 _BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]+)/api/")
 
@@ -41,6 +41,7 @@ class _Boards:
         self._build = build
         self._built: dict[Pr, ASGIApp] = {}
         self._lock = threading.Lock()
+        self.routing = anyio.CapacityLimiter(ROUTING_THREADS)
 
     def of(self, pr: Pr) -> ASGIApp | None:
         if pr not in self._told.held().managers:
@@ -62,7 +63,8 @@ class _Routed:
         if found is not None:
             owner, name, number = found.groups()
             pr = Pr(Repo(owner, name), int(number))
-            board = await anyio.to_thread.run_sync(self._boards.of, pr)
+            board = await anyio.to_thread.run_sync(self._boards.of, pr,
+                                                   limiter=self._boards.routing)
             if board is not None:
                 await board({**scope, "root_path": pr_page(pr)}, receive, send)
                 return
@@ -106,7 +108,6 @@ class OneServer:
         desk = Desk(holdings=self._holdings, told=self._told, wall=self._wall,
                     ledger=self._ledger, pulse=self._pulse, clock=self._clock, url=url,
                     app_root=self._app_root, fonts=self._fonts,
-                    streams=anyio.CapacityLimiter(NO_PROXIED_STREAMS),
                     version=self._version, problem=self._problem, setup=self._setup,
                     releases=self._releases, tour=self._tour, pid=pid)
 
@@ -122,4 +123,4 @@ class OneServer:
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
                 clock=self._clock, prefix=pr_page(pr)))
 
-        return _Routed(hub_app(desk, port, unheld.routes), _Boards(self._told, board))
+        return _Routed(hub_app(desk, port), _Boards(self._told, board))

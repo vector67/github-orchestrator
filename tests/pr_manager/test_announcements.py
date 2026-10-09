@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.conversation import Classification
 from github_orchestrator.desktop import Badge
 from github_orchestrator.notifications.fake import FakeNotifications, FixReady, Posted
@@ -17,7 +16,7 @@ from tests.conversation.support import (
     said,
 )
 from tests.pr_manager.scripted_terminal import ManualClock
-from tests.pr_manager.support import THE_PR, manager_over, seed_state
+from tests.pr_manager.support import THE_PR, ServerPanel, manager_over, seed_state
 
 KEY = "PRRT_1"
 
@@ -78,7 +77,7 @@ CARRY_ON = "carry on from the board"
 
 
 def _run(settings, threads, tmp_path, clock, notifications, *script):
-    board = FakeBoardApi()
+    board = ServerPanel()
     script = tuple((lambda: board.panel.carry_on()) if item == CARRY_ON else item
                    for item in script)
     return manager_over(settings, *script, worktree=tmp_path, clock=clock, board=board,

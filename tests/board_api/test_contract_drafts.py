@@ -13,6 +13,7 @@ from tests.board_api.support import (
     board_on,
     client_of,
     fake_threads,
+    followed,
     heard_on,
 )
 from tests.board_api.test_contract_writes import NOW, asked, tag_of
@@ -75,7 +76,7 @@ def test_create_draft_mints_a_draft_with_nothing_on_github(board):
     assert (created["kind"], created["state"], created["body"]) == (
         "create-draft", "applied", "call it write_iso")
     assert created["anchor"]["path"] == PATH
-    assert client.get(answer.headers["Location"]).json() == created
+    assert followed(client, answer).json() == created
     drafted = _read(client, _key_of(answer))
     assert (drafted["kind"], drafted["state"], drafted["github_node_id"]) == (
         "draft", "draft", None)
@@ -280,7 +281,7 @@ def test_post_now_puts_the_draft_on_github_under_the_key_it_always_had(scene):
     assert posted["key"] == key
     assert (posted["kind"], posted["state"], posted["github_node_id"]) == (
         "review", "waiting", on_github.key)
-    operation = client.get(answer.headers["Location"]).json()
+    operation = followed(client, answer).json()
     assert (operation["kind"], operation["state"],
             operation["posted_comment"]) == ("post-now", "applied", comment.id)
 

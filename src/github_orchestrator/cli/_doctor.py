@@ -28,7 +28,7 @@ from github_orchestrator.cli._update import UPDATE, newer_release
 from github_orchestrator.desktop import Desktop
 from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.github import Access
-from github_orchestrator.settings import Boards, ConfigFile
+from github_orchestrator.settings import ConfigFile
 from github_orchestrator.watcher import Releases, WatcherHealth
 
 COMMAND_TIMEOUT = 30
@@ -208,7 +208,7 @@ class InstanceChecks:
 
 class MachineChecks:
     def __init__(self, config: CliConfig, run: Run, which: Which, desktop: Desktop,
-                 boards: Boards, service: Service, hub_health: HubHealth,
+                 service: Service, hub_health: HubHealth,
                  releases: Releases) -> None:
         self._config = config
         self._hub_health = hub_health
@@ -216,11 +216,9 @@ class MachineChecks:
         self._run = run
         self._which = which
         self._desktop = desktop
-        self._boards = boards
         self._service = service
 
     def findings(self) -> list[Finding]:
-        used, out_of = self._boards.ports_in_use()
         install = install_of(self._config.python)
         newer = newer_release(self._config, self._hub_health(self._config.hub_url),
                               self._releases)
@@ -231,7 +229,6 @@ class MachineChecks:
             skill_finding(self._config.agent.skill_folder(self._config.home)),
             *agent_findings(self._config.agent, self._config.agent_argv, self._run),
             self._notifications(),
-            ok(f"{used} of {out_of} board ports are in use"),
         ]
 
     def _install(self, install: Install) -> Finding:

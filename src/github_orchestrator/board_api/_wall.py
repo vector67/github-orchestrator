@@ -6,7 +6,6 @@ from github_orchestrator.board_api._projection import dashboard_of
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Held,
-    Holdings,
     WallGroup,
 )
 from github_orchestrator.domain import Pr, Repo
@@ -26,16 +25,16 @@ class Wall:
         self._dashboards = dashboards
         self._watching = sorted(str(repo) for repo in watching)
 
-    def read(self, held: Held, holdings: Holdings) -> contract.HeldPullRequests:
+    def read(self, held: Held) -> contract.HeldPullRequests:
         return contract.HeldPullRequests(
             watching=self._watching,
             groups=[contract.WallGroupName(group=group, name=GROUP_NAMES[group])
                     for group in WallGroup],
-            pull_requests=[self._row(pr, manager, holdings) for pr, manager in sorted(
+            pull_requests=[self._row(pr, manager) for pr, manager in sorted(
                 held.managers.items(), key=lambda one: (str(one[0].repo), one[0].number))])
 
-    def _row(self, pr: Pr, manager: str, holdings: Holdings) -> contract.HeldPullRequest:
+    def _row(self, pr: Pr, manager: str) -> contract.HeldPullRequest:
         return contract.HeldPullRequest(
             repo=str(pr.repo), number=pr.number, manager=manager,
-            board_url=None if holdings.board_port(pr) is None else pr_page(pr),
+            board_url=pr_page(pr),
             dashboard=dashboard_of(self._dashboards.dashboard(pr)))

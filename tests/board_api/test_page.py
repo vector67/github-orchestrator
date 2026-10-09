@@ -6,6 +6,7 @@ from github_orchestrator.github.fake import FakeGitHub
 from tests.board_api.support import (
     BODY,
     SERVED_APP,
+    THE_ROOT,
     board_on,
     client_for,
     client_of,
@@ -45,7 +46,7 @@ def test_a_deep_app_route_serves_the_index_so_the_router_can_boot(tmp_path):
 
 
 def test_a_built_asset_is_served_with_its_own_type(tmp_path):
-    answer = client_for(app_root=built_app(tmp_path)).get("/robots.txt")
+    answer = client_for(app_root=built_app(tmp_path)).get(f"{THE_ROOT}/robots.txt")
 
     assert answer.status_code == 200
     assert answer.headers["content-type"].startswith("text/plain")
@@ -64,7 +65,7 @@ def test_the_server_keeps_its_own_routes_from_the_app(tmp_path):
     client = client_for(app_root=built_app(tmp_path))
 
     assert client.get("/api/conversations").headers["content-type"] == "application/json"
-    assert client.get("/fonts/Acme-Regular.otf").status_code == 404
+    assert client.get(f"{THE_ROOT}/fonts/Acme-Regular.otf").status_code == 404
 
 
 class SlowToAnswer(FakeGitHub):
@@ -106,7 +107,7 @@ def test_reading_a_threads_comments_does_not_wait_for_github_to_confirm_them():
 
 
 def test_the_palette_is_served_as_css_the_app_can_link():
-    answer = client_for().get("/palette.css")
+    answer = client_for().get(f"{THE_ROOT}/palette.css")
 
     assert answer.status_code == 200
     assert answer.headers["content-type"].startswith("text/css")
@@ -115,7 +116,7 @@ def test_the_palette_is_served_as_css_the_app_can_link():
 
 
 def test_the_palette_css_binds_every_variable_in_both_modes():
-    bound = css_variables(client_for().get("/palette.css").text)
+    bound = css_variables(client_for().get(f"{THE_ROOT}/palette.css").text)
 
     assert bound["light"]
     assert set(bound["light"]) == set(bound["dark"]), (
@@ -148,7 +149,7 @@ def fonts_in(tmp_path, *names):
 def test_the_font_faces_are_served_as_css_when_there_are_fonts(tmp_path):
     font_dir = fonts_in(tmp_path, "Acme-Regular.otf", "Acme-SemiBold.otf")
 
-    answer = client_for(font_dir=font_dir).get("/fonts.css")
+    answer = client_for(font_dir=font_dir).get(f"{THE_ROOT}/fonts.css")
 
     assert answer.status_code == 200
     assert answer.headers["content-type"].startswith("text/css")
@@ -188,7 +189,7 @@ def test_health_says_the_font_directory_holds_no_usable_face(tmp_path):
 
 
 def test_the_font_css_is_a_plain_stack_when_there_are_none():
-    css = client_for().get("/fonts.css").text
+    css = client_for().get(f"{THE_ROOT}/fonts.css").text
 
     assert "@font-face" not in css
     assert "--body-stack:" in css

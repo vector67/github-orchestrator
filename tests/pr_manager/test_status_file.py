@@ -3,7 +3,6 @@ import json
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.fake import FakeBoardApi
 from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
@@ -11,7 +10,7 @@ from tests.builders import a_pr
 from tests.conversation.support import hear, on_github, said
 from tests.pr_event_queue.support import ci_failed
 from tests.pr_manager.scripted_terminal import ManualClock
-from tests.pr_manager.support import manager_over, seed_state
+from tests.pr_manager.support import ServerPanel, manager_over, seed_state
 
 REPO = "acme/widgets"
 THE_PR = a_pr(7, REPO)
@@ -153,7 +152,7 @@ def test_the_keys_of_live_thread_runs_are_written(settings, tmp_path):
 
 
 def test_the_notice_a_refused_command_leaves_is_written(settings, tmp_path):
-    board = FakeBoardApi()
+    board = ServerPanel()
     agent_runs = FakeAgentRuns(FakePrProcesses()).script(Outcome(finishes=False))
 
     _manager(settings, lambda: (board.panel.carry_on(), board.panel.start_review()),

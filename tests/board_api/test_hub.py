@@ -1,9 +1,7 @@
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi.testclient import TestClient
 
 from github_orchestrator.board_api.fake import FakeHoldings, FakeTold, FakeTour
 from github_orchestrator.board_api.interface import Held
@@ -11,6 +9,7 @@ from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.watcher import Health
 from tests.board_api.support import (
     HUB_PORT,
+    SERVER_PID,
     UNBUILT,
     Pulse,
     Words,
@@ -27,11 +26,10 @@ THEIRS = a_pr(17, REPO)
 ELSEWHERE = a_pr(5, "octocat/hello-world")
 
 
-def hub_client(holdings, *prs, app_root=UNBUILT, port=HUB_PORT):
+def hub_client(holdings, *prs, app_root=UNBUILT):
     told = holding(*prs)
-    hub, listening = served_hub(app_root, told=told)
-    url = hub.start(port, holdings)
-    return TestClient(listening.app, base_url=url), told
+    web = served_hub(app_root, told=told, holdings=holdings)
+    return web, told
 
 
 def client(holdings, *prs, **kwargs):
@@ -50,20 +48,17 @@ def test_the_list_is_in_repo_then_number_order_whatever_order_the_watcher_gave()
 
 
 def test_the_list_names_every_repository_this_instance_watches():
-    hub, listening = served_hub(watching=[Repo("acme", "widgets"), Repo("acme", "gadgets")],
-                                told=holding())
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(watching=[Repo("acme", "widgets"), Repo("acme", "gadgets")], told=holding())
 
-    answer = TestClient(listening.app, base_url=url).get("/api/pull-requests")
+    answer = web.get("/api/pull-requests")
 
     assert answer.json()["watching"] == ["acme/gadgets", "acme/widgets"]
 
 
 def test_the_list_is_refused_as_starting_until_the_watcher_says_what_it_holds():
-    hub, listening = served_hub(told=FakeTold())
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(told=FakeTold())
 
-    answer = TestClient(listening.app, base_url=url).get("/api/pull-requests")
+    answer = web.get("/api/pull-requests")
 
     assert answer.status_code == 503
     assert answer.json()["errors"][0]["code"] == "watcher-starting"
@@ -150,7 +145,7 @@ def test_health_says_this_is_the_hub_and_where_it_is():
     answer = client(FakeHoldings()).get("/api/health")
 
     assert answer.json() == {
-        "status": "ok", "pid": os.getpid(), "serves": "hub",
+        "status": "ok", "pid": SERVER_PID, "serves": "hub",
         "hub_url": f"http://127.0.0.1:{HUB_PORT}", "font_problem": None, "state": "watching",
         "version": "0.1.0",
         "watcher": {"polled_at": "2026-08-28T09:59:40+00:00",
@@ -206,9 +201,7 @@ def test_every_hub_command_declares_the_hand_over_and_where_to_poll():
 
 def test_health_says_which_state_the_watcher_last_told_the_hub():
     told = FakeTold(hub_state=HubState.WATCHING)
-    hub, listening = served_hub(told=told)
-    url = hub.start(HUB_PORT, FakeHoldings())
-    web = TestClient(listening.app, base_url=url)
+    web = served_hub(told=told)
 
     told.hub_state = HubState.SETUP
 
@@ -216,17 +209,15 @@ def test_health_says_which_state_the_watcher_last_told_the_hub():
 
 
 def test_health_has_no_state_before_the_watcher_tells_one():
-    hub, listening = served_hub(told=FakeTold(hub_state=None))
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(told=FakeTold(hub_state=None))
 
-    assert TestClient(listening.app, base_url=url).get("/api/health").json()["state"] is None
+    assert web.get("/api/health").json()["state"] is None
 
 
 def test_the_list_is_refused_as_starting_before_the_watcher_tells_its_state():
-    hub, listening = served_hub(told=FakeTold(hub_state=None))
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(told=FakeTold(hub_state=None))
 
-    answer = TestClient(listening.app, base_url=url).get("/api/pull-requests")
+    answer = web.get("/api/pull-requests")
 
     assert answer.json()["errors"][0]["code"] == "watcher-starting"
 
@@ -237,10 +228,9 @@ FAILING = Health(alive=True, since_last_poll=None, last_error="gh auth token fai
 
 
 def test_the_list_is_refused_as_failing_with_the_watchers_error_until_a_cycle_succeeds():
-    hub, listening = served_hub(pulse=Pulse(FAILING), told=FakeTold())
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(pulse=Pulse(FAILING), told=FakeTold())
 
-    answer = TestClient(listening.app, base_url=url).get("/api/pull-requests")
+    answer = web.get("/api/pull-requests")
 
     assert answer.status_code == 503
     assert answer.json()["errors"][0] == {"status": 503, "code": "watcher-failing",
@@ -250,10 +240,9 @@ def test_the_list_is_refused_as_failing_with_the_watchers_error_until_a_cycle_su
 @pytest.mark.parametrize("state", [HubState.SETUP, HubState.BROKEN])
 def test_the_list_is_refused_with_the_configs_problem_while_the_hub_is_not_watching(state):
     problem = "config.toml: the config file does not exist"
-    hub, listening = served_hub(config_file=Words(problem), told=FakeTold(hub_state=state))
-    url = hub.start(HUB_PORT, FakeHoldings())
+    web = served_hub(config_file=Words(problem), told=FakeTold(hub_state=state))
 
-    answer = TestClient(listening.app, base_url=url).get("/api/pull-requests")
+    answer = web.get("/api/pull-requests")
 
     assert answer.status_code == 503
     assert answer.json()["errors"][0] == {"status": 503, "code": "not-watching",
@@ -282,9 +271,8 @@ CHECKED = datetime(2026, 10, 9, 8, 0, tzinfo=timezone.utc)
 
 
 def _health_with(release):
-    hub, listening = served_hub(releases=Recorded(release), told=FakeTold(hub_state=HubState.SETUP))
-    url = hub.start(HUB_PORT, FakeHoldings())
-    return TestClient(listening.app, base_url=url).get("/api/health").json()["newest_release"]
+    web = served_hub(releases=Recorded(release), told=FakeTold(hub_state=HubState.SETUP))
+    return web.get("/api/health").json()["newest_release"]
 
 
 def test_health_gives_the_newest_release_the_daily_check_recorded_and_that_it_is_newer():
@@ -301,9 +289,8 @@ def test_health_has_no_newest_release_before_the_first_check():
 
 
 def _tour_client(marker):
-    hub, listening = served_hub(tour=marker)
-    url = hub.start(HUB_PORT, FakeHoldings())
-    return TestClient(listening.app, base_url=url)
+    web = served_hub(tour=marker)
+    return web
 
 
 def test_the_tour_is_due_when_the_marker_says_so():

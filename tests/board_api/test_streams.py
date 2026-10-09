@@ -1,12 +1,15 @@
 import json
-import socket
-import time
 
 import pytest
 
 from github_orchestrator.board_api.fake import FakeManagerPanel
-from tests.board_api.support import Events, board_on, fake_threads
-from tests.board_api.test_hub_proxy import OnLoopback
+from tests.board_api.support import (
+    BOARD_PATH,
+    Events,
+    board_on,
+    fake_threads,
+    on_loopback,
+)
 
 
 @pytest.fixture
@@ -21,10 +24,15 @@ def heartbeat_seconds():
 
 @pytest.fixture
 def board(panel, heartbeat_seconds):
-    served = board_on(fake_threads(), manager=panel, listening=OnLoopback(),
-                      heartbeat_seconds=heartbeat_seconds)
-    yield served
-    served.api.stop()
+    served = {}
+
+    def app_at(port):
+        served["board"] = board_on(fake_threads(), manager=panel,
+                                   heartbeat_seconds=heartbeat_seconds, port=port)
+        return served["board"].client.app
+
+    with on_loopback(app_at):
+        yield served["board"]
 
 
 @pytest.fixture
@@ -32,7 +40,7 @@ def opened(board):
     streams = []
 
     def open_stream(path, headers=None):
-        stream = Events(board.client.base_url.port, path, headers)
+        stream = Events(board.client.base_url.port, f"{BOARD_PATH}{path}", headers)
         streams.append(stream)
         return stream
 
@@ -115,16 +123,3 @@ def test_the_dashboard_stream_waits_out_a_manager_still_starting(board, panel, o
     assert json.loads(stream.event()["data"]) == board.client.get("/api/dashboard").json()
 
 
-def test_a_board_stops_at_once_and_ends_the_stream_a_page_holds_open(board, opened):
-    port = board.client.base_url.port
-    stream = opened("/api/manager/changes/stream")
-    stream.event()
-    begun = time.monotonic()
-
-    board.api.stop()
-
-    assert time.monotonic() - begun < 0.5
-    with pytest.raises(EOFError):
-        stream.block()
-    with pytest.raises(OSError):
-        socket.create_connection(("127.0.0.1", port), timeout=1).close()

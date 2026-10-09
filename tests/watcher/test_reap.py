@@ -16,8 +16,6 @@ from tests.conversation.support import (
     said,
 )
 from tests.disk_layout import (
-    board_flag_file,
-    board_port_file,
     dismissed_file,
     on_hold_file,
     thread_dir,
@@ -122,9 +120,7 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
     _window(world)
     _torn_down(settings)
     for flag in (on_hold_file(settings.on_hold_dir, THE_PR),
-                 dismissed_file(settings.dismissed_dir, THE_PR),
-                 board_flag_file(settings.board_dir, THE_PR),
-                 board_port_file(settings.board_dir, THE_PR)):
+                 dismissed_file(settings.dismissed_dir, THE_PR)):
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.write_text("")
 
@@ -137,8 +133,6 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
     assert not _tracked(settings)
     assert not on_hold_file(settings.on_hold_dir, THE_PR).exists()
     assert not dismissed_file(settings.dismissed_dir, THE_PR).exists()
-    assert not board_port_file(settings.board_dir, THE_PR).exists()
-    assert not board_flag_file(settings.board_dir, THE_PR).exists()
 
 
 def test_a_closing_pr_without_a_window_is_reaped(settings, capsys):

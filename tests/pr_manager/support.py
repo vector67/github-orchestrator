@@ -1,6 +1,6 @@
 import subprocess
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -8,8 +8,9 @@ from typing import Any
 import dishka
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api import BoardApi
-from github_orchestrator.board_api.fake import FakeBoardApi
+from github_orchestrator.board_api import ManagerPanel
+from github_orchestrator.board_api.fake import FakeManagerPanel
+from github_orchestrator.board_api.interface import ManagerPanels
 from github_orchestrator.change_detection import ChangeDetection, Poll
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.desktop import Desktop
@@ -25,6 +26,7 @@ from github_orchestrator.settings import Logs
 from github_orchestrator.settings.fake import Settings
 from github_orchestrator.wiring import (
     BrowserFrontProvider,
+    ManagerPanelsWiring,
     Part,
     PrManagerWiring,
     change_detection_wiring,
@@ -50,7 +52,6 @@ from tests.pr_manager.scripted_terminal import ManualClock, ScriptedSleep, Scrip
 REPO = "o/n"
 PR = 1
 THE_PR = a_pr(PR, REPO)
-BOARD_URL = "http://127.0.0.1:4321"
 POLLED_AT = "2026-06-10T11:00:00Z"
 
 
@@ -88,11 +89,22 @@ def _say_whose(settings: Settings, pr: Pr, is_author: bool) -> None:
     assert facts.is_author is is_author, "seed the role with seed_state(is_author=...)"
 
 
+def managed_in(worktree: str | Path, repo: str = REPO, pr: int = PR) -> FakePrProcesses:
+    processes = FakePrProcesses()
+    processes.open(a_pr(pr, repo), Path(worktree))
+    return processes
+
+
+@dataclass
+class ServerPanel:
+    panel: ManagerPanel = field(default_factory=FakeManagerPanel)
+
+
 @dataclass
 class Manager:
     manager: PrManager
     clock: ManualClock
-    board: BoardApi
+    board: ServerPanel
     desktop: Desktop
     notifications: FakeNotifications
     github: FakeGitHub
@@ -114,7 +126,7 @@ class Manager:
 def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
                  repo: str = REPO, pr: int = PR, is_author: bool | None = None,
                  clock: ManualClock | None = None,
-                 board: BoardApi | None = None,
+                 board: ServerPanel | None = None,
                  github: FakeGitHub | None = None,
                  desktop: Desktop | None = None,
                  notifications: FakeNotifications | None = None,
@@ -126,7 +138,7 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
                  logs: Logs | None = None,
                  run: Any = run_subprocess) -> Manager:
     clock = clock or ManualClock()
-    board = board or FakeBoardApi(url=BOARD_URL)
+    board = board or ServerPanel()
     github = github or FakeGitHub()
     desktop = desktop or FakeDesktop()
     notifications = notifications or FakeNotifications()
@@ -148,8 +160,8 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
         fake_provider(AgentChanges, pr_processes),
         fake_agent_runs_roles(agent_runs),
         fake_provider(WorkingCopies, working_copies),
-        fake_provider(BoardApi, board),
-        PrManagerWiring(config, run),
+        ManagerPanelsWiring(run),
+        PrManagerWiring(config),
         dashboard_source_wiring(settings),
         BrowserFrontProvider,
     ]
@@ -163,6 +175,7 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
     container = build_container(settings, *providers,
                                 clocks=clocks_of(clock.now, monotonic=clock.monotonic,
                                                  sleep=sleep))
+    board.panel = container.get(ManagerPanels).of(managed.pr)
     return Manager(
         manager=container.get(PrManager), clock=clock, board=board,
         desktop=desktop, notifications=notifications, github=github, event_queue=container.get(Intake), working_copies=working_copies,
