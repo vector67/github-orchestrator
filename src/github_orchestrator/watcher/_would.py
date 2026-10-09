@@ -62,16 +62,15 @@ class WouldSave:
         pass
 
 
-class WouldServeHub:
+class WouldKeepServer:
     def __init__(self, say: Callable[[str], None]) -> None:
         self._say = say
+        self._said = False
 
-    def start(self, port: int, holdings: object) -> str:
-        self._say(f"would serve the hub on port {port}")
-        return f"port {port}, not served on a dry run"
-
-    def stop(self) -> bool:
-        return False
+    def keep_running(self) -> None:
+        if not self._said:
+            self._say("would start the server if none is running")
+            self._said = True
 
 
 class WouldDeliver:

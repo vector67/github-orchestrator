@@ -57,6 +57,7 @@ from github_orchestrator.cli._command_lines import (
 from github_orchestrator.cli._config import (
     CliConfig,
     OpenTerminals,
+    ServerControl,
     Which,
 )
 from github_orchestrator.cli._config import Run as CliRun
@@ -124,6 +125,7 @@ from github_orchestrator.pr_processes._background import Run as ManagerRun
 from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
 from github_orchestrator.server._config import ServerConfig
+from github_orchestrator.server._process import ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
     Boards,
     ConfigFile,
@@ -174,6 +176,7 @@ from github_orchestrator.watcher._releases import (
     http_get,
 )
 from github_orchestrator.watcher._saving import CycleSaving, Saving
+from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
 from github_orchestrator.watcher._setup_files import SetupFiles
 from github_orchestrator.watcher._teardown import PrTeardown, Teardown
@@ -181,9 +184,9 @@ from github_orchestrator.watcher._told import ToldFiles
 from github_orchestrator.watcher._tour import TourFile
 from github_orchestrator.watcher._would import (
     WouldDeliver,
+    WouldKeepServer,
     WouldPlace,
     WouldSave,
-    WouldServeHub,
     WouldTearDown,
 )
 from github_orchestrator.working_copies import WorkingCopies
@@ -821,8 +824,8 @@ class WouldWatchProvider(Provider):
         return WouldSave()
 
     @provide
-    def hub(self, wiring: WouldWatchWiring) -> Hub:
-        return WouldServeHub(wiring.say)
+    def server(self, wiring: WouldWatchWiring) -> Server:
+        return WouldKeepServer(wiring.say)
 
     @provide
     def courier(self) -> Courier:
@@ -967,15 +970,34 @@ class ServerAppProvider(Provider):
 @dataclass(frozen=True)
 class ServerWiring(Wiring):
     config: ServerConfig
+    _: KW_ONLY
+    python: str
+    environment: Mapping[str, str]
+    spawn: Spawn
 
     def context(self) -> Mapping[object, object]:
-        return {ServerConfig: self.config}
+        return {ServerConfig: self.config, ServerWiring: self}
 
 
 @wires(ServerWiring)
 class ServerProvider(Provider):
     scope = Scope.APP
     config = from_context(provides=ServerConfig, scope=Scope.APP)
+    wiring = from_context(provides=ServerWiring, scope=Scope.APP)
+
+    @provide
+    def process(self, wiring: ServerWiring, logs: Logs, sleep: Sleep) -> ServerProcess:
+        return ServerProcess(lock=wiring.config.lock, pid_file=wiring.config.pid,
+                             log_file=logs.path(Process.SERVER), python=wiring.python,
+                             environment=wiring.environment, spawn=wiring.spawn, sleep=sleep)
+
+    @provide
+    def server(self, process: ServerProcess) -> Server:
+        return process
+
+    @provide
+    def control(self, process: ServerProcess) -> ServerControl:
+        return process
 
 
 def server_config(settings: Settings) -> ServerConfig:
@@ -1441,7 +1463,8 @@ def make_container(env: Mapping[str, str], home: Path,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
         ManagerPanelsProvider,
-        ServerWiring(server_config(settings)),
+        ServerWiring(server_config(settings), python=sys.executable,
+                     environment=settings.child_environment(), spawn=detached),
         *managers,
         *(dry_run_parts(settings) if dry_run else []),
     )

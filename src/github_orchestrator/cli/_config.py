@@ -21,6 +21,12 @@ class OpenTerminals(Protocol):
     def close(self) -> int: ...
 
 
+class ServerControl(Protocol):
+    def pid(self) -> int | None: ...
+
+    def stop(self) -> int | None: ...
+
+
 
 @dataclass(frozen=True)
 class CliConfig:

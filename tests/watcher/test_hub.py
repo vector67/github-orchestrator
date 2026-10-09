@@ -1,11 +1,10 @@
-import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
-from github_orchestrator.board_api.fake import FakeHoldings, FakeHub
-from github_orchestrator.board_api.interface import SetupDesk, Told
+from github_orchestrator.board_api.fake import FakeHoldings
+from github_orchestrator.board_api.interface import Holdings, SetupDesk, Told
 from github_orchestrator.domain import HubState
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -15,7 +14,13 @@ from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import polled_on_disk, seen
 from tests.settings.support import disk_boards, disk_dismissals, disk_holds
-from tests.watcher.support import health, watcher_container, watcher_over, watching
+from tests.watcher.support import (
+    ServerSpawns,
+    health,
+    watcher_container,
+    watcher_over,
+    watching,
+)
 
 REPO = "octocat/hello-world"
 MINE = a_pr(83, REPO)
@@ -60,62 +65,53 @@ class Naps:
             self.between()
 
 
-def _resident(settings, hub, *, cycles=1, between=None, dry_run=False, **modules):
-    watcher = watcher_over(settings, github=_github(settings), hub=hub, clock=_at_now,
-                           sleep=Naps(cycles, between), dry_run=dry_run, **modules)
+def _resident(settings, server=None, *, cycles=1, between=None, dry_run=False, **modules):
+    watcher = watcher_over(settings, github=_github(settings), server=server or ServerSpawns(),
+                           clock=_at_now, sleep=Naps(cycles, between), dry_run=dry_run, **modules)
     with pytest.raises(KeyboardInterrupt):
         watcher.run_forever()
 
 
-def test_the_resident_watcher_serves_the_hub_on_its_port_and_tells_it_the_prs_it_holds(settings):
-    hub = FakeHub()
+def test_the_resident_watcher_keeps_the_server_running_on_every_cycle(settings):
+    server = ServerSpawns()
 
-    _resident(settings, hub)
+    _resident(settings, server, cycles=3)
 
-    assert hub.port == settings.config.hub_port
+    assert server.made == 3
     assert set(_told(settings).held().managers) == {MINE, THEIRS}
 
 
-def test_the_hub_is_started_once_however_many_cycles_run(settings):
-    hub = FakeHub()
+def test_a_one_shot_cycle_starts_no_server(settings):
+    server = ServerSpawns()
 
-    _resident(settings, hub, cycles=3)
+    watcher_over(settings, github=_github(settings), server=server).run_cycle()
 
-    assert hub.starts == 1
-
-
-def test_a_hub_port_that_will_not_bind_is_logged_and_tried_again_next_cycle(settings, caplog):
-    hub = FakeHub(taken={settings.config.hub_port})
-
-    with caplog.at_level(logging.ERROR):
-        _resident(settings, hub, cycles=2, between=hub.taken.clear)
-
-    assert f"hub will not start on {settings.config.hub_port}" in caplog.text
-    assert (hub.starts, hub.port) == (1, settings.config.hub_port)
-    assert set(_told(settings).held().managers) == {MINE, THEIRS}
+    assert server.made == 0
 
 
-def test_a_one_shot_cycle_serves_no_hub(settings):
-    hub = FakeHub()
+def test_a_resident_dry_run_starts_no_server_and_tells_it_nothing(settings):
+    server = ServerSpawns()
 
-    watcher_over(settings, github=_github(settings), hub=hub).run_cycle()
-
-    assert hub.starts == 0
-
-
-def test_a_resident_dry_run_serves_no_hub_and_tells_it_nothing(settings):
-    hub = FakeHub()
-
-    _resident(settings, hub, dry_run=True)
+    _resident(settings, server, dry_run=True)
 
     told = _told(settings)
-    assert (hub.starts, told.held().told, told.state()) == (0, False, None)
+    assert (server.made, told.held().told, told.state()) == (0, False, None)
+
+
+def test_a_watcher_waiting_in_setup_keeps_the_server_running_on_every_wait(settings):
+    server = ServerSpawns()
+    states = iter([HubState.SETUP] * 3 + [HubState.WATCHING])
+
+    watcher_over(settings, server=server, sleep=lambda seconds: None).wait_in(
+        HubState.SETUP, lambda: next(states))
+
+    assert server.made == 3
 
 
 def test_a_pr_dismissed_forever_is_not_told_to_the_hub(settings):
     disk_dismissals(settings.data_dir).dismiss_forever(THEIRS)
 
-    _resident(settings, FakeHub())
+    _resident(settings)
 
     assert list(_told(settings).held().managers) == [MINE]
 
@@ -127,7 +123,7 @@ def test_a_pr_i_reviewed_that_left_the_search_is_still_told_to_the_hub(settings)
     github = _github(settings)
     github.add_pr(reviewed, PullRequestState(author="bob", head_sha="sha3", branch="unify"),
                   viewer_reviewed=True)
-    watcher = watcher_over(settings, github=github, hub=FakeHub(), clock=_at_now, sleep=Naps(1))
+    watcher = watcher_over(settings, github=github, clock=_at_now, sleep=Naps(1))
 
     with pytest.raises(KeyboardInterrupt):
         watcher.run_forever()
@@ -144,7 +140,7 @@ def test_after_a_cycle_the_watcher_tells_the_hub_each_pr_it_holds_and_its_manage
     windows = FakePrProcesses()
     windows.open(MINE, Path("/wt/archiving"))
 
-    _resident(settings, FakeHub(), pr_processes=windows)
+    _resident(settings, pr_processes=windows)
 
     held = _told(settings).held()
     assert held.told is True
@@ -152,7 +148,7 @@ def test_after_a_cycle_the_watcher_tells_the_hub_each_pr_it_holds_and_its_manage
 
 
 def test_a_watcher_starting_tells_the_hub_it_holds_nothing_yet_and_its_state(settings):
-    _resident(settings, FakeHub())
+    _resident(settings)
     states = iter([HubState.SETUP, HubState.WATCHING])
 
     watcher_over(settings, sleep=lambda seconds: None).wait_in(HubState.SETUP,
@@ -164,7 +160,7 @@ def test_a_watcher_starting_tells_the_hub_it_holds_nothing_yet_and_its_state(set
 
 
 def test_a_resident_watcher_tells_the_hub_it_is_watching(settings):
-    _resident(settings, FakeHub())
+    _resident(settings)
 
     assert _told(settings).state() is HubState.WATCHING
 
@@ -176,9 +172,8 @@ def test_the_hub_is_told_nothing_before_any_watcher_has_run(settings):
 
 
 def _holdings(settings, **modules):
-    hub = FakeHub()
-    _resident(settings, hub, **modules)
-    return hub.holdings
+    _resident(settings, **modules)
+    return watcher_container(settings, **modules).get(Holdings)
 
 
 def test_a_board_has_a_port_to_link_to_only_while_it_is_wanted(settings):
@@ -228,17 +223,6 @@ def test_a_pr_nothing_has_described_has_no_board_to_reach(holdings):
     assert holdings.board_port(NOBODYS) is None
 
 
-def test_a_hub_port_held_while_the_hub_waits_in_setup_is_logged_once(settings, caplog):
-    hub = FakeHub(taken={settings.config.hub_port})
-    states = iter([HubState.SETUP] * 5 + [HubState.WATCHING])
-    watcher = watcher_over(settings, hub=hub, sleep=lambda seconds: None)
-
-    with caplog.at_level(logging.WARNING):
-        watcher.wait_in(HubState.SETUP, lambda: next(states))
-
-    assert caplog.text.count(f"will not start on {settings.config.hub_port}") == 1
-
-
 def test_a_hub_waiting_in_setup_drops_the_error_of_cycles_it_no_longer_runs(settings):
     settings.watcher_failures.write_text('{"consecutive": 3, "last_error": "gh exploded"}')
     states = iter([HubState.SETUP, HubState.WATCHING])
@@ -249,15 +233,16 @@ def test_a_hub_waiting_in_setup_drops_the_error_of_cycles_it_no_longer_runs(sett
     assert health(settings).last_error is None
 
 
-def test_a_resident_watcher_stops_its_hub_and_returns_once_setup_moves_the_config(settings):
+def test_a_resident_watcher_returns_once_setup_moves_the_config(settings):
     settings.config_path.write_text("gh_account = \n")
-    hub = FakeHub()
-    container = watcher_container(settings, github=_github(settings), hub=hub, clock=_at_now,
+    server = ServerSpawns()
+    container = watcher_container(settings, github=_github(settings), server=server,
+                                  clock=_at_now,
                                   sleep=lambda seconds: container.get(SetupDesk).move_aside())
 
     container.get(Watcher).run_forever()
 
-    assert (hub.starts, hub.port) == (1, None)
+    assert server.made == 1
 
 
 def test_a_hub_waiting_in_setup_returns_once_setup_moves_the_config_though_its_state_reads_on(

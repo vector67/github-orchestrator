@@ -2,12 +2,11 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import dishka
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api import Hub
-from github_orchestrator.board_api.fake import FakeHub
 from github_orchestrator.cli import Cli
 from github_orchestrator.desktop import Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -25,9 +24,11 @@ from github_orchestrator.terminal_sessions.fake import (
 from github_orchestrator.wiring import (
     CliWiring,
     OtherInstancesWiring,
+    ServerWiring,
     cli_config,
     make_container,
     notifications_wiring,
+    server_config,
     watcher_wiring,
 )
 from tests.cli.scripted_system import WATCHER_PID as HUB_PID
@@ -122,6 +123,9 @@ class Machine:
     def _other_container(self, environment: Mapping[str, str]) -> dishka.Container:
         return self.others[environment["GITHUB_ORCHESTRATOR_DATA_DIR"]].container()
 
+    def spawn_server(self, argv: list[str], env: Mapping[str, str], log_file: Path) -> NoReturn:
+        raise AssertionError(f"the CLI started a server: {argv}")
+
     def sleep(self, seconds: float) -> None:
         self.slept.append(seconds)
         if self.while_asleep:
@@ -186,7 +190,8 @@ class Machine:
             fake_provider(PrProcesses, self.processes()),
             fake_provider(TerminalSessions, FakeTerminalSessions()),
             fake_provider(Terminals, self.terminals),
-            fake_provider(Hub, FakeHub()),
+            ServerWiring(server_config(settings), python=self.python,
+                         environment=settings.child_environment(), spawn=self.spawn_server),
             fake_agent_runs_roles(self.runs()),
             watcher_wiring(settings, self.home, releases_api=self.releases_api),
             notifications_wiring(settings),

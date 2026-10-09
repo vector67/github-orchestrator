@@ -1,12 +1,11 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import dishka
 
-from github_orchestrator.board_api import Hub
-from github_orchestrator.board_api.fake import FakeHub
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.desktop import Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -22,8 +21,10 @@ from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.watcher import Health, Watcher, WatcherHealth
 from github_orchestrator.wiring import (
     Part,
+    ServerWiring,
     dry_run_parts,
     notifications_wiring,
+    server_config,
     watcher_wiring,
 )
 from github_orchestrator.working_copies import WorkingCopies
@@ -72,6 +73,20 @@ def the_clone(settings: Settings) -> Path:
     return clone.path
 
 
+class LeftAtOnce:
+    def poll(self) -> int | None:
+        return 1
+
+
+@dataclass
+class ServerSpawns:
+    made: int = 0
+
+    def __call__(self, argv: list[str], env: Mapping[str, str], log_file: Path) -> LeftAtOnce:
+        self.made += 1
+        return LeftAtOnce()
+
+
 def watching(settings: Settings) -> FakeGitHub:
     github = FakeGitHub(account=settings.config.gh_account)
     github.repos.update(settings.repos)
@@ -86,7 +101,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       working_copies: WorkingCopies | None = None,
                       notifications: FakeNotifications | None = None,
                       logs: Logs | None = None,
-                      hub: Hub | None = None,
+                      server: ServerSpawns | None = None,
                       clock: Callable[[], datetime] | None = None,
                       sleep: Callable[[float], None] = never_sleeps,
                       dry_run: bool = False, home: Path | None = None,
@@ -100,7 +115,8 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
         fake_github(github),
         fake_provider(Desktop, desktop or FakeDesktop()),
         fake_provider(PrProcesses, pr_processes or FakePrProcesses()),
-        fake_provider(Hub, hub or FakeHub()),
+        ServerWiring(server_config(settings), python="python3",
+                     environment=settings.child_environment(), spawn=server or ServerSpawns()),
         fake_agent_runs_roles(fake_agent_runs()),
         fake_provider(WorkingCopies, working_copies or FakeWorkingCopies(github)),
         watcher_wiring(settings, home or settings.data_dir / "home",

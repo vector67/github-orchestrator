@@ -3,7 +3,6 @@ import logging
 
 import pytest
 
-from github_orchestrator.board_api.fake import FakeHub
 from github_orchestrator.board_api.interface import Told
 from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import HubState, Repo
@@ -12,7 +11,7 @@ from github_orchestrator.settings import Process
 from github_orchestrator.settings.fake import FakeLogs, fake_settings
 from github_orchestrator.watcher import __main__ as watcher_main
 from tests.settings.support import settings_read_from
-from tests.watcher.support import watcher_container
+from tests.watcher.support import ServerSpawns, watcher_container
 
 CONFIGURED = (
     'gh_account = "octocat"\n'
@@ -37,7 +36,7 @@ class Searches(FakeGitHub):
 
 
 def _prepared(monkeypatch, tmp_path, argv, *, config=CONFIGURED, error=None, desktop=None,
-              hub=None, sleep=None):
+              server=None, sleep=None):
     if config is not None:
         (tmp_path / "config.toml").write_text(config)
     settings = settings_read_from(tmp_path / "config.toml", tmp_path)
@@ -48,7 +47,7 @@ def _prepared(monkeypatch, tmp_path, argv, *, config=CONFIGURED, error=None, des
 
     def container(env, home, *, dry_run):
         return watcher_container(settings, github=github, desktop=desktop, logs=logs,
-                                 dry_run=dry_run, hub=hub, **naps)
+                                 dry_run=dry_run, server=server, **naps)
 
     monkeypatch.setattr("sys.argv", ["watcher", *argv])
     monkeypatch.setattr(watcher_main, "make_container", container)
@@ -85,46 +84,45 @@ class Edits:
     ('gh_account = "octocat"\n', HubState.SETUP),
     ("unknown_key = 1\n" + CONFIGURED, HubState.BROKEN),
 ])
-def test_a_resident_watcher_without_a_complete_config_serves_the_hub_and_polls_nothing(
+def test_a_resident_watcher_without_a_complete_config_keeps_the_server_running_and_polls_nothing(
     tmp_path, monkeypatch, config, state,
 ):
-    hub = FakeHub()
-    github, _ = _prepared(monkeypatch, tmp_path, ["--loop"], config=config, hub=hub,
+    server = ServerSpawns()
+    github, _ = _prepared(monkeypatch, tmp_path, ["--loop"], config=config, server=server,
                           sleep=Edits(tmp_path / "config.toml", config, CONFIGURED))
 
     watcher_main.main()
 
     assert told(tmp_path).state() is state
+    assert server.made == 2
     assert github.searched == []
 
 
-def test_the_hub_stops_when_the_config_is_set_up_so_the_service_starts_the_watcher_again(
+def test_the_watcher_returns_when_the_config_is_set_up_so_the_service_starts_it_again(
     tmp_path, monkeypatch,
 ):
-    hub = FakeHub()
-    _prepared(monkeypatch, tmp_path, ["--loop"], config=None, hub=hub,
+    _prepared(monkeypatch, tmp_path, ["--loop"], config=None,
               sleep=Edits(tmp_path / "config.toml", CONFIGURED))
 
     watcher_main.main()
 
-    assert hub.port is None
+    assert told(tmp_path).state() is HubState.SETUP
 
 
 def test_a_broken_config_moved_aside_drops_the_hub_into_setup_by_a_restart(tmp_path, monkeypatch):
-    hub = FakeHub()
     _prepared(monkeypatch, tmp_path, ["--loop"], config="unknown_key = 1\n" + CONFIGURED,
-              hub=hub, sleep=Edits(tmp_path / "config.toml", None))
+              sleep=Edits(tmp_path / "config.toml", None))
 
     watcher_main.main()
 
-    assert (told(tmp_path).state(), hub.port) == (HubState.BROKEN, None)
+    assert told(tmp_path).state() is HubState.BROKEN
 
 
 def test_a_resident_watcher_without_a_complete_config_takes_the_lock_first(
     tmp_path, monkeypatch, capsys,
 ):
-    hub = FakeHub()
-    _prepared(monkeypatch, tmp_path, ["--loop"], config=None, hub=hub)
+    server = ServerSpawns()
+    _prepared(monkeypatch, tmp_path, ["--loop"], config=None, server=server)
     lock = _held(fake_settings(tmp_path).watcher_lock)
     try:
         with pytest.raises(SystemExit) as excinfo:
@@ -133,7 +131,7 @@ def test_a_resident_watcher_without_a_complete_config_takes_the_lock_first(
         lock.close()
 
     assert excinfo.value.code == 0
-    assert (hub.starts, told(tmp_path).state()) == (0, None)
+    assert (server.made, told(tmp_path).state()) == (0, None)
 
 
 @pytest.mark.parametrize(("config", "said"), [

@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import IO, Protocol
 
-from github_orchestrator.board_api import Hub
 from github_orchestrator.change_detection import ChangeDetection, PrClosed, PrEvent
 from github_orchestrator.conversation import ConversationManagerFactory, ThreadActivity
 from github_orchestrator.domain import HubState, Pr, Sleep, UtcClock
@@ -16,10 +15,10 @@ from github_orchestrator.pr_processes import ManagerPane, PrProcesses
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._failures import clear_failures
-from github_orchestrator.watcher._holdings import WatchedHoldings
 from github_orchestrator.watcher._placing import Placement
 from github_orchestrator.watcher._poll import Fetched, fetch_pr_state
 from github_orchestrator.watcher._saving import Saving
+from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup_files import SetupFiles
 from github_orchestrator.watcher._teardown import Reason, Teardown
 from github_orchestrator.watcher.interface import Releases
@@ -49,8 +48,8 @@ class PollingWatcher:
                  sleep: Sleep, *, pull_requests: PullRequests,
                  courier: Courier, intake: Intake, worklist: Worklist,
                  pr_processes: PrProcesses, conversation_managers: ConversationManagerFactory,
-                 change_detection: ChangeDetection, dismissals: Dismissals, hub: Hub,
-                 holdings: WatchedHoldings, placement: Placement,
+                 change_detection: ChangeDetection, dismissals: Dismissals, server: Server,
+                 placement: Placement,
                  teardown: Teardown, saving: Saving, say: Say, setup_files: SetupFiles,
                  releases: Releases) -> None:
         self._config = config
@@ -69,10 +68,7 @@ class PollingWatcher:
         self._change_detection = change_detection
         self._dismissals = dismissals
         self._lock: IO[str] | None = None
-        self._hub = hub
-        self._hub_url: str | None = None
-        self._hub_refused: str | None = None
-        self._holdings = holdings
+        self._server = server
         self._placement = placement
         self._teardown = teardown
         self._saving = saving
@@ -106,7 +102,7 @@ class PollingWatcher:
         log.info("--- watcher daemon started (interval=%ss) ---", self._config.poll_interval)
         self._saving.began(HubState.WATCHING)
         while not self._leaving():
-            self._serve_hub()
+            self._server.keep_running()
             self._releases.check_if_due()
             try:
                 self._polled()
@@ -115,10 +111,9 @@ class PollingWatcher:
                 self._saving.failed(exc)
             self._rest()
         log.info("setup changed the config; stopping so the service starts the watcher again")
-        self._hub.stop()
 
     def wait_in(self, state: HubState, current: Callable[[], HubState]) -> None:
-        log.info("--- watcher serving the hub alone, in %s ---", state)
+        log.info("--- watcher keeping the server running alone, in %s ---", state)
         self._saving.began(state)
         try:
             clear_failures(self._config.failures)
@@ -126,7 +121,7 @@ class PollingWatcher:
             log.warning("Could not clear %s: %s", self._config.failures, exc)
         now = state
         while not self._leaving() and (now := current()) is state:
-            self._serve_hub()
+            self._server.keep_running()
             self._releases.check_if_due()
             self._sleep(CONFIG_CHECK_SECONDS)
         if self._left:
@@ -134,25 +129,10 @@ class PollingWatcher:
         else:
             log.info("the config is %s now; stopping so the service starts the watcher again",
                      now)
-        self._hub.stop()
 
     def _leaving(self) -> bool:
         self._left = self._left or self._setup_files.taken_leave()
         return self._left
-
-    def _serve_hub(self) -> None:
-        if self._hub_url is not None:
-            return
-        port = self._config.hub_port
-        try:
-            self._hub_url = self._hub.start(port, self._holdings)
-        except OSError as exc:
-            if str(exc) != self._hub_refused:
-                log.error("the hub will not start on %s (%s); trying again until it does",
-                          port, exc)
-                self._hub_refused = str(exc)
-            return
-        log.info("hub at %s", self._hub_url)
 
     def _polled(self) -> str:
         started = self._clock()
