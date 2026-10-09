@@ -3,6 +3,7 @@ from dataclasses import replace
 import pytest
 
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
+from github_orchestrator.board_api.interface import ManagerStanding
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
 from tests.board_api.support import board_contract, client_for
 
@@ -45,6 +46,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
         "frozen": None,
         "undismiss_command": "github-orchestrator undismiss --repo o/n 1",
         "notice": "an agent is already running",
+        "standing": "answering",
         "facts": {"polled_at": "2026-06-10T10:30:00Z", "ended": False, "is_author": True,
                   "changes_requested_by": [], "pending_reviewers": ["carol"],
                   "ci_status": "passing", "merge_state": "clean", "draft": False,
@@ -138,12 +140,12 @@ def test_what_happened_since_you_acted_is_answered_as_counts_for_the_page_to_wor
         "threads_resolved": 1}
 
 
-def test_a_manager_that_has_not_finished_its_first_tick_asks_the_page_to_come_back():
-    answer = client_for(manager=FakeManagerPanel(now=None)).get("/api/dashboard")
+def test_a_manager_that_has_not_finished_its_first_tick_is_read_as_starting():
+    starting = replace(IDLE, standing=ManagerStanding.STARTING)
 
-    assert answer.status_code == 503
-    assert answer.headers["Retry-After"] == "1"
-    assert answer.json()["errors"][0]["code"] == "manager-starting"
+    answer = client_for(manager=FakeManagerPanel(now=starting)).get("/api/dashboard")
+
+    assert (answer.status_code, answer.json()["standing"]) == (200, "starting")
 
 
 def test_the_changes_read_answers_the_agent_changes_text():

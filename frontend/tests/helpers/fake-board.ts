@@ -410,6 +410,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
     frozen: null,
     undismiss_command: 'github-orchestrator undismiss 7',
     notice: null,
+    standing: 'answering',
     facts: facts === null ? null : prFacts(facts),
     manager: {
       frozen_on: null,
@@ -485,7 +486,6 @@ export function heldPr(over: HeldOver = {}): HeldPullRequest {
     number,
     manager: 'running',
     board_url: `/pr/${repo}/${number}`,
-    board_answered: true,
     ...rest,
     dashboard: dashboard({
       ...shown,
@@ -623,14 +623,14 @@ export class FakeBoard {
   sources: Record<string, string[]> = {};
   inFlight: Operation[] = [];
   reviews: Record<string, Operation> = {};
-  private managed: Dashboard | null = dashboard();
+  private managed: Dashboard = dashboard();
   private managerSet = false;
 
-  get manager(): Dashboard | null {
+  get manager(): Dashboard {
     return this.managed;
   }
 
-  set manager(shown: Dashboard | null) {
+  set manager(shown: Dashboard) {
     this.managed = shown;
     this.managerSet = true;
   }
@@ -807,10 +807,7 @@ export class FakeBoard {
 
   private sendTo(stream: Streaming): void {
     const path = stream.read.pathname;
-    const body =
-      path === '/api/dashboard' && !this.boardOf(stream.url)
-        ? undefined
-        : this.read(stream.read, 'board', stream.url);
+    const body = this.read(stream.read, 'board', stream.url);
     if (body === undefined) return;
     const data = JSON.stringify(body);
     const id = hash(data);
@@ -972,12 +969,6 @@ export class FakeBoard {
       const read = new URL(`${streaming[1]}${where.search}`, where);
       return this.stream(url, read, headers);
     }
-    if (where.pathname === '/api/dashboard' && !this.boardOf(url)) {
-      return this.starting(
-        'manager-starting',
-        'the PR manager has not finished its first tick yet',
-      );
-    }
     if (
       side === 'hub' &&
       where.pathname === '/api/pull-requests' &&
@@ -1027,7 +1018,7 @@ export class FakeBoard {
     };
   }
 
-  private boardOf(url: string): Dashboard | null {
+  private boardOf(url: string): Dashboard {
     const through = THROUGH_THE_HUB.exec(
       new URL(url, 'http://127.0.0.1').pathname,
     );
@@ -1039,9 +1030,8 @@ export class FakeBoard {
     if (!held) return this.manager;
     if (!this.managerSet) return held.dashboard;
     if (
-      this.manager === null ||
-      (this.manager.pr.repo === held.repo &&
-        this.manager.pr.number === held.number)
+      this.manager.pr.repo === held.repo &&
+      this.manager.pr.number === held.number
     ) {
       return this.manager;
     }

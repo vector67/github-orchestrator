@@ -1,5 +1,6 @@
 from github_orchestrator.agent_runs import LastRun, Run
 from github_orchestrator.board_api import Dashboard
+from github_orchestrator.board_api.interface import ManagerStanding
 from github_orchestrator.change_detection import (
     CiStatus,
     Facts,
@@ -105,4 +106,5 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         threads_listed_at=counts.listed_at,
         undismiss_command=config.undismiss_command,
         notice=notice,
+        standing=ManagerStanding.STARTING,
     )

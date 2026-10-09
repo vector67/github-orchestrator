@@ -4,7 +4,12 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, RootModel, StringConstraints
 
 from github_orchestrator import conversation as domain
-from github_orchestrator.board_api.interface import CloneState, WallGroup, WriteState
+from github_orchestrator.board_api.interface import (
+    CloneState,
+    ManagerStanding,
+    WallGroup,
+    WriteState,
+)
 from github_orchestrator.conversation import (
     Classification,
     ConfidenceLevel,
@@ -38,9 +43,6 @@ class ErrorCode(StrEnum):
 
     FOREIGN_ORIGIN is a write that did not come from the board's own page:
     addressed to another host, or sent by another site's.
-
-    MANAGER_STARTING is the PR manager not having finished its first tick,
-    so it has no status to give yet. It clears within a tick.
 
     WATCHER_STARTING is the hub serving before the watcher has finished its
     first cycle, so it does not know yet which pull requests it holds. It
@@ -117,7 +119,6 @@ class ErrorCode(StrEnum):
     AGENTS_DISABLED = "agents-disabled"
     INTERNAL_REFUSAL = "internal-refusal"
     FOREIGN_ORIGIN = "foreign-origin"
-    MANAGER_STARTING = "manager-starting"
     WATCHER_STARTING = "watcher-starting"
     WATCHER_FAILING = "watcher-failing"
     NOT_WATCHING = "not-watching"
@@ -1378,6 +1379,14 @@ class Dashboard(BaseModel):
     notice: str | None = Field(
         description="The sentence the dashboard is showing for a few seconds, "
                     "such as why a command was refused.")
+    standing: ManagerStanding = Field(
+        description="What the PR manager's status file says of it: `starting` "
+                    "before its first tick has written the file, `answering` "
+                    "while the file is under 10 seconds old, and `gone` once "
+                    "it is older or will not read. Only while `answering` do "
+                    "the run, the notice, the live threads, the freeze and "
+                    "`manager.changed_at` come from the manager; otherwise "
+                    "they are what is on disk without it.")
     facts: PrFacts | None = Field(
         description="What the next move reads of GitHub. Null until the first poll.")
     manager: ManagerFlags
@@ -1488,17 +1497,12 @@ class HeldPullRequest(BaseModel):
         description="`/pr/<owner>/<name>/<number>` on the hub, where the pull request's board "
                     "is carried, when one is wanted. It answers only while its "
                     "PR manager runs.")
-    board_answered: bool = Field(
-        description="True where `dashboard` is the running manager's own, read "
-                    "from its board within the last 30 seconds. False where the "
-                    "board has not answered for longer or there is none, and the "
-                    "hub built the "
-                    "dashboard from what is on disk: no run, no notice, and a "
-                    "frozen worktree as the watcher sees it.")
     dashboard: Dashboard = Field(
-        description="What `/api/dashboard` on its board answers. The page "
-                    "decides the row's move and group from its facts, "
-                    "manager flags and thread rows.")
+        description="What `/api/dashboard` on its board answers for the same "
+                    "files: built from what is on disk with the PR manager's "
+                    "status file laid over it. Its `standing` says whether the "
+                    "manager is answering. The page decides the row's move and "
+                    "group from its facts, manager flags and thread rows.")
 
 
 class WallGroupName(BaseModel):

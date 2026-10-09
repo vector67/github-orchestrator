@@ -466,6 +466,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             release_requested=dashboard.release_requested),
         undismiss_command=dashboard.undismiss_command,
         notice=dashboard.notice,
+        standing=dashboard.standing,
         facts=_facts_of(dashboard) if dashboard.polled else None,
         manager=contract.ManagerFlags(
             frozen_on=dashboard.frozen_on, on_hold=dashboard.on_hold,

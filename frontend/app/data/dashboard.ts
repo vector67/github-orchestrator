@@ -944,7 +944,7 @@ export function standingOf(absence: Absence): string | null {
   if (dismissed && number !== null) {
     return `${dismissedSaying(number, dismissed)} This page has nothing more to show.`;
   }
-  if (absence.shown) return null;
+  if (absence.shown && !absence.starting) return null;
   if (absence.missed) return 'Can’t reach the board server.';
   if (absence.starting) return 'The manager is starting…';
   return 'The manager is not running.';

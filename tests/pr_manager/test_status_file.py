@@ -4,7 +4,7 @@ import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.fake import FakeBoardApi
-from github_orchestrator.board_api.interface import ManagerStanding, ManagerStatuses
+from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -23,7 +23,7 @@ def _manager(settings, *script, **modules):
 
 
 def _standing(manager):
-    return manager.container.get(ManagerStatuses).standing(THE_PR)
+    return manager.container.get(Dashboards).dashboard(THE_PR).standing
 
 
 def test_a_manager_that_has_not_ticked_is_starting(settings, tmp_path):
@@ -38,27 +38,23 @@ def test_a_manager_that_ticked_is_answering(settings, tmp_path):
     assert _standing(manager) is ManagerStanding.ANSWERING
 
 
-@pytest.mark.parametrize(("seconds", "standing"), [
-    (9.9, ManagerStanding.ANSWERING),
-    (10, ManagerStanding.GONE),
-], ids=["just inside the window", "at the window"])
-def test_a_manager_is_gone_once_its_file_is_ten_seconds_old(settings, tmp_path, seconds, standing):
-    manager = _manager(settings, worktree=tmp_path).run()
-
-    manager.clock.advance(seconds)
-
-    assert _standing(manager) is standing
-
-
 class _Unready:
+    def __init__(self, later):
+        self.ready = False
+        self._later = later
+
     def of(self, pr):
-        raise RuntimeError("the threads are not readable yet")
+        if not self.ready:
+            raise RuntimeError("the threads are not readable yet")
+        return self._later.of(pr)
 
 
 def test_a_new_run_is_starting_until_it_draws_even_after_an_earlier_run_wrote(settings, tmp_path):
-    _manager(settings, worktree=tmp_path).run()
+    earlier = _manager(settings, worktree=tmp_path).run()
+    unready = _Unready(earlier.conversation_managers)
 
-    manager = _manager(settings, worktree=tmp_path, conversation_managers=_Unready()).run()
+    manager = _manager(settings, worktree=tmp_path, conversation_managers=unready).run()
+    unready.ready = True
 
     assert _standing(manager) is ManagerStanding.STARTING
 

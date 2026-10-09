@@ -167,6 +167,7 @@ export interface Dashboard {
   frozen: FrozenWorktree | null;
   undismiss_command: string;
   notice: string | null;
+  standing: ManagerStanding;
   facts: PrFacts | null;
   manager: ManagerFlags;
   threads: ThreadRow[];
@@ -283,7 +284,7 @@ export interface DraftOperation {
   posted_comment: number | null;
 }
 
-export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'manager-starting' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'not-frozen' | 'board-unreachable' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'server-error';
+export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'not-frozen' | 'board-unreachable' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'server-error';
 
 export interface ErrorDetail {
   status: number;
@@ -412,7 +413,6 @@ export interface HeldPullRequest {
   number: number;
   manager: string;
   board_url: string | null;
-  board_answered: boolean;
   dashboard: Dashboard;
 }
 
@@ -449,6 +449,8 @@ export interface ManagerFlags {
   threads_live: number;
   changed_at: string | null;
 }
+
+export type ManagerStanding = 'starting' | 'answering' | 'gone';
 
 export interface MentionFact {
   author: string;

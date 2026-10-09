@@ -178,7 +178,7 @@ export default class PrControlsService extends Service {
       move: row.summaries.move.code,
       yours: this.yours(row.repo, row.number),
       held: true,
-      live: row.board_url !== null && row.board_answered,
+      live: row.board_url !== null && row.drawn.standing === 'answering',
       showing: 'hub',
     };
   }
@@ -217,7 +217,7 @@ export default class PrControlsService extends Service {
     if (pr === null) return null;
     const how = this.dismissals.get(keyOf(pr));
     if (!how) return null;
-    return this.hub.find(pr)?.board_answered ? null : how;
+    return this.hub.find(pr)?.drawn?.standing === 'answering' ? null : how;
   }
 
   runGit = (on: Controlled, keys: string): Promise<Tried<GitRun>> =>

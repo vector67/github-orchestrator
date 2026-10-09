@@ -414,13 +414,14 @@ def test_frozen_on_the_wrong_branch_starts_no_thread_runs(settings, tmp_path):
 def test_the_dashboard_counts_queued_working_and_ready_threads(settings, tmp_path):
     seed_state(settings, title="t", url="u")
     runs = _runs()
-    manager = manager_over(settings, is_author=True, worktree=tmp_path, agent_runs=runs,
-                           working_copies=_in_a_repo(tmp_path))
+    manager = manager_over(_with_config(settings, max_thread_runs=1), None, is_author=True,
+                           worktree=tmp_path, agent_runs=runs, working_copies=_in_a_repo(tmp_path))
     for key in ("PRRT_ready", "PRRT_gone"):
         propose(manager, _heard(manager, key), key, pr=THE_PR)
     manager.github.resolve_thread("PRRT_gone")
     _heard(manager, "PRRT_queued")
+    _heard(manager, "PRRT_waiting")
     runs.script(Outcome(finishes=False))
     manager.run()
     shown = _shown(manager)
-    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 0, 1)
+    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 1, 1)

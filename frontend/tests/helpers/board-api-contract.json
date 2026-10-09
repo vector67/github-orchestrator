@@ -633,10 +633,7 @@
     "200": {
      "$ref": "#/components/schemas/Dashboard"
     },
-    "304": null,
-    "503": {
-     "$ref": "#/components/schemas/Errors"
-    }
+    "304": null
    }
   },
   "/api/dashboard/stream": {
@@ -2322,6 +2319,9 @@
     "pr": {
      "$ref": "#/components/schemas/DashboardPr"
     },
+    "standing": {
+     "$ref": "#/components/schemas/ManagerStanding"
+    },
     "status": {
      "$ref": "#/components/schemas/DashboardStatus"
     },
@@ -2352,6 +2352,7 @@
     "frozen",
     "undismiss_command",
     "notice",
+    "standing",
     "facts",
     "manager",
     "threads",
@@ -3031,7 +3032,6 @@
     "agents-disabled",
     "internal-refusal",
     "foreign-origin",
-    "manager-starting",
     "watcher-starting",
     "watcher-failing",
     "not-watching",
@@ -3705,9 +3705,6 @@
   },
   "HeldPullRequest": {
    "properties": {
-    "board_answered": {
-     "type": "boolean"
-    },
     "board_url": {
      "anyOf": [
       {
@@ -3736,7 +3733,6 @@
     "number",
     "manager",
     "board_url",
-    "board_answered",
     "dashboard"
    ],
    "type": "object"
@@ -3895,6 +3891,14 @@
     "changed_at"
    ],
    "type": "object"
+  },
+  "ManagerStanding": {
+   "enum": [
+    "starting",
+    "answering",
+    "gone"
+   ],
+   "type": "string"
   },
   "MentionFact": {
    "properties": {

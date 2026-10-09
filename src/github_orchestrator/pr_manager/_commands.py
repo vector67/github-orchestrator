@@ -9,7 +9,7 @@ from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
-from github_orchestrator.pr_manager._dashboard_source import Drawn
+from github_orchestrator.pr_manager._dashboard_source import DashboardSource
 from github_orchestrator.pr_manager._files import locked
 from github_orchestrator.pr_manager._git_palette import (
     SHELL,
@@ -39,7 +39,8 @@ class ManagerCommands(ManagerPanel):
                  pull_requests: PullRequests, pr_work: PrWork, pr_processes: PrProcesses,
                  agent_changes: AgentChanges, history: History,
                  change_detection: ChangeDetection, intake: Intake,
-                 status_files: StatusFiles, command_files: CommandFiles) -> None:
+                 status_files: StatusFiles, command_files: CommandFiles,
+                 dashboards: DashboardSource) -> None:
         self._config = config
         self._board = board
         self._run = run
@@ -57,28 +58,26 @@ class ManagerCommands(ManagerPanel):
         self._intake = intake
         self._status_files = status_files
         self._command_files = command_files
+        self._dashboards = dashboards
         self.active_run: Run | None = None
         self._dismissed = False
         self._notice: str | None = None
         self._notice_at = 0.0
-        self._drawn: Drawn | None = None
 
-    def publish(self, drawn: Drawn) -> None:
-        self._drawn = drawn
-
-    def obey(self) -> None:
+    def obey(self, *, frozen: bool) -> None:
         for pending in self._command_files.pending(self._config.pr):
-            self.carry_out(pending.command)
+            self.carry_out(pending.command, frozen=frozen)
             self._command_files.delete(pending)
 
-    def carry_out(self, command: Command) -> None:
+    def carry_out(self, command: Command, *, frozen: bool) -> None:
         pr = self._config.pr
         if self._dismissed:
             log.info("%s: %s dropped — the manager is leaving", pr, command)
             return
         log.info("%s: %s", pr, command)
-        refused = refusal(self._conditions(), command,
-                          agents_enabled=self._config.agents_enabled)
+        run = self.active_run
+        refused = refusal(Conditions(frozen=frozen, running=run is not None and run.is_alive()),
+                          command, agents_enabled=self._config.agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", pr, command, refused)
             self.notify(refused)
@@ -104,9 +103,8 @@ class ManagerCommands(ManagerPanel):
             return None
         return self._notice
 
-    def dashboard(self) -> Dashboard | None:
-        drawn = self._drawn
-        return None if drawn is None else drawn.counted()
+    def dashboard(self) -> Dashboard:
+        return self._dashboards.dashboard(self._config.pr)
 
     def changes(self) -> str | None:
         return self._agent_changes.read(Path(self._config.worktree))
@@ -179,11 +177,6 @@ class ManagerCommands(ManagerPanel):
         if refused is None:
             self._command_files.write(self._config.pr, command)
         return refused
-
-    def _conditions(self) -> Conditions:
-        drawn, run = self._drawn, self.active_run
-        return Conditions(frozen=drawn is not None and drawn.dashboard.frozen_on is not None,
-                          running=run is not None and run.is_alive())
 
     def _act(self, command: Command) -> None:
         match command:

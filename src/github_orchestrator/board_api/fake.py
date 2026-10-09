@@ -8,6 +8,7 @@ from github_orchestrator.board_api.interface import (
     FieldRefusal,
     Holdings,
     ManagerPanel,
+    ManagerStanding,
     RepoChoice,
     SetupOptions,
     SetupProgress,
@@ -38,12 +39,12 @@ IDLE = Dashboard(
     seconds_left=None, run_working=False, release_requested=False,
     hidden=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
     undismiss_command="github-orchestrator undismiss --repo o/n 1",
-    notice=None)
+    notice=None, standing=ManagerStanding.ANSWERING)
 
 
 @dataclass
 class FakeManagerPanel:
-    now: Dashboard | None = IDLE
+    now: Dashboard = IDLE
     changes_text: str | None = None
     output: list[tuple[str, bool]] = field(default_factory=list)
     carried_on: int = 0
@@ -56,7 +57,7 @@ class FakeManagerPanel:
     terminal_refusal: str | None = None
     refusal: str | None = None
 
-    def dashboard(self) -> Dashboard | None:
+    def dashboard(self) -> Dashboard:
         return self.now
 
     def changes(self) -> str | None:
@@ -66,7 +67,7 @@ class FakeManagerPanel:
         return self.output[-lines:]
 
     def set_on_hold(self, on_hold: bool) -> str | None:
-        if self.refusal is None and self.now is not None:
+        if self.refusal is None:
             self.now = replace(self.now, on_hold=on_hold)
         return self.refusal
 

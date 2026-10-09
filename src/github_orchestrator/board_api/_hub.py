@@ -3,7 +3,6 @@ import logging
 import os
 import threading
 from collections.abc import Callable, Collection, Sequence
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
@@ -127,11 +126,9 @@ WATCHER_STARTING = {
            summary="Every pull request the watcher held after its last cycle.",
            responses={**etag.TAGGED, 503: WATCHER_STARTING})
 def list_pull_requests(request: Request, desk: Serving) -> Response:
-    """The wall: each pull request's dashboard, read from its board where
-    the board answers within a couple of seconds (every board is asked at
-    once, so a slow or dead one costs one wait, not one each), or its last
-    answer when that is under 30 seconds old, and otherwise built from what
-    the watcher, the switches and the PR managers left on disk. Grouped by who holds the ball, and within a group in the order
+    """The wall: each pull request's dashboard, built from what the watcher,
+    the switches and the PR managers left on disk, with each manager's status
+    file laid over it, as its board builds it. Grouped by who holds the ball, and within a group in the order
     they joined it, so a row that changes group goes to the bottom of its
     new one and says where it came from.
     """
@@ -345,7 +342,7 @@ class ServedHub:
                  dashboards: Dashboards, ledger: Ledger, pulse: WatcherPulse,
                  clock: UtcClock, watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, board_seconds: float, open_streams: int) -> None:
+                 tour: TourMarker, open_streams: int) -> None:
         self._listen = listen
         self._releases = releases
         self._tour = tour
@@ -358,9 +355,7 @@ class ServedHub:
         self._clock = clock
         self._app_root = app_root
         self._fonts = routes.served_fonts(font_dir)
-        self._wall = Wall(dashboards, watching,
-                          ThreadPoolExecutor(max_workers=32, thread_name_prefix="hub-wall"),
-                          clock, board_seconds=board_seconds)
+        self._wall = Wall(dashboards, watching)
         self._lock = threading.Lock()
         self._held: tuple[Pr, ...] | None = None
         self._listening: Listening | None = None

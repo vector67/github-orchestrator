@@ -20,7 +20,7 @@ from github_orchestrator.agent_runs.fake import (
 from github_orchestrator.agent_runs.fake import Outcome as RunOutcome
 from github_orchestrator.board_api import BoardApi, Dashboard
 from github_orchestrator.board_api.fake import FakeManagerPanel
-from github_orchestrator.board_api.interface import Dashboards
+from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
 from github_orchestrator.change_detection import ChangeDetection, Poll
 from github_orchestrator.conversation import (
     Classification,
@@ -651,7 +651,7 @@ def serve(directory: Path, viewer: str, outside: Outside, port: int = 0,
 
 def running(dashboard: Dashboard) -> Dashboard:
     return dataclasses.replace(dashboard, working_on="new-comments", elapsed_seconds=312.0,
-                               silent_seconds=6.0)
+                               silent_seconds=6.0, standing=ManagerStanding.ANSWERING)
 
 
 def manager_panel(dashboard: Dashboard, *, sessions: TerminalSessions | None = None,

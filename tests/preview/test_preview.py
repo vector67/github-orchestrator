@@ -161,6 +161,7 @@ def test_the_preview_serves_a_manager_panel_with_something_in_every_part(seeded)
     dashboard = seeded.get("/api/dashboard").json()
 
     assert dashboard["system"]["agent"]["state"] == "working"
+    assert dashboard["standing"] == "answering"
     assert dashboard["system"]["last_run"] is not None
     assert dashboard["facts"] is not None
     assert dashboard["threads"]

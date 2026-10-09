@@ -2,9 +2,8 @@ import Service, { service } from '@ember/service';
 import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
 import type PollService from 'frontend/services/poll';
-import type { Standing } from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
-import type { HeardLine, ShownPr } from 'frontend/services/store';
+import type { Drawn, HeardLine, ShownPr } from 'frontend/services/store';
 
 export default class DashboardService extends Service {
   @service declare here: HereService;
@@ -22,11 +21,8 @@ export default class DashboardService extends Service {
     return streams.dashboard.state === 'open' && streamed;
   }
 
-  get standing(): Standing {
-    const { streams, polledStanding, streamed } = this.poll.board;
-    if (!streams) return polledStanding;
-    if (streams.dashboard.state !== 'open') return 'gone';
-    return streamed ? 'answering' : 'starting';
+  get standing(): Drawn['standing'] {
+    return this.shown?.drawn.standing ?? 'gone';
   }
 
   get missed(): boolean {

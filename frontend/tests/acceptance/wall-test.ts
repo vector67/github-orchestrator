@@ -904,8 +904,8 @@ module('Acceptance | wall', function (hooks) {
 
   test('x on a row whose board is not answering says dismiss waits for it and asks nothing', async function (assert) {
     onTheHub(
-      heldPr({ board_answered: false }),
-      heldPr({ number: 8, board_url: null, board_answered: false }),
+      heldPr({ dashboard: { standing: 'gone' } }),
+      heldPr({ number: 8, board_url: null, dashboard: { standing: 'gone' } }),
     );
     await visit('/');
 
@@ -1003,7 +1003,9 @@ module('Acceptance | wall', function (hooks) {
     await press('j');
     await press('x');
     await press('f');
-    board().held = [heldPr({ board_url: null, board_answered: false })];
+    board().held = [
+      heldPr({ board_url: null, dashboard: { standing: 'gone' } }),
+    ];
     await clock().tick(LIST);
 
     await visit('/pr/o/r/7/dashboard');
@@ -1204,8 +1206,8 @@ module('Acceptance | wall', function (hooks) {
       heldPr({
         manager: 'no-window',
         board_url: null,
-        board_answered: false,
         dashboard: {
+          standing: 'gone',
           pr: {
             title: null,
             url: null,
