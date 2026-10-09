@@ -1,3 +1,4 @@
+import logging
 import tomllib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -288,6 +289,16 @@ def test_a_setup_write_makes_the_watcher_leave_once_whichever_process_wrote_it(w
     started_again = serve(world).left()
 
     assert (left, started_again) == (True, False)
+
+
+def test_a_watcher_left_by_setup_logs_that_setup_changed_the_config(world, caplog):
+    serve(world).put(request(("acme/widgets", "~/repositories/widgets", "")))
+
+    with caplog.at_level(logging.INFO):
+        assert serve(world).left()
+
+    assert "setup changed the config" in caplog.text
+    assert "the config is setup now" not in caplog.text
 
 
 def test_a_watcher_that_sees_the_written_config_takes_the_leave_with_it(world):

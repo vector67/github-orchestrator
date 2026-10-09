@@ -129,7 +129,11 @@ class PollingWatcher:
             self._serve_hub()
             self._releases.check_if_due()
             self._sleep(CONFIG_CHECK_SECONDS)
-        log.info("the config is %s now; stopping so the service starts the watcher again", now)
+        if self._left:
+            log.info("setup changed the config; stopping so the service starts the watcher again")
+        else:
+            log.info("the config is %s now; stopping so the service starts the watcher again",
+                     now)
         self._hub.stop()
 
     def _leaving(self) -> bool:
