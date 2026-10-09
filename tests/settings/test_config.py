@@ -144,6 +144,11 @@ def test_load_config_reads_claude_enabled(tmp_path):
     assert config.agents_enabled is False
 
 
+def test_jev_verdicts_are_off_unless_the_config_turns_them_on(tmp_path):
+    assert load_config(write_config(tmp_path)).jev_verdicts is False
+    assert load_config(write_config(tmp_path, 'jev_verdicts = true\n')).jev_verdicts is True
+
+
 def test_load_config_rejects_an_unknown_key(tmp_path):
     toml_file = tmp_path / "config.toml"
     toml_file.write_text('claud_enabled = false\n')

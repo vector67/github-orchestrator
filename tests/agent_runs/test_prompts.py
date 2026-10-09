@@ -86,6 +86,19 @@ def test_the_verdict_on_a_thread(runs, jev):
     assert_pinned("verdict", _sent_to_jev(runs, jev))
 
 
+def test_the_verdict_on_a_thread_without_jev(world, claude, tmp_path):
+    runs = real_agent_runs(world, claude, tmp_path)
+    runs.judge_thread(
+        "PRRT_1",
+        [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc123"),
+         ("bot", "claude", "looks fine")],
+        viewer="octocat", pr_author="mei", spoke_last="bot", viewer_commented=True,
+        mentions_viewer=False, kind="a line thread", answers=VERDICTS,
+        done=lambda verdict: None)
+
+    assert_pinned("verdict-haiku", _asked(runs, claude))
+
+
 def test_the_verdict_on_a_thread_with_links_and_an_emoji_reply(runs, jev):
     runs.judge_thread(
         "PRRT_1",

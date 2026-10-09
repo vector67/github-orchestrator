@@ -630,7 +630,7 @@ class ReportCommandsProvider(Provider):
 class AgentRunsWiring(Wiring):
     popen: AgentPopen
     run: GistRun
-    jev: JevAsk
+    jev: JevAsk | None
     _: KW_ONLY
     agent: Agent
     command: str
@@ -1424,7 +1424,8 @@ def make_container(env: Mapping[str, str], home: Path,
         AgentChangesProvider,
         ReportCommandsWiring(sys.executable),
         AgentRunsWiring(
-            subprocess.Popen, subprocess.run, post_to_jev,
+            subprocess.Popen, subprocess.run,
+            post_to_jev if settings.config.jev_verdicts else None,
             agent=settings.config.agent,
             command=settings.config.agent_command,
             model=settings.config.agent_model,

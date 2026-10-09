@@ -95,6 +95,12 @@ gh_account = "your-github-username"
 # Codex's "gpt-6-luna".
 # summary_model = "haiku"
 
+# Set true to ask Jev, TypeSafe's decision model, for the verdict on a thread
+# in someone else's PR, instead of the summary model. Each verdict sends the
+# thread to TypeSafe's API, with usernames swapped for stand-ins and URLs
+# removed; the API key is read from the macOS keychain item `typesafe-api`.
+# jev_verdicts = false
+
 # The GitHub account every `gh` call is made as: the token comes from
 # `gh auth token --user <this>`, the PR searches' `@me` resolves to it, and the
 # poller decides author-vs-reviewer by comparing against it. Naming an account

@@ -45,6 +45,8 @@ from github_orchestrator.agent_runs._summary_prompts import (
     fixes_prompt,
     gists_in,
     thread_gist_prompt,
+    verdict_in,
+    verdict_prompt,
 )
 from github_orchestrator.agent_runs._tail import iter_lines_reverse
 from github_orchestrator.agent_runs._thread_prompts import (
@@ -281,7 +283,7 @@ class AgentRun:
 
 
 class AgentRuns:
-    def __init__(self, popen: Popen, run: Run, jev: Ask, clock: Monotonic, *,
+    def __init__(self, popen: Popen, run: Run, jev: Ask | None, clock: Monotonic, *,
                  pr_processes: PrProcesses, report_commands: ReportCommands, changes_file: str,
                  agent: Agent, command: str, model: str,
                  summary_model: str, pytest_workers: int, transcripts_dir: Path,
@@ -479,12 +481,25 @@ class AgentRuns:
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None:
+        jev = self._jev
+        if jev is None:
+            def given(answer: str) -> None:
+                word = verdict_in(answer, answers)
+                if word is not None:
+                    done(word)
+
+            self._summaries.summarize(
+                verdict_prompt(comments, viewer=viewer, pr_author=pr_author,
+                               spoke_last=spoke_last, viewer_commented=viewer_commented,
+                               mentions_viewer=mentions_viewer, kind=kind, answers=answers),
+                given, label=key)
+            return
         state = verdict_state(comments, viewer=viewer, pr_author=pr_author,
                               viewer_commented=viewer_commented,
                               mentions_viewer=mentions_viewer, kind=kind)
 
         def judge() -> None:
-            word = choose(self._jev, state, VERDICT_INSTRUCTIONS, answers)
+            word = choose(jev, state, VERDICT_INSTRUCTIONS, answers)
             log.info("verdict for %s: %s", key, word)
             if word is not None:
                 done(word)

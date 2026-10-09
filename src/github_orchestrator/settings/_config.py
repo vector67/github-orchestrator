@@ -63,6 +63,7 @@ class OrchestratorConfig:
     agent_command: str = Agent.default().default_command()
     agent_model: str = Agent.default().default_model
     summary_model: str = Agent.default().default_summary_model
+    jev_verdicts: bool = False
     mismatch_grace_seconds: int = 3600
     mismatch_run_idle_seconds: int = 300
     max_thread_runs: int = 4

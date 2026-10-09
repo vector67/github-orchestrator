@@ -417,6 +417,18 @@ def test_no_verdict_is_handed_back_when_the_decision_model_fails_or_names_none_o
     assert given == []
 
 
+def test_without_jev_a_verdict_is_the_first_word_the_summary_model_gives(world):
+    if world.kind == "claude":
+        world.runs = real_agent_runs(world.fake, world.claude, world.data, world.clock)
+    world.fake.answer("\n  Their-Move \nbecause the author asked a question")
+    given = []
+
+    _judge(world, given.append)
+
+    world.summaries_written()
+    assert given == ["their-move"]
+
+
 CHECKS = {"addressed": "it does what was asked", "not-addressed": "it does not"}
 
 
