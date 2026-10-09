@@ -124,7 +124,8 @@ class PollingWatcher:
             clear_failures(self._config.failures)
         except OSError as exc:
             log.warning("Could not clear %s: %s", self._config.failures, exc)
-        while (now := current()) is state and not self._leaving():
+        now = state
+        while not self._leaving() and (now := current()) is state:
             self._serve_hub()
             self._releases.check_if_due()
             self._sleep(CONFIG_CHECK_SECONDS)

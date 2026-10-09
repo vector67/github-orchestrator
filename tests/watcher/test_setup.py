@@ -290,6 +290,16 @@ def test_a_setup_write_makes_the_watcher_leave_once_whichever_process_wrote_it(w
     assert (left, started_again) == (True, False)
 
 
+def test_a_watcher_that_sees_the_written_config_takes_the_leave_with_it(world):
+    serve(world).put(request(("acme/widgets", "~/repositories/widgets", "")))
+    waiting = serve(world).watcher
+    assert waiting is not None
+
+    waiting.wait_in(HubState.SETUP, lambda: HubState.WATCHING)
+
+    assert serve(world).left() is False
+
+
 def test_the_first_setup_that_starts_watching_makes_the_board_s_tour_due_until_seen(world):
     serve(world)
 
