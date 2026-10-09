@@ -106,6 +106,7 @@ from github_orchestrator.pr_event_queue._would import WouldIntake
 from github_orchestrator.pr_manager import Front, ManagedPr, PrManager
 from github_orchestrator.pr_manager._browser_front import BrowserFront
 from github_orchestrator.pr_manager._carry_out import EventCarryOut
+from github_orchestrator.pr_manager._command_file import CommandFiles
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
@@ -935,6 +936,10 @@ class DashboardSourceProvider(Provider):
     @provide
     def manager_statuses(self, status_files: StatusFiles) -> ManagerStatuses:
         return status_files
+
+    @provide
+    def command_files(self, wiring: DashboardSourceWiring) -> CommandFiles:
+        return CommandFiles(wiring.data_dir)
 
 
 class EveryTerminal:

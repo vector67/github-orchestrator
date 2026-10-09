@@ -1,7 +1,4 @@
 import logging
-import queue
-import threading
-from collections.abc import Callable
 from pathlib import Path
 
 from github_orchestrator.agent_runs import History, PrWork, Run
@@ -10,8 +7,10 @@ from github_orchestrator.change_detection import ChangeDetection, ReviewRequeste
 from github_orchestrator.domain import Monotonic
 from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
+from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import Drawn
+from github_orchestrator.pr_manager._files import locked
 from github_orchestrator.pr_manager._git_palette import (
     SHELL,
     argv_for,
@@ -21,6 +20,8 @@ from github_orchestrator.pr_manager._git_palette import (
     shell_argv,
 )
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
+from github_orchestrator.pr_manager._refusals import Conditions, refusal
+from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.settings import Boards, Dismissals, Holds
 
@@ -30,8 +31,6 @@ NOTICE_SECONDS = 4.0
 
 SHOWN_READ_ONLY = frozenset({"l", "d"})
 
-FROZEN = "refused: the worktree holds another PR's branch"
-
 
 class ManagerCommands(ManagerPanel):
     def __init__(self, config: ManagerConfig, board: BoardApi, run: GitRun,
@@ -39,7 +38,8 @@ class ManagerCommands(ManagerPanel):
                  boards: Boards, worklist: Worklist,
                  pull_requests: PullRequests, pr_work: PrWork, pr_processes: PrProcesses,
                  agent_changes: AgentChanges, history: History,
-                 change_detection: ChangeDetection, intake: Intake) -> None:
+                 change_detection: ChangeDetection, intake: Intake,
+                 status_files: StatusFiles, command_files: CommandFiles) -> None:
         self._config = config
         self._board = board
         self._run = run
@@ -55,26 +55,38 @@ class ManagerCommands(ManagerPanel):
         self._history = history
         self._change_detection = change_detection
         self._intake = intake
+        self._status_files = status_files
+        self._command_files = command_files
         self.active_run: Run | None = None
         self._dismissed = False
         self._notice: str | None = None
         self._notice_at = 0.0
         self._drawn: Drawn | None = None
-        self._loop: int | None = None
-        self._crossing: queue.SimpleQueue[tuple[str, Callable[[], None]]] = queue.SimpleQueue()
-        self._git_lock = threading.Lock()
 
     def publish(self, drawn: Drawn) -> None:
-        self._loop = threading.get_ident()
         self._drawn = drawn
 
     def obey(self) -> None:
-        while True:
-            try:
-                what, act = self._crossing.get_nowait()
-            except queue.Empty:
-                return
-            self._carry_out(what, act)
+        for pending in self._command_files.pending(self._config.pr):
+            self.carry_out(pending.command)
+            self._command_files.delete(pending)
+
+    def carry_out(self, command: Command) -> None:
+        pr = self._config.pr
+        if self._dismissed:
+            log.info("%s: %s dropped — the manager is leaving", pr, command)
+            return
+        log.info("%s: %s", pr, command)
+        refused = refusal(self._conditions(), command,
+                          agents_enabled=self._config.agents_enabled)
+        if refused is not None:
+            log.info("%s: %s refused — %s", pr, command, refused)
+            self.notify(refused)
+            return
+        try:
+            self._act(command)
+        except Exception:
+            log.exception("Error carrying out %s for %s", command, pr)
 
     @property
     def dismissed(self) -> bool:
@@ -102,27 +114,26 @@ class ManagerCommands(ManagerPanel):
     def agent_output(self, lines: int) -> list[tuple[str, bool]]:
         return self._history.transcript_tail(self._config.pr, lines)
 
-    def set_on_hold(self, on_hold: bool) -> None:
-        self._on_the_loop("hold" if on_hold else "resume", lambda: self._set_on_hold(on_hold))
+    def set_on_hold(self, on_hold: bool) -> str | None:
+        return self._hand(Command.HOLD if on_hold else Command.RESUME)
 
-    def carry_on(self) -> None:
-        self._on_the_loop("carry on", self._carry_on)
+    def carry_on(self) -> str | None:
+        return self._hand(Command.CARRY_ON)
 
-    def start_review(self) -> None:
-        self._on_the_loop("start review", self._start_review)
+    def start_review(self) -> str | None:
+        return self._hand(Command.START_REVIEW)
 
-    def dismiss(self, forever: bool) -> None:
-        self._on_the_loop("dismiss forever" if forever else "dismiss until the next event",
-                          lambda: self._dismiss(forever))
+    def dismiss(self, forever: bool) -> str | None:
+        return self._hand(Command.DISMISS_FOREVER if forever else Command.DISMISS_UNTIL_NEXT_EVENT)
 
-    def close(self) -> None:
-        self._on_the_loop("close", self._close)
+    def close(self) -> str | None:
+        return self._hand(Command.CLOSE)
 
     def run_git(self, keys: str) -> tuple[int, list[str], float]:
         command = resolve(keys)
         if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):
             raise ValueError(f"git palette keys {keys!r} name no command the page runs")
-        with self._git_lock:
+        with locked(Path(f"{self._config.worktree}.git-palette.lock")):
             refused = self._refusal(command.display)
             if refused is not None:
                 return -1, [refused], 0.0
@@ -155,55 +166,49 @@ class ManagerCommands(ManagerPanel):
         self._boards.want_board(pr, True)
         return url
 
-    def _refusal(self, what: str) -> str | None:
-        drawn = self._drawn
-        if drawn is None or drawn.dashboard.frozen_on is None:
-            return None
-        log.info("%s: %s refused — frozen", self._config.pr, what)
-        return FROZEN
-
-    def _on_the_loop(self, what: str, act: Callable[[], None]) -> None:
-        if threading.get_ident() == self._loop:
-            self._carry_out(what, act)
-        else:
-            self._crossing.put((what, act))
-
-    def _carry_out(self, what: str, act: Callable[[], None]) -> None:
-        pr = self._config.pr
-        if self._dismissed:
-            log.info("%s: %s dropped — the manager is leaving", pr, what)
-            return
-        log.info("%s: %s", pr, what)
-        refused = self._refusal(what)
+    def _refusal(self, what: str, command: Command | None = None) -> str | None:
+        config = self._config
+        refused = refusal(self._status_files.conditions(config.pr), command,
+                          agents_enabled=config.agents_enabled)
         if refused is not None:
-            self.notify(refused)
-            return
-        try:
-            act()
-        except Exception:
-            log.exception("Error carrying out %s for %s", what, pr)
+            log.info("%s: %s refused — %s", config.pr, what, refused)
+        return refused
+
+    def _hand(self, command: Command) -> str | None:
+        refused = self._refusal(command, command)
+        if refused is None:
+            self._command_files.write(self._config.pr, command)
+        return refused
+
+    def _conditions(self) -> Conditions:
+        drawn, run = self._drawn, self.active_run
+        return Conditions(frozen=drawn is not None and drawn.dashboard.frozen_on is not None,
+                          running=run is not None and run.is_alive())
+
+    def _act(self, command: Command) -> None:
+        match command:
+            case Command.HOLD:
+                self._set_on_hold(True)
+            case Command.RESUME:
+                self._set_on_hold(False)
+            case Command.CARRY_ON:
+                self._carry_on()
+            case Command.START_REVIEW:
+                self._start_review()
+            case Command.DISMISS_UNTIL_NEXT_EVENT:
+                self._dismiss(False)
+            case Command.DISMISS_FOREVER:
+                self._dismiss(True)
+            case Command.CLOSE:
+                self._close()
 
     def _set_on_hold(self, on_hold: bool) -> None:
         pr = self._config.pr
         self._holds.set_on_hold(pr, on_hold)
         log.info("%s: hold %s", pr, "ON" if on_hold else "OFF")
 
-    def _agent_refusal(self, what: str) -> bool:
-        config = self._config
-        if not config.agents_enabled:
-            log.info("%s %s: ignored — agents are disabled", what, config.pr)
-            self.notify("agents are disabled in config.toml")
-            return True
-        if self.active_run is not None and self.active_run.is_alive():
-            log.info("%s %s: ignored — an agent is already running", what, config.pr)
-            self.notify("an agent is already running")
-            return True
-        return False
-
     def _start_review(self) -> None:
         pr = self._config.pr
-        if self._agent_refusal("start review"):
-            return
         facts = self._change_detection.facts(pr)
         log.info("start review %s: queuing a review request", pr)
         self._intake.add(pr, ReviewRequested(title=facts.title if facts else None,
@@ -212,8 +217,6 @@ class ManagerCommands(ManagerPanel):
     def _carry_on(self) -> None:
         config = self._config
         pr = config.pr
-        if self._agent_refusal("carry on"):
-            return
         log.info("carry on %s: carrying on the last agent run", pr)
         started = self._pr_work.carry_on(config.worktree, pr)
         if isinstance(started, str):

@@ -735,12 +735,18 @@
   },
   "/api/manager:carry-on": {
    "post": {
-    "202": {}
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/manager:close": {
    "post": {
-    "202": {}
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/manager:dismiss": {
@@ -748,22 +754,34 @@
     "202": {},
     "400": {
      "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
     }
    }
   },
   "/api/manager:hold": {
    "post": {
-    "202": {}
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/manager:resume": {
    "post": {
-    "202": {}
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/manager:start-review": {
    "post": {
-    "202": {}
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/operations": {
@@ -3020,6 +3038,7 @@
     "not-frozen",
     "board-unreachable",
     "terminal-refused",
+    "manager-refused",
     "no-gh-token",
     "repo-not-visible",
     "setup-refused",

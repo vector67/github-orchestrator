@@ -1,4 +1,3 @@
-import dataclasses
 import json
 
 import pytest
@@ -134,13 +133,12 @@ def test_the_keys_of_live_thread_runs_are_written(settings, tmp_path):
 
 def test_the_notice_a_refused_command_leaves_is_written(settings, tmp_path):
     board = FakeBoardApi()
-    without_agents = dataclasses.replace(
-        settings, config=dataclasses.replace(settings.config, agents_enabled=False))
+    agent_runs = FakeAgentRuns(FakePrProcesses()).script(Outcome(finishes=False))
 
-    _manager(without_agents, lambda: board.panel.carry_on(), worktree=tmp_path, board=board,
-             is_author=True).run()
+    _manager(settings, lambda: (board.panel.carry_on(), board.panel.start_review()),
+             worktree=tmp_path, board=board, agent_runs=agent_runs, is_author=True).run()
 
-    assert _status(settings)["notice"] == "agents are disabled in config.toml"
+    assert _status(settings)["notice"] == "an agent is already running"
 
 
 def test_a_status_file_that_cannot_be_written_leaves_the_tick_to_do_its_work(settings, tmp_path):

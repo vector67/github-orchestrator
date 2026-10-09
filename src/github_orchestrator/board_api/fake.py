@@ -54,6 +54,7 @@ class FakeManagerPanel:
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
     terminal_refusal: str | None = None
+    refusal: str | None = None
 
     def dashboard(self) -> Dashboard | None:
         return self.now
@@ -64,21 +65,30 @@ class FakeManagerPanel:
     def agent_output(self, lines: int) -> list[tuple[str, bool]]:
         return self.output[-lines:]
 
-    def set_on_hold(self, on_hold: bool) -> None:
-        if self.now is not None:
+    def set_on_hold(self, on_hold: bool) -> str | None:
+        if self.refusal is None and self.now is not None:
             self.now = replace(self.now, on_hold=on_hold)
+        return self.refusal
 
-    def carry_on(self) -> None:
-        self.carried_on += 1
+    def carry_on(self) -> str | None:
+        if self.refusal is None:
+            self.carried_on += 1
+        return self.refusal
 
-    def start_review(self) -> None:
-        self.reviews_started += 1
+    def start_review(self) -> str | None:
+        if self.refusal is None:
+            self.reviews_started += 1
+        return self.refusal
 
-    def dismiss(self, forever: bool) -> None:
-        self.dismissed = "forever" if forever else "until the next event"
+    def dismiss(self, forever: bool) -> str | None:
+        if self.refusal is None:
+            self.dismissed = "forever" if forever else "until the next event"
+        return self.refusal
 
-    def close(self) -> None:
-        self.closed += 1
+    def close(self) -> str | None:
+        if self.refusal is None:
+            self.closed += 1
+        return self.refusal
 
     def run_git(self, keys: str) -> tuple[int, list[str], float]:
         self.ran.append(keys)

@@ -1,5 +1,7 @@
 from dataclasses import replace
 
+import pytest
+
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
 from tests.board_api.support import board_contract, client_for
@@ -243,6 +245,23 @@ def test_close_is_accepted_and_handed_to_the_manager():
 
     assert answer.status_code == 202
     assert panel.closed == 1
+
+
+@pytest.mark.parametrize(("path", "body"), [
+    ("/api/manager:hold", None), ("/api/manager:resume", None),
+    ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
+    ("/api/manager:dismiss", {"forever": False}), ("/api/manager:close", None),
+])
+def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
+    panel = FakeManagerPanel(refusal="an agent is already running")
+
+    answer = client_for(manager=panel).post(path, json=body)
+
+    assert answer.status_code == 409
+    [error] = answer.json()["errors"]
+    assert (error["code"], error["detail"]) == ("manager-refused", "an agent is already running")
+    assert (panel.carried_on, panel.reviews_started, panel.dismissed, panel.closed) == (0, 0, None, 0)
+    assert panel.dashboard().on_hold is False
 
 
 def test_every_manager_command_declares_the_hand_over_and_where_to_poll():

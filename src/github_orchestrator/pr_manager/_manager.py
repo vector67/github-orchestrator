@@ -10,6 +10,7 @@ from github_orchestrator.domain import LocalClock
 from github_orchestrator.notifications import ThreadNews
 from github_orchestrator.pr_event_queue import Taken, Worklist
 from github_orchestrator.pr_manager._carry_out import EventCarryOut
+from github_orchestrator.pr_manager._command_file import Command
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import DashboardSource
@@ -215,7 +216,7 @@ class ManagerLoop:
         if self._interrupted:
             self._interrupted = False
             log.info("loop %s: the agent was interrupted by the last manager's end", pr)
-            self._commands.carry_on()
+            self._commands.carry_out(Command.CARRY_ON)
 
         conversations = self._conversations()
         on_hold = dashboard.on_hold

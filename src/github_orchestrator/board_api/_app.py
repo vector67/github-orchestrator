@@ -563,10 +563,16 @@ HANDED_TO_THE_MANAGER: dict[int | str, dict[str, Any]] = {202: {
                    "notices included. Poll the dashboard to see it land.",
     "headers": {"Location": {
         "description": "The dashboard to poll.",
-        "schema": {"type": "string", "format": "uri-reference"}}}}}
+        "schema": {"type": "string", "format": "uri-reference"}}}},
+    409: {"description": "The PR manager's last status already rules it out: the "
+                         "worktree holds another branch, agents are disabled, or "
+                         "an agent is already running. The detail says which.",
+          "model": Errors}}
 
 
-def _handed_over() -> Response:
+def _handed_over(refused: str | None) -> Response:
+    if refused is not None:
+        raise Refusal(409, ErrorCode.MANAGER_REFUSED, refused)
     return Response(status_code=202, headers={"Location": f"{PREFIX}/dashboard"})
 
 
@@ -577,8 +583,7 @@ def hold_manager(board: Serving) -> Response:
     """The dashboard's `p` on a pull request not on hold. On one on hold it
     leaves it on hold.
     """
-    board.manager.set_on_hold(True)
-    return _handed_over()
+    return _handed_over(board.manager.set_on_hold(True))
 
 
 @writes.post("/manager:resume", status_code=202, tags=["manager"],
@@ -588,8 +593,7 @@ def resume_manager(board: Serving) -> Response:
     """The dashboard's `p` on a pull request on hold. On one not on hold it
     does nothing.
     """
-    board.manager.set_on_hold(False)
-    return _handed_over()
+    return _handed_over(board.manager.set_on_hold(False))
 
 
 @writes.post("/manager:carry-on", status_code=202, tags=["manager"],
@@ -597,11 +601,10 @@ def resume_manager(board: Serving) -> Response:
              summary="Start the agent again on this pull request, carrying on "
                      "from where its last session left off.")
 def carry_on(board: Serving) -> Response:
-    """The dashboard's `r`. Refused, with the dashboard's notice in the
-    status, when agents are disabled or a run is already going.
+    """The dashboard's `r`. Refused when agents are disabled or a run is
+    already going.
     """
-    board.manager.carry_on()
-    return _handed_over()
+    return _handed_over(board.manager.carry_on())
 
 
 @writes.post("/manager:start-review", status_code=202, tags=["manager"],
@@ -610,12 +613,10 @@ def carry_on(board: Serving) -> Response:
                      "request does.")
 def start_review(board: Serving) -> Response:
     """The fallback for when the review agent a review request starts went
-    wrong. A re-review when you have reviewed before. Refused, with the
-    dashboard's notice in the status, when agents are disabled or a run is
-    already going.
+    wrong. A re-review when you have reviewed before. Refused when agents
+    are disabled or a run is already going.
     """
-    board.manager.start_review()
-    return _handed_over()
+    return _handed_over(board.manager.start_review())
 
 
 @writes.post("/manager:dismiss", status_code=202, tags=["manager"],
@@ -626,8 +627,7 @@ def dismiss_manager(board: Serving, asked: DismissRequest) -> Response:
     """The dashboard's `x u` and `x f`. The manager records the dismissal,
     stops its run and exits, so this board stops answering soon after.
     """
-    board.manager.dismiss(asked.forever)
-    return _handed_over()
+    return _handed_over(board.manager.dismiss(asked.forever))
 
 
 @writes.post("/manager:close", status_code=202, tags=["manager"],
@@ -638,8 +638,7 @@ def close_pull_request(board: Serving) -> Response:
     or puts GitHub's refusal in the status's notice; the watcher's next poll
     sees it closed and tears it down.
     """
-    board.manager.close()
-    return _handed_over()
+    return _handed_over(board.manager.close())
 
 
 MAX_GIT_LINES = 2000

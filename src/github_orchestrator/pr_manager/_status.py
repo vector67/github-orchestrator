@@ -1,12 +1,12 @@
 import json
 import logging
-import os
-import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from github_orchestrator.board_api.interface import Dashboard, ManagerStanding
 from github_orchestrator.domain import Pr, UtcClock
+from github_orchestrator.pr_manager._files import write_whole
+from github_orchestrator.pr_manager._refusals import NOTHING_KNOWN, Conditions
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class StatusFiles:
         }
         path = self._path(dashboard.pr)
         try:
-            _write_atomically(path, json.dumps(status).encode())
+            write_whole(path, json.dumps(status).encode())
         except OSError as error:
             log.warning("could not write the status file %s: %s", path, error)
 
@@ -62,6 +62,18 @@ class StatusFiles:
             return ManagerStanding.ANSWERING
         return ManagerStanding.GONE
 
+    def conditions(self, pr: Pr) -> Conditions:
+        path = self._path(pr)
+        try:
+            status = json.loads(path.read_bytes())
+            return Conditions(frozen=status["frozen_on"] is not None,
+                              running=status["active_run"] is not None)
+        except FileNotFoundError:
+            return NOTHING_KNOWN
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            log.warning("could not read the status file %s: %s", path, error)
+            return NOTHING_KNOWN
+
     def _path(self, pr: Pr) -> Path:
         return self._dir / pr.repo.owner / pr.repo.name / f"{pr.number}.json"
 
@@ -78,17 +90,3 @@ def _active_run(dashboard: Dashboard, now: datetime) -> dict[str, str] | None:
 
 def _ago(now: datetime, seconds: float | None) -> str:
     return (now - timedelta(seconds=seconds or 0.0)).strftime(_STAMP)
-
-
-def _write_atomically(path: Path, content: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="wb", dir=path.parent, suffix=".tmp",
-                                     delete=False) as tmp:
-        tmp.write(content)
-        tmp.flush()
-        os.fsync(tmp.fileno())
-    try:
-        Path(tmp.name).replace(path)
-    except BaseException:
-        Path(tmp.name).unlink(missing_ok=True)
-        raise

@@ -61,6 +61,10 @@ class ErrorCode(StrEnum):
     TERMINAL_REFUSED is the PR manager not opening a terminal command: the
     worktree is frozen on another branch, or the command could not start.
 
+    MANAGER_REFUSED is a command for the PR manager that its last status
+    already rules out: the worktree is frozen on another branch, agents are
+    disabled, or an agent is already running. The detail says which.
+
     NO_GH_TOKEN is gh holding no token for the login the setup screen asked
     about; the detail says to run `gh auth login`.
 
@@ -120,6 +124,7 @@ class ErrorCode(StrEnum):
     NOT_FROZEN = "not-frozen"
     BOARD_UNREACHABLE = "board-unreachable"
     TERMINAL_REFUSED = "terminal-refused"
+    MANAGER_REFUSED = "manager-refused"
     NO_GH_TOKEN = "no-gh-token"
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"

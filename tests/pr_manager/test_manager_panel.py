@@ -16,6 +16,7 @@ from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import Dismissal
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
+from tests.pr_manager.scripted_terminal import ScriptEnded
 from tests.pr_manager.support import PR, REPO, run_manager, seed_state
 from tests.settings.support import disk_dismissals, disk_holds
 
@@ -148,6 +149,21 @@ def test_a_command_from_the_boards_thread_waits_for_the_loop_to_carry_it_out(set
     assert seen == [False, True]
 
 
+def test_a_hold_given_while_the_manager_is_down_is_carried_out_when_it_next_runs(
+        settings, tmp_path):
+    board = FakeBoardApi()
+
+    def hold_then_stop():
+        board.panel.set_on_hold(True)
+        raise ScriptEnded
+
+    _on_the_browser_front(settings, tmp_path, hold_then_stop, board=board)
+    assert disk_holds(settings.data_dir).on_hold(THE_PR) is False
+
+    _on_the_browser_front(settings, tmp_path, None)
+    assert disk_holds(settings.data_dir).on_hold(THE_PR) is True
+
+
 def test_hold_from_the_board_leaves_a_held_pr_on_hold(settings, tmp_path):
     disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
     board = FakeBoardApi()
@@ -181,11 +197,12 @@ def test_carry_on_from_the_board_is_refused_with_rs_notice_when_claude_is_disabl
         settings, tmp_path):
     runs = _runs()
     board = FakeBoardApi()
-    seen = []
-    _on_the_browser_front(_without_claude(settings), tmp_path, lambda: board.panel.carry_on(),
-              lambda: seen.append(board.panel.dashboard().notice), board=board, agent_runs=runs)
+    answers = []
+    _on_the_browser_front(_without_claude(settings), tmp_path,
+                          lambda: answers.append(board.panel.carry_on()), None, board=board,
+                          agent_runs=runs)
     assert runs.started == []
-    assert seen == ["agents are disabled in config.toml"]
+    assert answers == ["agents are disabled in config.toml"]
 
 
 def _reviewer_of(settings, tmp_path, *script, **modules):
@@ -213,11 +230,27 @@ def test_start_review_from_the_board_starts_the_review_agent_a_review_request_wo
 def test_start_review_from_the_board_is_refused_while_claude_is_running(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
     board = FakeBoardApi()
-    seen = []
+    answers = []
     _reviewer_of(settings, tmp_path, lambda: board.panel.carry_on(),
-                 lambda: board.panel.start_review(), None,
+                 lambda: answers.append(board.panel.start_review()), None, board=board,
+                 agent_runs=runs)
+    assert [run.work for run in runs.started] == [CarryingOn()]
+    assert answers == ["an agent is already running"]
+
+
+def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manager_drains_it(
+        settings, tmp_path):
+    runs = _runs(Outcome(finishes=False))
+    board = FakeBoardApi()
+    answers, seen = [], []
+
+    def both_at_once():
+        answers.extend([board.panel.carry_on(), board.panel.start_review()])
+
+    _reviewer_of(settings, tmp_path, both_at_once,
                  lambda: seen.append(board.panel.dashboard().notice), board=board,
                  agent_runs=runs)
+    assert answers == [None, None]
     assert [run.work for run in runs.started] == [CarryingOn()]
     assert seen == ["an agent is already running"]
 
@@ -225,12 +258,12 @@ def test_start_review_from_the_board_is_refused_while_claude_is_running(settings
 def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings, tmp_path):
     runs = _runs()
     board = FakeBoardApi()
-    seen = []
-    _reviewer_of(_without_claude(settings), tmp_path, lambda: board.panel.start_review(), None,
-                 lambda: seen.append(board.panel.dashboard().notice), board=board,
+    answers = []
+    _reviewer_of(_without_claude(settings), tmp_path,
+                 lambda: answers.append(board.panel.start_review()), None, board=board,
                  agent_runs=runs)
     assert runs.started == []
-    assert seen == ["agents are disabled in config.toml"]
+    assert answers == ["agents are disabled in config.toml"]
 
 
 @pytest.mark.parametrize(("forever", "dismissal"), [
@@ -272,13 +305,12 @@ def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_br
     working_copies.add_worktree(tmp_path, "expected-branch")
     board = FakeBoardApi()
 
-    seen = []
+    answers = []
     run_manager(settings, lambda: working_copies.add_worktree(tmp_path, "other-branch"),
-                lambda: board.panel.set_on_hold(True),
-                lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
-                is_author=True, board=board, working_copies=working_copies)
+                lambda: answers.append(board.panel.set_on_hold(True)), None,
+                worktree=tmp_path, is_author=True, board=board, working_copies=working_copies)
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is False
-    assert seen == ["refused: the worktree holds another PR's branch"]
+    assert answers == ["refused: the worktree holds another PR's branch"]
 
 
 def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):

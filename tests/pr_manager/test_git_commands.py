@@ -1,4 +1,6 @@
+import fcntl
 import subprocess
+import threading
 
 from github_orchestrator.board_api.fake import FakeBoardApi
 from tests.pr_manager.support import run_manager
@@ -88,3 +90,27 @@ def test_a_captured_command_that_times_out_says_so(settings, tmp_path):
 
     [(exit_code, lines, _)] = _ran(settings, tmp_path, "p", run=run)
     assert (exit_code, lines) == (-1, ["timed out after 60s"])
+
+
+def test_a_command_waits_while_another_process_runs_git_in_the_same_worktree(settings, tmp_path):
+    worktree = tmp_path / "wt"
+    board = FakeBoardApi()
+    started = threading.Event()
+    seen = []
+
+    def run(argv, **kwargs):
+        started.set()
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    def ask_while_the_palette_is_busy():
+        with open(tmp_path / "wt.git-palette.lock", "w") as other:
+            fcntl.flock(other, fcntl.LOCK_EX)
+            asking = threading.Thread(target=lambda: board.panel.run_git("s"))
+            asking.start()
+            seen.append(started.wait(0.2))
+        asking.join()
+        seen.append(started.is_set())
+
+    run_manager(settings, ask_while_the_palette_is_busy, worktree=worktree, is_author=True,
+                board=board, run=run)
+    assert seen == [False, True]
