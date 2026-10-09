@@ -118,7 +118,8 @@ serving over and deletes what it replaces.
    - Prove the setup flow end to end in a scratch instance with its own data
      directory and port, never the user's live instances.
 
-5. **The server process.**
+5. **The server process.** **Done** (`9c0c0aeb`, `c19e38b7`, `aad71971`, `e5c87f53`
+   and the commit that records this)
 
    - `python -m github_orchestrator.server` binds the instance's hub port and
      runs uvicorn's `Multiprocess` supervisor with `server_workers` = 4 spawned
@@ -319,3 +320,66 @@ Each step adds its decisions here, under its number, with the reason for each.
      and port 18731): `/api/health` said `setup`, the repo listing and the
      write's progress appeared under `setup/`, the write cloned, wrote the config
      and the watcher exited on the leave file, which was gone after.
+5. - **`FilePanel` in `pr_manager/_panel.py` is the one `ManagerPanel`.** It reads the
+     dashboard through `DashboardSource`, the notes and transcript from disk, writes
+     the command file and runs the git palette under its file lock. The manager hands
+     its board the same panel, so `ManagerCommands` keeps only what it carries out
+     and no longer implements the panel; it is not exported.
+   - **The server's panel reads the worktree from the manager's record on every
+     call** (`PrProcesses.manager_path`, `""` when there is none), as
+     `DashboardSource` does. A board built before its manager first started would
+     otherwise keep an empty worktree for the worker's life. `agents_enabled` comes
+     from the same `ConfigOf` the dashboard uses.
+   - **`OneServer` in `board_api/_one_server.py` builds the app, behind `ServerApp`
+     and `ManagerPanels` in `board_api/interface.py`.** Neither is exported, so
+     `board_api` keeps its four exports. Only wiring may build implementations, so
+     the panel factory (`FilePanels`) is handed in.
+   - **An ASGI router in front of the hub sends `/pr/{owner}/{name}/{n}/api/...` to
+     that pull request's board, with the prefix as `root_path`.** Routing strips it
+     and the guard's log line keeps it, so a board's lines name the pull request.
+     Whether the watcher holds the pull request is read from `held.json` on every
+     request, so one it let go of is 404 even after its board was built.
+   - **A built board is kept for the worker's life, even after the watcher lets go
+     of its pull request.** It costs a little memory until the worker restarts;
+     dropping it would race with a request in flight.
+   - **`hub_app` takes the routes for `/pr/...`:** the watcher's hub passes the proxy
+     until step 6, the server passes `unheld`, which answers 404 for a pull request
+     the watcher does not hold and closes a websocket with `GONE`.
+   - **Board routes write `Location` with `Board.prefix`,** `""` on the manager's
+     board, whose `Location` the proxy still moves under the prefix.
+   - **The board's own `/api/health` under the prefix stays as it is: `serves: "board"`, the hub's url, and the pid of the worker that answered.** The page's
+     reachability probe asks `here.api('/api/health')`, which on the hub is the
+     board's, so it must keep answering; this is what the proxy forwarded. The pid
+     only finds the worker's lines in `server.log`.
+   - **The hub's `/api/health` reports the supervisor's pid (`Desk.pid`),** the one
+     in `server.pid`, so step 6's restart-all and doctor compare one number whichever
+     worker answers. The watcher's hub passes its own pid.
+   - **Each worker is a uvicorn factory (`server/_worker.py`, a picklable `Worker`)
+     that builds its container and configures `SERVER` logging after it is
+     spawned.** The supervisor builds a container only to read its config and log.
+   - **The supervisor takes `server.lock` before it binds the port, and writes
+     `server.pid` whole after binding.** Lock held or port taken: an `ERROR` line in
+     `server.log` and exit 1. The pid file stays on exit; the lock says whether a
+     server is running.
+   - **`server_workers` is a config key, default 4, in the example file;
+     `server.lock` and `server.pid` are `Settings` paths.** The brief asked for a
+     config value; the example file must name every key.
+   - **`--port` and `--files-in DIR` let it run beside a live instance.** `--files-in`
+     puts `server.lock`, `server.pid` and `server.log` in `DIR`
+     (`make_container(logs_dir=...)`), so nothing lands in the data directory. From a
+     worktree the live config must be named with `GITHUB_ORCHESTRATOR_CONFIG`: the
+     checkout config is found relative to the source, and the worktree has none.
+   - **Leftovers, per worker:** `DashboardSource`'s flags stamp is first-seen per
+     process, so a wall row whose manager has no fresh status file shows a different
+     `manager.changed_at` from each worker and from the watcher's hub; thread
+     progress is counted in the background per process, so a worker's first read
+     answers `progress: null`; a worker's first git read of a pull request is slower.
+   - **Proved on a spare port against the live data directory** (GET only, server
+     files in a scratch folder): health, the wall, runs, and for two held pull
+     requests the pull request, conversations, a thread's operations, operations,
+     a proposal and its diff, the pull-request diff, dashboard, viewer, people,
+     health, terminal sessions and changes answered as the hub on 8720 did, apart
+     from the leftovers above; the dashboard stream sent the same first event and
+     a heartbeat; a second server left on the held lock, one on 8720 left on the
+     taken port; on SIGTERM every worker was gone and the data directory gained no
+     file.
