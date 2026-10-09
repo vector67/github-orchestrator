@@ -10,6 +10,7 @@ import dishka
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.change_detection import ChangeDetection
+from github_orchestrator.change_detection.fake import FakeChangeDetection
 from github_orchestrator.conversation import (
     Conversation,
     ConversationManagerFactory,
@@ -33,6 +34,7 @@ from github_orchestrator.settings.fake import Settings, fake_settings
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from github_orchestrator.wiring import (
+    ClocksWiring,
     Part,
     conversation_config,
     utcnow,
@@ -98,7 +100,8 @@ class World:
         config = replace(self.settings.config, agents_enabled=enabled)
         return world(replace(self.settings, config=config), github=self.github,
                      working_copies=self.working_copies, agent_runs=self.agent_runs,
-                     thread_records=self.thread_records, clock=self.clock,
+                     thread_records=self.thread_records,
+                     change_detection=self.change_detection, clock=self.clock,
                      monotonic=self.monotonic, pr_processes=self.pr_processes)
 
     def load(self, key: str, *, repo: str = REPO, pr: int = PR) -> Conversation | None:
@@ -131,8 +134,8 @@ def _container(settings: Settings, github: FakeGitHub, agent_runs: FakeAgentRuns
                desktop: FakeDesktop, pr_processes: FakePrProcesses,
                working_copies: WorkingCopies | None,
                thread_records: ThreadRecords | None,
-               clock: Callable[[], datetime] | None,
-               monotonic: Callable[[], float] | None) -> dishka.Container:
+               clocks: ClocksWiring,
+               change_detection: ChangeDetection | None = None) -> dishka.Container:
     providers: list[Part] = [
         fake_github(github),
         fake_provider(Desktop, desktop),
@@ -143,14 +146,21 @@ def _container(settings: Settings, github: FakeGitHub, agent_runs: FakeAgentRuns
         providers.append(fake_provider(WorkingCopies, working_copies))
     if thread_records is not None:
         providers.append(fake_provider(ThreadRecords, thread_records))
-    return build_container(settings, *providers,
-                           clocks=clocks_of(clock, monotonic=monotonic or time.monotonic))
+    if change_detection is not None:
+        providers.append(fake_provider(ChangeDetection, change_detection))
+    return build_container(settings, *providers, clocks=clocks)
+
+
+def _clocks(clock: Callable[[], datetime] | None,
+            monotonic: Callable[[], float] | None) -> ClocksWiring:
+    return clocks_of(clock, monotonic=monotonic or time.monotonic)
 
 
 def world(settings: Settings, *, github: FakeGitHub | None = None,
           working_copies: FakeWorkingCopies | None = None,
           agent_runs: FakeAgentRuns | None = None,
           thread_records: ThreadRecords | None = None,
+          change_detection: ChangeDetection | None = None,
           clock: Callable[[], datetime] | None = None,
           monotonic: Callable[[], float] | None = None,
           pr_processes: FakePrProcesses | None = None) -> World:
@@ -160,8 +170,11 @@ def world(settings: Settings, *, github: FakeGitHub | None = None,
     desktop = FakeDesktop()
     agent_runs = agent_runs or FakeAgentRuns(pr_processes)
     thread_records = thread_records or FakeThreadRecords()
+    clocks = _clocks(clock, monotonic)
+    change_detection = change_detection or FakeChangeDetection(
+        settings.config.gh_account, settings.config.watcher_poll_interval, clocks.utc)
     container = _container(settings, github, agent_runs, desktop, pr_processes,
-                           working_copies, thread_records, clock, monotonic)
+                           working_copies, thread_records, clocks, change_detection)
     return World(settings, github, working_copies, agent_runs, thread_records,
                  pr_processes, container.get(ConversationManagerFactory), container.get(ChangeDetection),
                  container.get(Standing), clock, monotonic)
@@ -175,7 +188,7 @@ def conversation_managers_over(settings: Settings, *, github: FakeGitHub | None 
                         monotonic: Callable[[], float] | None = None) -> ConversationManagerFactory:
     conversation_managers: ConversationManagerFactory = _container(
         settings, github or FakeGitHub(), agent_runs, FakeDesktop(), FakePrProcesses(),
-        working_copies, thread_records, clock, monotonic).get(ConversationManagerFactory)
+        working_copies, thread_records, _clocks(clock, monotonic)).get(ConversationManagerFactory)
     return conversation_managers
 
 
