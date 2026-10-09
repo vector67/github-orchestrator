@@ -14,6 +14,7 @@ from github_orchestrator.wiring import (
     ServerConfig,
     ServerControl,
     ServerWiring,
+    detached,
     wire,
 )
 from tests.conftest import clocks_of
@@ -154,3 +155,15 @@ def test_stopping_with_no_server_running_signals_nothing(files):
     finally:
         bystander.kill()
         bystander.wait()
+
+
+def test_a_started_server_runs_in_a_session_of_its_own_so_it_outlives_the_watchers(tmp_path):
+    log_file = tmp_path / "logs" / "server.log"
+    started = detached([sys.executable, "-c", "print('serving', flush=True)\n"
+                        "import time\ntime.sleep(60)"], {}, log_file)
+    try:
+        assert os.getsid(started.pid) == started.pid != os.getsid(0)
+        assert until(lambda: log_file.read_text() == "serving\n")
+    finally:
+        started.kill()
+        started.wait()

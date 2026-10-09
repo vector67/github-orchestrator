@@ -1,79 +1,47 @@
-import json
-import os
-import signal
-import socket
-import subprocess
 import sys
-import urllib.error
-import urllib.request
+from dataclasses import dataclass, field
 
 import pytest
 
-from tests.waiting import until
+from github_orchestrator import wiring
+from github_orchestrator.wiring import Server, make_container
 
-STARTED_WITHIN_SECONDS = 60
 INSTANCE = "side"
-
-
-def _free_port():
-    with socket.socket() as probe:
-        probe.bind(("127.0.0.1", 0))
-        return probe.getsockname()[1]
-
-
-def _health(port):
-    try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=2) as answer:
-            return json.load(answer)
-    except (urllib.error.URLError, ConnectionError, TimeoutError):
-        return None
 
 
 @pytest.fixture
 def side_instance(tmp_path):
-    home, port = tmp_path / "home", _free_port()
-    folder = home / ".config" / "github-orchestrator"
-    folder.mkdir(parents=True)
-    (folder / f"{INSTANCE}.toml").write_text(
-        f'gh_account = "octocat"\nhub_port = {port}\nserver_workers = 1\n'
-        "check_for_updates = false\n")
-    env = {name: value for name, value in os.environ.items()
-           if not name.startswith("GITHUB_ORCHESTRATOR_")}
-    env.update(HOME=str(home), XDG_DATA_HOME=str(tmp_path / "share"),
-               GITHUB_ORCHESTRATOR_INSTANCE=INSTANCE)
-    return env, port, tmp_path / "share" / f"github-orchestrator-{INSTANCE}"
+    home = tmp_path / "home"
+    config = home / ".config" / "github-orchestrator" / f"{INSTANCE}.toml"
+    config.parent.mkdir(parents=True)
+    config.write_text('gh_account = "octocat"\ncheck_for_updates = false\n')
+    env = {"HOME": str(home), "XDG_DATA_HOME": str(tmp_path / "share"),
+           "GITHUB_ORCHESTRATOR_INSTANCE": INSTANCE}
+    return env, home, config, tmp_path / "share" / f"github-orchestrator-{INSTANCE}"
 
 
-def _server_pid(data_dir):
-    try:
-        return int((data_dir / "server.pid").read_text())
-    except (OSError, ValueError):
+@dataclass
+class Spawns:
+    made: list[tuple[list[str], dict[str, str], object]] = field(default_factory=list)
+
+    def __call__(self, argv, env, log_file):
+        self.made.append((list(argv), dict(env), log_file))
+        return self
+
+    def poll(self):
         return None
 
 
-def _answers_from_its_pid_file(port, data_dir):
-    health = _health(port)
-    return health is not None and health["pid"] == _server_pid(data_dir)
+def test_a_watcher_of_another_instance_starts_that_instances_server_on_its_config_and_data(
+        side_instance, monkeypatch):
+    env, home, config, data_dir = side_instance
+    spawns = Spawns()
+    monkeypatch.setattr(wiring, "detached", spawns)
 
+    make_container(env, home).get(Server).keep_running()
 
-def test_a_watcher_of_another_instance_starts_that_instances_server_and_leaves_it_running(
-        side_instance):
-    env, port, data_dir = side_instance
-    watcher = subprocess.Popen([sys.executable, "-m", "github_orchestrator.watcher", "--loop"],
-                               env=env, start_new_session=True, stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-    server = None
-    try:
-        assert until(lambda: _answers_from_its_pid_file(port, data_dir), STARTED_WITHIN_SECONDS)
-        server = _server_pid(data_dir)
-        watcher.send_signal(signal.SIGTERM)
-        watcher.wait(timeout=30)
-
-        assert server != watcher.pid
-        assert _health(port)["pid"] == server
-    finally:
-        watcher.kill()
-        watcher.wait()
-        if server is not None:
-            os.kill(server, signal.SIGTERM)
-            assert until(lambda: _health(port) is None, 30)
+    [(argv, environment, log_file)] = spawns.made
+    assert argv == [sys.executable, "-m", "github_orchestrator.server"]
+    assert environment["GITHUB_ORCHESTRATOR_CONFIG"] == str(config)
+    assert environment["GITHUB_ORCHESTRATOR_DATA_DIR"] == str(data_dir)
+    assert log_file == data_dir / "logs" / "server.log"

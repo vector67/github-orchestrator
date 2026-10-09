@@ -17,9 +17,9 @@ log = logging.getLogger(__name__)
 ORPHAN_CHECK_SECONDS = 1.0
 
 
-def _leave_once_orphaned(supervisor: int) -> None:
+def _leave_once_orphaned(supervisor: int, check_seconds: float) -> None:
     while os.getppid() == supervisor:
-        time.sleep(ORPHAN_CHECK_SECONDS)
+        time.sleep(check_seconds)
     log.error("worker %d lost its server %d, so it leaves", os.getpid(), supervisor)
     os.kill(os.getpid(), signal.SIGTERM)
 
@@ -29,11 +29,12 @@ class Worker:
     port: int
     pid: int
     logs_dir: Path | None
+    orphan_check_seconds: float = ORPHAN_CHECK_SECONDS
 
     def __call__(self) -> ASGIApp:
         container = make_container(os.environ, Path.home(), logs_dir=self.logs_dir)
         container.get(Logs).configure_logging(Process.SERVER)
-        threading.Thread(target=_leave_once_orphaned, args=(self.pid,), daemon=True,
+        threading.Thread(target=_leave_once_orphaned, args=(self.pid, self.orphan_check_seconds), daemon=True,
                          name="orphan-check").start()
         server: ServerApp = container.get(ServerApp)
         return server.app(self.port, self.pid)
