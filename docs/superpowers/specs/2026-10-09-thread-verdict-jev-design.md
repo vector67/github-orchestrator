@@ -39,7 +39,7 @@ tokens, roughly $0.00002.
 
 - **The verdict on someone else's PR moves from haiku to Jev.** Which form, and
   what instructions and criteria it gets, is settled by experiment against the
-  test cases below.
+  test cases below; see [The form](#the-form).
 - **The decomposed form as tried breaks T2.** T2 says the model chooses freely
   and the code does not narrow or overrule it. The two-question tree made
   outcomes unreachable: once the viewer commented it could never say not-mine
@@ -66,7 +66,9 @@ tokens, roughly $0.00002.
 
 On someone else's PR, a thread the viewer commented on goes to
 needs-verification when a later comment claims a fix to what the viewer asked
-for. Opus then reads the PR's commits against the viewer's comment.
+for, or answers the viewer with something the code can confirm ("Yes, see the
+test on line 40"). Opus then reads the PR's commits against the viewer's
+comment.
 
 | ID  | Rule                                                                                                                                                                                         |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -157,6 +159,27 @@ needs a reply from me is Needs a look, and Y9 is the reply-and-ticket proposal
 of [that design](2026-10-08-reply-and-ticket-proposals-design.md). Y10 needs a
 classification for chatter that is not about the PR, which T4 does not have.
 
+## The form
+
+Settled by experiment on 2026-10-09: one `choice` over the five outcomes, asked
+of `jev-1.13`, with the instruction "What does this thread ask of viewer now?".
+The criteria are `MEANINGS` in `conversation/_domain/verdict.py`, in the order
+my-move, needs-verification, their-move, assumed-done, not-mine; the order is
+part of the form, since reordering the options lost O17. The state is the
+thread as plain text, with usernames swapped for `viewer`, `pr-author` and
+`colleague-N`, links reduced to their text and bare URLs removed, a marker line
+after the viewer's last comment, an emoji-only reply tagged with its emoji's
+name, and the closing facts sentence (thread kind, whether the viewer commented,
+whether the thread @-mentions the viewer).
+
+Scored on the 28 test cases above, the 16 real threads, and two held-out sets of
+30 synthetic cases no variant was tuned on, 20 runs each: every case right on
+every run. A JSON state, role words such as "you", and a decomposed form of
+seven yes/no questions all scored lower on the held-out sets.
+
+Until the Needs verification group exists, needs-verification places the thread
+in Answered.
+
 ## Open questions
 
 - Where a Needs verification card sits on the board and in the Columns view,
@@ -164,8 +187,4 @@ classification for chatter that is not about the PR, which T4 does not have.
 
 ## Out of scope here
 
-- Choosing Jev's form, instructions and criteria: that is the experiment, run
-  against the test cases above.
-- What is sent to TypeSafe. The experiment swapped usernames for stand-ins and
-  removed URLs; whether production does the same is decided with the form.
 - Building needs-verification and the Y9/Y10 changes.

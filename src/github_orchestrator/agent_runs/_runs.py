@@ -17,6 +17,7 @@ from typing import Any
 
 from github_orchestrator.agent_runs._agents import Agent
 from github_orchestrator.agent_runs._command_lines import CommandLines, command_lines_of
+from github_orchestrator.agent_runs._jev import Ask, choose
 from github_orchestrator.agent_runs._ledger import (
     FINISHED_SCAN_BYTES,
     SEED_SCAN_BYTES,
@@ -44,8 +45,6 @@ from github_orchestrator.agent_runs._summary_prompts import (
     fixes_prompt,
     gists_in,
     thread_gist_prompt,
-    verdict_in,
-    verdict_prompt,
 )
 from github_orchestrator.agent_runs._tail import iter_lines_reverse
 from github_orchestrator.agent_runs._thread_prompts import (
@@ -58,6 +57,10 @@ from github_orchestrator.agent_runs._transcript import (
     last_thread_in,
     summarize_event,
     tail_display_lines,
+)
+from github_orchestrator.agent_runs._verdict_state import (
+    VERDICT_INSTRUCTIONS,
+    verdict_state,
 )
 from github_orchestrator.agent_runs.interface import (
     FinishedRun,
@@ -278,7 +281,7 @@ class AgentRun:
 
 
 class AgentRuns:
-    def __init__(self, popen: Popen, run: Run, clock: Monotonic, *,
+    def __init__(self, popen: Popen, run: Run, jev: Ask, clock: Monotonic, *,
                  pr_processes: PrProcesses, report_commands: ReportCommands, changes_file: str,
                  agent: Agent, command: str, model: str,
                  summary_model: str, pytest_workers: int, transcripts_dir: Path,
@@ -296,6 +299,7 @@ class AgentRuns:
         self._lines: CommandLines = command_lines_of(agent)
         self._summaries = Summaries(run, self._command, summary_model, self._lines)
         self._checks = Summaries(run, self._command, model, self._lines)
+        self._jev = jev
         self._pr_runs: dict[Pr, AgentRun] = {}
 
     def _transcript(self, pr: Pr) -> Path:
@@ -475,16 +479,17 @@ class AgentRuns:
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None:
-        def given(answer: str) -> None:
-            word = verdict_in(answer, answers)
+        state = verdict_state(comments, viewer=viewer, pr_author=pr_author,
+                              viewer_commented=viewer_commented,
+                              mentions_viewer=mentions_viewer, kind=kind)
+
+        def judge() -> None:
+            word = choose(self._jev, state, VERDICT_INSTRUCTIONS, answers)
+            log.info("verdict for %s: %s", key, word)
             if word is not None:
                 done(word)
 
-        self._summaries.summarize(
-            verdict_prompt(comments, viewer=viewer, pr_author=pr_author, spoke_last=spoke_last,
-                           viewer_commented=viewer_commented,
-                           mentions_viewer=mentions_viewer, kind=kind, answers=answers),
-            given, label=key)
+        self._summaries.later(judge)
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
                      path: str | None, line: int | None, sha: str, worktree: str,

@@ -1,0 +1,14 @@
+{
+ "state": "claude[bot]: Summary at\n\nviewer: Add a test, see the guide.\n\npr-author: 👍 [a reply with only the emoji: thumbs up sign]\n\nviewer: Thanks!\n\n--- nobody has commented since viewer's last comment ---\n\nThis is a line thread. viewer is reviewing pr-author's pull request. viewer has commented in this thread, and nobody @-mentions viewer.",
+ "model": "jev-1.13.0",
+ "questions": {
+  "verdict": {
+   "type": "choice",
+   "instructions": "What does this thread ask of viewer now?",
+   "criteria": {
+    "my-move": "viewer has to answer",
+    "their-move": "someone else has to answer"
+   }
+  }
+ }
+}

@@ -11,6 +11,7 @@ from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.wiring import AgentRunsWiring, ReportCommandsWiring, wire
 from tests.agent_runs.pinned import PYTHON
 from tests.agent_runs.scripted_claude import ScriptedClaude
+from tests.agent_runs.scripted_jev import ScriptedJev
 from tests.conftest import clocks_of, fake_provider
 
 MODEL = "opus"
@@ -22,13 +23,13 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
                     clock: Callable[[], float] = time.monotonic,
                     summary_model: str = SUMMARY_MODEL,
                     command: str = "claude", agent: Agent = Agent.CLAUDE,
-                    model: str = MODEL) -> History:
+                    model: str = MODEL, jev: ScriptedJev | None = None) -> History:
     history: History = wire(
         fake_provider(PrProcesses, world.pr_processes),
         fake_provider(AgentChanges, world.pr_processes),
         ReportCommandsWiring(str(PYTHON)),
         clocks_of(monotonic=clock),
-        AgentRunsWiring(claude.popen, claude.run, agent=agent, command=command, model=model,
+        AgentRunsWiring(claude.popen, claude.run, (jev or ScriptedJev(world)).ask, agent=agent, command=command, model=model,
                         summary_model=summary_model, pytest_workers=PYTEST_WORKERS,
                         transcripts_dir=data / "transcripts",
                         runs_log=data / "runs.jsonl"),

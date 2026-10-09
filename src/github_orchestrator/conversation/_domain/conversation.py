@@ -111,6 +111,7 @@ class Ticket:
 
 class ThreadVerdict(StrEnum):
     MY_MOVE = "my-move"
+    NEEDS_VERIFICATION = "needs-verification"
     THEIR_MOVE = "their-move"
     ASSUMED_DONE = "assumed-done"
     NOT_MINE = "not-mine"

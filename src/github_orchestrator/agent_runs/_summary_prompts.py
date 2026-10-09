@@ -51,34 +51,6 @@ def fixes_prompt(fixes: Sequence[tuple[Sequence[tuple[str, str]], str | None]],
     )
 
 
-def _yes(said: bool) -> str:
-    return "yes" if said else "no"
-
-
-def verdict_prompt(comments: Sequence[tuple[str, str, str]], *, viewer: str, pr_author: str,
-                   spoke_last: str, viewer_commented: bool, mentions_viewer: bool, kind: str,
-                   answers: Mapping[str, str]) -> str:
-    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
-                          for label, login, body in comments)
-    offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
-    return (
-        "You sort pull request comment threads for one person, the viewer, who is "
-        "reviewing someone else's pull request. Read the thread and decide what it asks "
-        "of the viewer now. Each comment is labelled: `you` is the viewer, `PR author` "
-        "wrote the pull request, `colleague` is anyone else, `bot` is a review bot. "
-        "By default, assume a comment is addressed to the PR author, not the viewer.\n\n"
-        f"Viewer: {viewer}\n"
-        f"PR author: {pr_author or 'unknown'}\n"
-        f"Thread kind: {kind}\n"
-        f"Spoke last: {spoke_last}\n"
-        f"The viewer has commented in this thread: {_yes(viewer_commented)}\n"
-        f"The thread @-mentions the viewer: {_yes(mentions_viewer)}\n\n"
-        f"Answer with exactly one of these words on the first line, and nothing else:\n"
-        f"{offered}\n\n"
-        f"The thread, oldest comment first:\n\n{thread}"
-    )
-
-
 def verdict_in(answer: str, answers: Mapping[str, str]) -> str | None:
     word = answer.strip().lower()
     return word if word in answers else None

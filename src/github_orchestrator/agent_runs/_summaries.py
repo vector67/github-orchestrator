@@ -53,7 +53,7 @@ class Summaries:
             else:
                 log.info("gist for %s came back empty after %.1fs", label, took)
 
-        self._later(work)
+        self.later(work)
 
     def drain(self, timeout: float) -> bool:
         deadline = time.monotonic() + timeout
@@ -63,7 +63,7 @@ class Summaries:
             thread.join(max(0.0, deadline - time.monotonic()))
         return not any(thread.is_alive() for thread in pending)
 
-    def _later(self, work: Callable[[], None]) -> None:
+    def later(self, work: Callable[[], None]) -> None:
         def run() -> None:
             try:
                 with self._lanes:

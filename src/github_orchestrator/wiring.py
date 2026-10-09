@@ -22,6 +22,8 @@ from github_orchestrator.agent_runs import (
     Summaries,
     ThreadWork,
 )
+from github_orchestrator.agent_runs._jev import Ask as JevAsk
+from github_orchestrator.agent_runs._jev import post_to_jev
 from github_orchestrator.agent_runs._report_commands import ReportCommands
 from github_orchestrator.agent_runs._runs import (
     AgentRuns,
@@ -628,6 +630,7 @@ class ReportCommandsProvider(Provider):
 class AgentRunsWiring(Wiring):
     popen: AgentPopen
     run: GistRun
+    jev: JevAsk
     _: KW_ONLY
     agent: Agent
     command: str
@@ -647,7 +650,7 @@ class AgentRunsProvider(Provider):
     def runs(self, wiring: AgentRunsWiring, monotonic: Monotonic,
              pr_processes: PrProcesses, agent_changes: AgentChanges,
              report_commands: ReportCommands) -> AgentRuns:
-        return AgentRuns(wiring.popen, wiring.run, monotonic,
+        return AgentRuns(wiring.popen, wiring.run, wiring.jev, monotonic,
                                pr_processes=pr_processes, report_commands=report_commands,
                                changes_file=agent_changes.file_name(),
                                agent=wiring.agent, command=wiring.command,
@@ -1421,7 +1424,7 @@ def make_container(env: Mapping[str, str], home: Path,
         AgentChangesProvider,
         ReportCommandsWiring(sys.executable),
         AgentRunsWiring(
-            subprocess.Popen, subprocess.run,
+            subprocess.Popen, subprocess.run, post_to_jev,
             agent=settings.config.agent,
             command=settings.config.agent_command,
             model=settings.config.agent_model,

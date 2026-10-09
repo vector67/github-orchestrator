@@ -89,7 +89,7 @@ def test_a_colleagues_single_comment_asks_for_a_verdict_with_the_facts(settings)
     assert asked == VerdictAsked(
         key="PRRT_one", comments=(("colleague", "ben", "rename this"),), viewer=ME,
         pr_author=AUTHOR, spoke_last="colleague ben", viewer_commented=False,
-        mentions_viewer=False, kind="review thread on a line")
+        mentions_viewer=False, kind="a line thread")
 
 
 def _one_review_thread(settings, *comments):
@@ -105,7 +105,7 @@ def test_the_pr_description_is_my_move_not_waiting_on_its_author(settings):
     assert (held.standing, held.unread) == (ConversationState.READY, True)
     [asked] = board.agent_runs.verdicts_asked()
     assert (asked.kind, asked.comments[0][0], asked.mentions_viewer) == (
-        "PR description", "PR author", True)
+        "the PR description", "PR author", True)
 
 
 def test_a_bots_summary_is_my_move_not_waiting_on_the_bot(settings):
@@ -116,7 +116,7 @@ def test_a_bots_summary_is_my_move_not_waiting_on_the_bot(settings):
 
     assert (held.standing, held.unread) == (ConversationState.READY, True)
     [asked] = board.agent_runs.verdicts_asked()
-    assert (asked.kind, asked.spoke_last) == ("review summary", "bot claude[bot]")
+    assert (asked.kind, asked.spoke_last) == ("a review summary", "bot claude[bot]")
 
 
 def test_the_facts_label_each_comment_and_say_the_viewer_spoke(settings):
@@ -135,6 +135,7 @@ def test_the_facts_label_each_comment_and_say_the_viewer_spoke(settings):
 def test_each_verdict_places_the_thread_where_the_spec_says(settings):
     placed = {}
     for word, standing in (("my-move", ConversationState.READY),
+                           ("needs-verification", ConversationState.READY),
                            ("their-move", ConversationState.WAITING),
                            ("assumed-done", ConversationState.ASSUMED_DONE),
                            ("not-mine", ConversationState.NOT_MINE)):
@@ -145,6 +146,7 @@ def test_each_verdict_places_the_thread_where_the_spec_says(settings):
         assert held.standing is standing
 
     assert placed == {"my-move": (ConversationState.READY, False),
+                      "needs-verification": (ConversationState.READY, False),
                       "their-move": (ConversationState.WAITING, False),
                       "assumed-done": (ConversationState.ASSUMED_DONE, False),
                       "not-mine": (ConversationState.NOT_MINE, False)}

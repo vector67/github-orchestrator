@@ -29,28 +29,42 @@ RETRY_AFTER = timedelta(minutes=10)
 
 STATE_OF_VERDICT = {
     ThreadVerdict.MY_MOVE: OPEN,
+    ThreadVerdict.NEEDS_VERIFICATION: OPEN,
     ThreadVerdict.THEIR_MOVE: WAITING_ON_REVIEWER,
     ThreadVerdict.ASSUMED_DONE: ASSUMED_DONE,
     ThreadVerdict.NOT_MINE: NOT_MINE,
 }
 
 MEANINGS = {
-    ThreadVerdict.MY_MOVE: "the viewer has to act: someone asked or answered them, pushed "
-                           "back, or the viewer opened this and it is not settled yet",
-    ThreadVerdict.THEIR_MOVE: "the viewer has said their piece and waits on someone else "
-                              "to answer or to change the code",
-    ThreadVerdict.ASSUMED_DONE: "what the viewer asked for looks settled: it was fixed, "
-                                "agreed or thanked for, and nothing is left but to confirm",
-    ThreadVerdict.NOT_MINE: "it asks nothing of the viewer: someone else's thread, the PR "
-                            "description, a bot's summary, or one the viewer no longer "
-                            "needs to follow",
+    ThreadVerdict.MY_MOVE: "viewer has to act: someone asks viewer something or asks for "
+                           "viewer's input, or a comment since viewer's last comment answers "
+                           "viewer, pushes back on viewer, or declines or postpones what viewer "
+                           "asked for without saying any part of it is done",
+    ThreadVerdict.NEEDS_VERIFICATION: "a comment since viewer's last comment, by anyone, says "
+                                      "what viewer asked for, or part of it, has been done, "
+                                      "changed or fixed, with or without a commit, and asks "
+                                      "viewer nothing; the PR author replying with only an "
+                                      "approving emoji such as a thumbs-up counts as saying it "
+                                      "is done",
+    ThreadVerdict.THEIR_MOVE: "viewer has said their piece and is still waiting on someone "
+                              "else: nobody has replied since viewer's last comment, another "
+                              "reviewer only agrees with viewer, the PR author only promises to "
+                              "look into it, or the reply passes viewer's question on to "
+                              "someone else to answer",
+    ThreadVerdict.ASSUMED_DONE: "settled: viewer confirmed or approved after the fix, and "
+                                "nothing is left to do",
+    ThreadVerdict.NOT_MINE: "the thread asks nothing of viewer and viewer is not waiting on "
+                            "anything in it: other people discussing their own points, review "
+                            "comments for the PR author, a bot summary, or viewer only gave an "
+                            "opinion when someone else asked for it and the open question is "
+                            "now for another person",
 }
 
 KIND_WORDS = {
-    KIND_REVIEW: "review thread on a line",
-    KIND_ISSUE: "conversation comment",
-    KIND_REVIEW_SUMMARY: "review summary",
-    KIND_PR_BODY: "PR description",
+    KIND_REVIEW: "a line thread",
+    KIND_ISSUE: "a conversation comment",
+    KIND_REVIEW_SUMMARY: "a review summary",
+    KIND_PR_BODY: "the PR description",
 }
 
 YOU = "you"

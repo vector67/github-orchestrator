@@ -6,6 +6,7 @@ from github_orchestrator.agent_runs import ThreadFix
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.scripted_claude import ScriptedClaude
+from tests.agent_runs.scripted_jev import ScriptedJev
 from tests.agent_runs.support import (
     finish,
     ledger_file,
@@ -32,12 +33,14 @@ class World:
         self.clock = Clock()
         self.fake = FakeAgentRuns(FakePrProcesses(), clock=self.clock)
         self.claude = ScriptedClaude(self.fake)
+        self.jev = ScriptedJev(self.fake)
         self.data = tmp_path / "data"
         self.worktree = str(tmp_path)
         if kind == "fake":
             self.runs = self.fake
         else:
-            self.runs = real_agent_runs(self.fake, self.claude, self.data, self.clock)
+            self.runs = real_agent_runs(self.fake, self.claude, self.data, self.clock,
+                                        jev=self.jev)
         self.kind = kind
 
     def ledger(self):
@@ -389,12 +392,12 @@ def _judge(world, done):
     world.runs.judge_thread(
         "PRRT_x", [("PR author", "mei", "fixed in abc123")], viewer="octocat",
         pr_author="mei", spoke_last="PR author", viewer_commented=True,
-        mentions_viewer=False, kind="review thread on a line", answers=VERDICTS,
+        mentions_viewer=False, kind="a line thread", answers=VERDICTS,
         done=done)
 
 
-def test_a_verdict_is_the_answer_the_model_gives_first(world):
-    world.fake.answer("\n  Their-Move \nbecause the author asked a question")
+def test_a_verdict_is_the_option_the_decision_model_chose(world):
+    world.fake.answer("their-move")
     given = []
 
     _judge(world, given.append)
@@ -403,8 +406,8 @@ def test_a_verdict_is_the_answer_the_model_gives_first(world):
     assert given == ["their-move"]
 
 
-@pytest.mark.parametrize("answer", [None, "assumed-done", "the author fixed it"])
-def test_no_verdict_is_handed_back_when_the_model_names_none_it_was_offered(world, answer):
+@pytest.mark.parametrize("answer", [None, "assumed-done"])
+def test_no_verdict_is_handed_back_when_the_decision_model_fails_or_names_none_offered(world, answer):
     world.fake.answer(answer)
     given = []
 
