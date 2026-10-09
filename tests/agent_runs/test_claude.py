@@ -376,16 +376,19 @@ def test_a_gist_is_asked_of_the_summary_model_away_from_any_checkout(runs, world
     assert asked.cwd != os.getcwd()
 
 
-def test_a_commit_check_is_asked_of_the_fix_model_not_the_summary_model(runs, world, claude):
+def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_read_only_tools(
+        runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")
 
     runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
-                      sha="abc1234def", patch="-old\n+new", answers={"addressed": "yes"},
+                      sha="abc1234def", worktree=str(tmp_path), answers={"addressed": "yes"},
                       done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", MODEL]
+    assert asked.argv == ["claude", "--print", "--model", MODEL, "--allowedTools",
+                          "Read,Grep,Glob,Bash(git show:*),Bash(git log:*),Bash(git diff:*)"]
+    assert asked.cwd == str(tmp_path)
 
 
 def test_no_gist_is_asked_for_when_no_summary_model_is_configured(world, claude, tmp_path):

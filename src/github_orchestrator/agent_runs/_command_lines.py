@@ -4,11 +4,15 @@ from typing import Protocol
 from github_orchestrator.agent_runs._agents import Agent
 from github_orchestrator.agent_runs._pr_prompts import REBASE_ON_MAIN
 
+READ_ONLY_TOOLS = "Read,Grep,Glob,Bash(git show:*),Bash(git log:*),Bash(git diff:*)"
+
 
 class CommandLines(Protocol):
     def headless(self, model: str, *, carrying_on: bool, thread: str | None) -> list[str]: ...
 
     def gist(self, model: str) -> list[str]: ...
+
+    def read_only(self, model: str) -> list[str]: ...
 
     def rebase_session(self) -> list[str]: ...
 
@@ -28,6 +32,9 @@ class ClaudeCommandLines:
     def gist(self, model: str) -> list[str]:
         return ["--print", "--model", model]
 
+    def read_only(self, model: str) -> list[str]:
+        return [*self.gist(model), "--allowedTools", READ_ONLY_TOOLS]
+
     def rebase_session(self) -> list[str]:
         return [REBASE_ON_MAIN]
 
@@ -45,6 +52,9 @@ class CodexCommandLines:
     def gist(self, model: str) -> list[str]:
         return ["exec", "--ephemeral", "--skip-git-repo-check", "-s", "read-only",
                 "-m", model, "-"]
+
+    def read_only(self, model: str) -> list[str]:
+        return ["exec", "--ephemeral", "-s", "read-only", "-m", model, "-"]
 
     def rebase_session(self) -> list[str]:
         return ["$" + REBASE_ON_MAIN.removeprefix("/")]

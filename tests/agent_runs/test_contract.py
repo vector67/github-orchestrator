@@ -420,7 +420,7 @@ CHECKS = {"addressed": "it does what was asked", "not-addressed": "it does not"}
 def _check(world, done):
     world.runs.check_commit(
         "PRRT_x", [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
-        path="src/foo.py", line=4, sha="abc1234def", patch="-old\n+new", answers=CHECKS,
+        path="src/foo.py", line=4, sha="abc1234def", worktree=".", answers=CHECKS,
         done=lambda word, reasoning: done((word, reasoning)))
 
 

@@ -36,7 +36,7 @@ class Summaries:
         self._live_lock = threading.Lock()
 
     def summarize(self, prompt: str, done: Callable[[str], None], *,
-                  label: str) -> None:
+                  label: str, checkout: str | None = None) -> None:
         if not self._model:
             return
         queued_at = time.monotonic()
@@ -45,7 +45,7 @@ class Summaries:
             log.info("gist for %s started on %s after waiting %.1fs for a lane",
                      label, self._model, time.monotonic() - queued_at)
             asked_at = time.monotonic()
-            gist = self._ask(prompt)
+            gist = self._ask(prompt, checkout)
             took = time.monotonic() - asked_at
             if gist:
                 log.info("gist for %s written in %.1fs", label, took)
@@ -79,14 +79,17 @@ class Summaries:
             self._live.add(thread)
         thread.start()
 
-    def _ask(self, prompt: str) -> str | None:
+    def _spawn(self, prompt: str, flags: list[str], cwd: str) -> subprocess.CompletedProcess[Any]:
+        return self._run([*self._command, *flags], input=prompt, capture_output=True,
+                         text=True, timeout=SUMMARY_TIMEOUT, env=self._lines.env(), cwd=cwd)
+
+    def _ask(self, prompt: str, checkout: str | None) -> str | None:
         try:
-            with tempfile.TemporaryDirectory() as scratch:
-                done = self._run(
-                    [*self._command, *self._lines.gist(self._model)],
-                    input=prompt, capture_output=True, text=True,
-                    timeout=SUMMARY_TIMEOUT, env=self._lines.env(), cwd=scratch,
-                )
+            if checkout is None:
+                with tempfile.TemporaryDirectory() as scratch:
+                    done = self._spawn(prompt, self._lines.gist(self._model), scratch)
+            else:
+                done = self._spawn(prompt, self._lines.read_only(self._model), checkout)
         except (subprocess.TimeoutExpired, OSError) as exc:
             log.warning("comment summary spawn failed: %s", exc)
             return None

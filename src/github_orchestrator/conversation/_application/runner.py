@@ -229,7 +229,7 @@ def _verdict_recorder(ports: Ports,
 
 def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommitCheck) -> None:
     named = (Sha.parse(candidate) for candidate in effect.candidates)
-    commit = next((found for found in (ports.git.commit_patch(sha) for sha in named if sha)
+    commit = next((found for found in (ports.git.named_commit(sha) for sha in named if sha)
                    if found is not None), None)
     if commit is None:
         return
@@ -246,7 +246,7 @@ def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommi
             if outcome.conversation != stored:
                 update.conversation = outcome.conversation
 
-    ports.summaries.check_commit(conversation, sha, commit.text, record)
+    ports.summaries.check_commit(conversation, sha, commit.worktree, record)
 
 
 def _unpick_outcome(ports: Ports, conversation: Conversation) -> Change:

@@ -70,12 +70,11 @@ def test_the_verdict_on_a_thread(runs, claude):
     assert_pinned("verdict", _asked(runs, claude))
 
 
-def test_the_check_of_a_commit_against_a_thread(runs, claude):
+def test_the_check_of_a_commit_against_a_thread(runs, claude, tmp_path):
     runs.check_commit(
         "PRRT_1",
         [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
-        path="src/foo.py", line=4, sha="abc1234def",
-        patch="Rename the helper\n\ndiff --git a/src/foo.py b/src/foo.py\n-old\n+new",
+        path="src/foo.py", line=4, sha="abc1234def", worktree=str(tmp_path),
         answers={"addressed": "the commit does what was asked",
                  "not-addressed": "it does not"},
         done=lambda word, reasoning: None)

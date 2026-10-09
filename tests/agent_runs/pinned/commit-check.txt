@@ -1,4 +1,4 @@
-You check a pull request review for one person, the viewer, who is reviewing someone else's pull request. The viewer left a review comment; a later reply names a commit as the answer to it. Read the viewer's comments, then the commit, and decide whether the commit does what the viewer asked. Each comment is labelled: `you` is the viewer, `PR author` wrote the pull request, `colleague` is anyone else, `bot` is a review bot.
+You check a pull request review for one person, the viewer, who is reviewing someone else's pull request. The viewer left a review comment; a later reply names commit abc1234def as the answer to it. You are in a checkout of the pull request: read the commit with `git show abc1234def`, and any file, log or diff you need to judge it. Decide whether the commit does what the viewer asked. Each comment is labelled: `you` is the viewer, `PR author` wrote the pull request, `colleague` is anyone else, `bot` is a review bot.
 
 Answer on a single line: one of these words, then ||, then one or two sentences saying what the commit does about the viewer's comment and what, if anything, it leaves undone. Nothing else.
 - addressed: the commit does what was asked
@@ -9,11 +9,3 @@ The thread on src/foo.py:4, oldest comment first:
 [you] octocat: rename this
 
 [PR author] mei: fixed in abc1234
-
-Commit abc1234def, its message and its diff:
-
-Rename the helper
-
-diff --git a/src/foo.py b/src/foo.py
--old
-+new
