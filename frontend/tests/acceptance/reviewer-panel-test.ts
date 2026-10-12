@@ -743,6 +743,40 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(outcomes(), ['My move', 'Their move', 'Later…']);
   });
 
+  test('an answered card offers Move…, which leaves out My move', async function (assert) {
+    board().conversations = [board().threadIn('answered', { key: KEY })];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(offers(), [
+      'resolve',
+      'not-fixed',
+      'place',
+      'reply',
+      'defer',
+    ]);
+    assert.dom('[data-test-decision="place"]').includesText('Move…');
+    await click('[data-test-decision="place"]');
+
+    assert.deepEqual(outcomes(), [
+      'Their move',
+      'Not my conversation',
+      'Later…',
+    ]);
+    await click('[data-test-outcome="waiting"]');
+    await click('[data-test-dialog-submit]');
+    assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
+  });
+
+  test('a waiting card offers Move…, which leaves out Their move', async function (assert) {
+    board().conversations = [board().threadIn('waiting', { key: KEY })];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(offers(), ['resolve', 'defer', 'place', 'reply']);
+    await click('[data-test-decision="place"]');
+
+    assert.deepEqual(outcomes(), ['My move', 'Not my conversation', 'Later…']);
+  });
+
   test('later… opens the defer dialog, which defers the thread', async function (assert) {
     board().conversations = [board().threadIn('not-mine', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);

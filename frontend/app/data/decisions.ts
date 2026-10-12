@@ -572,7 +572,11 @@ const ENTRIES = {
         { to: 'not-mine', label: 'Not my conversation' },
         { to: LATER, label: 'Later…' },
       ]),
-      inPhase: { 'not-mine': { label: 'Move…', weight: 'primary' } },
+      inPhase: {
+        'not-mine': { label: 'Move…', weight: 'primary' },
+        answered: { label: 'Move…' },
+        waiting: { label: 'Move…' },
+      },
     },
     request: ({ modifier }) => ({ verb: 'place', body: { to: modifier } }),
     doing: 'moving it',
@@ -786,9 +790,9 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
 };
 
 const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
-  answered: ['resolve', 'not-fixed', 'reply', 'defer'],
+  answered: ['resolve', 'not-fixed', 'place', 'reply', 'defer'],
   removed: ['resolve'],
-  waiting: ['resolve', 'defer', 'reply'],
+  waiting: ['resolve', 'defer', 'place', 'reply'],
   'assumed-done': ['confirm-resolve', 'place', 'resolve', 'reply'],
   'not-mine': ['place', 'resolve', 'reply'],
   deferred: ['unpark', 'resolve'],
@@ -820,11 +824,14 @@ function doingOf(doing: string): string {
   return `${doing.charAt(0).toUpperCase()}${doing.slice(1)}…`;
 }
 
+const OUTCOME_OF_PHASE: Partial<Record<Phase, string>> = { answered: 'ready' };
+
 function besides(asks: Asks, phase: Phase): Asks {
   if (typeof asks !== 'object' || asks === null || !asks.outcomes) return asks;
+  const here = OUTCOME_OF_PHASE[phase] ?? phase;
   return {
     ...asks,
-    outcomes: asks.outcomes.filter((one) => one.to !== phase),
+    outcomes: asks.outcomes.filter((one) => one.to !== here),
   };
 }
 

@@ -384,6 +384,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     assert.deepEqual(offered(), [
       'Resolve',
       'Not fixed',
+      'Move…',
       'Reply',
       'Defer until …',
     ]);
@@ -424,7 +425,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     await each(
       board(),
       [
-        ['waiting', ['Resolve', 'Defer until …', 'Reply']],
+        ['waiting', ['Resolve', 'Defer until …', 'Move…', 'Reply']],
         ['deferred', ['Undefer', 'Resolve']],
       ] as const,
       ([phase]) => phase,
