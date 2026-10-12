@@ -69,9 +69,9 @@ def _placed(board, to, key="PRRT_one"):
     return asked
 
 
-def test_a_reviewer_places_an_assumed_done_or_not_mine_thread_in_each_outcome_by_hand(settings):
+def test_a_reviewer_places_a_thread_any_verdict_put_somewhere_in_each_outcome_by_hand(settings):
     placed = {}
-    for word in ("assumed-done", "not-mine"):
+    for word in ("my-move", "their-move", "assumed-done", "not-mine"):
         for to in (ConversationState.READY, ConversationState.WAITING,
                    ConversationState.NOT_MINE):
             board = _one_review_thread(settings)
@@ -85,6 +85,12 @@ def test_a_reviewer_places_an_assumed_done_or_not_mine_thread_in_each_outcome_by
             assert (board.here.github.prs[THE_PR], board.here.github.reactions) == on_github
 
     assert placed == {
+        ("my-move", ConversationState.READY): (ConversationState.READY, False, 1),
+        ("my-move", ConversationState.WAITING): (ConversationState.WAITING, False, 1),
+        ("my-move", ConversationState.NOT_MINE): (ConversationState.NOT_MINE, False, 1),
+        ("their-move", ConversationState.READY): (ConversationState.READY, False, 1),
+        ("their-move", ConversationState.WAITING): (ConversationState.WAITING, False, 1),
+        ("their-move", ConversationState.NOT_MINE): (ConversationState.NOT_MINE, False, 1),
         ("assumed-done", ConversationState.READY): (ConversationState.READY, False, 1),
         ("assumed-done", ConversationState.WAITING): (ConversationState.WAITING, False, 1),
         ("assumed-done", ConversationState.NOT_MINE): (ConversationState.NOT_MINE, False, 1),
@@ -98,14 +104,12 @@ def _code(asked):
     return asked.code if isinstance(asked, Denied) else asked
 
 
-def test_only_an_assumed_done_or_not_mine_thread_can_be_placed_by_hand(settings):
-    refused = {}
-    for word in ("my-move", "their-move"):
-        board = _one_review_thread(settings)
-        board.agent_runs.give(word)
-        refused[word] = _code(_placed(board, ConversationState.NOT_MINE))
+def test_a_deferred_thread_cannot_be_placed_by_hand(settings):
+    board = _one_review_thread(settings)
+    board.agent_runs.give("my-move")
+    _placed(board, ConversationState.DEFERRED)
 
-    assert refused == {"my-move": ErrorCode.NOT_PARKED, "their-move": ErrorCode.NOT_PARKED}
+    assert _code(_placed(board, ConversationState.NOT_MINE)) == ErrorCode.NOT_PARKED
 
 
 def test_a_reviewer_cannot_place_a_thread_where_no_outcome_of_theirs_lands_it(settings):

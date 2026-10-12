@@ -103,7 +103,10 @@ IDLE_FIX = (PROPOSED, DECLINED, FAILED)
 
 DELETABLE_KINDS = (KIND_REVIEW, KIND_ISSUE)
 
-PLACED_BY_HAND_FROM = (ASSUMED_DONE, NOT_MINE)
+PLACED_BY_HAND_FROM = {
+    ROLE_REVIEWER: (OPEN, WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE),
+    ROLE_AUTHOR: (ASSUMED_DONE, NOT_MINE),
+}
 
 OUTCOMES_BY_HAND = {
     ROLE_REVIEWER: (ConversationState.READY, ConversationState.WAITING,
@@ -721,7 +724,7 @@ def _an_outcome_of_the_role(conversation: Conversation, command: Place) -> Refus
 
 
 def _placed_by_an_agent(conversation: Conversation, command: Place) -> Refused | None:
-    if conversation.state not in PLACED_BY_HAND_FROM:
+    if conversation.state not in PLACED_BY_HAND_FROM[conversation.role]:
         return _refuse_decision(
             conversation, ErrorCode.NOT_PARKED,
             f"a {conversation.state} conversation was not placed by an agent")

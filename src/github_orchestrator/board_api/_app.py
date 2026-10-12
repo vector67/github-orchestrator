@@ -1033,8 +1033,10 @@ def confirm_thread(key: ThreadKey, board: Serving, if_match: IfMatch) -> Respons
                  "description": "A state no outcome on this pull request lands a "
                                 "thread in.",
                  "model": Errors}, 409: {
-                 "description": "The thread is not Assumed done or Not my "
-                                "conversation.",
+                 "description": "The thread is in no state an agent placed it in: "
+                                "My move, Waiting, Assumed done or Not my "
+                                "conversation on a pull request you review, and "
+                                "Assumed done or Not my conversation on your own.",
                  "model": Errors}})
 def place_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
                  asked: PlaceRequest) -> Response:
