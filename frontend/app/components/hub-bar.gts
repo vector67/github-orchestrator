@@ -85,7 +85,7 @@ export default class HubBar extends Component<HubBarSignature> {
   flip = () => this.theme.toggle();
 
   <template>
-    <header class="wall-bar">
+    <header class="wall-bar" data-top-bar>
       <span class="wall-name">Orchestrator</span>
       <nav class="hub-nav">
         <LinkTo

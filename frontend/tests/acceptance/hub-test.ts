@@ -321,6 +321,16 @@ module('Acceptance | hub', function (hooks) {
     );
   });
 
+  test('the top bar names itself for the recovery script, on the wall and on a pull request', async function (assert) {
+    onTheHub(heldPr());
+
+    await visit('/');
+    assert.dom('[data-top-bar]').exists({ count: 1 });
+
+    await visit('/pr/o/r/7/conversations');
+    assert.dom('[data-top-bar]').exists({ count: 1 });
+  });
+
   test('a board that cannot load says why under the top bar, which still leads back to the wall', async function (assert) {
     onTheHub(heldPr());
     board().broken = /\/api\/pull-request$/;
@@ -330,13 +340,15 @@ module('Acceptance | hub', function (hooks) {
     assert
       .dom('[data-test-pr-view] [data-test-load-trouble]')
       .hasText('The board could not load: connection refused');
-    assert.strictEqual(
-      document.documentElement.getAttribute('data-board-trouble'),
-      'The board could not load: connection refused',
-      'the recovery script offers its ways out while the page is marked',
-    );
+    assert
+      .dom('[data-board-trouble]')
+      .exists('the recovery script reads the board’s error from this');
+    assert
+      .dom('[data-top-bar]')
+      .exists(
+        'and stays out because the page started far enough to draw its bar',
+      );
     await click('[data-test-wall-link]');
     assert.strictEqual(currentURL(), '/');
-    assert.false(document.documentElement.hasAttribute('data-board-trouble'));
   });
 });

@@ -393,7 +393,7 @@ export default class SetupPage extends Component {
       {{#if this.watching}}
         <HubBar @on="setup" />
       {{else}}
-        <header class="wall-bar">
+        <header class="wall-bar" data-top-bar>
           <span class="wall-name">Orchestrator</span>
           <span class="setup-crumb">Setup</span>
         </header>

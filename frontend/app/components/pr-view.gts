@@ -199,7 +199,7 @@ export default class PrView extends Component<PrViewSignature> {
 
   <template>
     <div id="pr-view" data-test-pr-view>
-      <header class="prbar" data-test-pr-bar>
+      <header class="prbar" data-top-bar data-test-pr-bar>
         <button
           type="button"
           class="switch-btn"

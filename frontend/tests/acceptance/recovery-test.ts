@@ -135,13 +135,30 @@ module('Acceptance | recovery', function (hooks) {
     assert.dom('main', page().body).hasText('The wall');
   });
 
-  test('a page the board marks as in trouble shows the board’s reason until the mark goes', async function (assert) {
-    const { page } = await framed('<main>The board could not load</main>');
+  const TROUBLE =
+    '<section data-board-trouble><p>The board could not load: connection refused</p></section>';
 
-    page().documentElement.setAttribute(
-      'data-board-trouble',
-      'The board could not load: connection refused',
+  test('an error under a top bar keeps its own line, without the panel', async function (assert) {
+    const { page } = await framed(
+      `<header data-top-bar>The bar</header>${TROUBLE}`,
     );
+
+    await pause(600);
+
+    assert.strictEqual(panelOf(page()), null);
+  });
+
+  test('a panel the page’s own rendering removes comes back while the page is still in trouble', async function (assert) {
+    const { page } = await framed(TROUBLE);
+    (await panelIn(page)).remove();
+
+    page().body.insertAdjacentHTML('beforeend', '<p>re-rendered</p>');
+
+    assert.true((await panelIn(page)).isConnected);
+  });
+
+  test('a page that could not start shows the board’s reason until the board’s error goes', async function (assert) {
+    const { page } = await framed(`${TROUBLE}<main>The rest</main>`);
 
     const panel = await panelIn(page);
     assert.true(
@@ -149,7 +166,7 @@ module('Acceptance | recovery', function (hooks) {
         'The board could not load: connection refused',
       ),
     );
-    page().documentElement.removeAttribute('data-board-trouble');
+    page().querySelector('[data-board-trouble]')!.remove();
     await waitUntil(() => panelOf(page()) === null, { timeout: 5000 });
   });
 });

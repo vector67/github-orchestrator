@@ -2,7 +2,8 @@
   'use strict';
 
   var DRAFTS = 'decide-dialog-drafts';
-  var MARK = 'data-board-trouble';
+  var MARK = '[data-board-trouble]';
+  var TOP_BAR = '[data-top-bar]';
   var SETTLE_MS = 300;
   var UNSEEN = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEMPLATE: 1, LINK: 1 };
 
@@ -89,7 +90,10 @@
   }
 
   function marked() {
-    return document.documentElement.getAttribute(MARK);
+    if (document.querySelector(TOP_BAR)) return null;
+    var trouble = document.querySelector(MARK);
+    if (!trouble) return null;
+    return trouble.textContent.trim() || 'The board could not load.';
   }
 
   function reasons() {
@@ -126,7 +130,7 @@
         return way[0];
       }),
     ]);
-    if (panel && !panel.hidden && drawn === shown) return;
+    if (panel && panel.isConnected && !panel.hidden && drawn === shown) return;
     if (!panel) {
       panel = document.createElement('section');
       panel.id = 'board-recovery';
@@ -223,11 +227,7 @@
       waited = true;
       check();
     }, patience);
-    new MutationObserver(function () {
-      if (marked() || troubles.length || waited) soon();
-    }).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: [MARK],
+    new MutationObserver(soon).observe(document.documentElement, {
       childList: true,
       subtree: true,
     });

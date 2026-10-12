@@ -1,7 +1,4 @@
-import Component from '@glimmer/component';
-import type Owner from '@ember/owner';
-
-const MARK = 'data-board-trouble';
+import type { TOC } from '@ember/component/template-only';
 
 interface LoadTroubleSignature {
   Args: { trouble: unknown };
@@ -12,20 +9,10 @@ function wordsOf(trouble: unknown): string {
   return `The board could not load: ${why}`;
 }
 
-export default class LoadTrouble extends Component<LoadTroubleSignature> {
-  constructor(owner: Owner, args: LoadTroubleSignature['Args']) {
-    super(owner, args);
-    document.documentElement.setAttribute(MARK, wordsOf(args.trouble));
-  }
+const LoadTrouble: TOC<LoadTroubleSignature> = <template>
+  <section id="load-trouble" class="work-placeholder" data-board-trouble>
+    <p data-test-load-trouble>{{wordsOf @trouble}}</p>
+  </section>
+</template>;
 
-  willDestroy(): void {
-    super.willDestroy();
-    document.documentElement.removeAttribute(MARK);
-  }
-
-  <template>
-    <section id="load-trouble" class="work-placeholder">
-      <p data-test-load-trouble>{{wordsOf @trouble}}</p>
-    </section>
-  </template>
-}
+export default LoadTrouble;
