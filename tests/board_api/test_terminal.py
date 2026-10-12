@@ -146,6 +146,27 @@ def test_a_session_that_is_gone_closes_the_page_saying_so(web):
     assert closed.value.code == 4404
 
 
+def test_a_page_opened_on_localhost_connects_to_a_session(web, sessions):
+    session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
+    sessions.print(session, b"worktree $ ")
+
+    with _socket(web, session, origin=f"http://localhost:{PORT}",
+                 host=f"localhost:{PORT}") as page:
+        assert page.receive_bytes() == b"worktree $ "
+
+
+def test_a_page_on_another_localhost_port_cannot_connect_to_a_session(web, sessions):
+    session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
+
+    with pytest.raises(WebSocketDisconnect) as refused:
+        with _socket(web, session, origin=f"http://localhost:{PORT + 1}",
+                     host=f"localhost:{PORT}"):
+            pass
+
+    assert refused.value.code == 1008
+    assert sessions.sessions[session].connected_once is False
+
+
 def test_another_sites_page_cannot_connect_to_a_session(web, sessions):
     session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
 
