@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { visit, click, fillIn } from '@ember/test-helpers';
+import { visit, click, fillIn, select } from '@ember/test-helpers';
 import {
   added,
   comment,
@@ -236,6 +236,44 @@ module('Acceptance | reviewer panel', function (hooks) {
     await click('[data-test-decision="defer"]');
 
     assert.dom('[data-test-wake] option[value="push"]').exists();
+  });
+
+  test('defer is a button that says you choose when', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-decision="defer"]').includesText('Defer until …');
+    assert
+      .dom('[data-test-decision="defer"]')
+      .hasAttribute('data-weight', 'secondary');
+  });
+
+  test('defer can wait for a reply on the thread', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-decision="defer"]');
+
+    await select('[data-test-wake]', 'reply');
+    await click('[data-test-dialog-submit]');
+
+    assert.deepEqual(board().posted[0]!.body, { until: 'reply' });
+  });
+
+  test('a card parked for a reply says so', async function (assert) {
+    const deferred = board().threadIn('deferred', { key: KEY });
+    board().conversations = [deferred];
+    board().operations[KEY] = [
+      operation({
+        id: deferred.operations.findLast((one) => one.kind === 'defer')!.id,
+        conversation: KEY,
+        kind: 'defer',
+        until: 'reply',
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('#panel')
+      .includesText('waiting until someone replies on the thread');
   });
 
   test('reply on the bar opens the composer rather than deciding', async function (assert) {

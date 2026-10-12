@@ -488,6 +488,18 @@ def test_defer_until_the_next_push_waits_on_the_head_the_drain_reads():
     assert parked.wake_on == "push:8f73fe8"
 
 
+def test_defer_until_a_reply_stays_parked_until_someone_replies():
+    board = board_of()
+    heard_on(board)
+    proposed(board)
+
+    parked = settled_by(board, "defer", until="reply")
+    woken = heard_on(board, KEY, said(COMMENT_ID, BODY), said(102, "what about this?"))
+
+    assert parked.wake_on == "reply"
+    assert woken.standing is not ConversationState.DEFERRED
+
+
 def test_a_wake_condition_the_board_cannot_parse_is_malformed(ready):
     answer = asked(client_of(ready), "defer", until="a week on tuesday")
 

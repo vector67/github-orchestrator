@@ -2664,7 +2664,7 @@
      "$ref": "#/components/schemas/OperationState"
     },
     "until": {
-     "pattern": "^(manual|ci|push|pr:[0-9]+)$",
+     "pattern": "^(manual|reply|ci|push|pr:[0-9]+)$",
      "type": "string"
     }
    },
@@ -2695,7 +2695,7 @@
      ]
     },
     "until": {
-     "pattern": "^(manual|ci|push|pr:[0-9]+)$",
+     "pattern": "^(manual|reply|ci|push|pr:[0-9]+)$",
      "type": "string"
     }
    },

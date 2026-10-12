@@ -49,7 +49,7 @@ RESOLVE = "resolve"
 
 NO_THUMBS_UP_MODIFIER = "no-thumbs-up"
 
-WAKE_MODIFIERS = (WAKE_MANUAL, WAKE_CI, "push")
+WAKE_MODIFIERS = (WAKE_MANUAL, "reply", WAKE_CI, "push")
 
 
 def _modifier_allowed(decision: str, modifier: str) -> bool:

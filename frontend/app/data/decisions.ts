@@ -133,6 +133,7 @@ export interface Carried {
 
 export const WAKE_CONDITIONS = [
   { value: 'manual', label: 'when I bring it back' },
+  { value: 'reply', label: 'when someone replies on the thread' },
   { value: 'ci', label: "when this PR's CI passes" },
   { value: 'pr', label: 'when another PR closes' },
   { value: 'push', label: 'when the next push lands' },
@@ -495,10 +496,11 @@ const ENTRIES = {
     reviewer: {
       title:
         'parks this card with nothing posted to GitHub until the condition you ' +
-        'choose is met — the next push, this PR’s CI, another PR closing, or you',
+        'choose is met — a reply, the next push, this PR’s CI, another PR ' +
+        'closing, or you',
       inPhase: {
-        answered: { label: 'Defer until next push' },
-        waiting: { label: 'Defer until next push' },
+        answered: { label: 'Defer until …', weight: 'secondary' },
+        waiting: { label: 'Defer until …', weight: 'secondary' },
       },
     },
     request: ({ modifier }) => ({

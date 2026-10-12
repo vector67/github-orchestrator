@@ -385,7 +385,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
       'Resolve',
       'Not fixed',
       'Reply',
-      'Defer until next push',
+      'Defer until …',
     ]);
     assert
       .dom('[data-test-decision="resolve"]')
@@ -424,7 +424,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     await each(
       board(),
       [
-        ['waiting', ['Resolve', 'Defer until next push', 'Reply']],
+        ['waiting', ['Resolve', 'Defer until …', 'Reply']],
         ['deferred', ['Undefer', 'Resolve']],
       ] as const,
       ([phase]) => phase,

@@ -651,6 +651,7 @@ function bannerOf(
 }
 
 function wakeText(until: string | undefined): string {
+  if (until === 'reply') return 'waiting until someone replies on the thread';
   if (until === 'ci') return "waiting until this PR's CI passes";
   if (until?.startsWith('push')) return 'waiting until the next push';
   const pr = /^pr:(\d+)$/.exec(until ?? '');

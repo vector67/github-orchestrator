@@ -157,9 +157,9 @@ Sha = Annotated[str, StringConstraints(pattern="^[0-9a-f]{7,40}$")]
 ThreadKey = Annotated[str, StringConstraints(pattern="^[A-Za-z0-9_-]+$")]
 
 WakeCondition = Annotated[
-    str, StringConstraints(pattern="^(manual|ci|push|pr:[0-9]+)$"),
+    str, StringConstraints(pattern="^(manual|reply|ci|push|pr:[0-9]+)$"),
     Field(description="What brings a parked thread back: `manual` for "
-                      "nothing but a hand, `ci` for the checks going green, "
+                      "nothing but a hand, `reply` for a reply on the thread, `ci` for the checks going green, "
                       "`push` for the next push to the branch, `pr:<number>` "
                       "for another pull request closing."),
 ]
