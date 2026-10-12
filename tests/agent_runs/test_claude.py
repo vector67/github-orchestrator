@@ -376,6 +376,19 @@ def test_a_gist_is_asked_of_the_summary_model_away_from_any_checkout(runs, world
     assert asked.cwd != os.getcwd()
 
 
+def test_a_verdict_is_asked_of_sonnet(runs, world, claude):
+    world.answer("my-move")
+
+    runs.judge_thread("PRRT_x", [("octocat", "you", "rename this")], viewer="you",
+                      pr_author="octocat", spoke_last="octocat", viewer_commented=True,
+                      mentions_viewer=False, kind="review", answers={"my-move": "yes"},
+                      done=lambda word: None)
+    assert runs.drain_summaries(10)
+
+    [asked] = claude.asked
+    assert asked.argv == ["claude", "--print", "--model", "sonnet"]
+
+
 def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_read_only_tools(
         runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")

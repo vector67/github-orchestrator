@@ -301,6 +301,7 @@ class AgentRuns:
         self._lines: CommandLines = command_lines_of(agent)
         self._summaries = Summaries(run, self._command, summary_model, self._lines)
         self._checks = Summaries(run, self._command, model, self._lines)
+        self._verdicts = Summaries(run, self._command, agent.verdict_model, self._lines)
         self._jev = jev
         self._pr_runs: dict[Pr, AgentRun] = {}
 
@@ -488,7 +489,7 @@ class AgentRuns:
                 if word is not None:
                     done(word)
 
-            self._summaries.summarize(
+            self._verdicts.summarize(
                 verdict_prompt(comments, viewer=viewer, pr_author=pr_author,
                                spoke_last=spoke_last, viewer_commented=viewer_commented,
                                mentions_viewer=mentions_viewer, kind=kind, answers=answers),
@@ -519,4 +520,5 @@ class AgentRuns:
             given, label=key, checkout=worktree)
 
     def drain_summaries(self, timeout: float) -> bool:
-        return self._summaries.drain(timeout) and self._checks.drain(timeout)
+        return (self._summaries.drain(timeout) and self._checks.drain(timeout)
+                and self._verdicts.drain(timeout))

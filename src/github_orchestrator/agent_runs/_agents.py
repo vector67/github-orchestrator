@@ -43,5 +43,9 @@ class Agent(enum.StrEnum):
     def default_summary_model(self) -> str:
         return {Agent.CLAUDE: "haiku", Agent.CODEX: "gpt-6-luna"}[self]
 
+    @property
+    def verdict_model(self) -> str:
+        return {Agent.CLAUDE: "sonnet", Agent.CODEX: "gpt-6-luna"}[self]
+
     def skill_folder(self, home: Path) -> Path:
         return home / {Agent.CLAUDE: ".claude", Agent.CODEX: ".agents"}[self] / "skills"
