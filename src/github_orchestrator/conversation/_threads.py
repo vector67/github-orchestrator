@@ -358,12 +358,12 @@ class _Editable:
         return self._ask(Reject(reply=reply, delete_comment=delete_comment))
 
     def place(self, to: ConversationState, *, until: str = WAKE_MANUAL,
-              note: str = "") -> Conversation | Denied:
+              note: str = "", direction: str = "") -> Conversation | Denied:
         if to is ConversationState.DONE:
             return self._ask(Confirm())
         if to is ConversationState.DEFERRED:
             return self._ask(Defer(wake_on=until, note=note))
-        return self._ask(Place(to))
+        return self._ask(Place(to, direction))
 
     def unpark(self) -> Conversation | Denied:
         return self._ask(Unpark())

@@ -214,7 +214,7 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
         case "confirm":
             return Confirm()
         case "place":
-            return Place(to=ConversationState(intent.modifier))
+            return Place(to=ConversationState(intent.modifier), direction=payload)
         case "edit-draft":
             if intent.anchor is None:
                 return _Refusal(ErrorCode.MALFORMED_REQUEST,

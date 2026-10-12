@@ -17,6 +17,7 @@ from github_orchestrator.conversation import (
     CommitVerdict,
     Conversation,
     ConversationManagerFactory,
+    ConversationState,
     Denied,
     EditableConversation,
 )
@@ -142,6 +143,16 @@ def thread_check(args: argparse.Namespace, *, conversation_managers: Conversatio
         CommitVerdict(args.verdict), args.reason), args.verdict)
 
 
+PLACEABLE = (ConversationState.READY, ConversationState.WAITING, ConversationState.NOT_MINE,
+             ConversationState.QUEUED)
+
+
+def thread_place(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                 gist_model: str | None) -> None:
+    _report_or_die(args, conversation_managers, lambda conversation: conversation.place(
+        ConversationState(args.to), direction=args.human_direction), args.to)
+
+
 def thread_draft(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                 gist_model: str | None) -> None:
     body = _body_of(args.body_file)
@@ -205,6 +216,7 @@ THREAD_COMMANDS = {
     "base": thread_base,
     "fail": thread_fail,
     "check": thread_check,
+    "place": thread_place,
     "draft": thread_draft,
     "list": thread_list,
     "show": thread_show,
@@ -364,6 +376,17 @@ def add_thread_parsers(
                               choices=[verdict.value for verdict in CommitVerdict])
     check_parser.add_argument("--reason", default="set by hand",
                               help="One line: why the commit does or does not address it")
+
+    place_parser = thread_sub.add_parser(
+        "place", help="HUMAN ONLY: move a thread to the outcome the operator chose, as the "
+                      "board's move does. An agent runs this only when a human told it to, "
+                      "and quotes them in --human-direction.")
+    _common(place_parser)
+    place_parser.add_argument("--thread-id", required=True)
+    place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE])
+    place_parser.add_argument("--human-direction", required=True,
+                              help="The human's instruction, quoted, with who gave it; "
+                                   "kept in the thread's history")
 
     draft_parser = thread_sub.add_parser(
         "draft",

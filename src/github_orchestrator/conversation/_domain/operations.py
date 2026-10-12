@@ -281,6 +281,8 @@ def _carried(command: Change) -> dict[str, Any]:
                                    include=command.include)}
         case Defer():
             return {"text": command.note, "until": _wake_word(command.wake_on)}
+        case Place():
+            return {"text": command.direction}
         case EditDraft():
             return {"text": command.body, "anchor": command.anchor}
         case Posted():

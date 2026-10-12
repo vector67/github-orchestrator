@@ -167,7 +167,8 @@ def _intent_of(command: Command) -> Intent:
         case Confirm():
             return Intent(decision="confirm")
         case Place():
-            return Intent(decision="place", modifier=command.to.value)
+            return Intent(decision="place", modifier=command.to.value,
+                          payload=command.direction or None)
         case Enrol():
             return Intent(decision="enrol")
         case WithdrawFromReview():

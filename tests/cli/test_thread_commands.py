@@ -753,6 +753,26 @@ def test_check_refuses_a_thread_no_commit_was_checked_on(opened, threads, run_cl
     assert _stored(threads).commit_check is None
 
 
+def _a_colleagues_comment(settings, machine, threads):
+    polled_on_disk(settings.state_dir, THE_PR, seen(settings.config.gh_account, is_author=False))
+    on_github(machine.github, THREAD_KEY, said(COMMENT_ID, "rename this", author="ben"))
+    hear(threads)
+    assert _stored(threads).standing is ConversationState.READY
+
+
+def test_place_moves_a_thread_and_keeps_the_human_direction(settings, machine, threads, run_cli):
+    _a_colleagues_comment(settings, machine, threads)
+
+    ran = run_cli(*_report_argv("place", thread_id=THREAD_KEY, to="waiting",
+                                human_direction="octocat: I answered on the board, it is their move"))
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert ran.code == 0
+    stored = _stored(threads)
+    assert stored.standing is ConversationState.WAITING
+    assert stored.operations[-1].text == "octocat: I answered on the board, it is their move"
+
+
 def test_ready_prints_the_record_it_saved(fixed, threads, run_cli):
     ran = run_cli(*_ready_argv(sha=fixed, note="renamed the helper"))
 

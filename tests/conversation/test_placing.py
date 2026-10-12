@@ -104,6 +104,19 @@ def _code(asked):
     return asked.code if isinstance(asked, Denied) else asked
 
 
+def test_placing_by_hand_keeps_the_human_direction_it_was_given(settings):
+    board = _one_review_thread(settings)
+    board.agent_runs.give("my-move")
+
+    with board.manager.editing("PRRT_one") as editable:
+        editable.place(ConversationState.WAITING,
+                       direction="octocat: the verdict was wrong, it is their move")
+
+    placed = board.get("PRRT_one").operations[-1]
+    assert (placed.kind, placed.text) == (
+        OperationKind.PLACE, "octocat: the verdict was wrong, it is their move")
+
+
 def test_a_deferred_thread_cannot_be_placed_by_hand(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("my-move")
