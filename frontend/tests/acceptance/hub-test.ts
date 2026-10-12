@@ -286,6 +286,47 @@ module('Acceptance | hub', function (hooks) {
       .hasText('The board could not load: connection refused');
   });
 
+  function savedByAnOlderBoard(): void {
+    localStorage.setItem(
+      'hub-pull-requests',
+      JSON.stringify({
+        watching: ['o/r'],
+        groups: [],
+        pull_requests: [{ repo: 'o/r', number: 7, dashboard: { threads: [] } }],
+      }),
+    );
+  }
+
+  test('a page that cannot start says why instead of staying blank', async function (assert) {
+    savedByAnOlderBoard();
+
+    await visit('/').catch(() => undefined);
+
+    assert
+      .dom('[data-test-load-trouble]')
+      .hasText(
+        "The board could not load: Cannot read properties of undefined (reading 'title')",
+      );
+  });
+
+  test('a page that cannot start with what this browser saved offers to delete it, and starts once it is gone', async function (assert) {
+    savedByAnOlderBoard();
+    onTheHub(heldPr({ number: 8 }));
+    await visit('/').catch(() => undefined);
+
+    await click('[data-test-forget-saved]');
+
+    const kept = JSON.parse(localStorage.getItem('hub-pull-requests')!) as {
+      pull_requests: { number: number }[];
+    };
+    assert.deepEqual(
+      kept.pull_requests.map((pr) => pr.number),
+      [8],
+    );
+    assert.dom('[data-test-load-trouble]').doesNotExist();
+    assert.dom('[data-test-wall-row="o/r#8"]').exists();
+  });
+
   test('a board that cannot load says why under the top bar, which still leads back to the wall', async function (assert) {
     onTheHub(heldPr());
     board().broken = /\/api\/pull-request$/;
