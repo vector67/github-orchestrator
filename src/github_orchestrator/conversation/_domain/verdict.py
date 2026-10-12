@@ -118,10 +118,16 @@ def retry_due(asks: int, asked_at: str | None, now: str | None) -> bool:
             or datetime.fromisoformat(now) - datetime.fromisoformat(asked_at) >= RETRY_AFTER)
 
 
+def _replied_from_the_board(conversation: Conversation) -> bool:
+    return (bool(conversation.comments)
+            and conversation.comments[-1].id in conversation.panel_reply_ids)
+
+
 def verdict_due(conversation: Conversation, now: str | None) -> bool:
     newest = newest_said(conversation)
     if (conversation.role != ROLE_REVIEWER or conversation.state not in PLACED_BY_A_VERDICT
-            or newest is None or conversation.verdict_for == newest):
+            or newest is None or conversation.verdict_for == newest
+            or _replied_from_the_board(conversation)):
         return False
     return conversation.verdict_asked_for != newest or retry_due(
         conversation.verdict_asks, conversation.verdict_asked_at, now)

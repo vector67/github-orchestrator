@@ -180,7 +180,7 @@ def test_a_new_comment_on_a_thread_that_is_not_mine_brings_it_back_unread(settin
     assert len(board.agent_runs.verdicts_asked()) == 2
 
 
-def test_a_reply_from_the_board_parks_the_thread_then_asks_again(settings):
+def test_a_reply_from_the_board_parks_the_thread_without_asking_for_a_verdict(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("my-move")
 
@@ -189,7 +189,22 @@ def test_a_reply_from_the_board_parks_the_thread_then_asks_again(settings):
     board.manager.tick(FakeNotifications(), on_hold=False)
 
     assert board.get("PRRT_one").standing is ConversationState.WAITING
-    assert board.agent_runs.verdicts_asked()[-1].spoke_last == "you octocat"
+    assert len(board.agent_runs.verdicts_asked()) == 1
+
+
+def test_a_colleagues_comment_after_a_reply_from_the_board_asks_for_a_verdict(settings):
+    board = _one_review_thread(settings)
+    board.agent_runs.give("my-move")
+    with board.manager.editing("PRRT_one") as editable:
+        editable.reply("which helper?")
+    replied = board.get("PRRT_one").comments[-1]
+    board.here.github.add_thread(THE_PR, _review_thread(
+        "PRRT_one", _said(1, "ben", "rename this"), replied,
+        _said(3, "ben", "the parser one", "2026-09-01T12:00:00Z")))
+
+    board.heard()
+
+    assert board.agent_runs.verdicts_asked()[-1].spoke_last == "colleague ben"
     board.agent_runs.give("assumed-done")
     assert board.get("PRRT_one").standing is ConversationState.ASSUMED_DONE
 

@@ -604,10 +604,8 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
     seeding.placed(reopened, "my-move")
     seeding.ask(waiting, lambda conversation: conversation.reply(
         "That is not what I asked about."))
-    seeding.placed(waiting, "their-move")
     seeding.ask(waiting_theirs, lambda conversation: conversation.reply(
         "The second half still parses twice."))
-    seeding.placed(waiting_theirs, "their-move")
     seeding.ask(deferred, lambda conversation: conversation.place(
         ConversationState.DEFERRED, until="push",
         note="Look again once the guard is in."))
