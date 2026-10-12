@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from github_orchestrator.conversation._domain.conversation import (
     WAKE_MANUAL,
     Classification,
+    CommitVerdict,
     ConversationState,
     PointedLine,
     Ticket,
@@ -100,6 +101,12 @@ class ReportFiled:
 
 @dataclass(frozen=True)
 class Fail:
+    reason: str
+
+
+@dataclass(frozen=True)
+class SetCommitVerdict:
+    verdict: CommitVerdict
     reason: str
 
 
@@ -202,6 +209,7 @@ Command = (
     | ReportTicket
     | ReportFiled
     | Fail
+    | SetCommitVerdict
     | Approve
     | Rework
     | StartSession

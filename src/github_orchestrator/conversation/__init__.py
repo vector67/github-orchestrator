@@ -3,6 +3,7 @@ from github_orchestrator.conversation._application.asking import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     Classification,
+    CommitVerdict,
     ConfidenceLevel,
     Conversation,
     ConversationState,
@@ -22,6 +23,7 @@ from github_orchestrator.conversation.interface import (
 
 __all__ = [
     "Classification",
+    "CommitVerdict",
     "ConfidenceLevel",
     "Conversation",
     "ConversationManager",

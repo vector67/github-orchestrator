@@ -259,9 +259,9 @@ PACKAGES = {
     ),
     "conversation": Package(
         pinned=frozenset({
-            "Classification", "ConfidenceLevel", "Conversation", "ConversationManager",
-            "ConversationState", "Denied", "EditableConversation", "ErrorCode",
-            "OperationKind", "OperationState", "ReasonCode",
+            "Classification", "CommitVerdict", "ConfidenceLevel", "Conversation",
+            "ConversationManager", "ConversationState", "Denied", "EditableConversation",
+            "ErrorCode", "OperationKind", "OperationState", "ReasonCode",
             "ReviewState", "ConversationManagerFactory", "ThreadActivity", "Verdict",
         }),
         may_import=("github", "notifications", "working_copies", "agent_runs", "thread_records",
@@ -660,7 +660,7 @@ ROLE_MEMBERS = {
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "retry", "fix", "stop", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail"}),
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "set_commit_verdict"}),
 }
 
 

@@ -744,6 +744,15 @@ def test_fail_records_reason_and_keeps_worktree(opened, store, machine, threads,
     assert thread_worktree(store.worktrees, THE_PR, THREAD_KEY).is_dir()
 
 
+def test_check_refuses_a_thread_no_commit_was_checked_on(opened, threads, run_cli):
+    ran = run_cli(*_report_argv("check", thread_id=THREAD_KEY, verdict="addressed",
+                                reason="read the commit myself"))
+
+    assert ran.code == 1
+    assert "no commit has been checked on this thread" in ran.err
+    assert _stored(threads).commit_check is None
+
+
 def test_ready_prints_the_record_it_saved(fixed, threads, run_cli):
     ran = run_cli(*_ready_argv(sha=fixed, note="renamed the helper"))
 

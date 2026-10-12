@@ -8,6 +8,7 @@ from github_orchestrator.conversation._application.asking import Denied
 from github_orchestrator.conversation._domain.conversation import (
     WAKE_MANUAL,
     Classification,
+    CommitVerdict,
     Conversation,
     ConversationState,
 )
@@ -143,6 +144,9 @@ class EditableConversation(Protocol):
                   filed_url: str = "") -> Conversation | Denied: ...
 
     def fail(self, reason: str) -> Conversation | Denied: ...
+
+    def set_commit_verdict(self, verdict: CommitVerdict,
+                           reason: str) -> Conversation | Denied: ...
 
 
 class ConversationManager(Protocol):

@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SetCommitVerdict,
     StartSession,
     StepDone,
     Stop,
@@ -761,6 +762,13 @@ def _something_said(conversation: Conversation, command: Reply) -> Refused | Non
     return None
 
 
+def _a_commit_checked(conversation: Conversation, command: SetCommitVerdict) -> Refused | None:
+    if conversation.commit_check is None:
+        return Refused(conversation, ErrorCode.INTERNAL_REFUSAL,
+                       "no commit has been checked on this thread, so it has no verdict to set")
+    return None
+
+
 RULES: dict[type, tuple[Rule, ...]] = {
     GistWritten: (_the_gist_of_this_body,),
     DeclarePlan: (_planning((QUEUED, RUNNING, IN_SESSION), "takes no plan"),),
@@ -775,6 +783,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),),
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     Fail: (_running_only,),
+    SetCommitVerdict: (_a_commit_checked,),
     SessionRefused: (_a_session_opening,),
     RunStarted: (_queued_for_a_run,),
     RunExited: (_running_only,),

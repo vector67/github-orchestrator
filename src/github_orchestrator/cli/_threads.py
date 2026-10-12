@@ -14,6 +14,7 @@ from github_orchestrator.cli._report_commands import (
 )
 from github_orchestrator.conversation import (
     Classification,
+    CommitVerdict,
     Conversation,
     ConversationManagerFactory,
     Denied,
@@ -135,6 +136,12 @@ def thread_fail(args: argparse.Namespace, *, conversation_managers: Conversation
                    lambda conversation: conversation.fail(args.reason), "failed")
 
 
+def thread_check(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                 gist_model: str | None) -> None:
+    _report_or_die(args, conversation_managers, lambda conversation: conversation.set_commit_verdict(
+        CommitVerdict(args.verdict), args.reason), args.verdict)
+
+
 def thread_draft(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                 gist_model: str | None) -> None:
     body = _body_of(args.body_file)
@@ -197,6 +204,7 @@ THREAD_COMMANDS = {
     "ready": thread_ready,
     "base": thread_base,
     "fail": thread_fail,
+    "check": thread_check,
     "draft": thread_draft,
     "list": thread_list,
     "show": thread_show,
@@ -346,6 +354,16 @@ def add_thread_parsers(
     _common(fail_parser)
     fail_parser.add_argument("--thread-id", required=True)
     fail_parser.add_argument("--reason", required=True)
+
+    check_parser = thread_sub.add_parser(
+        "check", help="Set by hand whether the commit the PR author named addresses "
+                      "your comment, over the commit check's verdict.")
+    _common(check_parser)
+    check_parser.add_argument("--thread-id", required=True)
+    check_parser.add_argument("--verdict", required=True,
+                              choices=[verdict.value for verdict in CommitVerdict])
+    check_parser.add_argument("--reason", default="set by hand",
+                              help="One line: why the commit does or does not address it")
 
     draft_parser = thread_sub.add_parser(
         "draft",

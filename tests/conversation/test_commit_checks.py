@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from github_orchestrator.agent_runs.fake import HeldVerdicts
 from github_orchestrator.change_detection import Poll
-from github_orchestrator.conversation import ConversationState
+from github_orchestrator.conversation import CommitVerdict, ConversationState, Denied
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -204,3 +204,55 @@ def test_the_newest_comment_naming_a_commit_the_checkout_has_is_the_one_checked(
     [asked] = board.agent_runs.commit_checks_asked()
 
     assert asked.sha == sha
+
+
+def _set_by_hand(board, verdict, reason="checked it myself"):
+    with board.manager.editing(KEY) as conversation:
+        return conversation.set_commit_verdict(CommitVerdict(verdict), reason)
+
+
+def test_a_not_addressed_check_set_to_addressed_by_hand_lets_the_verdict_place_the_thread(
+        settings):
+    board, sha = _answered_with_a_commit(settings)
+    board.agent_runs.give("assumed-done")
+    board.agent_runs.give_check("not-addressed", "it renames a different helper")
+
+    _set_by_hand(board, "addressed")
+
+    held = board.get()
+    assert held.standing is ConversationState.ASSUMED_DONE
+    assert (str(held.commit_check.sha), held.commit_check.verdict.value,
+            held.commit_check.reasoning) == (sha, "addressed", "checked it myself")
+
+
+def test_an_addressed_check_set_to_not_addressed_by_hand_moves_the_thread_to_my_move(
+        settings):
+    board, _ = _answered_with_a_commit(settings)
+    board.agent_runs.give("assumed-done")
+    board.agent_runs.give_check("addressed", "old_name is now new_name")
+
+    _set_by_hand(board, "not-addressed")
+
+    assert board.get().standing is ConversationState.READY
+
+
+def test_a_verdict_set_by_hand_is_not_asked_about_again(settings):
+    board, _ = _answered_with_a_commit(settings)
+    board.agent_runs.give_check("not-addressed", "it renames a different helper")
+    _set_by_hand(board, "addressed")
+
+    board.tick_after(10).tick_after(10)
+
+    assert len(board.agent_runs.commit_checks_asked()) == 1
+    assert board.get().commit_check.verdict is CommitVerdict.ADDRESSED
+
+
+def test_a_thread_no_commit_was_checked_on_takes_no_verdict_by_hand(settings):
+    board = Board(settings).thread(
+        _said(1, ME, "rename old_name"),
+        _said(2, AUTHOR, "will do", "2026-09-01T11:00:00Z")).tick_after()
+
+    refused = _set_by_hand(board, "addressed")
+
+    assert isinstance(refused, Denied)
+    assert board.get().commit_check is None

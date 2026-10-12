@@ -25,6 +25,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SetCommitVerdict,
     StartSession,
     StepDone,
     Stop,
@@ -36,6 +37,7 @@ from github_orchestrator.conversation._domain.commit_check import (
     checked,
     commit_reference,
     held_back,
+    set_by_hand,
     with_a_check_ask,
 )
 from github_orchestrator.conversation._domain.conversation import (
@@ -312,6 +314,13 @@ def _commit_check_due(conversation: Conversation, command: CommitCheckDue,
         return Accepted(conversation)
     return Accepted(with_a_check_ask(conversation, reference.on, at),
                     (AskCommitCheck(on=reference.on, candidates=reference.candidates),))
+
+
+def _set_commit_verdict(conversation: Conversation, command: SetCommitVerdict) -> Accepted:
+    check = conversation.commit_check
+    if check is None:
+        return Accepted(conversation)
+    return Accepted(set_by_hand(conversation, check, command.verdict, command.reason))
 
 
 def _decidable(conversation: Conversation, at: str | None) -> Conversation:
@@ -1051,6 +1060,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _commit_check_due(conversation, command, at)
         case CommitChecked():
             return Accepted(checked(conversation, command.check))
+        case SetCommitVerdict():
+            return _set_commit_verdict(conversation, command)
         case WorkspaceCut():
             return Accepted(with_fix(conversation, base_sha=command.base_sha))
         case DeclarePlan():

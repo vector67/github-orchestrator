@@ -74,6 +74,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SetCommitVerdict,
     StartSession,
     StepDone,
     Stop,
@@ -95,6 +96,7 @@ from github_orchestrator.conversation._domain.conversation import (
     WAKE_MANUAL,
     Classification,
     Comment,
+    CommitVerdict,
     Conversation,
     ConversationState,
     OperationState,
@@ -428,6 +430,10 @@ class _Editable:
 
     def fail(self, reason: str) -> Conversation | Denied:
         return self._answer(Fail(reason=reason))
+
+    def set_commit_verdict(self, verdict: CommitVerdict,
+                           reason: str) -> Conversation | Denied:
+        return self._answer(SetCommitVerdict(verdict=verdict, reason=reason))
 
 
 class _ConversationManager:

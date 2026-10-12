@@ -10,6 +10,7 @@ from github_orchestrator.conversation._domain.conversation import (
 )
 from github_orchestrator.conversation._domain.verdict import (
     PLACED_BY_A_VERDICT,
+    STATE_OF_VERDICT,
     newest_said,
     retry_due,
 )
@@ -74,4 +75,16 @@ def checked(conversation: Conversation, check: CommitCheck) -> Conversation:
     given = replace(conversation, commit_check=check)
     if held_back(given) and given.state in PLACED_BY_A_VERDICT:
         return replace(given, state=OPEN)
+    return given
+
+
+def set_by_hand(conversation: Conversation, check: CommitCheck, verdict: CommitVerdict,
+                reason: str) -> Conversation:
+    given = replace(conversation, commit_check=replace(check, verdict=verdict, reasoning=reason))
+    if given.state not in PLACED_BY_A_VERDICT:
+        return given
+    if held_back(given):
+        return replace(given, state=OPEN)
+    if given.verdict is not None and given.verdict_for == newest_said(given):
+        return replace(given, state=STATE_OF_VERDICT[given.verdict])
     return given
