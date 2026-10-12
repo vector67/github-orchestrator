@@ -432,7 +432,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
         assert.deepEqual(offered(), labels, phase);
         assert
           .dom('[data-test-decision="resolve"]')
-          .hasAttribute('data-weight', 'ghost', phase);
+          .hasAttribute('data-weight', 'secondary', phase);
       },
     );
   });

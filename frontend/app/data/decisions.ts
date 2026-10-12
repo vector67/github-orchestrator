@@ -376,8 +376,8 @@ const ENTRIES = {
       },
       inPhase: {
         answered: { label: 'Resolve', weight: 'primary' },
-        waiting: { label: 'Resolve' },
-        deferred: { label: 'Resolve' },
+        waiting: { label: 'Resolve', weight: 'secondary' },
+        deferred: { label: 'Resolve', weight: 'secondary' },
       },
     },
     request: resolveRequest,
