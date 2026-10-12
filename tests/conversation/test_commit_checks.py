@@ -144,6 +144,25 @@ def test_a_commit_that_addresses_the_comment_leaves_the_verdict_where_it_put_it(
     assert board.get().standing is ConversationState.ASSUMED_DONE
 
 
+def test_a_commit_that_addresses_the_comment_moves_a_not_mine_thread_to_assumed_done(
+        settings):
+    board, _ = _answered_with_a_commit(settings)
+    board.agent_runs.give("not-mine")
+
+    board.agent_runs.give_check("addressed", "old_name is now new_name")
+
+    assert board.get().standing is ConversationState.ASSUMED_DONE
+
+
+def test_a_verdict_after_an_addressed_check_places_the_thread_in_assumed_done(settings):
+    board, _ = _answered_with_a_commit(settings)
+    board.agent_runs.give_check("addressed", "old_name is now new_name")
+
+    board.agent_runs.give("not-mine")
+
+    assert board.get().standing is ConversationState.ASSUMED_DONE
+
+
 def test_a_partly_addressed_commit_leaves_the_verdict_where_it_put_it(settings):
     board, _ = _answered_with_a_commit(settings)
     board.agent_runs.give("assumed-done")
@@ -223,6 +242,16 @@ def test_a_not_addressed_check_set_to_addressed_by_hand_lets_the_verdict_place_t
     assert held.standing is ConversationState.ASSUMED_DONE
     assert (str(held.commit_check.sha), held.commit_check.verdict.value,
             held.commit_check.reasoning) == (sha, "addressed", "checked it myself")
+
+
+def test_a_check_set_to_addressed_by_hand_moves_a_not_mine_thread_to_assumed_done(settings):
+    board, _ = _answered_with_a_commit(settings)
+    board.agent_runs.give("not-mine")
+    board.agent_runs.give_check("partly", "renamed, but one caller still uses old_name")
+
+    _set_by_hand(board, "addressed")
+
+    assert board.get().standing is ConversationState.ASSUMED_DONE
 
 
 def test_an_addressed_check_set_to_not_addressed_by_hand_moves_the_thread_to_my_move(

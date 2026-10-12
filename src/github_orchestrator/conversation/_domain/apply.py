@@ -36,7 +36,7 @@ from github_orchestrator.conversation._domain.commands import (
 from github_orchestrator.conversation._domain.commit_check import (
     checked,
     commit_reference,
-    held_back,
+    placed_by_check,
     set_by_hand,
     with_a_check_ask,
 )
@@ -303,7 +303,7 @@ def _verdict_given(conversation: Conversation, command: VerdictGiven) -> Accepte
     given = replace(conversation, verdict=command.verdict, verdict_for=command.on)
     if conversation.state not in PLACED_BY_A_VERDICT:
         return Accepted(given)
-    placed = OPEN if held_back(given) else STATE_OF_VERDICT[command.verdict]
+    placed = placed_by_check(given) or STATE_OF_VERDICT[command.verdict]
     return Accepted(replace(given, state=placed))
 
 
