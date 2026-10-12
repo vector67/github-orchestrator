@@ -230,6 +230,18 @@ def test_dropping_a_workspace_removes_its_checkout_and_its_branch(
     assert _git(pr_worktree, "rev-parse", "--verify", branch).returncode != 0
 
 
+def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
+    git, pr_worktree, worktrees_dir
+):
+    cut = _cut(git, pr_worktree)
+    _git(pr_worktree, "worktree", "lock", "--reason", "initializing", cut.path)
+
+    cut.drop()
+
+    assert not thread_worktree(worktrees_dir, THE_PR, THREAD_KEY).exists()
+    assert _git(pr_worktree, "rev-parse", "--verify", cut.branch).returncode != 0
+
+
 def test_dropping_a_fix_that_never_had_a_workspace_runs_no_git(
     git, pr_worktree, monkeypatch
 ):

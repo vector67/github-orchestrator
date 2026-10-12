@@ -139,7 +139,7 @@ def remove_worktree(worktree: str) -> None:
     if Path(worktree).resolve() == Path(main_worktree).resolve():
         log.warning("Refusing to remove main worktree: %s", worktree)
         return
-    result = _git("-C", main_worktree, "worktree", "remove", "--force", worktree)
+    result = _git("-C", main_worktree, "worktree", "remove", "--force", "--force", worktree)
     if result is None:
         log.error(
             "Failed to remove worktree %s: git worktree remove timed out after %ds",

@@ -15686,7 +15686,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 971346d).\n"
@@ -15721,6 +15723,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -15790,6 +15801,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -15813,7 +15833,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -15822,9 +15842,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -17693,7 +17716,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 75c86c5).\n"
@@ -17762,6 +17787,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -17831,6 +17865,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -17854,7 +17897,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -17863,9 +17906,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -17902,7 +17948,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -18066,6 +18116,9 @@
      "fs": {
       "feature/g": {
        "text": "one\n2\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
       }
      },
      "returncode": 0,
@@ -18206,6 +18259,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -18262,7 +18324,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 75c86c5).\n"
@@ -18354,6 +18418,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -18382,6 +18455,12 @@
       },
       "feature/g": {
        "text": "one\n2\nthree\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -18419,7 +18498,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 75c86c543ca1885fefa292032eefefc1f3700856\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 75c86c543ca1885fefa292032eefefc1f3700856\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -18427,6 +18506,7 @@
       "<TMP>/repo",
       "worktree",
       "remove",
+      "--force",
       "--force",
       "<TMP>/feature"
      ],
@@ -18434,14 +18514,16 @@
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -18450,9 +18532,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -18489,7 +18574,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -20979,6 +21068,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -21052,6 +21150,9 @@
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
       "repo/g": {
        "text": "one\ntwo\nthree\n"
       }
@@ -21133,6 +21234,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -21170,7 +21280,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -21179,13 +21289,16 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/feature"
      ],
      "fs": {
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
@@ -21204,6 +21317,8 @@
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -22236,7 +22351,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 78d7c2a).\n"
@@ -22284,6 +22401,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -22326,6 +22452,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": {
        "dir": true
       },
@@ -22383,6 +22518,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -22406,7 +22550,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -22415,9 +22559,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -22455,7 +22602,11 @@
       "-m",
       "left by a cut nobody saved"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "78d7c2abcd7a44f7fa13bcfd723e829efe1adce0\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -23867,6 +24018,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -23890,7 +24050,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -23899,13 +24059,16 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/feature"
      ],
      "fs": {
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
@@ -24052,6 +24215,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -24096,6 +24268,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/70/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc1/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/70/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc1/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees/owner/name/70": {
        "dir": true
       },
@@ -24143,7 +24324,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 971346d).\n"
@@ -24221,6 +24404,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -24272,7 +24464,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\nworktree <TMP>/thread-worktrees/owner/name/70/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/70/PRRT_kwDOabc\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -24280,6 +24472,7 @@
       "<TMP>/repo",
       "worktree",
       "remove",
+      "--force",
       "--force",
       "<TMP>/feature"
      ],
@@ -24287,14 +24480,16 @@
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -24303,9 +24498,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -24394,6 +24592,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -24450,7 +24657,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 971346d).\n"
@@ -24547,6 +24756,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -24584,7 +24802,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -24593,13 +24811,16 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/feature"
      ],
      "fs": {
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
@@ -24618,6 +24839,8 @@
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -24675,6 +24898,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -24731,7 +24963,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_kwDOabc"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc (was 971346d).\n"
@@ -24844,6 +25078,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -24881,7 +25124,7 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -24889,6 +25132,7 @@
       "<TMP>/repo",
       "worktree",
       "remove",
+      "--force",
       "--force",
       "<TMP>/feature"
      ],
@@ -24896,14 +25140,16 @@
       "feature": null,
       "feature/.git": null,
       "feature/f": null,
-      "feature/g": null
+      "feature/g": null,
+      "repo/.git/worktrees/feature/HEAD": null,
+      "repo/.git/worktrees/feature/commondir": null
      },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
       "git",
@@ -24912,9 +25158,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc"
      ],
      "fs": {
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": null,
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/.git": null,
       "thread-worktrees/owner/name/7/PRRT_kwDOabc/f": null,
@@ -35344,7 +35593,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_101"
      ],
-     "fs": {},
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101 (was 2d53e04).\n"
@@ -35392,6 +35643,15 @@
       "2d53e0429f477a026a7253afb784c12078e9fc03"
      ],
      "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -35431,6 +35691,15 @@
       "2d53e0429f477a026a7253afb784c12078e9fc03"
      ],
      "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees/acme/widgets/7/PRRT_101": {
        "dir": true
       },
@@ -35476,7 +35745,7 @@
      "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
     {
      "argv": [
       "git",
@@ -35485,9 +35754,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101"
      ],
      "fs": {
+      "prwork/.git/worktrees/PRRT_101/HEAD": null,
+      "prwork/.git/worktrees/PRRT_101/commondir": null,
       "thread-worktrees/acme/widgets/7/PRRT_101": null,
       "thread-worktrees/acme/widgets/7/PRRT_101/.git": null,
       "thread-worktrees/acme/widgets/7/PRRT_101/f": null,
@@ -37186,7 +37458,9 @@
       "-D",
       "orchestrator/thread/7/PRRT_101"
      ],
-     "fs": {},
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": null
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101 (was 2d53e04).\n"
@@ -37237,6 +37511,15 @@
       "2d53e0429f477a026a7253afb784c12078e9fc03"
      ],
      "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -37280,7 +37563,7 @@
      "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"remove\", \"--force\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
     {
      "argv": [
       "git",
@@ -37289,9 +37572,12 @@
       "worktree",
       "remove",
       "--force",
+      "--force",
       "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101"
      ],
      "fs": {
+      "prwork/.git/worktrees/PRRT_101/HEAD": null,
+      "prwork/.git/worktrees/PRRT_101/commondir": null,
       "thread-worktrees/acme/widgets/7/PRRT_101": null,
       "thread-worktrees/acme/widgets/7/PRRT_101/.git": null,
       "thread-worktrees/acme/widgets/7/PRRT_101/f": null
@@ -37315,6 +37601,195 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ]
+  },
+  "tests/working_copies/test_threads.py::test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "Deleted branch orchestrator/thread/7/PRRT_101 (was 2d53e04).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "--verify",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: Needed a single revision\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "2d53e0429f477a026a7253afb784c12078e9fc03"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 2d53e04 base\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"lock\", \"--reason\", \"initializing\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "lock",
+      "--reason",
+      "initializing",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "remove",
+      "--force",
+      "--force",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101"
+     ],
+     "fs": {
+      "prwork/.git/worktrees/PRRT_101/HEAD": null,
+      "prwork/.git/worktrees/PRRT_101/commondir": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/orchestrator/thread/7/PRRT_101\nlocked initializing\n\n"
     }
    ]
   },
