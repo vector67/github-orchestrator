@@ -330,7 +330,13 @@ module('Acceptance | hub', function (hooks) {
     assert
       .dom('[data-test-pr-view] [data-test-load-trouble]')
       .hasText('The board could not load: connection refused');
+    assert.strictEqual(
+      document.documentElement.getAttribute('data-board-trouble'),
+      'The board could not load: connection refused',
+      'the recovery script offers its ways out while the page is marked',
+    );
     await click('[data-test-wall-link]');
     assert.strictEqual(currentURL(), '/');
+    assert.false(document.documentElement.hasAttribute('data-board-trouble'));
   });
 });

@@ -1,6 +1,7 @@
 import re
 import threading
 import time
+from pathlib import Path
 
 from github_orchestrator.github.fake import FakeGitHub
 from tests.board_api.support import (
@@ -51,6 +52,27 @@ def test_a_built_asset_is_served_with_its_own_type(tmp_path):
     assert answer.status_code == 200
     assert answer.headers["content-type"].startswith("text/plain")
     assert answer.content.startswith(b"User-agent")
+
+
+def test_a_missing_file_under_a_built_folder_is_a_404_not_the_index(tmp_path):
+    answer = client_for(app_root=built_app(tmp_path)).get(
+        f"{THE_ROOT}/assets/main-from-an-older-build.js")
+
+    assert answer.status_code == 404, (
+        "a tab left open across a rebuild asks for chunks the new build "
+        "dropped, and the index served as script fails with nothing to say why")
+
+
+def test_the_page_shell_loads_the_recovery_script_before_anything_else():
+    shell = (Path(__file__).parents[2] / "frontend" / "index.html").read_text()
+    head = shell.split("</head>")[0]
+
+    first_load = re.search(r"<(script|link)\b[^>]*>", head)
+
+    assert first_load is not None
+    assert 'src="/recovery.js"' in first_load.group(0)
+    assert "data-embroider-ignore" in first_load.group(0)
+    assert (Path(__file__).parents[2] / "frontend" / "public" / "recovery.js").is_file()
 
 
 def test_nothing_is_served_before_the_front_end_is_built(tmp_path):

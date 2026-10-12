@@ -21,6 +21,11 @@ def _served_path(root: Path, path: str) -> Path | None:
     return candidate
 
 
+def _under_a_built_folder(root: Path, path: str) -> bool:
+    first, _, rest = path[len(APP_PREFIX):].partition("/")
+    return bool(first and rest) and (root / first).is_dir()
+
+
 def _type_of(served: Path) -> str:
     guessed, _ = mimetypes.guess_type(served.name)
     if guessed is None:
@@ -42,6 +47,8 @@ def app_response(path: str, root: Path) -> tuple[int, str, bytes] | None:
     served = _served_path(root, path)
     if served is not None:
         return 200, _type_of(served), served.read_bytes()
+    if _under_a_built_folder(root, path):
+        return 404, "text/plain; charset=utf-8", b"Not found\n"
     index = root / INDEX
     if not index.is_file():
         return None
