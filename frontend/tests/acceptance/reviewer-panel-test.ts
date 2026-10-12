@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { visit, click, fillIn, select } from '@ember/test-helpers';
+import { visit, click, fillIn, find, select } from '@ember/test-helpers';
 import {
   added,
   comment,
@@ -411,6 +411,27 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.dom('[data-test-dialog]').doesNotIncludeText('👍');
     await click('[data-test-dialog-submit]');
     assert.strictEqual(board().posted[0]!.verb, 'resolve');
+  });
+
+  test('a waiting card starts its actions at the left edge, not in the middle', async function (assert) {
+    board().conversations = [board().threadIn('waiting', { key: KEY })];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    const footer = find('#panel-actions')!.getBoundingClientRect();
+    const resolve = find(
+      '[data-test-decision="resolve"]',
+    )!.getBoundingClientRect();
+    const defer = find('[data-test-decision="defer"]')!.getBoundingClientRect();
+    const reply = find('[data-test-decision="reply"]')!.getBoundingClientRect();
+    assert.deepEqual(
+      {
+        resolveAtLeft: Math.round(resolve.left) === Math.round(footer.left),
+        deferBesideResolve: defer.left - resolve.right < 20,
+        replyAtRight: Math.round(reply.right) === Math.round(footer.right),
+      },
+      { resolveAtLeft: true, deferBesideResolve: true, replyAtRight: true },
+    );
   });
 });
 

@@ -1040,7 +1040,8 @@ button.copy-directory {
   padding: 0 18px;
 }
 
-#panel-actions button[data-weight="ghost"]:first-child,
+#panel-actions:not(:has([data-weight="primary"], [data-weight="secondary"]))
+  button[data-weight="ghost"]:first-child,
 #panel-actions
   :is([data-weight="primary"], [data-weight="secondary"])
   + :is([data-weight="ghost"], [data-weight="destructive"]) {
