@@ -250,6 +250,14 @@ function shelve(held: HeldPullRequests): void {
   }
 }
 
+function unshelve(): void {
+  try {
+    localStorage.removeItem(SHELVED_WALL);
+  } catch {
+    return;
+  }
+}
+
 function recalled(): string | null {
   try {
     return localStorage.getItem(CHOSEN_REPOS);
@@ -310,7 +318,7 @@ export default class StoreService extends Service {
   constructor(owner: Owner) {
     super(owner);
     const held = unshelved();
-    if (held) this.takeWall(held);
+    if (held) this.replayShelf(held);
     this.router.on('routeDidChange', () => {
       const asked = askedIn(this.router);
       if (asked && asked !== this.remembered) this.keepChosen(asked);
@@ -1023,6 +1031,21 @@ export default class StoreService extends Service {
         flags: merged(held.flags, manager, (flags) => flags.changed_at),
       };
     });
+  }
+
+  private replayShelf(held: HeldPullRequests): void {
+    try {
+      this.takeWall(held);
+    } catch (trouble) {
+      unshelve();
+      this.watching = [];
+      this.groups = null;
+      this.prs = {};
+      this.threads = {};
+      this.operations = {};
+      this.joins = 0;
+      void reportError('shelf', trouble);
+    }
   }
 
   private takeWall(held: HeldPullRequests): void {

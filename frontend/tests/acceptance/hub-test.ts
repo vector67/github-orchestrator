@@ -286,36 +286,32 @@ module('Acceptance | hub', function (hooks) {
       .hasText('The board could not load: connection refused');
   });
 
-  function savedByAnOlderBoard(): void {
+  test('a wall saved in a shape the page cannot replay is dropped and reported, and the hub starts from its list', async function (assert) {
     localStorage.setItem(
       'hub-pull-requests',
       JSON.stringify({
         watching: ['o/r'],
         groups: [],
-        pull_requests: [{ repo: 'o/r', number: 7, dashboard: { threads: [] } }],
+        pull_requests: [
+          heldPr({ number: 5 }),
+          { repo: 'o/r', number: 7, dashboard: { threads: [] } },
+        ],
       }),
     );
-  }
-
-  test('a page that cannot start says why instead of staying blank', async function (assert) {
-    savedByAnOlderBoard();
-
-    await visit('/').catch(() => undefined);
-
-    assert
-      .dom('[data-test-load-trouble]')
-      .hasText(
-        "The board could not load: Cannot read properties of undefined (reading 'title')",
-      );
-  });
-
-  test('a page that cannot start with what this browser saved offers to delete it, and starts once it is gone', async function (assert) {
-    savedByAnOlderBoard();
     onTheHub(heldPr({ number: 8 }));
-    await visit('/').catch(() => undefined);
 
-    await click('[data-test-forget-saved]');
+    await visit('/');
 
+    assert.deepEqual(
+      findAll('[data-test-wall-row]').map((one) =>
+        one.getAttribute('data-test-wall-row'),
+      ),
+      ['o/r#8'],
+    );
+    assert.deepEqual(
+      board().reported.map(({ where, message }) => [where, message]),
+      [['shelf', "Cannot read properties of undefined (reading 'title')"]],
+    );
     const kept = JSON.parse(localStorage.getItem('hub-pull-requests')!) as {
       pull_requests: { number: number }[];
     };
@@ -323,8 +319,6 @@ module('Acceptance | hub', function (hooks) {
       kept.pull_requests.map((pr) => pr.number),
       [8],
     );
-    assert.dom('[data-test-load-trouble]').doesNotExist();
-    assert.dom('[data-test-wall-row="o/r#8"]').exists();
   });
 
   test('a board that cannot load says why under the top bar, which still leads back to the wall', async function (assert) {
