@@ -56,7 +56,7 @@ def _foreign_site(headers: Headers, port: int) -> bool:
     site = headers.get("Sec-Fetch-Site")
     origin = headers.get("Origin")
     return ((site is not None or origin is not None) and site != "same-origin"
-            and origin != loopback_url(port))
+            and origin not in (loopback_url(port), f"http://localhost:{port}"))
 
 
 def _unguarded(request: Request, port: int) -> Response | None:
