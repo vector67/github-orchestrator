@@ -149,6 +149,17 @@ function closing({
   };
 }
 
+function resolveRequest(gathered: Gathered): Request {
+  return {
+    verb: 'resolve',
+    body: {
+      ...closing(gathered),
+      resolve: gathered.resolve !== false && !gathered.delete,
+      ...(gathered.thumbsUp === false ? { thumbs_up: false } : {}),
+    },
+  };
+}
+
 function reworkToast(pointed: number): string {
   const counted =
     pointed === 0
@@ -369,14 +380,7 @@ const ENTRIES = {
         deferred: { label: 'Resolve' },
       },
     },
-    request: (gathered) => ({
-      verb: 'resolve',
-      body: {
-        ...closing(gathered),
-        resolve: gathered.resolve !== false && !gathered.delete,
-        ...(gathered.thumbsUp === false ? { thumbs_up: false } : {}),
-      },
-    }),
+    request: resolveRequest,
     doing: 'resolving',
     square: 'done',
   },
@@ -518,6 +522,33 @@ const ENTRIES = {
       'moves this card to Done on the board — nothing is resolved, posted or ' +
       'reacted to on GitHub, and a new comment brings it back',
     asks: null,
+    doing: 'confirming',
+    square: 'done',
+  },
+  'confirm-resolve': {
+    key: 'g',
+    label: 'Confirm',
+    weight: 'primary',
+    title:
+      'resolves the thread on GitHub and posts any reply you write — left ' +
+      'empty, it puts 👍 on the newest reply instead',
+    asks: {
+      question: 'Confirm and resolve this conversation?',
+      note:
+        'Anything you write is posted to GitHub as your reply, and the thread ' +
+        'is marked resolved there. Left empty, the board puts 👍 on the newest ' +
+        'reply, unless you untick it. The card moves to Done. Reopen is one ' +
+        'click from there.',
+      reply: true,
+      thumbsUp: true,
+      submit: (typed, _resolving, thumbing) =>
+        typed
+          ? 'Reply and resolve on GitHub'
+          : thumbing
+            ? 'Resolve on GitHub and put 👍 on the newest reply'
+            : 'Resolve on GitHub',
+    },
+    request: resolveRequest,
     doing: 'confirming',
     square: 'done',
   },
@@ -758,7 +789,7 @@ const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
   answered: ['resolve', 'not-fixed', 'reply', 'defer'],
   removed: ['resolve'],
   waiting: ['resolve', 'defer', 'reply'],
-  'assumed-done': ['confirm', 'place', 'resolve', 'reply'],
+  'assumed-done': ['confirm-resolve', 'place', 'resolve', 'reply'],
   'not-mine': ['place', 'resolve', 'reply'],
   deferred: ['unpark', 'resolve'],
   resolved: ['unpark'],

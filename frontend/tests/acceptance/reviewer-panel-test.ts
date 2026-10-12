@@ -644,12 +644,49 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     board().actAs('reviewer');
   });
 
-  test('an assumed done card offers Confirm, which moves it to Done and posts nothing else', async function (assert) {
+  test('an assumed done card offers Confirm, which resolves it on GitHub and puts 👍 on the newest reply', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers().slice(0, 2), ['confirm', 'place']);
+    assert.deepEqual(offers().slice(0, 2), ['confirm-resolve', 'place']);
     assert.dom('[data-test-decision="place"]').includesText('Not confirm');
+    await click('[data-test-decision="confirm-resolve"]');
+
+    assert.dom('[data-test-thumbs-up]').isChecked();
+    assert
+      .dom('[data-test-dialog-submit]')
+      .hasText('Resolve on GitHub and put 👍 on the newest reply');
+    await click('[data-test-dialog-submit]');
+
+    assert.strictEqual(board().posted[0]!.verb, 'resolve');
+    assert.deepEqual(board().posted[0]!.body, {
+      delete_comment: false,
+      resolve: true,
+    });
+  });
+
+  test('confirm posts the reply written into it and resolves the thread on GitHub', async function (assert) {
+    board().conversations = [board().threadIn('assumed-done', { key: KEY })];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-decision="confirm-resolve"]');
+
+    await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
+    await click('[data-test-dialog-submit]');
+
+    assert.strictEqual(board().posted[0]!.verb, 'resolve');
+    assert.deepEqual(board().posted[0]!.body, {
+      reply: 'Thanks, that covers it.',
+      delete_comment: false,
+      resolve: true,
+    });
+  });
+
+  test('confirm on a mention still only moves it to Done on the board', async function (assert) {
+    board().conversations = [
+      board().threadIn('assumed-done', { key: KEY, mention: true }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
     await click('[data-test-decision="confirm"]');
 
     assert.strictEqual(board().posted[0]!.verb, 'confirm');

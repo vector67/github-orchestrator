@@ -702,9 +702,12 @@ settled for you to confirm (Assumed done), or nothing to do with you (Not my
 conversation). Until it has answered, the thread sits in Answered and its card
 says "not yet read". A reply you post from the board moves it to Waiting on
 author at once, and the agent reads it again. Only you move a thread to Done:
-an Assumed done card offers **Confirm** (`g`), which moves it to Done and
-touches nothing on GitHub, and **Not confirm** (`m`), which asks where it stands
-instead. A Not my conversation card offers the same question as **Move…**. It
+an Assumed done card offers **Confirm** (`g`) and **Not confirm** (`m`), which
+asks where it stands instead. Confirm opens a dialog like Resolve's: it posts
+any reply you write, resolves the thread on GitHub and moves the card to Done;
+left empty, it puts 👍 on the newest reply from someone else unless you untick
+it. On a thread that only mentions you, or on a PR you wrote, Confirm moves the
+card to Done and touches nothing on GitHub. A Not my conversation card offers the same question as **Move…**. It
 lists My move, Their move, Not my conversation and Later…, leaving out the group
 the card is in, and Later… opens the Defer dialog. On a PR you wrote it lists
 Needs a fix, which starts a fresh agent run, Needs a reply from me, which puts
