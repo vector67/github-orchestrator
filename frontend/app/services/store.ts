@@ -228,6 +228,10 @@ function unshelved(): HeldPullRequests | null {
     const raw = localStorage.getItem(SHELVED_WALL);
     if (!raw) return null;
     const held = JSON.parse(raw) as HeldPullRequests | ShelvedBeforeManyRepos;
+    const threaded = held.pull_requests.every((row) =>
+      Array.isArray(row.dashboard.threads as unknown),
+    );
+    if (!threaded) return null;
     const { watching } = held;
     return {
       ...held,

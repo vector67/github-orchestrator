@@ -47,6 +47,37 @@ module('Acceptance | wall', function (hooks) {
     );
   }
 
+  test('a wall shelved before dashboards carried threads does not stop the hub opening', async function (assert) {
+    const { pr, polled, status, system, frozen, undismiss_command, notice } =
+      heldPr().dashboard;
+    localStorage.setItem(
+      'hub-pull-requests',
+      JSON.stringify({
+        watching: ['o/r'],
+        groups: [],
+        pull_requests: [
+          {
+            ...heldPr(),
+            dashboard: {
+              pr,
+              polled,
+              status,
+              system,
+              frozen,
+              undismiss_command,
+              notice,
+            },
+          },
+        ],
+      }),
+    );
+    onTheHub(heldPr({ number: 8 }));
+
+    await visit('/');
+
+    assert.deepEqual(rows(), ['o/r#8']);
+  });
+
   test('the hub opens on the wall, its groups in the feed’s order and each row led by its verb', async function (assert) {
     onTheHub(
       heldPr(),
