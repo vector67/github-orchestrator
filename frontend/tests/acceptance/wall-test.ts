@@ -574,6 +574,42 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  function asIfNarrowerThan(width: number): () => void {
+    const condition = `(width <= ${width}px)`;
+    const rules = [...document.styleSheets]
+      .flatMap((sheet) => [...sheet.cssRules])
+      .filter(
+        (rule): rule is CSSMediaRule =>
+          rule instanceof CSSMediaRule && rule.media.mediaText === condition,
+      );
+    for (const rule of rules) rule.media.mediaText = 'all';
+    return () => {
+      for (const rule of rules) rule.media.mediaText = condition;
+    };
+  }
+
+  test('below 1240px the lead column is as wide as the row’s text column', async function (assert) {
+    onTheHub(heldPr());
+    const restore = asIfNarrowerThan(1240);
+    try {
+      await visit('/');
+
+      assert.dom('.wall-head').isNotVisible('the narrow wall folds its header');
+      const lead = find(
+        '[data-test-wall-row="o/r#7"] .wall-lead',
+      )!.getBoundingClientRect();
+      const why = find(
+        '[data-test-wall-row="o/r#7"] .why',
+      )!.getBoundingClientRect();
+      assert.true(
+        lead.width >= why.width - 1,
+        `lead ${Math.round(lead.width)}px wide, why ${Math.round(why.width)}px wide`,
+      );
+    } finally {
+      restore();
+    }
+  });
+
   test('a row’s edge says who holds the ball, and a frozen pull request’s says failed, as the rail’s does', async function (assert) {
     onTheHub(
       heldPr({ dashboard: { facts: factsFor('fix-ci') } }),
