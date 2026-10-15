@@ -68,7 +68,12 @@ from github_orchestrator.wiring import (
 )
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.forked_run import run_in_forks, temp_paths
-from tests.subprocess_recording import RECORDING, Recorder, covers_whole_suite
+from tests.subprocess_recording import (
+    RECORDING,
+    Recorder,
+    contents_digest,
+    covers_whole_suite,
+)
 
 os.environ["GIT_CONFIG_COUNT"] = "1"
 os.environ["GIT_CONFIG_KEY_0"] = "maintenance.auto"
@@ -114,6 +119,11 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
         "no_replay: run this test's subprocesses for real even when a recording exists",
+    )
+    config.addinivalue_line(
+        "markers",
+        "replays_while_unchanged(*paths): replay this test's recording only while the named "
+        "files and folders of the checkout hold what they held when it was recorded",
     )
     if config.getoption("--record"):
         mode = "record"
@@ -468,7 +478,9 @@ def _guarded(real: Callable[..., Any]) -> Callable[..., Any]:
 
 def _recorded_name(item: pytest.Item) -> str:
     group = item.get_closest_marker("xdist_group")
-    return item.nodeid.removesuffix(f"@{group.args[0]}") if group else item.nodeid
+    name = item.nodeid.removesuffix(f"@{group.args[0]}") if group else item.nodeid
+    unchanged = item.get_closest_marker("replays_while_unchanged")
+    return f"{name}#{contents_digest(unchanged.args)}" if unchanged else name
 
 
 @pytest.fixture(autouse=True)

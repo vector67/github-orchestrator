@@ -9,6 +9,7 @@ import pytest
 from tests.cli.support import Ran
 
 SCRIPT = Path(__file__).resolve().parents[2] / "install.sh"
+_REPLAYED = pytest.mark.replays_while_unchanged("install.sh", "tests/cli/install_stubs")
 
 
 def _assigned() -> dict[str, str]:
@@ -28,7 +29,7 @@ def _sh(*argv: str) -> subprocess.CompletedProcess[str]:
                           stdin=subprocess.DEVNULL)
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @pytest.mark.skipif(shutil.which("dash") is None, reason="dash is the strict POSIX sh to parse with")
 def test_the_installer_is_plain_posix_sh():
     parsed = subprocess.run(["dash", "-n", str(SCRIPT)], capture_output=True, text=True)
@@ -36,7 +37,7 @@ def test_the_installer_is_plain_posix_sh():
     assert parsed.returncode == 0, parsed.stderr
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 def test_help_lists_every_flag_and_its_environment_twin():
     shown = _sh("--help")
 
@@ -49,7 +50,7 @@ def test_help_lists_every_flag_and_its_environment_twin():
         assert f"GITHUB_ORCHESTRATOR_{twin}" in shown.stdout
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 def test_an_unknown_option_is_refused_before_anything_runs():
     refused = _sh("--colour")
 
@@ -83,7 +84,7 @@ def test_the_installer_asks_the_release_api_update_and_the_daily_check_ask():
     assert "https://api.github.com/repos/$REPO/releases" in SCRIPT.read_text()
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @pytest.mark.skipif(sys.platform != "darwin",
                     reason="on Linux the installer first needs a user manager, which CI lacks")
 def test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing(
@@ -101,7 +102,7 @@ def test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_cha
     assert list(home.iterdir()) == []
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 def test_help_lists_the_skill_flags_and_their_environment_twin():
     shown = _sh("--help")
 
@@ -139,7 +140,7 @@ _ON_A_MAC = pytest.mark.skipif(
     sys.platform != "darwin", reason="on Linux the installer first needs a user manager")
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 def test_yes_installs_a_missing_rebase_skill(tmp_path):
     said, calls = _installed(tmp_path, "-y", state="missing")
@@ -148,7 +149,7 @@ def test_yes_installs_a_missing_rebase_skill(tmp_path):
     assert "rebase-on-main" in said
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 @pytest.mark.parametrize(("argv", "environment"), [
     (("--no-skill",), {}), ((), {"GITHUB_ORCHESTRATOR_SKILL": "no"})])
@@ -160,7 +161,7 @@ def test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it(
     assert "github-orchestrator skill" in said
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 @pytest.mark.parametrize("argv", [(), ("--skill",)])
 def test_yes_leaves_a_different_skill_alone_and_says_so(tmp_path, argv):
@@ -170,7 +171,7 @@ def test_yes_leaves_a_different_skill_alone_and_says_so(tmp_path, argv):
     assert "github-orchestrator skill --replace" in said
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 def test_a_current_skill_is_left_as_it_is(tmp_path):
     said, calls = _installed(tmp_path, "-y", state="current")
@@ -179,7 +180,7 @@ def test_a_current_skill_is_left_as_it_is(tmp_path):
     assert "skill --status" in calls
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 def test_help_lists_the_agent_flag_and_its_environment_twin():
     shown = _sh("--help")
 
@@ -187,7 +188,7 @@ def test_help_lists_the_agent_flag_and_its_environment_twin():
         assert said in shown.stdout
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 def test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs():
     refused = _sh("--agent", "gemini")
 
@@ -199,7 +200,7 @@ def _config(tmp_path: Path) -> Path:
     return tmp_path / "home" / ".config" / "github-orchestrator" / "config.toml"
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 @pytest.mark.parametrize(("argv", "environment"), [
     (("--agent", "codex"), {}), ((), {"GITHUB_ORCHESTRATOR_AGENT": "codex"})])
@@ -212,7 +213,7 @@ def test_choosing_codex_writes_it_into_the_config_and_finds_codex(tmp_path, argv
     assert "skill" in calls
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 def test_yes_alone_keeps_claude_and_writes_no_agent(tmp_path):
     said, _ = _installed(tmp_path, "-y", state="missing")
@@ -221,7 +222,7 @@ def test_yes_alone_keeps_claude_and_writes_no_agent(tmp_path):
     assert "~/.claude/skills" in said
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 def test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tables(tmp_path):
     config = _config(tmp_path)
@@ -234,7 +235,7 @@ def test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tabl
     assert config.read_text() == 'agent = "codex"\n' + kept
 
 
-@pytest.mark.no_replay
+@_REPLAYED
 @_ON_A_MAC
 def test_choosing_claude_for_a_codex_config_switches_it_back(tmp_path):
     config = _config(tmp_path)

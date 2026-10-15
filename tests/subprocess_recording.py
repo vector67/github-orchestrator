@@ -13,9 +13,11 @@ from pathlib import Path
 from typing import Any
 
 RECORDING = Path(__file__).with_name("recorded_subprocesses.json")
+REPO = RECORDING.parent.parent
 TMP = "<TMP>"
 BASETEMP = "<BASETEMP>"
 PYTHON = "<PYTHON>"
+CHECKOUT = "<REPO>"
 
 Rewrite = Callable[[str], str]
 Stat = tuple[object, ...]
@@ -25,6 +27,16 @@ RealRun = Callable[..., Any]
 
 class RecordingMismatch(AssertionError):
     pass
+
+
+def contents_digest(paths: Iterable[str]) -> str:
+    digest = hashlib.sha1()
+    for named in paths:
+        root = REPO / named
+        for path in sorted([root] if root.is_file() else root.rglob("*")):
+            if path.is_file():
+                digest.update(str(path.relative_to(REPO)).encode() + b"\0" + path.read_bytes())
+    return digest.hexdigest()[:12]
 
 
 def covers_whole_suite(args: Sequence[str], invocation_dir: str | Path, selected: int,
@@ -47,6 +59,7 @@ class _Scope:
             (str(self.root), placeholder),
             (str(self.root.parent), BASETEMP),
             (sys.executable, PYTHON),
+            (str(REPO), CHECKOUT),
         ]
 
     def norm(self, text: str) -> str:

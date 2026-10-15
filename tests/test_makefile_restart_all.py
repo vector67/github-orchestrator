@@ -12,7 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 STUBS = Path(__file__).parent / "stubs" / "restart-all"
 
 pytestmark = [
-    pytest.mark.no_replay,
+    pytest.mark.replays_while_unchanged("Makefile", "tests/stubs/restart-all",
+                                       "src/github_orchestrator/desktop/notifier"),
     pytest.mark.skipif(shutil.which("make") is None, reason="needs make"),
 ]
 
