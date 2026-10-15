@@ -1,0 +1,13 @@
+{
+  "name": "github-orchestrator",
+  "owner": {
+    "name": "vector67"
+  },
+  "plugins": [
+    {
+      "name": "pr-summary",
+      "source": "./plugins/pr-summary",
+      "description": "Summarise a pull request by what was requested, what its authors claim, what its code and tests do, why it was needed, and where those disagree."
+    }
+  ]
+}
