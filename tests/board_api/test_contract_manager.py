@@ -25,7 +25,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
     assert answer.json() == {
         "pr": {"repo": "o/n", "number": 1, "title": "Remove the changes field",
                "url": "https://github.com/o/n/pull/1", "branch": "PROJ-34-remove-changes",
-               "ticket": "PROJ-34", "author": "octocat"},
+               "base_branch": "main", "ticket": "PROJ-34", "author": "octocat"},
         "polled": True,
         "status": {"detailed_reviewer": "carol", "you_are_the_detailed_reviewer": False,
                    "mergeable": True, "needs_rebase": True,

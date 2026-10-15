@@ -191,6 +191,7 @@ export interface DashboardPr {
   title: string | null;
   url: string | null;
   branch: string | null;
+  base_branch: string | null;
   ticket: string | null;
   author: string | null;
 }

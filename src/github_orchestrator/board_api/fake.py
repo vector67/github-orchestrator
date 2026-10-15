@@ -18,7 +18,7 @@ from github_orchestrator.domain import HubState, Pr, Repo
 IDLE = Dashboard(
     pr=Pr(Repo("o", "n"), 1), worktree="/wt", polled=True,
     title="Remove the changes field", url="https://github.com/o/n/pull/1",
-    branch="PROJ-34-remove-changes", ticket="PROJ-34", author="octocat", is_author=True,
+    branch="PROJ-34-remove-changes", base_branch="main", ticket="PROJ-34", author="octocat", is_author=True,
     detailed_reviewer="carol", is_detailed_reviewer=False, ci="passing", mergeable=True,
     needs_rebase=False,    review_decision=None, my_review=None, last_event_at="2026-06-10T10:30:00Z",
     review_ready_at="2026-06-09T08:00:00Z", since_commits=None,

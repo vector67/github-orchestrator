@@ -35,6 +35,12 @@ def test_the_dashboard_says_whether_the_branch_needs_a_rebase(settings, tmp_path
     assert _drawn(settings, tmp_path).needs_rebase is True
 
 
+def test_the_dashboard_names_the_branch_the_pr_merges_into(settings, tmp_path):
+    seed(settings, polled_pr(base_branch="develop"))
+
+    assert _drawn(settings, tmp_path).base_branch == "develop"
+
+
 def test_the_dashboard_leaves_mergeable_unknown_before_the_first_poll(settings, tmp_path):
     assert _drawn(settings, tmp_path).mergeable is None
 

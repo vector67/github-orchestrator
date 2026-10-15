@@ -132,6 +132,7 @@ export interface PrEntity {
   title: string | null;
   url: string | null;
   branch: string | null;
+  base_branch: string | null;
   head_sha: string | null;
   created_at: string | null;
   commits: number | null;
@@ -930,6 +931,7 @@ export default class StoreService extends Service {
       title: pull.title ?? held.title,
       url: pull.html_url,
       branch: pull.branch ?? held.branch,
+      base_branch: pull.base_branch ?? held.base_branch,
       head_sha: pull.head_sha ?? held.head_sha,
       created_at: pull.created_at,
       commits: pull.commits,
@@ -1143,6 +1145,7 @@ export default class StoreService extends Service {
               title: pr.title ?? held.title,
               url: pr.url ?? held.url,
               branch: pr.branch ?? held.branch,
+              base_branch: pr.base_branch ?? held.base_branch,
               ticket: pr.ticket,
               author: pr.author,
               drawn,
@@ -1243,6 +1246,7 @@ export default class StoreService extends Service {
       title: null,
       url: null,
       branch: null,
+      base_branch: null,
       head_sha: null,
       created_at: null,
       commits: null,

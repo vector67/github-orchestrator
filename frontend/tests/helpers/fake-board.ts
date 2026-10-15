@@ -399,6 +399,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       title: 'Fix the widget',
       url: 'https://github.com/o/r/pull/7',
       branch: 'PROJ-7-fix-the-widget',
+      base_branch: 'main',
       ticket: 'PROJ-7',
       author: 'dave',
       ...pr,

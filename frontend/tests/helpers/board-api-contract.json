@@ -2441,6 +2441,16 @@
       }
      ]
     },
+    "base_branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "branch": {
      "anyOf": [
       {
@@ -2494,6 +2504,7 @@
     "title",
     "url",
     "branch",
+    "base_branch",
     "ticket",
     "author"
    ],

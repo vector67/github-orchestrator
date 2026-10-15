@@ -37,6 +37,7 @@ class Dashboard:
     title: str | None
     url: str | None
     branch: str | None
+    base_branch: str | None
     ticket: str | None
     author: str | None
     is_author: bool | None

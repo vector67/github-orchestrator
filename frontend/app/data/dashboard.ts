@@ -111,7 +111,6 @@ const WAITING_FOR_AUTHOR = 'Waiting for author';
 const STATE_LABELS: Partial<Record<Move, string>> = {
   closed: 'Merged or closed',
   'fix-ci': 'Fix CI',
-  rebase: 'Rebase on main',
   'address-feedback': 'Address review feedback',
   'ready-to-merge': 'Ready to merge',
   'await-review': 'Waiting for review',
@@ -129,7 +128,12 @@ const STATE_LABELS: Partial<Record<Move, string>> = {
   mentioned: 'Mentioned',
 };
 
-function labelOf(state: Move): string {
+function baseOf(shown: ShownPr): string {
+  return shown.base_branch ?? 'the base branch';
+}
+
+function labelOf(state: Move, shown: ShownPr): string {
+  if (state === 'rebase') return `Rebase on ${baseOf(shown)}`;
   return STATE_LABELS[state] ?? state;
 }
 
@@ -143,6 +147,7 @@ const CI_WORDS: Record<string, string> = {
 type Polled = Pick<
   PrFacts,
   | 'ci_status'
+  | 'merge_state'
   | 'review_decision'
   | 'my_review'
   | 'changes_requested_by'
@@ -152,6 +157,7 @@ type Polled = Pick<
 
 const UNPOLLED: Polled = {
   ci_status: 'pending',
+  merge_state: null,
   review_decision: null,
   my_review: null,
   changes_requested_by: [],
@@ -230,7 +236,9 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
         ? `Failed: ${listed(status.failed_checks)}`
         : 'Fix CI failures';
     case 'rebase':
-      return 'Merge conflicts detected';
+      return facts.merge_state === 'conflicts'
+        ? 'Merge conflicts detected'
+        : `Behind ${baseOf(shown)}`;
     case 'address-feedback':
       return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes | ${unresolvedOf(facts)}`;
     case 'ready-to-merge':
@@ -273,7 +281,7 @@ function actionOf(shown: ShownPr, move: NextMove): Action | null {
   const state = move.state;
   if (!state) return null;
   return {
-    label: labelOf(state),
+    label: labelOf(state, shown),
     detail: detailOf(state, shown, move),
   };
 }
@@ -342,7 +350,7 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'mentioned':
       return EVERY_MENTION_ANSWERED;
     default:
-      return labelOf(code);
+      return labelOf(code, shown);
   }
 }
 

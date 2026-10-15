@@ -555,6 +555,44 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  test('a branch only behind its base is not described as conflicting', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('rebase', { merge_state: 'behind' }),
+          status: { mergeable: true, needs_rebase: true },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'rebase');
+    assert.deepEqual(
+      [cells('o/r#7')['merge'], cells('o/r#7')['why']],
+      ['none', 'Behind main'],
+    );
+  });
+
+  test('the rebase move names the branch the pull request merges into', async function (assert) {
+    onTheHub(
+      needing(7, {
+        pr: { base_branch: 'develop' },
+        facts: factsFor('rebase'),
+      }),
+      needing(8, { pr: { base_branch: null }, facts: factsFor('rebase') }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(verbsOf([7, 8]), [
+      'Rebase on develop',
+      'Rebase on the base branch',
+    ]);
+  });
+
   test('an approval on a repo without review rules shows in the Review column', async function (assert) {
     onTheHub(
       heldPr({

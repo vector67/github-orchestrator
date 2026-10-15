@@ -468,7 +468,8 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
     return contract.Dashboard(
         pr=contract.DashboardPr(
             repo=str(dashboard.pr.repo), number=dashboard.pr.number, title=dashboard.title,
-            url=dashboard.url, branch=dashboard.branch, ticket=dashboard.ticket,
+            url=dashboard.url, branch=dashboard.branch, base_branch=dashboard.base_branch,
+            ticket=dashboard.ticket,
             author=dashboard.author),
         polled=dashboard.polled,
         status=contract.DashboardStatus(

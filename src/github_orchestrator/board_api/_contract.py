@@ -1242,6 +1242,8 @@ class DashboardPr(BaseModel):
     title: str | None
     url: str | None = Field(description="Where the pull request is on github.com.")
     branch: str | None
+    base_branch: str | None = Field(
+        description="The branch the pull request merges into. Null before a poll has said.")
     ticket: str | None = Field(
         description="The Jira ticket the branch name carries, such as `PROJ-34`.")
     author: str | None = Field(
