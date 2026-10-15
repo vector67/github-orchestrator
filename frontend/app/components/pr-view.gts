@@ -314,9 +314,8 @@ export default class PrView extends Component<PrViewSignature> {
           type="button"
           class="theme-toggle btn"
           data-test-theme-toggle
-          aria-pressed={{if this.theme.dark "true" "false"}}
           {{on "click" this.flip}}
-        >Dark theme</button>
+        >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
       </header>
       {{#if this.notHeld}}
         <section id="not-found" data-test-pr-not-found>

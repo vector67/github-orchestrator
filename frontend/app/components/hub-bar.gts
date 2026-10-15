@@ -186,9 +186,8 @@ export default class HubBar extends Component<HubBarSignature> {
         type="button"
         class="theme-toggle btn"
         data-test-theme-toggle
-        aria-pressed={{if this.theme.dark "true" "false"}}
         {{on "click" this.flip}}
-      >Dark theme</button>
+      >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
     </header>
   </template>
 }
