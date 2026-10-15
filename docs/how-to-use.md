@@ -412,7 +412,9 @@ GitHub, your move, the counts, the flags and the detailed-reviewer flag. On
 your own PR the counts are **Human comments M/N done** and **Bot comments M/N
 done**; on someone else's, **Your threads M/N answered**. The flags are
 **Fix CI**, **Rebase** and **N unresolved threads**, shown whenever they hold,
-whatever your move. A draft has a grey **Draft** pill before its title, and
+whatever your move, and **N mismatches**, the Alignment judge's count in the
+PR's latest summary, which its wall row shows too, even once the summary is
+stale. A draft has a grey **Draft** pill before its title, and
 its move is outlined in grey, never yellow, since yellow means it needs you now.
 
 | Key       | What it does                              |
@@ -425,6 +427,7 @@ its move is outlined in grey, never yellow, since yellow means it needs you now.
 | `\`       | open the switcher; `\` or `Esc` closes it |
 | `[` / `]` | previous / next PR, in the wall's order   |
 | `Esc`     | back to the wall                          |
+| `o` / `y` | open the PR on GitHub / copy its link     |
 
 The Summary tab shows the pr-summary plugin's latest summary of the PR under a
 one-line strip. The strip says which state it is in: waiting for its turn (a PR
@@ -434,7 +437,6 @@ with the head it read and when; stale after a push, naming both heads and how
 many commits behind, with **Rerun**; needing the GitHub API, with the plugin's
 reason and a button that runs it over the API; or failed, with the exit status,
 the end of what it printed and **Rerun**. A refused run says why in the strip.
-| `o` / `y` | open the PR on GitHub / copy its link |
 
 The switcher slides in from the left with every PR's verb, grouped as on the
 wall, and slides away once you pick one.

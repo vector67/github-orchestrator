@@ -9,6 +9,7 @@ from github_orchestrator.board_api.interface import (
     WallGroup,
 )
 from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.pr_summaries import PrSummaries
 
 GROUP_NAMES = {
     WallGroup.NEEDS_YOU: "Needs you",
@@ -21,8 +22,10 @@ GROUP_NAMES = {
 
 
 class Wall:
-    def __init__(self, dashboards: Dashboards, watching: Collection[Repo]) -> None:
+    def __init__(self, dashboards: Dashboards, watching: Collection[Repo],
+                 summaries: PrSummaries) -> None:
         self._dashboards = dashboards
+        self._summaries = summaries
         self._watching = sorted(str(repo) for repo in watching)
 
     def read(self, held: Held) -> contract.HeldPullRequests:
@@ -37,4 +40,9 @@ class Wall:
         return contract.HeldPullRequest(
             repo=str(pr.repo), number=pr.number, manager=manager,
             board_url=pr_page(pr),
-            dashboard=dashboard_of(self._dashboards.dashboard(pr)))
+            dashboard=dashboard_of(self._dashboards.dashboard(pr)),
+            mismatches=self._mismatches(pr))
+
+    def _mismatches(self, pr: Pr) -> int | None:
+        summary = self._summaries.load(pr)
+        return summary.mismatches if summary else None

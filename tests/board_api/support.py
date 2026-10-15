@@ -135,10 +135,14 @@ class NoHeads:
         return None
 
 
-def no_summaries() -> list[Part]:
-    return [PrSummariesWiring(Path("/nonexistent/summaries")),
+def summaries_in(directory: Path) -> list[Part]:
+    return [PrSummariesWiring(directory),
             SummaryLaneWiring(Path("/nonexistent/config.toml"), {}, False),
             fake_provider(ChangeDetection, NoHeads())]
+
+
+def no_summaries() -> list[Part]:
+    return summaries_in(Path("/nonexistent/summaries"))
 
 
 @dataclass
@@ -245,7 +249,8 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
 
 def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(MOMENT),
                watching: Collection[Repo] = (Repo("acme", "widgets"),),
-               told: Told | None = None, **wall: Any) -> TestClient:
+               told: Told | None = None, summaries: list[Part] | None = None,
+               **wall: Any) -> TestClient:
     fake = fake_threads()
     server: ServerApp = wire(
         fake_provider(Told, told or FakeTold()),
@@ -254,7 +259,7 @@ def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(M
         fake_provider(WorkingCopies, fake.working_copies),
         fake_provider(Terminals, FakeTerminals()),
         fake_provider(ManagerPanels, OnePanel(FakeManagerPanel())),
-        *no_summaries(),
+        *(summaries or no_summaries()),
         clocks_of(clock),
         ServerAppWiring(app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
                         check_presence=False, first_names_only=False,

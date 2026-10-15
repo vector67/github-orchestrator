@@ -287,6 +287,12 @@ export default class PrView extends Component<PrViewSignature> {
               data-test-flag
             >{{this.reading.detailedReviewer.text}}</span>
           {{/if}}
+          {{#if this.summaries.mismatches}}
+            <span
+              class="flag"
+              data-test-mismatches
+            >{{this.summaries.mismatches}}</span>
+          {{/if}}
         </span>
         {{#if this.url}}
           <a

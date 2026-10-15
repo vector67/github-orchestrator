@@ -167,6 +167,14 @@ mapping, and the preview shows each state in both themes.
 
 ### 7. The mismatch chip
 
+**Done** (the commit that records this). The hub's `HeldPullRequest` carries
+`mismatches`, read by `Wall` from `PrSummaries.load`. The store holds the count
+once, as `mismatches` on the PR entity: the wall feed and the summary feed both
+write that field, and the stored `PrSummary` keeps everything but it. The chip
+is `Summaries.mismatches` in `data/summaries.ts`, a `.flag` beside the detailed
+reviewer's on the wall row and in `.prflags`. The look check wrote records into
+the preview's data directory.
+
 A chip reading "N mismatches" on the wall row (`components/wall.gts`) and in
 the PR header's `.prflags` when the count is above zero.
 

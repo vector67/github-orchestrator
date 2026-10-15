@@ -85,7 +85,7 @@ class OneServer:
                  check_seconds: float) -> None:
         self._app_root = app_root
         self._fonts = routes.served_fonts(font_dir)
-        self._wall = Wall(dashboards, watching)
+        self._wall = Wall(dashboards, watching, summaries)
         self._ledger = ledger
         self._pulse = pulse
         self._clock = clock

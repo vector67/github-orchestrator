@@ -135,9 +135,12 @@ export interface PrEntity {
   unreadable: string[];
   in_flight: string[];
   diffs: Partial<Record<DiffSource, Commits>>;
+  mismatches: number | null;
 }
 
 export type ShownPr = PrEntity & { drawn: Drawn };
+
+export type PrSummaryEntity = Omit<PrSummary, 'mismatches'>;
 
 export interface Manager {
   notes: string | null;
@@ -300,7 +303,7 @@ export default class StoreService extends Service {
   @tracked private threads: ByKey<Thread> = {};
   @tracked private operations: ByKey<StoredOperation> = {};
   @tracked private proposals: ByKey<Proposal> = {};
-  @tracked private prSummaries: Record<string, PrSummary> = {};
+  @tracked private prSummaries: Record<string, PrSummaryEntity> = {};
   @tracked private diffs: Record<string, Diff> = {};
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
@@ -880,8 +883,14 @@ export default class StoreService extends Service {
     }));
   }
 
-  private takePrSummary({ repo, number }: Numbered, summary: PrSummary): void {
-    this.prSummaries = { ...this.prSummaries, [keyOf(repo, number)]: summary };
+  private takePrSummary(
+    { repo, number }: Numbered,
+    { mismatches, ...summary }: PrSummary,
+  ): void {
+    const key = keyOf(repo, number);
+    this.prSummaries = { ...this.prSummaries, [key]: summary };
+    if (this.prs[key]?.mismatches === mismatches) return;
+    this.changePr(repo, number, (pr) => ({ ...pr, mismatches }));
   }
 
   private takePeople(people: Person[]): void {
@@ -1119,6 +1128,7 @@ export default class StoreService extends Service {
       this.changePr(row.repo, row.number, (pr) => ({
         ...pr,
         board_url: row.board_url,
+        mismatches: row.mismatches,
       }));
       this.place(row.repo, row.number, true);
     }
@@ -1167,6 +1177,7 @@ export default class StoreService extends Service {
       unreadable: [],
       in_flight: [],
       diffs: {},
+      mismatches: null,
     };
     this.prs = { ...this.prs, [key]: changed(held) };
     this.place(repo, number);

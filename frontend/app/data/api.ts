@@ -424,6 +424,7 @@ export interface HeldPullRequest {
   manager: string;
   board_url: string;
   dashboard: Dashboard;
+  mismatches: number | null;
 }
 
 export interface HeldPullRequests {

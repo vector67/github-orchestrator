@@ -1588,6 +1588,11 @@ class HeldPullRequest(BaseModel):
                     "status file laid over it. Its `standing` says whether the "
                     "manager is answering. The page decides the row's move and "
                     "group from its facts, manager flags and thread rows.")
+    mismatches: int | None = Field(
+        description="How many mismatches the Alignment judge found in the pull "
+                    "request's stored summary, as `/api/summary` on its board "
+                    "serves it. Read from disk; nothing runs. Null when no "
+                    "summary is stored or its judge's output would not read.")
 
 
 class WallGroupName(BaseModel):

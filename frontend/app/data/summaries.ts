@@ -6,7 +6,6 @@ import type {
   ManagerFlags,
   Operation,
   PrFacts,
-  PrSummary,
   RecordState,
   WitnessProgress,
   WallGroup,
@@ -21,7 +20,11 @@ import {
   type StoredOperation,
   type Thread,
 } from 'frontend/data/entities';
-import type { PrEntity, ShownPr } from 'frontend/services/store';
+import type {
+  PrEntity,
+  PrSummaryEntity,
+  ShownPr,
+} from 'frontend/services/store';
 
 export type Move =
   | 'release-worktree'
@@ -88,6 +91,7 @@ export interface Summaries {
   human: Tally;
   bot: Tally;
   move: NextMove;
+  mismatches: string | null;
 }
 
 type Threads = Record<string, Thread>;
@@ -416,7 +420,13 @@ function summarised(
       human,
       bot,
     }),
+    mismatches: mismatchesOf(pr?.mismatches ?? null),
   };
+}
+
+function mismatchesOf(count: number | null): string | null {
+  if (!count) return null;
+  return count === 1 ? '1 mismatch' : `${count} mismatches`;
 }
 
 const NONE = {};
@@ -621,7 +631,7 @@ function linesOf(text: string | null): string[] {
 }
 
 function stateOf(
-  summary: PrSummary,
+  summary: PrSummaryEntity,
   head: string | null,
   role: Role,
 ): SummaryState {
@@ -644,7 +654,7 @@ function reasonOf(state: SummaryState, stderr: string | null): string | null {
 }
 
 export function summaryTabOf(
-  summary: PrSummary,
+  summary: PrSummaryEntity,
   head: string | null,
   role: Role | null,
 ): SummaryTab | null {

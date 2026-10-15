@@ -1,4 +1,5 @@
 from dataclasses import replace
+from pathlib import Path
 
 from github_orchestrator.board_api.fake import (
     IDLE,
@@ -6,15 +7,22 @@ from github_orchestrator.board_api.fake import (
     FakeHoldings,
     FakeManagerPanel,
 )
+from github_orchestrator.pr_summaries import PrSummaries, Summary
+from github_orchestrator.wiring import PrSummariesWiring, wire
 from tests.board_api.support import (
+    MOMENT,
     client_for,
     holding,
     served_hub,
+    summaries_in,
 )
 from tests.builders import a_pr
+from tests.conftest import clocks_of
+from tests.conversation.support import at
 
 REPO = "acme/widgets"
 SECOND = a_pr(54, REPO)
+THIRD = a_pr(55, REPO)
 
 GROUPS = [
     {"group": "needs-you", "name": "Needs you"},
@@ -50,8 +58,20 @@ def test_each_row_carries_the_dashboard_built_from_what_is_on_disk():
 
     assert rows(web) == [{
         "repo": REPO, "number": 54, "manager": "exited", "board_url": "/pr/acme/widgets/54",
-        "dashboard": served_as_a_board_serves(rebuilt),
+        "dashboard": served_as_a_board_serves(rebuilt), "mismatches": None,
     }]
+
+
+def stored(directory: Path, pr, summary: Summary) -> None:
+    summaries: PrSummaries = wire(PrSummariesWiring(directory), clocks_of(at(MOMENT))).get(PrSummaries)
+    summaries.save(pr, summary)
+
+
+def test_each_row_carries_the_mismatch_count_of_its_stored_summary(tmp_path):
+    stored(tmp_path, SECOND, Summary(head_sha="a" * 40, mismatches=3))
+    web = served_hub(told=holding(SECOND, THIRD), summaries=summaries_in(tmp_path))
+
+    assert {row["number"]: row["mismatches"] for row in rows(web)} == {54: 3, 55: None}
 
 
 def test_every_row_links_to_its_pull_requests_page_on_the_hub():

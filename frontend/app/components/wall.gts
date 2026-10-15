@@ -202,6 +202,11 @@ export default class Wall extends Component {
                         title={{reading.detailedReviewer.hint}}
                         data-test-flag
                       >{{reading.detailedReviewer.text}}</span>{{/if}}{{#if
+                      pr.summaries.mismatches
+                    }}<span
+                        class="flag"
+                        data-test-mismatches
+                      >{{pr.summaries.mismatches}}</span>{{/if}}{{#if
                       pr.moved
                     }}<span class="moved" data-test-moved>moved here</span>{{/if}}</span>
                   <span

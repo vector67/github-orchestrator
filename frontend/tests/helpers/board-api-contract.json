@@ -3772,6 +3772,16 @@
     "manager": {
      "type": "string"
     },
+    "mismatches": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "number": {
      "type": "integer"
     },
@@ -3784,7 +3794,8 @@
     "number",
     "manager",
     "board_url",
-    "dashboard"
+    "dashboard",
+    "mismatches"
    ],
    "type": "object"
   },

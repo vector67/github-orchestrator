@@ -315,6 +315,50 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-strip]').doesNotExist();
   });
 
+  test('each wall row counts the mismatches of its stored summary, one in the singular, and none at zero or with no count', async function (assert) {
+    board().held = [
+      heldPr({ number: 7, mismatches: 3 }),
+      heldPr({ number: 8, mismatches: 1 }),
+      heldPr({ number: 9, mismatches: 0 }),
+      heldPr({ number: 10, mismatches: null }),
+    ];
+
+    await visit('/');
+
+    const chipOf = (number: number): string =>
+      `[data-test-wall-row="o/r#${number}"] [data-test-mismatches]`;
+    assert.dom(chipOf(7)).hasText('3 mismatches');
+    assert.dom(chipOf(8)).hasText('1 mismatch');
+    assert.dom(chipOf(9)).doesNotExist();
+    assert.dom(chipOf(10)).doesNotExist();
+  });
+
+  test('the header counts the mismatches the wall served, with the summary tab never opened', async function (assert) {
+    board().held = [heldPr({ mismatches: 2 })];
+
+    await visit('/pr/o/r/7');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
+    assert.dom('.prflags [data-test-mismatches]').hasText('2 mismatches');
+  });
+
+  test('a stale summary still counts its mismatches in the header, as the summary feed serves them', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'abc1234',
+      exit_status: 0,
+      finished: ago(30),
+      markdown: '# What it asks',
+      behind: 2,
+      mismatches: 4,
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'stale');
+    assert.dom('.prflags [data-test-mismatches]').hasText('4 mismatches');
+  });
+
   test('1 opens Summary and 2 Board, in the order the tabs stand', async function (assert) {
     await visit('/pr/o/r/7/dashboard');
 
