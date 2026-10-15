@@ -1,65 +1,20 @@
 import json
-import subprocess
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.domain import Pr
 from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.wiring import Part, PrSummariesWiring, SummaryLaneWiring, wire
 from tests.board_api.support import THE_PR, client_for, followed
 from tests.conftest import clocks_of, fake_provider
 from tests.conversation.support import at
+from tests.pr_summaries.support import HeadsAt, Held, run_now, three_commits
 
 FAKE_PLUGIN = Path(__file__).parents[1] / "pr_summaries" / "fake_plugin.py"
-WITNESSES = ["requested", "claimed", "implementation", "tests", "why", "alignment"]
 STARTED = "2026-08-28T10:00:00+00:00"
-
-
-class HeadsAt:
-    def __init__(self, head: str | None) -> None:
-        self._head = head
-
-    def facts(self, pr: Pr) -> SimpleNamespace:
-        return SimpleNamespace(head_sha=self._head)
-
-
-def run_now(work: Callable[[], None]) -> None:
-    work()
-
-
-class Held:
-    def __init__(self) -> None:
-        self.work: list[Callable[[], None]] = []
-
-    def __call__(self, work: Callable[[], None]) -> None:
-        self.work.append(work)
-
-    def finish(self) -> None:
-        while self.work:
-            self.work.pop()()
-
-
-def _git(cwd: Path, *args: str) -> str:
-    return subprocess.run(["git", "-C", str(cwd), *args], check=True,
-                          capture_output=True, text=True).stdout.strip()
-
-
-def _three_commits(root: Path) -> tuple[str, str, str]:
-    clone = root / "repo"
-    clone.mkdir()
-    _git(clone, "init", "-q", "-b", "main")
-    _git(clone, "config", "user.email", "t@example.com")
-    _git(clone, "config", "user.name", "T")
-    shas = []
-    for message in ("one", "two", "three"):
-        _git(clone, "commit", "-q", "--allow-empty", "-m", message)
-        shas.append(_git(clone, "rev-parse", "HEAD"))
-    return shas[0], shas[1], shas[2]
 
 
 def summary_parts(tmp_path: Path, behaviour: str = "clean", *, read: str | None = None,
@@ -105,7 +60,7 @@ def test_a_pr_never_summarised_serves_a_summary_with_nothing_stored_and_nothing_
 
 def test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head_has_moved_since(
         tmp_path, git_template):
-    first, _, third = git_template(_three_commits)
+    first, _, third = git_template(three_commits)
     wanted_on(tmp_path)
     client = client_for(head_sha=third, summaries=summary_parts(tmp_path, read=first))
     summarised(client)
@@ -131,19 +86,46 @@ def test_a_run_that_needs_the_github_api_serves_its_exit_status_and_the_plugins_
     assert (served["markdown"], served["mismatches"]) == (None, None)
 
 
-def test_a_running_summary_serves_when_it_started_and_a_flag_for_each_witness(tmp_path):
+def prepared(tmp_path: Path, *witnesses: str, finished: tuple[str, ...] = ()) -> None:
+    for witness in witnesses:
+        (folder(tmp_path) / witness).mkdir(parents=True)
+    for witness in finished:
+        (folder(tmp_path) / witness / "output.json").write_text("{}")
+
+
+def test_a_running_summary_serves_when_it_started_and_a_flag_for_each_witness_it_prepared(tmp_path):
     held = Held()
     client = client_for(summaries=summary_parts(tmp_path, run_in=held))
     summarised(client)
-    (folder(tmp_path) / "claimed").mkdir(parents=True)
-    (folder(tmp_path) / "claimed" / "output.json").write_text("{}")
+    before_inputs = client.get("/api/summary").json()
+    prepared(tmp_path, "requested", "claimed", "implementation", "tests", "why", "alignment",
+             finished=("claimed",))
 
     served = client.get("/api/summary").json()
 
     held.finish()
+    assert (before_inputs["running"], before_inputs["witnesses"]) == (True, [])
     assert (served["running"], served["since"]) == (True, STARTED)
-    assert served["witnesses"] == [{"witness": witness, "done": witness == "claimed"}
-                                   for witness in WITNESSES]
+    assert served["witnesses"] == [
+        {"witness": "requested", "done": False}, {"witness": "claimed", "done": True},
+        {"witness": "implementation", "done": False}, {"witness": "tests", "done": False},
+        {"witness": "why", "done": False}, {"witness": "alignment", "done": False}]
+
+
+def test_a_running_summary_on_a_pr_with_no_ticket_has_no_requested_witness(tmp_path):
+    held = Held()
+    client = client_for(summaries=summary_parts(tmp_path, run_in=held))
+    summarised(client)
+    prepared(tmp_path, "claimed", "implementation", "tests", "why", "alignment",
+             finished=("claimed", "implementation", "tests", "why"))
+
+    served = client.get("/api/summary").json()
+
+    held.finish()
+    assert served["witnesses"] == [
+        {"witness": "claimed", "done": True}, {"witness": "implementation", "done": True},
+        {"witness": "tests", "done": True}, {"witness": "why", "done": True},
+        {"witness": "alignment", "done": False}]
 
 
 def test_summarise_starts_a_run_and_answers_the_summary_running(tmp_path):

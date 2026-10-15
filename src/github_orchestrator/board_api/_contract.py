@@ -1496,7 +1496,10 @@ class PrSummary(BaseModel):
     since: str | None = Field(
         description="When the run in flight started. Null when none is.")
     witnesses: list[WitnessProgress] = Field(
-        description="Each witness of the run in flight. Empty when none is.")
+        description="Each witness whose folder the run in flight has made, in "
+                    "the plugin's order. `requested` has none on a pull request "
+                    "with no ticket. Empty when no run is in flight, or before "
+                    "the plugin has prepared its inputs.")
     behind: int | None = Field(
         description="How many commits the pull request's head is past "
                     "`head_sha`, counted in the local clone. Null when either "

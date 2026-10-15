@@ -1,35 +1,21 @@
 import json
-import subprocess
 import sys
 import threading
 import time
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.domain import Pr
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.wiring import PrSummariesWiring, SummaryLaneWiring, wire
 from tests.builders import a_pr
 from tests.conftest import clocks_of, fake_provider, ticking_clock
+from tests.pr_summaries.support import HeadsAt, Held, run_now, three_commits
 
 THE_PR = a_pr(7, "acme/widgets")
 FAKE_PLUGIN = Path(__file__).with_name("fake_plugin.py")
 HEAD = "abc123"
-
-
-class HeadsAt:
-    def __init__(self, head: str | None) -> None:
-        self._head = head
-
-    def facts(self, pr: Pr) -> SimpleNamespace:
-        return SimpleNamespace(head_sha=self._head)
-
-
-def run_now(work: Callable[[], None]) -> None:
-    work()
 
 
 class Lane:
@@ -188,7 +174,7 @@ def _partway(lane: Lane) -> None:
         time.sleep(0.01)
 
 
-def test_while_a_run_is_in_flight_its_progress_flags_each_of_the_six_witnesses_done_or_not(tmp_path):
+def test_while_a_run_is_in_flight_its_progress_names_the_witnesses_that_have_finished(tmp_path):
     threads = InAThread()
     lane = Lane(tmp_path, "partway", run_in=threads)
     lane.summaries.want(THE_PR)
@@ -199,8 +185,7 @@ def test_while_a_run_is_in_flight_its_progress_flags_each_of_the_six_witnesses_d
 
     threads.finish(lane)
     assert progress is not None
-    assert dict(progress.done) == {"requested": False, "claimed": True, "implementation": False,
-                                   "tests": False, "why": False, "alignment": False}
+    assert dict(progress.done) == {"claimed": True, "implementation": False}
     assert progress.since == lane.summaries.load(THE_PR).started
     assert lane.lane.progress(THE_PR) is None
 
@@ -292,14 +277,6 @@ def test_a_pr_in_a_repository_no_longer_watched_is_not_summarised(tmp_path):
     assert lane.summaries.due(set()) == [elsewhere]
 
 
-class Held:
-    def __init__(self) -> None:
-        self.work: list[Callable[[], None]] = []
-
-    def __call__(self, work: Callable[[], None]) -> None:
-        self.work.append(work)
-
-
 def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
     held = Held()
     lane = Lane(tmp_path, "clean", run_in=held)
@@ -314,26 +291,8 @@ def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
     held.work.pop()()
 
 
-def _git(cwd: Path, *args: str) -> str:
-    return subprocess.run(["git", "-C", str(cwd), *args], check=True,
-                          capture_output=True, text=True).stdout.strip()
-
-
-def _three_commits(root: Path) -> tuple[str, str, str]:
-    clone = root / "repo"
-    clone.mkdir()
-    _git(clone, "init", "-q", "-b", "main")
-    _git(clone, "config", "user.email", "t@example.com")
-    _git(clone, "config", "user.name", "T")
-    shas = []
-    for message in ("one", "two", "three"):
-        _git(clone, "commit", "-q", "--allow-empty", "-m", message)
-        shas.append(_git(clone, "rev-parse", "HEAD"))
-    return shas[0], shas[1], shas[2]
-
-
 def test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_head_now(tmp_path, git_template):
-    first, _, third = git_template(_three_commits)
+    first, _, third = git_template(three_commits)
     lane = Lane(tmp_path, "clean", head=first, clone=tmp_path / "repo")
     lane.lane.start(THE_PR, use_github_api=False)
 
@@ -342,7 +301,7 @@ def test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_hea
 
 
 def test_a_summary_has_no_count_behind_without_both_heads_or_a_commit_the_clone_holds(tmp_path, git_template):
-    first, _, third = git_template(_three_commits)
+    first, _, third = git_template(three_commits)
     lane = Lane(tmp_path, "clean", head=first, clone=tmp_path / "repo")
 
     never_run = lane.lane.behind(THE_PR, third)

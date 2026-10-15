@@ -38,7 +38,8 @@ def _mismatches(folder: Path) -> int | None:
 
 
 def _done(folder: Path) -> dict[str, bool]:
-    return {witness: (folder / witness / "output.json").exists() for witness in WITNESSES}
+    return {witness: (folder / witness / "output.json").exists()
+            for witness in WITNESSES if (folder / witness).is_dir()}
 
 
 def _in_flight(pr: Pr, since: datetime) -> bytes:

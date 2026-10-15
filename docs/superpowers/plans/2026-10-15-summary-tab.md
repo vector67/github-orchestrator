@@ -108,11 +108,13 @@ produces the stored file.
 
 ### 4. The board API
 
-**Done** (`1f3331fe`, which flags all six witnesses in `progress` and adds
-`SummaryLane.behind(pr, head)`, and the commit that records this). The board
-app serves `PrSummary` at `GET /api/summary`: the stored fields, `running`,
-`since`, `witnesses` (one `{witness, done}` per witness, in the plugin's order,
-empty when nothing runs), `behind` and `etag`. The operations are
+**Done** (`1f3331fe`, which adds `SummaryLane.behind(pr, head)`, `f5d1362d`,
+and the commit that records this, which puts the witness flags back to step
+3's rule and shares the summary test helpers). The board app serves
+`PrSummary` at `GET /api/summary`: the stored fields, `running`, `since`,
+`witnesses` (one `{witness, done}` per witness folder the plugin has made, in
+the plugin's order, so `requested` is absent on a PR with no ticket and the
+list is empty before the inputs are prepared), `behind` and `etag`. The operations are
 `POST /api/summary/operations:summarise` and
 `/api/summary/operations:summarise-with-github-api`, with the body's `etag` as
 `If-Match`; they answer `202` with the summary running, `409 summary-refused`
