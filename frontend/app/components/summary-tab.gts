@@ -124,9 +124,9 @@ export default class SummaryTab extends Component {
               {{on "click" this.run}}
             >Rerun</button>
           {{else}}
-            <code>{{this.tab.sha}}</code>
-            · finished
-            {{this.finished}}
+            <span><code>{{this.tab.sha}}</code>
+              · finished
+              {{this.finished}}</span>
           {{/if}}
           {{#if this.said}}
             <span class="said" data-test-summary-said>{{this.said}}</span>

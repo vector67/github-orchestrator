@@ -136,6 +136,19 @@ If-Match rule.
 
 ### 5–6. The store, the derived values and the tab
 
+**Done** (`4a9b85c5`, and the commit that records this, which styles the strip
+and the summary's tables after the look check and documents the tab and its
+keys). The entity is `PrSummary` in the store, read through `prSummary`, which
+gives `SummaryTab` from `summaryTabOf` in `data/summaries.ts`; only the Summary
+route polls it, every five seconds. `summarise` and `summariseWithGithubApi`
+return null when the run started, or the sentence to show: the lane's on a
+409, a moved summary read again on a 412. No strip is drawn until the facts
+say whose PR it is. The needs-the-GitHub-API strip shows stderr's first line
+and the call count from its "about N API calls"; a failed one shows its last
+line. The chip's count is left to step 7, which draws it. The preview has no
+card for summaries, since its cards are threads; the look check wrote records
+into the preview's data directory instead.
+
 One step, not two. The front end has no unit-test path: a test reaches the
 board only through its URL, its DOM and FakeBoard (`frontend/eslint.config.mjs`),
 so the store and the derived values can only be tested once the tab draws them.

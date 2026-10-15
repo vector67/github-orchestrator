@@ -3189,6 +3189,82 @@ kbd {
   flex: none;
 }
 
+#summary-tab {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.summary-strip {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 8px 24px;
+  font-size: var(--fs-m);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.summary-strip[data-state="stale"] {
+  color: var(--ready-text);
+  background: var(--ready-ground);
+  border-bottom-color: var(--ready-edge);
+}
+
+.summary-strip[data-state="failed"] {
+  color: var(--text);
+  background: var(--red-fill);
+  border-bottom-color: var(--red);
+}
+
+.summary-strip .witnesses {
+  display: flex;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.summary-strip .witnesses li {
+  color: var(--muted);
+}
+
+.summary-strip .witnesses li::before {
+  content: "○ ";
+}
+
+.summary-strip .witnesses li[data-done] {
+  color: inherit;
+}
+
+.summary-strip .witnesses li[data-done]::before {
+  content: "✓ ";
+}
+
+.summary-strip .said {
+  margin-left: auto;
+}
+
+.summary-body {
+  flex: 1;
+  max-width: 78ch;
+  padding: 16px 24px 32px;
+  overflow: auto;
+}
+
+.summary-body table {
+  border-collapse: collapse;
+}
+
+.summary-body th,
+.summary-body td {
+  padding: 4px 10px;
+  text-align: left;
+  border: 1px solid var(--hairline);
+}
+
 .switcher-scrim {
   position: fixed;
   inset: 0;

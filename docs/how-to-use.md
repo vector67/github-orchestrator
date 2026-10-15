@@ -404,7 +404,8 @@ seconds.
 
 ### A PR's page
 
-Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>` on its Board. The wall goes
+Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>`: on its Summary
+when you review it, on its Board when it is yours. The wall goes
 and the PR takes the whole screen. Its bar has the PRs button with how many
 need you, **Wall**, the title, whose PR it is, the branch, a link to it on
 GitHub, your move, the counts, the flags and the detailed-reviewer flag. On
@@ -416,14 +417,24 @@ its move is outlined in grey, never yellow, since yellow means it needs you now.
 
 | Key       | What it does                              |
 | --------- | ----------------------------------------- |
-| `1`       | Board tab                                 |
-| `2`       | Dashboard tab                             |
-| `3`       | Terminal tab                              |
-| `4`       | Diff tab                                  |
+| `1`       | Summary tab                               |
+| `2`       | Board tab                                 |
+| `3`       | Dashboard tab                             |
+| `4`       | Terminal tab                              |
+| `5`       | Diff tab                                  |
 | `\`       | open the switcher; `\` or `Esc` closes it |
 | `[` / `]` | previous / next PR, in the wall's order   |
 | `Esc`     | back to the wall                          |
-| `o` / `y` | open the PR on GitHub / copy its link     |
+
+The Summary tab shows the pr-summary plugin's latest summary of the PR under a
+one-line strip. The strip says which state it is in: waiting for its turn (a PR
+you review) or a **Summarise** button (your own); running, with the head it
+reads, how long it has run and each witness ticked off as it finishes; ready,
+with the head it read and when; stale after a push, naming both heads and how
+many commits behind, with **Rerun**; needing the GitHub API, with the plugin's
+reason and a button that runs it over the API; or failed, with the exit status,
+the end of what it printed and **Rerun**. A refused run says why in the strip.
+| `o` / `y` | open the PR on GitHub / copy its link |
 
 The switcher slides in from the left with every PR's verb, grouped as on the
 wall, and slides away once you pick one.
