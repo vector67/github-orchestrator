@@ -118,22 +118,25 @@ module('Acceptance | shell', function (hooks) {
       .hasAttribute('data-theme', wasDark ? 'dark' : 'light', 'and flips back');
   });
 
-  test('the theme toggle names the dark theme and says whether it is on', async function (assert) {
-    await visit('/pr/o/r/7/conversations');
-    const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  for (const page of ['/pr/o/r/7/conversations', '/']) {
+    test(`the theme toggle on ${page} names the theme it switches to and is never pressed`, async function (assert) {
+      await visit(page);
+      const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const named = (dark: boolean) => (dark ? 'Light theme' : 'Dark theme');
 
-    assert
-      .dom('[data-test-theme-toggle]')
-      .hasText('Dark theme')
-      .hasAttribute('aria-pressed', String(wasDark));
+      assert
+        .dom('[data-test-theme-toggle]')
+        .hasText(named(wasDark))
+        .doesNotHaveAttribute('aria-pressed');
 
-    await click('[data-test-theme-toggle]');
+      await click('[data-test-theme-toggle]');
 
-    assert
-      .dom('[data-test-theme-toggle]')
-      .hasText('Dark theme', 'the name stays put and the state flips')
-      .hasAttribute('aria-pressed', String(!wasDark));
-  });
+      assert
+        .dom('[data-test-theme-toggle]')
+        .hasText(named(!wasDark), 'the name follows the flip')
+        .doesNotHaveAttribute('aria-pressed');
+    });
+  }
 
   test('sending the review is the primary action of the strip', async function (assert) {
     await visit('/pr/o/r/7/conversations');
