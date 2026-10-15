@@ -12,6 +12,7 @@ LIMIT = 300_000
 FETCH_WORKERS = 8
 
 Contents = Callable[[str, str], bytes | None]
+Export = Callable[[Path, Callable[[str], bool]], None]
 
 
 class Unreadable(Exception):
@@ -211,6 +212,11 @@ def write_inputs(
     if ticket:
         _write(manifest["requested"], "ticket.txt", [ticket])
     return manifest
+
+
+def write_surroundings(folder: Path, files: list[ChangedFile], settings: Settings, export: Export) -> None:
+    changed = {changed.path for changed in files}
+    export(folder / "repo", lambda path: path not in changed and kind_of(path, settings) == "production")
 
 
 def _earlier_lines(earlier_pr: EarlierPr, authors: frozenset[str], settings: Settings) -> list[str]:

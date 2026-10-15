@@ -1,5 +1,8 @@
+import io
 import re
 import subprocess
+import tarfile
+from collections.abc import Callable
 from pathlib import Path
 
 from pr_summary.inputs import ChangedFile, Unreadable
@@ -88,6 +91,11 @@ class Clone:
         if kind != "blob":
             raise Unreadable(path)
         return body[: int(size)]
+
+    def export(self, sha: str, into: Path, keep: Callable[[str], bool]) -> None:
+        into.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(fileobj=io.BytesIO(_git(self.root, "archive", "--format=tar", sha))) as archive:
+            archive.extractall(into, members=[member for member in archive if member.isfile() and keep(member.name)], filter="data")
 
     def history(self, sha: str, path: str, count: int) -> list[str]:
         return _git(self.root, "log", f"-n{count}", "--format=%H", sha, "--", path).decode().split()

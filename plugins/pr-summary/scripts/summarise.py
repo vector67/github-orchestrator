@@ -4,6 +4,7 @@
 # ///
 import argparse
 import dataclasses
+import functools
 import sys
 import tempfile
 import time
@@ -24,7 +25,13 @@ from pr_summary.github import (
     pull_request,
     target,
 )
-from pr_summary.inputs import Contents, WorkDirNotEmpty, work_dir, write_inputs
+from pr_summary.inputs import (
+    Contents,
+    WorkDirNotEmpty,
+    work_dir,
+    write_inputs,
+    write_surroundings,
+)
 from pr_summary.report import report
 from pr_summary.settings import settings_from, ticket_key
 from pr_summary.witnesses import launcher, run_witnesses
@@ -88,6 +95,8 @@ def main() -> None:
     earlier = earlier_prs(gh, owner, repo, pr, ticket, files, settings, history_of)
     out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
+    if clone is not None:
+        write_surroundings(manifest["implementation"], files, settings, functools.partial(clone.export, pr.head_sha))
     if arguments.prepare_only:
         print(f"Working files: {out}")
         return

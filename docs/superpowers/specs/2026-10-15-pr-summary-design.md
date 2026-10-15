@@ -44,7 +44,7 @@ deterministic script prepared.
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | requested      | the ticket key, then the ticket itself and nothing else                                                                                                                          | Read, Write, Glob, Atlassian (read) |
 | claimed        | everything the PR's authors wrote: title, description, their comments and review replies on this PR, commit messages, comments and docstrings added in the diff, changes to docs | Read, Write, Glob                   |
-| implementation | the diff of production files with comments and docstrings stripped                                                                                                               | Read, Write, Glob                   |
+| implementation | the diff of production files with comments and docstrings stripped, and from a clone the unchanged production files at head as committed                                         | Read, Write, Glob, Grep             |
 | tests          | the diff of test files with comments and docstrings stripped                                                                                                                     | Read, Write, Glob                   |
 | why            | the ticket key, the repo's why guidance, earlier PRs' non-author comments, this PR's non-author human comments; then linked and earlier tickets and Confluence through Atlassian | Read, Write, Glob, Atlassian (read) |
 | alignment      | the five witnesses' outputs only                                                                                                                                                 | Read, Write, Glob                   |
@@ -79,7 +79,9 @@ Rules:
   code or the description again). When nothing outside the authors explains
   the change, Why says so: that is a finding, not a failure.
 - **Implementation and tests never see** the title, branch, description,
-  commit messages, comments, docstrings, docs or each other's inputs.
+  commit messages, this change's comments and docstrings, docs or each other's
+  inputs. Implementation does see the comments in files the PR did not touch:
+  they were not written for this change.
 - **No witness has Bash or the network**, except Requested and Why reaching
   Jira and Confluence through the Atlassian tools, read tools only, named one
   by one. Their prompts forbid following Jira's links back to the PR or its
@@ -274,6 +276,9 @@ plugin with `claude plugin marketplace add <owner>/github-orchestrator` and
 - **Code carries the author's words too**: identifiers, test names, log and
   error strings, file names and fixtures reach the implementation and tests
   witnesses. Stripping literals would cost more meaning than it saves.
+- **Unchanged files can still carry the author's voice**: a comment the same
+  author wrote in an earlier, stacked PR reaches Implementation through
+  `repo/`.
 - **The author may have written the ticket or Confluence pages.** The script
   cannot map a GitHub login to an Atlassian account; Requested shows the
   reporter and assignee so the reviewer can see it.

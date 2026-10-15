@@ -17053,6 +17053,634 @@
     }
    ]
   },
+  "tests/pr_summary_plugin/test_clone.py::test_export_writes_the_kept_files_of_a_commit_as_committed": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"archive\", \"--format=tar\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "archive",
+      "--format=tar",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "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MHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwMDAwADAwMDAwMDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB3ID0gNAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHNyYy9uZXcucHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwNjY0ADAwMDAwMDAAMDAwMDAwMAAwMDAwMDAwMDAzNgAxNTEyNTMzNDQwMAAwMDEzMDA0ADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdXN0YXIAMDByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwMDAwMAAwMDAwMDAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeSA9IDIKeSA9IDIKeSA9IDIKeSA9IDIKeSA9IDIKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABzcmMvcGtnLwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwMDc3NQAwMDAwMDAwADAwMDAwMDAAMDAwMDAwMDAwMDAAMTUxMjUzMzQ0MDAAMDAxMjQyMwA1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHVzdGFyADAwcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAwMDAAMDAwMDAwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHNyYy9wa2cvYS5weQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwNjY0ADAwMDAwMDAAMDAwMDAwMAAwMDAwMDAwMDAwNgAxNTEyNTMzNDQwMAAwMDEzMjExADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdXN0YXIAMDByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHJvb3QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwMDAwMAAwMDAwMDAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYSA9IDEKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABzcmMvcm93cy5weQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwMDY2NAAwMDAwMDAwADAwMDAwMDAAMDAwMDAwMDAwMDYAMTUxMjUzMzQ0MDAAMDAxMzIwMgAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHVzdGFyADAwcm9vdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAByb290AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAwMDAAMDAwMDAwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHggPSAyCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+     }
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"-e\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "-e",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"fetch\", \"--no-tags\", \"--quiet\", \"origin\", \"refs/pull/7/head\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "origin",
+      "refs/pull/7/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMzc4L3Rlc3QtMC9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMzc4L3Rlc3QtMC9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ]
+  },
   "tests/pr_summary_plugin/test_clone.py::test_history_lists_the_commits_that_touched_a_path_newest_first": {
    "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
     {
