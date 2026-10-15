@@ -3073,6 +3073,7 @@ kbd {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .move .vb {
