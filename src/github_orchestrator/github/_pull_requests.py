@@ -49,7 +49,8 @@ STATE_FIELDS = """
           checkRuns(first: %(page)d, filterBy: {checkType: LATEST}) { nodes {
             databaseId name status conclusion url detailsUrl summary startedAt completedAt
           } }
-        } } } }
+        } }
+        status { contexts { context state targetUrl description } } } }
       }
 """ % {"page": PAGE, "suites": SUITES}
 
@@ -140,12 +141,21 @@ def _checks(pull: dict[str, Any]) -> tuple[Check, ...]:
                        [run for run in ((suite or {}).get("checkRuns") or {}).get("nodes") or []
                         if run])),
                   key=lambda run: run.get("databaseId") or 0, reverse=True)
+    contexts = ((head.get("status") or {}).get("contexts") or [])
     return tuple(
         Check(name=r["name"], status=_lower(r.get("status")),
               conclusion=_lower(r.get("conclusion")), html_url=_page_of(r),
               summary=r.get("summary"))
         for r in runs
-    )
+    ) + tuple(_status_check(c) for c in contexts if c)
+
+
+def _status_check(context: dict[str, Any]) -> Check:
+    state = _lower(context.get("state"))
+    waiting = state in {"pending", "expected"}
+    return Check(name=context["context"], status="pending" if waiting else "completed",
+                 conclusion=None if waiting else state, html_url=context.get("targetUrl"),
+                 summary=context.get("description"))
 
 
 def _more(connection: dict[str, Any] | None) -> bool:
