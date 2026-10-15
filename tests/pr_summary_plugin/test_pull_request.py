@@ -24,6 +24,7 @@ GRAPHQL: dict[str, Any] = {
                 "headRefName": "SHOP-3-hide-button",
                 "baseRefOid": "b" * 40,
                 "headRefOid": "h" * 40,
+                "changedFiles": 6,
                 "author": person("octocat", "Octo Cat"),
                 "commits": {
                     "nodes": [

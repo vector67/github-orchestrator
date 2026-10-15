@@ -149,15 +149,23 @@ did not run or failed is shown as the first rung ("No ticket found",
 
 ## Preparing the inputs
 
-`scripts/prepare.py` talks to GitHub only through `gh`, as whatever account
-`gh` is logged in as. It:
+`scripts/summarise.py` reads the code from the **local clone** it is run in:
+it finds the remote that names the PR's repository, fetches
+`refs/pull/<n>/head` into it, and reads the changed files, their contents and
+their history with `git`. The diff is taken against the merge base of the
+base and head commits, as GitHub does. When the working directory is not a
+clone of the repository, or the fetch fails, it stops with status 3, saying
+why and how many API calls the remote route would take; `--use-github-api`
+reads the same through the GitHub API instead, two calls per changed file,
+and the skill passes it only after the user agrees. Everything else comes
+from GitHub through `gh`, as whatever account `gh` is logged in as. It:
 
 1. Reads the PR through GraphQL: title, body, author, branch, base and head
-   SHAs, creation time, files with their status and previous path, commits
+   SHAs, creation time, changed-file count, and every page of its commits
    with authors, comments, reviews and review threads, each author's login
    and whether it is a bot.
-2. Reads the config (below) from the **base** commit, never the head, so a
-   PR cannot change how it is summarised.
+2. Reads the config (below) from the merge base, never the head, so a PR
+   cannot change how it is summarised.
 3. Finds the ticket key: the first match of `ticket_pattern` in the first
    source in `ticket_sources` that has one, whose project is in
    `ticket_projects` when that is set.

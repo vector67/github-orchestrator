@@ -19,13 +19,21 @@ to avoid.
 
 ## Run it
 
-Run this with the Bash tool in the background. It takes several minutes:
+Run this with the Bash tool in the background, from a clone of the pull
+request's repository. It reads the code from that clone and fetches the pull
+request into it. It takes several minutes:
 
 ```bash
 uv run --script ${CLAUDE_PLUGIN_ROOT}/scripts/summarise.py $ARGUMENTS
 ```
 
 When it finishes, show its output to the user exactly as printed.
+
+If it exits with status 3, it could not read the repository locally and says
+why and how many GitHub API calls reading it remotely would take. Show the
+user that message and ask whether to go ahead. Only when they agree, run the
+same command again with `--use-github-api` added. Never add the flag without
+asking.
 
 ## When it fails
 

@@ -20,6 +20,7 @@ PR = PullRequest(
     authors=frozenset({"octocat"}),
     author_names=frozenset({"Octo Cat"}),
     commit_messages=("hide the button behind the exports flag",),
+    changed_file_count=6,
     remarks=(
         Remark(author="octocat", bot=False, body="Exports are being rewritten.", url="u1"),
         Remark(author="monalisa", bot=False, body="> Exports are being rewritten.\nWhich ticket covers the rewrite?", url="u2"),

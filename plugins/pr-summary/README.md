@@ -29,6 +29,11 @@ for Requested and Why an Atlassian MCP server.
 
 ## Use
 
+Run it from a clone of the pull request's repository: it fetches the pull
+request into that clone and reads the code with `git`. Anywhere else it stops
+and asks; `--use-github-api` reads the files over the GitHub API instead, at
+two calls per changed file.
+
 ```
 /pr-summary https://github.com/acme/shop/pull/7
 ```

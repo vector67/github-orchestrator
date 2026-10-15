@@ -13598,6 +13598,3167 @@
     }
    ]
   },
+  "tests/pr_summary_plugin/test_clone.py::test_a_folder_that_is_not_a_clone_of_the_repository_is_none": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMS9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMS9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/elsewhere\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IG5vdCBhIGdpdCByZXBvc2l0b3J5IChvciBhbnkgb2YgdGhlIHBhcmVudCBkaXJlY3Rvcmllcyk6IC5naXQK"
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/pr_summary_plugin/test_clone.py::test_changed_files_come_from_git_against_the_merge_base": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"-e\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "-e",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"diff\", \"-z\", \"-M\", \"--name-status\", \"d2be62d23d42f74a1c6539817809f6dd486ea3dc\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "diff",
+      "-z",
+      "-M",
+      "--name-status",
+      "d2be62d23d42f74a1c6539817809f6dd486ea3dc",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "QQBzcmMvYWRkZWQucHkARABzcmMvZ29uZS5weQBSMTAwAHNyYy9vbGQucHkAc3JjL25ldy5weQBNAHNyYy9yb3dzLnB5AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"diff\", \"-z\", \"-M\", \"--numstat\", \"d2be62d23d42f74a1c6539817809f6dd486ea3dc\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "diff",
+      "-z",
+      "-M",
+      "--numstat",
+      "d2be62d23d42f74a1c6539817809f6dd486ea3dc",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MQkwCXNyYy9hZGRlZC5weQAwCTEJc3JjL2dvbmUucHkAMAkwCQBzcmMvb2xkLnB5AHNyYy9uZXcucHkAMQkxCXNyYy9yb3dzLnB5AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"fetch\", \"--no-tags\", \"--quiet\", \"origin\", \"refs/pull/7/head\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "origin",
+      "refs/pull/7/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMy9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMy9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ]
+  },
+  "tests/pr_summary_plugin/test_clone.py::test_contents_are_the_exact_bytes_or_none_or_unreadable": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"--batch\"], \"<TMP>/clone\", \"2b9ce77ef083a08a6522ffd3e857c9dd59878309\"]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "--batch"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NWY5MmJkYWY5OTZlMTczOGVjYjEzN2ZmOTEzMDMxN2MyNDc3M2Q0OTpzcmMvb2xkLnB5IG1pc3NpbmcK"
+     }
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"--batch\"], \"<TMP>/clone\", \"47abf01ea706957f32ccfc128a353d0fee4e54ce\"]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "--batch"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Mjc2MmQwODFjNDhhZWZmOWQ0MDE3OWYzMzBiMThjNmM4MWEyZjVlOSB0cmVlIDMyCjEwMDY0NCBhLnB5ABM3pTDLwb19IK7i2A8fF0qRgkF9Cg=="
+     }
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"--batch\"], \"<TMP>/clone\", \"b6356a66eef5febaf84faa69b38cdba704e2fa68\"]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "--batch"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NDA3ZGUzMDY4ZTdiNTk1MDU4NWQ1YWJlZDk3NzZkMTA0MjM1YTg1ZCBibG9iIDYKeCA9IDIKCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"-e\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "-e",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"fetch\", \"--no-tags\", \"--quiet\", \"origin\", \"refs/pull/7/head\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "origin",
+      "refs/pull/7/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtNC9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtNC9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ]
+  },
+  "tests/pr_summary_plugin/test_clone.py::test_history_lists_the_commits_that_touched_a_path_newest_first": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"-e\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "-e",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"fetch\", \"--no-tags\", \"--quiet\", \"origin\", \"refs/pull/7/head\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "origin",
+      "refs/pull/7/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"log\", \"-n5\", \"--format=%H\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0\", \"--\", \"src/rows.py\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "log",
+      "-n5",
+      "--format=%H",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0",
+      "--",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZDJiZTYyZDIzZDQyZjc0YTFjNjUzOTgxNzgwOWY2ZGQ0ODZlYTNkYwo="
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtNS9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtNS9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ]
+  },
+  "tests/pr_summary_plugin/test_clone.py::test_the_diff_base_is_where_the_pr_branched_not_the_base_tip": {
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/added.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/added.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/gone.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/later.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/later.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/new.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/new.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/old.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/pkg/a.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/pkg/a.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"add\", \"src/rows.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "add",
+      "src/rows.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"branch\", \"-q\", \"-D\", \"feature\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "branch",
+      "-q",
+      "-D",
+      "feature"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"-b\", \"feature\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "-b",
+      "feature"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"checkout\", \"-q\", \"main\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/src/added.py": null,
+      "work/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "work/src/new.py": null,
+      "work/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "work/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"--bare\", \"<TMP>/work\", \"<TMP>/acme/shop.git\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "--bare",
+      "<TMP>/work",
+      "<TMP>/acme/shop.git"
+     ],
+     "fs": {
+      "acme/shop.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"clone\", \"-q\", \"<TMP>/acme/shop.git\", \"<TMP>/clone\"], \"<TMP>\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "clone",
+      "-q",
+      "<TMP>/acme/shop.git",
+      "<TMP>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n4325f2107dcff9c1add5047a5d306b0ff6a35bf0 refs/remotes/origin/main\n"
+      },
+      "clone/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      },
+      "clone/src": {
+       "dir": true
+      },
+      "clone/src/gone.py": {
+       "text": "z = 3\n"
+      },
+      "clone/src/later.py": {
+       "text": "v = 5\n"
+      },
+      "clone/src/old.py": {
+       "text": "y = 2\ny = 2\ny = 2\ny = 2\ny = 2\n"
+      },
+      "clone/src/pkg": {
+       "dir": true
+      },
+      "clone/src/pkg/a.py": {
+       "text": "a = 1\n"
+      },
+      "clone/src/rows.py": {
+       "text": "x = 1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"change\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "change"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"main moves on\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "main moves on"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"commit\", \"-q\", \"-m\", \"start\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "commit",
+      "-q",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "work/.git/refs/heads/main": {
+       "text": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"init\", \"-q\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rev-parse\", \"HEAD\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d2be62d23d42f74a1c6539817809f6dd486ea3dc\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5f92bdaf996e1738ecb137ff9130317c24773d49\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4325f2107dcff9c1add5047a5d306b0ff6a35bf0\n"
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/gone.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/gone.py"
+     ],
+     "fs": {
+      "work/src/gone.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"rm\", \"-q\", \"src/old.py\"], \"<TMP>/work\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "rm",
+      "-q",
+      "src/old.py"
+     ],
+     "fs": {
+      "work/src/old.py": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=Octo Cat\", \"-c\", \"user.email=octocat@example.com\", \"-c\", \"init.defaultBranch=main\", \"update-ref\", \"refs/pull/7/head\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/acme/shop.git\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=Octo Cat",
+      "-c",
+      "user.email=octocat@example.com",
+      "-c",
+      "init.defaultBranch=main",
+      "update-ref",
+      "refs/pull/7/head",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"cat-file\", \"-e\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "cat-file",
+      "-e",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"fetch\", \"--no-tags\", \"--quiet\", \"origin\", \"refs/pull/7/head\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "fetch",
+      "--no-tags",
+      "--quiet",
+      "origin",
+      "refs/pull/7/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"merge-base\", \"4325f2107dcff9c1add5047a5d306b0ff6a35bf0\", \"5f92bdaf996e1738ecb137ff9130317c24773d49\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "merge-base",
+      "4325f2107dcff9c1add5047a5d306b0ff6a35bf0",
+      "5f92bdaf996e1738ecb137ff9130317c24773d49"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZDJiZTYyZDIzZDQyZjc0YTFjNjUzOTgxNzgwOWY2ZGQ0ODZlYTNkYwo="
+     }
+    }
+   ],
+   "[[\"git\", \"remote\", \"-v\"], \"<TMP>/clone\", null]": [
+    {
+     "argv": [
+      "git",
+      "remote",
+      "-v"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMi9hY21lL3Nob3AuZ2l0IChmZXRjaCkKb3JpZ2luCS9wcml2YXRlL3Zhci9mb2xkZXJzL2xyL2ZrbjV0OXA1MXBnZzl5NmIxbl9feHo5aDAwMDBnbi9UL3B5dGVzdC1vZi1qcnVzc2VsbC9weXRlc3QtMjkyL3Rlc3QtMi9hY21lL3Nob3AuZ2l0IChwdXNoKQo="
+     }
+    }
+   ]
+  },
   "tests/preview/test_preview.py::test_a_reviewer_card_can_read_the_code_its_comment_sits_on": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"caf51806a83adcde9c74f86b2b68982755e7de69^{commit}\", \"--end-of-options\"], null, null]": [
     {

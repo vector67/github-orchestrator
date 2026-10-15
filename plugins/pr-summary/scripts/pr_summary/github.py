@@ -12,6 +12,8 @@ from pr_summary.pull_request import PullRequest, pull_request_from
 from pr_summary.settings import Settings
 
 Gh = Callable[[list[str]], bytes]
+History = Callable[[str], list[str]]
+HISTORY_DEPTH = 5
 PR_URL = re.compile(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)")
 
 AUTHOR = "author { login __typename }"
@@ -25,7 +27,7 @@ PULL_REQUEST = """
 query($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
-      number url title body createdAt headRefName baseRefOid headRefOid
+      number url title body createdAt headRefName baseRefOid headRefOid changedFiles
       author { login __typename ... on User { name } }
     }
   }
@@ -122,14 +124,24 @@ def contents(gh: Gh, owner: str, repo: str) -> Contents:
     return at
 
 
-def earlier_prs(gh: Gh, owner: str, repo: str, pr: PullRequest, ticket: str | None, files: list[ChangedFile], settings: Settings) -> list[EarlierPr]:
+def merge_base(gh: Gh, owner: str, repo: str, base: str, head: str) -> str:
+    return gh(["api", f"repos/{owner}/{repo}/compare/{base}...{head}", "--jq", ".merge_base_commit.sha"]).decode().strip()
+
+
+def history(gh: Gh, owner: str, repo: str, sha: str) -> History:
+    def of(path: str) -> list[str]:
+        return gh(["api", f"repos/{owner}/{repo}/commits?path={quote(path)}&sha={sha}&per_page={HISTORY_DEPTH}", "--jq", ".[].sha"]).decode().split()
+
+    return of
+
+
+def earlier_prs(gh: Gh, owner: str, repo: str, pr: PullRequest, ticket: str | None, files: list[ChangedFile], settings: Settings, history_of: History) -> list[EarlierPr]:
     numbers: list[int] = []
     if ticket:
         found = gh(["api", "-X", "GET", "search/issues", "-f", f"q=repo:{owner}/{repo} is:pr is:merged {ticket}", "--jq", ".items[].number"])
         numbers.extend(int(line) for line in found.decode().split())
     for path in most_changed(files, settings):
-        shas = gh(["api", f"repos/{owner}/{repo}/commits?path={quote(path)}&sha={pr.base_sha}&per_page=5", "--jq", ".[].sha"]).decode().split()
-        for sha in shas:
+        for sha in history_of(path):
             merged = gh(["api", f"repos/{owner}/{repo}/commits/{sha}/pulls", "--jq", f'.[] | select(.merged_at != null and .base.repo.full_name == "{owner}/{repo}") | .number'])
             numbers.extend(int(line) for line in merged.decode().split())
     earlier = []

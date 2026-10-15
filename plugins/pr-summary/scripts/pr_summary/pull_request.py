@@ -31,6 +31,7 @@ class PullRequest:
     author_names: frozenset[str]
     commit_messages: tuple[str, ...]
     remarks: tuple[Remark, ...]
+    changed_file_count: int
 
 
 def _remark(node: dict[str, Any]) -> Remark:
@@ -66,6 +67,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
         author_names=frozenset({*([pr["author"]["name"]] if pr["author"].get("name") else []), *commit_names}),
         commit_messages=tuple(commit["message"] for commit in commits),
         remarks=remarks_from(pr),
+        changed_file_count=pr["changedFiles"],
     )
 
 
