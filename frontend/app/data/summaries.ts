@@ -11,6 +11,7 @@ import type {
   WallGroup,
   WallGroupName,
 } from 'frontend/data/api';
+import { edgeOf } from 'frontend/data/dashboard';
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
@@ -528,6 +529,7 @@ export interface WallSection {
   group: WallGroup;
   name: string;
   level: Level;
+  edge: string;
   prs: WallRow[];
 }
 
@@ -587,6 +589,7 @@ function wallBuilt(
       group,
       name,
       level: levelOf(group),
+      edge: edgeOf(group),
       prs: placed
         .filter((one) => one.group === group)
         .sort((one, other) => one.joined - other.joined),

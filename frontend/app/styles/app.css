@@ -368,6 +368,13 @@ input[type="radio"] {
   text-transform: uppercase;
 }
 
+.edge-key {
+  flex: none;
+  align-self: center;
+  width: 5px;
+  height: 12px;
+}
+
 .group-count {
   font-weight: var(--fw-strong);
   color: var(--muted);
@@ -413,18 +420,22 @@ input[type="radio"] {
 }
 
 .edge[data-square="working"] {
-  box-shadow: inset 3px 0 0 var(--grey);
+  box-shadow: inset 3px 0 0 var(--mark);
 }
 
 .edge[data-square="waiting-on-others"] {
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--grey), transparent 50%);
+  box-shadow: inset 1px 0 0 var(--mark);
 }
 
 .edge[data-square="draft"] {
   box-shadow:
-    inset 1px 0 0 var(--grey),
+    inset 1px 0 0 var(--mark),
     inset 3px 0 0 transparent,
-    inset 4px 0 0 var(--grey);
+    inset 4px 0 0 var(--mark);
+}
+
+.edge[data-square="parked"] {
+  box-shadow: none;
 }
 
 .edge[data-square="rework"] {

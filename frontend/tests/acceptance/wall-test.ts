@@ -1066,6 +1066,37 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  test('each section’s heading carries the edge its rows draw, as their key', async function (assert) {
+    onTheHub(
+      heldPr({ dashboard: { facts: factsFor('fix-ci') } }),
+      heldPr({
+        number: 8,
+        dashboard: { manager: { working_on: 'ci-failed' } },
+      }),
+      heldPr({ number: 9 }),
+      heldPr({
+        number: 10,
+        dashboard: { manager: { on_hold: true }, system: { on_hold: true } },
+      }),
+    );
+
+    await visit('/');
+
+    const keys = findAll('[data-test-wall-group]').map((head) => [
+      head.getAttribute('data-test-wall-group'),
+      head.querySelector('[data-test-edge-key]')?.getAttribute('data-square'),
+    ]);
+    assert.deepEqual(keys, [
+      ['needs-you', 'ready'],
+      ['agent-working', 'working'],
+      ['waiting-on-others', 'waiting-on-others'],
+      ['parked', 'parked'],
+    ]);
+    assert
+      .dom('[data-test-edge-key]')
+      .hasClass('edge', 'the key is drawn by the rule that draws the rows');
+  });
+
   test('the detailed reviewer is a chip beside the move', async function (assert) {
     onTheHub(
       heldPr({

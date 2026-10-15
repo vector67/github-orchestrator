@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 from tests.board_api.support import THE_ROOT, client_for, css_variables
-from tests.contrast import WCAG_AA_NORMAL_TEXT, contrast_ratio
+from tests.contrast import WCAG_AA_NORMAL_TEXT, WCAG_NON_TEXT, contrast_ratio
 
 APP_CSS = (Path(__file__).parents[2] / "frontend" / "app" / "styles" / "app.css")
 
@@ -95,3 +95,49 @@ def test_no_variable_paints_type_without_a_ground_to_clear():
         f"app and no row of TYPE_ON_GROUND says what they sit on, so nothing "
         f"measures them"
     )
+
+
+EDGE_INKS = {
+    "ready": ("--yellow-text", "--yellow"),
+    "failed": ("--red",),
+    "reopened": ("--text",),
+    "working": ("--mark",),
+    "waiting-on-others": ("--mark",),
+    "draft": ("--mark",),
+    "rework": ("--blue",),
+    "parked": (),
+}
+
+ROW_GROUNDS = ("--page", "--selected", "--grey-fill")
+
+_EDGE_RULE_RE = re.compile(r'^\.edge\[data-square="([a-z-]+)"\]\s*\{([^}]*)\}', re.M)
+
+
+def test_every_row_edge_stands_off_every_ground_its_row_takes():
+    bound = css_variables(client_for().get(f"{THE_ROOT}/palette.css").text)
+
+    faint = [
+        f"a {square} edge is {ratio:.2f}:1 on {ground} in {theme}"
+        for theme in THEMES
+        for square, inks in EDGE_INKS.items()
+        if inks
+        for ground in ROW_GROUNDS
+        if (ratio := max(contrast_ratio(bound[theme][ink], bound[theme][ground])
+                         for ink in inks)) < WCAG_NON_TEXT
+    ]
+
+    assert faint == [], f"under {WCAG_NON_TEXT}:1 for a mark: {faint}"
+
+
+def test_every_edge_rule_paints_only_the_inks_measured_for_it():
+    drawn = {
+        square: set(re.findall(r"var\((--[a-z0-9-]+)\)", body))
+        for square, body in _EDGE_RULE_RE.findall(APP_CSS.read_text())
+    }
+    mixed = [
+        square for square, body in _EDGE_RULE_RE.findall(APP_CSS.read_text())
+        if "color-mix" in body
+    ]
+
+    assert drawn == {square: set(inks) for square, inks in EDGE_INKS.items()}
+    assert mixed == [], f"{mixed} mix an ink the palette never measures"

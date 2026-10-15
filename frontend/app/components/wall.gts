@@ -194,7 +194,12 @@ export default class Wall extends Component {
             class="group-head wall-group lvl-{{section.level}}-h"
             data-flip-key="head:{{section.group}}"
             data-test-wall-group={{section.group}}
-          ><span class="group-name">{{section.name}}</span>
+          ><span
+              class="edge-key edge"
+              aria-hidden="true"
+              data-square={{section.edge}}
+              data-test-edge-key
+            ></span><span class="group-name">{{section.name}}</span>
             <span
               class="group-count"
               data-test-count
