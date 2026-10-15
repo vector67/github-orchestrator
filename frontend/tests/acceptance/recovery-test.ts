@@ -14,11 +14,20 @@ interface Framed {
   loads: () => number;
 }
 
+const SPED_UP = 20;
+const SETTLED = 100;
+
+const FAST_TIMERS = `<script>
+  const realSetTimeout = window.setTimeout;
+  window.setTimeout = (run, ms = 0, ...rest) =>
+    realSetTimeout(run, ms / ${SPED_UP}, ...rest);
+</script>`;
+
 async function framed(body: string, patience = 60000): Promise<Framed> {
   const frame = document.createElement('iframe');
   let loads = 0;
   frame.addEventListener('load', () => (loads += 1));
-  frame.srcdoc = `<!DOCTYPE html><html><head><script src="/recovery.js" data-patience="${patience}"></script></head><body>${body}</body></html>`;
+  frame.srcdoc = `<!DOCTYPE html><html><head>${FAST_TIMERS}<script src="/recovery.js" data-patience="${patience}"></script></head><body>${body}</body></html>`;
   document.querySelector('#qunit-fixture')!.append(frame);
   await waitUntil(() => loads > 0, { timeout: 5000 });
   return { frame, page: () => frame.contentDocument!, loads: () => loads };
@@ -118,7 +127,7 @@ module('Acceptance | recovery', function (hooks) {
       "<main>The wall</main><script>throw new Error('late')</script>",
     );
 
-    await pause(600);
+    await pause(SETTLED);
 
     assert.strictEqual(panelOf(page()), null);
   });
@@ -145,7 +154,7 @@ module('Acceptance | recovery', function (hooks) {
       `<header data-top-bar>The bar</header>${TROUBLE}`,
     );
 
-    await pause(600);
+    await pause(SETTLED);
 
     assert.strictEqual(panelOf(page()), null);
   });
