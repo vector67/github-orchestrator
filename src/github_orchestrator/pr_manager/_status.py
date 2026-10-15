@@ -66,7 +66,8 @@ class StatusFiles:
         try:
             status = json.loads(content)
             if _seconds_since(now, status["written_at"]) >= STATUS_STALE_SECONDS:
-                return replace(dashboard, standing=ManagerStanding.GONE)
+                return replace(dashboard, standing=ManagerStanding.GONE, flags_changed_at=_later(
+                    dashboard.flags_changed_at, status["flags_changed_at"]))
             return _over(dashboard, status, now)
         except (ValueError, KeyError, TypeError) as error:
             log.warning("could not read the status file %s: %s", path, error)
@@ -104,6 +105,10 @@ def _ago(now: datetime, seconds: float | None) -> str:
 
 def _seconds_since(now: datetime, stamp: str) -> float:
     return (now - datetime.strptime(stamp, _STAMP).replace(tzinfo=UTC)).total_seconds()
+
+
+def _later(one: str | None, other: str | None) -> str | None:
+    return max((stamp for stamp in (one, other) if stamp is not None), default=None)
 
 
 def _over(dashboard: Dashboard, status: dict[str, Any], now: datetime) -> Dashboard:

@@ -1838,6 +1838,59 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(pulsing(), [false, false]);
   });
 
+  test('an agent run the manager reported does not outlive the manager going away', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('fix-ci'),
+          manager: {
+            working_on: 'ci-failed',
+            changed_at: '2026-09-12T09:00:00.000000Z',
+          },
+          system: {
+            agent: {
+              name: 'Claude',
+              enabled: true,
+              state: 'working',
+              event: 'ci-failed',
+              elapsed_seconds: 30,
+              silent_seconds: 1,
+            },
+          },
+        },
+      }),
+    );
+    await visit('/');
+    assert.deepEqual(verbsOf([7]), ['Agent is fixing CI']);
+
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('fix-ci'),
+          standing: 'gone',
+          manager: {
+            working_on: null,
+            changed_at: '2026-09-12T08:00:00.000000Z',
+          },
+        },
+      }),
+    );
+    await clock().tick(LIST);
+
+    assert.strictEqual(
+      cells('o/r#7')['agent'],
+      'idle',
+      'the agent cell follows the new dashboard',
+    );
+    assert.false(
+      verbsOf([7])[0]!.startsWith('Agent is'),
+      `the verb reads "${verbsOf([7])[0]}": it still says the agent works, from flags the hub stamped earlier than the dead manager did`,
+    );
+    assert
+      .dom('[data-test-wall-group="agent-working"]')
+      .doesNotExist('the row still sits under Agent working');
+  });
+
   test('a wall whose hub stops answering says so and marks its rows stale', async function (assert) {
     onTheHub(heldPr());
     await visit('/');

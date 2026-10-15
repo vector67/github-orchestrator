@@ -4,10 +4,21 @@ import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
+from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.domain import AuthorKind
+from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
+from github_orchestrator.wiring import dashboard_source_wiring
+from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.board_api.support import holding, served_board, served_hub
+from tests.conftest import (
+    build_container,
+    clocks_of,
+    fake_agent_runs_roles,
+    fake_github,
+    fake_provider,
+)
 from tests.conversation.support import (
     at,
     fake_conversation_managers,
@@ -296,6 +307,43 @@ def test_a_stopped_managers_dashboard_reads_gone_once_its_status_is_ten_seconds_
     dashboard = manager.container.get(Dashboards).dashboard(THE_PR)
 
     assert (dashboard.standing, dashboard.working_on) == (standing, working_on)
+
+
+def _hub_beside(settings, manager):
+    return build_container(
+        settings, fake_github(manager.github), fake_provider(PrProcesses, manager.pr_processes),
+        fake_agent_runs_roles(manager.agent_runs),
+        fake_provider(WorkingCopies, manager.working_copies),
+        fake_provider(ConversationManagerFactory, manager.conversation_managers),
+        dashboard_source_wiring(settings),
+        clocks=clocks_of(manager.clock.now, monotonic=manager.clock.monotonic),
+    ).get(Dashboards)
+
+
+def test_the_flags_of_a_manager_gone_quiet_are_stamped_no_earlier_than_the_run_it_last_reported(
+        settings, tmp_path):
+    seed(settings, POLLED)
+    clock = ManualClock()
+    agent_runs = FakeAgentRuns(FakePrProcesses(), clock=clock.monotonic).script(
+        Outcome(events=(WORKING,), finishes=False))
+    manager = manager_over(settings, lambda: clock.advance(5), lambda: clock.advance(5),
+                           worktree=tmp_path, clock=clock, agent_runs=agent_runs, is_author=True)
+    manager.event_queue.add(THE_PR, ci_failed("tests", "boom"))
+    hub = _hub_beside(settings, manager)
+    hub.dashboard(THE_PR)
+    clock.advance(60)
+    manager.run()
+
+    answering = hub.dashboard(THE_PR)
+    clock.advance(30)
+    gone = hub.dashboard(THE_PR)
+
+    assert (answering.standing, answering.working_on) == (ManagerStanding.ANSWERING, "ci-failed")
+    assert (gone.standing, gone.working_on) == (ManagerStanding.GONE, None)
+    assert gone.flags_changed_at is not None and answering.flags_changed_at is not None
+    assert gone.flags_changed_at >= answering.flags_changed_at, (
+        "the flags without the run carry an older stamp than the flags with it, so a page "
+        "that keeps the later-stamped copy keeps saying the agent is working")
 
 
 def test_the_wall_and_an_open_board_give_the_same_dashboard(settings, tmp_path):

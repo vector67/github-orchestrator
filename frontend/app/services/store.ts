@@ -1150,7 +1150,10 @@ export default class StoreService extends Service {
         facts: facts
           ? merged(held.facts, listsOf(facts), (polled) => polled.polled_at)
           : held.facts,
-        flags: merged(held.flags, manager, (flags) => flags.changed_at),
+        flags:
+          !stale && dashboard.standing === 'gone'
+            ? manager
+            : merged(held.flags, manager, (flags) => flags.changed_at),
       };
     });
   }
