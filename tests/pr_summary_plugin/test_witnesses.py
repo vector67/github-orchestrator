@@ -27,7 +27,7 @@ def test_a_witness_runs_restricted_as_its_plugin_agent_with_its_atlassian_tools_
     (tmp_path / "agents").mkdir()
     (tmp_path / "agents" / "why.md").write_text(AGENT)
 
-    argv = command("why", tmp_path)
+    argv = command("why", tmp_path, None)
 
     assert argv[:3] == ["claude", "-p", "--restricted"]
     assert argv[argv.index("--plugin-dir") + 1] == str(tmp_path)
@@ -40,7 +40,7 @@ def test_a_witness_without_atlassian_tools_allows_nothing_extra(tmp_path: Path) 
     (tmp_path / "agents").mkdir()
     (tmp_path / "agents" / "claimed.md").write_text(AGENT.replace(", mcp__atlassian__getJiraIssue, mcp__claude_ai_Atlassian_MCP__searchConfluence", ""))
 
-    assert "--allowedTools" not in command("claimed", tmp_path)
+    assert "--allowedTools" not in command("claimed", tmp_path, None)
 
 
 def no_wait(seconds: float) -> None:
@@ -167,3 +167,23 @@ def test_a_retried_witness_starts_without_its_first_answer(tmp_path: Path) -> No
     run_witnesses(manifest, launch, no_wait)
 
     assert found_on_launch == [False, False]
+
+
+def test_a_witness_given_an_mcp_config_loads_only_its_servers(tmp_path: Path) -> None:
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "why.md").write_text(AGENT)
+
+    argv = command("why", tmp_path, tmp_path / "mcp.json")
+
+    assert argv[argv.index("--mcp-config") + 1] == str(tmp_path / "mcp.json")
+    assert "--strict-mcp-config" in argv
+
+
+def test_a_witness_without_an_mcp_config_keeps_the_servers_claude_finds(tmp_path: Path) -> None:
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "why.md").write_text(AGENT)
+
+    argv = command("why", tmp_path, None)
+
+    assert "--mcp-config" not in argv
+    assert "--strict-mcp-config" not in argv

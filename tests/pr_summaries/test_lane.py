@@ -21,7 +21,7 @@ HEAD = "abc123"
 class Lane:
     def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
                  agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
-                 plugin: tuple[str, ...] | None = None, clone: Path | None = None) -> None:
+                 plugin: tuple[str, ...] | None = None, clone: Path | None = None, mcp_config: str = "") -> None:
         self.clone = clone or tmp_path / "clone"
         self.clone.mkdir(exist_ok=True)
         self.config = tmp_path / "config.toml"
@@ -30,7 +30,7 @@ class Lane:
             PrSummariesWiring(self.summaries_dir),
             SummaryLaneWiring(plugin=plugin or (sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
                               config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
-                              agents_enabled=agents_enabled, timeout=timeout, run_in=run_in),
+                              agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in),
             clocks_of(ticking_clock()),
             fake_provider(ChangeDetection, HeadsAt(head)),
         )
@@ -59,7 +59,8 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
     assert stored.answered == wanted
     assert wanted < stored.started < stored.finished
     assert lane.call() == {"pr": "https://github.com/acme/widgets/pull/7", "config": str(lane.config),
-                           "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat"}
+                           "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat",
+                           "mcp_config": None}
     assert lane.summaries.due(set()) == []
 
 
@@ -311,3 +312,12 @@ def test_a_summary_has_no_count_behind_without_both_heads_or_a_commit_the_clone_
     assert lane.lane.behind(THE_PR, None) is None
     assert lane.lane.behind(THE_PR, "0" * 40) is None
     assert lane.lane.behind(a_pr(3, "acme/gadgets"), third) is None
+
+
+def test_a_configured_mcp_config_is_handed_to_the_plugin(tmp_path):
+    lane = Lane(tmp_path, "clean", mcp_config="/etc/acme/mcp.json")
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert lane.call()["mcp_config"] == "/etc/acme/mcp.json"

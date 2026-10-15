@@ -14,6 +14,7 @@ parser.add_argument("--config", type=Path, required=True)
 parser.add_argument("--work-dir", type=Path, required=True)
 parser.add_argument("--use-github-api", action="store_true")
 parser.add_argument("--gh-account")
+parser.add_argument("--mcp-config")
 arguments = parser.parse_args()
 
 out = arguments.work_dir
@@ -26,6 +27,7 @@ out.mkdir(parents=True, exist_ok=True)
     "cwd": os.getcwd(),
     "use_github_api": arguments.use_github_api,
     "gh_account": arguments.gh_account,
+    "mcp_config": arguments.mcp_config,
 }))
 
 

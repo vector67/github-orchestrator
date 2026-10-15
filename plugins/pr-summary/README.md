@@ -53,6 +53,13 @@ once and hands the token to its own `gh` calls only, as `GH_TOKEN`; it never
 prints it. If that lookup fails, the run stops with a message naming the
 account.
 
+`--mcp-config <file>` has every witness load only the MCP servers in that file
+(`claude --mcp-config` with `--strict-mcp-config`). Without it a witness gets
+whatever servers claude finds, and claude.ai connectors can still be
+connecting when a witness starts, so the Jira witnesses report their tools
+unavailable. Name each server in the file as `claude mcp list` does, so its
+login carries over.
+
 ## Working files
 
 Each run writes its witness folders into a fresh temporary folder, or into

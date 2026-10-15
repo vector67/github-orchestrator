@@ -94,13 +94,15 @@ def test_a_gh_account_without_a_token_fails_naming_the_account(tmp_path: Path, m
     assert gh.tokens_of(["api", "user"]) == []
 
 
-def test_a_witness_that_failed_prints_the_report_then_exits_naming_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    def nothing_at(sha: str, path: str) -> bytes | None:
-        return None
+def nothing_at(sha: str, path: str) -> bytes | None:
+    return None
 
-    def contents_of(gh: Gh, owner: str, repo: str) -> Contents:
-        return nothing_at
 
+def contents_of(gh: Gh, owner: str, repo: str) -> Contents:
+    return nothing_at
+
+
+def summarising_offline(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(summarise, "target", lambda gh, given: ("acme", "shop", 7))
     monkeypatch.setattr(summarise, "pull_request", lambda gh, owner, repo, number: PR)
     monkeypatch.setattr(summarise.Clone, "find", lambda cwd, owner, repo: None)
@@ -109,8 +111,24 @@ def test_a_witness_that_failed_prints_the_report_then_exits_naming_it(tmp_path: 
     monkeypatch.setattr(summarise, "contents", contents_of)
     monkeypatch.setattr(summarise, "history", lambda gh, owner, repo, sha: lambda path: [])
     monkeypatch.setattr(summarise, "earlier_prs", lambda *args: [])
-    monkeypatch.setattr(summarise, "run_witnesses", lambda manifest, launch, wait: {"requested": "its tools stayed unavailable: the Atlassian tools never connected"})
     monkeypatch.setattr(summarise, "report", lambda manifest: "## Requested")
+
+
+def test_an_mcp_config_reaches_the_witness_launcher(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    summarising_offline(monkeypatch)
+    launched_with: list[Path | None] = []
+    monkeypatch.setattr(summarise, "launcher", lambda plugin_root, mcp_config: launched_with.append(mcp_config))
+    monkeypatch.setattr(summarise, "run_witnesses", lambda manifest, launch, wait: {})
+    monkeypatch.setattr("sys.argv", ["summarise.py", "7", "--use-github-api", "--work-dir", str(tmp_path / "work"), "--mcp-config", str(tmp_path / "mcp.json")])
+
+    summarise.main()
+
+    assert launched_with == [tmp_path / "mcp.json"]
+
+
+def test_a_witness_that_failed_prints_the_report_then_exits_naming_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    summarising_offline(monkeypatch)
+    monkeypatch.setattr(summarise, "run_witnesses", lambda manifest, launch, wait: {"requested": "its tools stayed unavailable: the Atlassian tools never connected"})
     monkeypatch.setattr("sys.argv", ["summarise.py", "7", "--use-github-api", "--work-dir", str(tmp_path / "work")])
 
     with pytest.raises(SystemExit) as exited:
