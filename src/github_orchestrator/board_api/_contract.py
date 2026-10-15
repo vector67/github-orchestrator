@@ -1343,7 +1343,7 @@ class PrFacts(BaseModel):
     changes_requested_by: list[str]
     pending_reviewers: list[str] = Field(
         description="Reviewers asked for a review who have not given one.")
-    ci_status: str = Field(description="`passing`, `failing` or `pending`.")
+    ci_status: str = Field(description="`passing`, `failing`, `pending`, or `none` when the head has no checks.")
     merge_state: MergeState | None = Field(
         description="Null where GitHub did not say.")
     draft: bool

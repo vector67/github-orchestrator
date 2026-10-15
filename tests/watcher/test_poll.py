@@ -206,10 +206,10 @@ def test_a_poll_ci_pending_when_checks_still_in_progress(settings):
     assert poll.facts.ci_status is CiStatus.PENDING
 
 
-def test_no_checks_at_all_is_pending(settings):
+def test_no_checks_at_all_is_not_pending_forever(settings):
     poll = _poll(settings, _state(checks=()))
 
-    assert poll.facts.ci_status is CiStatus.PENDING
+    assert poll.facts.ci_status is CiStatus.NONE
     assert poll.facts.checks_total == 0
 
 
