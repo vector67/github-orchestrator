@@ -5121,6 +5121,9 @@
   },
   "PullRequest": {
    "properties": {
+    "additions": {
+     "type": "integer"
+    },
     "base_branch": {
      "anyOf": [
       {
@@ -5140,6 +5143,29 @@
        "type": "null"
       }
      ]
+    },
+    "commits": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "deletions": {
+     "type": "integer"
     },
     "head_sha": {
      "anyOf": [
@@ -5179,7 +5205,11 @@
     "html_url",
     "base_branch",
     "branch",
-    "head_sha"
+    "head_sha",
+    "created_at",
+    "commits",
+    "additions",
+    "deletions"
    ],
    "type": "object"
   },

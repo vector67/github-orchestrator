@@ -465,6 +465,49 @@ export function filesOf(diff: Diff): FileStat[] {
   return files;
 }
 
+export type Square = 'added' | 'deleted' | 'neutral';
+
+export interface PrHeader {
+  title: string | null;
+  createdAt: string | null;
+  commits: string | null;
+  additions: number;
+  deletions: number;
+  squares: Square[];
+}
+
+const SQUARES = 5;
+
+function squaresOf(additions: number, deletions: number): Square[] {
+  const changed = additions + deletions;
+  const added = changed ? Math.floor((additions / changed) * SQUARES) : 0;
+  const deleted = changed ? Math.floor((deletions / changed) * SQUARES) : 0;
+  return [
+    ...Array<Square>(added).fill('added'),
+    ...Array<Square>(deleted).fill('deleted'),
+    ...Array<Square>(SQUARES - added - deleted).fill('neutral'),
+  ];
+}
+
+const headed = new WeakMap<PrEntity, PrHeader>();
+
+export function prHeaderOf(pr: PrEntity): PrHeader {
+  const known = headed.get(pr);
+  if (known) return known;
+  const { title, created_at, commits, additions, deletions } = pr;
+  const header = {
+    title,
+    createdAt: created_at,
+    commits:
+      commits === null ? null : `${commits} commit${commits === 1 ? '' : 's'}`,
+    additions,
+    deletions,
+    squares: squaresOf(additions, deletions),
+  };
+  headed.set(pr, header);
+  return header;
+}
+
 export interface Place {
   group: WallGroup | null;
   joined: number;

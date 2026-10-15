@@ -53,6 +53,22 @@ class PullRequests:
         facts = self._facts()
         return (facts.author if facts else None) or None
 
+    def created_at(self) -> str | None:
+        facts = self._facts()
+        return facts.created_at if facts else None
+
+    def commits(self) -> int | None:
+        facts = self._facts()
+        return facts.commits if facts else None
+
+    def additions(self) -> int:
+        facts = self._facts()
+        return facts.additions if facts else 0
+
+    def deletions(self) -> int:
+        facts = self._facts()
+        return facts.deletions if facts else 0
+
     def _facts(self) -> Facts | None:
         return self._change_detection.facts(self._pr)
 

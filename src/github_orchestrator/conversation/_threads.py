@@ -516,7 +516,11 @@ class _ConversationManager:
                        branch=ports.pull_requests.branch(),
                        head_sha=ports.pull_requests.head_sha(),
                        is_author=_is_author(ports.pull_requests.role()),
-                       account=ports.config.gh_account)
+                       account=ports.config.gh_account,
+                       created_at=ports.pull_requests.created_at(),
+                       commits=ports.pull_requests.commits(),
+                       additions=ports.pull_requests.additions(),
+                       deletions=ports.pull_requests.deletions())
 
     def activity(self, conversation: Conversation) -> Activity:
         ports = self._pr.ports

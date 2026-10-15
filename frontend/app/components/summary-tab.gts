@@ -10,7 +10,7 @@ import drawn from 'frontend/modifiers/drawn';
 import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
-import type { SummaryTab as Tab } from 'frontend/services/store';
+import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
 
 function is(one: string, other: string): boolean {
   return one === other;
@@ -30,6 +30,15 @@ export default class SummaryTab extends Component {
   get tab(): Tab | null {
     const { repo, number } = this.here.at;
     return this.store.prSummary(repo, number);
+  }
+
+  get header(): PrHeader | null {
+    const { repo, number } = this.here.at;
+    return this.store.prHeader(repo, number);
+  }
+
+  get opened(): string {
+    return relativeOf(this.header?.createdAt ?? null, this.hub.now);
   }
 
   get finished(): string {
@@ -65,8 +74,45 @@ export default class SummaryTab extends Component {
   }
 
   <template>
-    {{#if this.tab}}
-      <div id="summary-tab" data-test-summary-tab>
+    <div id="summary-tab" data-test-summary-tab>
+      {{#if this.header}}
+        <header class="summary-pr" data-test-summary-pr>
+          <h2 class="summary-pr-title" data-test-summary-title>
+            {{this.header.title}}
+          </h2>
+          <div class="summary-pr-facts">
+            {{#if this.header.createdAt}}
+              <span
+                title={{this.header.createdAt}}
+                data-test-summary-opened
+              >opened {{this.opened}}</span>
+            {{/if}}
+            {{#if this.header.commits}}
+              <span data-test-summary-commits>{{this.header.commits}}</span>
+            {{/if}}
+            <span class="diffstat">
+              <span
+                class="diffstat-added"
+                data-test-summary-additions
+              >+{{this.header.additions}}</span>
+              <span
+                class="diffstat-deleted"
+                data-test-summary-deletions
+              >-{{this.header.deletions}}</span>
+              <span class="diffstat-squares" aria-hidden="true">
+                {{#each this.header.squares key="@index" as |square|}}
+                  <span
+                    class="diffstat-square"
+                    data-kind={{square}}
+                    data-test-diffstat-square={{square}}
+                  ></span>
+                {{/each}}
+              </span>
+            </span>
+          </div>
+        </header>
+      {{/if}}
+      {{#if this.tab}}
         <div
           class="summary-strip"
           data-state={{this.tab.state}}
@@ -139,7 +185,7 @@ export default class SummaryTab extends Component {
             {{drawn markdownOf this.tab.markdown}}
           ></div>
         {{/if}}
-      </div>
-    {{/if}}
+      {{/if}}
+    </div>
   </template>
 }

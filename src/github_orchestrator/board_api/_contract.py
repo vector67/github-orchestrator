@@ -190,6 +190,12 @@ class PullRequest(BaseModel):
         description="The branch's current head. A `rebase` operation carries "
                     "`onto`, and without this there is nothing to compare it "
                     "against.")
+    created_at: str | None = Field(
+        description="When the pull request was opened. Null where GitHub did not say.")
+    commits: int | None = Field(
+        description="How many commits the branch holds. Null where GitHub did not say.")
+    additions: int = Field(description="Lines the pull request adds.")
+    deletions: int = Field(description="Lines the pull request removes.")
 
 
 class ErrorDetail(BaseModel):

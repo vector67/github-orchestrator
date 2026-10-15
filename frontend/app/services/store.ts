@@ -76,12 +76,14 @@ import {
   detailsOf,
   filesOf,
   placeOf,
+  prHeaderOf,
   readOf,
   shownOf,
   summaryOf,
   summaryTabOf,
   wallOf,
   type Place,
+  type PrHeader,
   type Shown,
   type Summaries,
   type SummaryTab,
@@ -95,6 +97,7 @@ export type {
   Flag,
   Move,
   NextMove,
+  PrHeader,
   Summaries,
   SummaryState,
   SummaryTab,
@@ -125,6 +128,10 @@ export interface PrEntity {
   url: string | null;
   branch: string | null;
   head_sha: string | null;
+  created_at: string | null;
+  commits: number | null;
+  additions: number;
+  deletions: number;
   ticket: string | null;
   author: string | null;
   board_url: string | null;
@@ -358,6 +365,11 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  prHeader(repo: string, number: number): PrHeader | null {
+    const pr = this.prs[keyOf(repo, number)];
+    return pr ? prHeaderOf(pr) : null;
   }
 
   prSummary(repo: string, number: number): SummaryTab | null {
@@ -880,6 +892,10 @@ export default class StoreService extends Service {
       url: pull.html_url,
       branch: pull.branch ?? held.branch,
       head_sha: pull.head_sha ?? held.head_sha,
+      created_at: pull.created_at,
+      commits: pull.commits,
+      additions: pull.additions,
+      deletions: pull.deletions,
     }));
   }
 
@@ -1167,6 +1183,10 @@ export default class StoreService extends Service {
       url: null,
       branch: null,
       head_sha: null,
+      created_at: null,
+      commits: null,
+      additions: 0,
+      deletions: 0,
       ticket: null,
       author: null,
       board_url: null,

@@ -244,6 +244,10 @@ export const PULL_REQUEST: PullRequest = {
   base_branch: 'main',
   branch: 'fix-the-widget',
   head_sha: 'c0ffee1',
+  created_at: null,
+  commits: null,
+  additions: 0,
+  deletions: 0,
 };
 
 export function prSummary(over: Partial<PrSummary> = {}): PrSummary {

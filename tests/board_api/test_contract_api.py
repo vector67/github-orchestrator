@@ -22,7 +22,21 @@ def test_the_pull_request_read_answers_the_contracts_fields():
         "base_branch": "main",
         "branch": "rename-the-helper",
         "head_sha": "8f73fe8",
+        "created_at": None,
+        "commits": None,
+        "additions": 0,
+        "deletions": 0,
     }
+
+
+def test_the_pull_request_read_says_when_it_was_opened_and_how_big_it_is():
+    answer = client_for(created_at="2026-09-01T10:00:00Z", commits=4, additions=501,
+                        deletions=214).get("/api/pull-request")
+
+    assert {field: answer.json()[field]
+            for field in ("created_at", "commits", "additions", "deletions")} == {
+        "created_at": "2026-09-01T10:00:00Z", "commits": 4, "additions": 501,
+        "deletions": 214}
 
 
 def test_a_pull_request_the_board_knows_nothing_about_carries_nulls():

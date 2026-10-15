@@ -108,6 +108,8 @@ class PullRequestState:
     changed_files: int | None = None
     additions: int | None = None
     deletions: int | None = None
+    commits: int | None = None
+    created_at: str | None = None
     mergeable: bool = False
     mergeable_state: str = "unknown"
     checks: tuple[Check, ...] = ()

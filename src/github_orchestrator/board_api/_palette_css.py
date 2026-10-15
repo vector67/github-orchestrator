@@ -29,7 +29,7 @@ PAGE_VARIABLES = (
     "page", "card", "text", "muted", "hairline", "border_strong", "scrim",
     "yellow", "yellow_text", "yellow_muted", "blue", "blue_fill",
     "link", "green",
-    "green_fill", "grey", "grey_fill", "red", "red_fill", "flag",
+    "green_fill", "green_text", "grey", "grey_fill", "red", "red_fill", "red_text", "flag",
     "ready_ground", "ready_text", "ready_muted", "ready_edge", "selected", "range_highlight",
     "tty_ground", "tty_text",
 )

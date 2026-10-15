@@ -61,10 +61,12 @@ class Palette:
     link: str
     green: str
     green_fill: str
+    green_text: str
     grey: str
     grey_fill: str
     red: str
     red_fill: str
+    red_text: str
     flag: str
     ready_ground: str
     ready_text: str
@@ -115,10 +117,12 @@ LIGHT = Palette(
     link=BLUE,
     green=GREEN,
     green_fill=over_white(GREEN, 0.2),
+    green_text=over(GREEN, 0.6, BLACK),
     grey=over_white(BLACK, 0.3),
     grey_fill=GREY_TINT,
     red=RED,
     red_fill=over_white(RED, 0.12),
+    red_text=over(RED, 0.85, BLACK),
     flag=FLAG_GROUND,
     ready_ground=YELLOW,
     ready_text=BLACK,
@@ -175,10 +179,12 @@ DARK = Palette(
     link=over(BLUE, 0.7, WHITE),
     green=GREEN,
     green_fill=over(GREEN, 0.2, DARK_PAGE),
+    green_text=GREEN,
     grey=over(DARK_TEXT, 0.3, DARK_PAGE),
     grey_fill=DARK_SUBTLE,
     red=RED,
     red_fill=over(RED, 0.16, DARK_PAGE),
+    red_text=over(RED, 0.8, WHITE),
     flag=FLAG_GROUND,
     ready_ground=DARK_READY,
     ready_text=DARK_TEXT,

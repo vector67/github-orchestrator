@@ -44,6 +44,7 @@ STATE_FIELDS = """
         }
       }
       commits(last: 1) {
+        totalCount
         nodes { commit { checkSuites(first: %(suites)d) { nodes {
           checkRuns(first: %(page)d, filterBy: {checkType: LATEST}) { nodes {
             databaseId name status conclusion url detailsUrl summary startedAt completedAt
@@ -233,6 +234,8 @@ def state_of(gh: Gh, account: str, pr: Pr, pull: dict[str, Any]) -> PullRequestS
         changed_files=pull.get("changedFiles"),
         additions=pull.get("additions"),
         deletions=pull.get("deletions"),
+        commits=(pull.get("commits") or {}).get("totalCount"),
+        created_at=pull.get("createdAt"),
         mergeable=pull.get("mergeable") == "MERGEABLE",
         mergeable_state=_lower(pull.get("mergeStateStatus")) or "unknown",
         checks=_checks(pull),

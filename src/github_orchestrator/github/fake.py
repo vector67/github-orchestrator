@@ -187,6 +187,7 @@ class FakeGitHub:
         mine = state.author == self.account
         return replace(
             state,
+            created_at=record.created_at,
             ready_for_review_at=(None if state.draft
                                  else state.ready_for_review_at or record.created_at),
             push_events=() if mine else state.push_events,

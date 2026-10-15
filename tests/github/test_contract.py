@@ -134,6 +134,14 @@ def test_a_prs_state_is_its_title_branches_head_and_mergeability(world, github):
     assert (state.mergeable, state.mergeable_state) == (True, "clean")
 
 
+def test_a_prs_state_says_when_it_was_opened_and_how_many_commits_it_holds(world, github):
+    world.add_pr(a_pr(7, REPO), _state(commits=4), created_at="2026-09-01T10:00:00Z")
+
+    state = github.pr_state(a_pr(7, REPO))
+
+    assert (state.created_at, state.commits) == ("2026-09-01T10:00:00Z", 4)
+
+
 def test_mergeability_github_has_not_worked_out_yet_is_unknown(world, github):
     world.add_pr(a_pr(7, REPO), _state())
 

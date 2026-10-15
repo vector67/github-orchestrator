@@ -179,6 +179,8 @@ class Facts:
     changed_files: int | None
     additions: int
     deletions: int
+    commits: int | None
+    created_at: str | None
     ci_status: CiStatus | None
     mergeable: bool | None
     needs_rebase: bool

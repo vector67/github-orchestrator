@@ -72,6 +72,62 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
+  function squares(): (string | undefined)[] {
+    return findAll('[data-test-diffstat-square]').map(
+      (one) => (one as HTMLElement).dataset['testDiffstatSquare'],
+    );
+  }
+
+  test('the tab heads with the full title, when it was opened, its commits and its lines changed as GitHub draws them', async function (assert) {
+    const title =
+      'Split the snapshot writer in two so each half can be tested alone';
+    board().held = [heldPr({ dashboard: { pr: { title } } })];
+    board().pullRequest = {
+      ...board().pullRequest,
+      created_at: ago(3 * 24 * 60),
+      commits: 4,
+      additions: 501,
+      deletions: 214,
+    };
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-title]').hasText(title);
+    assert.dom('[data-test-summary-opened]').hasText('opened 3d ago');
+    assert.dom('[data-test-summary-commits]').hasText('4 commits');
+    assert.dom('[data-test-summary-additions]').hasText('+501');
+    assert.dom('[data-test-summary-deletions]').hasText('-214');
+    assert.deepEqual(squares(), [
+      'added',
+      'added',
+      'added',
+      'deleted',
+      'neutral',
+    ]);
+  });
+
+  test('a pull request of one commit says so in the singular, and one that changes no lines draws five grey squares', async function (assert) {
+    board().pullRequest = {
+      ...board().pullRequest,
+      commits: 1,
+      additions: 0,
+      deletions: 0,
+    };
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-commits]').hasText('1 commit');
+    assert.dom('[data-test-summary-additions]').hasText('+0');
+    assert.dom('[data-test-summary-deletions]').hasText('-0');
+    assert.deepEqual(squares(), [
+      'neutral',
+      'neutral',
+      'neutral',
+      'neutral',
+      'neutral',
+    ]);
+  });
+
   test('a push since the summary marks it stale, naming both heads and how far behind it is, with Rerun', async function (assert) {
     asReviewer();
     board().summary = prSummary({

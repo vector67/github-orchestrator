@@ -636,7 +636,7 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool) ->
     head = _git(repo.worktree, "rev-parse", "HEAD").strip()
     state = PullRequestState(title=PR_TITLE, url=f"https://github.com/{PR.repo}/pull/{PR.number}",
                              branch=PR_BRANCH, base_branch=repo.base_branch,
-                             head_sha=head,
+                             head_sha=head, created_at="2026-09-10T09:00:00Z", commits=4, additions=501, deletions=214,
                              author=PR_AUTHOR if reviewer else viewer,
                              body=(f"Splits the invoice writer in two.\n\ncc @{viewer}, the export "
                                    "side is yours." if reviewer else ""),

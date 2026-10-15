@@ -10,6 +10,8 @@ TYPE_ON_GROUND = (
     ("the board's own type", "--text", "--page"),
     ("type on the selected row", "--text", "--selected"),
     ("muted type", "--muted", "--page"),
+    ("the lines a pull request adds", "--green-text", "--page"),
+    ("the lines a pull request removes", "--red-text", "--page"),
     ("muted type on the selected row", "--muted", "--selected"),
     ("muted type on a reopened selected row", "--muted", "--grey-fill"),
     ("the action bar's primary button", "--page", "--text"),

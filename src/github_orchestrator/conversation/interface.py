@@ -28,6 +28,10 @@ class PrFacts:
     head_sha: str | None
     is_author: bool | None
     account: str
+    created_at: str | None
+    commits: int | None
+    additions: int
+    deletions: int
 
 
 @dataclass(frozen=True)

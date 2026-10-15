@@ -300,11 +300,14 @@ def _served(conversation_managers: ConversationManagerFactory, stage: Stage, thr
 
 def board_on(fake: FakeConversationManagerFactory, *, is_author: bool = True, title: str | None = TITLE,
              base_branch: str | None = "main", head_sha: str | None = None,
-             branch: str | None = None,
+             branch: str | None = None, created_at: str | None = None,
+             commits: int | None = None, additions: int | None = None,
+             deletions: int | None = None,
              **serving: Unpack[Serving]) -> Served:
     _placed(fake.working_copies)
     fake.watch(THE_PR, is_author=is_author, title=title, base_branch=base_branch,
-               head_sha=head_sha, branch=branch)
+               head_sha=head_sha, branch=branch, created_at=created_at, commits=commits,
+               additions=additions, deletions=deletions)
     threads = fake.of(THE_PR)
     hear(threads)
     return _served(fake, fake, threads, **serving)
@@ -339,11 +342,14 @@ def proposed(board: Served, key: str = KEY, files: dict[str, str] | None = None,
 def board_for(pr_title: str | None = TITLE, base_branch: str | None = "main",
               is_author: bool = True, head_sha: str | None = "8f73fe8",
               working_copies: FakeWorkingCopies | None = None,
-              github: FakeGitHub | None = None,
+              github: FakeGitHub | None = None, created_at: str | None = None,
+              commits: int | None = None, additions: int | None = None,
+              deletions: int | None = None,
               **serving: Unpack[Serving]) -> Served:
     return board_on(fake_threads(github, working_copies), is_author=is_author, title=pr_title,
                     base_branch=base_branch, head_sha=head_sha, branch="rename-the-helper",
-                    **serving)
+                    created_at=created_at, commits=commits, additions=additions,
+                    deletions=deletions, **serving)
 
 
 def followed(web: TestClient, answer: httpx2.Response) -> httpx2.Response:

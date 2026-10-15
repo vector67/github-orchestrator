@@ -64,6 +64,8 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         changed_files=snapshot.get("changed_files", 0),
         additions=snapshot.get("additions") or 0,
         deletions=snapshot.get("deletions") or 0,
+        commits=snapshot.get("commits"),
+        created_at=_text(snapshot, "created_at"),
         ci_status=words.ci,
         mergeable=bool(snapshot["mergeable"]) if "mergeable" in snapshot else None,
         needs_rebase=words.mergeability in REBASE_STATES,

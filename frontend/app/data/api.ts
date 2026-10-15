@@ -632,6 +632,10 @@ export interface PullRequest {
   base_branch: string | null;
   branch: string | null;
   head_sha: string | null;
+  created_at: string | null;
+  commits: number | null;
+  additions: number;
+  deletions: number;
 }
 
 export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';

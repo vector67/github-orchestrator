@@ -240,6 +240,10 @@ def read_pull_request(request: Request, board: Serving) -> Response:
         base_branch=facts.base_branch,
         branch=facts.branch,
         head_sha=facts.head_sha,
+        created_at=facts.created_at,
+        commits=facts.commits,
+        additions=facts.additions,
+        deletions=facts.deletions,
     ))
 
 

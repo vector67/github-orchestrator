@@ -613,7 +613,7 @@ class _World:
                 if e.is_force_push
                 else {"__typename": "PullRequestCommit", "commit": {"committedDate": e.at}}
                 for e in state.push_events]},
-            "commits": {"nodes": [{"commit": {"checkSuites": {"nodes": [{"checkRuns": {"nodes": [
+            "commits": {"totalCount": state.commits, "nodes": [{"commit": {"checkSuites": {"nodes": [{"checkRuns": {"nodes": [
                 {"databaseId": len(state.checks) - n, "name": c.name,
                  "status": None if c.status is None else c.status.upper(),
                  "conclusion": None if c.conclusion is None else c.conclusion.upper(),

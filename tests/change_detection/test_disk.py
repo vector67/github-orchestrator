@@ -24,7 +24,8 @@ EXPECTED = (
     '{"repo": "acme/widgets", "pr": 42, "title": "Add widgets", '
     '"url": "https://github.com/acme/widgets/pull/42", "branch": "PROJ-1-widgets", '
     '"base_branch": "main", "pr_author": "alice", "changed_files": 3, '
-    '"additions": 10, "deletions": 2, "head_sha": "sha2", "mergeable": true, '
+    '"additions": 10, "deletions": 2, "commits": 2, '
+    '"created_at": "2026-08-29T00:00:00Z", "head_sha": "sha2", "mergeable": true, '
     '"mergeable_state": "clean", "draft": false, '
     '"last_poll_timestamp": "2026-09-01T10:00:00Z", "ci_status": "passing", '
     '"review_ready_at": "2026-08-30T00:00:00Z", '
@@ -49,7 +50,7 @@ def test_a_poll_writes_the_snapshot_file_every_other_process_reads(tmp_path):
         title="Add widgets", url="https://github.com/acme/widgets/pull/42",
         author="alice", branch="PROJ-1-widgets", base_branch="main", head_sha="sha2",
         body="Detailed reviewer: @octocat", changed_files=3, additions=10, deletions=2,
-        mergeable=True, mergeable_state="clean",
+        commits=2, created_at="2026-08-29T00:00:00Z", mergeable=True, mergeable_state="clean",
         checks=(Check("tests", "completed", "success", "https://ci/tests", "all green"),),
         reviews=(Review("octocat", ReviewState.CHANGES_REQUESTED, "2026-08-31T00:00:00Z", "sha1"),),
         review_decision="CHANGES_REQUESTED", pending_reviewers=("bob",),
