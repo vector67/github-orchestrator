@@ -178,7 +178,7 @@ function unresolvedOf(facts: Polled): string {
 function afterApprovingOf(move: NextMove): string {
   const still = move.stillRequested;
   return still.length
-    ? `You approved | ${listed(still)} still requested`
+    ? `You approved · ${listed(still)} still requested`
     : 'You approved';
 }
 
@@ -192,7 +192,7 @@ function awaitingReviewOf(status: DashboardStatus, facts: Polled): string {
   } else if (!approved.length) {
     parts.push('No reviewers assigned');
   }
-  return parts.join(' | ');
+  return parts.join(' · ');
 }
 
 function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
@@ -205,7 +205,7 @@ function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
   const parts = ['You approved'];
   if (requesters.length) parts.push(`${listed(requesters)} requested changes`);
   if (awaited.length) parts.push(`Waiting on review from: ${listed(awaited)}`);
-  return parts.join(' | ');
+  return parts.join(' · ');
 }
 
 const EVERY_MENTION_ANSWERED = 'Every mention answered';
@@ -228,9 +228,9 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
         ? 'Merge conflicts detected'
         : `Behind ${baseOf(shown)}`;
     case 'address-feedback':
-      return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes | ${unresolvedOf(facts)}`;
+      return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes · ${unresolvedOf(facts)}`;
     case 'ready-to-merge':
-      return `${status.approved_by.length ? `Approved by ${listed(status.approved_by)}` : 'No approval needed'} | ${ci}`;
+      return `${status.approved_by.length ? `Approved by ${listed(status.approved_by)}` : 'No approval needed'} · ${ci}`;
     case 'await-review':
     case 'request-reviewers':
     case 'mark-ready-for-review':
@@ -240,9 +240,9 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'await-ci':
       return `${status.checks_done}/${status.checks_total} checks complete`;
     case 'review':
-      return `${ci} | ${status.changed_files ?? '?'} files changed | ${reviewsSoFarOf(status, facts).replace(', ', ' | ')}`;
+      return `${ci} · ${status.changed_files ?? '?'} files changed · ${reviewsSoFarOf(status, facts).replace(', ', ' · ')}`;
     case 'rereview':
-      return `Re-review requested | ${ci}`;
+      return `Re-review requested · ${ci}`;
     case 'await-reviewers':
       return afterApprovingWithOthersOf(move, facts);
     case 'await-author':
@@ -735,7 +735,7 @@ function bandOf(
   shown: ShownPr,
   action: Action | null,
   move: string,
-  why: string,
+  since: string[] | null,
 ): Band {
   if (shown.drawn.frozen) {
     return {
@@ -765,7 +765,7 @@ function bandOf(
   return {
     state: 'normal',
     label: 'Next',
-    detail: why !== action.detail ? why : null,
+    detail: since ? `Since you acted: ${since.join(', ')}` : null,
     computed: differs
       ? `PR state: ${action.label} · ${action.detail}`
       : action.detail,
@@ -1075,24 +1075,6 @@ export function ageOf(entered: number, now: number): string {
   return `${Math.floor(hours / 24)}d`;
 }
 
-function whyOf(
-  shown: ShownPr,
-  action: Action | null,
-  since: string[] | null,
-): string {
-  const frozen = shown.drawn.frozen;
-  if (frozen?.release_requested) {
-    return 'Release asked for; the watcher cuts a fresh worktree on its next cycle';
-  }
-  if (frozen) {
-    return `Wrong branch checked out (${withoutBidiControls(frozen.here)}) · detaches in ${lengthOf(frozen.seconds_left)}`;
-  }
-  if (since) return `Since you acted: ${since.join(', ')}`;
-  if (!action) return 'Nothing known until the first poll';
-  if (shown.drawn.system.on_hold) return `${action.label}: ${action.detail}`;
-  return action.detail;
-}
-
 export type Square = 'ready' | 'draft' | 'work' | 'wait' | 'alarm' | 'park';
 
 const SQUARES: Record<WallGroup, Square> = {
@@ -1196,7 +1178,6 @@ export function dashboardOf(
   const action = actionOf(shown, next);
   const move = moveOf(shown, summaries);
   const since = sinceOf(shown);
-  const why = whyOf(shown, action, since);
   const frozen = shown.drawn.frozen;
   return {
     number: shown.number,
@@ -1214,7 +1195,7 @@ export function dashboardOf(
       : null,
     reason: reasonOf(shown, summaries),
     chips: chipsOf(shown, summaries, failing, now),
-    band: bandOf(shown, action, move, why),
+    band: bandOf(shown, action, move, since),
     frozen: frozen
       ? {
           worktree: tildeOf(frozen.worktree),
