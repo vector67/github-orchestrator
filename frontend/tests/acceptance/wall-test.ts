@@ -9,6 +9,7 @@ import {
   triggerEvent,
   visit,
   waitFor,
+  waitUntil,
 } from '@ember/test-helpers';
 import type { ThreadCounts } from 'frontend/data/api';
 import {
@@ -1100,6 +1101,30 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(verbs(), [
       '/pr/o/r/7/api/manager:dismiss {"forever":true}',
     ]);
+  });
+
+  test('a pull request opened while a dismissal from the wall is in flight stays open when the dismissal lands', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+    await press('x');
+    const release = board().hold(/\/api\/manager:dismiss$/);
+
+    tap('u');
+    await waitUntil(() => !find('[data-test-dismiss-confirm]'));
+    tap('j');
+    await waitUntil(() => selected()[0] === 'o/r#8');
+    tap('Enter');
+    await waitUntil(() => currentURL() === '/pr/o/r/8/conversations');
+
+    release();
+    await settled();
+
+    assert.strictEqual(
+      currentURL(),
+      '/pr/o/r/8/conversations',
+      'the dismissal did not pull the user back to the wall',
+    );
   });
 
   test('a dismissal stops standing once the pull request’s manager answers again', async function (assert) {

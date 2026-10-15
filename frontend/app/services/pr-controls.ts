@@ -287,7 +287,9 @@ export default class PrControlsService extends Service {
     this.dismissals = new Map(this.dismissals).set(keyOf(on.shown), how);
     this.toasts.say(dismissedSaying(on.number, how), 'done');
     await this.loader.refreshHub();
-    void this.router.transitionTo('index');
+    const here = this.here.pr;
+    if (here !== null && keyOf(here) === keyOf(on.shown))
+      void this.router.transitionTo('index');
   }
 
   private async throughTheManager(
