@@ -341,47 +341,47 @@ is stopped, saying so. A PR the watcher does not hold is not found.
 ### The wall
 
 The wall is the hub's home page, one row per PR the watcher holds, grouped by
-who has to move next: **Needs you**, **Draft**, **Agent working**, **Waiting on
-others**, **On hold** and **Mentioned**. Draft holds your own draft PRs, whatever
-their next move. Mentioned holds someone else's PR you don't review that named
-you, once you have answered every mention; a mention you have not answered,
-since your review if you gave one, needs you. The watcher looks for PRs that
-mention you at most once a minute and keeps one until it is merged or closed. On your own PR, changes a reviewer asked for and was not asked to review
-again come first, then human comments waiting on you or an agent, then bot
-comments (from `claude`, `codex` or `copilot`), then CI, a rebase and the merge.
-A PR you dismissed until its next event is off the wall, and
-out of the PR switcher, until that event comes, unless its worktree holds the
-wrong branch. So is a merged or closed PR, and someone else's PR you were
-never asked to review, never reviewed and were never mentioned on. A group with no PRs is not drawn. Grouping wins over rows staying put,
-so a row moves when its PR changes group, and it carries a tag saying where it
-came from until you open that PR.
+who moves next: **Needs you**, **Agent working**, **Waiting on others** and
+**Parked**. Your own draft PRs join Needs you when they hold fixes to decide;
+otherwise they are parked, with PRs on hold. Someone else's PR you don't review
+that named you waits on others once you have answered every mention; a mention
+you have not answered, since your review if you gave one, needs you. The
+watcher looks for PRs that mention you at most once a minute and keeps one until
+it is merged or closed. On your own PR, changes a reviewer asked for and was
+not asked to review again come first, then human comments waiting on you or an
+agent, then bot comments (from `claude`, `codex` or `copilot`), then CI, a
+rebase and the merge; a draft with nothing else in its way is marked ready for
+review. A PR you dismissed until its next event is off the wall, and out of the
+PR switcher, until that event comes, unless its worktree holds the wrong
+branch. So is a merged or closed PR, and someone else's PR you were never
+asked to review, never reviewed and were never mentioned on. A group with no
+PRs is not drawn, and a group's heading stays in view while its rows scroll.
+Grouping wins over rows staying put, so a row moves when its PR changes group,
+and it carries a **moved here** chip until you open that PR. The tab title
+counts the PRs that need you.
 
-Each row leads with your move, the one verb for what you have to do next, with
-the flags **Draft**, **Fix CI**, **Rebase** and **N unresolved threads** beside
-it whenever they hold, then the title, the number, whose PR it is and the branch. Clicking a row only opens
-the PR, whatever its verb says; hovering it adds **Open →** to its last line.
-The columns after it are Why, CI, Conflicts, Review, Claude, Threads, Unpushed
-and Queue, and hovering a header gives its definition:
+Each row leads with its move line: your move, the reason for that move, chips
+for the facts that matter, and at the right end how long the PR has been in its
+group. Below it are the title, the number, whose PR it is and the branch.
+Clicking a row only opens the PR, whatever its move says; hovering it adds
+**Open →** to its last line.
 
-| Column    | What it shows                                                                                |
-| --------- | -------------------------------------------------------------------------------------------- |
-| Why       | what makes that your move                                                                    |
-| CI        | GitHub's checks on the head commit: passing, failing or pending                              |
-| Conflicts | `none`, or `yes` where the branch conflicts with its base; a draft still needs marking ready |
-| Review    | the review decision on GitHub                                                                |
-| Claude    | what this PR's Claude agent is doing, or how its last run ended                              |
-| Threads   | review-board threads waiting on you: fixes ready, local drafts, answers                      |
-| Unpushed  | commits in the PR's worktree not yet pushed to origin                                        |
-| Queue     | events the watcher queued for this PR's agent                                                |
-
-A `·` in Threads, Unpushed or Queue means none. A Claude run is named for what
-started it: CI fix, rebase on main, review, re-review, thread fix, clean-up, or
-**carry on**, which is Claude started again with `--continue` to pick up its
-last conversation in the worktree, with no new instructions. A red square marks
-something broken or urgent, such as failing CI. "You are the detailed
-reviewer" shows beside the verb when the PR description's `Detailed reviewer: @<login>` line names you: the reviewer the PR asks to read the whole change in
-detail. A PR frozen on the wrong branch has a **Release** button in its Why
-cell.
+A chip shows a fact only when it is away from its quiet default (CI passing, no
+conflicts, no review yet, the agent idle, nothing unpushed or queued), and only
+when the move or its reason doesn't already say it. Chips are ordered by
+severity. On your own PR, the one fact standing in the way of the PR, when your
+move is something else, is red; on a PR you review nothing is. The chips are
+**CI failing**, **conflicts with** or **behind** the base branch, who
+**requested changes**, failed agent runs, what the agent is doing when that is
+not the move, **N fixes to decide**, **N unsent** review comments, **N
+unresolved** GitHub threads, **N answered** of your threads, **N unpushed**
+commits, **N queued** events, **approved**, **mentioned**, **detailed
+reviewer** (the PR description's `Detailed reviewer: @<login>` line names you),
+**N mismatches** and **draft**. Hovering a chip says what it means. A run is
+named for what started it: CI fix, rebase on main, review, re-review, thread
+fix, clean-up, or **carry on**, which is Claude started again with `--continue`
+to pick up its last conversation in the worktree, with no new instructions. A
+PR frozen on the wrong branch has a **Release** button on its row.
 
 | Key       | What it does                                                            |
 | --------- | ----------------------------------------------------------------------- |
@@ -408,13 +408,11 @@ Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>`: on its Summary
 when you review it, on its Board when it is yours. The wall goes
 and the PR takes the whole screen. Its bar has the PRs button with how many
 need you, **Wall**, the title, whose PR it is, the branch, a link to it on
-GitHub, your move, the counts, the flags and the detailed-reviewer flag. On
-your own PR the counts are **Human comments M/N done** and **Bot comments M/N
-done**; on someone else's, **Your threads M/N answered**. The flags are
-**Fix CI**, **Rebase** and **N unresolved threads**, shown whenever they hold,
-whatever your move, and **N mismatches**, the Alignment judge's count in the
-PR's latest summary, which its wall row shows too, even once the summary is
-stale. A draft has a grey **Draft** pill before its title, and
+GitHub, your move, the counts and the chips its wall row shows. On your own PR
+the counts are **Human comments M/N done** and **Bot comments M/N done**; on
+someone else's, **Your threads M/N answered**. **N mismatches** is the
+Alignment judge's count in the PR's latest summary, shown even once the summary
+is stale. A draft has a grey **Draft** pill before its title, and
 its move is outlined in grey, never yellow, since yellow means it needs you now.
 
 | Key       | What it does                              |
@@ -466,7 +464,7 @@ when the automatic one went wrong, **Git** (`g`), **Terminal** (`t`), **Close PR
 `u` or `f`), which takes the PR off the wall. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
-Unpushed in the System block is the wall's Unpushed column.
+Unpushed in the System block is the count behind the wall's unpushed chip.
 The right pane shows the agent's notes from `agent-changes.md`, or Claude's
 output, newest last; `⇧C` flips between them. Both follow the board's streams,
 so they change as the files do. When the manager's board is not answering, the
