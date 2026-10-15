@@ -9,6 +9,7 @@ import {
   triggerEvent,
   visit,
   waitFor,
+  waitUntil,
 } from '@ember/test-helpers';
 import type { HeldPullRequest, ThreadCounts } from 'frontend/data/api';
 import {
@@ -75,6 +76,32 @@ module('Acceptance | wall', function (hooks) {
           )
         : served(input, init);
     };
+  }
+
+  function answerTheNextWallReadLate(): () => void {
+    const served = globalThis.fetch;
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let used = false;
+    globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const path = new URL(url, 'http://127.0.0.1').pathname;
+      if (!used && path === '/api/pull-requests') {
+        used = true;
+        const answered = served(input, init);
+        return gate.then(() => answered);
+      }
+      return served(input, init);
+    };
+    return release;
+  }
+
+  function tap(key: string): void {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
   }
 
   test('a wall shelved before dashboards carried threads does not stop the hub opening', async function (assert) {
@@ -1138,6 +1165,42 @@ module('Acceptance | wall', function (hooks) {
       );
   });
 
+  test('a wall read sent before a dismissal and answered after it does not bring the dismissed row back', async function (assert) {
+    const listed = (at: string, ...numbers: number[]) =>
+      numbers.map((number) => heldPr({ number, dashboard: { listed_at: at } }));
+    onTheHub(...listed('2026-10-08T09:30:00Z', 7, 8));
+    await visit('/');
+    await press('j');
+    await press('x');
+
+    onTheHub(...listed('2026-10-08T09:30:30Z', 7, 8));
+    const reads = board().askedFor(/\/api\/pull-requests$/).length;
+    const release = answerTheNextWallReadLate();
+    const ticking = clock().tick(LIST);
+    try {
+      await waitUntil(
+        () => board().askedFor(/\/api\/pull-requests$/).length === reads + 1,
+      );
+      const served = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        const answer = await served(input, init);
+        const url = input instanceof Request ? input.url : String(input);
+        if (init?.method === 'POST' && url.endsWith('/api/manager:dismiss')) {
+          onTheHub(...listed('2026-10-08T09:31:00Z', 8));
+        }
+        return answer;
+      };
+      tap('u');
+      await waitUntil(() => !rows().includes('o/r#7'));
+    } finally {
+      release();
+    }
+    await ticking;
+    await settled();
+
+    assert.deepEqual(rows(), ['o/r#8'], 'the dismissed row stays gone');
+  });
+
   test('a frozen row takes only w: p and x say so and send nothing, and w releases it', async function (assert) {
     onTheHub(
       heldPr({
@@ -1330,6 +1393,59 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(rows(), ['o/r#7', 'o/r#9']);
     const asked = board().askedFor(/^\/api\/pull-requests$/);
     assert.notStrictEqual(asked[asked.length - 1]!.ifNoneMatch, null);
+  });
+
+  test('an answer to an older wall poll that lands late does not bring back a row that left', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }), heldPr({ number: 9 }));
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#8', 'o/r#9']);
+
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    const reads = board().askedFor(/\/api\/pull-requests$/).length;
+    const late = answerTheNextWallReadLate();
+    void clock().tick(LIST);
+    await waitUntil(
+      () => board().askedFor(/\/api\/pull-requests$/).length === reads + 1,
+    );
+
+    onTheHub(heldPr());
+    void clock().tick(LIST);
+    await waitUntil(() => rows().length === 1, { timeout: 2000 });
+    assert.deepEqual(rows(), ['o/r#7'], 'the newer poll took #8 and #9 away');
+
+    late();
+    await settled();
+
+    assert.deepEqual(
+      rows(),
+      ['o/r#7'],
+      'the older answer, landing last, put #8 back on the wall',
+    );
+  });
+
+  test('two wall actions while one wall read is slow do not raise the outage banner or dim the wall', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+    const runs = board().askedFor(/\/api\/runs$/).length;
+    const release = board().hold(/\/api\/pull-requests$/);
+    const ticking = clock().tick(LIST);
+
+    tap('p');
+    await waitUntil(() => board().posted.length === 1);
+    tap('j');
+    tap('p');
+    await waitUntil(() => board().posted.length === 2);
+    await waitUntil(() => board().askedFor(/\/api\/runs$/).length === runs + 3);
+
+    const banner = find('[data-test-banner]')?.textContent.trim() ?? null;
+    const stale = find('[data-test-wall-stale]') !== null;
+    release();
+    await ticking;
+    await settled();
+
+    assert.strictEqual(banner, null, 'no outage banner while the hub answers');
+    assert.false(stale, 'the wall is not dimmed as stale');
   });
 
   test('a wall before the watcher’s first poll says it waits for it', async function (assert) {

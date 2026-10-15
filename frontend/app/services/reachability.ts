@@ -65,6 +65,8 @@ export class Polled extends Reach {
   mark = '';
   private tag: string | null = null;
   private unanswered = 0;
+  private sent = 0;
+  private landed = 0;
 
   constructor(
     where: string,
@@ -72,13 +74,12 @@ export class Polled extends Reach {
     heard: (down: boolean) => void,
     private readonly ask: (tag: string | null) => Promise<Asked>,
     private readonly flipped: boolean,
-    private readonly overdue: boolean,
   ) {
     super(where, counts, heard);
   }
 
-  async poll(): Promise<boolean> {
-    if (this.overdue && this.unanswered > 0) this.missesAre(this.misses + 1);
+  async poll(due = false): Promise<boolean> {
+    if (due && this.unanswered > 0) this.missesAre(this.misses + 1);
     this.unanswered += 1;
     try {
       return await this.read();
@@ -89,7 +90,10 @@ export class Polled extends Reach {
 
   private read(): Promise<boolean> {
     return this.attempt(async () => {
+      const sent = ++this.sent;
       const answer = await this.ask(this.tag);
+      if (sent < this.landed) return false;
+      this.landed = sent;
       if (!answer.changed) return false;
       let took = false;
       const change = () => {
@@ -114,7 +118,6 @@ export class Polled extends Reach {
 interface Polling {
   counts?: Counts;
   flipped?: boolean;
-  overdue?: boolean;
   scope?: PrScope;
 }
 
@@ -134,15 +137,10 @@ export default class ReachabilityService extends Service {
   polled(
     where: string,
     ask: (tag: string | null) => Promise<Asked>,
-    {
-      counts = everyTrouble,
-      flipped = false,
-      overdue = false,
-      scope,
-    }: Polling = {},
+    { counts = everyTrouble, flipped = false, scope }: Polling = {},
   ): Polled {
     return this.kept(
-      new Polled(where, counts, this.heard, ask, flipped, overdue),
+      new Polled(where, counts, this.heard, ask, flipped),
       scope,
     );
   }

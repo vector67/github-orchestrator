@@ -106,14 +106,11 @@ export default class PollService extends Service {
       (tag) => this.store.ask({ kind: 'wall' }, tag),
       {
         flipped: true,
-        overdue: true,
         counts: (trouble) => unheldBy(trouble) === null,
       },
     );
-    this.runs = this.reachability.polled(
-      'runs',
-      (tag) => this.store.ask({ kind: 'runs' }, tag),
-      { overdue: true },
+    this.runs = this.reachability.polled('runs', (tag) =>
+      this.store.ask({ kind: 'runs' }, tag),
     );
   }
 
@@ -190,7 +187,7 @@ export default class PollService extends Service {
 
   startHub(): void {
     this.hubTimer ??= setInterval(
-      () => void waitForPromise(this.refreshHub()),
+      () => void waitForPromise(this.refreshHub(true)),
       LIST_MS,
     );
   }
@@ -285,8 +282,8 @@ export default class PollService extends Service {
     if (inFlight.mark !== before) await this.refreshList();
   }
 
-  async refreshHub(): Promise<void> {
-    await Promise.allSettled([this.wall.poll(), this.runs.poll()]);
+  async refreshHub(due = false): Promise<void> {
+    await Promise.allSettled([this.wall.poll(due), this.runs.poll(due)]);
     this.hubAt = Date.now();
   }
 
