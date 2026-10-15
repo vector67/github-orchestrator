@@ -583,7 +583,7 @@ function agentRebasing(shown: ShownPr): boolean {
 }
 
 function rebaseIsNext(shown: ShownPr, move: NextMove): boolean {
-  return move.state === 'rebase' && !agentRebasing(shown);
+  return move.code === 'rebase' && !agentRebasing(shown);
 }
 
 const REVIEW_WORDS: Record<string, string> = {

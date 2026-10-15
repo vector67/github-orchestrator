@@ -17,6 +17,7 @@ import {
   heldPr,
   proposal,
   setupFakeBoard,
+  threadRow,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
@@ -307,6 +308,17 @@ module('Acceptance | terminal', function (hooks) {
 
     const move = find('[data-test-your-move]')?.textContent ?? '';
     assert.strictEqual(move.split('Rebase on main').length - 1, 1);
+  });
+
+  test('when GitHub wants a rebase but your move is something else, the bar names your move and offers no rebase', async function (assert) {
+    needingARebase({
+      ...REBASE_NEXT,
+      threads: [threadRow('h1', 'ready', 'open', 'human')],
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-your-move]').hasText('Next Decide 1 fix');
+    assert.dom('[data-test-your-move] [data-test-rebase]').doesNotExist();
   });
 
   test('in a crowded bar, the rebase button stays inside its box and the draft pill clear of it', async function (assert) {
