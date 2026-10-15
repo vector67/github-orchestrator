@@ -85,7 +85,7 @@ def added_remarks(base: str | None, head: str, path: str) -> list[str]:
     return added
 
 
-def code_diff(path: str, before: str | None, after: str | None) -> str:
+def code_diff(path: str, before: str | None, after: str | None, previous: str | None = None) -> str:
     def lines(source: str | None) -> list[str]:
         if source is None:
             return []
@@ -96,7 +96,7 @@ def code_diff(path: str, before: str | None, after: str | None) -> str:
         difflib.unified_diff(
             lines(before),
             lines(after),
-            fromfile=f"a/{path}" if before is not None else "/dev/null",
+            fromfile=f"a/{previous or path}" if before is not None else "/dev/null",
             tofile=f"b/{path}" if after is not None else "/dev/null",
         )
     )

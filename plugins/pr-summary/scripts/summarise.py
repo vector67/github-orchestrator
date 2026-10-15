@@ -3,10 +3,12 @@
 # dependencies = ["tree-sitter-language-pack>=1.22"]
 # ///
 import argparse
+import sys
 import tempfile
 from pathlib import Path
 
 from pr_summary.github import (
+    GhFailed,
     changed_files,
     contents,
     earlier_prs,
@@ -48,4 +50,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except GhFailed as failure:
+        sys.exit(f"gh failed: {failure}")

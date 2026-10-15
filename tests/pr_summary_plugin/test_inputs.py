@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pr_summary.inputs import ChangedFile, EarlierPr, write_inputs
+from pr_summary.inputs import ChangedFile, EarlierPr, Unreadable, write_inputs
 from pr_summary.pull_request import PullRequest, Remark
 from pr_summary.settings import Settings
 
@@ -122,6 +122,42 @@ def test_a_renamed_file_diffs_against_its_previous_path(tmp_path: Path) -> None:
     seen = everything_in(written(tmp_path)["implementation"])
 
     assert "-x = 1" in seen
+
+
+def test_a_renamed_file_names_its_old_path_and_a_pure_rename_still_shows(tmp_path: Path) -> None:
+    moved = {(BASE, "src/old.py"): b"x = 1\n", (HEAD, "src/new.py"): b"x = 1\n"}
+
+    def read(sha: str, path: str) -> bytes | None:
+        return moved.get((sha, path))
+
+    folder = write_inputs(PR, [ChangedFile("src/new.py", "src/old.py", "renamed", 0)], read, [], Settings(), None, tmp_path)["implementation"]
+
+    assert (folder / "changes.diff").read_text() == "rename from src/old.py\nrename to src/new.py\n"
+
+
+def test_the_diff_of_an_edited_rename_starts_from_the_old_path(tmp_path: Path) -> None:
+    seen = everything_in(written(tmp_path)["implementation"])
+
+    assert "--- a/src/old_name.py\n+++ b/src/new_name.py\n" in seen
+
+
+def test_an_unreadable_file_such_as_a_submodule_is_skipped(tmp_path: Path) -> None:
+    def read(sha: str, path: str) -> bytes | None:
+        raise Unreadable(path)
+
+    folder = write_inputs(PR, [ChangedFile("vendor/lib", None, "modified", 2)], read, [], Settings(), None, tmp_path)["implementation"]
+
+    assert (folder / "skipped.txt").read_text() == "vendor/lib\n"
+    assert not (folder / "changes.diff").exists()
+
+
+def test_prose_folders_are_capped_too(tmp_path: Path) -> None:
+    manifest = written(tmp_path, limit=60)
+
+    for witness in ["claimed", "why"]:
+        files = [path for path in manifest[witness].rglob("*") if path.is_file() and path.name != "truncated.txt"]
+        assert sum(len(path.read_text()) for path in files) <= 60, witness
+        assert (manifest[witness] / "truncated.txt").exists(), witness
 
 
 def test_binary_files_are_skipped_and_named(tmp_path: Path) -> None:

@@ -1,5 +1,6 @@
 import difflib
 from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,8 +9,13 @@ from pr_summary.settings import Settings, kind_of, ticket_keys
 from pr_summary.stripping import added_remarks, code_diff, stripped
 
 LIMIT = 300_000
+FETCH_WORKERS = 8
 
 Contents = Callable[[str, str], bytes | None]
+
+
+class Unreadable(Exception):
+    pass
 
 
 @dataclass(frozen=True)
@@ -50,7 +56,7 @@ def _sides(pr: PullRequest, changed: ChangedFile, contents: Contents) -> Side | 
     try:
         before = None if changed.status == "added" else _text(contents(pr.base_sha, changed.previous or changed.path))
         after = None if changed.status == "removed" else _text(contents(pr.head_sha, changed.path))
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, Unreadable):
         return None
     return Side(before, after)
 
@@ -85,6 +91,40 @@ def _code_folder(folder: Path, diffs: dict[str, str], wholes: dict[str, str], sk
     _write(folder, "truncated.txt", truncated)
 
 
+def _prefetched(pr: PullRequest, files: list[ChangedFile], contents: Contents) -> Contents:
+    wanted = [(pr.base_sha, changed.previous or changed.path) for changed in files if changed.status != "added"]
+    wanted += [(pr.head_sha, changed.path) for changed in files if changed.status != "removed"]
+
+    def fetch(key: tuple[str, str]) -> bytes | None | Unreadable:
+        try:
+            return contents(*key)
+        except Unreadable as unreadable:
+            return unreadable
+
+    with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+        fetched = dict(zip(wanted, pool.map(fetch, wanted), strict=True))
+
+    def replay(sha: str, path: str) -> bytes | None:
+        found = fetched[(sha, path)]
+        if isinstance(found, Unreadable):
+            raise found
+        return found
+
+    return replay
+
+
+def _capped(folder: Path, limit: int) -> None:
+    sizes = {path: len(path.read_text()) for path in folder.rglob("*") if path.is_file()}
+    truncated = []
+    while sizes and sum(sizes.values()) > limit:
+        largest = max(sizes, key=lambda path: sizes[path])
+        keep = max(0, sizes[largest] - (sum(sizes.values()) - limit))
+        largest.write_text(largest.read_text()[:keep])
+        sizes[largest] = keep
+        truncated.append(str(largest.relative_to(folder)))
+    _write(folder, "truncated.txt", truncated)
+
+
 def _remark_lines(remarks: Iterable[Remark]) -> list[str]:
     return [f"## {remark.author} ({remark.url})\n{cleaned(remark.body)}\n" for remark in remarks]
 
@@ -110,19 +150,22 @@ def write_inputs(
     unstripped: dict[str, list[str]] = {"production": [], "tests": []}
     remarks_added: list[str] = []
     docs: list[str] = []
-    for changed in files:
+    kept_files = [changed for changed in files if kind_of(changed.path, settings) != "ignored"]
+    contents = _prefetched(pr, kept_files, contents)
+    for changed in kept_files:
         kind = kind_of(changed.path, settings)
-        if kind == "ignored":
-            continue
         side = _sides(pr, changed, contents)
         if side is None:
             if kind != "docs":
                 skipped[kind].append(changed.path)
             continue
         if kind == "docs":
-            docs.append(_raw_diff(changed.path, side))
+            docs.append(_raw_diff(changed, side))
             continue
-        diffs[kind][changed.path] = code_diff(changed.path, side.before, side.after)
+        diff = code_diff(changed.path, side.before, side.after, previous=changed.previous)
+        if not diff and changed.previous and changed.previous != changed.path:
+            diff = f"rename from {changed.previous}\nrename to {changed.path}\n"
+        diffs[kind][changed.path] = diff
         if side.after is not None:
             whole = stripped(side.after, changed.path)
             wholes[kind][changed.path] = side.after if whole is None else whole
@@ -151,6 +194,9 @@ def write_inputs(
     _write(why, "comments.md", _remark_lines(by_others))
     _write(why, "earlier_prs.md", [line for earlier_pr in earlier for line in _earlier_lines(earlier_pr, pr.authors, settings)])
 
+    _capped(claimed, limit)
+    _capped(why, limit)
+
     if ticket:
         _write(manifest["requested"], "ticket.txt", [ticket])
     return manifest
@@ -169,7 +215,7 @@ def _earlier_lines(earlier_pr: EarlierPr, authors: frozenset[str], settings: Set
     return [heading, *body, *_remark_lines(others)]
 
 
-def _raw_diff(path: str, side: Side) -> str:
+def _raw_diff(changed: ChangedFile, side: Side) -> str:
     def lines(text: str | None) -> list[str]:
         return [line + "\n" for line in (text or "").splitlines()]
 
@@ -177,7 +223,7 @@ def _raw_diff(path: str, side: Side) -> str:
         difflib.unified_diff(
             lines(side.before),
             lines(side.after),
-            fromfile=f"a/{path}" if side.before is not None else "/dev/null",
-            tofile=f"b/{path}" if side.after is not None else "/dev/null",
+            fromfile=f"a/{changed.previous or changed.path}" if side.before is not None else "/dev/null",
+            tofile=f"b/{changed.path}" if side.after is not None else "/dev/null",
         )
     )

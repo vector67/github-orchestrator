@@ -1,3 +1,4 @@
+import base64
 import json
 import re
 import subprocess
@@ -6,30 +7,36 @@ from typing import Any
 from urllib.parse import quote
 
 from pr_summary.earlier import chosen, earlier_from, most_changed
-from pr_summary.inputs import ChangedFile, Contents, EarlierPr
+from pr_summary.inputs import ChangedFile, Contents, EarlierPr, Unreadable
 from pr_summary.pull_request import PullRequest, pull_request_from
 from pr_summary.settings import Settings
 
 Gh = Callable[[list[str]], bytes]
 PR_URL = re.compile(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)")
 
-REMARKS = """
-  comments(first: 100) { nodes { author { login __typename } body url } }
-  reviews(first: 100) { nodes { author { login __typename } body url } }
-  reviewThreads(first: 100) { nodes { comments(first: 100) { nodes { author { login __typename } body url } } } }
+AUTHOR = "author { login __typename }"
+REMARK_NODES = f"nodes {{ {AUTHOR} body url }}"
+REMARKS = f"""
+  comments(first: 100) {{ {REMARK_NODES} }}
+  reviews(first: 100) {{ {REMARK_NODES} }}
+  reviewThreads(first: 100) {{ nodes {{ comments(first: 100) {{ {REMARK_NODES} }} }} }}
 """
-PULL_REQUEST = (
-    """
+PULL_REQUEST = """
 query($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
       number url title body createdAt headRefName baseRefOid headRefOid
       author { login __typename ... on User { name } }
-      commits(last: 100) { nodes { commit { message authors(first: 10) { nodes { name user { login } } } } } }
+    }
+  }
+}
 """
-    + REMARKS
-    + "    }\n  }\n}\n"
-)
+PAGED = {
+    "commits": "nodes { commit { message authors(first: 10) { nodes { name user { login } } } } }",
+    "comments": REMARK_NODES,
+    "reviews": REMARK_NODES,
+    "reviewThreads": f"nodes {{ comments(first: 100) {{ {REMARK_NODES} }} }}",
+}
 EARLIER_PULL_REQUEST = (
     """
 query($owner: String!, $repo: String!, $number: Int!) {
@@ -41,6 +48,18 @@ query($owner: String!, $repo: String!, $number: Int!) {
     + REMARKS
     + "    }\n  }\n}\n"
 )
+
+
+def _paged_query(connection: str) -> str:
+    return f"""
+query($owner: String!, $repo: String!, $number: Int!, $endCursor: String) {{
+  repository(owner: $owner, name: $repo) {{
+    pullRequest(number: $number) {{
+      {connection}(first: 100, after: $endCursor) {{ pageInfo {{ hasNextPage endCursor }} {PAGED[connection]} }}
+    }}
+  }}
+}}
+"""
 
 
 class GhFailed(Exception):
@@ -62,13 +81,22 @@ def target(gh: Gh, given: str) -> tuple[str, str, int]:
     return owner, repo, int(given.lstrip("#"))
 
 
+def _variables(query: str, owner: str, repo: str, number: int) -> list[str]:
+    return ["-f", f"query={query}", "-F", f"owner={owner}", "-F", f"repo={repo}", "-F", f"number={number}"]
+
+
 def _graphql(gh: Gh, query: str, owner: str, repo: str, number: int) -> dict[str, Any]:
-    response: dict[str, Any] = json.loads(gh(["api", "graphql", "-f", f"query={query}", "-F", f"owner={owner}", "-F", f"repo={repo}", "-F", f"number={number}"]))
+    response: dict[str, Any] = json.loads(gh(["api", "graphql", *_variables(query, owner, repo, number)]))
     return response
 
 
 def pull_request(gh: Gh, owner: str, repo: str, number: int) -> PullRequest:
-    return pull_request_from(_graphql(gh, PULL_REQUEST, owner, repo, number))
+    response = _graphql(gh, PULL_REQUEST, owner, repo, number)
+    pr = response["data"]["repository"]["pullRequest"]
+    for connection in PAGED:
+        pages = json.loads(gh(["api", "graphql", "--paginate", "--slurp", *_variables(_paged_query(connection), owner, repo, number)]))
+        pr[connection] = {"nodes": [node for page in pages for node in page["data"]["repository"]["pullRequest"][connection]["nodes"]]}
+    return pull_request_from(response)
 
 
 def changed_files(gh: Gh, owner: str, repo: str, number: int) -> list[ChangedFile]:
@@ -80,9 +108,16 @@ def changed_files(gh: Gh, owner: str, repo: str, number: int) -> list[ChangedFil
 def contents(gh: Gh, owner: str, repo: str) -> Contents:
     def at(sha: str, path: str) -> bytes | None:
         try:
-            return gh(["api", "-H", "Accept: application/vnd.github.raw+json", f"repos/{owner}/{repo}/contents/{quote(path)}?ref={sha}"])
-        except GhFailed:
-            return None
+            found = json.loads(gh(["api", f"repos/{owner}/{repo}/contents/{quote(path)}?ref={sha}"]))
+        except GhFailed as failure:
+            if "HTTP 404" in str(failure):
+                return None
+            raise
+        if not isinstance(found, dict) or found.get("type") != "file":
+            raise Unreadable(path)
+        if found.get("encoding") != "base64":
+            found = json.loads(gh(["api", f"repos/{owner}/{repo}/git/blobs/{found['sha']}"]))
+        return base64.b64decode(found["content"])
 
     return at
 
@@ -95,7 +130,7 @@ def earlier_prs(gh: Gh, owner: str, repo: str, pr: PullRequest, ticket: str | No
     for path in most_changed(files, settings):
         shas = gh(["api", f"repos/{owner}/{repo}/commits?path={quote(path)}&sha={pr.base_sha}&per_page=5", "--jq", ".[].sha"]).decode().split()
         for sha in shas:
-            merged = gh(["api", f"repos/{owner}/{repo}/commits/{sha}/pulls", "--jq", ".[] | select(.merged_at != null) | .number"])
+            merged = gh(["api", f"repos/{owner}/{repo}/commits/{sha}/pulls", "--jq", f'.[] | select(.merged_at != null and .base.repo.full_name == "{owner}/{repo}") | .number'])
             numbers.extend(int(line) for line in merged.decode().split())
     earlier = []
     for number in chosen(numbers, this=pr.number):
