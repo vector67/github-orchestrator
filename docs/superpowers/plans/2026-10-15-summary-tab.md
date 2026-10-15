@@ -36,6 +36,11 @@ is judged. Decision numbers (1–16) are the spec's. Issue #32.
 
 ### 1. The plugin's `--work-dir` flag
 
+**Done** (`cbea5153` and the commit that records this, which adds the README's
+layout). The by-hand run used a local commit, because this repository has no
+pull requests: five `output.json` files, with no `requested` folder, since a
+local commit has no ticket key.
+
 `plugins/pr-summary/scripts/summarise.py` and `pr_summary/inputs.py`: the flag
 writes the witness folders into the given path, creating it if missing and
 refusing a non-empty one. Without the flag, behaviour is unchanged. The README

@@ -47,6 +47,29 @@ uv run --script <plugin>/scripts/summarise.py https://github.com/acme/shop/pull/
 `--prepare-only` writes the witnesses' input folders and stops, which is the
 way to see exactly what each witness was given.
 
+## Working files
+
+Each run writes its witness folders into a fresh temporary folder, or into
+`--work-dir <path>` when given. The plugin creates `<path>` if it is missing
+and refuses one that is not empty, so a leftover `output.json` can never pass
+for a finished witness. The last line of the output names the folder:
+`Working files: <path>`.
+
+```
+<path>/
+  requested/        only when a ticket key was found
+  claimed/
+  implementation/
+  tests/
+  why/
+  alignment/
+  <witness>.log     each witness's own stdout and stderr
+```
+
+Each witness folder holds that witness's inputs, and `output.json` once the
+witness finishes. `alignment` runs last, after the others have finished or
+failed.
+
 ## Config
 
 Put a `[pr_summary]` table in `.github/pr-summary.toml` on the repository's
