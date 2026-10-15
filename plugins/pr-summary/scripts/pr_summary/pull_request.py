@@ -37,15 +37,19 @@ def _remark(node: dict[str, Any]) -> Remark:
     return Remark(author=author["login"], bot=author["__typename"] == "Bot", body=node["body"], url=node["url"])
 
 
-def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
-    pr = graphql["data"]["repository"]["pullRequest"]
-    commits = [node["commit"] for node in pr["commits"]["nodes"]]
-    commit_authors = {author["user"]["login"] for commit in commits for author in commit["authors"]["nodes"] if author["user"]}
+def remarks_from(pr: dict[str, Any]) -> tuple[Remark, ...]:
     nodes = [
         *pr["comments"]["nodes"],
         *pr["reviews"]["nodes"],
         *(comment for thread in pr["reviewThreads"]["nodes"] for comment in thread["comments"]["nodes"]),
     ]
+    return tuple(_remark(node) for node in nodes if node["body"].strip())
+
+
+def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
+    pr = graphql["data"]["repository"]["pullRequest"]
+    commits = [node["commit"] for node in pr["commits"]["nodes"]]
+    commit_authors = {author["user"]["login"] for commit in commits for author in commit["authors"]["nodes"] if author["user"]}
     return PullRequest(
         number=pr["number"],
         url=pr["url"],
@@ -58,7 +62,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
         author=pr["author"]["login"],
         authors=frozenset({pr["author"]["login"], *commit_authors}),
         commit_messages=tuple(commit["message"] for commit in commits),
-        remarks=tuple(_remark(node) for node in nodes if node["body"].strip()),
+        remarks=remarks_from(pr),
     )
 
 
