@@ -8,6 +8,7 @@ export interface MoveFlagSignature {
 const MoveFlagTag: TOC<MoveFlagSignature> = <template>
   <span
     class="move-flag {{if @flag.alarm 'alarm'}}"
+    title={{@flag.hint}}
     data-test-move-flag={{@flag.code}}
   >{{#if @flag.alarm}}<i class="sq alarm"></i>{{/if}}{{@flag.text}}</span>
 </template>;

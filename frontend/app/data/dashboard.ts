@@ -798,8 +798,19 @@ const DETAILED_REVIEWER: Flag = {
 export interface MoveFlag {
   code: FlagCode;
   text: string;
+  hint: string;
   alarm: boolean;
 }
+
+export const MISMATCHES_HINT =
+  'Mismatches the last finished PR summary found between what was asked for, what the author says and what the code does. It may be about an older head, and a summary running now is not counted until it ends; the Summary tab says which head it read';
+
+const FLAG_HINTS: Record<FlagCode, string> = {
+  draft: 'A draft: it has to be marked ready for review before it can merge',
+  'fix-ci': 'A check on the head commit is failing',
+  rebase: 'The branch conflicts with its base or is behind it',
+  'unresolved-threads': 'Review threads on GitHub not resolved yet',
+};
 
 const FLAG_WORDS: Record<FlagCode, (move: NextMove) => string> = {
   draft: () => 'Draft',
@@ -836,6 +847,7 @@ function flagsOf(move: NextMove): MoveFlag[] {
   return move.flags.map((code) => ({
     code,
     text: FLAG_WORDS[code](move),
+    hint: FLAG_HINTS[code],
     alarm: code === 'fix-ci',
   }));
 }

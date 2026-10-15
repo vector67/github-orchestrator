@@ -508,6 +508,17 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom(chipOf(10)).doesNotExist();
   });
 
+  test('a summary with mismatches carries no word of being about an older head or still running', async function (assert) {
+    board().held = [heldPr({ mismatches: 3 })];
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-mismatches]')
+      .hasText('3 mismatches')
+      .hasAttribute('title', /older head/);
+  });
+
   test('the header counts the mismatches the wall served, with the summary tab never opened', async function (assert) {
     board().held = [heldPr({ mismatches: 2 })];
 

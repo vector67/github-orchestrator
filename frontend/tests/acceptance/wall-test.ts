@@ -915,6 +915,30 @@ module('Acceptance | wall', function (hooks) {
       .doesNotExist();
   });
 
+  test('every flag beside the verb says what it means on hover', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: {
+            draft: true,
+            ci_status: 'failing',
+            merge_state: 'conflicts',
+            unresolved_threads: 1,
+          },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const untitled = findAll(
+      '[data-test-wall-row="o/r#7"] [data-test-verb] [data-test-move-flag]',
+    )
+      .filter((one) => !one.getAttribute('title'))
+      .map((one) => one.textContent.trim());
+    assert.deepEqual(untitled, []);
+  });
+
   test('each column header says what its word means, and what a dot means', async function (assert) {
     onTheHub(heldPr());
 

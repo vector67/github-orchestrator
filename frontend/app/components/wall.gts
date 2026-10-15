@@ -12,6 +12,7 @@ import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import {
   dashboardOf,
   HEADS,
+  MISMATCHES_HINT,
   type Reading,
   type Tone,
 } from 'frontend/data/dashboard';
@@ -211,6 +212,7 @@ export default class Wall extends Component {
                       pr.summaries.mismatches
                     }}<span
                         class="flag"
+                        title={{MISMATCHES_HINT}}
                         data-test-mismatches
                       >{{pr.summaries.mismatches}}</span>{{/if}}{{#if
                       pr.moved
