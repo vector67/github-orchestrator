@@ -74,6 +74,7 @@ os.environ["GIT_CONFIG_COUNT"] = "1"
 os.environ["GIT_CONFIG_KEY_0"] = "maintenance.auto"
 os.environ["GIT_CONFIG_VALUE_0"] = "false"
 os.environ["GIT_AUTHOR_DATE"] = os.environ["GIT_COMMITTER_DATE"] = "2026-01-01T00:00:00Z"
+os.environ["LANGUAGE"] = "C"
 
 UVICORN_POLL_SECONDS = 0.01
 
