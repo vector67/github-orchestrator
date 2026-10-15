@@ -10,8 +10,9 @@ JSON = "application/json"
 HEADER: dict[str, Any] = {
     "ETag": {"description": "The resource's revision. Echo it as "
                             "`If-None-Match` on the next read. For an "
-                            "operation, send the conversation's `etag` field "
-                            "as `If-Match` rather than this.",
+                            "operation, send the conversation's or the "
+                            "summary's `etag` field as `If-Match` rather "
+                            "than this.",
              "schema": {"type": "string"}}}
 
 TAGGED: dict[int | str, dict[str, Any]] = {

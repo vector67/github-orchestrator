@@ -952,7 +952,8 @@ class ServerAppProvider(Provider):
                    setup: SetupDesk, releases: Releases, tour: TourMarker, told: Told,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
-                   panels: ManagerPanels) -> ServerApp:
+                   panels: ManagerPanels, summaries: PrSummaries,
+                   lane: SummaryLane) -> ServerApp:
         from github_orchestrator.board_api._one_server import OneServer
         return OneServer(app_root=wiring.app_root, font_dir=wiring.font_dir,
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
@@ -961,6 +962,7 @@ class ServerAppProvider(Provider):
                          told=told, holdings=holdings,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
+                         summaries=summaries, lane=lane,
                          check_presence=wiring.check_presence,
                          first_names_only=wiring.first_names_only,
                          heartbeat_seconds=wiring.heartbeat_seconds,
@@ -1451,6 +1453,8 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         working_copies_wiring(settings),
         thread_records_wiring(settings),
         change_detection_wiring(settings),
+        pr_summaries_wiring(settings),
+        replace(summary_lane_wiring(settings), agents_enabled=False),
         conversation_wiring(settings),
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),

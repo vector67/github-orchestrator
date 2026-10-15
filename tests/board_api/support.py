@@ -38,6 +38,7 @@ from github_orchestrator.board_api.interface import (
     Told,
     TourMarker,
 )
+from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import Conversation, ConversationManagerFactory
 from github_orchestrator.conversation.fake import FakeConversationManagerFactory
 from github_orchestrator.domain import Pr, Repo
@@ -52,7 +53,13 @@ from github_orchestrator.terminal_sessions.fake import (
     FakeTerminalSessions,
 )
 from github_orchestrator.watcher import Health, Releases, WatcherHealth
-from github_orchestrator.wiring import Part, ServerAppWiring, wire
+from github_orchestrator.wiring import (
+    Part,
+    PrSummariesWiring,
+    ServerAppWiring,
+    SummaryLaneWiring,
+    wire,
+)
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -120,6 +127,18 @@ class Serving(TypedDict, total=False):
     clock: Callable[[], datetime]
     port: int
     pr: Pr
+    summaries: list[Part]
+
+
+class NoHeads:
+    def facts(self, pr: Pr) -> None:
+        return None
+
+
+def no_summaries() -> list[Part]:
+    return [PrSummariesWiring(Path("/nonexistent/summaries")),
+            SummaryLaneWiring(Path("/nonexistent/config.toml"), {}, False),
+            fake_provider(ChangeDetection, NoHeads())]
 
 
 @dataclass
@@ -150,6 +169,7 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
         fake_provider(WorkingCopies, working_copies),
         fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
         fake_provider(ManagerPanels, OnePanel(serving.get("manager") or FakeManagerPanel())),
+        *serving.get("summaries", no_summaries()),
         clocks_of(serving.get("clock", at(MOMENT))),
         ServerAppWiring(app_root=serving.get("app_root", UNBUILT), font_dir=serving.get("font_dir"),
                         watching=(Repo("acme", "widgets"),), version="0.1.0",
@@ -234,6 +254,7 @@ def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(M
         fake_provider(WorkingCopies, fake.working_copies),
         fake_provider(Terminals, FakeTerminals()),
         fake_provider(ManagerPanels, OnePanel(FakeManagerPanel())),
+        *no_summaries(),
         clocks_of(clock),
         ServerAppWiring(app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
                         check_presence=False, first_names_only=False,
@@ -451,6 +472,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
         fake_provider(WorkingCopies, fake.working_copies),
         fake_provider(Terminals, terminals),
         fake_provider(ManagerPanels, panels),
+        *no_summaries(),
         clocks_of(at(MOMENT)),
         ServerAppWiring(app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
                         version="0.1.0", check_presence=False, first_names_only=False,

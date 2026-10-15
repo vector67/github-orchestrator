@@ -108,6 +108,19 @@ produces the stored file.
 
 ### 4. The board API
 
+**Done** (`1f3331fe`, which flags all six witnesses in `progress` and adds
+`SummaryLane.behind(pr, head)`, and the commit that records this). The board
+app serves `PrSummary` at `GET /api/summary`: the stored fields, `running`,
+`since`, `witnesses` (one `{witness, done}` per witness, in the plugin's order,
+empty when nothing runs), `behind` and `etag`. The operations are
+`POST /api/summary/operations:summarise` and
+`/api/summary/operations:summarise-with-github-api`, with the body's `etag` as
+`If-Match`; they answer `202` with the summary running, `409 summary-refused`
+with the lane's sentence when it starts nothing, and `412` on a moved tag.
+`behind` lives in the lane, which holds the clones, because `PrCheckout` is
+over its method cap. `pr_summaries` exports `Summary` too. The preview's lane
+has agents disabled, so its buttons never run the real plugin.
+
 The summary becomes an entity in `board_api/_contract.py`, projected in
 `_projection.py` and served on its own feed in `_app.py`, with `running`,
 `since` and the witness flags. The operations `summarise` and

@@ -1233,6 +1233,46 @@
     }
    }
   },
+  "/api/summary": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/PrSummary"
+    },
+    "304": null
+   }
+  },
+  "/api/summary/operations:summarise": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/PrSummary"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/summary/operations:summarise-with-github-api": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/PrSummary"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/terminal/sessions": {
    "get": {
     "200": {
@@ -3060,6 +3100,7 @@
     "repo-not-visible",
     "setup-refused",
     "not-broken",
+    "summary-refused",
     "server-error"
    ],
    "type": "string"
@@ -4727,6 +4768,158 @@
    ],
    "type": "object"
   },
+  "PrSummary": {
+   "properties": {
+    "answered": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "behind": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "etag": {
+     "type": "string"
+    },
+    "exit_status": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "finished": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "head_sha": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "markdown": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "mismatches": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "running": {
+     "type": "boolean"
+    },
+    "since": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "started": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "stderr": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "wanted": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "witnesses": {
+     "items": {
+      "$ref": "#/components/schemas/WitnessProgress"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "head_sha",
+    "wanted",
+    "answered",
+    "started",
+    "finished",
+    "exit_status",
+    "stderr",
+    "markdown",
+    "mismatches",
+    "running",
+    "since",
+    "witnesses",
+    "behind",
+    "etag"
+   ],
+   "type": "object"
+  },
   "Proposal": {
    "properties": {
     "agent_note": {
@@ -6244,6 +6437,21 @@
     "overdue",
     "last_error",
     "fix"
+   ],
+   "type": "object"
+  },
+  "WitnessProgress": {
+   "properties": {
+    "done": {
+     "type": "boolean"
+    },
+    "witness": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "witness",
+    "done"
    ],
    "type": "object"
   },

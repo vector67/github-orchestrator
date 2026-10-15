@@ -233,8 +233,9 @@ PACKAGES = {
     ),
     "board_api": Package(
         pinned=frozenset({"Dashboard", "ManagerPanel"}),
-        may_import=("conversation", "working_copies", "terminal_sessions", ROOT, LIBRARIES),
-        role="the board serves one PR's review threads and its terminal sessions, and reaches the rest of the program only through them",
+        may_import=("conversation", "working_copies", "terminal_sessions", "pr_summaries", ROOT,
+                    LIBRARIES),
+        role="the board serves one PR's review threads, its terminal sessions and its summary, and reaches the rest of the program only through them",
         imported_by=("wiring", "pr_manager", "watcher", "preview", "server"),
         entries=frozenset({"interface", "fake"}),
     ),
@@ -318,7 +319,7 @@ PACKAGES = {
         role="PR windows run each PR's agent manager in the background and open its terminal sessions, and are handed the worktree by their callers",
     ),
     "pr_summaries": Package(
-        pinned=frozenset({"PrSummaries", "SummaryLane"}),
+        pinned=frozenset({"PrSummaries", "Summary", "SummaryLane"}),
         may_import=(),
         role="PR summaries keep each PR's latest summary and its request marks, and run the pr-summary plugin one PR at a time in a lane of their own, knowing nothing of who asks for one",
     ),

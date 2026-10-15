@@ -102,7 +102,7 @@ def test_every_read_that_declares_a_304_declares_the_tag_with_it(contract):
     conditional = [answers for path in contract["paths"].values()
                    for operation in path.values()
                    if "304" in (answers := operation["responses"])]
-    assert len(conditional) == 18
+    assert len(conditional) == 19
     assert all("ETag" in answers["200"]["headers"]
                and "ETag" in answers["304"]["headers"]
                for answers in conditional)

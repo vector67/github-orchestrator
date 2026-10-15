@@ -1,4 +1,5 @@
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from typing import TypedDict
 
 from github_orchestrator import conversation as domain
@@ -11,7 +12,8 @@ from github_orchestrator.conversation import (
     ConversationManager,
     OperationKind,
 )
-from github_orchestrator.domain import Location, Sha, author_kind_of, threads_listed
+from github_orchestrator.domain import Location, Pr, Sha, author_kind_of, threads_listed
+from github_orchestrator.pr_summaries import PrSummaries, Summary, SummaryLane
 from github_orchestrator.working_copies import FileDiff, PrCheckout
 
 MAX_FILE_LINES = 2000
@@ -166,6 +168,37 @@ def conversation_of(conversation: Conversation, account: str) -> contract.Conver
     )
     return drawn.model_copy(update={"etag": etag_of(
         drawn.model_dump_json(exclude={"updated_at"}).encode())})
+
+
+def _moment(moment: datetime | None) -> str | None:
+    return None if moment is None else moment.isoformat()
+
+
+def summary_of(pr: Pr, summaries: PrSummaries, lane: SummaryLane,
+               head: str | None) -> contract.PrSummary:
+    stored = summaries.load(pr) or Summary()
+    progress = lane.progress(pr)
+    drawn = contract.PrSummary(
+        repo=str(pr.repo),
+        number=pr.number,
+        head_sha=stored.head_sha,
+        wanted=_moment(stored.wanted),
+        answered=_moment(stored.answered),
+        started=_moment(stored.started),
+        finished=_moment(stored.finished),
+        exit_status=stored.exit_status,
+        stderr=stored.stderr,
+        markdown=stored.markdown,
+        mismatches=stored.mismatches,
+        running=progress is not None,
+        since=None if progress is None else _moment(progress.since),
+        witnesses=[] if progress is None else [
+            contract.WitnessProgress(witness=witness, done=done)
+            for witness, done in progress.done.items()],
+        behind=lane.behind(pr, head),
+        etag="",
+    )
+    return drawn.model_copy(update={"etag": etag_of(drawn.model_dump_json().encode())})
 
 
 class _Envelope(TypedDict):

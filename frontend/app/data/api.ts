@@ -294,7 +294,7 @@ export interface DraftOperation {
   posted_comment: number | null;
 }
 
-export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'not-frozen' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'server-error';
+export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'not-frozen' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'summary-refused' | 'server-error';
 
 export interface ErrorDetail {
   status: number;
@@ -580,6 +580,25 @@ export interface PrFacts {
   unresolved_threads: number | null;
 }
 
+export interface PrSummary {
+  repo: string;
+  number: number;
+  head_sha: string | null;
+  wanted: string | null;
+  answered: string | null;
+  started: string | null;
+  finished: string | null;
+  exit_status: number | null;
+  stderr: string | null;
+  markdown: string | null;
+  mismatches: number | null;
+  running: boolean;
+  since: string | null;
+  witnesses: WitnessProgress[];
+  behind: number | null;
+  etag: string;
+}
+
 export interface Proposal {
   id: string;
   conversation: string;
@@ -863,6 +882,11 @@ export interface WatcherHealth {
   overdue: boolean;
   last_error: string | null;
   fix: string | null;
+}
+
+export interface WitnessProgress {
+  witness: string;
+  done: boolean;
 }
 
 export type WriteState = 'cloning' | 'failed' | 'restarting';

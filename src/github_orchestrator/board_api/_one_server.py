@@ -26,6 +26,7 @@ from github_orchestrator.board_api.interface import (
 from github_orchestrator.board_api.interface import RunLedger as Ledger
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.domain import Pr, Repo, UtcClock
+from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.terminal_sessions import Terminals
 from github_orchestrator.working_copies import WorkingCopies
 
@@ -79,6 +80,7 @@ class OneServer:
                  tour: TourMarker, told: Told, holdings: Holdings,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
+                 summaries: PrSummaries, lane: SummaryLane,
                  check_presence: bool, first_names_only: bool, heartbeat_seconds: float,
                  check_seconds: float) -> None:
         self._app_root = app_root
@@ -98,6 +100,8 @@ class OneServer:
         self._working_copies = working_copies
         self._terminals = terminals
         self._panels = panels
+        self._summaries = summaries
+        self._lane = lane
         self._check_presence = check_presence
         self._first_names_only = first_names_only
         self._heartbeat_seconds = heartbeat_seconds
@@ -121,6 +125,7 @@ class OneServer:
                 heartbeat_seconds=self._heartbeat_seconds, check_seconds=self._check_seconds,
                 terminals=self._terminals.of(pr),
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
-                clock=self._clock, prefix=pr_page(pr)))
+                clock=self._clock, summaries=self._summaries, lane=self._lane,
+                prefix=pr_page(pr)))
 
         return _Routed(hub_app(desk, port), _Boards(self._told, board))

@@ -76,6 +76,10 @@ class ErrorCode(StrEnum):
     NOT_BROKEN is the setup screen asking to move aside a config that parses,
     which is never moved from the page.
 
+    SUMMARY_REFUSED is the summary lane not starting a run: another summary
+    is running, agents are disabled, or the repository is not watched. The
+    detail says which.
+
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
     """
@@ -126,6 +130,7 @@ class ErrorCode(StrEnum):
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"
     NOT_BROKEN = "not-broken"
+    SUMMARY_REFUSED = "summary-refused"
     SERVER_ERROR = "server-error"
 
 
@@ -1443,6 +1448,62 @@ class AgentOutput(BaseModel):
     """The tail of what the agent has said on this pull request, oldest first."""
 
     lines: list[OutputLine]
+
+
+class WitnessProgress(BaseModel):
+    witness: str = Field(
+        description="One of the pr-summary plugin's six witnesses, in the order "
+                    "the plugin lists them.")
+    done: bool = Field(
+        description="The witness has written its `output.json`.")
+
+
+class PrSummary(BaseModel):
+    """The latest pr-summary run on this pull request, as stored, and the run
+    in flight if there is one.
+
+    Read from disk and the summary lane's slot on each request; nothing here
+    runs the plugin or asks GitHub.
+    """
+
+    repo: str
+    number: int
+    head_sha: Sha | None = Field(
+        description="The head the stored summary was written for. Null until a "
+                    "run has finished cleanly.")
+    wanted: str | None = Field(
+        description="When a review was last requested from the viewer.")
+    answered: str | None = Field(
+        description="The `wanted` the latest finished run was started for. A "
+                    "summary is due again while `wanted` is later.")
+    started: str | None
+    finished: str | None
+    exit_status: int | None = Field(
+        description="The plugin's exit status on the latest run: 0 for a "
+                    "summary, 3 when it needs the GitHub API, anything else a "
+                    "failure. Null when the plugin could not be started or no "
+                    "run has finished.")
+    stderr: str | None = Field(
+        description="What the plugin printed to stderr on the latest run, which "
+                    "carries its reason when it exits 3.")
+    markdown: str | None = Field(
+        description="The summary to render, from the latest clean run. A failed "
+                    "run leaves the previous one here.")
+    mismatches: int | None = Field(
+        description="How many mismatches the Alignment judge found. Null when "
+                    "its output is missing or will not read.")
+    running: bool
+    since: str | None = Field(
+        description="When the run in flight started. Null when none is.")
+    witnesses: list[WitnessProgress] = Field(
+        description="Each witness of the run in flight. Empty when none is.")
+    behind: int | None = Field(
+        description="How many commits the pull request's head is past "
+                    "`head_sha`, counted in the local clone. Null when either "
+                    "is unknown or the clone lacks one of them.")
+    etag: str = Field(
+        description="This summary's revision. Send it as `If-Match` on "
+                    "`:summarise`.")
 
 
 class CapturedGit(StrEnum):

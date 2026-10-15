@@ -55,6 +55,7 @@ from github_orchestrator.board_api._contract import (
     PlaceRequest,
     Proposal,
     ProposalList,
+    PrSummary,
     PullRequest,
     ReplyRequest,
     ResolveRequest,
@@ -102,6 +103,7 @@ from github_orchestrator.board_api._projection import (
     proposal_of,
     proposals_of,
     reviews_of,
+    summary_of,
     viewer_of,
     work_in_flight,
 )
@@ -115,6 +117,7 @@ from github_orchestrator.conversation import (
 )
 from github_orchestrator.domain import Location, Pr, UtcClock
 from github_orchestrator.domain import Sha as CommitSha
+from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.terminal_sessions import TerminalSessions
 from github_orchestrator.working_copies import PrCheckout
 
@@ -153,6 +156,8 @@ class Board:
     terminal_threads: anyio.CapacityLimiter
     first_names_only: bool
     clock: UtcClock
+    summaries: PrSummaries
+    lane: SummaryLane
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
     prefix: str = ""
@@ -1231,6 +1236,70 @@ def send_review(board: Serving, asked: SendReviewRequest) -> Response:
     return JSONResponse(
         status_code=202, content=sent.model_dump(mode="json"),
         headers={"Location": f"{board.prefix}{PREFIX}/operations/{review.id}"})
+
+
+def _summary(board: Board) -> PrSummary:
+    return summary_of(board.pr, board.summaries, board.lane,
+                      board.conversations.facts().head_sha)
+
+
+@reads.get("/summary", response_model=PrSummary, tags=["summary"],
+           operation_id="readSummary",
+           summary="The latest pr-summary of this pull request, and the run in flight.",
+           responses=etag.TAGGED)
+def read_summary(request: Request, board: Serving) -> Response:
+    """Always answered, with every stored field null on a pull request never
+    summarised. Poll it while `running` to see the witnesses finish.
+    """
+    return etag.answered(request, _summary(board))
+
+
+SummaryIfMatch = Annotated[str, Header(
+    alias="If-Match",
+    description="The summary's `etag` field, as the last read gave it.")]
+
+SUMMARY_STARTED: dict[int | str, dict[str, Any]] = {
+    202: {"description": "The run started. The body is the summary with it running.",
+          "headers": {"Location": {
+              "description": "The summary to poll.",
+              "schema": {"type": "string", "format": "uri-reference"}}}},
+    409: {"description": "The summary lane started nothing: another summary is "
+                         "running, agents are disabled, or the repository is not "
+                         "watched. The detail says which.",
+          "model": Errors},
+    412: {"description": "The summary moved under you; read it again.",
+          "model": Errors}}
+
+
+def _summarised(board: Board, if_match: str, *, use_github_api: bool) -> Response:
+    if if_match != _summary(board).etag:
+        raise Refusal(412, ErrorCode.PRECONDITION_FAILED,
+                      f"the summary has moved since {if_match} was read")
+    refused = board.lane.start(board.pr, use_github_api=use_github_api)
+    if refused is not None:
+        raise Refusal(409, ErrorCode.SUMMARY_REFUSED, refused)
+    return JSONResponse(status_code=202, content=_summary(board).model_dump(mode="json"),
+                        headers={"Location": f"{board.prefix}{PREFIX}/summary"})
+
+
+@writes.post("/summary/operations:summarise", status_code=202, response_model=PrSummary,
+             tags=["summary"], operation_id="summarise", responses=SUMMARY_STARTED,
+             summary="Run the pr-summary plugin on this pull request now.")
+def summarise(board: Serving, if_match: SummaryIfMatch) -> Response:
+    """Rerun, or the first run on a pull request you wrote. It leaves `wanted`
+    alone, and the run it starts answers whatever request is pending.
+    """
+    return _summarised(board, if_match, use_github_api=False)
+
+
+@writes.post("/summary/operations:summarise-with-github-api", status_code=202,
+             response_model=PrSummary, tags=["summary"],
+             operation_id="summariseWithGithubApi", responses=SUMMARY_STARTED,
+             summary="Run the pr-summary plugin reading the pull request over the "
+                     "GitHub API.")
+def summarise_with_github_api(board: Serving, if_match: SummaryIfMatch) -> Response:
+    """The answer to a run that exited 3 because the clone could not be read."""
+    return _summarised(board, if_match, use_github_api=True)
 
 
 def _dashboard(board: Board) -> Dashboard:

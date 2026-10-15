@@ -1,5 +1,170 @@
 {
  "templates": {
+  "tests.board_api.test_summary._three_commits": {
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"one\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "one"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "d696c4ac844f7e38204f0198d7ad5771de76bd87\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"three\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "three"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "d68e6664101ecaa5c21a725a50babf427a018335\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"two\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "two"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "2498dcab5472a38bc46a6a2341cdc8870ecc9819\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "config",
+      "user.email",
+      "t@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"config\", \"user.name\", \"T\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "config",
+      "user.name",
+      "T"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"init\", \"-q\", \"-b\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "init",
+      "-q",
+      "-b",
+      "main"
+     ],
+     "fs": {
+      "repo/.git": {
+       "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.board_api.test_summary._three_commits>/repo\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d696c4ac844f7e38204f0198d7ad5771de76bd87\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2498dcab5472a38bc46a6a2341cdc8870ecc9819\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.board_api.test_summary._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d68e6664101ecaa5c21a725a50babf427a018335\n"
+    }
+   ]
+  },
   "tests.cli.test_thread_commands._build_pr_worktree": {
    "[[\"git\", \"-C\", \"<TPL:tests.cli.test_thread_commands._build_pr_worktree>/prwork\", \"add\", \"f\"], null, null]": [
     {
@@ -7176,6 +7341,34 @@
      "returncode": 128,
      "stderr": "fatal: cannot change to '/nonexistent/worktree': No such file or directory\n",
      "stdout": ""
+    }
+   ]
+  },
+  "tests/board_api/test_summary.py::test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head_has_moved_since": {
+   "[[\"git\", \"rev-list\", \"--count\", \"d696c4ac844f7e38204f0198d7ad5771de76bd87..d68e6664101ecaa5c21a725a50babf427a018335\"], \"<TMP>/repo\", null]": [
+    {
+     "argv": [
+      "git",
+      "rev-list",
+      "--count",
+      "d696c4ac844f7e38204f0198d7ad5771de76bd87..d68e6664101ecaa5c21a725a50babf427a018335"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2\n"
+    },
+    {
+     "argv": [
+      "git",
+      "rev-list",
+      "--count",
+      "d696c4ac844f7e38204f0198d7ad5771de76bd87..d68e6664101ecaa5c21a725a50babf427a018335"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2\n"
     }
    ]
   },
