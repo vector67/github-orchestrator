@@ -459,6 +459,89 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  const RLO = '\u202E';
+
+  function boxOfCharacter(text: Node, at: number): DOMRect {
+    const range = document.createRange();
+    range.setStart(text, at);
+    range.setEnd(text, at + 1);
+    return range.getBoundingClientRect();
+  }
+
+  function readsAfter(later: DOMRect, earlier: DOMRect): boolean {
+    if (later.top >= earlier.bottom) return true;
+    return later.bottom > earlier.top && later.left > earlier.left;
+  }
+
+  test('a right-to-left override in a branch does not reverse the why text after it', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          manager: { frozen_on: 'x' },
+          frozen: {
+            worktree: '/wt',
+            here: `${RLO}niam`,
+            expected: 'tidy',
+            seconds_left: 60,
+            run_working: false,
+            release_requested: false,
+          },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const text = find(
+      '[data-test-wall-row="o/r#7"] [data-test-cell="why"]',
+    )!.firstChild!;
+    const said = text.textContent!;
+    const after = [...said]
+      .map((character, at) => ({ character, at }))
+      .filter(
+        ({ character, at }) => at >= said.indexOf(')') && /\S/.test(character),
+      );
+    const backwards = after
+      .slice(1)
+      .filter(
+        ({ at }, before) =>
+          !readsAfter(
+            boxOfCharacter(text, at),
+            boxOfCharacter(text, after[before]!.at),
+          ),
+      )
+      .map(({ character }) => character);
+    assert.deepEqual(
+      backwards,
+      [],
+      `the characters of "${said.slice(said.indexOf(')'))}" drawn before the one ahead of them`,
+    );
+  });
+
+  test('a right-to-left override in a failing check name does not reverse the names after it', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('fix-ci'),
+          status: { failed_checks: [`${RLO}tnil`, 'build', 'deploy'] },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const text = find(
+      '[data-test-wall-row="o/r#7"] [data-test-cell="why"]',
+    )!.firstChild!;
+    const said = text.textContent!;
+    const build = boxOfCharacter(text, said.indexOf('build'));
+    const deploy = boxOfCharacter(text, said.indexOf('deploy'));
+    assert.true(
+      readsAfter(deploy, build),
+      `"build" at (${Math.round(build.left)}, ${Math.round(build.top)}), "deploy" at (${Math.round(deploy.left)}, ${Math.round(deploy.top)})`,
+    );
+  });
+
   function cells(key: string): Record<string, string> {
     return Object.fromEntries(
       findAll(`[data-test-wall-row="${key}"] [data-test-cell]`).map((one) => [

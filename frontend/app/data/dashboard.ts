@@ -95,8 +95,14 @@ function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
+const BIDI_CONTROLS = /[\u202A-\u202E\u2066-\u2069]/g;
+
+function withoutBidiControls(name: string): string {
+  return name.replace(BIDI_CONTROLS, '');
+}
+
 function listed(people: string[]): string {
-  return people.join(', ');
+  return people.map(withoutBidiControls).join(', ');
 }
 
 const WAITING_FOR_AUTHOR = 'Waiting for author';
@@ -738,7 +744,7 @@ function whyOf(
     return 'Release asked for; the watcher cuts a fresh worktree on its next cycle';
   }
   if (frozen) {
-    return `Wrong branch checked out (${frozen.here}) · detaches in ${lengthOf(frozen.seconds_left)}`;
+    return `Wrong branch checked out (${withoutBidiControls(frozen.here)}) · detaches in ${lengthOf(frozen.seconds_left)}`;
   }
   if (since) return `Since you acted: ${since.join(', ')}`;
   if (!action) return 'Nothing known until the first poll';
