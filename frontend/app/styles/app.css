@@ -3224,6 +3224,12 @@ kbd {
   border-bottom-color: var(--red);
 }
 
+.summary-strip .strip-end {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
 .summary-strip .witnesses {
   display: flex;
   gap: 12px;
@@ -3249,7 +3255,8 @@ kbd {
 }
 
 .summary-strip .said,
-.summary-strip .rerun {
+.summary-strip .rerun,
+.summary-strip .strip-end {
   margin-left: auto;
 }
 

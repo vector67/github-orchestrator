@@ -67,7 +67,8 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'ready');
     assert
       .dom('[data-test-summary-strip]')
-      .hasText('c0ffee1 · finished 5m ago Rerun');
+      .hasText('c0ffee1 finished 5m ago Rerun');
+    assert.dom('[data-test-summary-end]').hasText('finished 5m ago Rerun');
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
@@ -197,12 +198,13 @@ module('Acceptance | summary tab', function (hooks) {
       .hasText('rerun started 5m ago, finished 5/6 witnesses');
   });
 
-  test('a push since the summary marks it stale, naming both heads and how far behind it is, with Rerun', async function (assert) {
+  test('a push since the summary marks it stale, naming both heads and how far behind it is, with when it finished and Rerun at its end', async function (assert) {
     asReviewer();
+    const finished = ago(30);
     board().summary = prSummary({
       head_sha: 'abc1234',
       exit_status: 0,
-      finished: ago(30),
+      finished,
       markdown: '# What it asks',
       behind: 2,
     });
@@ -212,7 +214,13 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'stale');
     assert
       .dom('[data-test-summary-strip]')
-      .hasText('Written for abc1234, head is c0ffee1, 2 commits behind Rerun');
+      .hasText(
+        'Written for abc1234, head is c0ffee1, 2 commits behind finished 30m ago Rerun',
+      );
+    assert.dom('[data-test-summary-end]').hasText('finished 30m ago Rerun');
+    assert
+      .dom('[data-test-summary-end] [data-test-summary-finished]')
+      .hasAttribute('title', finished);
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
@@ -398,6 +406,7 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-strip]')
       .hasText('exit 2 · ValueError: no witnesses Rerun');
+    assert.dom('[data-test-summary-end]').hasText('Rerun');
     assert.dom('[data-test-summary-markdown] h1').hasText('Before');
 
     await click('[data-test-summary-run]');

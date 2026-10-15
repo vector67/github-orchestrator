@@ -165,34 +165,46 @@ export default class SummaryTab extends Component {
             <span>{{exitWordOf this.tab.exitStatus}}
               ·
               {{this.tab.reason}}</span>
-            <button
-              type="button"
-              class="btn"
-              data-test-summary-run
-              {{on "click" this.run}}
-            >Rerun</button>
+            <span class="strip-end" data-test-summary-end>
+              <button
+                type="button"
+                class="btn"
+                data-test-summary-run
+                {{on "click" this.run}}
+              >Rerun</button>
+            </span>
           {{else if (is this.tab.state "stale")}}
             <span>Written for
               <code>{{this.tab.sha}}</code>, head is
               <code>{{this.tab.head}}</code>{{#if this.tab.behind}},
                 {{commits this.tab.behind}}
                 behind{{/if}}</span>
-            <button
-              type="button"
-              class="btn"
-              data-test-summary-run
-              {{on "click" this.run}}
-            >Rerun</button>
+            <span class="strip-end" data-test-summary-end>
+              <span
+                title={{this.tab.finished}}
+                data-test-summary-finished
+              >finished {{this.finished}}</span>
+              <button
+                type="button"
+                class="btn"
+                data-test-summary-run
+                {{on "click" this.run}}
+              >Rerun</button>
+            </span>
           {{else}}
-            <span><code>{{this.tab.sha}}</code>
-              · finished
-              {{this.finished}}</span>
-            <button
-              type="button"
-              class="btn"
-              data-test-summary-run
-              {{on "click" this.run}}
-            >Rerun</button>
+            <span><code>{{this.tab.sha}}</code></span>
+            <span class="strip-end" data-test-summary-end>
+              <span
+                title={{this.tab.finished}}
+                data-test-summary-finished
+              >finished {{this.finished}}</span>
+              <button
+                type="button"
+                class="btn"
+                data-test-summary-run
+                {{on "click" this.run}}
+              >Rerun</button>
+            </span>
           {{/if}}
           {{#if this.said}}
             <span class="said" data-test-summary-said>{{this.said}}</span>
