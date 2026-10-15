@@ -41,6 +41,24 @@ def _file_of(item: pytest.Item) -> str:
     return item.nodeid.split("::", 1)[0]
 
 
+def _group_of(item: pytest.Item) -> object:
+    marker = item.get_closest_marker("xdist_group")
+    return marker.args[0] if marker else item
+
+
+def _unsplit_spans(items: list[pytest.Item], seconds: dict[str, float],
+                   forks: int) -> list[tuple[int, int]]:
+    starts: list[int] = []
+    weights: list[float] = []
+    for index, item in enumerate(items):
+        if not starts or _group_of(item) != _group_of(items[index - 1]):
+            starts.append(index)
+            weights.append(0.0)
+        weights[-1] += seconds.get(item.nodeid, _UNTIMED)
+    ends = [*starts[1:], len(items)]
+    return [(starts[first], ends[last - 1]) for first, last in _spans(weights, forks)]
+
+
 def _recorded(config: pytest.Config) -> dict[str, float]:
     cache = getattr(config, "cache", None)
     if cache is None:
@@ -166,7 +184,7 @@ def run_in_forks(session: pytest.Session, forks: int, live_tests: set[str]) -> N
         raise pytest.UsageError("--forks needs a single-threaded process when collection ends")
     recorded = _recorded(session.config)
     session.items[:] = _heaviest_files_first(session.items, recorded)
-    spans = list(_spans([recorded.get(item.nodeid, _UNTIMED) for item in session.items], forks))
+    spans = _unsplit_spans(session.items, recorded, forks)
     temp_paths(session.config).getbasetemp()
     work_read, work_write = os.pipe()
     children: dict[int, tuple[int, int]] = {}
