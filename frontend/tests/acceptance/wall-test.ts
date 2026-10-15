@@ -1150,6 +1150,62 @@ module('Acceptance | wall', function (hooks) {
       .hasAttribute('title', 'Open #7 · nothing runs until you choose');
   });
 
+  function describedBy(selector: string): string[] {
+    const ids = find(selector)!.getAttribute('aria-describedby') ?? '';
+    return ids
+      .split(' ')
+      .filter(Boolean)
+      .flatMap((id) =>
+        Array.from(document.getElementById(id)?.children ?? []).map((part) =>
+          part.textContent.trim().replace(/\s+/g, ' '),
+        ),
+      );
+  }
+
+  test('the wall has one main heading', async function (assert) {
+    onTheHub(heldPr());
+
+    await visit('/');
+
+    assert.dom('h1').exists({ count: 1 });
+    assert.dom('h1').hasText('Pull requests');
+  });
+
+  test('a row’s button is named by its move and title alone, and describes its reason, each chip with what it means, its age and its meta one by one', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          status: { last_event_at: minutesAgo(47) },
+          facts: factsFor('await-author', {
+            ci_status: 'failing',
+            merge_state: 'conflicts',
+          }),
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const lead = '[data-test-wall-row="o/r#7"] [data-test-wall-lead]';
+    const move = texts('[data-test-wall-row="o/r#7"] [data-test-verb]')[0];
+    const title = texts(
+      '[data-test-wall-row="o/r#7"] [data-test-wall-title]',
+    )[0];
+    const meta = texts('[data-test-wall-row="o/r#7"] [data-test-wall-meta]')[0];
+    assert.dom(lead).hasAttribute('aria-label', `${move}: ${title}`);
+    const reason = reasonOf(7);
+    const hints = findAll('[data-test-wall-row="o/r#7"] [data-test-state]').map(
+      (chip) => `${chip.textContent.trim()}: ${chip.getAttribute('title')}.`,
+    );
+    assert.true(hints.length >= 2, hints.join(' '));
+    assert.deepEqual(describedBy(lead), [
+      `${reason}.`,
+      ...hints,
+      'In Waiting on others for 47m.',
+      `${meta}.`,
+    ]);
+  });
+
   test('a row that moved group says moved here until you open it', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');

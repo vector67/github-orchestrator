@@ -75,6 +75,15 @@ def test_the_page_shell_loads_the_recovery_script_before_anything_else():
     assert (Path(__file__).parents[2] / "frontend" / "public" / "recovery.js").is_file()
 
 
+def test_the_page_shell_names_its_language_for_screen_readers():
+    shell = (Path(__file__).parents[2] / "frontend" / "index.html").read_text()
+
+    html = re.search(r"<html\b[^>]*>", shell)
+
+    assert html is not None
+    assert 'lang="en"' in html.group(0)
+
+
 def test_nothing_is_served_before_the_front_end_is_built(tmp_path):
     answer = client_for(app_root=tmp_path / "never-built").get("/")
 

@@ -2386,6 +2386,15 @@ kbd {
   color: var(--muted);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .wall-row {
   position: relative;
   display: flex;
@@ -2469,6 +2478,30 @@ kbd {
 .wall-row:hover .wall-lead .meta::after {
   content: " · Open →";
   color: var(--text);
+}
+
+.wall-says {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wall-says > span + span::before {
+  content: " ";
+}
+
+.wall-lead:focus-visible .wall-says {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  font-size: var(--fs-xs);
+  white-space: normal;
+  color: var(--muted);
 }
 
 .wall-row .release {
