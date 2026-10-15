@@ -119,9 +119,9 @@ module('Acceptance | terminal', function (hooks) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
 
-    await press('3');
+    await press('4');
     assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
-    await press('2');
+    await press('3');
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
   });
 
@@ -170,7 +170,7 @@ module('Acceptance | terminal', function (hooks) {
       .hasText('Leave the terminal for its session list');
     await press('x');
 
-    await press('1');
+    await press('2');
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
   });
 
@@ -512,8 +512,8 @@ module('Acceptance | terminal', function (hooks) {
     board().print('shell-1', 'still here');
     await shows('still here');
 
-    await press('1');
-    await press('3');
+    await press('2');
+    await press('4');
 
     assert.strictEqual(board().socketsOf('shell-1').length, 1);
     assert.strictEqual(board().socketsOf('shell-1')[0]!.closedWith, null);
@@ -530,8 +530,8 @@ module('Acceptance | terminal', function (hooks) {
       find('[data-test-session-standing]')?.textContent?.includes('lost'),
     );
 
-    await press('1');
-    await press('3');
+    await press('2');
+    await press('4');
     await waitUntil(() => board().socketsOf('shell-1').length === 2);
     board().print('shell-1', 'carried on');
 

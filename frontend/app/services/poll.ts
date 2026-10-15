@@ -28,6 +28,7 @@ class Rail {
   readonly people: Polled;
   readonly list: Polled;
   readonly inFlight: Polled;
+  readonly summary: Polled;
 
   constructor(
     reachability: ReachabilityService,
@@ -45,6 +46,7 @@ class Rail {
     this.people = polled('rail', { kind: 'people', pr });
     this.list = polled('rail', { kind: 'conversations', pr }, true);
     this.inFlight = polled('refresh', { kind: 'in-flight', pr });
+    this.summary = polled('summary', { kind: 'summary', pr });
   }
 }
 
@@ -93,6 +95,7 @@ export default class PollService extends Service {
   private listTimer: ReturnType<typeof setInterval> | null = null;
   private dashboardTimer: ReturnType<typeof setInterval> | null = null;
   private hubTimer: ReturnType<typeof setInterval> | null = null;
+  private summaryTimer: ReturnType<typeof setInterval> | null = null;
   private restartTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(owner: Owner) {
@@ -167,6 +170,23 @@ export default class PollService extends Service {
     this.dashboardTimer = null;
   }
 
+  startSummary(): Promise<void> {
+    this.summaryTimer ??= setInterval(
+      () => void waitForPromise(this.readSummary().catch(() => undefined)),
+      LIST_MS,
+    );
+    return this.readSummary();
+  }
+
+  stopSummary(): void {
+    if (this.summaryTimer) clearInterval(this.summaryTimer);
+    this.summaryTimer = null;
+  }
+
+  private async readSummary(): Promise<void> {
+    await this.rail.summary.poll();
+  }
+
   startHub(): void {
     this.hubTimer ??= setInterval(
       () => void waitForPromise(this.refreshHub()),
@@ -210,6 +230,7 @@ export default class PollService extends Service {
     this.stopList();
     this.stopDashboard();
     this.stopHub();
+    this.stopSummary();
   }
 
   private async tick(): Promise<void> {

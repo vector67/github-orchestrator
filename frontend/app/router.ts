@@ -14,6 +14,7 @@ Router.map(function () {
       this.route('new-draft');
       this.route('detail', { path: '/:conversation_id' });
     });
+    this.route('summary', { resetNamespace: true });
     this.route('board', { resetNamespace: true });
     this.route('dashboard', { resetNamespace: true });
     this.route('terminal', { resetNamespace: true });

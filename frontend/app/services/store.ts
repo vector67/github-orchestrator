@@ -26,6 +26,7 @@ import type {
   MovedAside,
   Person,
   PrFacts,
+  PrSummary,
   Proposal,
   PullRequest,
   RunLedger,
@@ -78,20 +79,25 @@ import {
   readOf,
   shownOf,
   summaryOf,
+  summaryTabOf,
   wallOf,
   type Place,
   type Shown,
   type Summaries,
+  type SummaryTab,
   type WallSection,
 } from 'frontend/data/summaries';
 import type { Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
+import { DOWN } from 'frontend/services/reachability';
 
 export type {
   Flag,
   Move,
   NextMove,
   Summaries,
+  SummaryState,
+  SummaryTab,
   Tally,
   WallRow,
   WallSection,
@@ -147,7 +153,8 @@ export type Feed =
   | { kind: 'viewer'; pr: Numbered }
   | { kind: 'people'; pr: Numbered }
   | { kind: 'conversations'; pr: Numbered }
-  | { kind: 'in-flight'; pr: Numbered };
+  | { kind: 'in-flight'; pr: Numbered }
+  | { kind: 'summary'; pr: Numbered };
 
 export type Asked =
   | { changed: false }
@@ -184,6 +191,10 @@ const SHELVED_WALL = 'hub-pull-requests';
 
 const CHOSEN_REPOS = 'hub-repos';
 
+const SUMMARY_MOVED =
+  'The summary moved before your click reached the board. It has been read ' +
+  'again; look at it before you press.';
+
 const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
 
 const FEED_PATHS: Record<Feed['kind'], string> = {
@@ -195,6 +206,7 @@ const FEED_PATHS: Record<Feed['kind'], string> = {
   people: '/api/people',
   conversations: '/api/conversations',
   'in-flight': '/api/operations',
+  summary: '/api/summary',
 };
 
 const TOLD_PATHS: Record<Told, string> = {
@@ -288,6 +300,7 @@ export default class StoreService extends Service {
   @tracked private threads: ByKey<Thread> = {};
   @tracked private operations: ByKey<StoredOperation> = {};
   @tracked private proposals: ByKey<Proposal> = {};
+  @tracked private prSummaries: Record<string, PrSummary> = {};
   @tracked private diffs: Record<string, Diff> = {};
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
@@ -342,6 +355,44 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  prSummary(repo: string, number: number): SummaryTab | null {
+    const key = keyOf(repo, number);
+    const held = this.prSummaries[key];
+    const role = this.summary(repo, number)?.role ?? null;
+    const head = this.prs[key]?.head_sha ?? null;
+    return held ? summaryTabOf(held, head, role) : null;
+  }
+
+  summarise(pr: Numbered): Promise<string | null> {
+    return this.summarised(pr, 'summarise');
+  }
+
+  summariseWithGithubApi(pr: Numbered): Promise<string | null> {
+    return this.summarised(pr, 'summarise-with-github-api');
+  }
+
+  private async summarised(pr: Numbered, verb: string): Promise<string | null> {
+    const at = `${this.here.prefixOf(pr)}${FEED_PATHS.summary}`;
+    const etag = this.prSummaries[keyOf(pr.repo, pr.number)]?.etag ?? null;
+    try {
+      const { body } = await posted<PrSummary>(
+        `${at}/operations:${verb}`,
+        etag,
+        {},
+      );
+      this.takePrSummary(pr, body);
+      return null;
+    } catch (trouble) {
+      if (!(trouble instanceof Refusal)) {
+        void reportError(`${verb} ${at}`, trouble);
+        return DOWN;
+      }
+      if (trouble.code !== 'precondition-failed') return trouble.detail;
+      this.takePrSummary(pr, await fetched<PrSummary>(at));
+      return SUMMARY_MOVED;
+    }
   }
 
   get chosen(): string[] | null {
@@ -787,6 +838,9 @@ export default class StoreService extends Service {
       case 'in-flight':
         this.takeInFlight(feed.pr, body as Operation[]);
         return true;
+      case 'summary':
+        this.takePrSummary(feed.pr, body as PrSummary);
+        return true;
     }
   }
 
@@ -824,6 +878,10 @@ export default class StoreService extends Service {
       branch: pull.branch ?? held.branch,
       head_sha: pull.head_sha ?? held.head_sha,
     }));
+  }
+
+  private takePrSummary({ repo, number }: Numbered, summary: PrSummary): void {
+    this.prSummaries = { ...this.prSummaries, [keyOf(repo, number)]: summary };
   }
 
   private takePeople(people: Person[]): void {

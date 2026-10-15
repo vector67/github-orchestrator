@@ -89,10 +89,11 @@ module('Acceptance | pr view', function (hooks) {
         'the move counts the thread the page read',
       );
     assert.deepEqual(texts('[data-test-tab]'), [
-      'Board 1',
-      'Dashboard 2',
-      'Terminal 3',
-      'Diff 4',
+      'Summary 1',
+      'Board 2',
+      'Dashboard 3',
+      'Terminal 4',
+      'Diff 5',
     ]);
     assert.dom('[data-test-tab="board"]').hasAttribute('aria-current', 'page');
     assert.dom('#c-k1').exists('the board is in the Board tab');
@@ -157,12 +158,12 @@ module('Acceptance | pr view', function (hooks) {
     await visit('/');
     await click('[data-test-wall-row="o/r#7"] [data-test-wall-lead]');
 
-    await press('2');
+    await press('3');
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
 
     await press('\\');
     await click('[data-test-switcher-row="o/r#8"]');
-    await press('2');
+    await press('3');
     assert.strictEqual(currentURL(), '/pr/o/r/8/dashboard');
 
     await press('Escape');
@@ -365,7 +366,7 @@ module('Acceptance | pr view', function (hooks) {
     onTheHub(heldPr());
     await visit('/pr/o/r/7');
 
-    await press('2');
+    await press('3');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
     assert
@@ -373,7 +374,7 @@ module('Acceptance | pr view', function (hooks) {
       .hasAttribute('aria-current', 'page');
     assert.dom('[data-test-dashboard]').exists();
 
-    await press('1');
+    await press('2');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
   });
@@ -662,7 +663,7 @@ module('Acceptance | pr view', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     await click('[data-test-control="dismiss"]');
 
-    await press('1');
+    await press('2');
     await press('?');
     await press('o');
     await press('p');

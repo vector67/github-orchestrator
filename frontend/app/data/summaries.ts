@@ -6,7 +6,9 @@ import type {
   ManagerFlags,
   Operation,
   PrFacts,
+  PrSummary,
   RecordState,
+  WitnessProgress,
   WallGroup,
   WallGroupName,
 } from 'frontend/data/api';
@@ -576,4 +578,90 @@ export function shownOf(wall: WallSection[], chosen: string[] | null): Shown {
   const shown = shownBuilt(wall, chosen);
   lastShown = { wall, chosen: asked, shown };
   return shown;
+}
+
+export type SummaryState =
+  | 'none-yet-reviewer'
+  | 'none-yet-author'
+  | 'running'
+  | 'ready'
+  | 'stale'
+  | 'needs-github-api'
+  | 'failed';
+
+export interface SummaryTab {
+  state: SummaryState;
+  sha: string | null;
+  head: string | null;
+  behind: number | null;
+  finished: string | null;
+  since: string | null;
+  witnesses: WitnessProgress[];
+  exitStatus: number | null;
+  reason: string | null;
+  calls: number | null;
+  markdown: string | null;
+}
+
+const SHORT_SHA = 7;
+
+const NEEDS_GITHUB_API = 3;
+
+const API_CALLS = /about (\d+) API calls/;
+
+function shortOf(sha: string | null): string | null {
+  return sha ? sha.slice(0, SHORT_SHA) : null;
+}
+
+function linesOf(text: string | null): string[] {
+  return (text ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function stateOf(
+  summary: PrSummary,
+  head: string | null,
+  role: Role,
+): SummaryState {
+  const { running, exit_status, stderr } = summary;
+  if (running) return 'running';
+  if (exit_status === NEEDS_GITHUB_API) return 'needs-github-api';
+  if (exit_status === null && stderr) return 'failed';
+  if (exit_status === null) {
+    return role === 'author' ? 'none-yet-author' : 'none-yet-reviewer';
+  }
+  if (exit_status !== 0) return 'failed';
+  return head !== null && summary.head_sha !== head ? 'stale' : 'ready';
+}
+
+function reasonOf(state: SummaryState, stderr: string | null): string | null {
+  const lines = linesOf(stderr);
+  if (state === 'needs-github-api') return lines[0] ?? null;
+  if (state === 'failed') return lines.at(-1) ?? null;
+  return null;
+}
+
+export function summaryTabOf(
+  summary: PrSummary,
+  head: string | null,
+  role: Role | null,
+): SummaryTab | null {
+  if (!role) return null;
+  const state = stateOf(summary, head, role);
+  const calls = API_CALLS.exec(summary.stderr ?? '')?.[1];
+  return {
+    state,
+    sha: shortOf(summary.head_sha),
+    head: shortOf(head),
+    behind: summary.behind,
+    finished: summary.finished,
+    since: summary.since,
+    witnesses: summary.witnesses,
+    exitStatus: summary.exit_status,
+    reason: reasonOf(state, summary.stderr),
+    calls: calls === undefined ? null : Number(calls),
+    markdown: summary.markdown,
+  };
 }

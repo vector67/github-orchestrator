@@ -534,7 +534,7 @@ module('Acceptance | dashboard', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     assert.strictEqual(board().openStreams.length, 3);
 
-    await press('1');
+    await press('2');
     assert.deepEqual(board().openStreams, []);
 
     await visit('/pr/o/r/7/dashboard');

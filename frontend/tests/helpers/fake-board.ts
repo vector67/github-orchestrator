@@ -23,6 +23,7 @@ import type {
   OutputLine,
   Person,
   PrFacts,
+  PrSummary,
   Proposal,
   PullRequest,
   RecordState,
@@ -244,6 +245,28 @@ export const PULL_REQUEST: PullRequest = {
   branch: 'fix-the-widget',
   head_sha: 'c0ffee1',
 };
+
+export function prSummary(over: Partial<PrSummary> = {}): PrSummary {
+  return {
+    repo: 'o/r',
+    number: 7,
+    head_sha: null,
+    wanted: null,
+    answered: null,
+    started: null,
+    finished: null,
+    exit_status: null,
+    stderr: null,
+    markdown: null,
+    mismatches: null,
+    running: false,
+    since: null,
+    witnesses: [],
+    behind: null,
+    etag: '"summary-1"',
+    ...over,
+  };
+}
 
 export interface DashboardOver extends Partial<
   Omit<Dashboard, 'pr' | 'status' | 'system' | 'facts' | 'manager'>
@@ -501,6 +524,9 @@ export function heldPr(over: HeldOver = {}): HeldPullRequest {
 }
 
 const MANAGER_VERB = /\/api\/manager:([a-z-]+)$/;
+
+const SUMMARISE =
+  /\/api\/summary\/operations:(summarise|summarise-with-github-api)$/;
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
 export const ONE_PR_READ =
   /^\/api\/(?!health$|pull-requests$|runs$|tour$|client-errors$)/;
@@ -624,6 +650,7 @@ export class FakeBoard {
   sources: Record<string, string[]> = {};
   inFlight: Operation[] = [];
   reviews: Record<string, Operation> = {};
+  summary: PrSummary = prSummary();
   private managed: Dashboard = dashboard();
   private managerSet = false;
 
@@ -1132,6 +1159,7 @@ export class FakeBoard {
     if (path === '/api/viewer') return this.viewer;
     if (path === '/api/people') return this.people;
     if (path === '/api/operations') return this.inFlight;
+    if (path === '/api/summary') return this.summary;
     const review = /^\/api\/operations\/([^/]+)$/.exec(path);
     if (review) return this.reviews[decodeURIComponent(review[1]!)];
     if (path === '/api/files') {
@@ -1216,6 +1244,8 @@ export class FakeBoard {
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
+    const summarised = SUMMARISE.exec(url);
+    if (summarised) return this.summarise(url, summarised[1]!, headers);
     const found =
       /\/api\/(?:conversations\/([^/]+)\/)?operations:([a-z-]+)$/.exec(url);
     const key = decodeURIComponent(found?.[1] ?? '');
@@ -1283,6 +1313,38 @@ export class FakeBoard {
         state: 'pending',
       }),
       conversation: asked,
+    });
+  }
+
+  private summarise(url: string, verb: string, headers: Headers): Response {
+    const ifMatch = headers.get('If-Match');
+    this.posted.push({ url, key: '', verb, ifMatch, body: null });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    if (ifMatch !== this.summary.etag) {
+      return this.json(412, {
+        errors: [
+          {
+            status: 412,
+            code: 'precondition-failed',
+            detail: `the summary has moved since ${ifMatch} was read`,
+          },
+        ],
+      });
+    }
+    this.summary = {
+      ...this.summary,
+      running: true,
+      since: new Date(Date.now()).toISOString(),
+      witnesses: [],
+      etag: `"summary-${this.posted.length}-running"`,
+    };
+    return respond(JSON.stringify(this.summary), {
+      status: 202,
+      headers: { 'Content-Type': 'application/json', Location: '/api/summary' },
     });
   }
 

@@ -134,23 +134,23 @@ the local clone.
 Done when: API tests cover each field and both operations, including the
 If-Match rule.
 
-### 5. The store and derived values
+### 5–6. The store, the derived values and the tab
 
-`store.ts` fetches the summaries feed (`FEED_PATHS`) and holds one entity per
+One step, not two. The front end has no unit-test path: a test reaches the
+board only through its URL, its DOM and FakeBoard (`frontend/eslint.config.mjs`),
+so the store and the derived values can only be tested once the tab draws them.
+
+`store.ts` fetches the summary feed (`FEED_PATHS`) and holds one entity per
 PR. `data/summaries.ts` derives the tab's state (the spec's seven), stale or
 not, and the chip's count.
-
-Done when: unit tests cover each state and staleness.
-
-### 6. The tab
 
 `pr-view.gts` gets the Summary tab first, with keys 1–5 in screen order in
 `takes()`. `router.ts` gets the route, and `routes/pr/index.ts` opens Summary
 for reviewer PRs. The tab is the strip and the markdown (`markdownOf`), with
 the checklist while running and buttons wired to the step 4 operations.
 
-Done when: component tests cover each strip state and the key mapping, and the
-preview shows each state in both themes. Add preview cards for them.
+Done when: acceptance tests cover each strip state, staleness and the key
+mapping, and the preview shows each state in both themes.
 
 ### 7. The mismatch chip
 

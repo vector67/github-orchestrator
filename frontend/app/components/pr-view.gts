@@ -118,6 +118,10 @@ export default class PrView extends Component<PrViewSignature> {
     return `${count} ${count === 1 ? 'needs' : 'need'} you`;
   }
 
+  get onSummaryTab(): boolean {
+    return this.router.currentRouteName === 'summary';
+  }
+
   get onBoardTab(): boolean {
     return BOARD_TAB.test(this.router.currentRouteName ?? '');
   }
@@ -170,12 +174,14 @@ export default class PrView extends Component<PrViewSignature> {
 
   private takes(key: string): boolean {
     if (key === '1') {
-      if (!this.onBoardTab) void this.router.transitionTo('conversations');
+      if (!this.onSummaryTab) void this.router.transitionTo('summary');
     } else if (key === '2') {
-      if (!this.onDashboardTab) void this.router.transitionTo('dashboard');
+      if (!this.onBoardTab) void this.router.transitionTo('conversations');
     } else if (key === '3') {
-      if (!this.onTerminalTab) void this.router.transitionTo('terminal');
+      if (!this.onDashboardTab) void this.router.transitionTo('dashboard');
     } else if (key === '4') {
+      if (!this.onTerminalTab) void this.router.transitionTo('terminal');
+    } else if (key === '5') {
       if (!this.onDiffTab) void this.router.transitionTo('pr.diff');
     } else if (key === 'o') {
       openOnGitHub(this.url);
@@ -308,6 +314,13 @@ export default class PrView extends Component<PrViewSignature> {
       </header>
       <nav class="prtabs" aria-label="this pull request">
         <LinkTo
+          @route="summary"
+          class="tab"
+          aria-current={{if this.onSummaryTab "page"}}
+          data-test-tab="summary"
+        >Summary
+          <kbd>1</kbd></LinkTo>
+        <LinkTo
           @route="conversations"
           class="tab"
           aria-current={{if this.onBoardTab "page"}}
@@ -317,7 +330,7 @@ export default class PrView extends Component<PrViewSignature> {
               class="count"
               data-test-tab-count
             >{{this.threadsWaiting}}</span>{{/if}}
-          <kbd>1</kbd></LinkTo>
+          <kbd>2</kbd></LinkTo>
         <LinkTo
           @route="dashboard"
           class="tab"
@@ -328,21 +341,21 @@ export default class PrView extends Component<PrViewSignature> {
               class="live-dot"
               {{pulses this.reading.move}}
             ></span>{{/if}}
-          <kbd>2</kbd></LinkTo>
+          <kbd>3</kbd></LinkTo>
         <LinkTo
           @route="terminal"
           class="tab"
           aria-current={{if this.onTerminalTab "page"}}
           data-test-tab="terminal"
         >Terminal
-          <kbd>3</kbd></LinkTo>
+          <kbd>4</kbd></LinkTo>
         <LinkTo
           @route="pr.diff"
           class="tab"
           aria-current={{if this.onDiffTab "page"}}
           data-test-tab="diff"
         >Diff
-          <kbd>4</kbd></LinkTo>
+          <kbd>5</kbd></LinkTo>
       </nav>
       <div class="pane">
         {{yield}}

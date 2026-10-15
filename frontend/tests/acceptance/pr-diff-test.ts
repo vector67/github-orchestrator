@@ -69,17 +69,18 @@ module('Acceptance | pr diff', function (hooks) {
     );
   });
 
-  test('the Diff tab is the fourth, on 4, and stacks every changed file', async function (assert) {
+  test('the Diff tab is the fifth, on 5, and stacks every changed file', async function (assert) {
     await visit('/pr/o/r/7/conversations');
 
-    await triggerEvent(document, 'keydown', { key: '4' });
+    await triggerEvent(document, 'keydown', { key: '5' });
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
     assert.deepEqual(texts('[data-test-tab]'), [
-      'Board 1',
-      'Dashboard 2',
-      'Terminal 3',
-      'Diff 4',
+      'Summary 1',
+      'Board 2',
+      'Dashboard 3',
+      'Terminal 4',
+      'Diff 5',
     ]);
     assert.dom('[data-test-tab="diff"]').hasAttribute('aria-current', 'page');
     assert.deepEqual(texts('[data-test-file-path]'), [
