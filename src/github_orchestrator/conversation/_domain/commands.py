@@ -37,7 +37,6 @@ class Confirm:
 @dataclass(frozen=True)
 class Place:
     to: ConversationState
-    direction: str = ""
 
 
 @dataclass(frozen=True)

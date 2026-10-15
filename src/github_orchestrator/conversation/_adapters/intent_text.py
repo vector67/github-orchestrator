@@ -41,6 +41,8 @@ WORDS_ONLY = (REWORK, "not_fixed", "reply", EDIT_DRAFT)
 
 ASKED = "@operation"
 
+DIRECTED = "@direction"
+
 DELETE_MODIFIER = "delete"
 
 GITHUB_MODIFIER = "github"
@@ -137,6 +139,8 @@ def format_intent(intent: Intent) -> str:
     if decision == EDIT_DRAFT:
         payload = _draft_payload(payload, intent.anchor)
     first = f"{decision} {slot}" if slot else decision
+    if intent.direction:
+        first = f"{DIRECTED} {json.dumps(intent.direction)}\n{first}"
     if intent.operation is not None:
         first = f"{ASKED} {intent.operation} {intent.requested_at or ''}".rstrip() + (
             f"\n{first}")
@@ -258,10 +262,28 @@ def _asked(text: str) -> tuple[str | None, str | None, str]:
     return operation or None, requested_at or None, rest
 
 
+def _directed(text: str) -> tuple[str, str] | None:
+    if not text.startswith(f"{DIRECTED} "):
+        return "", text
+    header, _, rest = text.partition("\n")
+    try:
+        direction = json.loads(header[len(DIRECTED) + 1:])
+    except ValueError:
+        return None
+    return (direction, rest) if isinstance(direction, str) else None
+
+
 def parse_intent(text: str) -> Intent | None:
     operation, requested_at, text = _asked(text)
+    directed = _directed(text)
+    if directed is None:
+        return None
+    direction, text = directed
     intent = _parsed(text)
-    if intent is None or operation is None:
+    if intent is None:
+        return None
+    intent = replace(intent, direction=direction)
+    if operation is None:
         return intent
     return replace(intent, operation=operation, requested_at=requested_at)
 

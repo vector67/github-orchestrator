@@ -332,6 +332,7 @@ def _operation(entry: Any) -> Document:
         "anchor": _line_anchor(entry),
         "review": entry.get("review"),
         "github_node_id": entry.get("github_node_id"),
+        "direction": str(entry.get("direction") or ""),
     }
 
 
@@ -582,6 +583,7 @@ def migrated_review(document: Document) -> Document:
         "reason_code": _reason_code(document),
         "drafts": [str(key) for key in document.get("drafts") or ()],
         "posted_review": document.get("posted_review"),
+        "direction": str(document.get("direction") or ""),
     }
 
 

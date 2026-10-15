@@ -108,12 +108,13 @@ def test_placing_by_hand_keeps_the_human_direction_it_was_given(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("my-move")
 
-    with board.manager.editing("PRRT_one") as editable:
-        editable.place(ConversationState.WAITING,
-                       direction="octocat: the verdict was wrong, it is their move")
+    with board.manager.editing(
+            "PRRT_one", direction="octocat: the verdict was wrong, it is their move") as editable:
+        editable.place(ConversationState.WAITING)
+    board.manager.tick(FakeNotifications(), on_hold=False)
 
     placed = board.get("PRRT_one").operations[-1]
-    assert (placed.kind, placed.text) == (
+    assert (placed.kind, placed.direction) == (
         OperationKind.PLACE, "octocat: the verdict was wrong, it is their move")
 
 

@@ -119,6 +119,7 @@ def _operation(operation: Operation) -> dict[str, Any]:
         "anchor": _line_anchor_document(operation.anchor),
         "review": operation.review,
         "github_node_id": operation.github_node_id,
+        "direction": operation.direction,
     }
 
 
@@ -282,6 +283,7 @@ def _decoded_operation(entry: Document) -> Operation:
         anchor=_anchor(entry["anchor"]),
         review=entry["review"],
         github_node_id=entry["github_node_id"],
+        direction=entry["direction"],
     )
 
 
@@ -412,6 +414,7 @@ def encode_review(review: Review) -> Document:
         "reason_code": review.reason_code,
         "drafts": list(review.drafts),
         "posted_review": review.posted_review,
+        "direction": review.direction,
     }
 
 
@@ -427,6 +430,7 @@ def decode_review(document: Document) -> Review:
         reason_code=_reason(document["reason_code"]),
         drafts=tuple(document["drafts"]),
         posted_review=document["posted_review"],
+        direction=document["direction"],
     )
 
 

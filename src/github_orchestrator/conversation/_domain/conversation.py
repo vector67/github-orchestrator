@@ -411,6 +411,7 @@ class Operation:
     anchor: Location | None = None
     review: str | None = None
     github_node_id: str | None = None
+    direction: str = ""
 
     @property
     def is_run(self) -> bool:

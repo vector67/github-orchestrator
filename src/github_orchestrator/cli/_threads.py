@@ -20,6 +20,7 @@ from github_orchestrator.conversation import (
     ConversationState,
     Denied,
     EditableConversation,
+    Verdict,
 )
 from github_orchestrator.domain import Location, Pr, Repo, Side
 
@@ -60,12 +61,19 @@ def thread_open(args: argparse.Namespace, *, conversation_managers: Conversation
 
 
 def _report_or_die(args: argparse.Namespace, conversation_managers: ConversationManagerFactory,
-                   reported: Callable[[EditableConversation], object], target: str) -> None:
+                   reported: Callable[[EditableConversation], object], target: str,
+                   direction: str = "") -> None:
     key = args.thread_id
-    with conversation_managers.of(_pr_of(args)).editing(key) as conversation:
+    with conversation_managers.of(_pr_of(args)).editing(key, direction=direction) as conversation:
         outcome = reported(conversation)
     if isinstance(outcome, Denied):
         _die(f"{_pr_of(args)} thread {key} was not marked {target}: {outcome.reason}")
+
+
+def _directed_or_die(args: argparse.Namespace,
+                     conversation_managers: ConversationManagerFactory,
+                     asked: Callable[[EditableConversation], object], target: str) -> None:
+    _report_or_die(args, conversation_managers, asked, target, args.human_direction)
 
 
 def thread_skip(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
@@ -144,25 +152,150 @@ def thread_check(args: argparse.Namespace, *, conversation_managers: Conversatio
 
 
 PLACEABLE = (ConversationState.READY, ConversationState.WAITING, ConversationState.NOT_MINE,
-             ConversationState.QUEUED)
+             ConversationState.QUEUED, ConversationState.DEFERRED, ConversationState.DONE)
 
 
 def thread_place(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                  gist_model: str | None) -> None:
-    _report_or_die(args, conversation_managers, lambda conversation: conversation.place(
-        ConversationState(args.to), direction=args.human_direction), args.to)
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.place(
+        ConversationState(args.to), until=args.until, note=args.note), args.to)
+
+
+def _pointed(args: argparse.Namespace) -> tuple[tuple[str, int | None, str], ...]:
+    pointed = []
+    for point in args.point or []:
+        file, _, rest = point.partition(":")
+        line, _, text = rest.partition(":")
+        if not file or not (line == "" or line.isdigit()):
+            _die(f"--point {point!r} is not FILE:LINE:TEXT")
+        pointed.append((file, int(line) if line else None, text))
+    return tuple(pointed)
+
+
+def thread_unpark(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                  gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.unpark(), "unparked")
+
+
+def thread_approve(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                   gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.approve(
+        reply=args.reply, delete_comment=args.delete_comment, resolve=args.resolve,
+        message=args.message, ticket_project=args.ticket_project,
+        ticket_title=args.ticket_title, ticket_body=args.ticket_body), "approved")
+
+
+def thread_rework(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                  gist_model: str | None) -> None:
+    pointed = _pointed(args)
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.rework(
+        note=args.note, pointed=pointed, include=args.include or ()), "reworked")
+
+
+def thread_session(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                   gist_model: str | None) -> None:
+    pointed = _pointed(args)
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.start_session(
+        steer=args.steer, pointed=pointed, include=args.include or ()), "given a session")
+
+
+def thread_fix(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+               gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.fix(), "queued for a fix")
+
+
+def thread_retry(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                 gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.retry(), "retried")
+
+
+def thread_stop(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.stop(), "stopped")
+
+
+def thread_resolve(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                   gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.resolve(
+        reply=args.reply, delete_comment=args.delete_comment, resolve=args.resolve,
+        thumbs_up=not args.no_thumbs_up), "resolved")
+
+
+def thread_reject(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                  gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.reject(
+        reply=args.reply, delete_comment=args.delete_comment), "rejected")
+
+
+def thread_answer(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                  gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.reply(args.body), "answered")
+
+
+def _location(args: argparse.Namespace) -> Location:
+    return Location(path=args.path, line=args.line, start_line=args.start_line,
+                    start_side=(None if args.start_line is None
+                                else Side(args.start_side or args.side)),
+                    side=Side(args.side))
+
+
+def _said(body_file: str) -> str:
+    body = _body_of(body_file)
+    if not body.strip():
+        _die(f"--body-file {body_file!r} holds nothing to say")
+    return body
+
+
+def thread_edit(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                gist_model: str | None) -> None:
+    body, anchor = _said(args.body_file), _location(args)
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.edit(body, anchor), "edited")
+
+
+def thread_enrol(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                 gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.enrol(), "enrolled")
+
+
+def thread_withdraw(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                    gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.withdraw(), "withdrawn")
+
+
+def thread_discard(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                   gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.discard(), "discarded")
+
+
+def thread_post_now(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                    gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers,
+                   lambda conversation: conversation.post_now(), "posted")
+
+
+def thread_send_review(args: argparse.Namespace, *,
+                       conversation_managers: ConversationManagerFactory,
+                       gist_model: str | None) -> None:
+    review = conversation_managers.of(_pr_of(args)).send_review(
+        Verdict(args.verdict), args.body, args.human_direction)
+    if isinstance(review, Denied):
+        _die(f"{_pr_of(args)} sent no review: {review.reason}")
+    print(review.id)
 
 
 def thread_draft(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                 gist_model: str | None) -> None:
-    body = _body_of(args.body_file)
-    if not body.strip():
-        _die(f"--body-file {args.body_file!r} holds nothing to say")
     drafted = conversation_managers.of(_pr_of(args)).open_draft(
-        body, Location(path=args.path, line=args.line, start_line=args.start_line,
-                       start_side=(None if args.start_line is None
-                                   else Side(args.start_side or args.side)),
-                       side=Side(args.side)))
+        _said(args.body_file), _location(args))
     if isinstance(drafted, Denied):
         _die(drafted.reason)
     print(drafted.key)
@@ -217,6 +350,22 @@ THREAD_COMMANDS = {
     "fail": thread_fail,
     "check": thread_check,
     "place": thread_place,
+    "unpark": thread_unpark,
+    "approve": thread_approve,
+    "rework": thread_rework,
+    "session": thread_session,
+    "fix": thread_fix,
+    "retry": thread_retry,
+    "stop": thread_stop,
+    "resolve": thread_resolve,
+    "reject": thread_reject,
+    "answer": thread_answer,
+    "edit": thread_edit,
+    "enrol": thread_enrol,
+    "withdraw": thread_withdraw,
+    "discard": thread_discard,
+    "post-now": thread_post_now,
+    "send-review": thread_send_review,
     "draft": thread_draft,
     "list": thread_list,
     "show": thread_show,
@@ -234,6 +383,133 @@ def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo", type=parse_repo, required=True,
                         help="The PR's repo, as owner/name")
     parser.add_argument("--pr", type=int, required=True, help="PR number")
+
+
+WAKES = ("manual", "reply", "ci", "push")
+
+
+def _wake(text: str) -> str:
+    if text in WAKES or (text.startswith("pr:") and text[3:].isdigit()):
+        return text
+    raise argparse.ArgumentTypeError(f"{text!r} is none of {', '.join(WAKES)} or pr:<number>")
+
+
+HUMAN_ONLY = ("HUMAN ONLY: {what} An agent runs this only when a human told it to, "
+              "and quotes them in --human-direction.")
+
+
+def _human_only(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser], verb: str,
+                what: str, *, thread: bool = True) -> argparse.ArgumentParser:
+    parser = thread_sub.add_parser(verb, help=HUMAN_ONLY.format(what=what),
+                                   description=HUMAN_ONLY.format(what=what))
+    _common(parser)
+    if thread:
+        parser.add_argument("--thread-id", required=True)
+    parser.add_argument("--human-direction", required=True,
+                        help="The human's instruction, quoted, with who gave it; "
+                             "kept in the thread's history")
+    return parser
+
+
+def _brief_fields(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--point", action="append", default=None,
+                        help="A line to point the agent at, as FILE:LINE:TEXT "
+                             "(LINE may be empty); repeat for more")
+    parser.add_argument("--include", action="append", default=None,
+                        help="A file to hand the agent; repeat for more")
+
+
+def _anchor_fields(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--path", required=True,
+                        help="The file, relative to the repo root")
+    parser.add_argument("--line", type=int, required=True,
+                        help="The line on the pull request's head")
+    parser.add_argument("--start-line", type=int, default=None,
+                        help="The first line, where it spans several")
+    parser.add_argument("--start-side", default=None,
+                        choices=[side.value for side in Side],
+                        help="The side the first line is on; --side where not given")
+    parser.add_argument("--side", default=Side.AFTER.value,
+                        choices=[side.value for side in Side])
+
+
+def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    place_parser = _human_only(
+        thread_sub, "place", "move a thread to the outcome the operator chose, as the "
+                             "board's move does; deferred parks it and done confirms it.")
+    place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE])
+    place_parser.add_argument("--until", type=_wake, default="manual",
+                              help="With --to deferred: what wakes it, one of "
+                                   "manual, reply, ci, push or pr:<number>")
+    place_parser.add_argument("--note", default="",
+                              help="With --to deferred: why it waits")
+
+    _human_only(thread_sub, "unpark", "wake a deferred thread now.")
+
+    approve_parser = _human_only(thread_sub, "approve",
+                                 "accept the agent's proposal: push its fix, post its reply "
+                                 "or file its ticket.")
+    approve_parser.add_argument("--reply", default="", help="The reply to post with it")
+    approve_parser.add_argument("--delete-comment", action="store_true",
+                                help="Delete the comment instead of answering it")
+    approve_parser.add_argument("--resolve", action="store_true",
+                                help="Mark the thread resolved on GitHub")
+    approve_parser.add_argument("--message", default="",
+                                help="The commit message, in place of the agent's")
+    approve_parser.add_argument("--ticket-project", default=None,
+                                help="The ticket's project, in place of the agent's")
+    approve_parser.add_argument("--ticket-title", default="", help="The ticket's title")
+    approve_parser.add_argument("--ticket-body", default="", help="The ticket's description")
+
+    rework_parser = _human_only(thread_sub, "rework",
+                                "send the agent's proposal back with a note on what to change.")
+    rework_parser.add_argument("--note", default="", help="What to change")
+    _brief_fields(rework_parser)
+
+    session_parser = _human_only(thread_sub, "session",
+                                 "open an interactive agent session on the thread.")
+    session_parser.add_argument("--steer", default="", help="What to start the session with")
+    _brief_fields(session_parser)
+
+    _human_only(thread_sub, "fix", "ask the agent to write a fix for the thread.")
+    _human_only(thread_sub, "retry", "run the agent again on a thread whose attempts failed.")
+    _human_only(thread_sub, "stop", "stop the agent's run on the thread.")
+
+    resolve_parser = _human_only(thread_sub, "resolve",
+                                 "close the thread as done, with a reply if one is given.")
+    resolve_parser.add_argument("--reply", default="", help="The reply to post")
+    resolve_parser.add_argument("--delete-comment", action="store_true",
+                                help="Delete the comment instead of answering it")
+    resolve_parser.add_argument("--resolve", action="store_true",
+                                help="Mark the thread resolved on GitHub")
+    resolve_parser.add_argument("--no-thumbs-up", action="store_true",
+                                help="Leave the comment without a thumbs-up")
+
+    reject_parser = _human_only(thread_sub, "reject",
+                                "turn the agent's proposal down and close the thread.")
+    reject_parser.add_argument("--reply", default="", help="The reply to post")
+    reject_parser.add_argument("--delete-comment", action="store_true",
+                               help="Delete the comment instead of answering it")
+
+    answer_parser = _human_only(thread_sub, "answer",
+                                "post the human's own reply on the thread now.")
+    answer_parser.add_argument("--body", required=True, help="The reply, in full")
+
+    edit_parser = _human_only(thread_sub, "edit", "rewrite a draft or move it to another line.")
+    _anchor_fields(edit_parser)
+    edit_parser.add_argument("--body-file", required=True, help="File holding the comment")
+
+    _human_only(thread_sub, "enrol", "put a draft in the review that goes out next.")
+    _human_only(thread_sub, "withdraw", "take a draft back out of the review.")
+    _human_only(thread_sub, "discard", "throw a draft away.")
+    _human_only(thread_sub, "post-now", "post a draft on GitHub on its own, now.")
+
+    review_parser = _human_only(thread_sub, "send-review",
+                                "send the review with every enrolled draft in it. Prints "
+                                "its id.", thread=False)
+    review_parser.add_argument("--verdict", required=True,
+                               choices=[verdict.value for verdict in Verdict])
+    review_parser.add_argument("--body", default=None, help="The review's summary")
 
 
 def _comment_fields(parser: argparse.ArgumentParser) -> None:
@@ -377,16 +653,7 @@ def add_thread_parsers(
     check_parser.add_argument("--reason", default="set by hand",
                               help="One line: why the commit does or does not address it")
 
-    place_parser = thread_sub.add_parser(
-        "place", help="HUMAN ONLY: move a thread to the outcome the operator chose, as the "
-                      "board's move does. An agent runs this only when a human told it to, "
-                      "and quotes them in --human-direction.")
-    _common(place_parser)
-    place_parser.add_argument("--thread-id", required=True)
-    place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE])
-    place_parser.add_argument("--human-direction", required=True,
-                              help="The human's instruction, quoted, with who gave it; "
-                                   "kept in the thread's history")
+    _add_human_only_parsers(thread_sub)
 
     draft_parser = thread_sub.add_parser(
         "draft",
@@ -394,17 +661,7 @@ def add_thread_parsers(
              "board, nothing on GitHub. Prints its key.",
     )
     _common(draft_parser)
-    draft_parser.add_argument("--path", required=True,
-                              help="The file, relative to the repo root")
-    draft_parser.add_argument("--line", type=int, required=True,
-                              help="The line on the pull request's head")
-    draft_parser.add_argument("--start-line", type=int, default=None,
-                              help="The first line, where it spans several")
-    draft_parser.add_argument("--start-side", default=None,
-                              choices=[side.value for side in Side],
-                              help="The side the first line is on; --side where not given")
-    draft_parser.add_argument("--side", default=Side.AFTER.value,
-                              choices=[side.value for side in Side])
+    _anchor_fields(draft_parser)
     draft_parser.add_argument("--body-file", required=True,
                               help="File holding the comment")
 

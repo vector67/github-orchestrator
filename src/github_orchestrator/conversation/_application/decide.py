@@ -141,7 +141,8 @@ def _refused(conversation: Conversation, code: ErrorCode,
 def _asked(intent: Intent) -> Asked | None:
     if intent.operation is None:
         return None
-    return Asked(id=intent.operation, requested_at=intent.requested_at)
+    return Asked(id=intent.operation, requested_at=intent.requested_at,
+                 direction=intent.direction)
 
 
 def _decided(ports: Ports, conversation: Conversation,
@@ -214,7 +215,7 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
         case "confirm":
             return Confirm()
         case "place":
-            return Place(to=ConversationState(intent.modifier), direction=payload)
+            return Place(to=ConversationState(intent.modifier))
         case "edit-draft":
             if intent.anchor is None:
                 return _Refusal(ErrorCode.MALFORMED_REQUEST,

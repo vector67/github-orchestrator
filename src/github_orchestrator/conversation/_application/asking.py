@@ -102,6 +102,7 @@ def _asked_for(conversation: Conversation, intent: Intent) -> Operation:
                      include=intent.include)
                if kind == OperationKind.REWORK else None),
         anchor=intent.anchor,
+        direction=intent.direction,
     )
 
 
@@ -167,8 +168,7 @@ def _intent_of(command: Command) -> Intent:
         case Confirm():
             return Intent(decision="confirm")
         case Place():
-            return Intent(decision="place", modifier=command.to.value,
-                          payload=command.direction or None)
+            return Intent(decision="place", modifier=command.to.value)
         case Enrol():
             return Intent(decision="enrol")
         case WithdrawFromReview():
@@ -254,7 +254,7 @@ def _stops_a_landing(conversation: Conversation, command: Command, intent: Inten
 
 
 def ask(ports: Ports, conversation: Conversation, command: Command,
-        held: Update) -> Conversation | Denied:
+        held: Update, direction: str = "") -> Conversation | Denied:
     """The refusals the rules can give now, the write into the pending decisions
     the drain reads, and the thread as the drain will leave it.
 
@@ -275,9 +275,10 @@ def ask(ports: Ports, conversation: Conversation, command: Command,
                       f"to take it")
     command = _allowed(command, ports.config)
     operation, requested_at = _operation_id(), ports.clock.now()
-    asked = replace(_intent_of(command), operation=operation, requested_at=requested_at)
+    asked = replace(_intent_of(command), operation=operation, requested_at=requested_at,
+                    direction=direction)
     outcome = apply(conversation, command, requested_at,
-                    Asked(id=operation, requested_at=requested_at))
+                    Asked(id=operation, requested_at=requested_at, direction=direction))
     if isinstance(outcome, Refused):
         if outcome.code is ErrorCode.CONFIRM_AGAIN:
             _asked_again_next(held, command)
@@ -299,7 +300,8 @@ _SAID_AS = {Verdict.APPROVE: "approval", Verdict.REQUEST_CHANGES: "change reques
             Verdict.COMMENT: "comment"}
 
 
-def send_review(ports: Ports, verdict: Verdict, body: str | None) -> Review | Denied:
+def send_review(ports: Ports, verdict: Verdict, body: str | None,
+                direction: str = "") -> Review | Denied:
     if not ports.github.takes_review(verdict, body):
         return Denied(ErrorCode.EMPTY_BODY,
                       f"GitHub takes no {_SAID_AS[verdict]} without a summary")
@@ -309,7 +311,7 @@ def send_review(ports: Ports, verdict: Verdict, body: str | None) -> Review | De
             return Denied(ErrorCode.REVIEW_IN_FLIGHT, "a review is already going out")
         review = Review(
             id=_operation_id(), verdict=verdict, body=body,
-            requested_at=ports.clock.now(),
+            requested_at=ports.clock.now(), direction=direction,
             drafts=tuple(conversation.key for conversation in records.list()
                          if conversation.state == ENROLLED))
         held.save(review)

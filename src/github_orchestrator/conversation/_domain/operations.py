@@ -129,6 +129,7 @@ class Asked:
 
     id: str
     requested_at: str | None = None
+    direction: str = ""
 
 
 @dataclass(frozen=True)
@@ -281,8 +282,6 @@ def _carried(command: Change) -> dict[str, Any]:
                                    include=command.include)}
         case Defer():
             return {"text": command.note, "until": _wake_word(command.wake_on)}
-        case Place():
-            return {"text": command.direction}
         case EditDraft():
             return {"text": command.body, "anchor": command.anchor}
         case Posted():
@@ -319,6 +318,7 @@ def asked_of(conversation: Conversation, command: Change,
     return Operation(
         id=_own_id(conversation, operations, kind, asked), kind=kind,
         requested_at=asked.requested_at if asked is not None else at,
+        direction=asked.direction if asked is not None else "",
         **_carried(command))
 
 
