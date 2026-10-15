@@ -43,7 +43,7 @@ export default class Wall extends Component {
   @service declare toasts: ToastsService;
   @service('pr-controls') declare controls: PrControlsService;
 
-  @tracked confirming: string | null = null;
+  @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
 
@@ -90,7 +90,8 @@ export default class Wall extends Component {
 
   isSelected = (pr: WallRow): boolean => keyOf(pr) === this.hub.selected;
 
-  isConfirming = (pr: WallRow): boolean => keyOf(pr) === this.confirming;
+  isConfirming = (pr: WallRow): boolean =>
+    pr.key === this.confirming?.key && pr.arrived === this.confirming.arrived;
 
   open = (pr: WallRow) => {
     void this.router.transitionTo(pageOf(pr));
@@ -110,7 +111,8 @@ export default class Wall extends Component {
 
   private press(pr: WallRow, control: Control): boolean {
     const next = this.controls.press(this.controls.ofRow(pr), control);
-    if (next === 'confirm-dismiss') this.confirming = keyOf(pr);
+    if (next === 'confirm-dismiss')
+      this.confirming = { key: pr.key, arrived: pr.arrived };
     return next !== 'nothing';
   }
 

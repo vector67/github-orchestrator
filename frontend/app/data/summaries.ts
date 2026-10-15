@@ -511,12 +511,14 @@ export function prHeaderOf(pr: PrEntity): PrHeader {
 export interface Place {
   group: WallGroup | null;
   joined: number;
+  arrived: number;
   moved: boolean;
 }
 
 export interface WallRow extends ShownPr {
   key: string;
   summaries: Summaries;
+  arrived: number;
   moved: boolean;
 }
 
@@ -534,7 +536,13 @@ export function placeOf(
 ): Place {
   const group = summaries.move.group;
   if (was && was.group === group) return was;
-  return { group, joined: joined(), moved: was !== null };
+  const at = joined();
+  return {
+    group,
+    joined: at,
+    arrived: was?.arrived ?? at,
+    moved: was !== null,
+  };
 }
 
 type Placed = WallRow & { joined: number; group: WallGroup | null };

@@ -924,6 +924,57 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
+  test('a dismiss question whose row leaves the wall does not come back by itself when the row returns', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+    await press('x');
+    assert.dom('[data-test-dismiss-confirm]').exists();
+
+    board().held = [heldPr({ number: 8 })];
+    await clock().tick(LIST);
+    assert.dom('[data-test-dismiss-confirm]').doesNotExist();
+
+    await press('j');
+    assert.deepEqual(
+      selected(),
+      ['o/r#8'],
+      'j moves again once the question went',
+    );
+
+    board().held = [heldPr(), heldPr({ number: 8 })];
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-dismiss-confirm]')
+      .doesNotExist('no question pops up that the user did not ask for now');
+  });
+
+  test('a dismiss question whose row changes section keeps the focus and still dismisses that row', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+    await press('x');
+
+    board().held = [
+      heldPr({
+        dashboard: { manager: { on_hold: true }, system: { on_hold: true } },
+      }),
+      heldPr({ number: 8 }),
+    ];
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7?');
+    assert.ok(
+      find('[data-test-dismiss-confirm]')!.contains(document.activeElement),
+      'the focus is still in the question',
+    );
+    await press('u');
+    assert.deepEqual(verbs(), [
+      '/pr/o/r/7/api/manager:dismiss {"forever":false}',
+    ]);
+  });
+
   test('x asks how long to dismiss for, u and f answer, Esc cancels', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
