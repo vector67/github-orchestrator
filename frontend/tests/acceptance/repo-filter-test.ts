@@ -94,6 +94,56 @@ module('Acceptance | repo filter', function (hooks) {
     ]);
   });
 
+  function repoNames(selector: string): string[] {
+    return findAll(`${selector} [data-test-row-repo]`).map(
+      (one) => one.textContent?.trim() ?? '',
+    );
+  }
+
+  test('with several repos shown each wall and switcher row names its repo', async function (assert) {
+    twoRepos();
+
+    await visit('/pr/acme/widgets/1');
+    await click('[data-test-switcher-open]');
+
+    assert.deepEqual(repoNames('[data-test-switcher-row]'), [
+      'acme/gadgets',
+      'acme/widgets',
+      'acme/gadgets',
+    ]);
+
+    await visit('/');
+
+    assert.deepEqual(repoNames('[data-test-wall-row]'), [
+      'acme/gadgets',
+      'acme/widgets',
+      'acme/gadgets',
+    ]);
+  });
+
+  test('with one repo shown no row names its repo', async function (assert) {
+    twoRepos();
+
+    await visit('/pr/acme/gadgets/2?repos=acme/gadgets');
+    await click('[data-test-switcher-open]');
+
+    assert.deepEqual(repoNames('[data-test-switcher-row]'), []);
+
+    await visit('/?repos=acme/gadgets');
+
+    assert.strictEqual(rows().length, 2);
+    assert.deepEqual(repoNames('[data-test-wall-row]'), []);
+  });
+
+  test('with one repo watched no row names its repo', async function (assert) {
+    board().watching = ['acme/widgets'];
+    board().held = [heldPr({ repo: 'acme/widgets', number: 1 })];
+
+    await visit('/');
+
+    assert.deepEqual(repoNames('[data-test-wall-row]'), []);
+  });
+
   function choices(): string[] {
     return attribute('[data-test-repo-choice]', 'data-test-repo-choice');
   }
