@@ -560,6 +560,7 @@ class SummaryLaneWiring(Wiring):
     config_path: Path
     clones: Mapping[Repo, Path]
     agents_enabled: bool
+    gh_account: str
     _: KW_ONLY
     plugin: tuple[str, ...] = ("uv", "run", "--script", str(SUMMARISE))
     timeout: float = SUMMARY_TIMEOUT_SECONDS
@@ -574,7 +575,7 @@ class SummaryLaneProvider(Provider):
     @provide
     def summary_lane(self, wiring: SummaryLaneWiring, summaries_wiring: PrSummariesWiring,
                      summaries: PrSummaries, clock: UtcClock,
-                     change_detection: ChangeDetection, access: Access) -> SummaryLane:
+                     change_detection: ChangeDetection) -> SummaryLane:
         def head_of(pr: Pr) -> str | None:
             facts = change_detection.facts(pr)
             return None if facts is None else facts.head_sha
@@ -582,7 +583,7 @@ class SummaryLaneProvider(Provider):
         return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
                                 plugin=wiring.plugin, config_path=wiring.config_path,
                                 clones=wiring.clones, head_of=head_of, url_of=pr_url,
-                                gh_token=access.token,
+                                gh_account=wiring.gh_account,
                                 agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
                                 run_in=wiring.run_in)
 
@@ -1285,7 +1286,7 @@ def pr_summaries_wiring(settings: Settings) -> PrSummariesWiring:
 def summary_lane_wiring(settings: Settings) -> SummaryLaneWiring:
     return SummaryLaneWiring(settings.config_path,
                              {repo: clone.path for repo, clone in settings.repos.items()},
-                             settings.config.agents_enabled)
+                             settings.config.agents_enabled, settings.config.gh_account)
 
 
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:

@@ -128,12 +128,6 @@ class FakeGitHub:
             )
         return None
 
-    def token(self) -> str:
-        refused = self.check_login(self.account)
-        if refused is not None:
-            raise GhError(refused)
-        return self.tokens[self.account]
-
     def active_account(self) -> str | None:
         return self.account
 

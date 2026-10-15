@@ -6,8 +6,6 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.github import Access
-from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.wiring import Part, PrSummariesWiring, SummaryLaneWiring, wire
 from tests.board_api.support import THE_PR, client_for, followed
@@ -25,11 +23,10 @@ def summary_parts(tmp_path: Path, behaviour: str = "clean", *, read: str | None 
     clone = tmp_path / "repo"
     clone.mkdir(exist_ok=True)
     return [PrSummariesWiring(tmp_path / "summaries"),
-            SummaryLaneWiring(tmp_path / "config.toml", {THE_PR.repo: clone}, agents_enabled,
+            SummaryLaneWiring(tmp_path / "config.toml", {THE_PR.repo: clone}, agents_enabled, "octocat",
                               plugin=(sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
                               run_in=run_in),
-            fake_provider(ChangeDetection, HeadsAt(read)),
-            fake_provider(Access, FakeGitHub())]
+            fake_provider(ChangeDetection, HeadsAt(read))]
 
 
 def wanted_on(tmp_path: Path) -> None:
