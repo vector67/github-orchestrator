@@ -1,5 +1,4 @@
 import difflib
-import tempfile
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -23,9 +22,7 @@ class WorkDirNotEmpty(Exception):
     pass
 
 
-def work_dir(named: Path | None) -> Path:
-    if named is None:
-        return Path(tempfile.mkdtemp(prefix="pr-summary-"))
+def work_dir(named: Path) -> Path:
     named.mkdir(parents=True, exist_ok=True)
     if any(named.iterdir()):
         raise WorkDirNotEmpty(f"{named} is not empty")

@@ -117,13 +117,6 @@ def test_a_named_work_dir_that_holds_anything_is_refused(tmp_path: Path) -> None
         work_dir(tmp_path)
 
 
-def test_without_a_name_each_run_gets_a_fresh_empty_folder() -> None:
-    first, second = work_dir(None), work_dir(None)
-
-    assert first != second
-    assert list(first.iterdir()) == list(second.iterdir()) == []
-
-
 def test_each_witness_leaves_its_output_in_its_own_folder_of_the_work_dir(tmp_path: Path) -> None:
     named = work_dir(tmp_path / "work")
 

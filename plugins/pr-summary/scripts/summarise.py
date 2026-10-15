@@ -5,6 +5,7 @@
 import argparse
 import dataclasses
 import sys
+import tempfile
 from pathlib import Path
 
 from pr_summary.clone import Clone, CloneFailed
@@ -40,7 +41,7 @@ def main() -> None:
     parser.add_argument("--use-github-api", action="store_true", help="read files over the GitHub API when the working directory is not a clone of the repository")
     arguments = parser.parse_args()
 
-    out = work_dir(arguments.work_dir)
+    named = work_dir(arguments.work_dir) if arguments.work_dir else None
     owner, repo, number = target(gh_cli, arguments.pr)
     pr = pull_request(gh_cli, owner, repo, number)
     clone = Clone.find(Path.cwd(), owner, repo)
@@ -80,6 +81,7 @@ def main() -> None:
     settings = settings_from(repo_config.decode() if repo_config is not None else fallback)
     ticket = ticket_key(settings, title=pr.title, branch=pr.branch)
     earlier = earlier_prs(gh_cli, owner, repo, pr, ticket, files, settings, history_of)
+    out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
     if not arguments.prepare_only:
         run_witnesses(manifest, launcher(PLUGIN_ROOT))

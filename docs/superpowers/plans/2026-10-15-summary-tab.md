@@ -36,8 +36,9 @@ is judged. Decision numbers (1–16) are the spec's. Issue #32.
 
 ### 1. The plugin's `--work-dir` flag
 
-**Done** (`cbea5153` and the commit that records this, which adds the README's
-layout). The by-hand run used a local commit, because this repository has no
+**Done** (`cbea5153`, `bc0e4023` and the commit that records this, which makes
+the temporary folder only after the GitHub calls when no `--work-dir` is given,
+as before). The by-hand run used a local commit, because this repository has no
 pull requests: five `output.json` files, with no `requested` folder, since a
 local commit has no ticket key.
 
