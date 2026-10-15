@@ -206,6 +206,70 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(texts('[data-test-wall-group]'), ['Waiting on others 1']);
   });
 
+  function parkedPr(number: number): ReturnType<typeof heldPr> {
+    return heldPr({
+      number,
+      dashboard: {
+        manager: { on_hold: true },
+        system: { queued_events: 0, on_hold: true },
+      },
+    });
+  }
+
+  test('the Parked section folds to its heading and count and unfolds again', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9), parkedPr(10));
+    await visit('/');
+
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+
+    assert.deepEqual(rows(), ['o/r#7']);
+    assert.deepEqual(texts('[data-test-wall-group]'), [
+      'Waiting on others 1',
+      'Parked 2',
+    ]);
+    assert
+      .dom('[data-test-wall-group="parked"] [data-test-fold]')
+      .hasAttribute('aria-expanded', 'false');
+
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#9', 'o/r#10']);
+    assert
+      .dom('[data-test-wall-group="parked"] [data-test-fold]')
+      .hasAttribute('aria-expanded', 'true');
+  });
+
+  test('only the Parked section folds', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9));
+    await visit('/');
+
+    assert.dom('[data-test-fold]').exists({ count: 1 });
+    assert.dom('[data-test-wall-group="parked"] [data-test-fold]').exists();
+  });
+
+  test('a folded Parked section stays folded when you come back to the wall', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9));
+    await visit('/');
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+
+    await visit('/pr/o/r/7/dashboard');
+    await visit('/');
+
+    assert.deepEqual(rows(), ['o/r#7']);
+  });
+
+  test('j and k skip the rows of a folded Parked section', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9), heldPr({ number: 8 }));
+    await visit('/');
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+
+    await press('j');
+    await press('j');
+    await press('j');
+
+    assert.deepEqual(selected(), ['o/r#8']);
+  });
+
   test('a mention you have not answered needs you and names who, and answered ones wait on others', async function (assert) {
     onTheHub(
       heldPr({
