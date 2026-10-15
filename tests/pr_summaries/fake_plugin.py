@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import signal
 import sys
 import time
 from pathlib import Path
@@ -45,10 +46,12 @@ if behaviour == "crash":
 if behaviour == "hang":
     finish("claimed", {"claims": []})
     time.sleep(60)
-if behaviour == "partway":
+if behaviour in ("partway", "partway-then-a-witness-fails"):
     finish("claimed", {"claims": []})
     (out / "implementation").mkdir()
     while not (out / "go-on").exists():
+        if (out / "die").exists():
+            os.killpg(os.getpgrp(), signal.SIGKILL)
         time.sleep(0.02)
 for witness in WITNESSES:
     finish(witness, {})
@@ -59,3 +62,5 @@ elif behaviour == "malformed-alignment":
     (out / "alignment" / "output.json").write_text("{not json")
 print("# Summary\n\nIt does what it says.")
 print(f"Working files: {out}")
+if behaviour == "partway-then-a-witness-fails":
+    sys.exit("Witnesses failed: why: timed out")

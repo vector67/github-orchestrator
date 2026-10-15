@@ -73,8 +73,8 @@ The summary record holds two request marks:
 
 A summary is due when `wanted` is newer than `answered` and no run for that
 PR is in flight. Each poll works this out again, as commit checks do. A run
-that dies with the process leaves `answered` unchanged, so it is due again
-after a restart.
+that dies without recording an exit status leaves `answered` unchanged, so it
+is due again.
 
 Rerun, the GitHub API button, and the button on your own PRs start a run at
 once without touching `wanted`. Each finished run sets `answered` to the
@@ -91,7 +91,21 @@ first. A run is:
    `local_path` as the working directory.
 3. Store the result. Keep the folder.
 
-A run past 25 minutes is killed and stored as failed. The plugin allows six
+A run outlives the server that started it. The lane's slot is a lock on
+`<data_dir>/summaries/lane.lock`, which also names the run in flight: the PR,
+`since`, the head it read and the `wanted` it answers. The plugin runs under
+a small wrapper that inherits the lock, sends stdout and stderr to
+`<n>.run/stdout` and `<n>.run/stderr` beside the working folder, and writes
+the exit status to `<n>.run/exit_status` before it exits. While the lock is
+held, every server reports the named run as running and refuses a second.
+Once it is free, whichever process takes the slot first, on a poll, a
+progress read or a start, stores the named run from those files and clears
+the name. A run is stored once, whether the server that started it waited
+for it or died. A run with no `exit_status` is stored as failed with
+`answered` unchanged.
+
+A run past 25 minutes is killed and stored as failed by the server waiting
+for it. The plugin allows six
 processes of ten minutes each, and the judge runs only after the five
 witnesses finish.
 

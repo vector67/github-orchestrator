@@ -6,8 +6,9 @@ import os
 import shutil
 import signal
 import subprocess
+import sys
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 
@@ -19,6 +20,25 @@ log = logging.getLogger(__name__)
 
 WORKING_FILES = "Working files: "
 WITNESSES = ("requested", "claimed", "implementation", "tests", "why", "alignment")
+LOST = "github-orchestrator lost the run: it ended without an exit status.\n"
+RECORDING_THE_EXIT = """
+import json, subprocess, sys
+try:
+    status = subprocess.run(sys.argv[2:]).returncode
+except OSError as failure:
+    sys.stderr.write(f"github-orchestrator could not start the plugin: {failure}\\n")
+    status = None
+with open(sys.argv[1], "w") as recorded:
+    recorded.write(json.dumps(status))
+"""
+
+
+@dataclass(frozen=True)
+class _Run:
+    pr: Pr
+    since: datetime
+    head: str | None
+    wanted: datetime | None
 
 
 def _markdown(stdout: str) -> str:
@@ -42,17 +62,40 @@ def _done(folder: Path) -> dict[str, bool]:
             for witness in WITNESSES if (folder / witness).is_dir()}
 
 
-def _in_flight(pr: Pr, since: datetime) -> bytes:
-    return json.dumps({"owner": pr.repo.owner, "repo": pr.repo.name, "number": pr.number,
-                       "since": since.isoformat()}).encode()
+def _outputs(pr_folder: Path) -> Path:
+    return pr_folder.with_suffix(".run")
 
 
-def _named(content: bytes) -> tuple[Pr, datetime] | None:
+def _read(path: Path) -> str:
+    try:
+        return path.read_text()
+    except FileNotFoundError:
+        return ""
+
+
+def _exit_status(outputs: Path) -> tuple[bool, int | None]:
+    try:
+        status = json.loads((outputs / "exit_status").read_text())
+    except (OSError, ValueError):
+        return False, None
+    return True, status if isinstance(status, int) else None
+
+
+def _in_flight(run: _Run) -> bytes:
+    return json.dumps({"owner": run.pr.repo.owner, "repo": run.pr.repo.name,
+                       "number": run.pr.number, "since": run.since.isoformat(),
+                       "head": run.head,
+                       "wanted": None if run.wanted is None else run.wanted.isoformat()}).encode()
+
+
+def _named(content: bytes) -> _Run | None:
     try:
         fields = json.loads(content)
-        return (Pr(Repo(fields["owner"], fields["repo"]), fields["number"]),
-                datetime.fromisoformat(fields["since"]))
-    except (ValueError, KeyError, TypeError):
+        wanted = fields.get("wanted")
+        return _Run(Pr(Repo(fields["owner"], fields["repo"]), fields["number"]),
+                    datetime.fromisoformat(fields["since"]), fields.get("head"),
+                    None if wanted is None else datetime.fromisoformat(wanted))
+    except (ValueError, KeyError, TypeError, AttributeError):
         return None
 
 
@@ -78,6 +121,7 @@ class LocalSummaryLane:
     def poll(self) -> None:
         if not self._agents_enabled:
             return
+        self._store_an_orphaned_run()
         due = [pr for pr in self._summaries.due(set()) if pr.repo in self._clones]
         if due:
             self.start(due[0], use_github_api=False)
@@ -90,17 +134,25 @@ class LocalSummaryLane:
         slot = self._slot()
         if slot is None:
             return "another summary is running"
-        started = self._clock()
+        self._store(slot)
+        run = _Run(pr, self._clock(), self._head_of(pr),
+                   (self._summaries.load(pr) or Summary()).wanted)
+        folder = working_folder(self._dir, pr)
+        shutil.rmtree(folder, ignore_errors=True)
+        shutil.rmtree(_outputs(folder), ignore_errors=True)
         os.ftruncate(slot, 0)
-        os.pwrite(slot, _in_flight(pr, started), 0)
-        self._run_in(lambda: self._run(pr, slot, started, use_github_api=use_github_api))
+        os.pwrite(slot, _in_flight(run), 0)
+        self._run_in(lambda: self._run(pr, slot, use_github_api=use_github_api))
         return None
 
     def progress(self, pr: Pr) -> Progress | None:
         held = self._held()
-        if held is None or held[0] != pr:
+        if held is None:
+            self._store_an_orphaned_run()
             return None
-        return Progress(since=held[1], done=_done(working_folder(self._dir, pr)))
+        if held.pr != pr:
+            return None
+        return Progress(since=held.since, done=_done(working_folder(self._dir, pr)))
 
     def behind(self, pr: Pr, head: str | None) -> int | None:
         read = (self._summaries.load(pr) or Summary()).head_sha
@@ -111,7 +163,7 @@ class LocalSummaryLane:
                                  cwd=clone, capture_output=True, text=True, check=False)
         return int(counted.stdout) if counted.returncode == 0 else None
 
-    def _held(self) -> tuple[Pr, datetime] | None:
+    def _held(self) -> _Run | None:
         try:
             descriptor = os.open(self._lock, os.O_RDONLY)
         except FileNotFoundError:
@@ -138,46 +190,61 @@ class LocalSummaryLane:
             return None
         return descriptor
 
-    def _run(self, pr: Pr, slot: int, started: datetime, *, use_github_api: bool) -> None:
+    def _store_an_orphaned_run(self) -> None:
+        slot = self._slot()
+        if slot is None:
+            return
         try:
-            self._summarise(pr, slot, started, use_github_api=use_github_api)
+            self._store(slot)
+        finally:
+            os.close(slot)
+
+    def _run(self, pr: Pr, slot: int, *, use_github_api: bool) -> None:
+        try:
+            self._plugin_run(pr, slot, use_github_api=use_github_api)
+            self._store(slot)
         except Exception:
             log.exception("Summary of %s failed", pr)
         finally:
             os.close(slot)
 
-    def _summarise(self, pr: Pr, slot: int, started: datetime, *,
-                   use_github_api: bool) -> None:
-        wanted = (self._summaries.load(pr) or Summary()).wanted
-        head = self._head_of(pr)
+    def _store(self, slot: int) -> None:
+        run = _named(os.pread(slot, 4096, 0))
+        if run is None:
+            return
+        folder = working_folder(self._dir, run.pr)
+        outputs = _outputs(folder)
+        ended, exit_status = _exit_status(outputs)
+        stderr = _read(outputs / "stderr") + ("" if ended else LOST)
+        previous = self._summaries.load(run.pr) or Summary()
+        report = (replace(previous, head_sha=run.head,
+                          markdown=_markdown(_read(outputs / "stdout")),
+                          mismatches=_mismatches(folder))
+                  if ended and exit_status == 0 else previous)
+        self._summaries.save(run.pr, replace(
+            report, answered=run.wanted if ended else previous.answered, started=run.since,
+            finished=self._clock(), exit_status=exit_status, stderr=stderr))
+        os.ftruncate(slot, 0)
+
+    def _plugin_run(self, pr: Pr, slot: int, *, use_github_api: bool) -> None:
         folder = working_folder(self._dir, pr)
-        shutil.rmtree(folder, ignore_errors=True)
+        outputs = _outputs(folder)
+        outputs.mkdir(parents=True)
         command = [*self._plugin, self._url_of(pr), "--config", str(self._config_path),
                    "--work-dir", str(folder), "--gh-account", self._gh_account,
                    *(["--use-github-api"] if use_github_api else [])]
-        exit_status, stdout, stderr = self._plugin_run(command, self._clones[pr.repo], slot)
-        previous = self._summaries.load(pr) or Summary()
-        report = (replace(previous, head_sha=head, markdown=_markdown(stdout),
-                          mismatches=_mismatches(folder))
-                  if exit_status == 0 else previous)
-        self._summaries.save(pr, replace(report, answered=wanted, started=started,
-                                         finished=self._clock(),
-                                         exit_status=exit_status, stderr=stderr))
-
-    def _plugin_run(self, command: list[str], cwd: Path,
-                    slot: int) -> tuple[int | None, str, str]:
+        with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
+            process = subprocess.Popen(
+                [sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
+                cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
+                start_new_session=True, pass_fds=(slot,))
         try:
-            process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, text=True,
-                                       start_new_session=True, pass_fds=(slot,))
-        except OSError as failure:
-            return None, "", f"github-orchestrator could not start the plugin: {failure}\n"
-        try:
-            stdout, stderr = process.communicate(timeout=self._timeout)
+            process.wait(timeout=self._timeout)
         except subprocess.TimeoutExpired:
             with contextlib.suppress(ProcessLookupError):
                 os.killpg(process.pid, signal.SIGKILL)
-            stdout, stderr = process.communicate()
-            stderr += (f"github-orchestrator stopped the run after "
-                       f"{self._timeout / 60:g} minutes.\n")
-        return process.returncode, stdout, stderr
+            process.wait()
+            with open(outputs / "stderr", "a") as stderr:
+                stderr.write(f"github-orchestrator stopped the run after "
+                             f"{self._timeout / 60:g} minutes.\n")
+            (outputs / "exit_status").write_text(json.dumps(process.returncode))

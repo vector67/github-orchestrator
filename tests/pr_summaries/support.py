@@ -1,9 +1,16 @@
+import json
 import subprocess
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 
+from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import Pr
+from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
+from github_orchestrator.wiring import PrSummariesWiring, SummaryLaneWiring, wire
+from tests.builders import a_pr
+from tests.conftest import clocks_of, fake_provider, ticking_clock
 
 
 class HeadsAt:
@@ -28,6 +35,39 @@ class Held:
     def finish(self) -> None:
         while self.work:
             self.work.pop()()
+
+
+THE_PR = a_pr(7, "acme/widgets")
+FAKE_PLUGIN = Path(__file__).with_name("fake_plugin.py")
+HEAD = "abc123"
+
+
+class Lane:
+    def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
+                 agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
+                 plugin: tuple[str, ...] | None = None, clone: Path | None = None) -> None:
+        self.clone = clone or tmp_path / "clone"
+        self.clone.mkdir(exist_ok=True)
+        self.config = tmp_path / "config.toml"
+        self.summaries_dir = tmp_path / "summaries"
+        container = wire(
+            PrSummariesWiring(self.summaries_dir),
+            SummaryLaneWiring(plugin=plugin or (sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
+                              config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
+                              agents_enabled=agents_enabled, timeout=timeout, run_in=run_in),
+            clocks_of(ticking_clock()),
+            fake_provider(ChangeDetection, HeadsAt(head)),
+        )
+        self.summaries: PrSummaries = container.get(PrSummaries)
+        self.lane: SummaryLane = container.get(SummaryLane)
+
+    @property
+    def folder(self) -> Path:
+        return self.summaries_dir / "acme" / "widgets" / "7"
+
+    def call(self) -> dict[str, object]:
+        called: dict[str, object] = json.loads((self.folder / "call.json").read_text())
+        return called
 
 
 def _git(cwd: Path, *args: str) -> str:

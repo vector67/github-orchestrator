@@ -1,4 +1,4 @@
-import json
+import subprocess
 import sys
 import threading
 import time
@@ -6,44 +6,8 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
-from github_orchestrator.wiring import PrSummariesWiring, SummaryLaneWiring, wire
 from tests.builders import a_pr
-from tests.conftest import clocks_of, fake_provider, ticking_clock
-from tests.pr_summaries.support import HeadsAt, Held, run_now, three_commits
-
-THE_PR = a_pr(7, "acme/widgets")
-FAKE_PLUGIN = Path(__file__).with_name("fake_plugin.py")
-HEAD = "abc123"
-
-
-class Lane:
-    def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
-                 agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
-                 plugin: tuple[str, ...] | None = None, clone: Path | None = None) -> None:
-        self.clone = clone or tmp_path / "clone"
-        self.clone.mkdir(exist_ok=True)
-        self.config = tmp_path / "config.toml"
-        self.summaries_dir = tmp_path / "summaries"
-        container = wire(
-            PrSummariesWiring(self.summaries_dir),
-            SummaryLaneWiring(plugin=plugin or (sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
-                              config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
-                              agents_enabled=agents_enabled, timeout=timeout, run_in=run_in),
-            clocks_of(ticking_clock()),
-            fake_provider(ChangeDetection, HeadsAt(head)),
-        )
-        self.summaries: PrSummaries = container.get(PrSummaries)
-        self.lane: SummaryLane = container.get(SummaryLane)
-
-    @property
-    def folder(self) -> Path:
-        return self.summaries_dir / "acme" / "widgets" / "7"
-
-    def call(self) -> dict[str, object]:
-        called: dict[str, object] = json.loads((self.folder / "call.json").read_text())
-        return called
+from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
 
 
 def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tmp_path):
@@ -289,6 +253,83 @@ def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
     assert lane.lane.progress(earlier) is None
     assert lane.lane.progress(THE_PR) is not None
     held.work.pop()()
+
+
+def _a_server_that_dies_partway(tmp_path: Path, lane: Lane, behaviour: str) -> None:
+    server = subprocess.Popen([sys.executable, "-m", "tests.pr_summaries.doomed_server", str(tmp_path), behaviour],
+                              cwd=Path(__file__).parents[2])
+    _partway(lane)
+    server.kill()
+    server.wait()
+
+
+def _until_it_stops_running(lane: Lane) -> None:
+    deadline = time.monotonic() + 10
+    while lane.lane.progress(THE_PR) is not None:
+        assert time.monotonic() < deadline, "the run never stopped"
+        time.sleep(0.02)
+
+
+def test_a_run_whose_server_died_still_shows_as_running_and_cannot_be_started_twice(tmp_path):
+    lane = Lane(tmp_path, "partway", head="moved-on")
+    lane.summaries.want(THE_PR)
+    _a_server_that_dies_partway(tmp_path, lane, "partway")
+
+    progress = lane.lane.progress(THE_PR)
+    refused = lane.lane.start(THE_PR, use_github_api=False)
+
+    (lane.folder / "go-on").write_text("")
+    _until_it_stops_running(lane)
+    assert progress is not None
+    assert dict(progress.done) == {"claimed": True, "implementation": False}
+    assert refused == "another summary is running"
+
+
+def test_a_run_whose_server_died_is_stored_by_the_next_lane_to_see_it_finish(tmp_path):
+    lane = Lane(tmp_path, "partway", head="moved-on")
+    lane.summaries.want(THE_PR)
+    wanted = lane.summaries.load(THE_PR).wanted
+    _a_server_that_dies_partway(tmp_path, lane, "partway")
+    since = lane.lane.progress(THE_PR).since
+
+    (lane.folder / "go-on").write_text("")
+    _until_it_stops_running(lane)
+
+    stored = lane.summaries.load(THE_PR)
+    assert stored.markdown == "# Summary\n\nIt does what it says.\n"
+    assert (stored.exit_status, stored.stderr, stored.head_sha, stored.mismatches) == (0, "", HEAD, None)
+    assert (stored.answered, stored.started) == (wanted, since)
+    assert stored.finished is not None
+    assert lane.summaries.due(set()) == []
+
+
+def test_a_run_whose_server_died_and_whose_witness_failed_keeps_the_earlier_summary(tmp_path):
+    lane = Lane(tmp_path, "partway-then-a-witness-fails")
+    _with_an_earlier_summary(lane)
+    _a_server_that_dies_partway(tmp_path, lane, "partway-then-a-witness-fails")
+
+    (lane.folder / "go-on").write_text("")
+    _until_it_stops_running(lane)
+
+    stored = lane.summaries.load(THE_PR)
+    assert (stored.exit_status, stored.stderr) == (1, "Witnesses failed: why: timed out\n")
+    assert (stored.head_sha, stored.markdown, stored.mismatches) == ("old", "# Earlier\n", 1)
+    assert lane.summaries.due(set()) == []
+
+
+def test_a_run_that_died_with_no_server_waiting_is_stored_as_lost_and_left_due(tmp_path):
+    lane = Lane(tmp_path, "partway")
+    _with_an_earlier_summary(lane)
+    _a_server_that_dies_partway(tmp_path, lane, "partway")
+
+    (lane.folder / "die").write_text("")
+    _until_it_stops_running(lane)
+
+    stored = lane.summaries.load(THE_PR)
+    assert stored.exit_status is None
+    assert "ended without an exit status" in stored.stderr
+    assert (stored.head_sha, stored.markdown) == ("old", "# Earlier\n")
+    assert lane.summaries.due(set()) == [THE_PR]
 
 
 def test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_head_now(tmp_path, git_template):
