@@ -260,6 +260,54 @@ longer exists and is not in the table.
 A stopped manager's board kept answering under load and showed it as gone 9 s
 after the stop, which is met.
 
+### Cause, 2026-10-15: the launchd job's CPU class
+
+The service's launch agent sets no `ProcessType`. launchd.plist(5) says such a
+job gets "light resource limits ... throttling its CPU usage", and every process
+the watcher starts inherits them: `ps -o pri` shows 20 for the watcher, the server
+and its workers, against 31 for a process started from a terminal. The probe and
+the spinners ran at 31, so under load the server lost the CPU to them. That may
+also be why lowering the spinners with `nice` did not help; it was not measured
+again.
+
+Measured with the same rig (70 spinners, a probe, a loop timing requests on a
+second server started from a worktree on its own port), above load average 80.
+Only the server's CPU class changed between the runs. `taskpolicy -c utility`
+puts the server at priority 20, the value `ps` shows for the service's server:
+
+|                                                                     | median | p90    | max    |
+| ------------------------------------------------------------------- | ------ | ------ | ------ |
+| priority 31, no page open (load 82–116): `/api/health`              | 2 ms   | 3 ms   | 9 ms   |
+| the same: a board's `/health`                                       | 2 ms   | 3 ms   | 7 ms   |
+| the same: `/viewer`                                                 | 5 ms   | 6 ms   | 24 ms  |
+| the same: a proposal's diff                                         | 209 ms | 219 ms | 254 ms |
+| priority 31, six simulated open boards (load 83–116): `/api/health` | 2 ms   | 4 ms   | 100 ms |
+| the same: `/viewer`                                                 | 5 ms   | 12 ms  | 76 ms  |
+| the same: a proposal's diff                                         | 216 ms | 246 ms | 440 ms |
+| priority 20, no page open (load 83–124): `/api/health`              | 132 ms | 475 ms | 816 ms |
+| the same: `/viewer`                                                 | 436 ms | 1.1 s  | 2.1 s  |
+| the same: a proposal's diff                                         | 11 s   | 27 s   | 27 s   |
+| priority 20, six simulated open boards (load 82–163): `/api/health` | 2.7 s  | 9.4 s  | 9.4 s  |
+| the same: a board's `/health`                                       | 4.6 s  | 7.5 s  | 7.5 s  |
+| the same: `/viewer`                                                 | 7.1 s  | 15 s   | 15 s   |
+| the same: a proposal's diff                                         | 50 s   | 52 s   | 52 s   |
+| the probe, late from a 5 ms sleep, in every run                     | 1 ms   | 1 ms   | 8 ms   |
+
+At priority 31 the targets are met; at priority 20 the 2026-10-09 result comes
+back. The slow runs finished few requests: the last one only 8 `/viewer` reads
+and 3 diffs above load 80. Native samples of the workers at priority 31 showed no
+thread waiting for the GIL. A child of a process clamped with
+`taskpolicy -c utility` stays at 20 even when started with `taskpolicy -a`, so
+the server likely cannot leave the class from inside the watcher's tree, though
+that was not tried under launchd.
+
+Open: how to lift the server out of the class. Setting `ProcessType` to
+`Interactive` in the launch agent lifts the whole tree, managers and agent runs
+included. Giving the server a launch agent of its own lifts only the server but
+changes who supervises it. Lifting the job and starting managers and agent runs
+under a utility clamp keeps their class as it is today. None of these has been
+measured under launchd yet.
+
 ## Settled at review
 
 - `server_workers` is 4. A worker serves many connections at once on its event
