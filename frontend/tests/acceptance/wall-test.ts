@@ -856,6 +856,23 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(selected(), ['o/r#7']);
   });
 
+  test('k after the selected row leaves the wall lands next to where it was, not on the first row', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }), heldPr({ number: 9 }));
+    await visit('/');
+    await press('j');
+    await press('j');
+    await press('j');
+    assert.deepEqual(selected(), ['o/r#9']);
+
+    board().held = [heldPr(), heldPr({ number: 8 })];
+    await clock().tick(LIST);
+    assert.deepEqual(selected(), [], 'nothing is highlighted');
+
+    await press('k');
+
+    assert.deepEqual(selected(), ['o/r#8']);
+  });
+
   test('p holds the selected pull request and p again resumes it', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');

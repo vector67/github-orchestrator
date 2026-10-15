@@ -46,6 +46,7 @@ export default class Wall extends Component {
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
+  private lastAt = -1;
 
   constructor(owner: Owner, args: object) {
     super(owner, args);
@@ -123,8 +124,11 @@ export default class Wall extends Component {
   private move(by: number): void {
     const order = this.order;
     const chosen = this.chosen;
-    const next = stepped(order, chosen ? order.indexOf(chosen) : -1, by);
-    if (next) this.hub.selected = keyOf(next);
+    const at = chosen ? order.indexOf(chosen) : this.lastAt - (by > 0 ? 1 : 0);
+    const next = stepped(order, at, by);
+    if (!next) return;
+    this.hub.selected = keyOf(next);
+    this.lastAt = order.indexOf(next);
   }
 
   private takes(key: string): boolean {
