@@ -4,7 +4,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
-import { todayOf, type Said } from 'frontend/data/runs';
+import { TODAY_HINT, todayOf, type Said } from 'frontend/data/runs';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
@@ -165,7 +165,10 @@ export default class HubBar extends Component<HubBarSignature> {
               ></i>{{/if}}{{this.poll.text}}</span>
         {{/if}}
         {{#if this.today}}
-          <span data-test-health="today">{{this.today}}</span>
+          <span
+            title={{TODAY_HINT}}
+            data-test-health="today"
+          >{{this.today}}</span>
         {{/if}}
       </span>
       {{#if this.hub.fontProblem}}

@@ -74,8 +74,11 @@ function costWords(today: RunsToday): string {
   return today.cost_usd === null ? '' : ` · ~$${today.cost_usd.toFixed(2)}`;
 }
 
+export const TODAY_HINT =
+  'Agent runs that ended since midnight, and what they would have cost on the API';
+
 export function todayOf(today: RunsToday): string {
-  return `${counted(today.runs)} today${costWords(today)}`;
+  return `${today.runs} agent ${today.runs === 1 ? 'run' : 'runs'} today${costWords(today)}`;
 }
 
 function failedFact(runs: FinishedRun[]): Fact[] {

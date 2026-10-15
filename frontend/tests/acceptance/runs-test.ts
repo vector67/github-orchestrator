@@ -147,8 +147,14 @@ module('Acceptance | runs', function (hooks) {
 
     assert.strictEqual(
       text('[data-test-health="today"]'),
-      '12 runs today · ~$8.14',
+      '12 agent runs today · ~$8.14',
     );
+    assert
+      .dom('[data-test-health="today"]')
+      .hasAttribute(
+        'title',
+        'Agent runs that ended since midnight, and what they would have cost on the API',
+      );
   });
 
   test('a day of one run that reported no cost names no cost', async function (assert) {
@@ -157,7 +163,7 @@ module('Acceptance | runs', function (hooks) {
 
     await visit('/');
 
-    assert.strictEqual(text('[data-test-health="today"]'), '1 run today');
+    assert.strictEqual(text('[data-test-health="today"]'), '1 agent run today');
   });
 
   function watched(): string[] {
