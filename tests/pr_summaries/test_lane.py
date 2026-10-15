@@ -1,5 +1,5 @@
-import subprocess
-import sys
+import os
+import signal
 import threading
 import time
 from collections.abc import Callable
@@ -73,7 +73,7 @@ def test_a_run_that_fails_otherwise_keeps_the_earlier_summary_and_stores_its_exi
 
 
 def test_a_run_past_its_time_is_killed_and_stored_as_failed(tmp_path):
-    lane = Lane(tmp_path, "hang", timeout=0.5)
+    lane = Lane(tmp_path, "hang", timeout=0.2)
     _with_an_earlier_summary(lane)
 
     lane.lane.poll()
@@ -257,11 +257,15 @@ def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
 
 
 def _a_server_that_dies_partway(tmp_path: Path, lane: Lane, behaviour: str) -> None:
-    server = subprocess.Popen([sys.executable, "-m", "tests.pr_summaries.doomed_server", str(tmp_path), behaviour],
-                              cwd=Path(__file__).parents[2])
+    server = os.fork()
+    if server == 0:
+        try:
+            Lane(tmp_path, behaviour).lane.start(THE_PR, use_github_api=False)
+        finally:
+            os._exit(0)
     _partway(lane)
-    server.kill()
-    server.wait()
+    os.kill(server, signal.SIGKILL)
+    os.waitpid(server, 0)
 
 
 def _until_it_stops_running(lane: Lane) -> None:
