@@ -35,6 +35,7 @@ use.
 | 2026-10-09 | 216f2ff0 | 4,077        | 930         | 13.4 s (13.4-13.5)  | 13.1 s (12.9-13.8)  | 5.0-26.8         | 53-88 °C        |
 | 2026-10-09 | 79a83a65 | 4,077        | 930         | 12.1 s (11.8-12.6)  | 13.7 s (13.0-15.9)  | 2.1-14.7         | 45-92 °C        |
 | 2026-10-09 | bd632429 | 4,105        | 930         | 13.2 s (12.4-16.4)  | 12.8 s (12.4-14.9)  | 5.8-15.0         | 47-91 °C        |
+| 2026-10-15 | db18876b | 4,315        | 961         | 11.5 s (11.1-11.9)  | 11.7 s (11.0-11.9)  | 2.6-13.2         | 46-91 °C        |
 
 The 2026-10-09 row, after the last step of the front-end store plan, matches the cold median above it (13.5 s against 13.4 s) and brings the warm median back to the cold one. Other sessions held the load at 9-16 during the runs.
 
