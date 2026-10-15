@@ -555,6 +555,107 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  test('an approval on a repo without review rules shows in the Review column', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('ready-to-merge', { review_decision: null }),
+          status: { approved_by: ['alice'] },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(
+      [cells('o/r#7')['why'], cells('o/r#7')['review']],
+      ['Approved by alice | CI passing', 'approved'],
+    );
+  });
+
+  test('a review request after others reviewed does not say "no reviews yet"', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('review', { review_decision: 'approved' }),
+          status: { approved_by: ['alice'] },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'review');
+    assert.strictEqual(
+      cells('o/r#7')['why'],
+      'CI passing | 3 files changed | alice approved',
+    );
+  });
+
+  test('a reviewer who approved and was asked again is not both approved and awaited', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-review', {
+            pending_reviewers: ['alice'],
+            review_decision: 'review-required',
+          }),
+          status: { approved_by: ['alice'] },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'await-review');
+    assert.strictEqual(cells('o/r#7')['why'], 'Waiting on: alice');
+  });
+
+  test('after you approve, a reviewer who requested changes is not someone you wait on to review', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-reviewers', {
+            review_decision: 'changes-requested',
+            changes_requested_by: ['bob'],
+            pending_reviewers: [],
+          }),
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'await-reviewers');
+    assert.strictEqual(
+      cells('o/r#7')['why'],
+      'You approved | bob requested changes',
+    );
+  });
+
+  test('a pull request whose author account was deleted is not called one you are reviewing', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: { pr: { author: null }, facts: factsFor('mention') },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'mention');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] .meta')
+      .hasText('#7 · PROJ-7-fix-the-widget');
+  });
+
   const RLO = '\u202E';
 
   function boxOfCharacter(text: Node, at: number): DOMRect {

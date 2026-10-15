@@ -178,13 +178,39 @@ function afterApprovingOf(move: NextMove): string {
 }
 
 function awaitingReviewOf(status: DashboardStatus, facts: Polled): string {
-  const approved = status.approved_by;
+  const approved = status.approved_by.filter(
+    (login) => !facts.pending_reviewers.includes(login),
+  );
   const parts = approved.map((login) => `${login} approved`);
   if (facts.pending_reviewers.length) {
     parts.push(`Waiting on: ${listed(facts.pending_reviewers)}`);
   } else if (!approved.length) {
     parts.push('No reviewers assigned');
   }
+  return parts.join(' | ');
+}
+
+function reviewsSoFarOf(status: DashboardStatus, facts: Polled): string {
+  const parts: string[] = [];
+  if (status.approved_by.length) {
+    parts.push(`${listed(status.approved_by)} approved`);
+  }
+  if (facts.changes_requested_by.length) {
+    parts.push(`${listed(facts.changes_requested_by)} requested changes`);
+  }
+  return parts.length ? parts.join(' | ') : 'no reviews yet';
+}
+
+function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
+  const requesters = move.reviewers.filter(
+    (login) =>
+      facts.changes_requested_by.includes(login) &&
+      !facts.pending_reviewers.includes(login),
+  );
+  const awaited = move.reviewers.filter((login) => !requesters.includes(login));
+  const parts = ['You approved'];
+  if (requesters.length) parts.push(`${listed(requesters)} requested changes`);
+  if (awaited.length) parts.push(`Waiting on review from: ${listed(awaited)}`);
   return parts.join(' | ');
 }
 
@@ -218,13 +244,11 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'await-ci':
       return `${status.checks_done}/${status.checks_total} checks complete`;
     case 'review':
-      return `${ci} | ${status.changed_files ?? '?'} files changed | no reviews yet`;
+      return `${ci} | ${status.changed_files ?? '?'} files changed | ${reviewsSoFarOf(status, facts)}`;
     case 'rereview':
       return `Re-review requested | ${ci}`;
     case 'await-reviewers':
-      return move.reviewers.length
-        ? `You approved | Waiting on review from: ${listed(move.reviewers)}`
-        : 'You approved';
+      return afterApprovingWithOthersOf(move, facts);
     case 'await-author':
       return afterApprovingOf(move);
     case 'await-rerequest':
@@ -336,10 +360,14 @@ function sinceOf(shown: ShownPr): string[] | null {
   return said.length ? said : ['nothing new'];
 }
 
+const NOT_REVIEWING: Move[] = ['not-reviewing', 'mention', 'mentioned'];
+
 function whoseOf(shown: ShownPr, summaries: Summaries): string | null {
   if (!shown.drawn.polled) return null;
   if (summaries.role === 'author') return 'your PR';
-  return shown.author ? `${shown.author}'s PR` : 'reviewing';
+  if (shown.author) return `${shown.author}'s PR`;
+  const state = summaries.move.state;
+  return state && NOT_REVIEWING.includes(state) ? null : 'reviewing';
 }
 
 export interface DismissWording {
@@ -407,6 +435,14 @@ function reviewWordOf(decision: string | null): string {
   return decision ? (REVIEW_WORDS[decision] ?? decision) : 'pending';
 }
 
+function decisionWordOf(shown: ShownPr): string {
+  const decision = polledOf(shown).review_decision;
+  if (decision === null && shown.drawn.status.approved_by.length) {
+    return reviewWordOf('approved');
+  }
+  return reviewWordOf(decision);
+}
+
 function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
   const status = shown.drawn.status;
   const rows: Row[] = [];
@@ -443,7 +479,7 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
     row(
       'review',
       'Review',
-      reviewWordOf(decision),
+      decisionWordOf(shown),
       decision === 'changes-requested' ? '' : 'quiet',
     ),
   );
@@ -679,7 +715,7 @@ function reviewCell(shown: ShownPr): Cell {
   const decision = polledOf(shown).review_decision;
   return cell(
     'review',
-    reviewWordOf(decision),
+    decisionWordOf(shown),
     decision === 'changes-requested' ? 'plain' : 'quiet',
   );
 }
