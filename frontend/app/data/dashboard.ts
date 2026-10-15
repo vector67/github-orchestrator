@@ -820,6 +820,8 @@ const APPROVAL_NAMED: Move[] = [
   'await-reviewers',
 ];
 
+const UNPUSHED_BACKLOG = 10;
+
 const DECISIONS: Move[] = ['human-comments', 'bot-comments'];
 
 const MENTION_NAMED: Move[] = ['mention', 'mentioned'];
@@ -1029,6 +1031,7 @@ function chipsOf(
       system.unpushed_commits,
       (count) => `${count} unpushed`,
       ROW_HINTS['unpushed']!,
+      (system.unpushed_commits ?? 0) >= UNPUSHED_BACKLOG ? 'warn' : 'plain',
     ),
     code === 'on-hold'
       ? null

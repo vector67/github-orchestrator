@@ -872,6 +872,22 @@ module('Acceptance | wall', function (hooks) {
       .doesNotExist();
   });
 
+  test('a backlog of unpushed commits stands out from a few', async function (assert) {
+    onTheHub(
+      heldPr({ dashboard: { system: { unpushed_commits: 1 } } }),
+      heldPr({ number: 8, dashboard: { system: { unpushed_commits: 74 } } }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-state="unpushed"]')
+      .hasClass('tone-plain');
+    assert
+      .dom('[data-test-wall-row="o/r#8"] [data-test-state="unpushed"]')
+      .hasClass('tone-warn');
+  });
+
   test('an agent run fixing the fact in the way leaves that fact’s chip out', async function (assert) {
     const running = (event: string) => ({
       name: 'Claude',
