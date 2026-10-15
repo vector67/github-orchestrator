@@ -73,9 +73,10 @@ author PR (never due by itself).
 
 ### 3. The lane and the run
 
-**Done** (`c97e67ce` and the commit that records this, which offers the lane
-its turn after each watcher poll and has a dry run name the summary it would
-run). The lane is `SummaryLane` in `pr_summaries`: `poll`, `start(pr, use_github_api=)` for step 4's operations, which returns the reason when it
+**Done** (`c97e67ce`, `09d3196b`, which offers the lane its turn after each
+watcher poll and has a dry run name the summary it would run, and the commit
+that records this, which names the run in flight as soon as it takes the
+slot). The lane is `SummaryLane` in `pr_summaries`: `poll`, `start(pr, use_github_api=)` for step 4's operations, which returns the reason when it
 starts nothing, and `progress(pr)`, the run in flight with its witness flags.
 The slot is an flock on `summaries/lane.lock`, which names the PR and when it
 started, so the watcher and the server share it; the plugin inherits the lock.

@@ -110,7 +110,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       requirements: Callable[[], list[tuple[str, str | None]]] | None = None,
                       releases_api: ScriptedReleasesApi | None = None,
                       github_token: str | None = None,
-                      summary_lane: object | None = None,
+                      summary_lane: SummaryLane | None = None,
                       ) -> dishka.Container:
     github = github or watching(settings)
     providers: list[Part] = [

@@ -288,3 +288,25 @@ def test_a_pr_in_a_repository_no_longer_watched_is_not_summarised(tmp_path):
 
     assert refused == "acme/gadgets is not a watched repository"
     assert lane.summaries.due(set()) == [elsewhere]
+
+
+class Held:
+    def __init__(self) -> None:
+        self.work: list[Callable[[], None]] = []
+
+    def __call__(self, work: Callable[[], None]) -> None:
+        self.work.append(work)
+
+
+def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
+    held = Held()
+    lane = Lane(tmp_path, "clean", run_in=held)
+    earlier = a_pr(8, "acme/widgets")
+    lane.lane.start(earlier, use_github_api=False)
+    held.work.pop()()
+
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    assert lane.lane.progress(earlier) is None
+    assert lane.lane.progress(THE_PR) is not None
+    held.work.pop()()

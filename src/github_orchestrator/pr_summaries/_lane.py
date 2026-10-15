@@ -1,3 +1,4 @@
+import contextlib
 import fcntl
 import json
 import logging
@@ -88,7 +89,10 @@ class LocalSummaryLane:
         slot = self._slot()
         if slot is None:
             return "another summary is running"
-        self._run_in(lambda: self._run(pr, slot, use_github_api=use_github_api))
+        started = self._clock()
+        os.ftruncate(slot, 0)
+        os.pwrite(slot, _in_flight(pr, started), 0)
+        self._run_in(lambda: self._run(pr, slot, started, use_github_api=use_github_api))
         return None
 
     def progress(self, pr: Pr) -> Progress | None:
@@ -124,22 +128,20 @@ class LocalSummaryLane:
             return None
         return descriptor
 
-    def _run(self, pr: Pr, slot: int, *, use_github_api: bool) -> None:
+    def _run(self, pr: Pr, slot: int, started: datetime, *, use_github_api: bool) -> None:
         try:
-            self._summarise(pr, slot, use_github_api=use_github_api)
+            self._summarise(pr, slot, started, use_github_api=use_github_api)
         except Exception:
             log.exception("Summary of %s failed", pr)
         finally:
             os.close(slot)
 
-    def _summarise(self, pr: Pr, slot: int, *, use_github_api: bool) -> None:
+    def _summarise(self, pr: Pr, slot: int, started: datetime, *,
+                   use_github_api: bool) -> None:
         wanted = (self._summaries.load(pr) or Summary()).wanted
         head = self._head_of(pr)
         folder = working_folder(self._dir, pr)
         shutil.rmtree(folder, ignore_errors=True)
-        started = self._clock()
-        os.ftruncate(slot, 0)
-        os.pwrite(slot, _in_flight(pr, started), 0)
         command = [*self._plugin, self._url_of(pr), "--config", str(self._config_path),
                    "--work-dir", str(folder), *(["--use-github-api"] if use_github_api else [])]
         exit_status, stdout, stderr = self._plugin_run(command, self._clones[pr.repo], slot)
@@ -162,7 +164,8 @@ class LocalSummaryLane:
         try:
             stdout, stderr = process.communicate(timeout=self._timeout)
         except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGKILL)
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, signal.SIGKILL)
             stdout, stderr = process.communicate()
             stderr += (f"github-orchestrator stopped the run after "
                        f"{self._timeout / 60:g} minutes.\n")
