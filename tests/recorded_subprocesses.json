@@ -96,6 +96,171 @@
     }
    ]
   },
+  "tests.pr_summaries.test_lane._three_commits": {
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"one\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "one"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "d696c4ac844f7e38204f0198d7ad5771de76bd87\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"three\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "three"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "d68e6664101ecaa5c21a725a50babf427a018335\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"two\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "two"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/main": {
+       "text": "2498dcab5472a38bc46a6a2341cdc8870ecc9819\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "config",
+      "user.email",
+      "t@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"config\", \"user.name\", \"T\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "config",
+      "user.name",
+      "T"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"init\", \"-q\", \"-b\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "init",
+      "-q",
+      "-b",
+      "main"
+     ],
+     "fs": {
+      "repo/.git": {
+       "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.pr_summaries.test_lane._three_commits>/repo\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d696c4ac844f7e38204f0198d7ad5771de76bd87\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2498dcab5472a38bc46a6a2341cdc8870ecc9819\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.pr_summaries.test_lane._three_commits>/repo",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "d68e6664101ecaa5c21a725a50babf427a018335\n"
+    }
+   ]
+  },
   "tests.preview.test_preview.client_for_preview:8917fe3d": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"b41c0d2^{commit}\"], null, null]": [
     {
@@ -13595,6 +13760,52 @@
      "returncode": 128,
      "stderr": "fatal: No configured push destination.\nEither specify the URL from the command-line or configure a remote repository using\n\n    git remote add <name> <url>\n\nand then push using the remote name\n\n    git push <name>\n\nTo push to multiple remotes at once, configure a remote group using\n\n    git config remotes.<groupname> \"<remote1> <remote2>\"\n\nand then push using the group name\n\n    git push <groupname>\n\n",
      "stdout": ""
+    }
+   ]
+  },
+  "tests/pr_summaries/test_lane.py::test_a_summary_has_no_count_behind_without_both_heads_or_a_commit_the_clone_holds": {
+   "[[\"git\", \"rev-list\", \"--count\", \"d696c4ac844f7e38204f0198d7ad5771de76bd87..0000000000000000000000000000000000000000\"], \"<TMP>/repo\", null]": [
+    {
+     "argv": [
+      "git",
+      "rev-list",
+      "--count",
+      "d696c4ac844f7e38204f0198d7ad5771de76bd87..0000000000000000000000000000000000000000"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: Invalid revision range d696c4ac844f7e38204f0198d7ad5771de76bd87..0000000000000000000000000000000000000000\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/pr_summaries/test_lane.py::test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_head_now": {
+   "[[\"git\", \"rev-list\", \"--count\", \"d696c4ac844f7e38204f0198d7ad5771de76bd87..d68e6664101ecaa5c21a725a50babf427a018335\"], \"<TMP>/repo\", null]": [
+    {
+     "argv": [
+      "git",
+      "rev-list",
+      "--count",
+      "d696c4ac844f7e38204f0198d7ad5771de76bd87..d68e6664101ecaa5c21a725a50babf427a018335"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2\n"
+    }
+   ],
+   "[[\"git\", \"rev-list\", \"--count\", \"d696c4ac844f7e38204f0198d7ad5771de76bd87..d696c4ac844f7e38204f0198d7ad5771de76bd87\"], \"<TMP>/repo\", null]": [
+    {
+     "argv": [
+      "git",
+      "rev-list",
+      "--count",
+      "d696c4ac844f7e38204f0198d7ad5771de76bd87..d696c4ac844f7e38204f0198d7ad5771de76bd87"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "0\n"
     }
    ]
   },

@@ -90,6 +90,9 @@ class WouldSummarise:
     def progress(self, pr: Pr) -> None:
         return None
 
+    def behind(self, pr: Pr, head: str | None) -> None:
+        return None
+
 
 class WouldDeliver:
     def deliver(self, woke_at: datetime, polled_at: datetime | None) -> None:

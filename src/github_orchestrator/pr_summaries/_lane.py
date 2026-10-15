@@ -38,8 +38,7 @@ def _mismatches(folder: Path) -> int | None:
 
 
 def _done(folder: Path) -> dict[str, bool]:
-    return {witness: (folder / witness / "output.json").exists()
-            for witness in WITNESSES if (folder / witness).is_dir()}
+    return {witness: (folder / witness / "output.json").exists() for witness in WITNESSES}
 
 
 def _in_flight(pr: Pr, since: datetime) -> bytes:
@@ -100,6 +99,15 @@ class LocalSummaryLane:
         if held is None or held[0] != pr:
             return None
         return Progress(since=held[1], done=_done(working_folder(self._dir, pr)))
+
+    def behind(self, pr: Pr, head: str | None) -> int | None:
+        read = (self._summaries.load(pr) or Summary()).head_sha
+        clone = self._clones.get(pr.repo)
+        if read is None or head is None or clone is None:
+            return None
+        counted = subprocess.run(["git", "rev-list", "--count", f"{read}..{head}"],
+                                 cwd=clone, capture_output=True, text=True, check=False)
+        return int(counted.stdout) if counted.returncode == 0 else None
 
     def _held(self) -> tuple[Pr, datetime] | None:
         try:
