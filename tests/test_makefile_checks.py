@@ -65,7 +65,7 @@ def test_the_node_guard_names_a_missing_node_and_installs_the_packages():
         "not there yet")
 
 
-@pytest.mark.no_replay
+@pytest.mark.replays_while_unchanged("Makefile", "tests/stubs/lint_python")
 def test_lint_python_runs_mypy_even_when_ruff_fails(tmp_path):
     calls = tmp_path / "calls"
     env = {**os.environ, "PATH": f"{STUBS}:{os.environ['PATH']}", "STUB_CALLS": str(calls)}

@@ -20350,6 +20350,114 @@
     }
    ]
   },
+  "tests/test_makefile_checks.py::test_lint_python_runs_mypy_even_when_ruff_fails#a03e7bf3ceb6": {
+   "[[\"make\", \"-f\", \"<REPO>/Makefile\", \"lint-python\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "-f",
+      "<REPO>/Makefile",
+      "lint-python"
+     ],
+     "fs": {
+      "calls": {
+       "text": "run ruff check src tests plugins\nrun mypy\nrun pytest tests/test_layering.py -q -p no:randomly\n"
+      }
+     },
+     "returncode": 2,
+     "stderr": "make: *** [lint-python] Error 1\n",
+     "stdout": "uv run ruff check src tests plugins; ruff=$?; uv run mypy; mypy=$?; \\\n\tuv run pytest tests/test_layering.py -q -p no:randomly; layering=$?; \\\n\t[ $ruff -eq 0 ] && [ $mypy -eq 0 ] && [ $layering -eq 0 ]\n"
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[build_frontend]#41e4b25b73e8": {
+   "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "build_frontend",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "npm ci --silent\nnpm run build --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[frontend_deps]#41e4b25b73e8": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "stub.log": {
+       "text": "npm ci --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_an_install_as_new_as_the_lockfile_is_not_repeated[build_frontend]#41e4b25b73e8": {
+   "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "build_frontend",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "npm run build --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_an_install_as_new_as_the_lockfile_is_not_repeated[frontend_deps]#41e4b25b73e8": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/test_makefile_restart_all.py::test_restart_all_syncs_and_builds_the_checkout_then_runs_the_cli_restart_all#4dc3bca60629": {
    "[[\"make\", \"restart-all\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\", \"VENV_PYTHON=<REPO>/tests/stubs/restart-all/python\", \"RESTART_LOCK=<TMP>/restart-all.lock\"], \"<REPO>\", null]": [
     {

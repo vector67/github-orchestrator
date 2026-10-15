@@ -45,7 +45,7 @@ def _npm_calls(tmp_path, target, frontend):
 
 
 @needs_make
-@pytest.mark.no_replay
+@pytest.mark.replays_while_unchanged("Makefile", "tests/stubs/restart-all")
 @pytest.mark.parametrize("target", ["build_frontend", "frontend_deps"])
 def test_an_install_as_new_as_the_lockfile_is_not_repeated(tmp_path, target):
     frontend = _frontend(tmp_path, installed_after_lockfile=True)
@@ -56,7 +56,7 @@ def test_an_install_as_new_as_the_lockfile_is_not_repeated(tmp_path, target):
 
 
 @needs_make
-@pytest.mark.no_replay
+@pytest.mark.replays_while_unchanged("Makefile", "tests/stubs/restart-all")
 @pytest.mark.parametrize("target", ["build_frontend", "frontend_deps"])
 def test_a_lockfile_newer_than_the_install_installs_again(tmp_path, target):
     frontend = _frontend(tmp_path, installed_after_lockfile=False)
