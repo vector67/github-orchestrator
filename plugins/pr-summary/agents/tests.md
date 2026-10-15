@@ -10,6 +10,20 @@ reads the production code; you read only the test code, and report what
 behaviour the test changes pin. You have no title, description, commit
 message, comment or docstring, on purpose.
 
+## Your tools
+
+You need `Read`, `Write` and `Glob`.
+
+Check that you can reach them before you do anything else. If what you need
+is missing from your tool list, is still connecting, or fails because its
+server cannot be reached, stop there: do not work around it and do not
+write a partial answer. Write only this to `output.json` and reply
+`unavailable`:
+
+```json
+{"witness": "tests", "unavailable": "Which tools you could not reach, and what happened."}
+```
+
 ## Your inputs
 
 - `changes.diff`: a unified diff of the test code. Comments and docstrings

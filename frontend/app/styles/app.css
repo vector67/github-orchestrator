@@ -3248,8 +3248,13 @@ kbd {
   content: "✓ ";
 }
 
-.summary-strip .said {
+.summary-strip .said,
+.summary-strip .rerun {
   margin-left: auto;
+}
+
+.summary-strip .rerun {
+  color: var(--muted);
 }
 
 .summary-body {

@@ -6,6 +6,7 @@ import argparse
 import dataclasses
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from pr_summary.clone import Clone, CloneFailed
@@ -86,10 +87,14 @@ def main() -> None:
     earlier = earlier_prs(gh, owner, repo, pr, ticket, files, settings, history_of)
     out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
-    if not arguments.prepare_only:
-        run_witnesses(manifest, launcher(PLUGIN_ROOT))
-        print(report(manifest))
+    if arguments.prepare_only:
+        print(f"Working files: {out}")
+        return
+    failures = run_witnesses(manifest, launcher(PLUGIN_ROOT), time.sleep)
+    print(report(manifest))
     print(f"Working files: {out}")
+    if failures:
+        sys.exit("Witnesses failed: " + "; ".join(f"{witness}: {reason}" for witness, reason in failures.items()))
 
 
 if __name__ == "__main__":

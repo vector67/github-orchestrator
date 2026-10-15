@@ -607,11 +607,15 @@ export interface SummaryTab {
   finished: string | null;
   since: string | null;
   witnesses: WitnessProgress[];
+  witnessesDone: number;
+  witnessCount: number;
   exitStatus: number | null;
   reason: string | null;
   calls: number | null;
   markdown: string | null;
 }
+
+const WITNESS_COUNT = 6;
 
 const SHORT_SHA = 7;
 
@@ -670,6 +674,8 @@ export function summaryTabOf(
     finished: summary.finished,
     since: summary.since,
     witnesses: summary.witnesses,
+    witnessesDone: summary.witnesses.filter((one) => one.done).length,
+    witnessCount: WITNESS_COUNT,
     exitStatus: summary.exit_status,
     reason: reasonOf(state, summary.stderr),
     calls: calls === undefined ? null : Number(calls),
