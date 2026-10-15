@@ -28,13 +28,17 @@ def settings_from(toml_text: str | None) -> Settings:
     return replace(Settings(), **given)
 
 
+def ticket_keys(settings: Settings, text: str) -> list[str]:
+    keys = (found.group(0) for found in re.finditer(settings.ticket_pattern, text))
+    return list(dict.fromkeys(key for key in keys if not settings.ticket_projects or key.split("-")[0] in settings.ticket_projects))
+
+
 def ticket_key(settings: Settings, title: str, branch: str) -> str | None:
     texts = {"title": title, "branch": branch}
     for source in settings.ticket_sources:
-        for found in re.finditer(settings.ticket_pattern, texts.get(source, "")):
-            key = found.group(0)
-            if not settings.ticket_projects or key.split("-")[0] in settings.ticket_projects:
-                return key
+        keys = ticket_keys(settings, texts.get(source, ""))
+        if keys:
+            return keys[0]
     return None
 
 

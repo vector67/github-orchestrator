@@ -52,4 +52,6 @@ not.
   make in different places separate when they differ.
 - `evidence` is the file and a short quote.
 - If two of their own statements disagree, say so in `gaps`.
+- `gaps` holds at most three things a reviewer would have to check by hand.
+  Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.

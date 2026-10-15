@@ -1,6 +1,5 @@
 import difflib
 import re
-from collections import Counter
 from collections.abc import Iterator
 
 from tree_sitter import Node
@@ -60,22 +59,27 @@ def stripped(source: str, path: str) -> str | None:
     return "\n".join(line.rstrip() for line in blanked.decode(errors="replace").split("\n"))
 
 
-def remarks_of(source: str, path: str) -> list[str]:
-    parsed = _parsed(source, path)
-    if parsed is None:
-        return []
-    data, remarks = parsed
-    return [data[remark.start_byte : remark.end_byte].decode(errors="replace").strip() for remark in remarks]
+def _added_rows(base: str | None, head: str) -> set[int]:
+    matcher = difflib.SequenceMatcher(a=(base or "").splitlines(), b=head.splitlines(), autojunk=False)
+    return {row for tag, _, _, start, end in matcher.get_opcodes() if tag in ("insert", "replace") for row in range(start, end)}
 
 
 def added_remarks(base: str | None, head: str, path: str) -> list[str]:
-    left = Counter(remarks_of(base, path)) if base is not None else Counter[str]()
+    parsed = _parsed(head, path)
+    if parsed is None:
+        return []
+    data, remarks = parsed
+    added_rows = _added_rows(base, head)
     added = []
-    for remark in remarks_of(head, path):
-        if left[remark] > 0:
-            left[remark] -= 1
-        else:
-            added.append(remark)
+    for remark in remarks:
+        text = data[remark.start_byte : remark.end_byte].decode(errors="replace")
+        rows = range(remark.start_point.row, remark.end_point.row + 1)
+        if all(row in added_rows for row in rows):
+            added.append(text.strip())
+            continue
+        lines = [line.strip() for row, line in zip(rows, text.split("\n"), strict=True) if row in added_rows and line.strip()]
+        if lines:
+            added.append("\n".join(lines))
     return added
 
 

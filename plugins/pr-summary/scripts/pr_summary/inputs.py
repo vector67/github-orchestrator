@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pr_summary.pull_request import PullRequest, Remark, cleaned, voices
-from pr_summary.settings import Settings, kind_of
+from pr_summary.settings import Settings, kind_of, ticket_keys
 from pr_summary.stripping import added_remarks, code_diff, stripped
 
 LIMIT = 300_000
@@ -27,6 +27,7 @@ class EarlierPr:
     title: str
     body: str
     author: str
+    merged_at: str
     remarks: tuple[Remark, ...]
 
 
@@ -144,6 +145,7 @@ def write_inputs(
 
     why = manifest["why"]
     _write(why, "ticket.txt", [ticket or "No ticket found."])
+    _write(why, "authors.txt", sorted(pr.authors | pr.author_names))
     _write(why, "guidance.md", [settings.why_guidance] if settings.why_guidance else [])
     _write(why, "comments.md", _remark_lines(by_others))
     _write(why, "earlier_prs.md", [line for earlier_pr in earlier for line in _earlier_lines(earlier_pr, pr.authors, settings)])
@@ -159,7 +161,9 @@ def _earlier_lines(earlier_pr: EarlierPr, authors: frozenset[str], settings: Set
     if not others and not written_by_others:
         return []
     title = f" {earlier_pr.title}" if written_by_others else ""
-    heading = f"# #{earlier_pr.number}{title} ({earlier_pr.url})\n"
+    keys = ticket_keys(settings, f"{earlier_pr.title}\n{earlier_pr.body}")
+    tickets = f", tickets {', '.join(keys)}" if keys else ""
+    heading = f"# #{earlier_pr.number}{title} ({earlier_pr.url}): merged {earlier_pr.merged_at[:10]}{tickets}\n"
     body = [f"{earlier_pr.body}\n"] if written_by_others and earlier_pr.body else []
     return [heading, *body, *_remark_lines(others)]
 

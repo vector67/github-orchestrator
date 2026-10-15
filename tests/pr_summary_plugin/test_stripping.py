@@ -52,6 +52,13 @@ def test_added_remarks_are_the_comments_and_docstrings_the_head_adds() -> None:
     assert added_remarks(base, head, "src/rows.py") == ['"""Keep non-empty rows."""', "# drop empties, per the ticket"]
 
 
+def test_an_edited_docstring_contributes_only_its_added_lines() -> None:
+    base = 'def keep(row):\n    """Keep rows.\n\n    Sorted top-down.\n    """\n    return row\n'
+    head = 'def keep(row):\n    """Keep rows.\n\n    Sorted top-down.\n    Empty rows are dropped.\n    """\n    return any(row)\n'
+
+    assert added_remarks(base, head, "src/rows.py") == ["Empty rows are dropped."]
+
+
 def test_added_remarks_of_a_new_file_are_all_its_remarks() -> None:
     assert added_remarks(None, "x = 1  # set x\n", "src/x.py") == ["# set x"]
 

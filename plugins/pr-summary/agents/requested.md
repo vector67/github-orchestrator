@@ -46,4 +46,6 @@ the reason in `gaps`. Never guess what a ticket says.
 - One claim per distinct thing asked for: each acceptance criterion, each
   explicit exclusion ("do not change X"), each constraint. Ids `R1`, `R2`, …
 - `evidence` names the ticket field each claim comes from.
+- `gaps` holds at most three things a reviewer would have to check by hand.
+  Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.

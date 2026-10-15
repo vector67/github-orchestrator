@@ -4,8 +4,8 @@ from pr_summary.pull_request import cleaned, pull_request_from, voices
 from pr_summary.settings import Settings, settings_from
 
 
-def person(login: str) -> dict[str, str]:
-    return {"login": login, "__typename": "User"}
+def person(login: str, name: str | None = None) -> dict[str, str | None]:
+    return {"login": login, "__typename": "User", "name": name}
 
 
 def remark(login: str, body: str, kind: str = "User") -> dict[str, Any]:
@@ -24,11 +24,11 @@ GRAPHQL: dict[str, Any] = {
                 "headRefName": "SHOP-3-hide-button",
                 "baseRefOid": "b" * 40,
                 "headRefOid": "h" * 40,
-                "author": person("octocat"),
+                "author": person("octocat", "Octo Cat"),
                 "commits": {
                     "nodes": [
-                        {"commit": {"message": "hide the button", "authors": {"nodes": [{"user": person("octocat")}]}}},
-                        {"commit": {"message": "pair on tests", "authors": {"nodes": [{"user": person("octocat")}, {"user": person("hubot")}, {"user": None}]}}},
+                        {"commit": {"message": "hide the button", "authors": {"nodes": [{"name": "Octo Cat", "user": person("octocat")}]}}},
+                        {"commit": {"message": "pair on tests", "authors": {"nodes": [{"name": "Octo Cat", "user": person("octocat")}, {"name": "Hu Bot", "user": person("hubot")}, {"name": "Mona Pair", "user": None}]}}},
                     ]
                 },
                 "comments": {"nodes": [remark("monalisa", "Why hide it rather than fix exports?"), remark("octocat", "Exports are being rewritten.")]},
@@ -42,6 +42,10 @@ GRAPHQL: dict[str, Any] = {
 
 def test_the_authors_are_the_pr_author_and_every_commit_author() -> None:
     assert pull_request_from(GRAPHQL).authors == frozenset({"octocat", "hubot"})
+
+
+def test_the_authors_names_include_co_authors_without_a_login() -> None:
+    assert pull_request_from(GRAPHQL).author_names == frozenset({"Octo Cat", "Hu Bot", "Mona Pair"})
 
 
 def test_the_pull_request_keeps_its_identity_and_commit_messages() -> None:

@@ -33,6 +33,9 @@ the code and nothing else.
      effects, performance characteristics.
    - **Refactor**: structure changes that keep behaviour the same.
    - **Mechanical**: renames, moves, formatting, dependency bumps.
+   - **Existing**: behaviour in unchanged code (from `files/`) that the
+     changed lines call, feed or depend on, so a reader does not mistake it
+     for something missing. Only what the change touches.
 3. Judge behaviour from what the code does, not from what things are named.
    A function called `keep_rows` proves nothing until its body does.
 4. Do not guess why the change was made. You cannot know.
@@ -52,8 +55,10 @@ the code and nothing else.
 ```
 
 - One claim per distinct change, ids `I1`, `I2`, …, each text starting with
-  `Behaviour:`, `Refactor:` or `Mechanical:`.
+  `Behaviour:`, `Refactor:`, `Mechanical:` or `Existing:`.
 - `evidence` is a path and a line range in the new version of the file, from
-  the `+` side of the hunk headers.
+  the `+` side of the hunk headers or from `files/`.
+- `gaps` holds at most three things a reviewer would have to check by hand.
+  Never report that an optional input was absent or that nothing was cut.
 - If the diff is empty, say there is no production code change.
 - Write plain JSON only, with straight quotes.

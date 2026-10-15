@@ -28,6 +28,7 @@ class PullRequest:
     head_sha: str
     author: str
     authors: frozenset[str]
+    author_names: frozenset[str]
     commit_messages: tuple[str, ...]
     remarks: tuple[Remark, ...]
 
@@ -50,6 +51,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
     pr = graphql["data"]["repository"]["pullRequest"]
     commits = [node["commit"] for node in pr["commits"]["nodes"]]
     commit_authors = {author["user"]["login"] for commit in commits for author in commit["authors"]["nodes"] if author["user"]}
+    commit_names = {author["name"] for commit in commits for author in commit["authors"]["nodes"] if author.get("name")}
     return PullRequest(
         number=pr["number"],
         url=pr["url"],
@@ -61,6 +63,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
         head_sha=pr["headRefOid"],
         author=pr["author"]["login"],
         authors=frozenset({pr["author"]["login"], *commit_authors}),
+        author_names=frozenset({*([pr["author"]["name"]] if pr["author"].get("name") else []), *commit_names}),
         commit_messages=tuple(commit["message"] for commit in commits),
         remarks=remarks_from(pr),
     )

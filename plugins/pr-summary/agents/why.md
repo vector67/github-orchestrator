@@ -14,13 +14,17 @@ context around the change, never from the people who made it.
 ## Your inputs
 
 - `ticket.txt`: the ticket key, or `No ticket found.`
+- `authors.txt`: the pull request's authors, by GitHub login and by name.
 - `guidance.md`: where this organisation writes down its reasons. May be
   missing.
 - `comments.md`: comments on the pull request by people who are not its
   authors. May be missing.
 - `earlier_prs.md`: earlier merged pull requests on the same ticket or the
   same code, with comments by people who are not this pull request's authors.
-  May be missing.
+  Each heading gives the merge date and the tickets it names; the title is
+  left out when one of this pull request's authors wrote it. An earlier pull
+  request on the same ticket may hold part of the same piece of work. May be
+  missing.
 
 You do not have the code, the pull request's title or description, or
 anything its authors wrote. That is deliberate.
@@ -28,8 +32,9 @@ anything its authors wrote. That is deliberate.
 ## What to do
 
 1. Read the inputs.
-2. With the Atlassian tools, read the ticket, its parent or epic, and the
-   issues linked to it. Search Jira for earlier tickets on the same epic,
+2. With the Atlassian tools, read the ticket, its comments, its parent or
+   epic, and the issues linked to it. Skip only comments written by someone
+   in `authors.txt`; everyone else's comments are context you need. Search Jira for earlier tickets on the same epic,
    component or problem, and Confluence for design pages, decisions and
    incident notes, following `guidance.md` if it exists.
 3. Never open a ticket's development panel or remote links, and never read
@@ -58,6 +63,8 @@ that in `display`: "No source outside the pull request's authors explains why
 
 - One claim per distinct reason, constraint or decision, ids `W1`, `W2`, …
 - `evidence` is a ticket key and field, a Confluence URL, or a comment URL.
+- `gaps` holds at most three things a reviewer would have to check by hand.
+  Never report that an optional input was absent or that nothing was cut.
 - Separate what a source states from what you infer; mark an inference
   "Inferred:" at the start of the claim.
 - Write plain JSON only, with straight quotes.

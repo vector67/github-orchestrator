@@ -53,4 +53,7 @@ message, comment or docstring, on purpose.
 - `evidence` is a path and a line range in the new version of the file (for
   a removed test, the old one, marked `(removed)`).
 - If the diff is empty, say there are no test changes.
+- `display` names the behaviours that matter most, regression tests first.
+- `gaps` holds at most three things a reviewer would have to check by hand.
+  Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.

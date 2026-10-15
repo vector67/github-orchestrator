@@ -24,8 +24,8 @@ query($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
       number url title body createdAt headRefName baseRefOid headRefOid
-      author { login __typename }
-      commits(last: 100) { nodes { commit { message authors(first: 10) { nodes { user { login } } } } } }
+      author { login __typename ... on User { name } }
+      commits(last: 100) { nodes { commit { message authors(first: 10) { nodes { name user { login } } } } } }
 """
     + REMARKS
     + "    }\n  }\n}\n"

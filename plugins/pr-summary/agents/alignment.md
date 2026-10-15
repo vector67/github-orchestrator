@@ -26,8 +26,9 @@ Trust runs in this order, highest first:
 4. **tests**: what the tests pin
 5. **claimed**: what the authors say
 
-Walk it from the top: check requested against why, then implementation
-against why and requested, then tests against the three above, then claimed
+Walk it from the top: check requested against why (only for what this pull
+request's implementation or tests touch), then implementation against why
+and requested, then tests against the three above, then claimed
 against all four. The higher witness is taken as true. A lower witness never
 corrects a higher one: if the code suggests the ticket asked for the wrong
 thing, that is "implementation disagrees with requested", and the reviewer
@@ -41,13 +42,17 @@ one. A mismatch is not a judgement that the pull request is wrong.
 - `contradiction`: the two say incompatible things.
 - `scope-creep`: the lower does more than the higher asks for or needs.
 - `unrequested-refactor`: restructuring nobody above asked for.
-- `not-done`: the higher asks for something the lower does not do.
+- `not-done`: the higher asks for something the lower does not do. If
+  implementation reports it as existing code, or why names an earlier
+  merged pull request on the same ticket that delivered it, it is not a
+  mismatch.
 - `untested`: a behaviour in implementation that no tests claim pins.
 - `unsupported`: a claim that nothing above supports.
 
 Compare meaning, not wording. Two claims that describe the same behaviour in
 different words agree. Do not merge two different issues into one mismatch
-to make the list shorter.
+to make the list shorter, and do not list one issue twice because two claims
+mention it.
 
 ## output.json
 

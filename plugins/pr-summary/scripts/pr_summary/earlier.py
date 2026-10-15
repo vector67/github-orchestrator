@@ -26,5 +26,6 @@ def earlier_from(pr: dict[str, Any], opened: str) -> EarlierPr | None:
         title=pr["title"],
         body=pr["body"] or "",
         author=(pr["author"] or {"login": "ghost"})["login"],
+        merged_at=pr["mergedAt"],
         remarks=remarks_from(pr),
     )

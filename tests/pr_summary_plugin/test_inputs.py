@@ -18,6 +18,7 @@ PR = PullRequest(
     head_sha=HEAD,
     author="octocat",
     authors=frozenset({"octocat"}),
+    author_names=frozenset({"Octo Cat"}),
     commit_messages=("hide the button behind the exports flag",),
     remarks=(
         Remark(author="octocat", bot=False, body="Exports are being rewritten.", url="u1"),
@@ -54,12 +55,21 @@ EARLIER = [
         title="Rewrite the exporter",
         body="First step of the export rewrite.",
         author="monalisa",
+        merged_at="2026-09-20T10:00:00Z",
         remarks=(
             Remark(author="hubot", bot=False, body="Exports time out on large shops; the button must go until this lands.", url="e1"),
             Remark(author="octocat", bot=False, body="I will hide the button meanwhile.", url="e2"),
         ),
     ),
-    EarlierPr(number=5, url="https://github.com/acme/shop/pull/5", title="Tidy the toolbar", body="Moves buttons around.", author="octocat", remarks=()),
+    EarlierPr(
+        number=5,
+        url="https://github.com/acme/shop/pull/5",
+        title="[SHOP-3] Tidy the toolbar",
+        body="Moves buttons around.",
+        author="octocat",
+        merged_at="2026-09-25T10:00:00Z",
+        remarks=(Remark(author="hubot", bot=False, body="The data team asked for this split.", url="e3"),),
+    ),
 ]
 
 
@@ -152,6 +162,18 @@ def test_why_never_sees_the_authors_or_bots(tmp_path: Path) -> None:
     assert "I will hide the button meanwhile" not in seen
     assert "Tidy the toolbar" not in seen
     assert "This PR hides" not in seen
+
+
+def test_why_knows_who_the_authors_are_so_it_can_skip_them_elsewhere(tmp_path: Path) -> None:
+    assert (written(tmp_path)["why"] / "authors.txt").read_text() == "Octo Cat\noctocat\n"
+
+
+def test_an_earlier_pr_by_an_author_keeps_its_ticket_and_date_but_not_its_title(tmp_path: Path) -> None:
+    seen = everything_in(written(tmp_path)["why"])
+
+    assert "# #5 (https://github.com/acme/shop/pull/5): merged 2026-09-25, tickets SHOP-3" in seen
+    assert "The data team asked for this split." in seen
+    assert "# #3 Rewrite the exporter (https://github.com/acme/shop/pull/3): merged 2026-09-20" in seen
 
 
 def test_why_and_requested_get_the_ticket_key(tmp_path: Path) -> None:
