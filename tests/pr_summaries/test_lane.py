@@ -23,7 +23,8 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
     assert stored.answered == wanted
     assert wanted < stored.started < stored.finished
     assert lane.call() == {"pr": "https://github.com/acme/widgets/pull/7", "config": str(lane.config),
-                           "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat"}
+                           "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat",
+                           "mcp_config": None}
     assert lane.summaries.due(set()) == []
 
 
@@ -352,3 +353,12 @@ def test_a_summary_has_no_count_behind_without_both_heads_or_a_commit_the_clone_
     assert lane.lane.behind(THE_PR, None) is None
     assert lane.lane.behind(THE_PR, "0" * 40) is None
     assert lane.lane.behind(a_pr(3, "acme/gadgets"), third) is None
+
+
+def test_a_configured_mcp_config_is_handed_to_the_plugin(tmp_path):
+    lane = Lane(tmp_path, "clean", mcp_config="/etc/acme/mcp.json")
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert lane.call()["mcp_config"] == "/etc/acme/mcp.json"

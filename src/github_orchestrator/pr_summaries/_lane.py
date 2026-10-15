@@ -103,7 +103,7 @@ class LocalSummaryLane:
     def __init__(self, summaries_dir: Path, summaries: PrSummaries, clock: UtcClock, *,
                  plugin: Sequence[str], config_path: Path, clones: Mapping[Repo, Path],
                  head_of: Callable[[Pr], str | None], url_of: Callable[[Pr], str],
-                 gh_account: str, agents_enabled: bool, timeout: float,
+                 gh_account: str, mcp_config: str, agents_enabled: bool, timeout: float,
                  run_in: Callable[[Callable[[], None]], None]) -> None:
         self._dir = summaries_dir
         self._summaries = summaries
@@ -114,6 +114,7 @@ class LocalSummaryLane:
         self._head_of = head_of
         self._url_of = url_of
         self._gh_account = gh_account
+        self._mcp_config = mcp_config
         self._agents_enabled = agents_enabled
         self._timeout = timeout
         self._run_in = run_in
@@ -232,6 +233,7 @@ class LocalSummaryLane:
         outputs.mkdir(parents=True)
         command = [*self._plugin, self._url_of(pr), "--config", str(self._config_path),
                    "--work-dir", str(folder), "--gh-account", self._gh_account,
+                   *(["--mcp-config", self._mcp_config] if self._mcp_config else []),
                    *(["--use-github-api"] if use_github_api else [])]
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
             process = subprocess.Popen(

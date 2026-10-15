@@ -20,7 +20,7 @@ def _tools(agent: Path) -> list[str]:
     return [tool.strip() for tool in line.removeprefix("tools:").split(",")]
 
 
-def command(witness: str, plugin_root: Path) -> list[str]:
+def command(witness: str, plugin_root: Path, mcp_config: Path | None) -> list[str]:
     mcp_tools = [tool for tool in _tools(plugin_root / "agents" / f"{witness}.md") if tool.startswith("mcp__")]
     return [
         "claude",
@@ -33,13 +33,14 @@ def command(witness: str, plugin_root: Path) -> list[str]:
         "--permission-mode",
         "acceptEdits",
         "--no-session-persistence",
+        *(["--mcp-config", str(mcp_config), "--strict-mcp-config"] if mcp_config else []),
         *(["--allowedTools", *mcp_tools] if mcp_tools else []),
     ]
 
 
-def launcher(plugin_root: Path) -> Launch:
+def launcher(plugin_root: Path, mcp_config: Path | None) -> Launch:
     def launch(witness: str, folder: Path) -> bool:
-        result = subprocess.run(command(witness, plugin_root), input=PROMPT, cwd=folder, capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
+        result = subprocess.run(command(witness, plugin_root, mcp_config), input=PROMPT, cwd=folder, capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
         (folder.parent / f"{witness}.log").write_text(result.stdout + result.stderr)
         return result.returncode == 0
 

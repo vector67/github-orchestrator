@@ -562,6 +562,7 @@ class SummaryLaneWiring(Wiring):
     agents_enabled: bool
     gh_account: str
     _: KW_ONLY
+    mcp_config: str = ""
     plugin: tuple[str, ...] = ("uv", "run", "--script", str(SUMMARISE))
     timeout: float = SUMMARY_TIMEOUT_SECONDS
     run_in: Callable[[Callable[[], None]], None] = in_a_summary_thread
@@ -583,7 +584,7 @@ class SummaryLaneProvider(Provider):
         return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
                                 plugin=wiring.plugin, config_path=wiring.config_path,
                                 clones=wiring.clones, head_of=head_of, url_of=pr_url,
-                                gh_account=wiring.gh_account,
+                                gh_account=wiring.gh_account, mcp_config=wiring.mcp_config,
                                 agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
                                 run_in=wiring.run_in)
 
@@ -1286,7 +1287,8 @@ def pr_summaries_wiring(settings: Settings) -> PrSummariesWiring:
 def summary_lane_wiring(settings: Settings) -> SummaryLaneWiring:
     return SummaryLaneWiring(settings.config_path,
                              {repo: clone.path for repo, clone in settings.repos.items()},
-                             settings.config.agents_enabled, settings.config.gh_account)
+                             settings.config.agents_enabled, settings.config.gh_account,
+                             mcp_config=os.path.expanduser(settings.config.summary_mcp_config))
 
 
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:

@@ -95,6 +95,13 @@ gh_account = "your-github-username"
 # Codex's "gpt-6-luna".
 # summary_model = "haiku"
 
+# An MCP config file (the JSON `claude --mcp-config` takes) for the Summary
+# tab's witnesses. They then load only these servers, connected before they
+# start, instead of whatever claude finds; claude.ai connectors can arrive
+# after a witness has given up on them. Name each server as in `claude mcp
+# list` so its login carries over.
+# summary_mcp_config = "~/.config/github-orchestrator/pr-summary-mcp.json"
+
 # Set true to ask Jev, TypeSafe's decision model, for the verdict on a thread
 # in someone else's PR, instead of the summary model. Each verdict sends the
 # thread to TypeSafe's API, with usernames swapped for stand-ins and URLs

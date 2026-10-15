@@ -42,6 +42,7 @@ def main() -> None:
     parser.add_argument("--work-dir", type=Path, help="write the witness folders here, creating it if missing; it must be empty")
     parser.add_argument("--use-github-api", action="store_true", help="read files over the GitHub API when the working directory is not a clone of the repository")
     parser.add_argument("--gh-account", help="run gh as this logged-in account, with the token gh auth token --user gives for it, instead of gh's active account")
+    parser.add_argument("--mcp-config", type=Path, help="an MCP config file the witnesses load instead of every MCP server claude would find, so their servers are connected before they start")
     arguments = parser.parse_args()
 
     named = work_dir(arguments.work_dir) if arguments.work_dir else None
@@ -90,7 +91,7 @@ def main() -> None:
     if arguments.prepare_only:
         print(f"Working files: {out}")
         return
-    failures = run_witnesses(manifest, launcher(PLUGIN_ROOT), time.sleep)
+    failures = run_witnesses(manifest, launcher(PLUGIN_ROOT, arguments.mcp_config), time.sleep)
     print(report(manifest))
     print(f"Working files: {out}")
     if failures:
