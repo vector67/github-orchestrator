@@ -170,7 +170,9 @@ did not run or failed is shown as the first rung ("No ticket found",
    tree-sitter, keeping every line where it was, and the stripped versions
    are diffed; hunks whose only changes are blank lines are dropped. A file
    in a language tree-sitter cannot parse is diffed unstripped and listed in
-   `unstripped.txt`.
+   `unstripped.txt`. The stripped new version of each changed file goes
+   beside the diff under `files/`, so a witness can read the code around a
+   hunk before calling something missing.
 6. Collects the comments and docstrings the diff adds, and the docs diffs,
    for Claimed.
 7. Finds earlier PRs for Why: merged PRs found by searching for the ticket
@@ -180,8 +182,9 @@ did not run or failed is shown as the first rung ("No ticket found",
    and description only when an author of this PR did not write them, and
    the bodies of comments by humans who are not authors of this PR, with
    quoted lines (`>`) and suggestion blocks removed.
-8. Caps each witness's inputs at 300,000 characters, cutting the largest
-   files first and naming them in `truncated.txt`.
+8. Caps each code witness's inputs at 300,000 characters: the diffs first,
+   cutting the largest first, then whole files in what is left. Whatever is
+   cut is named in `truncated.txt`.
 9. Writes each witness's folder into a fresh randomly named temporary
    directory outside any git repository.
 

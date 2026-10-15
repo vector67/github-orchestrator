@@ -15,6 +15,8 @@ message, comment or docstring, on purpose.
 - `changes.diff`: a unified diff of the test code. Comments and docstrings
   have been blanked, so blank lines appear where they were; line numbers are
   the real ones.
+- `files/`: the whole new version of each changed test file, stripped the
+  same way, so you can read a test's setup and helpers beyond the hunk.
 - `skipped.txt`, `unstripped.txt`, `truncated.txt`: as their names say. Any
   may be missing.
 

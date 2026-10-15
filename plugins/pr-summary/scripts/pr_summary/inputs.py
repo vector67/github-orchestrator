@@ -59,14 +59,25 @@ def _write(folder: Path, name: str, lines: Iterable[str]) -> None:
         (folder / name).write_text(text)
 
 
-def _code_folder(folder: Path, diffs: dict[str, str], skipped: list[str], unstripped: list[str], limit: int) -> None:
-    kept = dict(diffs)
-    truncated = []
-    while kept and sum(map(len, kept.values())) > limit:
+def _largest_first_until_within(entries: dict[str, str], budget: int) -> tuple[dict[str, str], list[str]]:
+    kept = dict(entries)
+    dropped = []
+    while kept and sum(map(len, kept.values())) > budget:
         largest = max(kept, key=lambda path: len(kept[path]))
-        truncated.append(largest)
+        dropped.append(largest)
         del kept[largest]
-    _write(folder, "changes.diff", [diff.rstrip("\n") for diff in kept.values() if diff])
+    return kept, dropped
+
+
+def _code_folder(folder: Path, diffs: dict[str, str], wholes: dict[str, str], skipped: list[str], unstripped: list[str], limit: int) -> None:
+    kept_diffs, dropped_diffs = _largest_first_until_within(diffs, limit)
+    kept_wholes, dropped_wholes = _largest_first_until_within(wholes, limit - sum(map(len, kept_diffs.values())))
+    truncated = [*dropped_diffs, *(f"files/{path}" for path in dropped_wholes)]
+    _write(folder, "changes.diff", [diff.rstrip("\n") for diff in kept_diffs.values() if diff])
+    for path, text in kept_wholes.items():
+        whole = folder / "files" / path
+        whole.parent.mkdir(parents=True, exist_ok=True)
+        whole.write_text(text)
     _write(folder, "skipped.txt", skipped)
     _write(folder, "unstripped.txt", unstripped)
     _write(folder, "truncated.txt", truncated)
@@ -92,6 +103,7 @@ def write_inputs(
         folder.mkdir()
 
     diffs: dict[str, dict[str, str]] = {"production": {}, "tests": {}}
+    wholes: dict[str, dict[str, str]] = {"production": {}, "tests": {}}
     skipped: dict[str, list[str]] = {"production": [], "tests": []}
     unstripped: dict[str, list[str]] = {"production": [], "tests": []}
     remarks_added: list[str] = []
@@ -109,6 +121,9 @@ def write_inputs(
             docs.append(_raw_diff(changed.path, side))
             continue
         diffs[kind][changed.path] = code_diff(changed.path, side.before, side.after)
+        if side.after is not None:
+            whole = stripped(side.after, changed.path)
+            wholes[kind][changed.path] = side.after if whole is None else whole
         if stripped(side.after or side.before or "", changed.path) is None:
             unstripped[kind].append(changed.path)
         if side.after is not None:
@@ -116,8 +131,8 @@ def write_inputs(
             if added:
                 remarks_added.append(f"## {changed.path}\n" + "\n".join(added) + "\n")
 
-    _code_folder(manifest["implementation"], diffs["production"], skipped["production"], unstripped["production"], limit)
-    _code_folder(manifest["tests"], diffs["tests"], skipped["tests"], unstripped["tests"], limit)
+    _code_folder(manifest["implementation"], diffs["production"], wholes["production"], skipped["production"], unstripped["production"], limit)
+    _code_folder(manifest["tests"], diffs["tests"], wholes["tests"], skipped["tests"], unstripped["tests"], limit)
 
     by_authors, by_others = voices(pr.remarks, pr.authors, settings)
     claimed = manifest["claimed"]

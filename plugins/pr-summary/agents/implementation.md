@@ -16,6 +16,9 @@ the code and nothing else.
 - `changes.diff`: a unified diff of the production code. Comments and
   docstrings have been blanked, so blank lines appear where they were; line
   numbers are the real ones.
+- `files/`: the whole new version of each changed file, stripped the same
+  way. The change is what the diff shows; read the whole files for the code
+  around it before saying something is missing.
 - `skipped.txt`: binary files left out. `unstripped.txt`: files whose comments
   could not be removed (treat any prose in them as unreliable).
   `truncated.txt`: files left out because the change is too large. Any of

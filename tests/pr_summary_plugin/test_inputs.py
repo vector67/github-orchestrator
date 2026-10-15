@@ -96,6 +96,18 @@ def test_implementation_sees_stripped_production_code_and_nothing_of_the_author(
     assert "lock" not in seen
 
 
+def test_code_witnesses_also_get_each_changed_file_whole_and_stripped(tmp_path: Path) -> None:
+    manifest = written(tmp_path)
+
+    toolbar = (manifest["implementation"] / "files" / "src" / "toolbar.py").read_text()
+    test_file = (manifest["tests"] / "files" / "tests" / "test_toolbar.py").read_text()
+    assert "return ['export'] if flags.exports else []" in toolbar
+    assert "hidden while exports" not in toolbar
+    assert "assert buttons(Off()) == []" in test_file
+    assert "hides when exports are off" not in test_file
+    assert not (manifest["implementation"] / "files" / "assets").exists()
+
+
 def test_a_renamed_file_diffs_against_its_previous_path(tmp_path: Path) -> None:
     seen = everything_in(written(tmp_path)["implementation"])
 
