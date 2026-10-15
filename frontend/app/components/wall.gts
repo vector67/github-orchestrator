@@ -160,8 +160,12 @@ export default class Wall extends Component {
     {{pageTitle this.tabTitle}}
     <main id="wall" data-test-wall>
       <HubBar @on="wall" />
+      {{#if this.stale}}
+        <p class="wall-stale-note" data-test-wall-stale-note>These rows may be
+          out of date.</p>
+      {{/if}}
       <div
-        class="wall-body {{if this.stale 'stale'}}"
+        class="wall-body"
         data-test-wall-stale={{this.stale}}
         {{moves}}
         {{selects this.hub.selected}}

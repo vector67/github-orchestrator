@@ -2545,6 +2545,22 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-banner]').doesNotExist();
   });
 
+  test('a stale wall says in words that its rows may be out of date', async function (assert) {
+    onTheHub(heldPr());
+    board().ledger = runLedger({
+      watcher: {
+        polled_at: new Date(clock().now - 600_000).toISOString(),
+        overdue: true,
+      },
+    });
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-stale-note]')
+      .hasText('These rows may be out of date.');
+  });
+
   test('the rows of a wall whose watcher polls on time are not marked stale', async function (assert) {
     onTheHub(heldPr());
     board().ledger = runLedger({
@@ -2554,6 +2570,7 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
 
     assert.dom('[data-test-wall-stale]').doesNotExist();
+    assert.dom('[data-test-wall-stale-note]').doesNotExist();
   });
 
   test('a row keeps its own element when another repo’s pull request with its number leaves the wall', async function (assert) {

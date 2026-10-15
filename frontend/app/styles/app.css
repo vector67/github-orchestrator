@@ -2362,11 +2362,16 @@ kbd {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  transition: opacity var(--motion-dim) ease;
 }
 
-.wall-body.stale {
-  opacity: 0.5;
+.wall-stale-note {
+  flex: none;
+  margin: 0;
+  padding: 8px 24px;
+  font-size: var(--fs-m);
+  color: var(--ready-text);
+  background: var(--ready-ground);
+  border-bottom: 1px solid var(--ready-edge);
 }
 
 .wall-group {
