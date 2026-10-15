@@ -793,6 +793,16 @@ export interface Chip {
   tone: ChipTone;
 }
 
+const FIXED_BY_RUN: Record<string, string> = {
+  'ci-failed': 'ci',
+  'became-unmergeable': 'merge',
+};
+
+function fixingNow(shown: ShownPr, key: string): boolean {
+  const agent = shown.drawn.system.agent;
+  return agent.state === 'working' && FIXED_BY_RUN[agent.event ?? ''] === key;
+}
+
 const BLOCKERS: Partial<Record<Move, string>> = {
   'fix-ci': 'ci',
   rebase: 'merge',
@@ -826,6 +836,7 @@ function chip(key: string, text: string, hint: string, tone: ChipTone): Chip {
 
 function ciChip(shown: ShownPr, code: Move): Chip | null {
   if (shown.facts?.ci_status !== 'failing' || code === 'fix-ci') return null;
+  if (fixingNow(shown, 'ci')) return null;
   const failed = shown.drawn.status.failed_checks;
   return chip(
     'ci',
@@ -839,7 +850,7 @@ function ciChip(shown: ShownPr, code: Move): Chip | null {
 
 function mergeChip(shown: ShownPr, code: Move): Chip | null {
   const state = shown.facts?.merge_state;
-  if (code === 'rebase') return null;
+  if (code === 'rebase' || fixingNow(shown, 'merge')) return null;
   if (state === 'conflicts') {
     return chip(
       'merge',

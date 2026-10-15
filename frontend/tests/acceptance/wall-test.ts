@@ -831,14 +831,14 @@ module('Acceptance | wall', function (hooks) {
             review_decision: 'changes-requested',
             merge_state: 'conflicts',
           }),
-          manager: { working_on: 'ci-failed' },
+          manager: { working_on: 'manual-continue' },
           threads: [row('h1', 'ready', 'open', 'human')],
           system: {
             agent: {
               name: 'Claude',
               enabled: true,
               state: 'working',
-              event: 'ci-failed',
+              event: 'manual-continue',
               elapsed_seconds: 134,
               silent_seconds: 6,
             },
@@ -857,7 +857,7 @@ module('Acceptance | wall', function (hooks) {
       'CI failing',
       'conflicts with main',
       'changes requested',
-      'agent fixing CI',
+      'agent carrying on',
       '2 unpushed',
       '1 queued',
     ]);
@@ -869,6 +869,38 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#8"] [data-test-blocking]')
       .doesNotExist();
+  });
+
+  test('an agent run fixing the fact in the way leaves that fact’s chip out', async function (assert) {
+    const running = (event: string) => ({
+      name: 'Claude',
+      enabled: true,
+      state: 'working',
+      event,
+      elapsed_seconds: 30,
+      silent_seconds: null,
+    });
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('fix-ci', { merge_state: 'behind' }),
+          manager: { working_on: 'ci-failed' },
+          system: { agent: running('ci-failed') },
+        },
+      }),
+      heldPr({
+        number: 8,
+        dashboard: {
+          facts: factsFor('rebase'),
+          manager: { working_on: 'became-unmergeable' },
+          system: { agent: running('became-unmergeable') },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual([chips('o/r#7'), chips('o/r#8')], [['behind main'], []]);
   });
 
   test('a fact on a pull request you only review is never red', async function (assert) {
