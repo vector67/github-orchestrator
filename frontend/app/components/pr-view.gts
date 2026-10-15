@@ -199,173 +199,187 @@ export default class PrView extends Component<PrViewSignature> {
     return true;
   }
 
+  get notHeld(): boolean {
+    return this.store.notHeld(this.repo, this.args.pr.number);
+  }
+
   private async copy(): Promise<void> {
     this.toasts.say(await copyAddress(this.url), 'done');
   }
 
   <template>
     <div id="pr-view" data-test-pr-view>
-      <header class="prbar" data-top-bar data-test-pr-bar>
-        <button
-          type="button"
-          class="switch-btn"
-          data-test-switcher-open
-          {{on "click" this.openSwitcher}}
-        ><span class="burger"></span>PRs
-          <span class="n">{{this.needs}}</span>
-          <kbd>\</kbd></button>
-        {{#if this.hub.poll}}
-          <span
-            class="pr-health"
-            title={{this.hub.poll.text}}
-            aria-label={{this.hub.poll.text}}
-            data-test-pr-health
-            data-test-health-alarm={{this.hub.poll.alarm}}
-          ><i class="sq {{if this.hub.poll.alarm 'alarm'}}"></i></span>
-        {{/if}}
-        <LinkTo @route="index" class="linkish" data-test-wall-link>Wall
-          <kbd>Esc</kbd></LinkTo>
-        <div class="prtitle" data-test-pr-heading>
-          <span class="tline">{{#if this.reading.draft}}<span
-                class="draft-pill"
-                data-test-draft-pill
-              >Draft</span>{{/if}}<span
-              class="t"
-              data-test-pr-title
-            >{{this.title}}</span></span>
-          <span class="m">{{#if this.reading.whose}}{{this.reading.whose}}
-              ·
-            {{/if}}{{#if this.reading.branch}}{{this.reading.branch}}
-              ·
-            {{/if}}<a
-              data-test-repo
+      {{#if this.notHeld}}
+        <section id="not-found" data-test-pr-not-found>
+          <h1>Pull request not found</h1>
+          <p>The watcher holds no pull request
+            {{this.repo}}#{{@pr.number}}. It only watches pull requests you
+            wrote or were asked to review.
+            <a href="/">Back to the board</a>.</p>
+        </section>
+      {{else}}
+        <header class="prbar" data-top-bar data-test-pr-bar>
+          <button
+            type="button"
+            class="switch-btn"
+            data-test-switcher-open
+            {{on "click" this.openSwitcher}}
+          ><span class="burger"></span>PRs
+            <span class="n">{{this.needs}}</span>
+            <kbd>\</kbd></button>
+          {{#if this.hub.poll}}
+            <span
+              class="pr-health"
+              title={{this.hub.poll.text}}
+              aria-label={{this.hub.poll.text}}
+              data-test-pr-health
+              data-test-health-alarm={{this.hub.poll.alarm}}
+            ><i class="sq {{if this.hub.poll.alarm 'alarm'}}"></i></span>
+          {{/if}}
+          <LinkTo @route="index" class="linkish" data-test-wall-link>Wall
+            <kbd>Esc</kbd></LinkTo>
+          <div class="prtitle" data-test-pr-heading>
+            <span class="tline">{{#if this.reading.draft}}<span
+                  class="draft-pill"
+                  data-test-draft-pill
+                >Draft</span>{{/if}}<span
+                class="t"
+                data-test-pr-title
+              >{{this.title}}</span></span>
+            <span class="m">{{#if this.reading.whose}}{{this.reading.whose}}
+                ·
+              {{/if}}{{#if this.reading.branch}}{{this.reading.branch}}
+                ·
+              {{/if}}<a
+                data-test-repo
+                href={{this.url}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{this.repo}}#{{@pr.number}}</a></span>
+          </div>
+          {{#if this.reading}}
+            <div
+              class="move tone-{{this.moveTone}}"
+              data-muted={{if this.reading.muted "true"}}
+              data-move={{this.reading.code}}
+              data-test-your-move
+            >
+              <span class="lab" data-test-move-label>{{if
+                  this.reading.muted
+                  "Next, when it’s ready"
+                  "Next"
+                }}</span>
+              {{#if this.reading.rebaseIsNext}}
+                <RebaseButton />
+              {{else}}
+                <span class="vb" title={{this.reading.move}}>{{#if
+                    this.reading.working
+                  }}<span
+                      class="live-dot"
+                      {{pulses this.reading.move}}
+                    ></span>{{/if}}{{this.reading.move}}</span>
+              {{/if}}
+            </div>
+          {{/if}}
+          <span class="grow"></span>
+          <span class="prflags">
+            {{#if this.counts.length}}
+              <span class="prcounts">
+                {{#each this.counts key="@index" as |count|}}
+                  <span data-test-pr-count>{{count}}</span>
+                {{/each}}
+              </span>
+            {{/if}}
+            {{#each this.barFlags key="code" as |flag|}}
+              <MoveFlagTag @flag={{flag}} />
+            {{/each}}
+            {{#if this.reading.detailedReviewer}}
+              <span
+                class="flag"
+                title={{this.reading.detailedReviewer.hint}}
+                data-test-flag
+              >{{this.reading.detailedReviewer.text}}</span>
+            {{/if}}
+            {{#if this.summaries.mismatches}}
+              <span
+                class="flag"
+                data-test-mismatches
+              >{{this.summaries.mismatches}}</span>
+            {{/if}}
+          </span>
+          {{#if this.url}}
+            <a
+              class="linkish"
               href={{this.url}}
               target="_blank"
               rel="noopener noreferrer"
-            >{{this.repo}}#{{@pr.number}}</a></span>
+              data-test-github
+            >GitHub <kbd>o</kbd></a>
+          {{/if}}
+          {{#if this.hub.fontProblem}}
+            <span
+              class="font-problem"
+              title={{this.hub.fontProblem}}
+              data-test-font-problem
+            >Board font missing</span>
+          {{/if}}
+          <button
+            type="button"
+            class="theme-toggle btn"
+            data-test-theme-toggle
+            aria-pressed={{if this.theme.dark "true" "false"}}
+            {{on "click" this.flip}}
+          >Dark theme</button>
+        </header>
+        <nav class="prtabs" aria-label="this pull request">
+          <LinkTo
+            @route="summary"
+            class="tab"
+            aria-current={{if this.onSummaryTab "page"}}
+            data-test-tab="summary"
+          >Summary
+            <kbd>1</kbd></LinkTo>
+          <LinkTo
+            @route="conversations"
+            class="tab"
+            aria-current={{if this.onBoardTab "page"}}
+            data-test-tab="board"
+          >Board
+            {{#if this.threadsWaiting}}<span
+                class="count"
+                data-test-tab-count
+              >{{this.threadsWaiting}}</span>{{/if}}
+            <kbd>2</kbd></LinkTo>
+          <LinkTo
+            @route="dashboard"
+            class="tab"
+            aria-current={{if this.onDashboardTab "page"}}
+            data-test-tab="dashboard"
+          >Dashboard
+            {{#if this.reading.working}}<span
+                class="live-dot"
+                {{pulses this.reading.move}}
+              ></span>{{/if}}
+            <kbd>3</kbd></LinkTo>
+          <LinkTo
+            @route="terminal"
+            class="tab"
+            aria-current={{if this.onTerminalTab "page"}}
+            data-test-tab="terminal"
+          >Terminal
+            <kbd>4</kbd></LinkTo>
+          <LinkTo
+            @route="pr.diff"
+            class="tab"
+            aria-current={{if this.onDiffTab "page"}}
+            data-test-tab="diff"
+          >Diff
+            <kbd>5</kbd></LinkTo>
+        </nav>
+        <div class="pane">
+          {{yield}}
         </div>
-        {{#if this.reading}}
-          <div
-            class="move tone-{{this.moveTone}}"
-            data-muted={{if this.reading.muted "true"}}
-            data-move={{this.reading.code}}
-            data-test-your-move
-          >
-            <span class="lab" data-test-move-label>{{if
-                this.reading.muted
-                "Next, when it’s ready"
-                "Next"
-              }}</span>
-            {{#if this.reading.rebaseIsNext}}
-              <RebaseButton />
-            {{else}}
-              <span class="vb" title={{this.reading.move}}>{{#if
-                  this.reading.working
-                }}<span
-                    class="live-dot"
-                    {{pulses this.reading.move}}
-                  ></span>{{/if}}{{this.reading.move}}</span>
-            {{/if}}
-          </div>
-        {{/if}}
-        <span class="grow"></span>
-        <span class="prflags">
-          {{#if this.counts.length}}
-            <span class="prcounts">
-              {{#each this.counts key="@index" as |count|}}
-                <span data-test-pr-count>{{count}}</span>
-              {{/each}}
-            </span>
-          {{/if}}
-          {{#each this.barFlags key="code" as |flag|}}
-            <MoveFlagTag @flag={{flag}} />
-          {{/each}}
-          {{#if this.reading.detailedReviewer}}
-            <span
-              class="flag"
-              title={{this.reading.detailedReviewer.hint}}
-              data-test-flag
-            >{{this.reading.detailedReviewer.text}}</span>
-          {{/if}}
-          {{#if this.summaries.mismatches}}
-            <span
-              class="flag"
-              data-test-mismatches
-            >{{this.summaries.mismatches}}</span>
-          {{/if}}
-        </span>
-        {{#if this.url}}
-          <a
-            class="linkish"
-            href={{this.url}}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test-github
-          >GitHub <kbd>o</kbd></a>
-        {{/if}}
-        {{#if this.hub.fontProblem}}
-          <span
-            class="font-problem"
-            title={{this.hub.fontProblem}}
-            data-test-font-problem
-          >Board font missing</span>
-        {{/if}}
-        <button
-          type="button"
-          class="theme-toggle btn"
-          data-test-theme-toggle
-          aria-pressed={{if this.theme.dark "true" "false"}}
-          {{on "click" this.flip}}
-        >Dark theme</button>
-      </header>
-      <nav class="prtabs" aria-label="this pull request">
-        <LinkTo
-          @route="summary"
-          class="tab"
-          aria-current={{if this.onSummaryTab "page"}}
-          data-test-tab="summary"
-        >Summary
-          <kbd>1</kbd></LinkTo>
-        <LinkTo
-          @route="conversations"
-          class="tab"
-          aria-current={{if this.onBoardTab "page"}}
-          data-test-tab="board"
-        >Board
-          {{#if this.threadsWaiting}}<span
-              class="count"
-              data-test-tab-count
-            >{{this.threadsWaiting}}</span>{{/if}}
-          <kbd>2</kbd></LinkTo>
-        <LinkTo
-          @route="dashboard"
-          class="tab"
-          aria-current={{if this.onDashboardTab "page"}}
-          data-test-tab="dashboard"
-        >Dashboard
-          {{#if this.reading.working}}<span
-              class="live-dot"
-              {{pulses this.reading.move}}
-            ></span>{{/if}}
-          <kbd>3</kbd></LinkTo>
-        <LinkTo
-          @route="terminal"
-          class="tab"
-          aria-current={{if this.onTerminalTab "page"}}
-          data-test-tab="terminal"
-        >Terminal
-          <kbd>4</kbd></LinkTo>
-        <LinkTo
-          @route="pr.diff"
-          class="tab"
-          aria-current={{if this.onDiffTab "page"}}
-          data-test-tab="diff"
-        >Diff
-          <kbd>5</kbd></LinkTo>
-      </nav>
-      <div class="pane">
-        {{yield}}
-      </div>
+      {{/if}}
       <Switcher
         @open={{this.switching}}
         @current={{@pr}}
