@@ -82,9 +82,9 @@ Comments — one line per comment, action first:
 
 ```
 3 comments on widgets#16 · 2 fixes started
-New thread | Fix started | Ada (review comment): "<gist>"
-Reopened | Fix queued | Reviewer B: "<gist>"
-Reply | No fix | Reviewer B: "<gist>"
+New thread | Fix started | Ada (review comment) | summary: <gist>
+Reopened | Fix queued | Reviewer B | summary: <gist>
+Reply | No fix | Reviewer B: "<the comment's first words>"
 ```
 
 - Thread action: New thread, Reopened, Reply — decided when the watcher sees
@@ -94,7 +94,9 @@ Reply | No fix | Reviewer B: "<gist>"
 - `(review comment)` flags a review's top-level message. The review's verdict
   only goes out as the immediate "Review decision changed".
 - The gist summarises the new comment itself: one haiku call per banner, the
-  comment's first words after 60 seconds without an answer.
+  comment's first words after 60 seconds without an answer. A gist is labelled
+  `summary:` and never quoted, so it can't be mistaken for the commenter's
+  words; only the comment's own words stand in quotes.
 - The user's own comments never get a line.
 
 Claude disabled — `Claude disabled — skipped events on #56, #16`.

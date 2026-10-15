@@ -130,8 +130,9 @@ def _comment_banner(comments: list[CommentArrived], gists: tuple[str, ...],
     lines = []
     for at, (comment, fix) in enumerate(zip(comments, fixes, strict=True)):
         who = f"{comment.author} (review comment)" if comment.review_comment else comment.author
-        gist = clipped((gists[at] if at < len(gists) else "") or comment.body, GIST_CHARS)
-        lines.append(f'{comment.arrival.value} | {_PROGRESS[fix]} | {who}: "{gist}"')
+        gist = gists[at] if at < len(gists) else ""
+        said = f" | summary: {clipped(gist, GIST_CHARS)}" if gist else f': "{clipped(comment.body, GIST_CHARS)}"'
+        lines.append(f"{comment.arrival.value} | {_PROGRESS[fix]} | {who}{said}")
     started, queued = fixes.count(FixProgress.STARTED), fixes.count(FixProgress.QUEUED)
     counts = []
     if started:
