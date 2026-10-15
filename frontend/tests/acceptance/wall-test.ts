@@ -1002,12 +1002,6 @@ module('Acceptance | wall', function (hooks) {
     await triggerEvent(document, 'keydown', { key });
   }
 
-  function tap(key: string): void {
-    document.dispatchEvent(
-      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
-    );
-  }
-
   function selected(): string[] {
     return findAll('[data-test-wall-row][aria-current="true"]').map((one) =>
       one.getAttribute('data-test-wall-row')!,
