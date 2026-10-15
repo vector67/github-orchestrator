@@ -221,7 +221,11 @@ export default class Wall extends Component {
                     class="ttl"
                     data-test-wall-title
                   >{{reading.title}}</span>
-                  <span class="meta">#{{pr.number}}{{#if reading.whose}}
+                  <span class="meta">{{#if this.store.severalReposShown}}<span
+                        data-test-row-repo
+                      >{{pr.repo}}</span>{{/if}}#{{pr.number}}{{#if
+                      reading.whose
+                    }}
                       ·
                       {{reading.whose}}{{/if}}{{#if reading.branch}}
                       ·

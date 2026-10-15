@@ -465,6 +465,10 @@ export default class StoreService extends Service {
     return known.length ? known : null;
   }
 
+  get severalReposShown(): boolean {
+    return (this.chosen ?? this.watching).length > 1;
+  }
+
   choose(repos: string[] | null): void {
     const every = this.watching.every((repo) => repos?.includes(repo));
     const asked = repos?.length && !every ? repos.join(',') : null;

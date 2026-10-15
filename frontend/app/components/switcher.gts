@@ -80,7 +80,10 @@ export default class Switcher extends Component<SwitcherSignature> {
                         as |chip|
                       }}<StateChip @chip={{chip}} />{{/each}}</span>{{/if}}<span
                     class="ttl"
-                  >#{{pr.number}} {{reading.title}}</span></span></button>
+                  >{{#if this.store.severalReposShown}}<span
+                        data-test-row-repo
+                      >{{pr.repo}}</span>{{/if}}#{{pr.number}}
+                    {{reading.title}}</span></span></button>
             {{/let}}
           {{/each}}
         {{/each}}
