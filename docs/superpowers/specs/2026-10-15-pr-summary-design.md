@@ -206,7 +206,11 @@ listed in the config's `bots`.
 once, waits, copies their `output.json` files into the alignment folder, runs
 the judge, then runs `render.py` and prints its markdown and the scratch
 folder's path. A witness that fails or runs past ten minutes is recorded as
-failed; the rest continue.
+failed; the rest continue. A witness that cannot reach the tools its agent
+file names writes only `{"unavailable": "<why>"}` and is run once more after
+30 seconds; if it is unavailable again it fails, and the judge never sees it.
+Any failed witness makes the run exit non-zero after printing the summary,
+naming each failure on stderr.
 
 `scripts/render.py` checks each `output.json` against its shape and prints
 the summary in section order. A missing or malformed output shows as that

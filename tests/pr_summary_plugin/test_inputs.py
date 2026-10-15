@@ -124,7 +124,7 @@ def test_each_witness_leaves_its_output_in_its_own_folder_of_the_work_dir(tmp_pa
         (folder / "output.json").write_text("{}")
         return True
 
-    run_witnesses(written(named), launch)
+    run_witnesses(written(named), launch, lambda seconds: None)
 
     assert sorted(path.relative_to(named).as_posix() for path in named.glob("*/output.json")) == [
         "alignment/output.json",

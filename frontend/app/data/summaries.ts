@@ -650,11 +650,15 @@ export interface SummaryTab {
   finished: string | null;
   since: string | null;
   witnesses: WitnessProgress[];
+  witnessesDone: number;
+  witnessCount: number;
   exitStatus: number | null;
   reason: string | null;
   calls: number | null;
   markdown: string | null;
 }
+
+const WITNESS_COUNT = 6;
 
 const SHORT_SHA = 7;
 
@@ -676,14 +680,14 @@ function linesOf(text: string | null): string[] {
 function stateOf(
   summary: PrSummaryEntity,
   head: string | null,
-  role: Role,
+  role: Role | null,
 ): SummaryState {
   const { running, exit_status, stderr } = summary;
   if (running) return 'running';
   if (exit_status === NEEDS_GITHUB_API) return 'needs-github-api';
   if (exit_status === null && stderr) return 'failed';
   if (exit_status === null) {
-    return role === 'reviewer' && summary.wanted
+    return role !== 'author' && summary.wanted
       ? 'none-yet-reviewer'
       : 'none-yet-author';
   }
@@ -702,8 +706,7 @@ export function summaryTabOf(
   summary: PrSummaryEntity,
   head: string | null,
   role: Role | null,
-): SummaryTab | null {
-  if (!role) return null;
+): SummaryTab {
   const state = stateOf(summary, head, role);
   const calls = API_CALLS.exec(summary.stderr ?? '')?.[1];
   return {
@@ -714,6 +717,8 @@ export function summaryTabOf(
     finished: summary.finished,
     since: summary.since,
     witnesses: summary.witnesses,
+    witnessesDone: summary.witnesses.filter((one) => one.done).length,
+    witnessCount: WITNESS_COUNT,
     exitStatus: summary.exit_status,
     reason: reasonOf(state, summary.stderr),
     calls: calls === undefined ? null : Number(calls),

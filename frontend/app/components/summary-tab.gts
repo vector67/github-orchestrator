@@ -45,6 +45,10 @@ export default class SummaryTab extends Component {
     return relativeOf(this.tab?.finished ?? null, this.hub.now);
   }
 
+  get started(): string {
+    return relativeOf(this.tab?.since ?? null, this.hub.now);
+  }
+
   get elapsed(): string {
     const since = Date.parse(this.tab?.since ?? '');
     return Number.isNaN(since) ? '' : lengthOf((this.hub.now - since) / 1000);
@@ -129,16 +133,26 @@ export default class SummaryTab extends Component {
               {{on "click" this.run}}
             >Summarise</button>
           {{else if (is this.tab.state "running")}}
-            <span class="live-dot" {{pulses this.tab.since}}></span>
-            <span><code>{{this.tab.head}}</code> · {{this.elapsed}}</span>
-            <ol class="witnesses">
-              {{#each this.tab.witnesses key="witness" as |one|}}
-                <li
-                  data-done={{if one.done "true"}}
-                  data-test-witness={{one.witness}}
-                >{{one.witness}}</li>
-              {{/each}}
-            </ol>
+            {{#if this.tab.markdown}}
+              <span><code>{{this.tab.sha}}</code>
+                · finished
+                {{this.finished}}</span>
+              <span class="rerun" data-test-summary-rerun>rerun started
+                {{this.started}}, finished
+                {{this.tab.witnessesDone}}/{{this.tab.witnessCount}}
+                witnesses</span>
+            {{else}}
+              <span class="live-dot" {{pulses this.tab.since}}></span>
+              <span><code>{{this.tab.head}}</code> · {{this.elapsed}}</span>
+              <ol class="witnesses">
+                {{#each this.tab.witnesses key="witness" as |one|}}
+                  <li
+                    data-done={{if one.done "true"}}
+                    data-test-witness={{one.witness}}
+                  >{{one.witness}}</li>
+                {{/each}}
+              </ol>
+            {{/if}}
           {{else if (is this.tab.state "needs-github-api")}}
             <span>{{this.tab.reason}}</span>
             <button
@@ -173,6 +187,12 @@ export default class SummaryTab extends Component {
             <span><code>{{this.tab.sha}}</code>
               · finished
               {{this.finished}}</span>
+            <button
+              type="button"
+              class="btn"
+              data-test-summary-run
+              {{on "click" this.run}}
+            >Rerun</button>
           {{/if}}
           {{#if this.said}}
             <span class="said" data-test-summary-said>{{this.said}}</span>

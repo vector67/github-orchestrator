@@ -4,7 +4,7 @@ import type RouterService from '@ember/routing/router-service';
 import { tracked } from '@glimmer/tracking';
 import { registerDestructor } from '@ember/destroyable';
 import { waitForPromise } from '@ember/test-waiters';
-import { unheldBy } from 'frontend/data/refusal';
+import { notHeldBy, unheldBy } from 'frontend/data/refusal';
 import type { Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
@@ -40,6 +40,7 @@ class Rail {
       reachability.polled(where, (tag) => store.ask(feed, tag), {
         flipped,
         scope,
+        counts: (trouble) => !notHeldBy(trouble),
       });
     this.pull = polled('rail', { kind: 'pull-request', pr });
     this.viewer = polled('rail', { kind: 'viewer', pr });

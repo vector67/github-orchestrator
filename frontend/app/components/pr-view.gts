@@ -199,6 +199,10 @@ export default class PrView extends Component<PrViewSignature> {
     return true;
   }
 
+  get notHeld(): boolean {
+    return this.store.notHeld(this.repo, this.args.pr.number);
+  }
+
   private async copy(): Promise<void> {
     this.toasts.say(await copyAddress(this.url), 'done');
   }
@@ -318,54 +322,64 @@ export default class PrView extends Component<PrViewSignature> {
           {{on "click" this.flip}}
         >Dark theme</button>
       </header>
-      <nav class="prtabs" aria-label="this pull request">
-        <LinkTo
-          @route="summary"
-          class="tab"
-          aria-current={{if this.onSummaryTab "page"}}
-          data-test-tab="summary"
-        >Summary
-          <kbd>1</kbd></LinkTo>
-        <LinkTo
-          @route="conversations"
-          class="tab"
-          aria-current={{if this.onBoardTab "page"}}
-          data-test-tab="board"
-        >Board
-          {{#if this.threadsWaiting}}<span
-              class="count"
-              data-test-tab-count
-            >{{this.threadsWaiting}}</span>{{/if}}
-          <kbd>2</kbd></LinkTo>
-        <LinkTo
-          @route="dashboard"
-          class="tab"
-          aria-current={{if this.onDashboardTab "page"}}
-          data-test-tab="dashboard"
-        >Dashboard
-          {{#if this.reading.working}}<span
-              class="live-dot"
-              {{pulses this.reading.move}}
-            ></span>{{/if}}
-          <kbd>3</kbd></LinkTo>
-        <LinkTo
-          @route="terminal"
-          class="tab"
-          aria-current={{if this.onTerminalTab "page"}}
-          data-test-tab="terminal"
-        >Terminal
-          <kbd>4</kbd></LinkTo>
-        <LinkTo
-          @route="pr.diff"
-          class="tab"
-          aria-current={{if this.onDiffTab "page"}}
-          data-test-tab="diff"
-        >Diff
-          <kbd>5</kbd></LinkTo>
-      </nav>
-      <div class="pane">
-        {{yield}}
-      </div>
+      {{#if this.notHeld}}
+        <section id="not-found" data-test-pr-not-found>
+          <h1>Pull request not found</h1>
+          <p>The watcher holds no pull request
+            {{this.repo}}#{{@pr.number}}. It only watches pull requests you
+            wrote or were asked to review.
+            <a class="not-found-link" href="/">Back to the board</a>.</p>
+        </section>
+      {{else}}
+        <nav class="prtabs" aria-label="this pull request">
+          <LinkTo
+            @route="summary"
+            class="tab"
+            aria-current={{if this.onSummaryTab "page"}}
+            data-test-tab="summary"
+          >Summary
+            <kbd>1</kbd></LinkTo>
+          <LinkTo
+            @route="conversations"
+            class="tab"
+            aria-current={{if this.onBoardTab "page"}}
+            data-test-tab="board"
+          >Board
+            {{#if this.threadsWaiting}}<span
+                class="count"
+                data-test-tab-count
+              >{{this.threadsWaiting}}</span>{{/if}}
+            <kbd>2</kbd></LinkTo>
+          <LinkTo
+            @route="dashboard"
+            class="tab"
+            aria-current={{if this.onDashboardTab "page"}}
+            data-test-tab="dashboard"
+          >Dashboard
+            {{#if this.reading.working}}<span
+                class="live-dot"
+                {{pulses this.reading.move}}
+              ></span>{{/if}}
+            <kbd>3</kbd></LinkTo>
+          <LinkTo
+            @route="terminal"
+            class="tab"
+            aria-current={{if this.onTerminalTab "page"}}
+            data-test-tab="terminal"
+          >Terminal
+            <kbd>4</kbd></LinkTo>
+          <LinkTo
+            @route="pr.diff"
+            class="tab"
+            aria-current={{if this.onDiffTab "page"}}
+            data-test-tab="diff"
+          >Diff
+            <kbd>5</kbd></LinkTo>
+        </nav>
+        <div class="pane">
+          {{yield}}
+        </div>
+      {{/if}}
       <Switcher
         @open={{this.switching}}
         @current={{@pr}}

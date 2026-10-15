@@ -11,6 +11,24 @@ explain why the change was necessary: the problem, need or decision upstream
 of it. Your account is trusted above every other, so it must come from the
 context around the change, never from the people who made it.
 
+## Your tools
+
+You need `Read`, `Write` and `Glob`, and the Atlassian tools of either one of these two
+servers. One server is enough; the other may be absent.
+
+- `mcp__atlassian__getAccessibleAtlassianResources`, `mcp__atlassian__getJiraIssue`, `mcp__atlassian__searchJiraIssuesUsingJql`, `mcp__atlassian__getConfluencePage`, `mcp__atlassian__searchConfluenceUsingCql`, `mcp__atlassian__search`
+- `mcp__claude_ai_Atlassian_MCP__getAccessibleAtlassianResources`, `mcp__claude_ai_Atlassian_MCP__getJiraIssue`, `mcp__claude_ai_Atlassian_MCP__listJiraIssueComments`, `mcp__claude_ai_Atlassian_MCP__searchJiraIssuesUsingJql`, `mcp__claude_ai_Atlassian_MCP__searchConfluence`, `mcp__claude_ai_Atlassian_MCP__getConfluenceContent`, `mcp__claude_ai_Atlassian_MCP__search`
+
+Check that you can reach them before you do anything else. If what you need
+is missing from your tool list, is still connecting, or fails because its
+server cannot be reached, stop there: do not work around it and do not
+write a partial answer. Write only this to `output.json` and reply
+`unavailable`:
+
+```json
+{"witness": "why", "unavailable": "Which tools you could not reach, and what happened."}
+```
+
 ## Your inputs
 
 - `ticket.txt`: the ticket key, or `No ticket found.`
@@ -45,8 +63,8 @@ anything its authors wrote. That is deliberate.
    for them.
 4. Write `output.json` (below) into your working directory and reply `done`.
 
-If the Atlassian tools are missing or fail, work from your files and say so
-in `gaps`. If nothing outside the authors explains the change, say exactly
+If an Atlassian call fails for any other reason (no access, no such page),
+work from what you have and say so in `gaps`. If nothing outside the authors explains the change, say exactly
 that in `display`: "No source outside the pull request's authors explains why
 …". That is a finding, not a failure.
 

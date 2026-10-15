@@ -1486,6 +1486,11 @@ button.copy-directory {
   padding: 40px;
 }
 
+.not-found-link {
+  color: var(--link);
+  text-underline-offset: 2px;
+}
+
 #board-columns {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3243,7 +3248,8 @@ kbd {
   content: "✓ ";
 }
 
-.summary-strip .said {
+.summary-strip .said,
+.summary-strip .rerun {
   margin-left: auto;
 }
 
@@ -3302,6 +3308,10 @@ kbd {
 
 .diffstat-square[data-kind="deleted"] {
   background: var(--red);
+}
+
+.summary-strip .rerun {
+  color: var(--muted);
 }
 
 .summary-body {

@@ -8,7 +8,6 @@ import {
   visit,
 } from '@ember/test-helpers';
 import {
-  dashboard,
   heldPr,
   prSummary,
   setupFakeBoard,
@@ -68,7 +67,7 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'ready');
     assert
       .dom('[data-test-summary-strip]')
-      .hasText('c0ffee1 · finished 5m ago');
+      .hasText('c0ffee1 · finished 5m ago Rerun');
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
@@ -128,6 +127,76 @@ module('Acceptance | summary tab', function (hooks) {
     ]);
   });
 
+  test('Rerun on a current summary starts a run against the summary it read, keeping the text and showing the run beside when the last one finished', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: ago(19),
+      markdown: '# What it asks',
+      etag: '"summary-9"',
+    });
+    await visit('/pr/o/r/7/summary');
+
+    await click('[data-test-summary-run]');
+
+    assert.deepEqual(
+      board().posted.map(({ verb, ifMatch }) => ({ verb, ifMatch })),
+      [{ verb: 'summarise', ifMatch: '"summary-9"' }],
+    );
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasAttribute('data-state', 'running');
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasText(
+        'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/6 witnesses',
+      );
+    assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
+  });
+
+  test('a rerun over a summary counts its witnesses as the polls come in', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: ago(19),
+      markdown: '# What it asks',
+      running: true,
+      since: ago(5),
+      witnesses: [
+        { witness: 'requested', done: true },
+        { witness: 'claimed', done: true },
+        { witness: 'implementation', done: true },
+        { witness: 'tests', done: true },
+        { witness: 'why', done: false },
+      ],
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert
+      .dom('[data-test-summary-rerun]')
+      .hasText('rerun started 5m ago, finished 4/6 witnesses');
+
+    board().summary = {
+      ...board().summary,
+      witnesses: [
+        { witness: 'requested', done: true },
+        { witness: 'claimed', done: true },
+        { witness: 'implementation', done: true },
+        { witness: 'tests', done: true },
+        { witness: 'why', done: true },
+        { witness: 'alignment', done: false },
+      ],
+    };
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-summary-rerun]')
+      .hasText('rerun started 5m ago, finished 5/6 witnesses');
+  });
+
   test('a push since the summary marks it stale, naming both heads and how far behind it is, with Rerun', async function (assert) {
     asReviewer();
     board().summary = prSummary({
@@ -159,6 +228,39 @@ module('Acceptance | summary tab', function (hooks) {
       .hasAttribute('data-state', 'none-yet-reviewer');
     assert.dom('[data-test-summary-strip]').hasText('Waiting for its turn');
     assert.dom('[data-test-summary-markdown]').doesNotExist();
+  });
+
+  test('a summary whose pull request has no facts yet still shows its strip and the summary', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: ago(5),
+      markdown: '# What it asks',
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'ready');
+    assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
+  });
+
+  test('a request waiting on a pull request with no facts yet waits for its turn, since only a reviewer is asked', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary({ wanted: ago(2) });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasText('Waiting for its turn');
+  });
+
+  test('no request on a pull request with no facts yet offers Summarise', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary();
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasText('No summary Summarise');
   });
 
   test('a pull request you review with no request waiting offers Summarise rather than a wait that never ends', async function (assert) {
@@ -203,12 +305,9 @@ module('Acceptance | summary tab', function (hooks) {
       .hasAttribute('data-state', 'running');
   });
 
-  test('while a run is in flight the strip shows it live on the head it reads, how long it has run and each witness, ticking them off as the polls come in, over the previous summary', async function (assert) {
+  test('while a first run is in flight the strip shows it live on the head it reads, how long it has run and each witness, ticking them off as the polls come in', async function (assert) {
     asReviewer();
     board().summary = prSummary({
-      head_sha: 'abc1234',
-      exit_status: 0,
-      markdown: '# Before',
       running: true,
       since: ago(3),
       witnesses: [
@@ -232,7 +331,6 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-witness="implementation"]')
       .doesNotHaveAttribute('data-done');
-    assert.dom('[data-test-summary-markdown] h1').hasText('Before');
 
     board().summary = {
       ...board().summary,
@@ -381,14 +479,6 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-strip]')
       .hasAttribute('data-state', 'running');
-  });
-
-  test('until the facts say whose pull request it is, the tab draws no strip', async function (assert) {
-    board().manager = dashboard({ facts: null, polled: false });
-
-    await visit('/pr/o/r/7/summary');
-
-    assert.dom('[data-test-summary-strip]').doesNotExist();
   });
 
   test('each wall row counts the mismatches of its stored summary, one in the singular, and none at zero or with no count', async function (assert) {

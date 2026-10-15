@@ -89,3 +89,11 @@ def test_a_missing_alignment_says_so(tmp_path: Path) -> None:
 
     assert "Alignment failed: no output.json." in text
     assert "Everything matches." not in text
+
+
+def test_a_witness_whose_tools_stayed_unavailable_fails_naming_why(tmp_path: Path) -> None:
+    unavailable = {"witness": "requested", "unavailable": "the Atlassian tools never connected"}
+
+    text = report(folders(tmp_path, {**ALL, "requested": unavailable}, []))
+
+    assert "## Requested\nRequested failed: its tools stayed unavailable: the Atlassian tools never connected" in text

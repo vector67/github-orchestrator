@@ -69,7 +69,12 @@ import {
   write,
 } from 'frontend/data/http';
 import type { Details, FileStat } from 'frontend/data/panel';
-import { Refusal, unheldBy, type Unheld } from 'frontend/data/refusal';
+import {
+  notHeldBy,
+  Refusal,
+  unheldBy,
+  type Unheld,
+} from 'frontend/data/refusal';
 import { reportError } from 'frontend/data/report';
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
@@ -311,6 +316,7 @@ export default class StoreService extends Service {
   @tracked private operations: ByKey<StoredOperation> = {};
   @tracked private proposals: ByKey<Proposal> = {};
   @tracked private prSummaries: Record<string, PrSummaryEntity> = {};
+  @tracked private lost: Record<string, boolean> = {};
   @tracked private diffs: Record<string, Diff> = {};
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
@@ -370,6 +376,10 @@ export default class StoreService extends Service {
   prHeader(repo: string, number: number): PrHeader | null {
     const pr = this.prs[keyOf(repo, number)];
     return pr ? prHeaderOf(pr) : null;
+  }
+
+  notHeld(repo: string, number: number): boolean {
+    return this.lost[keyOf(repo, number)] === true;
   }
 
   prSummary(repo: string, number: number): SummaryTab | null {
@@ -503,7 +513,11 @@ export default class StoreService extends Service {
     const path = this.pathOf(feed);
     const asking = read<unknown>(path, tag);
     const answer =
-      feed.kind === 'wall' ? await this.heldOrNot(asking) : await asking;
+      feed.kind === 'wall'
+        ? await this.heldOrNot(asking)
+        : 'pr' in feed
+          ? await this.heldHere(feed.pr, asking)
+          : await asking;
     if (!answer.changed) return answer;
     return {
       changed: true,
@@ -817,6 +831,20 @@ export default class StoreService extends Service {
         this.unheld = unheld;
         this.configProblem =
           unheld === 'not-watching' ? (trouble as Refusal).detail : null;
+      }
+      throw trouble;
+    }
+  }
+
+  private async heldHere<T>(pr: Numbered, asking: Promise<T>): Promise<T> {
+    const key = keyOf(pr.repo, pr.number);
+    try {
+      const answer = await asking;
+      if (this.lost[key]) this.lost = { ...this.lost, [key]: false };
+      return answer;
+    } catch (trouble) {
+      if (notHeldBy(trouble) && !this.lost[key]) {
+        this.lost = { ...this.lost, [key]: true };
       }
       throw trouble;
     }
