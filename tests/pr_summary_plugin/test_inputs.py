@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from pr_summary.inputs import (
     WorkDirNotEmpty,
     work_dir,
     write_inputs,
+    write_surroundings,
 )
 from pr_summary.pull_request import PullRequest, Remark
 from pr_summary.settings import Settings
@@ -160,6 +162,28 @@ def test_code_witnesses_also_get_each_changed_file_whole_and_stripped(tmp_path: 
     assert "assert buttons(Off()) == []" in test_file
     assert "hides when exports are off" not in test_file
     assert not (manifest["implementation"] / "files" / "assets").exists()
+
+
+def test_implementation_also_gets_the_unchanged_production_code_with_its_comments(tmp_path: Path) -> None:
+    head = {
+        "src/toolbar.py": "# hidden while exports are off\n",
+        "src/flags.py": "# exports default to on\nexports = True\n",
+        "tests/test_flags.py": "def test_flags(): ...\n",
+        "docs/flags.md": "Flags\n",
+        "web/yarn.lock": "lock\n",
+    }
+
+    def export(into: Path, keep: Callable[[str], bool]) -> None:
+        for path, text in head.items():
+            if keep(path):
+                (into / path).parent.mkdir(parents=True, exist_ok=True)
+                (into / path).write_text(text)
+
+    write_surroundings(tmp_path, [ChangedFile("src/toolbar.py", None, "modified", 2)], Settings(), export)
+
+    repo = tmp_path / "repo"
+    assert [str(path.relative_to(repo)) for path in repo.rglob("*") if path.is_file()] == ["src/flags.py"]
+    assert (repo / "src/flags.py").read_text() == head["src/flags.py"]
 
 
 def test_a_renamed_file_diffs_against_its_previous_path(tmp_path: Path) -> None:

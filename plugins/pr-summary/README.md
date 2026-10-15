@@ -6,7 +6,9 @@ they open the diff:
 1. **Requested**: what the ticket asked for, from the ticket alone.
 2. **Claimed**: what the authors say they did, from their words alone.
 3. **Intent**: what the production code does and what the tests pin, each read
-   from code with its comments and docstrings removed.
+   from code with its comments and docstrings removed. Implementation also
+   gets the repository's unchanged production code at the head, comments
+   included, when run from a clone.
 4. **Why**: why the change was needed, from tickets, Confluence, earlier pull
    requests and other people's comments, never from the authors.
 5. **Alignment**: every mismatch between them, checked in trust order: why,

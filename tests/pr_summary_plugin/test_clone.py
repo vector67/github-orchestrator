@@ -96,6 +96,16 @@ def test_contents_are_the_exact_bytes_or_none_or_unreadable(origin: dict[str, st
         clone.contents(origin["head"], "src/pkg")
 
 
+def test_export_writes_the_kept_files_of_a_commit_as_committed(tmp_path: Path, origin: dict[str, str]) -> None:
+    clone = fetched(origin)
+    into = tmp_path / "exported"
+
+    clone.export(origin["head"], into, lambda path: path != "src/rows.py")
+
+    assert sorted(str(path.relative_to(into)) for path in into.rglob("*") if path.is_file()) == ["src/added.py", "src/new.py", "src/pkg/a.py"]
+    assert (into / "src/pkg/a.py").read_bytes() == b"a = 1\n"
+
+
 def test_history_lists_the_commits_that_touched_a_path_newest_first(origin: dict[str, str]) -> None:
     clone = fetched(origin)
 
