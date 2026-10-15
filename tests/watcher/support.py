@@ -15,6 +15,7 @@ from github_orchestrator.notifications import BoardPages
 from github_orchestrator.notifications.fake import FakeBoardPages, FakeNotifications
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
+from github_orchestrator.pr_summaries import SummaryLane
 from github_orchestrator.settings import Logs
 from github_orchestrator.settings.fake import Settings
 from github_orchestrator.thread_records import ThreadRecords
@@ -109,6 +110,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       requirements: Callable[[], list[tuple[str, str | None]]] | None = None,
                       releases_api: ScriptedReleasesApi | None = None,
                       github_token: str | None = None,
+                      summary_lane: object | None = None,
                       ) -> dishka.Container:
     github = github or watching(settings)
     providers: list[Part] = [
@@ -136,6 +138,8 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
         providers.append(fake_notifications(notifications))
     if logs is not None:
         providers.append(fake_provider(Logs, logs))
+    if summary_lane is not None:
+        providers.append(fake_provider(SummaryLane, summary_lane))
     if dry_run:
         providers.extend(dry_run_parts(settings))
     return build_container(settings, *providers, clocks=clocks_of(clock or at_now, sleep=sleep))

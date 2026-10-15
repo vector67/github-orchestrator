@@ -192,6 +192,7 @@ from github_orchestrator.watcher._would import (
     WouldKeepServer,
     WouldPlace,
     WouldSave,
+    WouldSummarise,
     WouldTearDown,
 )
 from github_orchestrator.working_copies import WorkingCopies
@@ -885,6 +886,10 @@ class WouldWatchProvider(Provider):
     @provide
     def courier(self) -> Courier:
         return WouldDeliver()
+
+    @provide
+    def summary_lane(self, wiring: WouldWatchWiring, summaries: PrSummaries) -> SummaryLane:
+        return WouldSummarise(summaries, wiring.say)
 
 
 def dry_run_parts(settings: Settings) -> list[Part]:

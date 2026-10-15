@@ -73,6 +73,19 @@ author PR (never due by itself).
 
 ### 3. The lane and the run
 
+**Done** (`c97e67ce` and the commit that records this, which offers the lane
+its turn after each watcher poll and has a dry run name the summary it would
+run). The lane is `SummaryLane` in `pr_summaries`: `poll`, `start(pr, use_github_api=)` for step 4's operations, which returns the reason when it
+starts nothing, and `progress(pr)`, the run in flight with its witness flags.
+The slot is an flock on `summaries/lane.lock`, which names the PR and when it
+started, so the watcher and the server share it; the plugin inherits the lock.
+A failed run keeps the earlier summary's `head_sha`, `markdown` and
+`mismatches`. `head_sha` is the head the watcher last saw when the run started.
+The package carries the plugin through the link
+`src/github_orchestrator/plugins/pr-summary`, so a checkout and the wheel run
+the same `summarise.py`. The live run on a PR in a watched repository took
+about 80 seconds, exited 0 and stored the file with every field.
+
 One slot (decision 6), kept apart from `agent_runs/_summaries.py`, whose 300 s
 timeout is too short. Each poll asks step 2 for due PRs and starts the first
 when the slot is free. A run follows the spec's "Running":

@@ -4,6 +4,7 @@ from datetime import datetime
 from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane
+from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._poll import Fetched
@@ -71,6 +72,23 @@ class WouldKeepServer:
         if not self._said:
             self._say("would start the server if none is running")
             self._said = True
+
+
+class WouldSummarise:
+    def __init__(self, summaries: PrSummaries, say: Callable[[str], None]) -> None:
+        self._summaries = summaries
+        self._say = say
+
+    def poll(self) -> None:
+        due = self._summaries.due(set())
+        if due:
+            self._say(f"would summarise {due[0]}")
+
+    def start(self, pr: Pr, *, use_github_api: bool) -> str | None:
+        return "a dry run summarises nothing"
+
+    def progress(self, pr: Pr) -> None:
+        return None
 
 
 class WouldDeliver:

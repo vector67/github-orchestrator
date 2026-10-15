@@ -12,6 +12,7 @@ from github_orchestrator.github import PullRequests
 from github_orchestrator.notifications import Courier
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
+from github_orchestrator.pr_summaries import SummaryLane
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._failures import clear_failures
@@ -51,7 +52,7 @@ class PollingWatcher:
                  change_detection: ChangeDetection, dismissals: Dismissals, server: Server,
                  placement: Placement,
                  teardown: Teardown, saving: Saving, say: Say, setup_files: SetupFiles,
-                 releases: Releases) -> None:
+                 releases: Releases, summary_lane: SummaryLane) -> None:
         self._config = config
         self._clock = clock
         self._sleep = sleep
@@ -76,6 +77,7 @@ class PollingWatcher:
         self._setup_files = setup_files
         self._left = False
         self._releases = releases
+        self._summary_lane = summary_lane
 
     def run_cycle(self) -> None:
         try:
@@ -349,6 +351,10 @@ class PollingWatcher:
                      + self._tear_down_dismissed(found))
         self._placement.revive_pending()
         self._saving.polled({pr: self._pr_processes.manager(pr) for pr in held})
+        try:
+            self._summary_lane.poll()
+        except Exception:
+            log.exception("Could not start the next summary")
         log.debug("--- watcher end ---")
 
         summary = (f"Polled {len(set(found))} PRs, {total_events} events queued, "
