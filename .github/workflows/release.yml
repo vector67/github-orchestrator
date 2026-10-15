@@ -41,7 +41,7 @@ jobs:
       - name: Build the wheel
         run: uv build --wheel --out-dir dist
 
-      - name: Check the wheel carries the board, the skill, the notifier and the unit template
+      - name: Check the wheel carries the board, the skill, the notifier, the unit template and the pr-summary plugin
         run: |
           python3 - dist/*.whl <<'EOF'
           import sys
@@ -55,6 +55,8 @@ jobs:
               "github_orchestrator/desktop/notifier/notify.swift",
               "github_orchestrator/desktop/notifier/icon.swift",
               "github_orchestrator/cli/services/github-orchestrator.service.template",
+              "github_orchestrator/plugins/pr-summary/scripts/summarise.py",
+              "github_orchestrator/plugins/pr-summary/agents/alignment.md",
           ]
           missing = [name for name in needed if name not in names]
           if not any(name.startswith("github_orchestrator/desktop/notifier/badges/") for name in names):

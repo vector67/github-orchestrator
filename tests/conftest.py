@@ -59,6 +59,7 @@ from github_orchestrator.wiring import (
     logs_wiring,
     pr_event_queue_wiring,
     pr_summaries_wiring,
+    summary_lane_wiring,
     switches_wiring,
     thread_records_wiring,
     utcnow,
@@ -280,6 +281,7 @@ def build_container(settings: Settings, *fakes: Part,
         thread_records_wiring(settings),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
+        summary_lane_wiring(settings),
         conversation_wiring(settings),
         *fakes,
     )
@@ -384,7 +386,7 @@ def agent_runs(desktop: FakeDesktop, pr_processes: FakePrProcesses) -> FakeAgent
     return FakeAgentRuns(pr_processes)
 
 
-NEVER_SPAWNED = ("gh", "claude", "osascript", "open", "tmux")
+NEVER_SPAWNED = ("gh", "claude", "osascript", "open", "tmux", "uv")
 
 
 def _spawns_a_guarded_binary(cmd: object) -> str | None:

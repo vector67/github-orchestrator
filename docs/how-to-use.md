@@ -289,6 +289,8 @@ threads/          one record per review thread, with its lock and pending decisi
 thread-worktrees/ the worktree each thread's fix is built in
 transcripts/      append-only Claude stream-json, per PR
 runs.jsonl        one line per finished run, every PR
+summaries/        each PR's latest pr-summary, <n>.json, beside <n>/, the working
+                  folder its newest run left; lane.lock names the run in flight
 logs/             watcher.log, agent-manager.log, launchd.log
 ```
 

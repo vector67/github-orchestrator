@@ -1,4 +1,4 @@
-from collections.abc import Set
+from collections.abc import Mapping, Set
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -27,3 +27,17 @@ class PrSummaries(Protocol):
     def save(self, pr: Pr, summary: Summary) -> None: ...
 
     def due(self, in_flight: Set[Pr]) -> list[Pr]: ...
+
+
+@dataclass(frozen=True)
+class Progress:
+    since: datetime
+    done: Mapping[str, bool]
+
+
+class SummaryLane(Protocol):
+    def poll(self) -> None: ...
+
+    def start(self, pr: Pr, *, use_github_api: bool) -> str | None: ...
+
+    def progress(self, pr: Pr) -> Progress | None: ...

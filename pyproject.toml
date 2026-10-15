@@ -65,6 +65,7 @@ files = [
     "tests/**/support.py",
     "tests/**/scripted_*.py",
 ]
+exclude = ["^src/github_orchestrator/plugins/"]
 strict = true
 warn_unreachable = true
 disallow_any_unimported = true

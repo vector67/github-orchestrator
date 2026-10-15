@@ -46,6 +46,10 @@ def _encoded(summary: Summary) -> bytes:
                        "mismatches": summary.mismatches}, indent=2).encode()
 
 
+def working_folder(summaries_dir: Path, pr: Pr) -> Path:
+    return summaries_dir / pr.repo.owner / pr.repo.name / str(pr.number)
+
+
 def _replaced(path: Path, content: bytes) -> None:
     with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".tmp", delete=False) as written:
         written.write(content)
@@ -91,4 +95,4 @@ class DiskPrSummaries:
             os.close(descriptor)
 
     def _file(self, pr: Pr) -> Path:
-        return self._dir / pr.repo.owner / pr.repo.name / f"{pr.number}.json"
+        return working_folder(self._dir, pr).with_suffix(".json")

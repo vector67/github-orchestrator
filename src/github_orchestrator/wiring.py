@@ -91,6 +91,7 @@ from github_orchestrator.domain import (
 from github_orchestrator.github import Access, PullRequests, Reviews, Threads
 from github_orchestrator.github._client import GhCliGitHub
 from github_orchestrator.github._gh_cli import Run
+from github_orchestrator.github._pages import pr_url
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -127,8 +128,9 @@ from github_orchestrator.pr_processes._background import BackgroundPrProcesses
 from github_orchestrator.pr_processes._background import Run as ManagerRun
 from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
-from github_orchestrator.pr_summaries import PrSummaries
+from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.pr_summaries._disk import DiskPrSummaries
+from github_orchestrator.pr_summaries._lane import LocalSummaryLane
 from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._process import Kill, ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
@@ -542,6 +544,45 @@ class PrSummariesProvider(Provider):
     @provide
     def pr_summaries(self, wiring: PrSummariesWiring, clock: UtcClock) -> PrSummaries:
         return DiskPrSummaries(wiring.summaries_dir, clock)
+
+
+SUMMARISE = Path(__file__).parent / "plugins" / "pr-summary" / "scripts" / "summarise.py"
+SUMMARY_TIMEOUT_SECONDS = 25 * 60
+
+
+def in_a_summary_thread(work: Callable[[], None]) -> None:
+    Thread(target=work, name="summary", daemon=True).start()
+
+
+@dataclass(frozen=True)
+class SummaryLaneWiring(Wiring):
+    config_path: Path
+    clones: Mapping[Repo, Path]
+    agents_enabled: bool
+    _: KW_ONLY
+    plugin: tuple[str, ...] = ("uv", "run", "--script", str(SUMMARISE))
+    timeout: float = SUMMARY_TIMEOUT_SECONDS
+    run_in: Callable[[Callable[[], None]], None] = in_a_summary_thread
+
+
+@wires(SummaryLaneWiring)
+class SummaryLaneProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=SummaryLaneWiring, scope=Scope.APP)
+
+    @provide
+    def summary_lane(self, wiring: SummaryLaneWiring, summaries_wiring: PrSummariesWiring,
+                     summaries: PrSummaries, clock: UtcClock,
+                     change_detection: ChangeDetection) -> SummaryLane:
+        def head_of(pr: Pr) -> str | None:
+            facts = change_detection.facts(pr)
+            return None if facts is None else facts.head_sha
+
+        return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
+                                plugin=wiring.plugin, config_path=wiring.config_path,
+                                clones=wiring.clones, head_of=head_of, url_of=pr_url,
+                                agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
+                                run_in=wiring.run_in)
 
 
 @dataclass(frozen=True)
@@ -1233,6 +1274,12 @@ def pr_summaries_wiring(settings: Settings) -> PrSummariesWiring:
     return PrSummariesWiring(settings.summaries_dir)
 
 
+def summary_lane_wiring(settings: Settings) -> SummaryLaneWiring:
+    return SummaryLaneWiring(settings.config_path,
+                             {repo: clone.path for repo, clone in settings.repos.items()},
+                             settings.config.agents_enabled)
+
+
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:
     return ChangeDetectionWiring(settings.state_dir, settings.config.gh_account,
                                  settings.config.watcher_poll_interval)
@@ -1442,6 +1489,7 @@ def make_container(env: Mapping[str, str], home: Path,
         thread_records_wiring(settings),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
+        summary_lane_wiring(settings),
         *mode_wirings(settings, managed),
         AgentChangesProvider,
         ReportCommandsWiring(sys.executable),

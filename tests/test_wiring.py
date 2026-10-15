@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dishka import Provider, Scope, from_context, provide
 
-from github_orchestrator.wiring import Wiring, wire, wires
+from github_orchestrator.wiring import SUMMARISE, Wiring, wire, wires
 
 
 @dataclass(frozen=True)
@@ -64,3 +64,9 @@ def test_closing_one_container_leaves_another_of_its_shape_working():
     first.close()
 
     assert second.get(Greeting) == "hello grace"
+
+
+def test_the_summary_lane_runs_the_plugin_this_checkout_carries():
+    plugin = Path(__file__).resolve().parents[1] / "plugins" / "pr-summary" / "scripts" / "summarise.py"
+
+    assert SUMMARISE.resolve() == plugin
