@@ -54,6 +54,12 @@ the README says.
 
 ### 2. The summary record and the due rule
 
+**Done** (`35cb1e1c` and the commit that records this, which sets `wanted`
+from the PR manager's carry-out). The package is `pr_summaries`, since
+`agent_runs` already exports a `Summaries` role. It exports only
+`PrSummaries`: `want`, `load`, `save` and `due`. `save` keeps the stored
+`wanted`, so a request made during a run is not lost.
+
 A new package owns `<data_dir>/summaries/<owner>/<repo>/<n>.json` and its
 fields (spec, "What is stored"). `ReviewRequested`
 (`change_detection/_rules.py:288-292`, launched through

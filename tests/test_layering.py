@@ -301,7 +301,7 @@ PACKAGES = {
         pinned=frozenset({"Front", "ManagedPr", "PrManager"}),
         may_import=("settings", "desktop", "notifications", "pr_event_queue", "working_copies",
                     "pr_processes", "agent_runs", "conversation", "change_detection", "board_api",
-                    "github"),
+                    "github", "pr_summaries"),
         role="the PR manager takes its work from the event_queue, carries it out through agent runs, review threads and the desktop, writes to the PR itself through GitHub, answers the board only through the board API's panel and dashboard types, and only its entry point builds the container",
         imported_by=("wiring",),
         entries=frozenset({"__main__"}),

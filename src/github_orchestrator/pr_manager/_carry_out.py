@@ -23,6 +23,7 @@ from github_orchestrator.pr_event_queue import Intake, Launching, Response
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._next_move import reviewed_before
 from github_orchestrator.pr_processes import AgentChanges
+from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.working_copies import WorkingCopies
 
 log = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ class EventCarryOut:
     def __init__(self, config: ManagerConfig, clock: LocalClock, pr_status: PrStatus,
                  runs: Runs, pr_work: PrWork, change_detection: ChangeDetection,
                  agent_changes: AgentChanges, intake: Intake,
-                 working_copies: WorkingCopies) -> None:
+                 working_copies: WorkingCopies, summaries: PrSummaries) -> None:
         self._pr = config.pr
         self._worktree = config.worktree
         self._account = config.account
@@ -116,11 +117,14 @@ class EventCarryOut:
         self._change_detection = change_detection
         self._agent_changes = agent_changes
         self._intake = intake
+        self._summaries = summaries
         self._fixing: tuple[Run, CiFailed] | None = None
 
     def carry_out(self, response: Response, *, is_author: bool, active_run: Run | None,
                   conversations: ConversationManager) -> Run | str | None:
         pr, event = self._pr, response.event
+        if isinstance(response.launch, ReviewRequested) and not is_author:
+            self._summaries.want(pr)
         if response.launch is not None:
             if isinstance(response.launch, CiFailed) and not self._retrying(response.launch):
                 return None
