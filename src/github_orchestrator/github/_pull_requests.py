@@ -136,13 +136,15 @@ def _checks(pull: dict[str, Any]) -> tuple[Check, ...]:
     head = ((heads[-1] or {}).get("commit") or {}) if heads else {}
     suites = (head.get("checkSuites") or {}).get("nodes") or []
     runs = sorted((run for suite in suites
-                   for run in ((suite or {}).get("checkRuns") or {}).get("nodes") or [] if run),
+                   for run in _dedupe_check_runs_by_name(
+                       [run for run in ((suite or {}).get("checkRuns") or {}).get("nodes") or []
+                        if run])),
                   key=lambda run: run.get("databaseId") or 0, reverse=True)
     return tuple(
         Check(name=r["name"], status=_lower(r.get("status")),
               conclusion=_lower(r.get("conclusion")), html_url=_page_of(r),
               summary=r.get("summary"))
-        for r in _dedupe_check_runs_by_name(runs)
+        for r in runs
     )
 
 
