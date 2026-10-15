@@ -8,7 +8,6 @@ import {
   visit,
 } from '@ember/test-helpers';
 import {
-  dashboard,
   heldPr,
   prSummary,
   setupFakeBoard,
@@ -173,6 +172,39 @@ module('Acceptance | summary tab', function (hooks) {
       .hasAttribute('data-state', 'none-yet-reviewer');
     assert.dom('[data-test-summary-strip]').hasText('Waiting for its turn');
     assert.dom('[data-test-summary-markdown]').doesNotExist();
+  });
+
+  test('a summary whose pull request has no facts yet still shows its strip and the summary', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: ago(5),
+      markdown: '# What it asks',
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'ready');
+    assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
+  });
+
+  test('a request waiting on a pull request with no facts yet waits for its turn, since only a reviewer is asked', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary({ wanted: ago(2) });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasText('Waiting for its turn');
+  });
+
+  test('no request on a pull request with no facts yet offers Summarise', async function (assert) {
+    board().held = [heldPr({ dashboard: { facts: null } })];
+    board().summary = prSummary();
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-strip]').hasText('No summary Summarise');
   });
 
   test('a pull request you review with no request waiting offers Summarise rather than a wait that never ends', async function (assert) {
@@ -391,14 +423,6 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-strip]')
       .hasAttribute('data-state', 'running');
-  });
-
-  test('until the facts say whose pull request it is, the tab draws no strip', async function (assert) {
-    board().manager = dashboard({ facts: null, polled: false });
-
-    await visit('/pr/o/r/7/summary');
-
-    assert.dom('[data-test-summary-strip]').doesNotExist();
   });
 
   test('each wall row counts the mismatches of its stored summary, one in the singular, and none at zero or with no count', async function (assert) {

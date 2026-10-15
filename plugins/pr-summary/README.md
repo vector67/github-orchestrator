@@ -74,7 +74,9 @@ for a finished witness. The last line of the output names the folder:
 
 Each witness folder holds that witness's inputs, and `output.json` once the
 witness finishes. `alignment` runs last, after the others have finished or
-failed.
+failed. A witness that cannot reach its tools (an MCP server still
+connecting, say) is run once more after 30 seconds. If any witness still
+fails, the run prints the summary and then exits non-zero, naming each failure.
 
 ## Config
 
