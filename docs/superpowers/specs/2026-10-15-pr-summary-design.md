@@ -13,8 +13,9 @@ the code does, why the change was needed, or whether those agree.
 ## What it is
 
 A Claude Code plugin, `pr-summary`, that runs in any repository with no
-github-orchestrator installed. The orchestrator's future Summary tab (the
-first tab, before Board) reuses it unchanged. Nothing in it imports
+github-orchestrator installed. The orchestrator's Summary tab (the first
+tab, before Board) reuses it with one addition, `--work-dir`
+([its spec](2026-10-15-summary-tab-design.md)). Nothing in it imports
 `github_orchestrator`.
 
 You give it a PR (URL, or a number in the current repository). It prints a
