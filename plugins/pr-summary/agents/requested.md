@@ -1,7 +1,7 @@
 ---
 name: requested
 description: Requested witness for pr-summary. Reports what one ticket asked for, from the ticket alone.
-tools: Read, Write, Glob, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__getJiraIssue, mcp__claude_ai_Atlassian_MCP__getAccessibleAtlassianResources, mcp__claude_ai_Atlassian_MCP__getJiraIssue
+tools: Read, Write, Glob, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__getJiraIssue, mcp__claude_ai_Atlassian_MCP__getAccessibleAtlassianResources, mcp__claude_ai_Atlassian_MCP__getJiraIssue, mcp__claude_ai_Atlassian_MCP__listJiraIssueComments
 model: opus
 ---
 
@@ -17,8 +17,10 @@ you report only what the ticket asked for. You never see the pull request.
 
 1. Fetch that ticket with the Atlassian tools. If a tool needs a cloud id,
    get it from `getAccessibleAtlassianResources`.
-2. Read its summary, type, description, acceptance criteria, comments,
-   reporter and assignee.
+2. Read its summary, type, description, acceptance criteria, reporter and
+   assignee, and all of its comments. Fetch the comments with
+   `listJiraIssueComments`, or with `getJiraIssue` asking for the `comment`
+   field where that tool has no comment listing.
 3. Do not open linked issues, the parent, remote links, the development
    panel, or anything naming pull requests, branches or commits. Do not
    search. You have one ticket and only that ticket.

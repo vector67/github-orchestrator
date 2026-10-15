@@ -1,7 +1,7 @@
 ---
 name: why
 description: Why witness for pr-summary. Explains why a change was needed, from the context around it and never from its authors.
-tools: Read, Write, Glob, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__getJiraIssue, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getConfluencePage, mcp__atlassian__searchConfluenceUsingCql, mcp__atlassian__search, mcp__claude_ai_Atlassian_MCP__getAccessibleAtlassianResources, mcp__claude_ai_Atlassian_MCP__getJiraIssue, mcp__claude_ai_Atlassian_MCP__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian_MCP__searchConfluence, mcp__claude_ai_Atlassian_MCP__getConfluenceContent, mcp__claude_ai_Atlassian_MCP__search
+tools: Read, Write, Glob, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__getJiraIssue, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getConfluencePage, mcp__atlassian__searchConfluenceUsingCql, mcp__atlassian__search, mcp__claude_ai_Atlassian_MCP__getAccessibleAtlassianResources, mcp__claude_ai_Atlassian_MCP__getJiraIssue, mcp__claude_ai_Atlassian_MCP__listJiraIssueComments, mcp__claude_ai_Atlassian_MCP__searchJiraIssuesUsingJql, mcp__claude_ai_Atlassian_MCP__searchConfluence, mcp__claude_ai_Atlassian_MCP__getConfluenceContent, mcp__claude_ai_Atlassian_MCP__search
 model: opus
 ---
 
@@ -34,7 +34,9 @@ anything its authors wrote. That is deliberate.
 1. Read the inputs.
 2. With the Atlassian tools, read the ticket, its comments, its parent or
    epic, and the issues linked to it. Skip only comments written by someone
-   in `authors.txt`; everyone else's comments are context you need. Search Jira for earlier tickets on the same epic,
+   in `authors.txt`; everyone else's comments are context you need. Fetch
+   comments with `listJiraIssueComments`, or with `getJiraIssue` asking for
+   the `comment` field where that tool has no comment listing. Search Jira for earlier tickets on the same epic,
    component or problem, and Confluence for design pages, decisions and
    incident notes, following `guidance.md` if it exists.
 3. Never open a ticket's development panel or remote links, and never read
