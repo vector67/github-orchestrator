@@ -614,6 +614,28 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-wall-row="o/r#8"] [data-test-alarm]').doesNotExist();
   });
 
+  test('negative counts read as none, not as a minus number', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          system: { unpushed_commits: -3, queued_events: -1 },
+          facts: { unresolved_threads: -2 },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(
+      {
+        ahead: cells('o/r#7')['ahead'],
+        queue: cells('o/r#7')['queue'],
+        flags: texts('[data-test-wall-row="o/r#7"] [data-test-move-flag]'),
+      },
+      { ahead: '·', queue: '·', flags: [] },
+    );
+  });
+
   test('the Threads cell on someone else’s pull request counts your threads answered, not other people’s threads', async function (assert) {
     onTheHub(
       heldPr({
@@ -1237,6 +1259,20 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-toast]').includesText('Copied');
   });
 
+  test('a pull-request address with a script scheme is not opened from the wall', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: { pr: { url: 'javascript:window.__wallPwned="url"' } },
+      }),
+    );
+    await visit('/');
+    await press('j');
+
+    await press('o');
+
+    assert.deepEqual(github().opened, []);
+  });
+
   test('a command the hub refuses says why in a toast', async function (assert) {
     onTheHub(heldPr());
     await visit('/');
@@ -1410,6 +1446,28 @@ module('Acceptance | wall', function (hooks) {
       .hasText('#7 PROJ-31 · Share one summary shape');
   });
 
+  test('a 2,000-character title does not take over the screen', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          pr: {
+            title: 'lorem ipsum dolor sit amet '.repeat(80).slice(0, 2000),
+          },
+        },
+      }),
+      heldPr({ number: 8 }),
+    );
+
+    await visit('/');
+
+    const heightOf = (key: string) =>
+      find(`[data-test-wall-row="${key}"]`)!.getBoundingClientRect().height;
+    assert.true(
+      heightOf('o/r#7') <= heightOf('o/r#8') * 3,
+      `the long-titled row is ${Math.round(heightOf('o/r#7'))}px against ${Math.round(heightOf('o/r#8'))}px for a plain one`,
+    );
+  });
+
   test('Claude’s column names the last run in words, not its event id, with how it ended', async function (assert) {
     const ago = (seconds: number) =>
       new Date(clock().now - seconds * 1000).toISOString();
@@ -1505,6 +1563,20 @@ module('Acceptance | wall', function (hooks) {
         '[data-test-wall-row="o/r#8"] [data-test-cell="agent"] [data-test-alarm]',
       )
       .doesNotExist();
+  });
+
+  test('a failed run with an unreadable end time does not print NaN', async function (assert) {
+    onTheHub(heldPr());
+    board().ledger = runLedger({
+      runs: [finishedRun({ failed: true, ended_at: 'not a time' })],
+    });
+
+    await visit('/');
+
+    assert.false(
+      cells('o/r#7')['agent']!.includes('NaN'),
+      `the agent cell reads "${cells('o/r#7')['agent']}"`,
+    );
   });
 
   test('a live dot pulses for five seconds when work starts or its move changes, then holds steady', async function (assert) {

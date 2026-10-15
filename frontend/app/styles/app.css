@@ -2424,6 +2424,13 @@ kbd {
   content: "";
 }
 
+.wall-lead .ttl {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .wall-lead .meta {
   font-size: var(--fs-xs);
   color: var(--muted);

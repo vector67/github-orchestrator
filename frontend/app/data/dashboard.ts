@@ -22,6 +22,7 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 export function lengthOf(seconds: number): string {
+  if (Number.isNaN(seconds)) return '?';
   const whole = Math.max(0, Math.floor(seconds));
   const days = Math.floor(whole / DAY);
   const hours = Math.floor((whole % DAY) / HOUR);
@@ -651,9 +652,10 @@ function cell(key: string, text: string, tone: Tone, live = false): Cell {
 }
 
 function counted(key: string, value: number | null): Cell {
-  const shown = value
-    ? cell(key, String(value), 'strong')
-    : cell(key, '·', 'quiet');
+  const shown =
+    value && value > 0
+      ? cell(key, String(value), 'strong')
+      : cell(key, '·', 'quiet');
   return { ...shown, count: true };
 }
 

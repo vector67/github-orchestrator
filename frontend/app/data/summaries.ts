@@ -240,7 +240,7 @@ function flagsOf(facts: PrFacts | null): Flag[] {
     ['draft', facts.draft],
     ['fix-ci', facts.ci_status === 'failing'],
     ['rebase', behindMain(facts)],
-    ['unresolved-threads', Boolean(facts.unresolved_threads)],
+    ['unresolved-threads', (facts.unresolved_threads ?? 0) > 0],
   ];
   return holds.filter(([, held]) => held).map(([flag]) => flag);
 }
