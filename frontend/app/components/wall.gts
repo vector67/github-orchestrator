@@ -30,6 +30,17 @@ const same = (one: unknown, other: unknown): boolean => one === other;
 
 const KEYED = ['hold', 'dismiss', 'release'] as const;
 
+const FOLDABLE = 'parked';
+const PARKED_FOLDED = 'wall-parked-folded';
+
+function foldedBefore(): boolean {
+  try {
+    return localStorage.getItem(PARKED_FOLDED) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 export default class Wall extends Component {
   @service declare hub: HubService;
   @service declare store: StoreService;
@@ -39,6 +50,7 @@ export default class Wall extends Component {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
+  @tracked parkedFolded = foldedBefore();
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private lastAt = -1;
@@ -54,8 +66,25 @@ export default class Wall extends Component {
   }
 
   get order(): WallRow[] {
-    return this.hub.sections.flatMap((section) => section.prs);
+    return this.hub.sections.flatMap((section) => this.shownOf(section));
   }
+
+  foldable = (section: WallSection): boolean => section.group === FOLDABLE;
+
+  isFolded = (section: WallSection): boolean =>
+    this.foldable(section) && this.parkedFolded;
+
+  shownOf = (section: WallSection): WallRow[] =>
+    this.isFolded(section) ? [] : section.prs;
+
+  toggleParked = () => {
+    this.parkedFolded = !this.parkedFolded;
+    try {
+      localStorage.setItem(PARKED_FOLDED, String(this.parkedFolded));
+    } catch {
+      return;
+    }
+  };
 
   get stale(): boolean {
     return this.hub.stale && this.order.length > 0;
@@ -199,12 +228,29 @@ export default class Wall extends Component {
               aria-hidden="true"
               data-square={{section.edge}}
               data-test-edge-key
-            ></span><span class="group-name">{{section.name}}</span>
-            <span
-              class="group-count"
-              data-test-count
-            >{{section.prs.length}}</span></h2>
-          {{#each section.prs key="key" as |pr|}}
+            ></span>{{#if (this.foldable section)}}<button
+                type="button"
+                class="group-fold"
+                aria-expanded={{if (this.isFolded section) "false" "true"}}
+                title={{if
+                  (this.isFolded section)
+                  "Show the parked pull requests"
+                  "Fold the parked pull requests to their count"
+                }}
+                data-test-fold
+                {{on "click" this.toggleParked}}
+              ><span class="group-name">{{section.name}}</span>
+                <span
+                  class="group-count"
+                  data-test-count
+                >{{section.prs.length}}</span></button>{{else}}<span
+                class="group-name"
+              >{{section.name}}</span>
+              <span
+                class="group-count"
+                data-test-count
+              >{{section.prs.length}}</span>{{/if}}</h2>
+          {{#each (this.shownOf section) key="key" as |pr|}}
             {{#let (this.readingOf pr) (uniqueId) as |reading says|}}
               <div
                 class="wall-row edge lvl-{{section.level}}"
