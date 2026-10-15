@@ -2550,7 +2550,14 @@
      ]
     },
     "mergeable": {
-     "type": "boolean"
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
     },
     "needs_rebase": {
      "type": "boolean"

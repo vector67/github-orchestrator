@@ -427,7 +427,9 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
       ci === 'failing' ? 'alarm' : ci === 'passing' ? 'quiet' : '',
     ),
   );
-  if (status.mergeable)
+  if (status.mergeable === null)
+    rows.push(row('mergeable', 'Mergeable', 'not known yet', 'quiet'));
+  else if (status.mergeable)
     rows.push(row('mergeable', 'Mergeable', 'yes', 'quiet'));
   else if (agentRebasing(shown))
     rows.push(row('mergeable', 'Mergeable', 'no, agent rebasing'));
@@ -607,7 +609,7 @@ const CELL_LABELS: Record<string, string> = {
 const CELL_HINTS: Record<string, string> = {
   ci: 'GitHub’s checks on the head commit: passing, failing or pending',
   merge:
-    'Whether the branch conflicts with its base on GitHub; a draft still has to be marked ready before it can merge',
+    'Whether the branch conflicts with its base on GitHub; ? until GitHub has worked it out. A draft still has to be marked ready before it can merge',
   review: 'The review decision on GitHub',
   agent:
     'What this PR’s agent is doing, or how its last run ended. A run is named for what started it; carry on is the agent picking up its last conversation here',
@@ -667,7 +669,9 @@ function ciCell(shown: ShownPr): Cell {
 }
 
 function mergeCell(shown: ShownPr): Cell {
-  if (shown.drawn.status.mergeable) return cell('merge', 'none', 'quiet');
+  const mergeable = shown.drawn.polled ? shown.drawn.status.mergeable : null;
+  if (mergeable === null) return cell('merge', '?', 'quiet');
+  if (mergeable) return cell('merge', 'none', 'quiet');
   return cell('merge', 'yes', agentRebasing(shown) ? 'plain' : 'alarm');
 }
 

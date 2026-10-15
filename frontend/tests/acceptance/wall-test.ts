@@ -1815,6 +1815,42 @@ module('Acceptance | wall', function (hooks) {
       .hasText('Nothing known until the first poll');
   });
 
+  test('a pull request not polled yet does not raise a conflicts alarm', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: { polled: false, facts: null, status: { mergeable: false } },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'first-poll');
+    assert.strictEqual(cells('o/r#7')['merge'], '?');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-cell="merge"]')
+      .doesNotHaveClass('tone-alarm');
+  });
+
+  test('a pull request GitHub is still checking for conflicts reads as not known, not as conflicting', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: { merge_state: 'unknown' },
+          status: { mergeable: null },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.strictEqual(cells('o/r#7')['merge'], '?');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-cell="merge"]')
+      .doesNotHaveClass('tone-alarm');
+  });
+
   test('a title that already leads with its ticket shows the ticket once', async function (assert) {
     onTheHub(
       heldPr({

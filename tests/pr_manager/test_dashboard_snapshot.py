@@ -35,6 +35,16 @@ def test_the_dashboard_says_whether_the_branch_needs_a_rebase(settings, tmp_path
     assert _drawn(settings, tmp_path).needs_rebase is True
 
 
+def test_the_dashboard_leaves_mergeable_unknown_before_the_first_poll(settings, tmp_path):
+    assert _drawn(settings, tmp_path).mergeable is None
+
+
+def test_the_dashboard_leaves_mergeable_unknown_while_github_is_still_deciding(settings, tmp_path):
+    seed(settings, polled_pr(mergeable=False, mergeable_state="unknown"))
+
+    assert _drawn(settings, tmp_path).mergeable is None
+
+
 def test_a_reviewers_dashboard_holds_their_review_and_what_happened_since(settings, tmp_path):
     seed(settings, REVIEWED)
 

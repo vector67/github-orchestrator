@@ -194,6 +194,19 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-status="review"] [data-test-alarm]').doesNotExist();
   });
 
+  test('a mergeability GitHub has not decided reads as not known, with no alarm', async function (assert) {
+    onTheHub({ status: { mergeable: null } });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-value]')
+      .hasText('not known yet');
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-alarm]')
+      .doesNotExist();
+  });
+
   test('a conflict the agent is rebasing away reads as handled, and no reviewer reads as not assigned', async function (assert) {
     onTheHub({
       status: { mergeable: false, detailed_reviewer: null },

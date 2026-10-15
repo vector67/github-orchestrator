@@ -5,6 +5,7 @@ from github_orchestrator.change_detection._stored import Words, mentions_of, wor
 from github_orchestrator.change_detection._unmergeable import REBASE_STATES
 from github_orchestrator.change_detection.interface import (
     Facts,
+    Mergeability,
     ReviewerStatus,
     SinceReview,
 )
@@ -50,6 +51,12 @@ def _requested(snapshot: dict[str, Any], account: str) -> bool:
     return account in _pending_reviewers(snapshot) or snapshot.get("review_requested") is True
 
 
+def _mergeable(snapshot: dict[str, Any], words: Words) -> bool | None:
+    if "mergeable" not in snapshot or words.mergeability is Mergeability.UNKNOWN:
+        return None
+    return bool(snapshot["mergeable"])
+
+
 def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
     checks = snapshot.get("checks", [])
     words = words_of(snapshot)
@@ -67,7 +74,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         commits=snapshot.get("commits"),
         created_at=_text(snapshot, "created_at"),
         ci_status=words.ci,
-        mergeable=bool(snapshot["mergeable"]) if "mergeable" in snapshot else None,
+        mergeable=_mergeable(snapshot, words),
         needs_rebase=words.mergeability in REBASE_STATES,
         review_decision=words.decision,
         failed_checks=tuple(c["name"] for c in checks if c.get("failed")),

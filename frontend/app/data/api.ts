@@ -198,7 +198,7 @@ export interface DashboardPr {
 export interface DashboardStatus {
   detailed_reviewer: string | null;
   you_are_the_detailed_reviewer: boolean;
-  mergeable: boolean;
+  mergeable: boolean | null;
   needs_rebase: boolean;
   last_event_at: string | null;
   review_ready_at: string | null;

@@ -16,7 +16,8 @@ REPO = "acme/widgets"
 
 def track(settings, pr, **fields):
     polled_on_disk(settings.state_dir, a_pr(pr, REPO), seen(
-        settings.config.gh_account, **{"checks": (failing(),), "mergeable": True, **fields}))
+        settings.config.gh_account, **{"checks": (failing(),), "mergeable": True,
+                                       "mergeable_state": "unstable", **fields}))
 
 
 def pr_line(out, pr):

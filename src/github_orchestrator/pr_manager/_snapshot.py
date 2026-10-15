@@ -50,7 +50,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         detailed_reviewer=None if facts is None else facts.detailed_reviewer,
         is_detailed_reviewer=facts is not None and facts.is_detailed_reviewer,
         ci=_ci(facts).value,
-        mergeable=facts is not None and bool(facts.mergeable),
+        mergeable=None if facts is None else facts.mergeable,
         needs_rebase=facts is not None and facts.needs_rebase,
         review_decision=None if facts is None or facts.review_decision is None
         else facts.review_decision.value,

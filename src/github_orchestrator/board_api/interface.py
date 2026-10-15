@@ -43,7 +43,7 @@ class Dashboard:
     detailed_reviewer: str | None
     is_detailed_reviewer: bool
     ci: str
-    mergeable: bool
+    mergeable: bool | None
     needs_rebase: bool
     review_decision: str | None
     my_review: str | None

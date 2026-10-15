@@ -1264,7 +1264,8 @@ class DashboardStatus(BaseModel):
         description="The login of the detailed reviewer. Null where none is "
                     "assigned.")
     you_are_the_detailed_reviewer: bool
-    mergeable: bool = Field(description="False where GitHub has not said.")
+    mergeable: bool | None = Field(
+        description="Null before the first poll and while GitHub is still working it out.")
     needs_rebase: bool = Field(
         description="The branch conflicts with or is behind its base, so a "
                     "rebase on main would bring it level.")
