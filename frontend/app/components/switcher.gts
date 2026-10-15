@@ -3,10 +3,11 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { pulses } from 'frontend/motion';
 import { fn } from '@ember/helper';
-import MoveFlagTag from 'frontend/components/move-flag';
+import StateChip from 'frontend/components/state-chip';
 import { dashboardOf, type Reading } from 'frontend/data/dashboard';
-import { keyOf, type Numbered } from 'frontend/data/wall';
+import { failingOf, keyOf, type Numbered } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
+import type StoreService from 'frontend/services/store';
 import type { WallRow } from 'frontend/services/store';
 
 export interface SwitcherSignature {
@@ -20,11 +21,17 @@ export interface SwitcherSignature {
 
 export default class Switcher extends Component<SwitcherSignature> {
   @service declare hub: HubService;
+  @service declare store: StoreService;
 
   isCurrent = (pr: WallRow): boolean => keyOf(pr) === keyOf(this.args.current);
 
   readingOf = (pr: WallRow): Reading =>
-    dashboardOf(pr, pr.summaries, this.hub.now);
+    dashboardOf(
+      pr,
+      pr.summaries,
+      this.hub.now,
+      failingOf(pr, this.store.ledger?.runs ?? []),
+    );
 
   <template>
     <button
@@ -66,10 +73,12 @@ export default class Switcher extends Component<SwitcherSignature> {
                   >{{#if reading.working}}<span
                         class="live-dot"
                         {{pulses reading.move}}
-                      ></span>{{/if}}{{reading.move}}{{#each
-                      reading.flags key="code"
-                      as |flag|
-                    }}<MoveFlagTag @flag={{flag}} />{{/each}}</span><span
+                      ></span>{{/if}}{{reading.move}}</span>{{#if
+                    reading.chips.length
+                  }}<span class="state-chips">{{#each
+                        reading.chips key="key"
+                        as |chip|
+                      }}<StateChip @chip={{chip}} />{{/each}}</span>{{/if}}<span
                     class="ttl"
                   >#{{pr.number}} {{reading.title}}</span></span></button>
             {{/let}}

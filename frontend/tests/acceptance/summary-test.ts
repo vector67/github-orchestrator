@@ -501,7 +501,7 @@ module('Acceptance | summary tab', function (hooks) {
     await visit('/');
 
     const chipOf = (number: number): string =>
-      `[data-test-wall-row="o/r#${number}"] [data-test-mismatches]`;
+      `[data-test-wall-row="o/r#${number}"] [data-test-state="mismatches"]`;
     assert.dom(chipOf(7)).hasText('3 mismatches');
     assert.dom(chipOf(8)).hasText('1 mismatch');
     assert.dom(chipOf(9)).doesNotExist();
@@ -514,7 +514,7 @@ module('Acceptance | summary tab', function (hooks) {
     await visit('/');
 
     assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-mismatches]')
+      .dom('[data-test-wall-row="o/r#7"] [data-test-state="mismatches"]')
       .hasText('3 mismatches')
       .hasAttribute('title', /older head/);
   });
@@ -525,7 +525,9 @@ module('Acceptance | summary tab', function (hooks) {
     await visit('/pr/o/r/7');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
-    assert.dom('.prflags [data-test-mismatches]').hasText('2 mismatches');
+    assert
+      .dom('.prflags [data-test-state="mismatches"]')
+      .hasText('2 mismatches');
   });
 
   test('a stale summary still counts its mismatches in the header, as the summary feed serves them', async function (assert) {
@@ -542,7 +544,9 @@ module('Acceptance | summary tab', function (hooks) {
     await visit('/pr/o/r/7/summary');
 
     assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'stale');
-    assert.dom('.prflags [data-test-mismatches]').hasText('4 mismatches');
+    assert
+      .dom('.prflags [data-test-state="mismatches"]')
+      .hasText('4 mismatches');
   });
 
   test('1 opens Summary and 2 Board, in the order the tabs stand', async function (assert) {

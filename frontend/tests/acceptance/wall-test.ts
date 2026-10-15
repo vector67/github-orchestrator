@@ -173,12 +173,18 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-group="needs-you"] .group-name + [data-test-count]')
       .hasText('1', 'the count sits right after the name');
     assert.deepEqual(rows(), ['o/r#8', 'o/r#7', 'o/r#9', 'o/r#10']);
-    const lead = '[data-test-wall-row="o/r#8"] [data-test-wall-lead] > *';
-    assert.deepEqual(texts(lead), [
-      'Human comments · 0/1 done · 1 to decide',
-      'Tidy the importer',
-      '#8 · your PR · tidy',
-    ]);
+    const lead = '[data-test-wall-row="o/r#8"] [data-test-wall-lead]';
+    assert.deepEqual(
+      texts(
+        `${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title], ${lead} .meta`,
+      ),
+      [
+        'Decide 1 fix',
+        'human threads, 0 of 1 done',
+        'Tidy the importer',
+        '#8 · your PR · tidy',
+      ],
+    );
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-wall-title]')
       .hasText('PROJ-7 · Fix the widget');
@@ -231,11 +237,43 @@ module('Acceptance | wall', function (hooks) {
       'Parked 1',
     ]);
     assert.deepEqual(texts('[data-test-wall-row] [data-test-verb]'), [
-      'anna, bob mentioned you',
-      'Every mention answered',
+      'Answer the mention',
+      'Waiting on others',
       'On hold',
     ]);
+    assert.deepEqual(texts('[data-test-wall-row] [data-test-reason]'), [
+      'anna, bob mentioned you',
+      'you are not a reviewer and every mention is answered',
+      'resume it to let events through',
+    ]);
   });
+
+  test('a mention on a pull request that waits on others shows as a chip', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-author', {
+            mentioned: true,
+            mentions: [{ author: 'anna', at: null, answered: true }],
+          }),
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(chips('o/r#7'), ['mentioned']);
+  });
+
+  function chips(key: string): string[] {
+    return texts(`[data-test-wall-row="${key}"] [data-test-state]`);
+  }
+
+  function reasonOf(number: number): string {
+    return texts(
+      `[data-test-wall-row="o/r#${number}"] [data-test-reason]`,
+    ).join('');
+  }
 
   function threads(over: Partial<ThreadCounts>): ThreadCounts {
     return { queued: 0, live: 0, proposed: 0, drafts: 0, ...over };
@@ -378,11 +416,11 @@ module('Acceptance | wall', function (hooks) {
 
     assert.deepEqual(verbsOf([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), [
       'Release the worktree',
-      'On hold, 2 events held',
       'On hold',
-      'Human comments · 1/4 done · 2 to decide',
-      'Send your review · 1 draft',
-      'Re-review · 1/2 of your threads answered',
+      'On hold',
+      'Decide 2 fixes',
+      'Send your review',
+      'Re-review',
       'Agent is carrying on',
       'Agent is working on 1 thread',
       'Waiting for the first poll',
@@ -394,19 +432,30 @@ module('Acceptance | wall', function (hooks) {
       verbsOf([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]),
       [
         'Waiting on the author to ask you again',
-        'Waiting on the author · erin still requested',
-        'Re-review · 0/0 of your threads answered',
+        'Waiting on the author',
+        'Re-review',
         'Fix CI',
         'Waiting on the author',
         'Waiting on the author',
-        'Human comments · 2/5 done · agent on 3',
-        'Bot comments · 0/2 done · 2 to decide',
-        'Bot comments · 1/2 done · agent on 1',
-        'Address changes requested from bob, carol',
+        'Agent is fixing 3 human threads',
+        'Decide 2 bot fixes',
+        'Agent is fixing 1 bot thread',
+        'Address changes from bob, carol',
         'Waiting on carol to re-review',
         'Waiting on reviewers dave, erin',
       ],
     );
+    assert.deepEqual([2, 3, 4, 5, 6, 7, 19, 20, 21].map(reasonOf), [
+      '2 events wait until you resume it',
+      'resume it to let events through',
+      'human threads, 1 of 4 done',
+      '1 unsent comment',
+      'asked again · 1 of 2 of your threads answered',
+      'running 1s',
+      '2 of 5 done',
+      'bot threads, 0 of 2 done',
+      '1 of 2 done',
+    ]);
     assert
       .dom('[data-test-wall-row="o/r#13"] .meta')
       .hasText("#13 · alice's PR · PROJ-7-fix-the-widget");
@@ -415,7 +464,7 @@ module('Acceptance | wall', function (hooks) {
       .hasText('#18 · reviewing · PROJ-7-fix-the-widget');
   });
 
-  test('each row’s why words what change detection says from the facts the board sends', async function (assert) {
+  test('each row’s reason explains its move, from the facts the board sends', async function (assert) {
     onTheHub(
       needing(1, {
         facts: factsFor('fix-ci'),
@@ -463,6 +512,7 @@ module('Acceptance | wall', function (hooks) {
       }),
       needing(15, { facts: factsFor('await-author') }),
       needing(17, {
+        facts: factsFor('await-author'),
         status: {
           since_you_last_acted: {
             commits: 3,
@@ -478,8 +528,7 @@ module('Acceptance | wall', function (hooks) {
         status: { changed_files: null },
       }),
       needing(19, {
-        facts: factsFor('await-reviewers', { pending_reviewers: [] }),
-        status: { failed_checks: ['lint'] },
+        facts: factsFor('mark-ready-for-review'),
       }),
     );
 
@@ -487,30 +536,27 @@ module('Acceptance | wall', function (hooks) {
 
     assert.deepEqual(
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19].map(
-        (number) =>
-          texts(
-            `[data-test-wall-row="o/r#${number}"] [data-test-cell="why"]`,
-          ).join(''),
+        reasonOf,
       ),
       [
-        'Failed: lint, unit',
-        'Fix CI failures',
-        'Merge conflicts detected',
-        'erin requested changes | 3 unresolved comments',
-        'Waiting on carol to re-review',
-        'Approved by erin | CI passing',
-        'erin approved | Waiting on: carol',
-        'No reviewers assigned',
-        '2/5 checks complete',
-        'CI failing | 3 files changed | no reviews yet',
-        'Re-review requested | CI passing',
-        'Waiting for the author to ask you to review again',
-        'You approved | Waiting on review from: carol',
-        'You approved | dave still requested',
-        'You approved',
-        'Since you acted: force-pushed, 1 comment, 2 threads resolved',
-        'CI passing | ? files changed | no reviews yet',
-        'You approved',
+        'lint, unit failing',
+        'a check is failing',
+        'conflicts with main',
+        'requested changes and is not asked to review again',
+        'asked again after requesting changes',
+        'approved by erin, CI passing',
+        'erin approved · review requested',
+        'nobody is asked to review',
+        '2 of 5 checks done',
+        'requested from you · 3 files changed · no reviews yet',
+        'asked again',
+        'you commented',
+        'you approved',
+        'you approved · dave still requested',
+        'you approved',
+        'you approved · since then: force-pushed, 1 comment, 2 threads resolved',
+        'requested from you · no reviews yet',
+        'still a draft',
       ],
     );
   });
@@ -534,23 +580,26 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'ready-to-merge');
     assert.deepEqual(
-      [cells('o/r#7')['why'], cells('o/r#7')['ci']],
-      ['No approval needed | CI pending', 'pending'],
+      [reasonOf(7), chips('o/r#7')],
+      ['no approval needed, CI pending', []],
     );
   });
 
   test('a head with no checks reads as no CI', async function (assert) {
     onTheHub(
       heldPr({
-        dashboard: { facts: factsFor('review', { ci_status: 'none' }) },
+        dashboard: {
+          facts: factsFor('ready-to-merge', { ci_status: 'none' }),
+          status: { approved_by: ['erin'] },
+        },
       }),
     );
 
     await visit('/');
 
-    assert.strictEqual(
-      cells('o/r#7')['why'],
-      'no CI | 3 files changed | no reviews yet',
+    assert.deepEqual(
+      [reasonOf(7), chips('o/r#7')],
+      ['approved by erin, no CI', []],
     );
   });
 
@@ -569,10 +618,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'rebase');
-    assert.deepEqual(
-      [cells('o/r#7')['merge'], cells('o/r#7')['why']],
-      ['none', 'Behind main'],
-    );
+    assert.deepEqual([chips('o/r#7'), reasonOf(7)], [[], 'behind main']);
   });
 
   test('the rebase move names the branch the pull request merges into', async function (assert) {
@@ -592,11 +638,11 @@ module('Acceptance | wall', function (hooks) {
     ]);
   });
 
-  test('an approval on a repo without review rules shows in the Review column', async function (assert) {
+  test('an approval on a repo without review rules shows as a chip', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
-          facts: factsFor('ready-to-merge', { review_decision: null }),
+          facts: factsFor('await-ci', { review_decision: null }),
           status: { approved_by: ['alice'] },
         },
       }),
@@ -604,10 +650,7 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(
-      [cells('o/r#7')['why'], cells('o/r#7')['review']],
-      ['Approved by alice | CI passing', 'approved'],
-    );
+    assert.deepEqual(chips('o/r#7'), ['approved by alice']);
   });
 
   test('a review request after others reviewed does not say "no reviews yet"', async function (assert) {
@@ -626,8 +669,8 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'review');
     assert.strictEqual(
-      cells('o/r#7')['why'],
-      'CI passing | 3 files changed | alice approved',
+      reasonOf(7),
+      'requested from you · 3 files changed · alice approved',
     );
   });
 
@@ -649,7 +692,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'await-review');
-    assert.strictEqual(cells('o/r#7')['why'], 'Waiting on: alice');
+    assert.strictEqual(reasonOf(7), 'review requested');
   });
 
   test('after you approve, a reviewer who requested changes is not someone you wait on to review', async function (assert) {
@@ -670,7 +713,10 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'await-author');
-    assert.strictEqual(cells('o/r#7')['why'], 'You approved');
+    assert.deepEqual(
+      [reasonOf(7), chips('o/r#7')],
+      ['you approved', ['bob requested changes']],
+    );
   });
 
   test('a pull request whose author account was deleted is not called one you are reviewing', async function (assert) {
@@ -724,7 +770,7 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
 
     const text = find(
-      '[data-test-wall-row="o/r#7"] [data-test-cell="why"]',
+      '[data-test-wall-row="o/r#7"] [data-test-reason]',
     )!.firstChild!;
     const said = text.textContent!;
     const after = [...said]
@@ -762,7 +808,7 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
 
     const text = find(
-      '[data-test-wall-row="o/r#7"] [data-test-cell="why"]',
+      '[data-test-wall-row="o/r#7"] [data-test-reason]',
     )!.firstChild!;
     const said = text.textContent!;
     const build = boxOfCharacter(text, said.indexOf('build'));
@@ -773,16 +819,7 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  function cells(key: string): Record<string, string> {
-    return Object.fromEntries(
-      findAll(`[data-test-wall-row="${key}"] [data-test-cell]`).map((one) => [
-        one.getAttribute('data-test-cell') ?? '',
-        one.textContent.trim().replace(/\s+/g, ' '),
-      ]),
-    );
-  }
-
-  test('each row carries the wall’s fields from its dashboard, a zero as a dot and an alarm marked', async function (assert) {
+  test('a row shows a chip only for a fact away from its quiet default, by severity, with only the one in the move’s way red', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -790,7 +827,10 @@ module('Acceptance | wall', function (hooks) {
             mergeable: false,
             failed_checks: ['unit-tests'],
           },
-          facts: factsFor('fix-ci', { review_decision: 'changes-requested' }),
+          facts: factsFor('fix-ci', {
+            review_decision: 'changes-requested',
+            merge_state: 'conflicts',
+          }),
           manager: { working_on: 'ci-failed' },
           threads: [row('h1', 'ready', 'open', 'human')],
           system: {
@@ -812,37 +852,78 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(cells('o/r#7'), {
-      why: 'Failed: unit-tests',
-      ci: 'failing',
-      merge: 'yes',
-      review: 'changes requested',
-      agent: 'CI fix · 2m 14s · 6s quiet',
-      threads: '1 ready',
-      ahead: '2',
-      queue: '1',
-    });
+    assert.deepEqual(verbsOf([7]), ['Decide 1 fix']);
+    assert.deepEqual(chips('o/r#7'), [
+      'CI failing',
+      'conflicts with main',
+      'changes requested',
+      'agent fixing CI',
+      '2 unpushed',
+      '1 queued',
+    ]);
+    assert.deepEqual(
+      texts('[data-test-wall-row="o/r#7"] [data-test-blocking]'),
+      ['CI failing'],
+    );
+    assert.deepEqual(chips('o/r#8'), []);
     assert
-      .dom(
-        '[data-test-wall-row="o/r#7"] [data-test-cell="ci"] [data-test-alarm]',
-      )
-      .exists();
-    assert
-      .dom(
-        '[data-test-wall-row="o/r#7"] [data-test-cell="merge"] [data-test-alarm]',
-      )
-      .exists();
-    assert.deepEqual(cells('o/r#8'), {
-      why: 'Waiting on: carol',
-      ci: 'passing',
-      merge: 'none',
-      review: 'pending',
-      agent: 'idle',
-      threads: '·',
-      ahead: '·',
-      queue: '·',
-    });
-    assert.dom('[data-test-wall-row="o/r#8"] [data-test-alarm]').doesNotExist();
+      .dom('[data-test-wall-row="o/r#8"] [data-test-blocking]')
+      .doesNotExist();
+  });
+
+  test('a fact on a pull request you only review is never red', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-rerequest', {
+            ci_status: 'failing',
+            merge_state: 'conflicts',
+          }),
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(chips('o/r#7'), ['CI failing', 'conflicts with main']);
+    assert.dom('[data-test-blocking]').doesNotExist();
+  });
+
+  test('the wall has no status columns and no column header', async function (assert) {
+    onTheHub(heldPr());
+
+    await visit('/');
+
+    assert.dom('.wall-head').doesNotExist();
+    assert.dom('[data-test-wall-head]').doesNotExist();
+    assert.dom('[data-test-cell]').doesNotExist();
+  });
+
+  test('the move, its reason, its chips and its age share one line', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-review', { unresolved_threads: 2 }),
+          system: { unpushed_commits: 3 },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const middleOf = (selector: string) => {
+      const box = find(
+        `[data-test-wall-row="o/r#7"] ${selector}`,
+      )!.getBoundingClientRect();
+      return Math.round(box.top + box.height / 2);
+    };
+    const verb = middleOf('[data-test-verb]');
+    assert.deepEqual(
+      ['[data-test-reason]', '[data-test-state]', '[data-test-age]'].map(
+        (selector) => Math.abs(middleOf(selector) - verb) <= 3,
+      ),
+      [true, true, true],
+    );
   });
 
   test('negative counts read as none, not as a minus number', async function (assert) {
@@ -857,17 +938,10 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(
-      {
-        ahead: cells('o/r#7')['ahead'],
-        queue: cells('o/r#7')['queue'],
-        flags: texts('[data-test-wall-row="o/r#7"] [data-test-move-flag]'),
-      },
-      { ahead: '·', queue: '·', flags: [] },
-    );
+    assert.deepEqual(chips('o/r#7'), []);
   });
 
-  test('the Threads cell on someone else’s pull request counts your threads answered, not other people’s threads', async function (assert) {
+  test('on someone else’s pull request the answered chip counts your threads answered, not other people’s threads', async function (assert) {
     onTheHub(
       heldPr({
         number: 8,
@@ -883,67 +957,22 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.strictEqual(cells('o/r#8')['threads'], '1 answered');
+    assert.deepEqual(chips('o/r#8'), ['1 answered']);
   });
 
-  test('each status cell names its column, for the narrow wall that folds the header away', async function (assert) {
-    onTheHub(heldPr());
+  test('unsent comments show as a chip until sending them is the move', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-author'),
+          threads: [row('d', 'draft', 'draft', 'mine')],
+        },
+      }),
+    );
 
     await visit('/');
 
-    assert.deepEqual(
-      findAll(
-        '[data-test-wall-row="o/r#7"] [data-test-cell]:not([data-test-cell="why"])',
-      ).map((one) => [
-        one.getAttribute('data-test-cell'),
-        one.getAttribute('data-label'),
-      ]),
-      [
-        ['ci', 'CI'],
-        ['merge', 'Conflicts'],
-        ['review', 'Review'],
-        ['agent', 'Agent'],
-        ['threads', 'Threads'],
-        ['ahead', 'Unpushed'],
-        ['queue', 'Queue'],
-      ],
-    );
-  });
-
-  function asIfNarrowerThan(width: number): () => void {
-    const condition = `(width <= ${width}px)`;
-    const rules = [...document.styleSheets]
-      .flatMap((sheet) => [...sheet.cssRules])
-      .filter(
-        (rule): rule is CSSMediaRule =>
-          rule instanceof CSSMediaRule && rule.media.mediaText === condition,
-      );
-    for (const rule of rules) rule.media.mediaText = 'all';
-    return () => {
-      for (const rule of rules) rule.media.mediaText = condition;
-    };
-  }
-
-  test('below 1240px the lead column is as wide as the row’s text column', async function (assert) {
-    onTheHub(heldPr());
-    const restore = asIfNarrowerThan(1240);
-    try {
-      await visit('/');
-
-      assert.dom('.wall-head').isNotVisible('the narrow wall folds its header');
-      const lead = find(
-        '[data-test-wall-row="o/r#7"] .wall-lead',
-      )!.getBoundingClientRect();
-      const why = find(
-        '[data-test-wall-row="o/r#7"] .why',
-      )!.getBoundingClientRect();
-      assert.true(
-        lead.width >= why.width - 1,
-        `lead ${Math.round(lead.width)}px wide, why ${Math.round(why.width)}px wide`,
-      );
-    } finally {
-      restore();
-    }
+    assert.deepEqual(chips('o/r#7'), ['1 unsent']);
   });
 
   test('a row’s edge says who holds the ball, and a frozen pull request’s says failed, as the rail’s does', async function (assert) {
@@ -998,12 +1027,13 @@ module('Acceptance | wall', function (hooks) {
       ),
       'the wall’s rows take the edge the rail’s rows draw',
     );
-    assert
-      .dom('[data-test-wall-row="o/r#11"] [data-test-cell="why"]')
-      .hasText('Wrong branch checked out (main) · detaches in 38m 0s');
+    assert.strictEqual(
+      reasonOf(11),
+      'wrong branch checked out (main) · detaches in 38m 0s',
+    );
   });
 
-  test('the detailed reviewer is flagged beside the verb', async function (assert) {
+  test('the detailed reviewer is a chip beside the move', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: { status: { you_are_the_detailed_reviewer: true } },
@@ -1013,16 +1043,14 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
+    assert.deepEqual(chips('o/r#7'), ['detailed reviewer']);
     assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-verb] [data-test-flag]')
-      .hasText('You are the detailed reviewer');
-    assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-flag]')
+      .dom('[data-test-wall-row="o/r#7"] [data-test-state="reviewer"]')
       .hasAttribute('title', /Detailed reviewer: @/);
-    assert.dom('[data-test-wall-row="o/r#8"] [data-test-flag]').doesNotExist();
+    assert.deepEqual(chips('o/r#8'), []);
   });
 
-  test('the move’s flags sit beside the verb, and a row without any has none', async function (assert) {
+  test('facts the move does not name sit beside it as states, and a row without any has none', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -1039,75 +1067,45 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(
-      texts(
-        '[data-test-wall-row="o/r#7"] [data-test-verb] [data-test-move-flag]',
-      ),
-      ['Draft', 'Fix CI', 'Rebase', '1 unresolved thread'],
-    );
-    assert
-      .dom('[data-test-wall-row="o/r#8"] [data-test-move-flag]')
-      .doesNotExist();
+    assert.deepEqual(verbsOf([7]), ['Fix CI']);
+    assert.deepEqual(chips('o/r#7'), [
+      'conflicts with main',
+      '1 unresolved',
+      'draft',
+    ]);
+    assert.deepEqual(chips('o/r#8'), []);
   });
 
-  test('every flag beside the verb says what it means on hover', async function (assert) {
+  test('every chip says what it means on hover', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
-          facts: {
+          facts: factsFor('await-author', {
             draft: true,
             ci_status: 'failing',
             merge_state: 'conflicts',
             unresolved_threads: 1,
-          },
+            changes_requested_by: ['bob'],
+            mentioned: true,
+          }),
+          status: { you_are_the_detailed_reviewer: true },
+          system: { unpushed_commits: 1, queued_events: 1 },
+          threads: [
+            row('d', 'draft', 'draft', 'mine'),
+            row('m', 'ready', 'open', 'mine'),
+          ],
         },
+        mismatches: 2,
       }),
     );
 
     await visit('/');
 
-    const untitled = findAll(
-      '[data-test-wall-row="o/r#7"] [data-test-verb] [data-test-move-flag]',
-    )
+    const untitled = findAll('[data-test-wall-row="o/r#7"] [data-test-state]')
       .filter((one) => !one.getAttribute('title'))
       .map((one) => one.textContent.trim());
+    assert.true(chips('o/r#7').length >= 9, chips('o/r#7').join(', '));
     assert.deepEqual(untitled, []);
-  });
-
-  test('each column header says what its word means, and what a dot means', async function (assert) {
-    onTheHub(heldPr());
-
-    await visit('/');
-
-    const heads = findAll('[data-test-wall-head]');
-    assert.deepEqual(
-      heads.map((one) => one.textContent.trim()),
-      [
-        'Your move, then the PR',
-        'Why',
-        'CI',
-        'Conflicts',
-        'Review',
-        'Agent',
-        'Threads',
-        'Unpushed',
-        'Queue',
-      ],
-    );
-    assert.true(
-      heads.every((one) => (one.getAttribute('title') ?? '').length > 0),
-      'every header carries a definition',
-    );
-    const title = (label: string) =>
-      heads
-        .find((one) => one.textContent.trim() === label)!
-        .getAttribute('title') ?? '';
-    assert.true(title('Unpushed').includes('not yet pushed'));
-    for (const counted of ['Threads', 'Unpushed', 'Queue']) {
-      assert.true(title(counted).includes('A dot means none'), counted);
-    }
-    assert.true(title('Conflicts').includes('marked ready'));
-    assert.true(title('Agent').includes('carry on'));
   });
 
   test('a row says it only opens the pull request', async function (assert) {
@@ -1185,6 +1183,98 @@ module('Acceptance | wall', function (hooks) {
 
     assert.dom('[data-test-wall-row="o/r#7"]').exists();
     assert.dom('[data-test-moved]').doesNotExist();
+  });
+
+  const MINUTE = 60_000;
+  const DAY = 24 * 60 * MINUTE;
+
+  function minutesAgo(minutes: number): string {
+    return new Date(clock().now - minutes * MINUTE).toISOString();
+  }
+
+  function ageOf(key: string): string {
+    return texts(`[data-test-wall-row="${key}"] [data-test-age]`).join('');
+  }
+
+  test('each row ends its move line with how long it has been in its section, and starts again when it moves', async function (assert) {
+    const lastEvent = { status: { last_event_at: minutesAgo(47) } };
+    onTheHub(heldPr({ dashboard: lastEvent }));
+    await visit('/');
+
+    assert.strictEqual(ageOf('o/r#7'), '47m');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-age]')
+      .hasAttribute('title', 'In Waiting on others for 47m');
+
+    board().held = [
+      heldPr({ dashboard: { ...lastEvent, facts: factsFor('fix-ci') } }),
+    ];
+    await clock().tick(LIST);
+    assert.strictEqual(ageOf('o/r#7'), 'now');
+
+    await clock().tick(LIST * 24);
+    assert.strictEqual(ageOf('o/r#7'), '2m');
+  });
+
+  test('a row remembers when it entered its section from an earlier visit', async function (assert) {
+    localStorage.setItem(
+      'hub-sections-entered',
+      JSON.stringify({
+        'o/r#7': { group: 'waiting-on-others', at: clock().now - 3 * DAY },
+        'o/r#8': { group: 'needs-you', at: clock().now - 3 * DAY },
+      }),
+    );
+    onTheHub(
+      heldPr({ dashboard: { status: { last_event_at: minutesAgo(5) } } }),
+      heldPr({
+        number: 8,
+        dashboard: { status: { last_event_at: minutesAgo(5) } },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(
+      [ageOf('o/r#7'), ageOf('o/r#8')],
+      ['3d', '5m'],
+      'a section it has left since is not remembered',
+    );
+  });
+
+  test('the tab title counts the pull requests that need you', async function (assert) {
+    onTheHub(
+      heldPr({ dashboard: { facts: factsFor('fix-ci') } }),
+      heldPr({ number: 8, dashboard: { facts: factsFor('fix-ci') } }),
+      heldPr({ number: 9 }),
+    );
+    await visit('/');
+
+    assert.true(document.title.startsWith('(2) '), document.title);
+
+    board().held = [heldPr({ number: 9 })];
+    await clock().tick(LIST);
+
+    assert.false(document.title.startsWith('('), document.title);
+  });
+
+  test('a section’s heading stays in view while its rows scroll under it', async function (assert) {
+    onTheHub(
+      ...Array.from({ length: 30 }, (_, at) =>
+        heldPr({ number: at + 1, dashboard: { facts: factsFor('fix-ci') } }),
+      ),
+    );
+    await visit('/');
+    const body = find('.wall-body')!;
+    const heading = find('[data-test-wall-group="needs-you"]')!;
+
+    body.scrollTop = body.scrollHeight;
+    await settled();
+
+    const top = body.getBoundingClientRect().top;
+    assert.true(
+      Math.abs(heading.getBoundingClientRect().top - top) <= 1,
+      `heading at ${Math.round(heading.getBoundingClientRect().top)}px, the wall’s body at ${Math.round(top)}px`,
+    );
   });
 
   test('a move from before you looked is not marked', async function (assert) {
@@ -1671,9 +1761,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#8"] [data-test-release]')
       .doesNotExist();
-    assert
-      .dom('[data-test-wall-row="o/r#8"] [data-test-cell="why"]')
-      .includesText('Release asked for');
+    assert.true(reasonOf(8).startsWith('release asked for'), reasonOf(8));
   });
 
   test('o opens the selected pull request on GitHub and y copies its address', async function (assert) {
@@ -1965,13 +2053,18 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
+    const lead = '[data-test-wall-row="o/r#7"] [data-test-wall-lead]';
     assert.deepEqual(
-      texts('[data-test-wall-row="o/r#7"] [data-test-wall-lead] > *'),
-      ['Waiting for the first poll', 'Title not known yet', '#7'],
+      texts(
+        `${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title], ${lead} .meta`,
+      ),
+      [
+        'Waiting for the first poll',
+        'nothing known yet',
+        'Title not known yet',
+        '#7',
+      ],
     );
-    assert
-      .dom('[data-test-cell="why"]')
-      .hasText('Nothing known until the first poll');
   });
 
   test('a pull request not polled yet does not raise a conflicts alarm', async function (assert) {
@@ -1986,10 +2079,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"]')
       .hasAttribute('data-move', 'first-poll');
-    assert.strictEqual(cells('o/r#7')['merge'], '?');
-    assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-cell="merge"]')
-      .doesNotHaveClass('tone-alarm');
+    assert.deepEqual(chips('o/r#7'), []);
   });
 
   test('a pull request GitHub is still checking for conflicts reads as not known, not as conflicting', async function (assert) {
@@ -2004,10 +2094,7 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.strictEqual(cells('o/r#7')['merge'], '?');
-    assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-cell="merge"]')
-      .doesNotHaveClass('tone-alarm');
+    assert.deepEqual(chips('o/r#7'), []);
   });
 
   test('a title that already leads with its ticket shows the ticket once', async function (assert) {
@@ -2064,7 +2151,7 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  test('Claude’s column names the last run in words, not its event id, with how it ended', async function (assert) {
+  test('an idle agent shows no chip unless its last run failed, which it names in words with how it ended', async function (assert) {
     const ago = (seconds: number) =>
       new Date(clock().now - seconds * 1000).toISOString();
     onTheHub(
@@ -2107,11 +2194,19 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(texts('[data-test-cell="agent"]'), [
-      'idle · last rebase on main ok 17d 15h ago',
-      'idle · last thread fix killed (SIGKILL) 2m 0s ago',
-      'idle · last review exit 1 3h 0m ago',
-    ]);
+    assert.deepEqual(
+      ['o/r#7', 'o/r#8', 'o/r#9'].map((key) => chips(key)),
+      [[], ['last thread fix failed'], ['last review failed']],
+    );
+    assert.deepEqual(
+      findAll('[data-test-state="runs"]').map((one) =>
+        one.getAttribute('title'),
+      ),
+      [
+        'The last run, a thread fix, ended 2m 0s ago: killed (SIGKILL)',
+        'The last run, a review, ended 3h 0m ago: exit 1',
+      ],
+    );
   });
 
   test('a pull request whose newest runs failed is marked failed in Claude’s column, counting them', async function (assert) {
@@ -2145,20 +2240,16 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(texts('[data-test-cell="agent"]'), [
-      'idle · 2 failed runs, last thread fix 2m 0s ago',
-      'idle',
-    ]);
+    assert.deepEqual(
+      ['o/r#7', 'o/r#8'].map((key) => chips(key)),
+      [['2 failed runs'], []],
+    );
     assert
-      .dom(
-        '[data-test-wall-row="o/r#7"] [data-test-cell="agent"] [data-test-alarm]',
-      )
-      .exists();
-    assert
-      .dom(
-        '[data-test-wall-row="o/r#8"] [data-test-cell="agent"] [data-test-alarm]',
-      )
-      .doesNotExist();
+      .dom('[data-test-wall-row="o/r#7"] [data-test-state="runs"]')
+      .hasAttribute(
+        'title',
+        '2 runs failed in a row; the last, a thread fix, ended 2m 0s ago',
+      );
   });
 
   test('a failed run with an unreadable end time does not print NaN', async function (assert) {
@@ -2169,10 +2260,8 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.false(
-      cells('o/r#7')['agent']!.includes('NaN'),
-      `the agent cell reads "${cells('o/r#7')['agent']}"`,
-    );
+    const said = find('[data-test-state="runs"]')!.getAttribute('title') ?? '';
+    assert.false(said.includes('NaN'), `the runs chip says "${said}"`);
   });
 
   test('a live dot pulses for five seconds when work starts or its move changes, then holds steady', async function (assert) {
@@ -2198,17 +2287,17 @@ module('Acceptance | wall', function (hooks) {
     const pulsing = () =>
       findAll(dots).map((dot) => dot.hasAttribute('data-pulsing'));
 
-    assert.deepEqual(pulsing(), [true, true], 'work starting pulses');
+    assert.deepEqual(pulsing(), [true], 'work starting pulses');
     await clock().tick(4000);
-    assert.deepEqual(pulsing(), [true, true]);
+    assert.deepEqual(pulsing(), [true]);
     await clock().tick(1000);
-    assert.deepEqual(pulsing(), [false, false], 'then it holds steady');
+    assert.deepEqual(pulsing(), [false], 'then it holds steady');
 
     board().held = [working('became-unmergeable')];
     await clock().tick(LIST);
-    assert.deepEqual(pulsing(), [true, true], 'a new move pulses again');
+    assert.deepEqual(pulsing(), [true], 'a new move pulses again');
     await clock().tick(LIST);
-    assert.deepEqual(pulsing(), [false, false]);
+    assert.deepEqual(pulsing(), [false]);
   });
 
   test('an agent run the manager reported does not outlive the manager going away', async function (assert) {
@@ -2250,10 +2339,10 @@ module('Acceptance | wall', function (hooks) {
     );
     await clock().tick(LIST);
 
-    assert.strictEqual(
-      cells('o/r#7')['agent'],
-      'idle',
-      'the agent cell follows the new dashboard',
+    assert.deepEqual(
+      chips('o/r#7'),
+      [],
+      'no agent chip outlives the new dashboard',
     );
     assert.false(
       verbsOf([7])[0]!.startsWith('Agent is'),

@@ -9,7 +9,6 @@ import type {
 import { tildeOf } from 'frontend/data/address';
 import { countsOf as groupCountsOf, READY_GROUP } from 'frontend/data/groups';
 import type {
-  Flag as FlagCode,
   Move,
   NextMove,
   Summaries,
@@ -196,17 +195,6 @@ function awaitingReviewOf(status: DashboardStatus, facts: Polled): string {
   return parts.join(' | ');
 }
 
-function reviewsSoFarOf(status: DashboardStatus, facts: Polled): string {
-  const parts: string[] = [];
-  if (status.approved_by.length) {
-    parts.push(`${listed(status.approved_by)} approved`);
-  }
-  if (facts.changes_requested_by.length) {
-    parts.push(`${listed(facts.changes_requested_by)} requested changes`);
-  }
-  return parts.length ? parts.join(' | ') : 'no reviews yet';
-}
-
 function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
   const requesters = move.reviewers.filter(
     (login) =>
@@ -252,7 +240,7 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'await-ci':
       return `${status.checks_done}/${status.checks_total} checks complete`;
     case 'review':
-      return `${ci} | ${status.changed_files ?? '?'} files changed | ${reviewsSoFarOf(status, facts)}`;
+      return `${ci} | ${status.changed_files ?? '?'} files changed | ${reviewsSoFarOf(status, facts).replace(', ', ' | ')}`;
     case 'rereview':
       return `Re-review requested | ${ci}`;
     case 'await-reviewers':
@@ -288,10 +276,6 @@ function actionOf(shown: ShownPr, move: NextMove): Action | null {
 
 const FIRST_POLL = 'Waiting for the first poll';
 
-function commentsOf(who: string, counts: Tally, rest: string): string {
-  return `${who} comments · ${counts.done}/${counts.total} done · ${rest}`;
-}
-
 const AGENT_DOING: Record<string, string> = {
   'ci-failed': 'fixing CI',
   'became-unmergeable': 'rebasing on main',
@@ -299,31 +283,33 @@ const AGENT_DOING: Record<string, string> = {
   'manual-continue': 'carrying on',
 };
 
+function fixes(count: number): string {
+  return count === 1 ? '1 fix' : `${count} fixes`;
+}
+
 function moveOf(shown: ShownPr, summaries: Summaries): string {
-  const { threads, queued_events: queued, agent } = shown.drawn.system;
+  const { threads, agent } = shown.drawn.system;
   const { move, human, bot } = summaries;
   const code = move.code;
   switch (code) {
     case 'release-worktree':
       return 'Release the worktree';
     case 'on-hold':
-      return queued ? `On hold, ${plural(queued, 'event')} held` : 'On hold';
+      return 'On hold';
     case 'address-feedback':
-      return `Address changes requested from ${listed(move.reviewers)}`;
+      return `Address changes from ${listed(move.reviewers)}`;
     case 'human-comments':
-      return commentsOf('Human', human, `${human.toDecide} to decide`);
+      return `Decide ${fixes(human.toDecide)}`;
     case 'agent-on-human-comments':
-      return commentsOf('Human', human, `agent on ${human.agentOn}`);
+      return `Agent is fixing ${plural(human.agentOn, 'human thread')}`;
     case 'bot-comments':
-      return commentsOf('Bot', bot, `${bot.toDecide} to decide`);
+      return `Decide ${fixes(bot.toDecide).replace(' ', ' bot ')}`;
     case 'agent-on-bot-comments':
-      return commentsOf('Bot', bot, `agent on ${bot.agentOn}`);
+      return `Agent is fixing ${plural(bot.agentOn, 'bot thread')}`;
     case 'send-review':
-      return `Send your review · ${plural(summaries.drafts, 'draft')}`;
-    case 'agent-running': {
-      const event = agent.event ?? '';
-      return `Agent is ${AGENT_DOING[event] ?? `working on ${event}`}`;
-    }
+      return 'Send your review';
+    case 'agent-running':
+      return `Agent is ${doingOf(agent.event)}`;
     case 'agent-on-threads':
       return `Agent is working on ${plural(threads.live, 'thread')}`;
     case 'first-poll':
@@ -338,20 +324,189 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
         ? `Waiting on reviewers ${listed(move.reviewers)}`
         : 'Waiting on reviewers';
     case 'await-author':
-      return move.stillRequested.length
-        ? `Waiting on the author · ${listed(move.stillRequested)} still requested`
-        : 'Waiting on the author';
+      return 'Waiting on the author';
     case 'await-rerequest':
       return 'Waiting on the author to ask you again';
     case 'rereview':
-      return `Re-review · ${summaries.yours.answered}/${summaries.yours.total} of your threads answered`;
+      return 'Re-review';
     case 'mention':
-      return mentionedOf(move);
+      return 'Answer the mention';
     case 'mentioned':
-      return EVERY_MENTION_ANSWERED;
+      return 'Waiting on others';
     default:
       return labelOf(code, shown);
   }
+}
+
+function doingOf(event: string | null): string {
+  if (event === null) return 'working';
+  return AGENT_DOING[event] ?? `working on ${runNameOf(event)}`;
+}
+
+function frozenReasonOf(frozen: FrozenWorktree): string {
+  if (frozen.release_requested) {
+    return 'release asked for; the watcher cuts a fresh worktree on its next cycle';
+  }
+  return `wrong branch checked out (${withoutBidiControls(frozen.here)}) · detaches in ${lengthOf(frozen.seconds_left)}`;
+}
+
+function heldOf(queued: number): string {
+  if (queued <= 0) return 'resume it to let events through';
+  return queued === 1
+    ? '1 event waits until you resume it'
+    : `${queued} events wait until you resume it`;
+}
+
+function runningOf(system: DashboardSystem): string {
+  const { elapsed_seconds: elapsed, silent_seconds: silent } = system.agent;
+  const parts = [
+    elapsed !== null ? `running ${lengthOf(elapsed)}` : null,
+    silent !== null ? `${lengthOf(silent)} since its last output` : null,
+  ].filter((part) => part !== null);
+  return parts.length ? parts.join(' · ') : 'just started';
+}
+
+function doneOf(tally: Tally): string {
+  return `${tally.done} of ${tally.total} done`;
+}
+
+function approvalsOf(status: DashboardStatus, facts: Polled): string[] {
+  const approved = status.approved_by.filter(
+    (login) => !facts.pending_reviewers.includes(login),
+  );
+  return approved.length ? [`${listed(approved)} approved`] : [];
+}
+
+function reviewsSoFarOf(status: DashboardStatus, facts: Polled): string {
+  const parts: string[] = [];
+  if (status.approved_by.length) {
+    parts.push(`${listed(status.approved_by)} approved`);
+  }
+  if (facts.changes_requested_by.length) {
+    parts.push(`${listed(facts.changes_requested_by)} requested changes`);
+  }
+  return parts.length ? parts.join(', ') : 'no reviews yet';
+}
+
+const YOUR_REVIEW_WORDS: Record<string, string> = {
+  commented: 'you commented',
+  'changes-requested': 'you requested changes',
+  dismissed: 'your review was dismissed',
+};
+
+function filesOf(changed: number | null): string | null {
+  if (changed === null) return null;
+  return changed === 1 ? '1 file changed' : `${changed} files changed`;
+}
+
+function reviewerReasonOf(
+  shown: ShownPr,
+  summaries: Summaries,
+): (string | null)[] | null {
+  const status = shown.drawn.status;
+  const facts = polledOf(shown);
+  const { move, yours } = summaries;
+  switch (move.code) {
+    case 'review':
+      return [
+        'requested from you',
+        filesOf(status.changed_files),
+        reviewsSoFarOf(status, facts),
+      ];
+    case 'rereview':
+      return [
+        'asked again',
+        yours.total
+          ? `${yours.answered} of ${yours.total} of your threads answered`
+          : null,
+      ];
+    case 'await-reviewers':
+      return ['you approved'];
+    case 'await-author':
+      return [
+        'you approved',
+        move.stillRequested.length
+          ? `${listed(move.stillRequested)} still requested`
+          : null,
+      ];
+    case 'await-rerequest':
+      return [YOUR_REVIEW_WORDS[facts.my_review ?? ''] ?? 'you reviewed'];
+    default:
+      return null;
+  }
+}
+
+function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
+  const status = shown.drawn.status;
+  const facts = polledOf(shown);
+  const { move, human, bot } = summaries;
+  const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
+  switch (move.code) {
+    case 'on-hold':
+      return heldOf(shown.drawn.system.queued_events);
+    case 'first-poll':
+      return 'nothing known yet';
+    case 'human-comments':
+      return `human threads, ${doneOf(human)}`;
+    case 'bot-comments':
+      return `bot threads, ${doneOf(bot)}`;
+    case 'agent-on-human-comments':
+      return doneOf(human);
+    case 'agent-on-bot-comments':
+      return doneOf(bot);
+    case 'agent-running':
+      return runningOf(shown.drawn.system);
+    case 'agent-on-threads': {
+      const queued = shown.drawn.system.threads.queued;
+      return queued
+        ? `${queued} more queued`
+        : 'its fixes come to the board for you to decide';
+    }
+    case 'send-review':
+      return plural(summaries.drafts, 'unsent comment');
+    case 'address-feedback':
+      return move.reviewers.length === 1
+        ? 'requested changes and is not asked to review again'
+        : 'requested changes and are not asked to review again';
+    case 'fix-ci':
+      return status.failed_checks.length
+        ? `${listed(status.failed_checks)} failing`
+        : 'a check is failing';
+    case 'rebase':
+      return facts.merge_state === 'conflicts'
+        ? `conflicts with ${baseOf(shown)}`
+        : `behind ${baseOf(shown)}`;
+    case 'ready-to-merge':
+      return `${status.approved_by.length ? `approved by ${listed(status.approved_by)}` : 'no approval needed'}, ${ci}`;
+    case 'await-ci':
+      return `${status.checks_done} of ${status.checks_total} checks done`;
+    case 'await-rereview':
+      return 'asked again after requesting changes';
+    case 'await-review':
+      return [...approvalsOf(status, facts), 'review requested'].join(' · ');
+    case 'request-reviewers':
+      return [...approvalsOf(status, facts), 'nobody is asked to review'].join(
+        ' · ',
+      );
+    case 'mark-ready-for-review':
+      return 'still a draft';
+    case 'mention':
+      return `${listed(move.mentionedBy)} mentioned you`;
+    case 'mentioned':
+      return 'you are not a reviewer and every mention is answered';
+    default:
+      return '';
+  }
+}
+
+function reasonOf(shown: ShownPr, summaries: Summaries): string {
+  const frozen = shown.drawn.frozen;
+  if (frozen) return frozenReasonOf(frozen);
+  const parts = reviewerReasonOf(shown, summaries);
+  if (!parts) return authorReasonOf(shown, summaries);
+  const since = sinceOf(shown);
+  if (since) parts.push(`since then: ${since.join(', ')}`);
+  return parts.filter((part) => part !== null).join(' · ');
 }
 
 function sinceOf(shown: ShownPr): string[] | null {
@@ -629,160 +784,284 @@ function titleOf(shown: ShownPr): string {
   return ticket ? `${ticket} · ${withoutLeadingTicket(title, ticket)}` : title;
 }
 
-export type Tone = 'alarm' | 'quiet' | 'plain' | 'strong';
+export type ChipTone = 'alarm' | 'warn' | 'plain' | 'quiet' | 'accent';
 
-export interface Cell {
+export interface Chip {
   key: string;
-  label: string;
   text: string;
-  tone: Tone;
-  live: boolean;
-  count: boolean;
-}
-
-const CELL_LABELS: Record<string, string> = {
-  ci: 'CI',
-  merge: 'Conflicts',
-  review: 'Review',
-  agent: 'Agent',
-  threads: 'Threads',
-  ahead: 'Unpushed',
-  queue: 'Queue',
-};
-
-const CELL_HINTS: Record<string, string> = {
-  ci: 'GitHub’s checks on the head commit: passing, failing or pending',
-  merge:
-    'Whether the branch conflicts with its base on GitHub; ? until GitHub has worked it out. A draft still has to be marked ready before it can merge',
-  review: 'The review decision on GitHub',
-  agent:
-    'What this PR’s agent is doing, or how its last run ended. A run is named for what started it; carry on is the agent picking up its last conversation here',
-  threads:
-    'Review-board threads waiting on you: fixes ready to decide, local drafts, answers. A dot means none',
-  ahead:
-    'Commits in this PR’s worktree not yet pushed to origin. A dot means none',
-  queue:
-    'Events the watcher queued for this PR’s agent to pick up. A dot means none',
-};
-
-export interface Head {
-  label: string;
   hint: string;
-  right: boolean;
+  tone: ChipTone;
 }
 
-const COUNTED_KEYS = ['threads', 'ahead', 'queue'];
+const BLOCKERS: Partial<Record<Move, string>> = {
+  'fix-ci': 'ci',
+  rebase: 'merge',
+  'address-feedback': 'review',
+};
 
-export const HEADS: Head[] = [
-  {
-    label: 'Your move, then the PR',
-    hint: 'What you do next on each PR; clicking a row only opens it',
-    right: false,
-  },
-  { label: 'Why', hint: 'What makes that your move', right: false },
-  ...Object.keys(CELL_LABELS).map((key) => ({
-    label: CELL_LABELS[key]!,
-    hint: CELL_HINTS[key]!,
-    right: COUNTED_KEYS.includes(key),
-  })),
+const REVIEW_NAMED: Move[] = ['address-feedback', 'await-rereview', 'review'];
+
+const APPROVAL_NAMED: Move[] = [
+  'ready-to-merge',
+  'review',
+  'await-review',
+  'request-reviewers',
+  'await-author',
+  'await-reviewers',
 ];
 
-function cell(key: string, text: string, tone: Tone, live = false): Cell {
-  return {
-    key,
-    label: CELL_LABELS[key] ?? key,
-    text,
-    tone,
-    live,
-    count: false,
-  };
+const DECISIONS: Move[] = ['human-comments', 'bot-comments'];
+
+const MENTION_NAMED: Move[] = ['mention', 'mentioned'];
+
+const DRAFT_HINT =
+  'A draft: it has to be marked ready for review before it can merge';
+
+const MISMATCHES_HINT =
+  'Mismatches the last finished PR summary found between what was asked for, what the author says and what the code does. It may be about an older head, and a summary running now is not counted until it ends; the Summary tab says which head it read';
+
+function chip(key: string, text: string, hint: string, tone: ChipTone): Chip {
+  return { key, text, hint, tone };
 }
 
-function counted(key: string, value: number | null): Cell {
-  const shown =
-    value && value > 0
-      ? cell(key, String(value), 'strong')
-      : cell(key, '·', 'quiet');
-  return { ...shown, count: true };
-}
-
-function ciCell(shown: ShownPr): Cell {
-  const ci = polledOf(shown).ci_status;
-  if (ci === 'failing') return cell('ci', ci, 'alarm');
-  return cell('ci', ci, ci === 'passing' ? 'quiet' : 'plain');
-}
-
-function mergeCell(shown: ShownPr): Cell {
-  const mergeable = shown.drawn.polled ? shown.drawn.status.mergeable : null;
-  if (mergeable === null) return cell('merge', '?', 'quiet');
-  if (mergeable) return cell('merge', 'none', 'quiet');
-  return cell('merge', 'yes', agentRebasing(shown) ? 'plain' : 'alarm');
-}
-
-function reviewCell(shown: ShownPr): Cell {
-  const decision = polledOf(shown).review_decision;
-  return cell(
-    'review',
-    decisionWordOf(shown),
-    decision === 'changes-requested' ? 'plain' : 'quiet',
+function ciChip(shown: ShownPr, code: Move): Chip | null {
+  if (shown.facts?.ci_status !== 'failing' || code === 'fix-ci') return null;
+  const failed = shown.drawn.status.failed_checks;
+  return chip(
+    'ci',
+    'CI failing',
+    failed.length
+      ? `Failing on the head commit: ${listed(failed)}`
+      : 'A check on the head commit is failing',
+    'warn',
   );
 }
 
-function failedCell(failing: FinishedRun[], now: number): Cell {
-  const newest = failing[0]!;
-  const ago = lengthOf((now - Date.parse(newest.ended_at)) / 1000);
-  const count =
-    failing.length === 1 ? '1 failed run' : `${failing.length} failed runs`;
-  return cell(
-    'agent',
-    `idle · ${count}, last ${runNameOf(newest.event)} ${ago} ago`,
-    'alarm',
-  );
-}
-
-function agentCell(shown: ShownPr, now: number, failing: FinishedRun[]): Cell {
-  const { agent, last_run: last, on_hold } = shown.drawn.system;
-  if (shown.drawn.frozen) return cell('agent', 'frozen', 'quiet');
-  if (on_hold) return cell('agent', 'on hold', 'quiet');
-  if (!agent.enabled) return cell('agent', 'disabled', 'quiet');
-  if (agent.state === 'working') {
-    const parts = [agent.event ? runNameOf(agent.event) : 'working'];
-    if (agent.elapsed_seconds !== null)
-      parts.push(lengthOf(agent.elapsed_seconds));
-    if (agent.silent_seconds !== null)
-      parts.push(`${lengthOf(agent.silent_seconds)} quiet`);
-    return cell('agent', parts.join(' · '), 'plain', true);
+function mergeChip(shown: ShownPr, code: Move): Chip | null {
+  const state = shown.facts?.merge_state;
+  if (code === 'rebase') return null;
+  if (state === 'conflicts') {
+    return chip(
+      'merge',
+      `conflicts with ${baseOf(shown)}`,
+      'The branch conflicts with the branch it merges into',
+      'warn',
+    );
   }
-  if (failing.length) return failedCell(failing, now);
-  if (!last) return cell('agent', 'idle', 'quiet');
-  const ago = lengthOf((now - Date.parse(last.ended_at)) / 1000);
-  return cell(
+  if (state === 'behind') {
+    return chip(
+      'merge',
+      `behind ${baseOf(shown)}`,
+      'The branch is behind the branch it merges into and has to be brought up to date',
+      'warn',
+    );
+  }
+  return null;
+}
+
+function reviewChip(shown: ShownPr, code: Move): Chip | null {
+  const facts = shown.facts;
+  if (!facts || REVIEW_NAMED.includes(code)) return null;
+  const hint = 'A reviewer asked for changes on GitHub';
+  if (facts.changes_requested_by.length) {
+    return chip(
+      'review',
+      `${listed(facts.changes_requested_by)} requested changes`,
+      hint,
+      'warn',
+    );
+  }
+  return facts.review_decision === 'changes-requested'
+    ? chip('review', 'changes requested', hint, 'warn')
+    : null;
+}
+
+function approvedChip(shown: ShownPr, code: Move): Chip | null {
+  const facts = shown.facts;
+  if (!facts || APPROVAL_NAMED.includes(code)) return null;
+  if (facts.changes_requested_by.length) return null;
+  if (facts.review_decision === 'changes-requested') return null;
+  const approvers = shown.drawn.status.approved_by;
+  const hint = 'The pull request is approved on GitHub';
+  if (approvers.length) {
+    return chip('approved', `approved by ${listed(approvers)}`, hint, 'accent');
+  }
+  return facts.review_decision === 'approved'
+    ? chip('approved', 'approved', hint, 'accent')
+    : null;
+}
+
+function agoOf(iso: string, now: number): string {
+  return lengthOf((now - Date.parse(iso)) / 1000);
+}
+
+function runsChip(
+  shown: ShownPr,
+  failing: FinishedRun[],
+  now: number,
+): Chip | null {
+  const { agent, last_run: last } = shown.drawn.system;
+  if (agent.state === 'working') return null;
+  const newest = failing[0];
+  if (newest) {
+    const name = runNameOf(newest.event);
+    const ago = agoOf(newest.ended_at, now);
+    return failing.length === 1
+      ? chip(
+          'runs',
+          '1 failed run',
+          `The last run, a ${name}, failed ${ago} ago`,
+          'warn',
+        )
+      : chip(
+          'runs',
+          `${failing.length} failed runs`,
+          `${failing.length} runs failed in a row; the last, a ${name}, ended ${ago} ago`,
+          'warn',
+        );
+  }
+  if (!last || last.exit_code === 0 || last.exit_code === null) return null;
+  const name = runNameOf(last.event);
+  return chip(
+    'runs',
+    `last ${name} failed`,
+    `The last run, a ${name}, ended ${agoOf(last.ended_at, now)} ago: ${exitWordOf(last.exit_code)}`,
+    'warn',
+  );
+}
+
+function agentChip(shown: ShownPr, code: Move): Chip | null {
+  const system = shown.drawn.system;
+  if (system.agent.state !== 'working' || code === 'agent-running') return null;
+  return chip(
     'agent',
-    `idle · last ${runNameOf(last.event)} ${exitWordOf(last.exit_code)} ${ago} ago`,
+    `agent ${doingOf(system.agent.event)}`,
+    `${system.agent.name} is ${runningOf(system)}`,
+    'plain',
+  );
+}
+
+function countChip(
+  key: string,
+  count: number | null,
+  text: (count: number) => string,
+  hint: string,
+  tone: ChipTone = 'plain',
+): Chip | null {
+  return count !== null && count > 0
+    ? chip(key, text(count), hint, tone)
+    : null;
+}
+
+function mentionedChip(shown: ShownPr, code: Move): Chip | null {
+  const facts = shown.facts;
+  if (!facts?.mentioned || MENTION_NAMED.includes(code)) return null;
+  const who = [...new Set(facts.mentions.map((one) => one.author))];
+  return chip(
+    'mentioned',
+    'mentioned',
+    who.length
+      ? `${listed(who)} mentioned you here`
+      : 'You were mentioned here',
     'quiet',
   );
 }
 
-interface Waiting {
-  ready: number;
-  drafts: number;
-  answered: number;
+function chipsOf(
+  shown: ShownPr,
+  summaries: Summaries,
+  failing: FinishedRun[],
+  now: number,
+): Chip[] {
+  const { move, role } = summaries;
+  const code = move.code;
+  const system = shown.drawn.system;
+  const facts = shown.facts;
+  const found = [
+    ciChip(shown, code),
+    mergeChip(shown, code),
+    reviewChip(shown, code),
+    runsChip(shown, failing, now),
+    agentChip(shown, code),
+    role === 'author' && !DECISIONS.includes(code)
+      ? countChip(
+          'decide',
+          summaries.ready,
+          (count) => `${fixes(count)} to decide`,
+          'Fixes the agent proposed on the board, waiting for your decision',
+        )
+      : null,
+    code === 'send-review'
+      ? null
+      : countChip(
+          'unsent',
+          summaries.drafts,
+          (count) => `${count} unsent`,
+          'Comments you drafted on the board and have not sent',
+        ),
+    countChip(
+      'unresolved',
+      facts?.unresolved_threads ?? null,
+      (count) => `${count} unresolved`,
+      'Review threads on GitHub not resolved yet',
+    ),
+    role === 'reviewer' && code !== 'rereview'
+      ? countChip(
+          'answered',
+          summaries.yours.answered,
+          (count) => `${count} answered`,
+          'Threads you opened that the author has answered',
+        )
+      : null,
+    countChip(
+      'unpushed',
+      system.unpushed_commits,
+      (count) => `${count} unpushed`,
+      ROW_HINTS['unpushed']!,
+    ),
+    code === 'on-hold'
+      ? null
+      : countChip(
+          'queue',
+          system.queued_events,
+          (count) => `${count} queued`,
+          ROW_HINTS['queue']!,
+          'quiet',
+        ),
+    approvedChip(shown, code),
+    mentionedChip(shown, code),
+    shown.drawn.status.you_are_the_detailed_reviewer
+      ? chip('reviewer', 'detailed reviewer', DETAILED_REVIEWER_HINT, 'accent')
+      : null,
+    summaries.mismatches
+      ? chip('mismatches', summaries.mismatches, MISMATCHES_HINT, 'quiet')
+      : null,
+    facts?.draft && code !== 'mark-ready-for-review'
+      ? chip('draft', 'draft', DRAFT_HINT, 'quiet')
+      : null,
+  ].filter((one) => one !== null);
+  const blocker =
+    role === 'author' && move.state && move.state !== code
+      ? BLOCKERS[move.state]
+      : undefined;
+  const marked = found.map((one) =>
+    one.key === blocker ? { ...one, tone: 'alarm' as const } : one,
+  );
+  return [
+    ...marked.filter((one) => one.tone === 'alarm'),
+    ...marked.filter((one) => one.tone !== 'alarm'),
+  ];
 }
 
-function waitingOf({ ready, drafts, answered }: Waiting): string | null {
-  const parts = [
-    ready ? `${ready} ready` : null,
-    drafts ? plural(drafts, 'draft') : null,
-    answered ? `${answered} answered` : null,
-  ].filter((part) => part !== null);
-  return parts.length ? parts.join(', ') : null;
-}
+const MINUTE_MS = 60_000;
 
-function threadsCell(waiting: string | null): Cell {
-  const shown = waiting
-    ? cell('threads', waiting, 'strong')
-    : cell('threads', '·', 'quiet');
-  return { ...shown, count: true };
+export function ageOf(entered: number, now: number): string {
+  const minutes = Math.floor(Math.max(0, now - entered) / MINUTE_MS);
+  if (minutes < 1) return 'now';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
 }
 
 function whyOf(
@@ -837,30 +1116,6 @@ const DETAILED_REVIEWER: Flag = {
   hint: DETAILED_REVIEWER_HINT,
 };
 
-export interface MoveFlag {
-  code: FlagCode;
-  text: string;
-  hint: string;
-  alarm: boolean;
-}
-
-export const MISMATCHES_HINT =
-  'Mismatches the last finished PR summary found between what was asked for, what the author says and what the code does. It may be about an older head, and a summary running now is not counted until it ends; the Summary tab says which head it read';
-
-const FLAG_HINTS: Record<FlagCode, string> = {
-  draft: 'A draft: it has to be marked ready for review before it can merge',
-  'fix-ci': 'A check on the head commit is failing',
-  rebase: 'The branch conflicts with its base or is behind it',
-  'unresolved-threads': 'Review threads on GitHub not resolved yet',
-};
-
-const FLAG_WORDS: Record<FlagCode, (move: NextMove) => string> = {
-  draft: () => 'Draft',
-  'fix-ci': () => 'Fix CI',
-  rebase: () => 'Rebase',
-  'unresolved-threads': (move) => plural(move.unresolved, 'unresolved thread'),
-};
-
 export function threadsWaitingOf(summaries: Summaries): string | null {
   if (!summaries.role) return null;
   const decided = groupCountsOf(summaries.groups, summaries.role).find(
@@ -885,15 +1140,6 @@ export function countsOf(summaries: Summaries): string[] {
   ];
 }
 
-function flagsOf(move: NextMove): MoveFlag[] {
-  return move.flags.map((code) => ({
-    code,
-    text: FLAG_WORDS[code](move),
-    hint: FLAG_HINTS[code],
-    alarm: code === 'fix-ci',
-  }));
-}
-
 export interface Reading {
   number: number;
   code: Move;
@@ -906,8 +1152,8 @@ export interface Reading {
   whose: string | null;
   branch: string | null;
   detailedReviewer: Flag | null;
-  why: string;
-  cells: Cell[];
+  reason: string;
+  chips: Chip[];
   band: Band;
   frozen: Frozen | null;
   onHold: boolean;
@@ -917,7 +1163,6 @@ export interface Reading {
   system: Row[];
   since: string[] | null;
   rebaseIsNext: boolean;
-  flags: MoveFlag[];
   draft: boolean;
   muted: boolean;
   dismiss: DismissWording;
@@ -956,22 +1201,8 @@ export function dashboardOf(
     detailedReviewer: shown.drawn.status.you_are_the_detailed_reviewer
       ? DETAILED_REVIEWER
       : null,
-    why,
-    cells: [
-      ciCell(shown),
-      mergeCell(shown),
-      reviewCell(shown),
-      agentCell(shown, now, failing),
-      threadsCell(
-        waitingOf({
-          ready: summaries.ready,
-          drafts: summaries.drafts,
-          answered: summaries.yours.answered,
-        }),
-      ),
-      counted('ahead', shown.drawn.system.unpushed_commits),
-      counted('queue', shown.drawn.system.queued_events),
-    ],
+    reason: reasonOf(shown, summaries),
+    chips: chipsOf(shown, summaries, failing, now),
     band: bandOf(shown, action, move, why),
     frozen: frozen
       ? {
@@ -987,7 +1218,6 @@ export function dashboardOf(
     system: systemRows(shown, now),
     since: frozen ? null : since,
     rebaseIsNext: rebaseIsNext(shown, next),
-    flags: flagsOf(next),
     draft: next.flags.includes('draft'),
     muted: next.muted,
     dismiss: dismissOf(shown),

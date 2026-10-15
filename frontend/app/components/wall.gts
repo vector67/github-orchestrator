@@ -5,21 +5,16 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
+import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import HubBar from 'frontend/components/hub-bar';
-import MoveFlagTag from 'frontend/components/move-flag';
+import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
-import {
-  dashboardOf,
-  HEADS,
-  MISMATCHES_HINT,
-  type Reading,
-  type Tone,
-} from 'frontend/data/dashboard';
+import { ageOf, dashboardOf, type Reading } from 'frontend/data/dashboard';
 import { failingOf, keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
-import type { WallRow } from 'frontend/services/store';
+import type { WallRow, WallSection } from 'frontend/services/store';
 import type KeysService from 'frontend/services/keys';
 import { stepped, type Keymap } from 'frontend/services/keys';
 import type PrControlsService from 'frontend/services/pr-controls';
@@ -31,7 +26,6 @@ import {
 import type ToastsService from 'frontend/services/toasts';
 import { moves, pulses, selects } from 'frontend/motion';
 
-const eq = (tone: Tone, wanted: Tone): boolean => tone === wanted;
 const same = (one: unknown, other: unknown): boolean => one === other;
 
 const KEYED = ['hold', 'dismiss', 'release'] as const;
@@ -78,6 +72,16 @@ export default class Wall extends Component {
       this.hub.now,
       failingOf(pr, this.store.ledger?.runs ?? []),
     );
+
+  get tabTitle(): string {
+    const count = this.store.needYou;
+    return count ? `(${count}) wall` : 'wall';
+  }
+
+  ageOf = (pr: WallRow): string => ageOf(pr.entered, this.hub.now);
+
+  ageHintOf = (section: WallSection, pr: WallRow): string =>
+    `In ${section.name} for ${this.ageOf(pr)}`;
 
   get filteredOut(): string {
     const hidden = this.store.hidden;
@@ -153,15 +157,9 @@ export default class Wall extends Component {
   }
 
   <template>
+    {{pageTitle this.tabTitle}}
     <main id="wall" data-test-wall>
       <HubBar @on="wall" />
-      <div class="wall-head" aria-hidden="true">
-        {{#each HEADS key="label" as |head|}}<span
-            class={{if head.right "r"}}
-            title={{head.hint}}
-            data-test-wall-head
-          >{{head.label}}</span>{{/each}}
-      </div>
       <div
         class="wall-body {{if this.stale 'stale'}}"
         data-test-wall-stale={{this.stale}}
@@ -196,27 +194,29 @@ export default class Wall extends Component {
                   data-test-wall-lead
                   {{on "click" (fn this.open pr)}}
                 >
-                  <span class="verb" data-test-verb>{{#if reading.working}}<span
-                        class="live-dot"
-                        {{pulses reading.move}}
-                      ></span>{{/if}}{{reading.move}}{{#each
-                      reading.flags key="code"
-                      as |flag|
-                    }}<MoveFlagTag @flag={{flag}} />{{/each}}{{#if
-                      reading.detailedReviewer
+                  <span class="move-line"><span
+                      class="verb"
+                      data-test-verb
+                    >{{#if reading.working}}<span
+                          class="live-dot"
+                          {{pulses reading.move}}
+                        ></span>{{/if}}{{reading.move}}</span>{{#if
+                      reading.reason
                     }}<span
-                        class="flag"
-                        title={{reading.detailedReviewer.hint}}
-                        data-test-flag
-                      >{{reading.detailedReviewer.text}}</span>{{/if}}{{#if
-                      pr.summaries.mismatches
-                    }}<span
-                        class="flag"
-                        title={{MISMATCHES_HINT}}
-                        data-test-mismatches
-                      >{{pr.summaries.mismatches}}</span>{{/if}}{{#if
-                      pr.moved
-                    }}<span class="moved" data-test-moved>moved here</span>{{/if}}</span>
+                        class="reason"
+                        data-test-reason
+                      >{{reading.reason}}</span>{{/if}}<span
+                      class="state-chips"
+                    >{{#each reading.chips key="key" as |chip|}}<StateChip
+                          @chip={{chip}}
+                        />{{/each}}{{#if pr.moved}}<span
+                          class="state-chip tone-accent moved"
+                          data-test-moved
+                        >moved here</span>{{/if}}</span><span
+                      class="age"
+                      title={{this.ageHintOf section pr}}
+                      data-test-age
+                    >{{this.ageOf pr}}</span></span>
                   <span
                     class="ttl"
                     data-test-wall-title
@@ -227,30 +227,13 @@ export default class Wall extends Component {
                       ·
                       <span class="mono">{{reading.branch}}</span>{{/if}}</span>
                 </button>
-                <span class="why"><span
-                    data-test-cell="why"
-                  >{{reading.why}}</span>{{#if (this.releasable pr)}}<button
-                      type="button"
-                      class="release"
-                      data-test-release
-                      title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
-                      {{on "click" (fn this.release pr)}}
-                    >Release</button>{{/if}}</span>
-                <span class="cells">
-                  {{#each reading.cells key="key" as |one|}}
-                    <span
-                      class="cell tone-{{one.tone}} {{if one.count 'r'}}"
-                      data-test-cell={{one.key}}
-                      data-label={{one.label}}
-                    >{{#if one.live}}<span
-                          class="live-dot"
-                          {{pulses reading.move}}
-                        ></span>{{/if}}{{#if (eq one.tone "alarm")}}<i
-                          class="sq alarm"
-                          data-test-alarm
-                        ></i>{{/if}}{{one.text}}</span>
-                  {{/each}}
-                </span>
+                {{#if (this.releasable pr)}}<button
+                    type="button"
+                    class="release"
+                    data-test-release
+                    title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
+                    {{on "click" (fn this.release pr)}}
+                  >Release</button>{{/if}}
               </div>
               {{#if (this.isConfirming pr)}}
                 <DismissConfirm

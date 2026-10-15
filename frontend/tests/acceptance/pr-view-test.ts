@@ -84,10 +84,7 @@ module('Acceptance | pr view', function (hooks) {
     assert.dom('[data-test-pr-title]').hasText('#7 PROJ-7 · Fix the widget');
     assert
       .dom('[data-test-pr-heading] + [data-test-your-move]')
-      .hasText(
-        'Next Human comments · 0/1 done · 1 to decide',
-        'the move counts the thread the page read',
-      );
+      .hasText('Next Decide 1 fix', 'the move counts the thread the page read');
     assert.deepEqual(texts('[data-test-tab]'), [
       'Summary 1',
       'Board 2',
@@ -193,7 +190,7 @@ module('Acceptance | pr view', function (hooks) {
     assert.dom('[data-test-view="board"]').hasClass('active');
   });
 
-  test('the bar and the Board tab show what needs you: the tab’s count, the move’s flags and the detailed reviewer', async function (assert) {
+  test('the bar and the Board tab show what needs you: the tab’s count and the row’s chips, the detailed reviewer among them', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -213,26 +210,24 @@ module('Acceptance | pr view', function (hooks) {
     assert
       .dom('[data-test-tab="board"] [data-test-tab-count]')
       .hasText('1 ready');
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-move-flag]'), [
-      'Fix CI',
-      'Rebase',
-      '2 unresolved threads',
+    assert.deepEqual(texts('[data-test-pr-bar] [data-test-state]'), [
+      'CI failing',
+      'behind main',
+      '2 unresolved',
+      'detailed reviewer',
+    ]);
+    assert.deepEqual(texts('[data-test-pr-bar] [data-test-blocking]'), [
+      'CI failing',
     ]);
     assert
-      .dom('[data-test-move-flag="fix-ci"] .sq')
-      .hasClass('alarm', 'Fix CI keeps the alarm CI failing had');
-    assert
-      .dom('[data-test-pr-bar] [data-test-flag]')
-      .hasText('You are the detailed reviewer');
-    assert
-      .dom('[data-test-pr-bar] [data-test-flag]')
+      .dom('[data-test-pr-bar] [data-test-state="reviewer"]')
       .hasAttribute('title', /Detailed reviewer: @/);
     assert
       .dom('[data-test-github]')
       .hasAttribute('href', 'https://github.com/o/r/pull/7');
   });
 
-  test('the bar shows only the flags the move names, whatever the status says', async function (assert) {
+  test('the bar shows chips from the facts, whatever the status says', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -243,7 +238,7 @@ module('Acceptance | pr view', function (hooks) {
 
     await visit('/pr/o/r/7');
 
-    assert.dom('[data-test-pr-bar] [data-test-move-flag]').doesNotExist();
+    assert.dom('[data-test-pr-bar] [data-test-state]').doesNotExist();
     assert.dom('[data-test-pr-bar]').doesNotIncludeText('CI failing');
   });
 
@@ -269,9 +264,11 @@ module('Acceptance | pr view', function (hooks) {
     assert
       .dom('[data-test-your-move] [data-test-move-label]')
       .hasText('Next, when it’s ready');
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-move-flag]'), [
-      'Fix CI',
-    ]);
+    assert.deepEqual(
+      texts('[data-test-pr-bar] [data-test-state]'),
+      [],
+      'the move names CI and the pill names the draft',
+    );
 
     await visit('/pr/o/r/8');
 
@@ -475,16 +472,16 @@ module('Acceptance | pr view', function (hooks) {
       'the switcher’s rows take the edge the rail’s rows draw',
     );
     assert.deepEqual(texts('[data-test-switcher-row] [data-test-verb]'), [
-      'Human comments · 0/1 done · 1 to decide',
+      'Decide 1 fix',
       'Waiting on reviewers carol',
-      'On hold, 2 events held',
+      'On hold',
     ]);
     assert
       .dom('[data-test-switcher-row="o/r#7"]')
       .hasAttribute('aria-current', 'true');
   });
 
-  test('the switcher carries each pull request’s flags beside its verb', async function (assert) {
+  test('the switcher carries each pull request’s chips beside its verb', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -498,13 +495,11 @@ module('Acceptance | pr view', function (hooks) {
     await click('[data-test-switcher-open]');
 
     assert.deepEqual(
-      texts(
-        '[data-test-switcher-row="o/r#7"] [data-test-verb] [data-test-move-flag]',
-      ),
-      ['Draft', '4 unresolved threads'],
+      texts('[data-test-switcher-row="o/r#7"] [data-test-state]'),
+      ['4 unresolved', 'draft'],
     );
     assert
-      .dom('[data-test-switcher-row="o/r#8"] [data-test-move-flag]')
+      .dom('[data-test-switcher-row="o/r#8"] [data-test-state]')
       .doesNotExist();
   });
 
@@ -537,9 +532,9 @@ module('Acceptance | pr view', function (hooks) {
     await click('[data-test-switcher-open]');
 
     assert.deepEqual(texts('[data-test-switcher-row] [data-test-verb]'), [
-      'Human comments · 0/1 done · 1 to decide',
+      'Decide 1 fix',
       'Waiting on reviewers carol',
-      'On hold, 2 events held',
+      'On hold',
     ]);
   });
 

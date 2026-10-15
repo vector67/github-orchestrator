@@ -12,12 +12,12 @@ import {
   countsOf,
   dashboardOf,
   threadsWaitingOf,
-  type MoveFlag,
+  type Chip,
   type Reading,
 } from 'frontend/data/dashboard';
-import MoveFlagTag from 'frontend/components/move-flag';
+import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
-import { keyOf, pageOf, type Numbered } from 'frontend/data/wall';
+import { failingOf, keyOf, pageOf, type Numbered } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import { stepped, type Keymap } from 'frontend/services/keys';
@@ -71,7 +71,12 @@ export default class PrView extends Component<PrViewSignature> {
   get reading(): Reading | null {
     const { shown, summaries } = this;
     return shown && summaries
-      ? dashboardOf(shown, summaries, this.hub.now)
+      ? dashboardOf(
+          shown,
+          summaries,
+          this.hub.now,
+          failingOf(shown, this.store.ledger?.runs ?? []),
+        )
       : null;
   }
 
@@ -109,8 +114,8 @@ export default class PrView extends Component<PrViewSignature> {
     return this.reading?.square ?? 'wait';
   }
 
-  get barFlags(): MoveFlag[] {
-    return (this.reading?.flags ?? []).filter((flag) => flag.code !== 'draft');
+  get barChips(): Chip[] {
+    return (this.reading?.chips ?? []).filter((chip) => chip.key !== 'draft');
   }
 
   get needs(): string {
@@ -281,21 +286,12 @@ export default class PrView extends Component<PrViewSignature> {
               {{/each}}
             </span>
           {{/if}}
-          {{#each this.barFlags key="code" as |flag|}}
-            <MoveFlagTag @flag={{flag}} />
-          {{/each}}
-          {{#if this.reading.detailedReviewer}}
-            <span
-              class="flag"
-              title={{this.reading.detailedReviewer.hint}}
-              data-test-flag
-            >{{this.reading.detailedReviewer.text}}</span>
-          {{/if}}
-          {{#if this.summaries.mismatches}}
-            <span
-              class="flag"
-              data-test-mismatches
-            >{{this.summaries.mismatches}}</span>
+          {{#if this.barChips.length}}
+            <span class="state-chips">
+              {{#each this.barChips key="key" as |chip|}}
+                <StateChip @chip={{chip}} />
+              {{/each}}
+            </span>
           {{/if}}
         </span>
         {{#if this.url}}

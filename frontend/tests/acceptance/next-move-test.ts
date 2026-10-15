@@ -13,7 +13,8 @@ import {
 interface OnTheWall {
   wallMove: string | null;
   group: string | null;
-  flags: string[];
+  reason: string;
+  chips: string[];
 }
 
 interface OnTheDashboard {
@@ -129,7 +130,8 @@ module('Acceptance | next move', function (hooks) {
     return {
       wallMove: wallRow?.getAttribute('data-move') ?? null,
       group: wallRow?.getAttribute('data-flip-group') ?? null,
-      flags: findAll('[data-test-wall-row="o/r#7"] [data-test-move-flag]').map(
+      reason: text('[data-test-wall-row="o/r#7"] [data-test-reason]'),
+      chips: findAll('[data-test-wall-row="o/r#7"] [data-test-state]').map(
         (one) => one.textContent.trim(),
       ),
     };
@@ -231,7 +233,7 @@ module('Acceptance | next move', function (hooks) {
       'changes owed beat failing ci',
       { ...CI_FAILING, changes_requested_by: ['bob'] },
       'address-feedback',
-      'Address changes requested from bob',
+      'Address changes from bob',
     ],
     [
       'a requester not asked again',
@@ -242,7 +244,7 @@ module('Acceptance | next move', function (hooks) {
         pending_reviewers: ['carol'],
       },
       'address-feedback',
-      'Address changes requested from bob',
+      'Address changes from bob',
     ],
     [
       'every requester asked again',
@@ -350,8 +352,8 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
-  const FLAGS: [string, Partial<PrFacts>, string[]][] = [
-    ['your pr failing ci', CI_FAILING, ['Fix CI', '3 unresolved threads']],
+  const CHIPS: [string, Partial<PrFacts>, string[]][] = [
+    ['your pr failing ci', CI_FAILING, ['3 unresolved']],
     [
       'your draft behind main',
       {
@@ -360,13 +362,13 @@ module('Acceptance | next move', function (hooks) {
         merge_state: 'conflicts',
         draft: true,
       },
-      ['Draft', 'Rebase'],
+      ['draft'],
     ],
     ['nothing to flag', READY_TO_MERGE, []],
     [
       'someone else’s pr with threads open',
       WAITING_ON_THE_AUTHOR,
-      ['3 unresolved threads'],
+      ['3 unresolved'],
     ],
     [
       'someone else’s pr failing ci and behind',
@@ -377,13 +379,13 @@ module('Acceptance | next move', function (hooks) {
         my_review: 'commented',
         my_review_at: REVIEWED_AT,
       }),
-      ['Fix CI', 'Rebase', '1 unresolved thread'],
+      ['CI failing', 'behind main', '1 unresolved'],
     ],
   ];
 
-  for (const [name, facts, flags] of FLAGS) {
-    test(`flags name what holds on the pull request whatever the move: ${name}`, async function (assert) {
-      assert.deepEqual((await onTheWall({ facts })).flags, flags);
+  for (const [name, facts, chips] of CHIPS) {
+    test(`chips name what holds on the pull request that the move does not: ${name}`, async function (assert) {
+      assert.deepEqual((await onTheWall({ facts })).chips, chips);
     });
   }
 
@@ -412,9 +414,9 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
-  for (const [name, queued, verb] of [
-    ['nothing held', 0, 'On hold'],
-    ['two held', 2, 'On hold, 2 events held'],
+  for (const [name, queued, reason] of [
+    ['nothing held', 0, 'resume it to let events through'],
+    ['two held', 2, '2 events wait until you resume it'],
   ] as const) {
     test(`a pull request on hold says so and how many events wait: ${name}`, async function (assert) {
       const shown = await seen({
@@ -424,8 +426,8 @@ module('Acceptance | next move', function (hooks) {
       });
 
       assert.deepEqual(
-        [shown.move, shown.group, shown.verb],
-        ['on-hold', 'parked', verb],
+        [shown.move, shown.group, shown.verb, shown.reason],
+        ['on-hold', 'parked', 'On hold', reason],
       );
     });
   }
@@ -470,19 +472,14 @@ module('Acceptance | next move', function (hooks) {
       [
         'agent-on-human-comments',
         'agent-working',
-        'Human comments · 0/1 done · agent on 1',
+        'Agent is fixing 1 human thread',
       ],
     );
   });
 
   for (const [name, kind, move, verb] of [
-    [
-      'human',
-      'human',
-      'human-comments',
-      'Human comments · 0/2 done · 2 to decide',
-    ],
-    ['bot', 'bot', 'bot-comments', 'Bot comments · 0/2 done · 2 to decide'],
+    ['human', 'human', 'human-comments', 'Decide 2 fixes'],
+    ['bot', 'bot', 'bot-comments', 'Decide 2 bot fixes'],
   ] as const) {
     test(`comments waiting on you come before failing CI: ${name}`, async function (assert) {
       const shown = await seen({
@@ -530,7 +527,7 @@ module('Acceptance | next move', function (hooks) {
 
     assert.deepEqual(
       [shown.move, shown.verb],
-      ['address-feedback', 'Address changes requested from carol'],
+      ['address-feedback', 'Address changes from carol'],
     );
   });
 
@@ -558,7 +555,7 @@ module('Acceptance | next move', function (hooks) {
       [
         'agent-on-bot-comments',
         'agent-working',
-        'Bot comments · 0/1 done · agent on 1',
+        'Agent is fixing 1 bot thread',
       ],
     );
   });
@@ -570,8 +567,8 @@ module('Acceptance | next move', function (hooks) {
     });
 
     assert.deepEqual(
-      [shown.move, shown.group, shown.verb],
-      ['send-review', 'needs-you', 'Send your review · 1 draft'],
+      [shown.move, shown.group, shown.verb, shown.reason],
+      ['send-review', 'needs-you', 'Send your review', '1 unsent comment'],
     );
   });
 
@@ -614,11 +611,12 @@ module('Acceptance | next move', function (hooks) {
     });
 
     assert.deepEqual(
-      [shown.move, shown.group, shown.verb],
+      [shown.move, shown.group, shown.verb, shown.reason],
       [
         'await-author',
         'waiting-on-others',
-        'Waiting on the author · dave, erin still requested',
+        'Waiting on the author',
+        'you approved · dave, erin still requested',
       ],
     );
   });
@@ -704,7 +702,7 @@ module('Acceptance | next move', function (hooks) {
   });
 
   test('a re-review counts the threads you opened that the author answered', async function (assert) {
-    const shown = await onTheDashboard({
+    const shown = await seen({
       facts: ASKED_AGAIN,
       threads: [
         row('PRRT_1', 'ready', 'open', 'mine'),
@@ -714,8 +712,12 @@ module('Acceptance | next move', function (hooks) {
     });
 
     assert.deepEqual(
-      [shown.move, shown.verb],
-      ['rereview', 'Re-review · 1/2 of your threads answered'],
+      [shown.move, shown.verb, shown.reason],
+      [
+        'rereview',
+        'Re-review',
+        'asked again · 1 of 2 of your threads answered',
+      ],
     );
   });
 
@@ -740,7 +742,7 @@ module('Acceptance | next move', function (hooks) {
 
     assert.deepEqual(
       [shown.move, shown.group, shown.verb],
-      ['mentioned', 'waiting-on-others', 'Every mention answered'],
+      ['mentioned', 'waiting-on-others', 'Waiting on others'],
     );
   });
 
@@ -759,8 +761,13 @@ module('Acceptance | next move', function (hooks) {
     });
 
     assert.deepEqual(
-      [shown.move, shown.group, shown.verb],
-      ['mention', 'needs-you', 'anna, carol mentioned you'],
+      [shown.move, shown.group, shown.verb, shown.reason],
+      [
+        'mention',
+        'needs-you',
+        'Answer the mention',
+        'anna, carol mentioned you',
+      ],
     );
   });
 
@@ -779,8 +786,8 @@ module('Acceptance | next move', function (hooks) {
       });
 
       assert.deepEqual(
-        [shown.move, shown.group, shown.verb],
-        ['mention', 'needs-you', 'anna mentioned you'],
+        [shown.move, shown.group, shown.verb, shown.reason],
+        ['mention', 'needs-you', 'Answer the mention', 'anna mentioned you'],
       );
     });
   }

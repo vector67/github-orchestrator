@@ -7,12 +7,14 @@ import { _backburner } from '@ember/runloop';
 const DIALOG_DRAFTS = 'decide-dialog-drafts';
 const KEPT_PULL_REQUESTS = 'hub-pull-requests';
 const CHOSEN_REPOS = 'hub-repos';
+const SECTIONS_ENTERED = 'hub-sections-entered';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
     localStorage.removeItem(DIALOG_DRAFTS);
     localStorage.removeItem(KEPT_PULL_REQUESTS);
     localStorage.removeItem(CHOSEN_REPOS);
+    localStorage.removeItem(SECTIONS_ENTERED);
   });
 }
 
