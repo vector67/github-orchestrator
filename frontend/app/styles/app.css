@@ -2478,10 +2478,15 @@ kbd {
   color: var(--muted);
 }
 
-.wall-lead:focus-visible .meta::after,
-.wall-row:hover .wall-lead .meta::after {
+.wall-lead .meta::after {
+  visibility: hidden;
   content: " · Open →";
   color: var(--text);
+}
+
+.wall-lead:focus-visible .meta::after,
+.wall-row:hover .wall-lead .meta::after {
+  visibility: visible;
 }
 
 .wall-says {
