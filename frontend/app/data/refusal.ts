@@ -28,6 +28,14 @@ const UNHELD = ['watcher-starting', 'watcher-failing', 'not-watching'] as const;
 
 export type Unheld = (typeof UNHELD)[number];
 
+export function notHeldBy(trouble: unknown): boolean {
+  return (
+    trouble instanceof Refusal &&
+    trouble.status === 404 &&
+    trouble.code === 'not-found'
+  );
+}
+
 export function unheldBy(trouble: unknown): Unheld | null {
   if (!(trouble instanceof Refusal)) return null;
   return UNHELD.find((code) => code === trouble.code) ?? null;

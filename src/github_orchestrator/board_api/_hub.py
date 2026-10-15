@@ -261,7 +261,11 @@ async def hang_up_unheld(websocket: WebSocket, owner: Owner, name: Name, number:
 
 unheld = APIRouter(tags=["hub"])
 unheld.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", refuse_unheld,
-                     methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
+                     methods=["GET"], operation_id="readUnheldPullRequest", status_code=404,
+                     responses={404: NOT_FOUND},
+                     summary="Any read of a pull request the watcher does not hold.")
+unheld.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", refuse_unheld,
+                     methods=["POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
 unheld.add_api_websocket_route("/pr/{owner}/{name}/{number}/api/{path:path}", hang_up_unheld)
 
 

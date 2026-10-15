@@ -1309,6 +1309,16 @@
      "$ref": "#/components/schemas/Person"
     }
    }
+  },
+  "/pr/{owner}/{name}/{number}/api/{path}": {
+   "get": {
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
   }
  },
  "schemas": {
