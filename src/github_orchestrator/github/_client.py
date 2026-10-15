@@ -56,6 +56,9 @@ class GhCliGitHub:
             return str(refused)
         return None
 
+    def token(self) -> str:
+        return self._gh.token()
+
     def active_account(self) -> str | None:
         return self._gh.active_account()
 

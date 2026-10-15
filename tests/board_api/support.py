@@ -42,7 +42,7 @@ from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import Conversation, ConversationManagerFactory
 from github_orchestrator.conversation.fake import FakeConversationManagerFactory
 from github_orchestrator.domain import Pr, Repo
-from github_orchestrator.github import ThreadComment
+from github_orchestrator.github import Access, ThreadComment
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings import ConfigFile
@@ -138,7 +138,8 @@ class NoHeads:
 def summaries_in(directory: Path) -> list[Part]:
     return [PrSummariesWiring(directory),
             SummaryLaneWiring(Path("/nonexistent/config.toml"), {}, False),
-            fake_provider(ChangeDetection, NoHeads())]
+            fake_provider(ChangeDetection, NoHeads()),
+            fake_provider(Access, FakeGitHub())]
 
 
 def no_summaries() -> list[Part]:

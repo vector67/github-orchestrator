@@ -25,6 +25,7 @@ out.mkdir(parents=True, exist_ok=True)
     "cwd": os.getcwd(),
     "use_github_api": arguments.use_github_api,
 }))
+(out / "gh_token").write_text(os.environ.get("GH_TOKEN", ""))
 
 
 def finish(witness: str, output: object) -> None:

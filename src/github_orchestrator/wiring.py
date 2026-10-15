@@ -574,7 +574,7 @@ class SummaryLaneProvider(Provider):
     @provide
     def summary_lane(self, wiring: SummaryLaneWiring, summaries_wiring: PrSummariesWiring,
                      summaries: PrSummaries, clock: UtcClock,
-                     change_detection: ChangeDetection) -> SummaryLane:
+                     change_detection: ChangeDetection, access: Access) -> SummaryLane:
         def head_of(pr: Pr) -> str | None:
             facts = change_detection.facts(pr)
             return None if facts is None else facts.head_sha
@@ -582,6 +582,7 @@ class SummaryLaneProvider(Provider):
         return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
                                 plugin=wiring.plugin, config_path=wiring.config_path,
                                 clones=wiring.clones, head_of=head_of, url_of=pr_url,
+                                gh_token=access.token,
                                 agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
                                 run_in=wiring.run_in)
 

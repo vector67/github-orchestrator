@@ -7,6 +7,8 @@ from dataclasses import replace
 from pathlib import Path
 
 from github_orchestrator.change_detection import ChangeDetection
+from github_orchestrator.github import Access
+from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.wiring import PrSummariesWiring, SummaryLaneWiring, wire
 from tests.builders import a_pr
@@ -21,7 +23,8 @@ HEAD = "abc123"
 class Lane:
     def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
                  agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
-                 plugin: tuple[str, ...] | None = None, clone: Path | None = None) -> None:
+                 plugin: tuple[str, ...] | None = None, clone: Path | None = None,
+                 github: FakeGitHub | None = None) -> None:
         self.clone = clone or tmp_path / "clone"
         self.clone.mkdir(exist_ok=True)
         self.config = tmp_path / "config.toml"
@@ -33,6 +36,7 @@ class Lane:
                               agents_enabled=agents_enabled, timeout=timeout, run_in=run_in),
             clocks_of(ticking_clock()),
             fake_provider(ChangeDetection, HeadsAt(head)),
+            fake_provider(Access, github or FakeGitHub("octocat")),
         )
         self.summaries: PrSummaries = container.get(PrSummaries)
         self.lane: SummaryLane = container.get(SummaryLane)
@@ -149,6 +153,32 @@ def test_a_plugin_that_cannot_be_started_is_stored_as_failed(tmp_path):
     assert stored.exit_status is None
     assert "no-such-uv" in stored.stderr
     assert stored.finished is not None
+    assert lane.summaries.due(set()) == []
+
+
+def test_the_plugin_reaches_github_as_the_configured_account_whatever_the_shell_holds(tmp_path, monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "fake-token-of-the-shell")
+    lane = Lane(tmp_path, "clean", github=FakeGitHub("octocat"))
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert (lane.folder / "gh_token").read_text() == "gho_octocat"
+
+
+def test_a_run_without_a_token_for_the_configured_account_is_stored_as_failed(tmp_path):
+    github = FakeGitHub("octocat")
+    github.tokens.clear()
+    lane = Lane(tmp_path, "clean", github=github)
+    _with_an_earlier_summary(lane)
+
+    lane.lane.poll()
+
+    stored = lane.summaries.load(THE_PR)
+    assert stored.exit_status is None
+    assert "gh auth token --user octocat failed" in stored.stderr
+    assert (stored.markdown, stored.finished is not None) == ("# Earlier\n", True)
+    assert not (lane.folder / "call.json").exists()
     assert lane.summaries.due(set()) == []
 
 

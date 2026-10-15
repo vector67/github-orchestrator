@@ -60,6 +60,7 @@ class LocalSummaryLane:
     def __init__(self, summaries_dir: Path, summaries: PrSummaries, clock: UtcClock, *,
                  plugin: Sequence[str], config_path: Path, clones: Mapping[Repo, Path],
                  head_of: Callable[[Pr], str | None], url_of: Callable[[Pr], str],
+                 gh_token: Callable[[], str],
                  agents_enabled: bool, timeout: float,
                  run_in: Callable[[Callable[[], None]], None]) -> None:
         self._dir = summaries_dir
@@ -70,6 +71,7 @@ class LocalSummaryLane:
         self._clones = clones
         self._head_of = head_of
         self._url_of = url_of
+        self._gh_token = gh_token
         self._agents_enabled = agents_enabled
         self._timeout = timeout
         self._run_in = run_in
@@ -165,7 +167,11 @@ class LocalSummaryLane:
     def _plugin_run(self, command: list[str], cwd: Path,
                     slot: int) -> tuple[int | None, str, str]:
         try:
-            process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE,
+            env = {**os.environ, "GH_TOKEN": self._gh_token()}
+        except Exception as failure:
+            return None, "", f"github-orchestrator could not read a GitHub token for the plugin: {failure}\n"
+        try:
+            process = subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE, text=True,
                                        start_new_session=True, pass_fds=(slot,))
         except OSError as failure:
