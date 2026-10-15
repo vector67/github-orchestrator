@@ -2387,7 +2387,6 @@ kbd {
   text-align: right;
 }
 
-.wall-group.lvl-draft-h,
 .wall-group.lvl-waiting-h,
 .wall-group.lvl-parked-h {
   color: var(--muted);
@@ -2511,13 +2510,11 @@ kbd {
 }
 
 .lvl-working .ttl,
-.lvl-draft .ttl,
 .lvl-waiting .ttl {
   font-size: var(--fs-s);
   color: var(--muted);
 }
 
-.lvl-draft .verb,
 .lvl-waiting .verb {
   font-size: var(--fs-m);
   font-weight: var(--fw-strong);
@@ -3404,7 +3401,6 @@ kbd {
   overflow-y: auto;
 }
 
-.switcher-group.lvl-draft-h,
 .switcher-group.lvl-waiting-h,
 .switcher-group.lvl-parked-h {
   color: var(--muted);
@@ -3452,7 +3448,6 @@ kbd {
   font-weight: var(--fw-bold);
 }
 
-.switcher-row.lvl-draft .verb,
 .switcher-row.lvl-waiting .verb,
 .switcher-row.lvl-parked .verb {
   font-size: var(--fs-s);

@@ -456,7 +456,7 @@ module('Acceptance | pr view', function (hooks) {
     assert.deepEqual(texts('[data-test-switcher] [data-test-switcher-group]'), [
       'Needs you 1',
       'Waiting on others 1',
-      'On hold 1',
+      'Parked 1',
     ]);
     assert
       .dom('[data-test-switcher-group]')

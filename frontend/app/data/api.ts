@@ -875,7 +875,7 @@ export interface UnparkOperation {
   settled_at: string | null;
 }
 
-export type WallGroup = 'needs-you' | 'draft' | 'agent-working' | 'waiting-on-others' | 'on-hold' | 'mentioned';
+export type WallGroup = 'needs-you' | 'agent-working' | 'waiting-on-others' | 'parked';
 
 export interface WallGroupName {
   group: WallGroup;

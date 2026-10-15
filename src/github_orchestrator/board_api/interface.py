@@ -10,17 +10,15 @@ from github_orchestrator.domain import HubState, Mention, Pr, Repo, ThreadRow
 
 
 class WallGroup(StrEnum):
-    """Who holds the ball on a pull request, the wall's groups in the order
-    the wall shows them: it needs you, it is your draft, an agent is working
-    on it, it waits on someone else (a reviewer, the author, CI or the first
-    poll), it is on hold, or it mentioned you and every mention is answered."""
+    """Who moves next on a pull request, the wall's groups in the order the
+    wall shows them: you (your drafts too when they hold something to decide),
+    an agent, someone else (a reviewer, the author, CI or the first poll), or
+    nobody while it is parked (on hold, or a draft with nothing to do)."""
 
     NEEDS_YOU = "needs-you"
-    DRAFT = "draft"
     AGENT_WORKING = "agent-working"
     WAITING_ON_OTHERS = "waiting-on-others"
-    ON_HOLD = "on-hold"
-    MENTIONED = "mentioned"
+    PARKED = "parked"
 
 
 class ManagerStanding(StrEnum):

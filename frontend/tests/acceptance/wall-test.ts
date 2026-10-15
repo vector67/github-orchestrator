@@ -163,9 +163,8 @@ module('Acceptance | wall', function (hooks) {
     assert.strictEqual(currentURL(), '/');
     assert.deepEqual(texts('[data-test-wall-group]'), [
       'Needs you 1',
-      'Draft 1',
       'Waiting on others 1',
-      'On hold 1',
+      'Parked 2',
     ]);
     assert
       .dom('[data-test-wall-group="needs-you"]')
@@ -173,7 +172,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-group="needs-you"] .group-name + [data-test-count]')
       .hasText('1', 'the count sits right after the name');
-    assert.deepEqual(rows(), ['o/r#8', 'o/r#10', 'o/r#7', 'o/r#9']);
+    assert.deepEqual(rows(), ['o/r#8', 'o/r#7', 'o/r#9', 'o/r#10']);
     const lead = '[data-test-wall-row="o/r#8"] [data-test-wall-lead] > *';
     assert.deepEqual(texts(lead), [
       'Human comments · 0/1 done · 1 to decide',
@@ -200,7 +199,7 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(texts('[data-test-wall-group]'), ['Waiting on others 1']);
   });
 
-  test('a mention you have not answered needs you and names who, and answered ones sit in Mentioned below On hold', async function (assert) {
+  test('a mention you have not answered needs you and names who, and answered ones wait on others', async function (assert) {
     onTheHub(
       heldPr({
         number: 8,
@@ -228,13 +227,13 @@ module('Acceptance | wall', function (hooks) {
 
     assert.deepEqual(texts('[data-test-wall-group]'), [
       'Needs you 1',
-      'On hold 1',
-      'Mentioned 1',
+      'Waiting on others 1',
+      'Parked 1',
     ]);
     assert.deepEqual(texts('[data-test-wall-row] [data-test-verb]'), [
       'anna, bob mentioned you',
-      'On hold',
       'Every mention answered',
+      'On hold',
     ]);
   });
 
@@ -398,7 +397,7 @@ module('Acceptance | wall', function (hooks) {
         'Waiting on the author · erin still requested',
         'Re-review · 0/0 of your threads answered',
         'Fix CI',
-        'Waiting on reviewers',
+        'Waiting on the author',
         'Waiting on the author',
         'Human comments · 2/5 done · agent on 3',
         'Bot comments · 0/2 done · 2 to decide',
@@ -670,11 +669,8 @@ module('Acceptance | wall', function (hooks) {
 
     assert
       .dom('[data-test-wall-row="o/r#7"]')
-      .hasAttribute('data-move', 'await-reviewers');
-    assert.strictEqual(
-      cells('o/r#7')['why'],
-      'You approved | bob requested changes',
-    );
+      .hasAttribute('data-move', 'await-author');
+    assert.strictEqual(cells('o/r#7')['why'], 'You approved');
   });
 
   test('a pull request whose author account was deleted is not called one you are reviewing', async function (assert) {
@@ -990,10 +986,10 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(edges, [
       'ready',
       'failed',
-      'draft',
       'working',
       'waiting-on-others',
       'parked',
+      'draft',
     ]);
     assert.dom('[data-test-wall-row] [data-test-square]').doesNotExist();
     assert.true(

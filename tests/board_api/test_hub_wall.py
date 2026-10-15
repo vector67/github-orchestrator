@@ -26,11 +26,9 @@ THIRD = a_pr(55, REPO)
 
 GROUPS = [
     {"group": "needs-you", "name": "Needs you"},
-    {"group": "draft", "name": "Draft"},
     {"group": "agent-working", "name": "Agent working"},
     {"group": "waiting-on-others", "name": "Waiting on others"},
-    {"group": "on-hold", "name": "On hold"},
-    {"group": "mentioned", "name": "Mentioned"},
+    {"group": "parked", "name": "Parked"},
 ]
 
 

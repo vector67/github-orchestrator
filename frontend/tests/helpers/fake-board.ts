@@ -463,11 +463,9 @@ export interface HeldOver extends Partial<Omit<HeldPullRequest, 'dashboard'>> {
 
 export const WALL_GROUPS: WallGroupName[] = [
   { group: 'needs-you', name: 'Needs you' },
-  { group: 'draft', name: 'Draft' },
   { group: 'agent-working', name: 'Agent working' },
   { group: 'waiting-on-others', name: 'Waiting on others' },
-  { group: 'on-hold', name: 'On hold' },
-  { group: 'mentioned', name: 'Mentioned' },
+  { group: 'parked', name: 'Parked' },
 ];
 
 export function finishedRun(over: Partial<FinishedRun> = {}): FinishedRun {

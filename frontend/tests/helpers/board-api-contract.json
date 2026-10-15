@@ -6431,11 +6431,9 @@
   "WallGroup": {
    "enum": [
     "needs-you",
-    "draft",
     "agent-working",
     "waiting-on-others",
-    "on-hold",
-    "mentioned"
+    "parked"
    ],
    "type": "string"
   },

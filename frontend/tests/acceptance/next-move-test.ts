@@ -304,25 +304,51 @@ module('Acceptance | next move', function (hooks) {
 
     assert.deepEqual(
       [shown.move, shown.group, shown.muted],
-      ['mark-ready-for-review', 'draft', true],
+      ['mark-ready-for-review', 'parked', true],
     );
   });
 
-  for (const [name, facts] of [
-    ['fix ci', CI_FAILING],
-    ['ready to merge', READY_TO_MERGE],
-  ] as const) {
-    test(`a draft is in the Draft group with the rest of the list muted: ${name}`, async function (assert) {
-      const undrafted = await onTheDashboard({ facts });
-      const drafted = await seen({ facts: { ...facts, draft: true } });
+  test('a draft with nothing else in its way is marked ready for review, not ready to merge', async function (assert) {
+    const shown = await seen({ facts: { ...READY_TO_MERGE, draft: true } });
 
-      assert.deepEqual(
-        [drafted.move, drafted.group, drafted.muted],
-        [undrafted.move, 'draft', true],
-      );
-      assert.false(undrafted.muted);
+    assert.deepEqual(
+      [shown.move, shown.group, shown.muted],
+      ['mark-ready-for-review', 'parked', true],
+    );
+  });
+
+  test('a draft with nothing to decide is parked with the rest of the list muted', async function (assert) {
+    const undrafted = await onTheDashboard({ facts: CI_FAILING });
+    const drafted = await seen({ facts: { ...CI_FAILING, draft: true } });
+
+    assert.deepEqual(
+      [drafted.move, drafted.group, drafted.muted],
+      [undrafted.move, 'parked', true],
+    );
+    assert.false(undrafted.muted);
+  });
+
+  test('a draft with fixes to decide needs you', async function (assert) {
+    const shown = await seen({
+      facts: { ...CI_FAILING, draft: true },
+      threads: [row('PRRT_1', 'ready', 'open', 'human')],
     });
-  }
+
+    assert.deepEqual(
+      [shown.move, shown.group],
+      ['human-comments', 'needs-you'],
+    );
+  });
+
+  test('an agent working on a draft has the move', async function (assert) {
+    assert.deepEqual(
+      await moveAndGroup({
+        facts: { ...CI_FAILING, draft: true },
+        manager: { working_on: 'ci-failed' },
+      }),
+      ['agent-running', 'agent-working'],
+    );
+  });
 
   const FLAGS: [string, Partial<PrFacts>, string[]][] = [
     ['your pr failing ci', CI_FAILING, ['Fix CI', '3 unresolved threads']],
@@ -399,7 +425,7 @@ module('Acceptance | next move', function (hooks) {
 
       assert.deepEqual(
         [shown.move, shown.group, shown.verb],
-        ['on-hold', 'on-hold', verb],
+        ['on-hold', 'parked', verb],
       );
     });
   }
@@ -597,7 +623,7 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
-  test('changes requested by someone else keep the pull request waiting on reviewers', async function (assert) {
+  test('changes requested by someone else keep the pull request waiting on reviewers, without naming the one who asked for changes', async function (assert) {
     const shown = await seen({
       facts: reviewed('approved', {
         review_decision: 'changes-requested',
@@ -607,11 +633,22 @@ module('Acceptance | next move', function (hooks) {
 
     assert.deepEqual(
       [shown.move, shown.group, shown.verb],
-      [
-        'await-reviewers',
-        'waiting-on-others',
-        'Waiting on reviewers erin, bob',
-      ],
+      ['await-reviewers', 'waiting-on-others', 'Waiting on reviewers erin'],
+    );
+  });
+
+  test('changes requested by someone else with nobody left to review wait on the author', async function (assert) {
+    const shown = await seen({
+      facts: reviewed('approved', {
+        review_decision: 'changes-requested',
+        changes_requested_by: ['bob'],
+        pending_reviewers: [],
+      }),
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, shown.verb],
+      ['await-author', 'waiting-on-others', 'Waiting on the author'],
     );
   });
 
@@ -692,7 +729,7 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
-  test('a pull request that mentioned you once and was answered sits in Mentioned', async function (assert) {
+  test('a pull request that mentioned you once and was answered waits on others', async function (assert) {
     const shown = await seen({
       facts: reviewing({
         pending_reviewers: ['erin'],
@@ -703,7 +740,7 @@ module('Acceptance | next move', function (hooks) {
 
     assert.deepEqual(
       [shown.move, shown.group, shown.verb],
-      ['mentioned', 'mentioned', 'Every mention answered'],
+      ['mentioned', 'waiting-on-others', 'Every mention answered'],
     );
   });
 

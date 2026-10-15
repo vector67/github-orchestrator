@@ -13,11 +13,9 @@ from github_orchestrator.pr_summaries import PrSummaries
 
 GROUP_NAMES = {
     WallGroup.NEEDS_YOU: "Needs you",
-    WallGroup.DRAFT: "Draft",
     WallGroup.AGENT_WORKING: "Agent working",
     WallGroup.WAITING_ON_OTHERS: "Waiting on others",
-    WallGroup.ON_HOLD: "On hold",
-    WallGroup.MENTIONED: "Mentioned",
+    WallGroup.PARKED: "Parked",
 }
 
 

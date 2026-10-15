@@ -5,15 +5,13 @@ export interface Numbered {
   number: number;
 }
 
-export type Level = 'needs' | 'draft' | 'working' | 'waiting' | 'parked';
+export type Level = 'needs' | 'working' | 'waiting' | 'parked';
 
 const LEVELS: Record<WallGroup, Level> = {
   'needs-you': 'needs',
-  draft: 'draft',
   'agent-working': 'working',
   'waiting-on-others': 'waiting',
-  'on-hold': 'parked',
-  mentioned: 'waiting',
+  parked: 'parked',
 };
 
 export function levelOf(group: WallGroup): Level {

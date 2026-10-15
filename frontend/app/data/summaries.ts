@@ -199,15 +199,17 @@ const BEFORE_ANYTHING: Move[] = [
 ];
 
 const GROUPS: Partial<Record<Move, WallGroup | null>> = {
-  'on-hold': 'on-hold',
+  'on-hold': 'parked',
   'agent-running': 'agent-working',
   'agent-on-threads': 'agent-working',
   'agent-on-human-comments': 'agent-working',
   'agent-on-bot-comments': 'agent-working',
   closed: null,
   'not-reviewing': null,
-  mentioned: 'mentioned',
+  mentioned: 'waiting-on-others',
 };
+
+const DRAFT_DECISIONS: Move[] = ['human-comments', 'bot-comments'];
 
 const YOUR_TURN: Move[] = ['review', 'rereview'];
 
@@ -253,7 +255,9 @@ function ofAuthor(facts: PrFacts): Pick {
   if (owed.length) return { move: 'address-feedback', reviewers: owed };
   if (ci === 'failing') return { move: 'fix-ci' };
   if (behindMain(facts)) return { move: 'rebase' };
-  if (facts.merge_state === 'clean') return { move: 'ready-to-merge' };
+  if (facts.merge_state === 'clean') {
+    return { move: facts.draft ? 'mark-ready-for-review' : 'ready-to-merge' };
+  }
   if (ci === 'pending') return { move: 'await-ci' };
   if (requesters.length) {
     return { move: 'await-rereview', reviewers: requesters };
@@ -268,13 +272,8 @@ function afterApproving(facts: PrFacts): Pick {
   if (decision === null) {
     return { move: 'await-author', stillRequested: facts.pending_reviewers };
   }
-  return {
-    move: 'await-reviewers',
-    reviewers: unique([
-      ...facts.pending_reviewers,
-      ...facts.changes_requested_by,
-    ]),
-  };
+  if (!facts.pending_reviewers.length) return { move: 'await-author' };
+  return { move: 'await-reviewers', reviewers: facts.pending_reviewers };
 }
 
 function reviewedBefore(facts: PrFacts): boolean {
@@ -349,8 +348,9 @@ function onTop(state: Move | null, board: Board): Move {
   return YOUR_TURN.includes(state) ? yourTurn(state, board) : state;
 }
 
-function wallGroupOf(code: Move): WallGroup | null {
+function wallGroupOf(code: Move, muted: boolean): WallGroup | null {
   if (code in GROUPS) return GROUPS[code] ?? null;
+  if (muted && !DRAFT_DECISIONS.includes(code)) return 'parked';
   return WAITING.includes(code) ? 'waiting-on-others' : 'needs-you';
 }
 
@@ -364,7 +364,7 @@ function nextMoveOf(facts: PrFacts | null, board: Board): NextMove {
     facts.draft &&
     board.isAuthor &&
     !BEFORE_ANYTHING.includes(code);
-  const group = muted ? 'draft' : wallGroupOf(code);
+  const group = wallGroupOf(code, muted);
   return {
     code,
     state,

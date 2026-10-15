@@ -807,11 +807,9 @@ export type Square = 'ready' | 'draft' | 'work' | 'wait' | 'alarm' | 'park';
 
 const SQUARES: Record<WallGroup, Square> = {
   'needs-you': 'ready',
-  draft: 'draft',
   'agent-working': 'work',
   'waiting-on-others': 'wait',
-  'on-hold': 'park',
-  mentioned: 'wait',
+  parked: 'park',
 };
 
 const EDGES: Record<Square, string> = {
@@ -934,9 +932,11 @@ export function dashboardOf(
   const next = summaries.move;
   const square = shown.drawn.frozen
     ? 'alarm'
-    : next.group
-      ? SQUARES[next.group]
-      : 'park';
+    : next.group === 'parked' && next.muted
+      ? 'draft'
+      : next.group
+        ? SQUARES[next.group]
+        : 'park';
   const action = actionOf(shown, next);
   const move = moveOf(shown, summaries);
   const since = sinceOf(shown);

@@ -514,7 +514,7 @@ module('Acceptance | motion', function (hooks) {
     assert.deepEqual(marked('[data-test-wall-row]', 'data-test-wall-row'), [
       'o/r#8',
     ]);
-    assert.dom('[data-test-wall-group="on-hold"]').doesNotExist();
+    assert.dom('[data-test-wall-group="parked"]').doesNotExist();
     assert.deepEqual(document.getAnimations(), [], 'nothing is still moving');
   });
 
