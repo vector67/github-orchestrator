@@ -19,6 +19,8 @@ def _loaded(folder: Path | None, fields: tuple[str, ...], top: str | None = None
         return "output.json is not valid JSON."
     if not isinstance(content, dict):
         return "output.json is not an object."
+    if "unavailable" in content:
+        return f"its tools stayed unavailable: {content['unavailable']}"
     items = content.get(top, None) if top else [content]
     if not isinstance(items, list):
         return f"output.json has no {top}."

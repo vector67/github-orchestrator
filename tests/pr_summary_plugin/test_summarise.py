@@ -6,6 +6,9 @@ from typing import Any
 import pytest
 import summarise
 from pr_summary.github import Gh, GhFailed
+from pr_summary.inputs import Contents
+
+from tests.pr_summary_plugin.test_inputs import PR
 
 
 def failing_target(gh: Gh, given: str) -> tuple[str, str, int]:
@@ -89,3 +92,29 @@ def test_a_gh_account_without_a_token_fails_naming_the_account(tmp_path: Path, m
         run_with(gh, ["--gh-account", "octocat"], monkeypatch, tmp_path)
 
     assert gh.tokens_of(["api", "user"]) == []
+
+
+def test_a_witness_that_failed_prints_the_report_then_exits_naming_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    def nothing_at(sha: str, path: str) -> bytes | None:
+        return None
+
+    def contents_of(gh: Gh, owner: str, repo: str) -> Contents:
+        return nothing_at
+
+    monkeypatch.setattr(summarise, "target", lambda gh, given: ("acme", "shop", 7))
+    monkeypatch.setattr(summarise, "pull_request", lambda gh, owner, repo, number: PR)
+    monkeypatch.setattr(summarise.Clone, "find", lambda cwd, owner, repo: None)
+    monkeypatch.setattr(summarise, "merge_base", lambda gh, owner, repo, base, head: PR.base_sha)
+    monkeypatch.setattr(summarise, "changed_files", lambda gh, owner, repo, number: [])
+    monkeypatch.setattr(summarise, "contents", contents_of)
+    monkeypatch.setattr(summarise, "history", lambda gh, owner, repo, sha: lambda path: [])
+    monkeypatch.setattr(summarise, "earlier_prs", lambda *args: [])
+    monkeypatch.setattr(summarise, "run_witnesses", lambda manifest, launch, wait: {"requested": "its tools stayed unavailable: the Atlassian tools never connected"})
+    monkeypatch.setattr(summarise, "report", lambda manifest: "## Requested")
+    monkeypatch.setattr("sys.argv", ["summarise.py", "7", "--use-github-api", "--work-dir", str(tmp_path / "work")])
+
+    with pytest.raises(SystemExit) as exited:
+        summarise.main()
+
+    assert "## Requested" in capsys.readouterr().out
+    assert exited.value.code == "Witnesses failed: requested: its tools stayed unavailable: the Atlassian tools never connected"

@@ -10,6 +10,20 @@ report what the ticket asked for, what the code does and why the change was
 needed; you report only what the pull request's authors say they did. You do
 not judge whether it is true.
 
+## Your tools
+
+You need `Read`, `Write` and `Glob`.
+
+Check that you can reach them before you do anything else. If what you need
+is missing from your tool list, is still connecting, or fails because its
+server cannot be reached, stop there: do not work around it and do not
+write a partial answer. Write only this to `output.json` and reply
+`unavailable`:
+
+```json
+{"witness": "claimed", "unavailable": "Which tools you could not reach, and what happened."}
+```
+
 ## Your inputs
 
 The files in your working directory, all written by the pull request's
