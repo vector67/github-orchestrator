@@ -1205,9 +1205,9 @@ export function dashboardOf(
     band: bandOf(shown, action, move, since),
     frozen: frozen
       ? {
-          worktree: tildeOf(frozen.worktree),
-          here: frozen.here,
-          expected: frozen.expected,
+          worktree: withoutBidiControls(tildeOf(frozen.worktree)),
+          here: withoutBidiControls(frozen.here),
+          expected: withoutBidiControls(frozen.expected),
         }
       : null,
     onHold: shown.drawn.system.on_hold,

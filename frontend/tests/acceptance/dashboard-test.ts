@@ -1039,6 +1039,25 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
+  test('a right-to-left override in the frozen worktree or its branches is left out of the band', async function (assert) {
+    const RLO = '\u202E';
+    onTheHub({
+      frozen: {
+        ...FROZEN,
+        worktree: `/wt/${RLO}tegdiw`,
+        here: `${RLO}niam`,
+        expected: `${RLO}ydit`,
+      },
+      manager: { frozen_on: 'x' },
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-band-detail]')
+      .hasText('The worktree at /wt/tegdiw holds niam, not ydit.');
+  });
+
   test('w releases a frozen worktree through the hub, and the band then says it was asked for', async function (assert) {
     onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
     board().broken = /\/stream$/;
