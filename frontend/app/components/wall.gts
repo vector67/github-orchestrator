@@ -103,11 +103,21 @@ export default class Wall extends Component {
     void this.router.transitionTo(pageOf(pr));
   };
 
+  select = (pr: WallRow) => {
+    this.hub.selected = keyOf(pr);
+    this.lastAt = this.order.indexOf(pr);
+  };
+
   releasable = (pr: WallRow): boolean =>
     this.controls.offer(this.controls.ofRow(pr), 'release').state === 'ready';
 
-  release = (pr: WallRow) => {
-    this.press(pr, 'release');
+  titleOf = (pr: WallRow, control: Control): string | null => {
+    const offer = this.controls.offer(this.controls.ofRow(pr), control);
+    return 'title' in offer ? offer.title : null;
+  };
+
+  pressed = (pr: WallRow, control: Control) => {
+    this.press(pr, control);
   };
 
   dismiss = (pr: WallRow, forever: boolean) => {
@@ -132,12 +142,20 @@ export default class Wall extends Component {
     const at = chosen ? order.indexOf(chosen) : this.lastAt - (by > 0 ? 1 : 0);
     const next = stepped(order, at, by);
     if (!next) return;
-    this.hub.selected = keyOf(next);
-    this.lastAt = order.indexOf(next);
+    this.leaveTheRow();
+    this.select(next);
+  }
+
+  private leaveTheRow(): void {
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && focused.closest('.wall-row'))
+      focused.blur();
   }
 
   private takes(key: string): boolean {
     const pr = this.chosen;
+    if (key === 'Enter' && document.activeElement?.closest('.row-controls'))
+      return false;
     if (key === 'j' || key === 'k') {
       this.move(key === 'j' ? 1 : -1);
       return true;
@@ -199,6 +217,7 @@ export default class Wall extends Component {
                   aria-label="{{reading.move}}: {{reading.title}}"
                   aria-describedby={{says}}
                   data-test-wall-lead
+                  {{on "focus" (fn this.select pr)}}
                   {{on "click" (fn this.open pr)}}
                 >
                   <span class="move-line"><span
@@ -257,13 +276,31 @@ export default class Wall extends Component {
                         ·
                         {{reading.branch}}{{/if}}.</span></span>
                 </button>
-                {{#if (this.releasable pr)}}<button
-                    type="button"
-                    class="release"
-                    data-test-release
-                    title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
-                    {{on "click" (fn this.release pr)}}
-                  >Release</button>{{/if}}
+                <span class="row-controls">
+                  {{#if (this.releasable pr)}}<button
+                      type="button"
+                      class="row-control release"
+                      data-test-release
+                      title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
+                      {{on "focus" (fn this.select pr)}}
+                      {{on "click" (fn this.pressed pr "release")}}
+                    >Release</button>{{/if}}
+                  {{#unless reading.frozen}}<button
+                      type="button"
+                      class="row-control"
+                      title={{this.titleOf pr "hold"}}
+                      data-test-wall-control="hold"
+                      {{on "focus" (fn this.select pr)}}
+                      {{on "click" (fn this.pressed pr "hold")}}
+                    >{{if reading.onHold "Resume" "Hold"}}</button><button
+                      type="button"
+                      class="row-control"
+                      title={{this.titleOf pr "dismiss"}}
+                      data-test-wall-control="dismiss"
+                      {{on "focus" (fn this.select pr)}}
+                      {{on "click" (fn this.pressed pr "dismiss")}}
+                    >Dismiss</button>{{/unless}}
+                </span>
               </div>
               {{#if (this.isConfirming pr)}}
                 <DismissConfirm

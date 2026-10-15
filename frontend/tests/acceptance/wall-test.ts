@@ -5,6 +5,7 @@ import {
   currentURL,
   find,
   findAll,
+  focus,
   settled,
   triggerEvent,
   visit,
@@ -1407,6 +1408,74 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall]')
       .doesNotExist('the wall gives way to the pull request');
+  });
+
+  test('tabbing to a row selects it, so Enter opens the row the focus is on', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+
+    await focus('[data-test-wall-row="o/r#8"] [data-test-wall-lead]');
+    assert.deepEqual(selected(), ['o/r#8']);
+
+    await press('Enter');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/8/conversations');
+  });
+
+  test('k after tabbing to a row takes the focus off it, so only the row k lands on is current', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await focus('[data-test-wall-row="o/r#8"] [data-test-wall-lead]');
+
+    await press('k');
+
+    assert.deepEqual(selected(), ['o/r#7']);
+    assert.notOk(
+      find('[data-test-wall-row="o/r#8"]')!.contains(document.activeElement),
+      'the row k left holds no focus',
+    );
+  });
+
+  test('Enter on a focused row button is the button’s, not an open', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+
+    await focus('[data-test-wall-row="o/r#8"] [data-test-wall-control="hold"]');
+    await press('Enter');
+
+    assert.strictEqual(currentURL(), '/');
+  });
+
+  test('each row has a hold and a dismiss button that do what p and x do', async function (assert) {
+    onTheHub(
+      heldPr(),
+      heldPr({
+        number: 8,
+        dashboard: { manager: { on_hold: true }, system: { on_hold: true } },
+      }),
+    );
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')
+      .hasText('Hold');
+    assert
+      .dom('[data-test-wall-row="o/r#8"] [data-test-wall-control="hold"]')
+      .hasText('Resume');
+
+    await click('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]');
+    await click('[data-test-wall-row="o/r#8"] [data-test-wall-control="hold"]');
+    assert.deepEqual(
+      board().posted.map((one) => `${one.key} ${one.verb}`),
+      ['o/r#7 hold', 'o/r#8 resume'],
+    );
+    assert.strictEqual(currentURL(), '/', 'a row button does not open the row');
+
+    await click(
+      '[data-test-wall-row="o/r#8"] [data-test-wall-control="dismiss"]',
+    );
+    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #8?');
   });
 
   test('the selection stays on its pull request when the feed moves rows around it', async function (assert) {

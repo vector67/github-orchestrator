@@ -364,7 +364,10 @@ Each row leads with its move line: your move, the reason for that move, chips
 for the facts that matter, and at the right end how long the PR has been in its
 group. Below it are the title, the number, whose PR it is and the branch.
 Clicking a row only opens the PR, whatever its move says; hovering it adds
-**Open →** to its last line.
+**Open →** to its last line. Hovering, focusing or selecting a row also shows
+its **Hold** (or **Resume**) and **Dismiss** buttons, which do what the keys do.
+The selected row, the one the keys act on, is framed; tabbing to a row selects
+it, and `j` or `k` take the focus off the row they leave.
 
 A chip shows a fact only when it is away from its quiet default (CI passing, no
 conflicts, no review yet, the agent idle, nothing unpushed or queued), and only
