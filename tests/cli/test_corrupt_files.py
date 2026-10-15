@@ -18,7 +18,7 @@ def test_status_lists_a_healthy_pr_beside_a_state_file_that_will_not_parse(machi
     assert ran.code == 0
     lines = ran.out.splitlines()
     assert "Tracked PRs: 2" in lines
-    assert any(line.startswith("  org/aaaa#1  ci=pending") for line in lines)
+    assert any(line.startswith("  org/aaaa#1  ci=none") for line in lines)
     assert any(line.startswith("  org/zzzz#2  [corrupt state file: ") for line in lines)
 
 

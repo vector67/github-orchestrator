@@ -7,7 +7,8 @@ from typing import Literal, Protocol
 from github_orchestrator.domain import Location, Pr, Repo, Side
 
 _PASSED = frozenset({"success", "skipped", "neutral"})
-_FAILED = frozenset({"failure", "cancelled", "timed_out", "action_required", "stale"})
+_FAILED = frozenset({"failure", "cancelled", "timed_out", "action_required", "stale",
+                     "error", "startup_failure"})
 
 
 class GhError(RuntimeError):

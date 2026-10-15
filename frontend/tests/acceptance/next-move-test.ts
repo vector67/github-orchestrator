@@ -186,6 +186,11 @@ module('Acceptance | next move', function (hooks) {
       ['await-review', 'waiting-on-others'],
     ],
     [
+      'awaiting review on a repo with no checks at all',
+      { facts: { ...WAITING_ON_REVIEW, ci_status: 'none' } },
+      ['await-review', 'waiting-on-others'],
+    ],
+    [
       'review',
       { facts: reviewing({ viewer_requested: true, ci_status: 'pending' }) },
       ['review', 'needs-you'],

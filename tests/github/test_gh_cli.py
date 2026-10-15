@@ -404,6 +404,34 @@ def test_the_runs_of_every_check_suite_on_the_head_come_back():
     assert [c.name for c in _state(_pull(commits=head)).checks] == ["tests", "lint", "claude"]
 
 
+def test_two_workflows_with_a_job_of_the_same_name_keep_both_results():
+    unit = _run("test", "FAILURE", databaseId=1, startedAt="2026-10-15T10:00:00Z")
+    e2e = _run("test", "SUCCESS", databaseId=2, startedAt="2026-10-15T10:01:00Z")
+
+    checks = _state(_pull(commits=_head([unit], [e2e]))).checks
+
+    assert sorted(c.conclusion or "" for c in checks) == ["failure", "success"]
+
+
+def test_commit_statuses_from_external_ci_come_back_beside_the_check_runs():
+    head = _head([_run("tests")])
+    head["nodes"][0]["commit"]["status"] = {"contexts": [
+        {"context": "ci/jenkins", "state": "FAILURE", "targetUrl": "https://jenkins/7",
+         "description": "2 tests failed"},
+        {"context": "ci/deploy", "state": "PENDING", "targetUrl": None, "description": None},
+        {"context": "ci/lint", "state": "ERROR", "targetUrl": None, "description": None},
+    ]}
+
+    gh = ScriptedGh().answer("graphql status { contexts", _pull(commits=head))
+    state = real_github(gh=gh).pr_state(a_pr(7, REPO))
+    checks = {c.name: c for c in state.checks}
+
+    assert checks["ci/jenkins"] == Check("ci/jenkins", "completed", "failure",
+                                         "https://jenkins/7", "2 tests failed")
+    assert (checks["ci/lint"].failed, checks["ci/deploy"].done) == (True, False)
+    assert checks["tests"].passed
+
+
 def test_checks_come_newest_run_first_as_the_rest_api_lists_them():
     head = _head([_run("tests", databaseId=1)], [_run("lint", databaseId=3), _run("docs", databaseId=2)])
 
