@@ -804,6 +804,12 @@ module('Acceptance | wall', function (hooks) {
     await triggerEvent(document, 'keydown', { key });
   }
 
+  function tap(key: string): void {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+  }
+
   function selected(): string[] {
     return findAll('[data-test-wall-row][aria-current="true"]').map((one) =>
       one.getAttribute('data-test-wall-row')!,
@@ -861,6 +867,23 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),
       ['o/r#8 hold', 'o/r#8 resume'],
+    );
+  });
+
+  test('p pressed twice before the hub answers the first hold resumes, rather than holding twice', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    await press('j');
+    const release = board().hold(/\/api\/pull-requests\/o\/r\/7:/);
+
+    tap('p');
+    tap('p');
+    release();
+    await settled();
+
+    assert.deepEqual(
+      board().posted.map((one) => `${one.key} ${one.verb}`),
+      ['o/r#7 hold', 'o/r#7 resume'],
     );
   });
 
@@ -997,6 +1020,36 @@ module('Acceptance | wall', function (hooks) {
 
     await press('w');
     await press('w');
+
+    assert.deepEqual(
+      board().posted.map((one) => `${one.key} ${one.verb}`),
+      ['o/r#7 release'],
+    );
+  });
+
+  test('w pressed twice before the hub answers the first release sends one release', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          frozen: {
+            worktree: '/wt',
+            here: 'main',
+            expected: 'tidy',
+            seconds_left: 60,
+            run_working: false,
+            release_requested: false,
+          },
+        },
+      }),
+    );
+    await visit('/');
+    await press('j');
+    const release = board().hold(/:release$/);
+
+    tap('w');
+    tap('w');
+    release();
+    await settled();
 
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),

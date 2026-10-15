@@ -88,9 +88,22 @@ function carryOnHeldBack(shown: ShownPr): string | null {
   return null;
 }
 
-function releaseOffer(shown: ShownPr): Offer {
+type HubVerb = 'hold' | 'resume' | 'release';
+
+interface Sent {
+  verb: HubVerb;
+}
+
+function onHoldOf(shown: ShownPr, sent: Sent | undefined): boolean {
+  if (sent?.verb === 'hold') return true;
+  if (sent?.verb === 'resume') return false;
+  return shown.drawn.system.on_hold;
+}
+
+function releaseOffer(shown: ShownPr, sent: Sent | undefined): Offer {
   if (!shown.drawn.frozen) return ABSENT;
-  if (shown.drawn.frozen.release_requested) return { state: 'asked' };
+  if (shown.drawn.frozen.release_requested || sent?.verb === 'release')
+    return { state: 'asked' };
   return { state: 'ready', title: null };
 }
 
@@ -100,14 +113,18 @@ function heldBackOf(control: Control, shown: ShownPr): string | null {
   return null;
 }
 
-function offerOf(on: Controlled, control: Control): Offer {
+function offerOf(
+  on: Controlled,
+  control: Control,
+  sent: Sent | undefined,
+): Offer {
   const shown = on.shown;
-  if (control === 'release') return releaseOffer(shown);
+  if (control === 'release') return releaseOffer(shown, sent);
   if (shown.drawn.frozen) return held(ONLY_W);
   if (control === 'hold') {
     return {
       state: 'ready',
-      title: shown.drawn.system.on_hold ? HINTS.resume : HINTS.hold,
+      title: onHoldOf(shown, sent) ? HINTS.resume : HINTS.hold,
     };
   }
   if (control === 'close' && !on.yours) return ABSENT;
@@ -154,6 +171,7 @@ export default class PrControlsService extends Service {
   @service declare toasts: ToastsService;
 
   @tracked private dismissals: ReadonlyMap<string, Dismissal> = new Map();
+  @tracked private sent: ReadonlyMap<string, Sent> = new Map();
 
   get onPage(): Controlled | null {
     const shown = this.dashboard.shown;
@@ -192,12 +210,12 @@ export default class PrControlsService extends Service {
   }
 
   offer(on: Controlled | null, control: Control): Offer {
-    return on ? offerOf(on, control) : ABSENT;
+    return on ? offerOf(on, control, this.sentTo(on)) : ABSENT;
   }
 
   press(on: Controlled | null, control: Control): Pressed {
     if (!on) return 'nothing';
-    const offer = offerOf(on, control);
+    const offer = offerOf(on, control, this.sentTo(on));
     if (offer.state === 'absent') return 'nothing';
     if (offer.state === 'held') this.toasts.say(offer.title, 'failed');
     if (offer.state !== 'ready') return 'done';
@@ -232,6 +250,10 @@ export default class PrControlsService extends Service {
     return waitForPromise(this.carrying(on, control));
   }
 
+  private sentTo(on: Controlled): Sent | undefined {
+    return this.sent.get(keyOf(on.shown));
+  }
+
   private prefix(on: Controlled): string {
     return this.here.prefixOf(on.shown);
   }
@@ -242,7 +264,7 @@ export default class PrControlsService extends Service {
       return;
     }
     if (control === 'hold') {
-      const verb = on.shown.drawn.system.on_hold ? 'resume' : 'hold';
+      const verb = onHoldOf(on.shown, this.sentTo(on)) ? 'resume' : 'hold';
       if (on.showing === 'hub' && on.held) {
         await this.throughTheHub(on.shown, verb);
       } else {
@@ -286,10 +308,22 @@ export default class PrControlsService extends Service {
     return taken.done;
   }
 
-  private async throughTheHub(
-    row: ShownPr,
-    verb: 'hold' | 'resume' | 'release',
-  ): Promise<void> {
+  private async throughTheHub(row: ShownPr, verb: HubVerb): Promise<void> {
+    const key = keyOf(row);
+    const sent = { verb };
+    this.sent = new Map(this.sent).set(key, sent);
+    try {
+      await this.handToTheHub(row, verb);
+    } finally {
+      if (this.sent.get(key) === sent) {
+        const left = new Map(this.sent);
+        left.delete(key);
+        this.sent = left;
+      }
+    }
+  }
+
+  private async handToTheHub(row: ShownPr, verb: HubVerb): Promise<void> {
     const taken = await tried(
       `hub ${verb}`,
       this.store.hand(`/api/pull-requests/${row.repo}/${row.number}:${verb}`),
