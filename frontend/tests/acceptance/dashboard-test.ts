@@ -161,6 +161,19 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-band-computed]').hasText('Failed: unit-tests');
   });
 
+  test('the band joins the parts of the state’s detail with a middle dot, as the rest of the board does', async function (assert) {
+    onTheHub({
+      facts: factsFor('ready-to-merge'),
+      status: { approved_by: ['alice'] },
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-band-computed]')
+      .hasText('Approved by alice · CI passing');
+  });
+
   test('the status block marks what is wrong and words the rest', async function (assert) {
     onTheHub({
       facts: { ci_status: 'failing', review_decision: 'changes-requested' },
