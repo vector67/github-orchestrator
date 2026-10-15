@@ -3,6 +3,7 @@ import { waitUntil } from '@ember/test-helpers';
 
 const DRAFTS = 'decide-dialog-drafts';
 const SHELF = 'hub-pull-requests';
+const SECTIONS_ENTERED = 'hub-sections-entered';
 const KEEP_DRAFTS =
   'Delete everything except saved drafts and reload (might work)';
 const DELETE_ALL = 'Delete all local storage and reload';
@@ -47,6 +48,7 @@ module('Acceptance | recovery', function (hooks) {
   hooks.beforeEach(function () {
     localStorage.removeItem(DRAFTS);
     localStorage.removeItem(SHELF);
+    localStorage.removeItem(SECTIONS_ENTERED);
   });
 
   hooks.afterEach(function () {

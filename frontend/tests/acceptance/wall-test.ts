@@ -875,7 +875,7 @@ module('Acceptance | wall', function (hooks) {
     const running = (event: string) => ({
       name: 'Claude',
       enabled: true,
-      state: 'working',
+      state: 'working' as const,
       event,
       elapsed_seconds: 30,
       silent_seconds: null,
