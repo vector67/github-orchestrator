@@ -55,6 +55,8 @@ class Step:
 
 def _ci_status(poll: Poll) -> CiStatus:
     checks = poll.state.checks
+    if not checks:
+        return CiStatus.NONE
     done = [c for c in checks if c.done]
     if any(c.failed for c in done):
         return CiStatus.FAILING

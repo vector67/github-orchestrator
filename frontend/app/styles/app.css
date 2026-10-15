@@ -2424,6 +2424,13 @@ kbd {
   content: "";
 }
 
+.wall-lead .ttl {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .wall-lead .meta {
   font-size: var(--fs-xs);
   color: var(--muted);
@@ -4091,18 +4098,13 @@ kbd {
   }
 
   .wall-row {
-    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 4px 12px;
-  }
-
-  .wall-row .why {
-    grid-column: 2;
   }
 
   .wall-row .cells {
     display: flex;
     flex-wrap: wrap;
-    grid-column: 2;
     gap: 2px 16px;
   }
 

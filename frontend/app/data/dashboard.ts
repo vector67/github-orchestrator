@@ -22,6 +22,7 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 export function lengthOf(seconds: number): string {
+  if (Number.isNaN(seconds)) return '?';
   const whole = Math.max(0, Math.floor(seconds));
   const days = Math.floor(whole / DAY);
   const hours = Math.floor((whole % DAY) / HOUR);
@@ -95,8 +96,14 @@ function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
+const BIDI_CONTROLS = /[\u202A-\u202E\u2066-\u2069]/g;
+
+function withoutBidiControls(name: string): string {
+  return name.replace(BIDI_CONTROLS, '');
+}
+
 function listed(people: string[]): string {
-  return people.join(', ');
+  return people.map(withoutBidiControls).join(', ');
 }
 
 const WAITING_FOR_AUTHOR = 'Waiting for author';
@@ -645,9 +652,10 @@ function cell(key: string, text: string, tone: Tone, live = false): Cell {
 }
 
 function counted(key: string, value: number | null): Cell {
-  const shown = value
-    ? cell(key, String(value), 'strong')
-    : cell(key, '·', 'quiet');
+  const shown =
+    value && value > 0
+      ? cell(key, String(value), 'strong')
+      : cell(key, '·', 'quiet');
   return { ...shown, count: true };
 }
 
@@ -738,7 +746,7 @@ function whyOf(
     return 'Release asked for; the watcher cuts a fresh worktree on its next cycle';
   }
   if (frozen) {
-    return `Wrong branch checked out (${frozen.here}) · detaches in ${lengthOf(frozen.seconds_left)}`;
+    return `Wrong branch checked out (${withoutBidiControls(frozen.here)}) · detaches in ${lengthOf(frozen.seconds_left)}`;
   }
   if (since) return `Since you acted: ${since.join(', ')}`;
   if (!action) return 'Nothing known until the first poll';

@@ -25,6 +25,7 @@ class CiStatus(Enum):
     PASSING = "passing"
     FAILING = "failing"
     PENDING = "pending"
+    NONE = "none"
 
 
 class ReviewDecision(Enum):

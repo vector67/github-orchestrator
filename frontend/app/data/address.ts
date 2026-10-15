@@ -4,8 +4,10 @@ export function tildeOf(path: string): string {
   return path.replace(HOME, '~/');
 }
 
+const GITHUB = 'https://github.com/';
+
 export function openOnGitHub(url: string | null): void {
-  if (url) window.open(url, '_blank', 'noopener');
+  if (url?.startsWith(GITHUB)) window.open(url, '_blank', 'noopener');
 }
 
 export function copyAddress(url: string | null): Promise<string> {
