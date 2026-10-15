@@ -74,7 +74,8 @@ def added_remarks(base: str | None, head: str, path: str) -> list[str]:
     added = []
     for remark in remarks:
         text = data[remark.start_byte : remark.end_byte].decode(errors="replace")
-        rows = range(remark.start_point.row, remark.end_point.row + 1)
+        first_row = data.count(b"\n", 0, remark.start_byte)
+        rows = range(first_row, first_row + text.count("\n") + 1)
         if all(row in added_rows for row in rows):
             added.append(text.strip())
             continue
