@@ -1486,6 +1486,11 @@ button.copy-directory {
   padding: 40px;
 }
 
+.not-found-link {
+  color: var(--link);
+  text-underline-offset: 2px;
+}
+
 #board-columns {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
