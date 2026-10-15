@@ -8,6 +8,7 @@ const DIALOG_DRAFTS = 'decide-dialog-drafts';
 const KEPT_PULL_REQUESTS = 'hub-pull-requests';
 const CHOSEN_REPOS = 'hub-repos';
 const SECTIONS_ENTERED = 'hub-sections-entered';
+const PARKED_FOLDED = 'wall-parked-folded';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
@@ -15,6 +16,7 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(KEPT_PULL_REQUESTS);
     localStorage.removeItem(CHOSEN_REPOS);
     localStorage.removeItem(SECTIONS_ENTERED);
+    localStorage.removeItem(PARKED_FOLDED);
   });
 }
 
