@@ -5,7 +5,6 @@
 import argparse
 import dataclasses
 import sys
-import tempfile
 from pathlib import Path
 
 from pr_summary.clone import Clone, CloneFailed
@@ -22,7 +21,7 @@ from pr_summary.github import (
     pull_request,
     target,
 )
-from pr_summary.inputs import Contents, write_inputs
+from pr_summary.inputs import Contents, WorkDirNotEmpty, work_dir, write_inputs
 from pr_summary.report import report
 from pr_summary.settings import settings_from, ticket_key
 from pr_summary.witnesses import launcher, run_witnesses
@@ -37,9 +36,11 @@ def main() -> None:
     parser.add_argument("pr", help="a pull request URL, or its number in the current repository")
     parser.add_argument("--config", type=Path, help="a TOML file with a [pr_summary] table, used when the repository has no .github/pr-summary.toml")
     parser.add_argument("--prepare-only", action="store_true", help="write the witnesses' input folders and stop")
+    parser.add_argument("--work-dir", type=Path, help="write the witness folders here, creating it if missing; it must be empty")
     parser.add_argument("--use-github-api", action="store_true", help="read files over the GitHub API when the working directory is not a clone of the repository")
     arguments = parser.parse_args()
 
+    out = work_dir(arguments.work_dir)
     owner, repo, number = target(gh_cli, arguments.pr)
     pr = pull_request(gh_cli, owner, repo, number)
     clone = Clone.find(Path.cwd(), owner, repo)
@@ -79,7 +80,6 @@ def main() -> None:
     settings = settings_from(repo_config.decode() if repo_config is not None else fallback)
     ticket = ticket_key(settings, title=pr.title, branch=pr.branch)
     earlier = earlier_prs(gh_cli, owner, repo, pr, ticket, files, settings, history_of)
-    out = Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
     if not arguments.prepare_only:
         run_witnesses(manifest, launcher(PLUGIN_ROOT))
@@ -90,5 +90,5 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except (GhFailed, CloneFailed) as failure:
+    except (GhFailed, CloneFailed, WorkDirNotEmpty) as failure:
         sys.exit(f"{type(failure).__name__}: {failure}")

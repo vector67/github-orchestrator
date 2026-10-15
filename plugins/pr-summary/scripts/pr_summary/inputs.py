@@ -1,4 +1,5 @@
 import difflib
+import tempfile
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -16,6 +17,19 @@ Contents = Callable[[str, str], bytes | None]
 
 class Unreadable(Exception):
     pass
+
+
+class WorkDirNotEmpty(Exception):
+    pass
+
+
+def work_dir(named: Path | None) -> Path:
+    if named is None:
+        return Path(tempfile.mkdtemp(prefix="pr-summary-"))
+    named.mkdir(parents=True, exist_ok=True)
+    if any(named.iterdir()):
+        raise WorkDirNotEmpty(f"{named} is not empty")
+    return named
 
 
 @dataclass(frozen=True)

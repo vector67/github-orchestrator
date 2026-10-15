@@ -10,8 +10,8 @@ is judged. Decision numbers (1–16) are the spec's. Issue #32.
   anything that changes behaviour and `frontend-work` for anything under
   `frontend/`.
 - Each step gets its own branch in its own worktree, cut from local `main`. It
-  is merged and restarted before the next step starts. Stop after each step and
-  report to the user before starting the next.
+  is merged and restarted before the next step starts. The user approved
+  running the steps straight through, without stopping to report between them.
 - Run `make lint-python` and `make test-python` before each commit. When the
   commit touches `frontend/`, run the full `make lint` and `make test` as well,
   and report the pass counts.

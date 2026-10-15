@@ -1,8 +1,17 @@
 from pathlib import Path
 
-from pr_summary.inputs import ChangedFile, EarlierPr, Unreadable, write_inputs
+import pytest
+from pr_summary.inputs import (
+    ChangedFile,
+    EarlierPr,
+    Unreadable,
+    WorkDirNotEmpty,
+    work_dir,
+    write_inputs,
+)
 from pr_summary.pull_request import PullRequest, Remark
 from pr_summary.settings import Settings
+from pr_summary.witnesses import run_witnesses
 
 BASE = "b" * 40
 HEAD = "h" * 40
@@ -91,6 +100,47 @@ def test_every_witness_gets_its_own_folder(tmp_path: Path) -> None:
 
     assert sorted(manifest) == ["alignment", "claimed", "implementation", "requested", "tests", "why"]
     assert all(folder.parent == tmp_path for folder in manifest.values())
+
+
+def test_a_named_work_dir_is_created_when_missing(tmp_path: Path) -> None:
+    named = tmp_path / "summaries" / "7"
+
+    assert work_dir(named) == named
+    assert named.is_dir()
+
+
+def test_a_named_work_dir_that_holds_anything_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "why").mkdir()
+    (tmp_path / "why" / "output.json").write_text("{}")
+
+    with pytest.raises(WorkDirNotEmpty):
+        work_dir(tmp_path)
+
+
+def test_without_a_name_each_run_gets_a_fresh_empty_folder() -> None:
+    first, second = work_dir(None), work_dir(None)
+
+    assert first != second
+    assert list(first.iterdir()) == list(second.iterdir()) == []
+
+
+def test_each_witness_leaves_its_output_in_its_own_folder_of_the_work_dir(tmp_path: Path) -> None:
+    named = work_dir(tmp_path / "work")
+
+    def launch(witness: str, folder: Path) -> bool:
+        (folder / "output.json").write_text("{}")
+        return True
+
+    run_witnesses(written(named), launch)
+
+    assert sorted(path.relative_to(named).as_posix() for path in named.glob("*/output.json")) == [
+        "alignment/output.json",
+        "claimed/output.json",
+        "implementation/output.json",
+        "requested/output.json",
+        "tests/output.json",
+        "why/output.json",
+    ]
 
 
 def test_implementation_sees_stripped_production_code_and_nothing_of_the_author(tmp_path: Path) -> None:
