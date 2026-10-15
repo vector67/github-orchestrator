@@ -325,9 +325,9 @@ def test_comments_three_minutes_apart_from_the_first_go_out_as_one_banner(tmp_pa
 
     assert _shown(desktop) == [(
         Badge.COMMENTS, "3 comments on widgets#84 · 1 fix started, 1 queued",
-        'New thread | Fix started | Ada (review comment): "this loop could be one query"\n'
-        'Reopened | Fix queued | Reviewer B: "still flaky"\n'
-        'Reply | No fix | Reviewer B: "looks fine"',
+        'New thread | Fix started | Ada (review comment) | summary: this loop could be one query\n'
+        'Reopened | Fix queued | Reviewer B | summary: still flaky\n'
+        'Reply | No fix | Reviewer B | summary: looks fine',
     )]
 
 
