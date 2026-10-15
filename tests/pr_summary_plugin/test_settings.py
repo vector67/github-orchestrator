@@ -47,6 +47,24 @@ def test_files_sort_into_ignored_docs_tests_and_production() -> None:
     assert kind_of("src/export/rows.py", settings) == "production"
 
 
+def test_tests_are_found_at_any_depth_and_in_go() -> None:
+    settings = Settings()
+
+    assert kind_of("pkg/extensions/official_test.go", settings) == "tests"
+    assert kind_of("pkg/tests/helpers.py", settings) == "tests"
+    assert kind_of("x/test/y.py", settings) == "tests"
+    assert kind_of("spec/models/user_spec.rb", settings) == "tests"
+    assert kind_of("internal/testdata/input.json", settings) == "tests"
+    assert kind_of("src/conftest.py", settings) == "tests"
+
+
+def test_release_notes_and_project_prose_are_docs() -> None:
+    settings = Settings()
+
+    for path in ["CHANGES.txt", "NEWS", "changelog.d/123.feature", "news/45.bugfix", "releasenotes/notes/fix-x.yaml", "CONTRIBUTING", "AUTHORS"]:
+        assert kind_of(path, settings) == "docs", path
+
+
 def test_markdown_inside_a_test_folder_is_docs() -> None:
     assert kind_of("tests/README.md", Settings()) == "docs"
 

@@ -29,6 +29,7 @@ class EarlierPr:
     author: str
     merged_at: str
     remarks: tuple[Remark, ...]
+    bot: bool = False
 
 
 @dataclass(frozen=True)
@@ -157,14 +158,14 @@ def write_inputs(
 
 def _earlier_lines(earlier_pr: EarlierPr, authors: frozenset[str], settings: Settings) -> list[str]:
     _, others = voices(earlier_pr.remarks, authors, settings)
-    written_by_others = earlier_pr.author not in authors
+    written_by_others = earlier_pr.author not in authors and not earlier_pr.bot
     if not others and not written_by_others:
         return []
     title = f" {earlier_pr.title}" if written_by_others else ""
     keys = ticket_keys(settings, f"{earlier_pr.title}\n{earlier_pr.body}")
     tickets = f", tickets {', '.join(keys)}" if keys else ""
     heading = f"# #{earlier_pr.number}{title} ({earlier_pr.url}): merged {earlier_pr.merged_at[:10]}{tickets}\n"
-    body = [f"{earlier_pr.body}\n"] if written_by_others and earlier_pr.body else []
+    body = [f"{cleaned(earlier_pr.body)}\n"] if written_by_others and earlier_pr.body else []
     return [heading, *body, *_remark_lines(others)]
 
 

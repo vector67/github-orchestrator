@@ -7,6 +7,7 @@ from tree_sitter_language_pack import detect_language_from_path, get_parser
 
 DOCSTRING_HOMES = {"module", "block"}
 DOCSTRING_OWNERS = {"function_definition", "class_definition"}
+UNSTRIPPABLE = {"vue", "svelte", "html", "astro", "vimdoc", "markdown"}
 HUNK = re.compile(r"^@@ .* @@", re.MULTILINE)
 
 
@@ -39,7 +40,7 @@ def _is_docstring(node: Node) -> bool:
 
 def _parsed(source: str, path: str) -> tuple[bytes, list[Node]] | None:
     language = detect_language_from_path(path)
-    if language is None:
+    if language is None or language in UNSTRIPPABLE:
         return None
     data = source.encode()
     tree = get_parser(language).parse(data)

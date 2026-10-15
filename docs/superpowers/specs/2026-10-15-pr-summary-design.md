@@ -219,10 +219,10 @@ instance `config.toml`). With neither, the defaults apply. Both use a
 ticket_pattern = "[A-Z][A-Z0-9]+-[0-9]+"
 ticket_sources = ["title", "branch"]
 ticket_projects = []
-tests = ["tests/**", "test/**", "**/test_*.py", "**/*_test.py", "**/*.test.*", "**/*.spec.*", "**/__tests__/**"]
-docs = ["**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*"]
+tests = ["**/tests/**", "**/test/**", "**/spec/**", "**/testdata/**", "**/__tests__/**", "**/test_*.py", "**/*_test.py", "**/conftest.py", "**/*_test.go", "**/*.test.*", "**/*.spec.*"]
+docs = ["**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*", "**/CHANGES*", "**/NEWS*", "**/CONTRIBUTING*", "**/AUTHORS*", "**/changelog.d/**", "**/news/**", "**/releasenotes/**"]
 ignore = ["**/*.lock", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock"]
-bots = []
+bots = ["codecov-commenter", "CLAassistant", "sonarcloud", "netlify", "vercel"]
 why_guidance = ""
 ```
 
@@ -249,6 +249,15 @@ plugin with `claude plugin marketplace add <owner>/github-orchestrator` and
 
 ## Known limits
 
+- **Some files cannot be stripped**: markup that embeds code (`.vue`,
+  `.svelte`, `.html`, `.astro`), plain text, and files with no grammar
+  (`Makefile`, `Dockerfile`, extensionless scripts). They reach the code
+  witnesses with their comments, listed in `unstripped.txt`. Docstrings are
+  recognised in Python only; Rust `#[doc]`, Elixir `@doc` and the like stay in.
+- **Bots GitHub calls users** are caught only by the `-bot` and `[bot]`
+  suffixes and the default `bots` list.
+- **A co-author whose commit email is not linked to a GitHub account** counts
+  as an author by name, but their comments, posted under a login, reach Why.
 - **Code carries the author's words too**: identifiers, test names, log and
   error strings, file names and fixtures reach the implementation and tests
   witnesses. Stripping literals would cost more meaning than it saves.

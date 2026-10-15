@@ -12,10 +12,10 @@ class Settings:
     ticket_pattern: str = "[A-Z][A-Z0-9]+-[0-9]+"
     ticket_sources: tuple[str, ...] = ("title", "branch")
     ticket_projects: tuple[str, ...] = ()
-    tests: tuple[str, ...] = ("tests/**", "test/**", "**/test_*.py", "**/*_test.py", "**/*.test.*", "**/*.spec.*", "**/__tests__/**")
-    docs: tuple[str, ...] = ("**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*")
+    tests: tuple[str, ...] = ("**/tests/**", "**/test/**", "**/spec/**", "**/testdata/**", "**/__tests__/**", "**/test_*.py", "**/*_test.py", "**/conftest.py", "**/*_test.go", "**/*.test.*", "**/*.spec.*")
+    docs: tuple[str, ...] = ("**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*", "**/CHANGES*", "**/NEWS*", "**/CONTRIBUTING*", "**/AUTHORS*", "**/changelog.d/**", "**/news/**", "**/releasenotes/**")
     ignore: tuple[str, ...] = ("**/*.lock", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock")
-    bots: tuple[str, ...] = ()
+    bots: tuple[str, ...] = ("codecov-commenter", "CLAassistant", "sonarcloud", "netlify", "vercel")
     why_guidance: str = ""
 
 

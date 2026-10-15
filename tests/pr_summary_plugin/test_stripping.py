@@ -41,6 +41,11 @@ def test_typescript_loses_line_block_and_doc_comments() -> None:
     assert "const url = 'http://x';" in result
 
 
+def test_markup_that_embeds_code_counts_as_not_strippable() -> None:
+    for path in ["app/mask.vue", "app/Card.svelte", "site/index.html", "notes/CHANGES.txt"]:
+        assert stripped("<script>\n// note\nlet x = 1\n</script>\n", path) is None, path
+
+
 def test_a_file_in_an_unknown_language_is_not_stripped() -> None:
     assert stripped("-- a comment\nselect 1;\n", "db/query.unknownext") is None
 

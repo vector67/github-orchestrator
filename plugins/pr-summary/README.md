@@ -54,10 +54,10 @@ for repositories without one. The defaults:
 ticket_pattern = "[A-Z][A-Z0-9]+-[0-9]+"
 ticket_sources = ["title", "branch"]   # where to look for the ticket key, in order
 ticket_projects = []                   # e.g. ["SHOP"]; empty accepts any project
-tests = ["tests/**", "test/**", "**/test_*.py", "**/*_test.py", "**/*.test.*", "**/*.spec.*", "**/__tests__/**"]
-docs = ["**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*"]
+tests = ["**/tests/**", "**/test/**", "**/spec/**", "**/testdata/**", "**/__tests__/**", "**/test_*.py", "**/*_test.py", "**/conftest.py", "**/*_test.go", "**/*.test.*", "**/*.spec.*"]
+docs = ["**/*.md", "**/*.rst", "**/*.adoc", "**/*.ipynb", "docs/**", "**/docs/**", "**/README*", "**/CHANGELOG*", "**/CHANGES*", "**/NEWS*", "**/CONTRIBUTING*", "**/AUTHORS*", "**/changelog.d/**", "**/news/**", "**/releasenotes/**"]
 ignore = ["**/*.lock", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock"]
-bots = []                              # logins to treat as bots besides GitHub's own
+bots = ["codecov-commenter", "CLAassistant", "sonarcloud", "netlify", "vercel"]  # logins to treat as bots besides GitHub's own
 why_guidance = ""                      # where your organisation writes down its reasons
 ```
 

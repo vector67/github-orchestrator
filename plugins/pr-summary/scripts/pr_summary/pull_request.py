@@ -70,7 +70,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
 
 
 def is_bot(remark: Remark, settings: Settings) -> bool:
-    return remark.bot or remark.author.endswith("[bot]") or remark.author in settings.bots
+    return remark.bot or remark.author.endswith(("[bot]", "-bot")) or remark.author in settings.bots
 
 
 def voices(remarks: Iterable[Remark], authors: frozenset[str], settings: Settings) -> tuple[list[Remark], list[Remark]]:

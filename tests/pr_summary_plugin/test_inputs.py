@@ -176,6 +176,42 @@ def test_an_earlier_pr_by_an_author_keeps_its_ticket_and_date_but_not_its_title(
     assert "# #3 Rewrite the exporter (https://github.com/acme/shop/pull/3): merged 2026-09-20" in seen
 
 
+def test_an_earlier_pr_opened_by_a_bot_keeps_neither_title_nor_body(tmp_path: Path) -> None:
+    by_bot = EarlierPr(
+        number=9,
+        url="https://github.com/acme/shop/pull/9",
+        title="bump compress from 1.2 to 1.3",
+        body="Release notes for compress.",
+        author="dependabot",
+        merged_at="2026-09-01T10:00:00Z",
+        remarks=(Remark(author="monalisa", bot=False, body="Needed for the exporter.", url="e9"),),
+        bot=True,
+    )
+
+    seen = everything_in(write_inputs(PR, FILES, contents, [by_bot], Settings(), "SHOP-3", tmp_path)["why"])
+
+    assert "Needed for the exporter." in seen
+    assert "bump compress" not in seen
+    assert "Release notes" not in seen
+
+
+def test_an_earlier_pr_body_loses_its_quoted_lines(tmp_path: Path) -> None:
+    quoting = EarlierPr(
+        number=8,
+        url="https://github.com/acme/shop/pull/8",
+        title="Split exports",
+        body="> I will hide the button meanwhile.\nSplitting exports so they stop timing out.",
+        author="monalisa",
+        merged_at="2026-09-01T10:00:00Z",
+        remarks=(),
+    )
+
+    seen = everything_in(write_inputs(PR, FILES, contents, [quoting], Settings(), "SHOP-3", tmp_path)["why"])
+
+    assert "Splitting exports so they stop timing out." in seen
+    assert "hide the button meanwhile" not in seen
+
+
 def test_why_and_requested_get_the_ticket_key(tmp_path: Path) -> None:
     manifest = written(tmp_path, settings=Settings(why_guidance="Decisions live in the ENG space."))
 

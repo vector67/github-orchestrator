@@ -88,6 +88,15 @@ def test_bot_suffixed_logins_are_bots_whatever_their_type() -> None:
     assert others == []
 
 
+def test_well_known_user_type_bots_and_bot_suffixes_are_bots() -> None:
+    found = pull_request_from(GRAPHQL).remarks[0]
+    disguised = [type(found)(author=login, bot=False, body="Coverage report", url="u") for login in ["codecov-commenter", "element-bot", "CLAassistant"]]
+
+    _, others = voices(disguised, frozenset(), Settings())
+
+    assert others == []
+
+
 def test_cleaned_drops_quoted_lines_and_suggestions() -> None:
     body = "> You said this hides it\nIt should be fixed instead.\n```suggestion\nreturn rows\n```\nThanks."
 
