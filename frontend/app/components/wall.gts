@@ -286,6 +286,10 @@ export default class Wall extends Component {
               Waiting for the watcher’s first poll. The wall fills in when it
               ends.
             </p>
+          {{else if this.store.heldCount}}
+            <p class="wall-empty" data-test-wall-empty>
+              None of the pull requests the watcher holds belongs on the wall.
+            </p>
           {{else}}
             <p class="wall-empty" data-test-wall-empty>
               The watcher holds no pull requests yet. They appear here after its

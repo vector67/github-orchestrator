@@ -1463,6 +1463,27 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-wall-empty]').doesNotExist();
   });
 
+  test('a hub that restarted and has not finished its first cycle does not pass off the old rows as current', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+
+    board().unheld = {
+      code: 'watcher-starting',
+      detail: 'the watcher has not finished its first cycle yet',
+    };
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    const told =
+      find('[data-test-wall-unheld="watcher-starting"]') !== null ||
+      find('[data-test-wall-stale]') !== null;
+    assert.true(
+      told,
+      `three polls refused as watcher-starting, the page still shows ${rows().join(', ')} unmarked`,
+    );
+  });
+
   test('a wall whose polls fail shows the error and its fix in place of waiting', async function (assert) {
     onTheHub();
     board().unheld = {
@@ -1510,6 +1531,29 @@ module('Acceptance | wall', function (hooks) {
       );
   });
 
+  test('a hub that stops watching after a good wall says so instead of showing the old rows as fresh', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#8']);
+
+    board().unheld = {
+      code: 'not-watching',
+      detail: 'config.toml names no repos',
+    };
+    board().state = 'setup';
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    const told =
+      find('[data-test-wall-unheld="not-watching"]') !== null ||
+      find('[data-test-wall-stale]') !== null;
+    assert.true(
+      told,
+      `the hub refuses the wall as not-watching, yet the page shows ${rows().join(', ')} unmarked and never says why`,
+    );
+  });
+
   test('the wall fills in once a cycle succeeds after failing', async function (assert) {
     onTheHub(heldPr());
     board().unheld = { code: 'watcher-failing', detail: 'gh: HTTP 502' };
@@ -1528,6 +1572,39 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
 
     assert.dom('[data-test-wall-empty]').exists();
+  });
+
+  test('a hub holding only pull requests off the wall does not say it holds none', async function (assert) {
+    onTheHub(heldPr({ dashboard: { facts: factsFor('not-reviewing') } }));
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row]')
+      .doesNotExist('not-reviewing is off the wall');
+    assert
+      .dom('[data-test-wall-empty]')
+      .doesNotIncludeText(
+        'holds no pull requests',
+        'the watcher holds one; it is just not shown',
+      );
+  });
+
+  test('a wall body without its groups does not say the watcher holds nothing', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#8']);
+
+    wallAnswers(
+      JSON.stringify({ watching: ['o/r'], pull_requests: [heldPr()] }),
+    );
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-empty]')
+      .doesNotExist(
+        'a body missing `groups` wipes every row and claims the watcher holds no pull requests',
+      );
   });
 
   test('what no poll has said yet reads as not known, never blank', async function (assert) {

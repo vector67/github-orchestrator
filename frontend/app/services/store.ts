@@ -331,6 +331,7 @@ export default class StoreService extends Service {
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
   @tracked private groups: WallGroupName[] | null = null;
+  @tracked heldCount = 0;
   @tracked watching: string[] = [];
   @tracked ledger: Omit<RunLedger, 'watcher'> | null = null;
   @tracked health: Omit<Health, 'watcher'> | null = null;
@@ -1170,12 +1171,13 @@ export default class StoreService extends Service {
   }
 
   private takeWall(held: HeldPullRequests): void {
-    const { watching, groups, prs, threads, joins } = this;
+    const { watching, groups, heldCount, prs, threads, joins } = this;
     try {
       this.applyWall(held);
     } catch (trouble) {
       this.watching = watching;
       this.groups = groups;
+      this.heldCount = heldCount;
       this.prs = prs;
       this.threads = threads;
       this.joins = joins;
@@ -1185,8 +1187,12 @@ export default class StoreService extends Service {
   }
 
   private applyWall(held: HeldPullRequests): void {
+    if (!Array.isArray(held.groups)) {
+      throw new Error('the wall came without its groups');
+    }
     this.watching = held.watching;
     this.groups = held.groups;
+    this.heldCount = held.pull_requests.length;
     const rows = [...held.pull_requests].sort(
       (one, other) =>
         one.repo.localeCompare(other.repo) || one.number - other.number,

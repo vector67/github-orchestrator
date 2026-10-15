@@ -38,7 +38,7 @@ export default class HubService extends Service {
   }
 
   get stale(): boolean {
-    return this.poll?.alarm ?? false;
+    return (this.poll?.alarm ?? false) || this.store.unheld !== null;
   }
 
   find(pr: Numbered): PrEntity | undefined {
