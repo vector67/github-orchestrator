@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, uniqueId } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import { pageTitle } from 'ember-page-title';
@@ -178,8 +178,13 @@ export default class Wall extends Component {
     {{pageTitle this.tabTitle}}
     <main id="wall" data-test-wall>
       <HubBar @on="wall" />
+      <h1 class="visually-hidden">Pull requests</h1>
+      {{#if this.stale}}
+        <p class="wall-stale-note" data-test-wall-stale-note>These rows may be
+          out of date.</p>
+      {{/if}}
       <div
-        class="wall-body {{if this.stale 'stale'}}"
+        class="wall-body"
         data-test-wall-stale={{this.stale}}
         {{moves}}
         {{selects this.hub.selected}}
@@ -195,7 +200,7 @@ export default class Wall extends Component {
               data-test-count
             >{{section.prs.length}}</span></h2>
           {{#each section.prs key="key" as |pr|}}
-            {{#let (this.readingOf pr) as |reading|}}
+            {{#let (this.readingOf pr) (uniqueId) as |reading says|}}
               <div
                 class="wall-row edge lvl-{{section.level}}"
                 aria-current={{if (this.isSelected pr) "true"}}
@@ -209,6 +214,8 @@ export default class Wall extends Component {
                   type="button"
                   class="wall-lead"
                   title="Open #{{pr.number}} · nothing runs until you choose"
+                  aria-label="{{reading.move}}: {{reading.title}}"
+                  aria-describedby={{says}}
                   data-test-wall-lead
                   {{on "focus" (fn this.select pr)}}
                   {{on "click" (fn this.open pr)}}
@@ -240,7 +247,9 @@ export default class Wall extends Component {
                     class="ttl"
                     data-test-wall-title
                   >{{reading.title}}</span>
-                  <span class="meta">{{#if this.store.severalReposShown}}<span
+                  <span class="meta" data-test-wall-meta>{{#if
+                      this.store.severalReposShown
+                    }}<span
                         data-test-row-repo
                       >{{pr.repo}}</span>{{/if}}#{{pr.number}}{{#if
                       reading.whose
@@ -249,6 +258,23 @@ export default class Wall extends Component {
                       {{reading.whose}}{{/if}}{{#if reading.branch}}
                       ·
                       <span class="mono">{{reading.branch}}</span>{{/if}}</span>
+                  <span id={{says}} class="wall-says">{{#if
+                      reading.reason
+                    }}<span>{{reading.reason}}.</span>{{/if}}{{#each
+                      reading.chips key="key"
+                      as |chip|
+                    }}<span>{{chip.text}}: {{chip.hint}}.</span>{{/each}}{{#if
+                      pr.moved
+                    }}<span>moved here.</span>{{/if}}<span>{{this.ageHintOf
+                        section
+                        pr
+                      }}.</span><span>{{#if
+                        this.store.severalReposShown
+                      }}{{pr.repo}}{{/if}}#{{pr.number}}{{#if reading.whose}}
+                        ·
+                        {{reading.whose}}{{/if}}{{#if reading.branch}}
+                        ·
+                        {{reading.branch}}{{/if}}.</span></span>
                 </button>
                 <span class="row-controls">
                   {{#if (this.releasable pr)}}<button
