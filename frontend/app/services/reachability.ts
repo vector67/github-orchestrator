@@ -87,21 +87,23 @@ export class Polled extends Reach {
     }
   }
 
-  private async read(): Promise<boolean> {
-    const answer = await this.attempt(() => this.ask(this.tag));
-    if (!answer.changed) return false;
-    let took = false;
-    const change = () => {
-      took = answer.take();
-    };
-    if (this.flipped) {
-      await flip(change);
-    } else {
-      change();
-    }
-    this.tag = took ? answer.tag : null;
-    if (took) this.mark = answer.mark;
-    return took;
+  private read(): Promise<boolean> {
+    return this.attempt(async () => {
+      const answer = await this.ask(this.tag);
+      if (!answer.changed) return false;
+      let took = false;
+      const change = () => {
+        took = answer.take();
+      };
+      if (this.flipped) {
+        await flip(change);
+      } else {
+        change();
+      }
+      this.tag = took ? answer.tag : null;
+      if (took) this.mark = answer.mark;
+      return took;
+    });
   }
 
   forget(): void {

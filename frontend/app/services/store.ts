@@ -242,6 +242,16 @@ function markOf(operations: Operation[]): string {
   return operations.map((one) => `${one.id}:${one.state}`).join('|');
 }
 
+function listsOf(facts: PrFacts): PrFacts {
+  const list = <T>(one: T[]): T[] => (Array.isArray(one) ? one : []);
+  return {
+    ...facts,
+    changes_requested_by: list(facts.changes_requested_by),
+    pending_reviewers: list(facts.pending_reviewers),
+    mentions: list(facts.mentions),
+  };
+}
+
 function under(key: string): string {
   return `/api/conversations/${encodeURIComponent(key)}`;
 }
@@ -1137,7 +1147,7 @@ export default class StoreService extends Service {
               drawn,
             }),
         facts: facts
-          ? merged(held.facts, facts, (polled) => polled.polled_at)
+          ? merged(held.facts, listsOf(facts), (polled) => polled.polled_at)
           : held.facts,
         flags: merged(held.flags, manager, (flags) => flags.changed_at),
       };
@@ -1160,7 +1170,21 @@ export default class StoreService extends Service {
   }
 
   private takeWall(held: HeldPullRequests): void {
+    const { watching, groups, prs, threads, joins } = this;
+    try {
+      this.applyWall(held);
+    } catch (trouble) {
+      this.watching = watching;
+      this.groups = groups;
+      this.prs = prs;
+      this.threads = threads;
+      this.joins = joins;
+      throw trouble;
+    }
     shelve(held);
+  }
+
+  private applyWall(held: HeldPullRequests): void {
     this.watching = held.watching;
     this.groups = held.groups;
     const rows = [...held.pull_requests].sort(

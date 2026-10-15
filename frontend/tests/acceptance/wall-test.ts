@@ -10,7 +10,7 @@ import {
   visit,
   waitFor,
 } from '@ember/test-helpers';
-import type { ThreadCounts } from 'frontend/data/api';
+import type { HeldPullRequest, ThreadCounts } from 'frontend/data/api';
 import {
   factsFor,
   finishedRun,
@@ -18,6 +18,7 @@ import {
   runLedger,
   setupFakeBoard,
   threadRow as row,
+  WALL_GROUPS,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
@@ -45,6 +46,35 @@ module('Acceptance | wall', function (hooks) {
     return findAll('[data-test-wall-row]').map((one) =>
       one.getAttribute('data-test-wall-row')!,
     );
+  }
+
+  function wallOf(held: unknown[], over: Record<string, unknown> = {}): string {
+    return JSON.stringify({
+      watching: ['o/r'],
+      groups: WALL_GROUPS,
+      pull_requests: held,
+      ...over,
+    });
+  }
+
+  function withoutDashboard(number: number): Partial<HeldPullRequest> {
+    const held: Partial<HeldPullRequest> = { ...heldPr({ number }) };
+    delete held.dashboard;
+    return held;
+  }
+
+  function wallAnswers(body: string): void {
+    const served = globalThis.fetch;
+    globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      return new URL(url, 'http://127.0.0.1').pathname === '/api/pull-requests'
+        ? Promise.resolve(
+            new Response(body, {
+              headers: { 'Content-Type': 'application/json' },
+            }),
+          )
+        : served(input, init);
+    };
   }
 
   test('a wall shelved before dashboards carried threads does not stop the hub opening', async function (assert) {
@@ -1676,6 +1706,88 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-wall-stale]').exists();
     release();
     await settled();
+  });
+
+  test('a wall poll whose body will not take marks the wall stale after it keeps failing', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#8']);
+
+    wallAnswers(wallOf([heldPr(), withoutDashboard(8)]));
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-stale]')
+      .exists(
+        'three polls in a row brought a wall the page could not take, yet the wall does not say its rows are stale',
+      );
+  });
+
+  test('a wall poll whose body breaks part-way is taken whole or not at all', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }), heldPr({ number: 9 }));
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#8', 'o/r#9']);
+
+    wallAnswers(
+      wallOf([
+        heldPr({ dashboard: { pr: { title: 'Renamed on GitHub' } } }),
+        withoutDashboard(8),
+      ]),
+    );
+    await clock().tick(LIST);
+
+    const title = texts(
+      '[data-test-wall-row="o/r#7"] [data-test-wall-title]',
+    ).join('');
+    const halfTaken =
+      title.includes('Renamed on GitHub') && rows().includes('o/r#9');
+    assert.false(
+      halfTaken,
+      `half a poll was taken: #7 shows the new title (${title}) while #9, which that same poll dropped, is still on the wall (${rows().join(', ')})`,
+    );
+  });
+
+  test('a half-taken wall body is not left on the shelf for the next visit', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/');
+
+    wallAnswers(wallOf([heldPr(), withoutDashboard(8)]));
+    await clock().tick(LIST);
+
+    const shelved = JSON.parse(
+      localStorage.getItem('hub-pull-requests') ?? '',
+    ) as { pull_requests: { dashboard?: unknown }[] };
+    assert.true(
+      shelved.pull_requests.every((one) => one.dashboard !== undefined),
+      'the body the store could not take was shelved before it was read',
+    );
+  });
+
+  test('a null list in one pull request’s facts does not take the whole wall down', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+
+    const eight = heldPr({ number: 8 });
+    wallAnswers(
+      wallOf([
+        heldPr(),
+        {
+          ...eight,
+          dashboard: {
+            ...eight.dashboard,
+            facts: { ...eight.dashboard.facts, pending_reviewers: null },
+          },
+        },
+      ]),
+    );
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .exists('the healthy row still shows');
+    assert.dom('[data-test-wall]').exists();
   });
 
   test('the rows of a wall whose watcher is overdue are marked stale', async function (assert) {
