@@ -66,18 +66,26 @@ export const pulses = modifier((dot: HTMLElement, [state]: [unknown]) => {
   });
 });
 
-const chosen = new WeakMap<HTMLElement, { key: string; row: HTMLElement }>();
+const chosen = new WeakMap<HTMLElement, string>();
+
+function rowOf(list: HTMLElement, key: string): HTMLElement | null {
+  return list.querySelector<HTMLElement>(
+    `[data-flip-key="${CSS.escape(key)}"]`,
+  );
+}
 
 export const selects = modifier(
   (list: HTMLElement, [key]: [string | null | undefined]) => {
     const was = chosen.get(list);
-    if (!key || was?.key === key) return;
-    const row = list.querySelector<HTMLElement>(
-      `[data-flip-key="${CSS.escape(key)}"]`,
-    );
+    if (!key || was === key) return;
+    const row = rowOf(list, key);
     if (!row) return;
-    chosen.set(list, { key, row });
-    if (was?.row.isConnected) highlight(row, was.row.getBoundingClientRect());
+    chosen.set(list, key);
+    const from = was ? rowOf(list, was) : null;
+    if (from) highlight(row, from.getBoundingClientRect());
+    const head = row.previousElementSibling;
+    if (head?.matches('[data-flip-key^="head:"]'))
+      head.scrollIntoView({ block: 'nearest' });
     row.scrollIntoView({ block: 'nearest' });
   },
 );

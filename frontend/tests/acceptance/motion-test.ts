@@ -592,6 +592,32 @@ module('Acceptance | motion', function (hooks) {
     assert.deepEqual(slides(), [], 'nothing is left in flight');
   });
 
+  test('the highlight slides from the selected row after a poll moved that row to another section', async function (assert) {
+    board().held = [heldPr({ number: 7 }), heldPr({ number: 8 })];
+    await visit('/');
+    await press('j');
+
+    board().held = [
+      heldPr({
+        number: 7,
+        dashboard: { manager: { on_hold: true }, system: { on_hold: true } },
+      }),
+      heldPr({ number: 8 }),
+    ];
+    await clock().tick(LIST);
+    inMotion();
+
+    await press('k');
+
+    assert
+      .dom('[data-test-wall-row][aria-current="true"]')
+      .hasAttribute('data-test-wall-row', 'o/r#8');
+    assert.deepEqual(sliding(), ['o/r#8'], 'the highlight slides onto the row');
+
+    slides().forEach((one) => one.finish());
+    await settled();
+  });
+
   test('the first selection on the wall draws its highlight in place', async function (assert) {
     board().held = [heldPr({ number: 1 }), heldPr({ number: 2 })];
     await visit('/');
@@ -652,5 +678,22 @@ module('Acceptance | motion', function (hooks) {
       'the selected row is in view',
     );
     assert.deepEqual(slides(), [], 'nothing is left in flight');
+  });
+
+  test('k back to the top row of a short wall scrolls its section heading into view too', async function (assert) {
+    board().held = Array.from({ length: 12 }, (_, at) =>
+      heldPr({ number: at + 1 }),
+    );
+    await visit('/');
+    const wall = find('.wall-body') as HTMLElement;
+    wall.style.maxHeight = '200px';
+
+    await press('j', 12);
+    await press('k', 11);
+
+    assert.true(
+      insideOf(wall, '[data-test-wall-group]'),
+      'the top section heading is in view',
+    );
   });
 });
