@@ -33,6 +33,7 @@ class Review:
     reason_code: ReasonCode | None = None
     drafts: tuple[str, ...] = ()
     posted_review: int | None = None
+    direction: str = ""
 
     @property
     def in_flight(self) -> bool:

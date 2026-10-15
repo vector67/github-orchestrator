@@ -271,10 +271,11 @@ def _ticket(project: str | None, title: str, body: str) -> Ticket | None:
 
 
 class _Editable:
-    def __init__(self, pr: _Pr, key: str, held: Held | None) -> None:
+    def __init__(self, pr: _Pr, key: str, held: Held | None, direction: str) -> None:
         self._pr = pr
         self._key = key
         self._held = held
+        self._direction = direction
         self._open = True
 
     def close(self) -> None:
@@ -306,7 +307,7 @@ class _Editable:
         if conversation.is_unreadable:
             return Denied(ErrorCode.INTERNAL_REFUSAL, f"thread {key} will not read")
         try:
-            return ask(self._pr.ports, conversation, command, held)
+            return ask(self._pr.ports, conversation, command, held, self._direction)
         except UnreadableRecord as exc:
             return Denied(ErrorCode.INTERNAL_REFUSAL, str(exc))
 
@@ -358,12 +359,12 @@ class _Editable:
         return self._ask(Reject(reply=reply, delete_comment=delete_comment))
 
     def place(self, to: ConversationState, *, until: str = WAKE_MANUAL,
-              note: str = "", direction: str = "") -> Conversation | Denied:
+              note: str = "") -> Conversation | Denied:
         if to is ConversationState.DONE:
             return self._ask(Confirm())
         if to is ConversationState.DEFERRED:
             return self._ask(Defer(wake_on=until, note=note))
-        return self._ask(Place(to, direction))
+        return self._ask(Place(to))
 
     def unpark(self) -> Conversation | Denied:
         return self._ask(Unpark())
@@ -441,16 +442,16 @@ class _ConversationManager:
         self._pr = _Pr(modules, pr)
 
     @contextmanager
-    def editing(self, key: str) -> Iterator[EditableConversation]:
+    def editing(self, key: str, *, direction: str = "") -> Iterator[EditableConversation]:
         if not is_thread_key(key):
-            unheld = _Editable(self._pr, key, None)
+            unheld = _Editable(self._pr, key, None, direction)
             try:
                 yield unheld
             finally:
                 unheld.close()
             return
         with self._pr.ports.records.held(key) as held:
-            editable = _Editable(self._pr, key, held)
+            editable = _Editable(self._pr, key, held, direction)
             try:
                 yield editable
             finally:
@@ -503,8 +504,9 @@ class _ConversationManager:
                 update.conversation = outcome.conversation
             return cut.workspace.path
 
-    def send_review(self, verdict: Verdict, body: str | None) -> Review | Denied:
-        return send_review(self._pr.ports, verdict, body)
+    def send_review(self, verdict: Verdict, body: str | None,
+                    direction: str = "") -> Review | Denied:
+        return send_review(self._pr.ports, verdict, body, direction)
 
     def reviews(self) -> Sequence[Review]:
         return self._pr.ports.records.reviews()

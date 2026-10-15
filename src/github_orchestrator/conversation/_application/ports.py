@@ -62,6 +62,7 @@ class Intent:
     thumbs_up: bool = True
     message: str = ""
     ticket: Ticket | None = None
+    direction: str = ""
 
 
 @dataclass(frozen=True)

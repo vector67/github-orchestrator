@@ -7431,6 +7431,922 @@
     }
    ]
   },
+  "tests/cli/test_thread_commands.py::test_a_draft_verb_the_board_refuses_says_why[enrol-anchor]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_draft_verb_the_board_refuses_says_why[post-now-anchor]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_colleagues_thread_keeps_the_direction[fix-fields3-first]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_colleagues_thread_keeps_the_direction[resolve-fields0-resolve]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_proposed_fix_keeps_the_direction[approve-fields0-approve]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"cherry-pick\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c..orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "cherry-pick",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c..orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/main": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      },
+      "prwork/g": {
+       "text": "the fix"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "[main faf9c64] the fix\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+)\n create mode 100644 g\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"push\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "push"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: No configured push destination.\nEither specify the URL from the command-line or configure a remote repository using\n\n    git remote add <name> <url>\n\nand then push using the remote name\n\n    git push <name>\n\nTo push to multiple remotes at once, configure a remote group using\n\n    git config remotes.<groupname> \"<remote1> <remote2>\"\n\nand then push using the group name\n\n    git push <groupname>\n\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-list\", \"--count\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-list",
+      "--count",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"faf9c649a16855ea68ad6abf98245a3ece10020e^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"orchestrator/thread/7/PRRT_101^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "orchestrator/thread/7/PRRT_101^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD faf9c649a16855ea68ad6abf98245a3ece10020e\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"commit\", \"-q\", \"-m\", \"the fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "commit",
+      "-q",
+      "-m",
+      "the fix"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\", \"faf9c649a16855ea68ad6abf98245a3ece10020e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "merge-base",
+      "--is-ancestor",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_proposed_fix_keeps_the_direction[reject-fields2-reject]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"commit\", \"-q\", \"-m\", \"the fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "commit",
+      "-q",
+      "-m",
+      "the fix"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\", \"faf9c649a16855ea68ad6abf98245a3ece10020e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "merge-base",
+      "--is-ancestor",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_proposed_fix_keeps_the_direction[rework-fields1-rework]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD faf9c649a16855ea68ad6abf98245a3ece10020e\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"commit\", \"-q\", \"-m\", \"the fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "commit",
+      "-q",
+      "-m",
+      "the fix"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\", \"faf9c649a16855ea68ad6abf98245a3ece10020e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "merge-base",
+      "--is-ancestor",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_a_human_only_verb_on_a_proposed_fix_keeps_the_direction[session-fields3-start-session]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD faf9c649a16855ea68ad6abf98245a3ece10020e\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"commit\", \"-q\", \"-m\", \"the fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "commit",
+      "-q",
+      "-m",
+      "the fix"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\", \"faf9c649a16855ea68ad6abf98245a3ece10020e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "merge-base",
+      "--is-ancestor",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ]
+  },
   "tests/cli/test_thread_commands.py::test_a_reply_after_a_ticket_leaves_no_ticket_behind": {
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
     {
@@ -11698,6 +12614,305 @@
     }
    ]
   },
+  "tests/cli/test_thread_commands.py::test_resolve_posts_the_humans_reply": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_retry_runs_a_failed_thread_again": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_rework_carries_the_humans_note": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD faf9c649a16855ea68ad6abf98245a3ece10020e\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"commit\", \"-q\", \"-m\", \"the fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "commit",
+      "-q",
+      "-m",
+      "the fix"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\", \"faf9c649a16855ea68ad6abf98245a3ece10020e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "merge-base",
+      "--is-ancestor",
+      "--end-of-options",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c",
+      "faf9c649a16855ea68ad6abf98245a3ece10020e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "faf9c649a16855ea68ad6abf98245a3ece10020e\n"
+    }
+   ]
+  },
   "tests/cli/test_thread_commands.py::test_show_prints_the_saved_record_of_one_thread": {
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
     {
@@ -13137,6 +14352,105 @@
    ]
   },
   "tests/cli/test_thread_commands.py::test_step_on_a_number_the_plan_does_not_have_exits_nonzero": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"856ffec8209ba4d59a882ebb8e11fded21b6222c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "856ffec8209ba4d59a882ebb8e11fded21b6222c"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      },
+      "prwork/.git/worktrees/PRRT_101/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 856ffec8209ba4d59a882ebb8e11fded21b6222c\nbranch refs/heads/main\n\n"
+    }
+   ]
+  },
+  "tests/cli/test_thread_commands.py::test_stop_stops_the_agents_run": {
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
     {
      "argv": [

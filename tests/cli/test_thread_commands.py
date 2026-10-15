@@ -11,6 +11,7 @@ from github_orchestrator.conversation import (
     Classification,
     ConfidenceLevel,
     ConversationState,
+    OperationKind,
     ReviewState,
 )
 from github_orchestrator.domain import Sha, Side
@@ -770,7 +771,196 @@ def test_place_moves_a_thread_and_keeps_the_human_direction(settings, machine, t
     assert ran.code == 0
     stored = _stored(threads)
     assert stored.standing is ConversationState.WAITING
-    assert stored.operations[-1].text == "octocat: I answered on the board, it is their move"
+    assert stored.operations[-1].direction == "octocat: I answered on the board, it is their move"
+
+
+DIRECTION = "octocat: \"do it\", said on the call"
+
+HUMAN_ONLY = ("place", "unpark", "approve", "rework", "session", "fix", "retry", "stop",
+              "resolve", "reject", "answer", "edit", "enrol", "withdraw", "discard",
+              "post-now", "send-review")
+
+
+@pytest.mark.parametrize("verb", HUMAN_ONLY)
+def test_a_human_only_verb_will_not_run_without_the_humans_direction(run_cli, verb):
+    ran = run_cli("thread", verb, f"--repo={REPO}", f"--pr={PR}")
+
+    assert ran.code == 2
+    assert "--human-direction" in ran.err
+
+
+@pytest.mark.parametrize("verb", HUMAN_ONLY)
+def test_a_human_only_verb_says_an_agent_runs_it_only_when_a_human_said_to(run_cli, verb):
+    ran = run_cli("thread", verb, "--help")
+
+    assert "HUMAN ONLY" in ran.out
+    assert "only when a human told it to" in " ".join(ran.out.split())
+
+
+def _human(verb, **fields):
+    return _report_argv(verb, human_direction=DIRECTION, **fields)
+
+
+def _asked(threads, kind, key=THREAD_KEY):
+    return [one for one in _stored(threads, key).operations if one.kind is kind][-1]
+
+
+def _directed(run_cli, threads, verb, kind, key=THREAD_KEY, **fields):
+    ran = run_cli(*_human(verb, thread_id=key, **fields))
+    assert ran.code == 0, ran.err
+    threads.tick(FakeNotifications(), on_hold=False)
+    return _asked(threads, kind, key)
+
+
+@pytest.mark.parametrize(("verb", "fields", "kind"), [
+    ("resolve", {"reply": "Done, thanks."}, OperationKind.RESOLVE),
+    ("answer", {"body": "It runs once per poll."}, OperationKind.REPLY),
+    ("place", {"to": "deferred", "until": "reply", "note": "after the release"},
+     OperationKind.DEFER),
+    ("fix", {}, OperationKind.FIRST),
+])
+def test_a_human_only_verb_on_a_colleagues_thread_keeps_the_direction(
+        settings, machine, threads, run_cli, verb, fields, kind):
+    _a_colleagues_comment(settings, machine, threads)
+
+    asked = _directed(run_cli, threads, verb, kind, **fields)
+
+    assert asked.direction == DIRECTION
+
+
+def test_resolve_posts_the_humans_reply(settings, machine, threads, run_cli):
+    _a_colleagues_comment(settings, machine, threads)
+
+    asked = _directed(run_cli, threads, "resolve", OperationKind.RESOLVE, reply="Done, thanks.")
+
+    assert asked.text == "Done, thanks."
+    assert _stored(threads).standing is ConversationState.DONE
+
+
+def test_a_deferred_thread_wakes_by_hand_with_unpark(settings, machine, threads, run_cli):
+    _a_colleagues_comment(settings, machine, threads)
+    _directed(run_cli, threads, "place", OperationKind.DEFER, to="deferred")
+
+    asked = _directed(run_cli, threads, "unpark", OperationKind.UNPARK)
+
+    assert asked.direction == DIRECTION
+    assert _stored(threads).standing is not ConversationState.DEFERRED
+
+
+def test_place_done_asks_to_confirm_what_only_an_assumed_done_thread_takes(
+        settings, machine, threads, run_cli):
+    _a_colleagues_comment(settings, machine, threads)
+
+    ran = run_cli(*_human("place", thread_id=THREAD_KEY, to="done"))
+
+    assert ran.code == 1
+    assert "is not assumed done" in ran.err
+
+
+def test_stop_stops_the_agents_run(running, threads, run_cli):
+    asked = _directed(run_cli, threads, "stop", OperationKind.STOP)
+
+    assert asked.direction == DIRECTION
+
+
+def _proposed(fixed, run_cli):
+    ran = run_cli(*_ready_argv(sha=fixed))
+    assert ran.code == 0, ran.err
+
+
+@pytest.mark.parametrize(("verb", "fields", "kind"), [
+    ("approve", {"reply": "Fixed in the latest push."}, OperationKind.APPROVE),
+    ("rework", {"note": "keep the old name as an alias"}, OperationKind.REWORK),
+    ("reject", {"reply": "Leaving it as it is."}, OperationKind.REJECT),
+    ("session", {"steer": "look at the caller"}, OperationKind.START_SESSION),
+])
+def test_a_human_only_verb_on_a_proposed_fix_keeps_the_direction(
+        fixed, threads, run_cli, verb, fields, kind):
+    _proposed(fixed, run_cli)
+
+    asked = _directed(run_cli, threads, verb, kind, **fields)
+
+    assert asked.direction == DIRECTION
+
+
+def test_rework_carries_the_humans_note(fixed, threads, run_cli):
+    _proposed(fixed, run_cli)
+
+    asked = _directed(run_cli, threads, "rework", OperationKind.REWORK,
+                      note="keep the old name as an alias", include="src/foo.py",
+                      point="src/foo.py:3:this one")
+
+    assert asked.brief.note == "keep the old name as an alias"
+    assert asked.brief.include == ("src/foo.py",)
+    assert [(one.file, one.line, one.text) for one in asked.brief.pointed] == [
+        ("src/foo.py", 3, "this one")]
+
+
+def test_retry_runs_a_failed_thread_again(opened, machine, threads, run_cli):
+    for _ in range(_stored(threads).run_holder.attempts_allowed):
+        _running(machine, threads)
+        run_cli(*_report_argv("fail", thread_id=THREAD_KEY, reason="tests failed"))
+    assert _stored(threads).fix.has_failed
+
+    machine.runs().script(Outcome())
+    asked = _directed(run_cli, threads, "retry", OperationKind.RETRY)
+
+    assert asked.direction == DIRECTION
+
+
+def _a_draft(run_cli, body_file):
+    ran = run_cli("thread", "draft", "--repo", REPO, "--pr", str(PR), "--path", "src/foo.py",
+                  "--line", "12", "--body-file", str(body_file))
+    assert ran.code == 0, ran.err
+    return ran.out.strip()
+
+
+def test_edit_rewrites_a_draft_and_keeps_the_direction(store, threads, body_file, tmp_path,
+                                                     run_cli):
+    key = _a_draft(run_cli, body_file)
+    rewritten = tmp_path / "rewritten.md"
+    rewritten.write_text("Rename it to parse_rows.")
+
+    asked = _directed(run_cli, threads, "edit", OperationKind.EDIT_DRAFT, key=key,
+                      body_file=rewritten, path="src/foo.py", line=14)
+
+    assert asked.direction == DIRECTION
+    drafted = _stored(threads, key)
+    assert (drafted.body, drafted.line) == ("Rename it to parse_rows.", 14)
+
+
+def test_discard_throws_a_draft_away(store, threads, body_file, run_cli):
+    key = _a_draft(run_cli, body_file)
+
+    ran = run_cli(*_human("discard", thread_id=key))
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert ran.code == 0, ran.err
+    assert _asked(threads, OperationKind.DISCARD, key).direction == DIRECTION
+
+
+@pytest.mark.parametrize(("verb", "refusal"), [
+    ("enrol", "anchor"),
+    ("post-now", "anchor"),
+    ("withdraw", "review"),
+])
+def test_a_draft_verb_the_board_refuses_says_why(store, threads, body_file, run_cli, verb,
+                                                 refusal):
+    key = _a_draft(run_cli, body_file)
+
+    ran = run_cli(*_human(verb, thread_id=key))
+
+    assert ran.code == 1
+    assert refusal in ran.err
+
+
+def test_send_review_keeps_the_direction_on_the_review(store, threads, run_cli):
+    ran = run_cli(*_report_argv("send-review", verdict="comment", body="A few small things.",
+                                human_direction=DIRECTION))
+
+    assert ran.code == 0, ran.err
+    review = threads.reviews()[-1]
+    assert (review.body, review.direction) == ("A few small things.", DIRECTION)
 
 
 def test_ready_prints_the_record_it_saved(fixed, threads, run_cli):
