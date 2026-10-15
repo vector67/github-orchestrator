@@ -223,7 +223,12 @@ export default class Wall extends Component {
             class="group-head wall-group lvl-{{section.level}}-h"
             data-flip-key="head:{{section.group}}"
             data-test-wall-group={{section.group}}
-          >{{#if (this.foldable section)}}<button
+          ><span
+              class="edge-key edge"
+              aria-hidden="true"
+              data-square={{section.edge}}
+              data-test-edge-key
+            ></span>{{#if (this.foldable section)}}<button
                 type="button"
                 class="group-fold"
                 aria-expanded={{if (this.isFolded section) "false" "true"}}

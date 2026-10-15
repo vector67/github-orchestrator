@@ -1093,6 +1093,10 @@ const EDGES: Record<Square, string> = {
   park: 'parked',
 };
 
+export function edgeOf(group: WallGroup): string {
+  return EDGES[SQUARES[group]];
+}
+
 export interface Frozen {
   worktree: string;
   here: string;

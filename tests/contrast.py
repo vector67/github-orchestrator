@@ -1,4 +1,5 @@
 WCAG_AA_NORMAL_TEXT = 4.5
+WCAG_NON_TEXT = 3
 
 
 def relative_luminance(colour: str) -> float:
