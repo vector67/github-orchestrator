@@ -16,6 +16,7 @@ from pr_summary.github import (
     changed_files,
     contents,
     earlier_prs,
+    gh_as,
     gh_cli,
     history,
     merge_base,
@@ -39,11 +40,13 @@ def main() -> None:
     parser.add_argument("--prepare-only", action="store_true", help="write the witnesses' input folders and stop")
     parser.add_argument("--work-dir", type=Path, help="write the witness folders here, creating it if missing; it must be empty")
     parser.add_argument("--use-github-api", action="store_true", help="read files over the GitHub API when the working directory is not a clone of the repository")
+    parser.add_argument("--gh-account", help="run gh as this logged-in account, with the token gh auth token --user gives for it, instead of gh's active account")
     arguments = parser.parse_args()
 
     named = work_dir(arguments.work_dir) if arguments.work_dir else None
-    owner, repo, number = target(gh_cli, arguments.pr)
-    pr = pull_request(gh_cli, owner, repo, number)
+    gh = gh_as(arguments.gh_account) if arguments.gh_account else gh_cli
+    owner, repo, number = target(gh, arguments.pr)
+    pr = pull_request(gh, owner, repo, number)
     clone = Clone.find(Path.cwd(), owner, repo)
     unavailable = "the working directory is not a clone of it"
     if clone is not None:
@@ -63,10 +66,10 @@ def main() -> None:
             return local.history(base, path, HISTORY_DEPTH)
 
     elif arguments.use_github_api:
-        base = merge_base(gh_cli, owner, repo, pr.base_sha, pr.head_sha)
-        files = changed_files(gh_cli, owner, repo, number)
-        read = contents(gh_cli, owner, repo)
-        history_of = history(gh_cli, owner, repo, base)
+        base = merge_base(gh, owner, repo, pr.base_sha, pr.head_sha)
+        files = changed_files(gh, owner, repo, number)
+        read = contents(gh, owner, repo)
+        history_of = history(gh, owner, repo, base)
     else:
         sys.stderr.write(
             f"Cannot read {owner}/{repo} locally: {unavailable}.\n"
@@ -80,7 +83,7 @@ def main() -> None:
     fallback = arguments.config.read_text() if arguments.config else None
     settings = settings_from(repo_config.decode() if repo_config is not None else fallback)
     ticket = ticket_key(settings, title=pr.title, branch=pr.branch)
-    earlier = earlier_prs(gh_cli, owner, repo, pr, ticket, files, settings, history_of)
+    earlier = earlier_prs(gh, owner, repo, pr, ticket, files, settings, history_of)
     out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
     if not arguments.prepare_only:

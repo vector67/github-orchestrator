@@ -14,7 +14,7 @@ the code does, why the change was needed, or whether those agree.
 
 A Claude Code plugin, `pr-summary`, that runs in any repository with no
 github-orchestrator installed. The orchestrator's Summary tab (the first
-tab, before Board) reuses it with one addition, `--work-dir`
+tab, before Board) reuses it with two additions, `--work-dir` and `--gh-account`
 ([its spec](2026-10-15-summary-tab-design.md)). Nothing in it imports
 `github_orchestrator`.
 

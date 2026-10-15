@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import re
 import subprocess
 from collections.abc import Callable
@@ -68,11 +69,20 @@ class GhFailed(Exception):
     pass
 
 
-def gh_cli(args: list[str]) -> bytes:
-    result = subprocess.run(["gh", *args], capture_output=True)
+def gh_cli(args: list[str], env: dict[str, str] | None = None) -> bytes:
+    result = subprocess.run(["gh", *args], capture_output=True, env=env)
     if result.returncode != 0:
         raise GhFailed(result.stderr.decode(errors="replace").strip())
     return result.stdout
+
+
+def gh_as(account: str) -> Gh:
+    try:
+        token = gh_cli(["auth", "token", "--user", account]).decode().strip()
+    except GhFailed as failure:
+        raise GhFailed(f"gh auth token --user {account} failed: {failure}") from None
+    env = {**os.environ, "GH_TOKEN": token}
+    return lambda args: gh_cli(args, env)
 
 
 def target(gh: Gh, given: str) -> tuple[str, str, int]:

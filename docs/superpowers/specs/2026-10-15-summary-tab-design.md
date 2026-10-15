@@ -33,18 +33,25 @@ Alignment section's mismatches.
 | 10  | Keys follow screen order: Summary 1, Board 2, Dashboard 3, Terminal 4, Diff 5.                         |
 | 11  | PRs you review open on Summary; your own open on Board.                                                |
 | 12  | A chip counts the Alignment mismatches on the wall row and in the PR header.                           |
-| 13  | The plugin gains `--work-dir <path>`, the one change to it.                                            |
+| 13  | The plugin gains `--work-dir <path>` and `--gh-account <login>`, the two changes to it.                |
 | 14  | The mismatch count comes from the judge's `alignment/output.json`.                                     |
 | 15  | The newest run's working folder is kept per PR and replaced by the next run.                           |
 | 16  | A summary is due once per review request, not once per head SHA.                                       |
 
-## The plugin's one change
+## The plugin's two changes
 
 `summarise.py` takes `--work-dir <path>`. With it, the plugin writes its
 witness folders into `<path>` instead of a fresh `mkdtemp` folder. It creates
 `<path>` if missing and refuses one that is not empty, so a leftover
 `output.json` can never pass for a finished witness. Without the flag nothing
 changes.
+
+`summarise.py` takes `--gh-account <login>`. With it, the plugin reads that
+account's token once with `gh auth token --user <login>` and sets `GH_TOKEN`
+on its own `gh` calls, so an instance whose `gh_account` is not `gh`'s active
+account still reads that account's private repositories. The board passes
+the account's name and never a token. A failed lookup stops the run with a
+message naming the account. Without the flag nothing changes.
 
 The README documents the layout as part of the flag's contract:
 `<path>/<witness>/output.json` for `requested`, `claimed`, `implementation`,
@@ -79,7 +86,7 @@ A lane of its own with one slot. Due PRs wait their turn, oldest `wanted`
 first. A run is:
 
 1. Delete the PR's working folder.
-2. `uv run --script <plugin>/scripts/summarise.py <pr-url> --config <instance config.toml> --work-dir <folder>`,
+2. `uv run --script <plugin>/scripts/summarise.py <pr-url> --config <instance config.toml> --work-dir <folder> --gh-account <gh_account>`,
    plus `--use-github-api` when the button started it, with the repository's
    `local_path` as the working directory.
 3. Store the result. Keep the folder.

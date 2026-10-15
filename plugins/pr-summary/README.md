@@ -47,6 +47,12 @@ uv run --script <plugin>/scripts/summarise.py https://github.com/acme/shop/pull/
 `--prepare-only` writes the witnesses' input folders and stops, which is the
 way to see exactly what each witness was given.
 
+`--gh-account <login>` runs every `gh` call as that logged-in account rather
+than the one `gh` has active. The plugin asks `gh auth token --user <login>`
+once and hands the token to its own `gh` calls only, as `GH_TOKEN`; it never
+prints it. If that lookup fails, the run stops with a message naming the
+account.
+
 ## Working files
 
 Each run writes its witness folders into a fresh temporary folder, or into
