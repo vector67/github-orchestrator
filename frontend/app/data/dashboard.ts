@@ -137,6 +137,7 @@ const CI_WORDS: Record<string, string> = {
   passing: 'CI passing',
   failing: 'CI failing',
   pending: 'CI pending',
+  none: 'no CI',
 };
 
 type Polled = Pick<
@@ -207,7 +208,7 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'address-feedback':
       return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes | ${unresolvedOf(facts)}`;
     case 'ready-to-merge':
-      return `Approved by ${listed(status.approved_by) || 'Reviewer'} | CI passing`;
+      return `${status.approved_by.length ? `Approved by ${listed(status.approved_by)}` : 'No approval needed'} | ${ci}`;
     case 'await-review':
     case 'request-reviewers':
     case 'mark-ready-for-review':

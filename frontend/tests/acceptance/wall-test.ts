@@ -516,6 +516,45 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  test('a repo with no CI and no review rules is not said to be approved with CI passing', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('ready-to-merge', {
+            ci_status: 'pending',
+            review_decision: null,
+          }),
+          status: { approved_by: [], checks_done: 0, checks_total: 0 },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .hasAttribute('data-move', 'ready-to-merge');
+    assert.deepEqual(
+      [cells('o/r#7')['why'], cells('o/r#7')['ci']],
+      ['No approval needed | CI pending', 'pending'],
+    );
+  });
+
+  test('a head with no checks reads as no CI', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: { facts: factsFor('review', { ci_status: 'none' }) },
+      }),
+    );
+
+    await visit('/');
+
+    assert.strictEqual(
+      cells('o/r#7')['why'],
+      'no CI | 3 files changed | no reviews yet',
+    );
+  });
+
   const RLO = '\u202E';
 
   function boxOfCharacter(text: Node, at: number): DOMRect {
