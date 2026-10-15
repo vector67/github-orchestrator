@@ -640,7 +640,9 @@ function stateOf(
   if (exit_status === NEEDS_GITHUB_API) return 'needs-github-api';
   if (exit_status === null && stderr) return 'failed';
   if (exit_status === null) {
-    return role === 'author' ? 'none-yet-author' : 'none-yet-reviewer';
+    return role === 'reviewer' && summary.wanted
+      ? 'none-yet-reviewer'
+      : 'none-yet-author';
   }
   if (exit_status !== 0) return 'failed';
   return head !== null && summary.head_sha !== head ? 'stale' : 'ready';

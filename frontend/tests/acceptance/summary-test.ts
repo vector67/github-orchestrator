@@ -93,6 +93,7 @@ module('Acceptance | summary tab', function (hooks) {
 
   test('a pull request you review with no summary yet waits for its turn, with nothing below', async function (assert) {
     asReviewer();
+    board().summary = prSummary({ wanted: ago(2) });
 
     await visit('/pr/o/r/7');
 
@@ -102,6 +103,25 @@ module('Acceptance | summary tab', function (hooks) {
       .hasAttribute('data-state', 'none-yet-reviewer');
     assert.dom('[data-test-summary-strip]').hasText('Waiting for its turn');
     assert.dom('[data-test-summary-markdown]').doesNotExist();
+  });
+
+  test('a pull request you review with no request waiting offers Summarise rather than a wait that never ends', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({ etag: '"summary-5"' });
+
+    await visit('/pr/o/r/7');
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasAttribute('data-state', 'none-yet-author');
+    assert.dom('[data-test-summary-strip]').hasText('No summary Summarise');
+
+    await click('[data-test-summary-run]');
+
+    assert.deepEqual(
+      board().posted.map(({ verb, ifMatch }) => ({ verb, ifMatch })),
+      [{ verb: 'summarise', ifMatch: '"summary-5"' }],
+    );
   });
 
   test('your own pull request opens on Board, and its Summary tab offers Summarise, which runs one against the summary it read', async function (assert) {

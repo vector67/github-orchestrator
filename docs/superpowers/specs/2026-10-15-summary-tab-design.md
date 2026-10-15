@@ -132,8 +132,8 @@ one state:
 
 | State                | Strip                                                                  | Below the strip              |
 | -------------------- | ---------------------------------------------------------------------- | ---------------------------- |
-| None yet, reviewer   | Waiting for its turn, with the live dot when running                   | nothing                      |
-| None yet, author     | No summary, and a Summarise button                                     | nothing                      |
+| None yet, reviewer   | A request is waiting (`wanted` set): Waiting for its turn              | nothing                      |
+| None yet, author     | No summary, and a Summarise button; a reviewer's with no request too   | nothing                      |
 | Running              | Live dot, SHA, elapsed time, and a checklist of the six witnesses      | the previous summary, if any |
 | Ready                | SHA and when it finished                                               | the summary                  |
 | Stale                | Written for `<sha>`, head is `<sha>`, N commits behind; a Rerun button | the summary                  |
