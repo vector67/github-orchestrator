@@ -63,6 +63,10 @@ class Settings:
         return self.data_dir / "threads"
 
     @property
+    def summaries_dir(self) -> Path:
+        return self.data_dir / "summaries"
+
+    @property
     def thread_worktrees_dir(self) -> Path:
         return self.data_dir / "thread-worktrees"
 

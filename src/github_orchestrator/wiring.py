@@ -127,6 +127,8 @@ from github_orchestrator.pr_processes._background import BackgroundPrProcesses
 from github_orchestrator.pr_processes._background import Run as ManagerRun
 from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
+from github_orchestrator.pr_summaries import PrSummaries
+from github_orchestrator.pr_summaries._disk import DiskPrSummaries
 from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._process import Kill, ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
@@ -525,6 +527,21 @@ class ThreadRecordsProvider(Provider):
     @provide
     def thread_records(self, wiring: ThreadRecordsWiring) -> ThreadRecords:
         return DiskThreadRecords(wiring.threads_dir)
+
+
+@dataclass(frozen=True)
+class PrSummariesWiring(Wiring):
+    summaries_dir: Path
+
+
+@wires(PrSummariesWiring)
+class PrSummariesProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=PrSummariesWiring, scope=Scope.APP)
+
+    @provide
+    def pr_summaries(self, wiring: PrSummariesWiring, clock: UtcClock) -> PrSummaries:
+        return DiskPrSummaries(wiring.summaries_dir, clock)
 
 
 @dataclass(frozen=True)
@@ -1212,6 +1229,10 @@ def thread_records_wiring(settings: Settings) -> ThreadRecordsWiring:
     return ThreadRecordsWiring(settings.threads_dir)
 
 
+def pr_summaries_wiring(settings: Settings) -> PrSummariesWiring:
+    return PrSummariesWiring(settings.summaries_dir)
+
+
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:
     return ChangeDetectionWiring(settings.state_dir, settings.config.gh_account,
                                  settings.config.watcher_poll_interval)
@@ -1420,6 +1441,7 @@ def make_container(env: Mapping[str, str], home: Path,
         working_copies_wiring(settings),
         thread_records_wiring(settings),
         change_detection_wiring(settings),
+        pr_summaries_wiring(settings),
         *mode_wirings(settings, managed),
         AgentChangesProvider,
         ReportCommandsWiring(sys.executable),

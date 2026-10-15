@@ -317,6 +317,11 @@ PACKAGES = {
         may_import=("terminal_sessions",),
         role="PR windows run each PR's agent manager in the background and open its terminal sessions, and are handed the worktree by their callers",
     ),
+    "pr_summaries": Package(
+        pinned=frozenset({"PrSummaries"}),
+        may_import=(),
+        role="PR summaries keep each PR's latest summary and its request marks, and know nothing of who asks for one or runs it",
+    ),
     "server": Package(
         pinned=frozenset(),
         may_import=("settings", "board_api", LIBRARIES),
