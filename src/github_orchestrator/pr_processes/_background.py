@@ -60,7 +60,7 @@ class BackgroundPrProcesses:
         output = pr_file(self._places.manager_logs_dir, pr, OUTPUT)
         output.parent.mkdir(parents=True, exist_ok=True)
         started = self._run(
-            ["sh", "-c", DETACHED, "sh", str(output), *manager_argv(pr)],
+            ["sh", "-c", DETACHED, "sh", str(output), *self._places.clamp, *manager_argv(pr)],
             cwd=worktree, env={**os.environ, **self._places.environment},
             start_new_session=True, check=True, capture_output=True, text=True,
         )

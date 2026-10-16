@@ -142,6 +142,7 @@ def test_the_restart_rewrites_the_launchagent_to_run_this_python_before_reloadin
             "GITHUB_ORCHESTRATOR_CONFIG": str(machine.config_path),
         },
         "KeepAlive": True,
+        "ProcessType": "Interactive",
         "ThrottleInterval": 1,
         "StandardOutPath": str(machine.data_dir / "logs" / "launchd.log"),
         "StandardErrorPath": str(machine.data_dir / "logs" / "launchd.log"),

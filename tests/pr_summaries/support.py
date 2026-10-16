@@ -45,7 +45,8 @@ HEAD = "abc123"
 class Lane:
     def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
                  agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
-                 plugin: tuple[str, ...] | None = None, clone: Path | None = None, mcp_config: str = "") -> None:
+                 plugin: tuple[str, ...] | None = None, clone: Path | None = None, mcp_config: str = "",
+                 clamp: tuple[str, ...] = ()) -> None:
         self.clone = clone or tmp_path / "clone"
         self.clone.mkdir(exist_ok=True)
         self.config = tmp_path / "config.toml"
@@ -54,7 +55,8 @@ class Lane:
             PrSummariesWiring(self.summaries_dir),
             SummaryLaneWiring(plugin=plugin or (sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
                               config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
-                              agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in),
+                              agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in,
+                              clamp=clamp),
             clocks_of(ticking_clock()),
             fake_provider(ChangeDetection, HeadsAt(head)),
         )

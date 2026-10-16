@@ -16,8 +16,8 @@ from tests.conftest import fake_provider
 
 
 def background_pr_processes(settings: Settings, run: Callable[..., Any],
-                          terminals: Terminals) -> PrProcesses:
-    provider = BackgroundPrProcessesWiring(run, pr_processes_places(settings))
+                          terminals: Terminals, clamp: tuple[str, ...] = ()) -> PrProcesses:
+    provider = BackgroundPrProcessesWiring(run, pr_processes_places(settings, clamp))
     pr_processes: PrProcesses = wire(
         provider, fake_provider(Terminals, terminals)).get(PrProcesses)
     return pr_processes

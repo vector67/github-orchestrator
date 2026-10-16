@@ -23,7 +23,8 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
                     clock: Callable[[], float] = time.monotonic,
                     summary_model: str = SUMMARY_MODEL,
                     command: str = "claude", agent: Agent = Agent.CLAUDE,
-                    model: str = MODEL, jev: ScriptedJev | None = None) -> History:
+                    model: str = MODEL, jev: ScriptedJev | None = None,
+                    clamp: tuple[str, ...] = ()) -> History:
     history: History = wire(
         fake_provider(PrProcesses, world.pr_processes),
         fake_provider(AgentChanges, world.pr_processes),
@@ -32,7 +33,7 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
         AgentRunsWiring(claude.popen, claude.run, jev.ask if jev else None, agent=agent, command=command, model=model,
                         summary_model=summary_model, pytest_workers=PYTEST_WORKERS,
                         transcripts_dir=data / "transcripts",
-                        runs_log=data / "runs.jsonl"),
+                        runs_log=data / "runs.jsonl", clamp=clamp),
     ).get(History)
     return history
 

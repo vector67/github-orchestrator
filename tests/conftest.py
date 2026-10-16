@@ -292,7 +292,7 @@ def build_container(settings: Settings, *fakes: Part,
         thread_records_wiring(settings),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
-        summary_lane_wiring(settings),
+        summary_lane_wiring(settings, ()),
         conversation_wiring(settings),
         *fakes,
     )

@@ -241,6 +241,10 @@ def local_now() -> datetime:
     return datetime.now().astimezone()
 
 
+def utility_clamp(platform: str) -> tuple[str, ...]:
+    return ("taskpolicy", "-c", "utility") if platform == "darwin" else ()
+
+
 def which(program: str, *, path: str | None = None) -> str | None:
     return shutil.which(program, path=path)
 
@@ -566,6 +570,7 @@ class SummaryLaneWiring(Wiring):
     plugin: tuple[str, ...] = ("uv", "run", "--script", str(SUMMARISE))
     timeout: float = SUMMARY_TIMEOUT_SECONDS
     run_in: Callable[[Callable[[], None]], None] = in_a_summary_thread
+    clamp: tuple[str, ...] = ()
 
 
 @wires(SummaryLaneWiring)
@@ -586,7 +591,7 @@ class SummaryLaneProvider(Provider):
                                 clones=wiring.clones, head_of=head_of, url_of=pr_url,
                                 gh_account=wiring.gh_account, mcp_config=wiring.mcp_config,
                                 agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
-                                run_in=wiring.run_in)
+                                run_in=wiring.run_in, clamp=wiring.clamp)
 
 
 @dataclass(frozen=True)
@@ -701,6 +706,7 @@ class AgentRunsWiring(Wiring):
     pytest_workers: int
     transcripts_dir: Path
     runs_log: Path
+    clamp: tuple[str, ...]
 
 
 @wires(AgentRunsWiring)
@@ -720,7 +726,7 @@ class AgentRunsProvider(Provider):
                                summary_model=wiring.summary_model,
                                pytest_workers=wiring.pytest_workers,
                                transcripts_dir=wiring.transcripts_dir,
-                               runs_log=wiring.runs_log)
+                               runs_log=wiring.runs_log, clamp=wiring.clamp)
 
     @provide
     def history(self, runs: AgentRuns) -> History:
@@ -1251,11 +1257,12 @@ def conversation_config(settings: Settings) -> ThreadsConfig:
     )
 
 
-def pr_processes_places(settings: Settings) -> Places:
+def pr_processes_places(settings: Settings, clamp: tuple[str, ...]) -> Places:
     return Places(
         manager_records_dir=settings.pr_managers_dir,
         manager_logs_dir=settings.logs_dir / "pr_managers",
         environment=settings.child_environment(),
+        clamp=clamp,
     )
 
 
@@ -1284,11 +1291,12 @@ def pr_summaries_wiring(settings: Settings) -> PrSummariesWiring:
     return PrSummariesWiring(settings.summaries_dir)
 
 
-def summary_lane_wiring(settings: Settings) -> SummaryLaneWiring:
+def summary_lane_wiring(settings: Settings, clamp: tuple[str, ...]) -> SummaryLaneWiring:
     return SummaryLaneWiring(settings.config_path,
                              {repo: clone.path for repo, clone in settings.repos.items()},
                              settings.config.agents_enabled, settings.config.gh_account,
-                             mcp_config=os.path.expanduser(settings.config.summary_mcp_config))
+                             mcp_config=os.path.expanduser(settings.config.summary_mcp_config),
+                             clamp=clamp)
 
 
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:
@@ -1458,7 +1466,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         thread_records_wiring(settings),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
-        replace(summary_lane_wiring(settings), agents_enabled=False),
+        replace(summary_lane_wiring(settings, ()), agents_enabled=False),
         conversation_wiring(settings),
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
@@ -1470,8 +1478,9 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
     ), settings.config.gh_account
 
 
-def mode_wirings(settings: Settings, managed: ManagedPr | None) -> list[Part]:
-    places = pr_processes_places(settings)
+def mode_wirings(settings: Settings, managed: ManagedPr | None,
+                 clamp: tuple[str, ...]) -> list[Part]:
+    places = pr_processes_places(settings, clamp)
     sessions = TerminalSessionsWiring(
         subprocess.Popen, settings.child_environment(),
         terminal_sessions_dir(settings), None if managed is None else managed.pr)
@@ -1486,6 +1495,7 @@ def make_container(env: Mapping[str, str], home: Path,
                    check_presence: bool = True, dry_run: bool = False,
                    logs_dir: Path | None = None) -> dishka.Container:
     settings = load_settings(env, home)
+    clamp = utility_clamp(sys.platform)
     managers = [] if managed is None else [
         PrManagerWiring(manager_config(settings, managed)),
     ]
@@ -1502,8 +1512,8 @@ def make_container(env: Mapping[str, str], home: Path,
         thread_records_wiring(settings),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
-        summary_lane_wiring(settings),
-        *mode_wirings(settings, managed),
+        summary_lane_wiring(settings, clamp),
+        *mode_wirings(settings, managed, clamp),
         AgentChangesProvider,
         ReportCommandsWiring(sys.executable),
         AgentRunsWiring(
@@ -1516,6 +1526,7 @@ def make_container(env: Mapping[str, str], home: Path,
             pytest_workers=settings.config.pytest_workers,
             transcripts_dir=settings.transcripts_dir,
             runs_log=settings.runs_log,
+            clamp=clamp,
         ),
         conversation_wiring(settings),
         watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN")),

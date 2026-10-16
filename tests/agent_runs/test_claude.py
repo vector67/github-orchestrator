@@ -107,6 +107,32 @@ def test_a_gist_is_asked_of_the_configured_command(work_runs, world, claude):
     assert asked.argv == [*WORK_ARGV, "--print", "--model", SUMMARY_MODEL]
 
 
+CLAMP = ("taskpolicy", "-c", "utility")
+
+
+@pytest.fixture
+def clamped_runs(world, claude, tmp_path):
+    return real_agent_runs(world, claude, tmp_path, clamp=CLAMP)
+
+
+def test_a_run_starts_under_the_clamp(clamped_runs, claude, tmp_path):
+    finish(_start(clamped_runs, tmp_path))
+
+    [spawned] = claude.spawned
+    assert spawned.argv[:5] == [*CLAMP, "claude", "--print"]
+
+
+def test_a_gist_is_asked_under_the_clamp(clamped_runs, world, claude):
+    world.answer("rename it")
+
+    clamped_runs.summarize_comment("PRRT_x", None, None, "rename this", lambda gist: None,
+                                   chars=60)
+    assert clamped_runs.drain_summaries(10)
+
+    [asked] = claude.asked
+    assert asked.argv == [*CLAMP, "claude", "--print", "--model", SUMMARY_MODEL]
+
+
 def test_a_rebase_session_runs_the_configured_command(work_runs, world):
     assert work_runs.rebase_in_session(THE_PR, "/tmp/wt") is None
 

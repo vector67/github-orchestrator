@@ -1,5 +1,6 @@
 import os
 import signal
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -26,6 +27,20 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
                            "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat",
                            "mcp_config": None}
     assert lane.summaries.due(set()) == []
+
+
+RECORDING_CLAMP = "import os, sys; open(sys.argv[1], 'w').write(sys.argv[2]); os.execv(sys.argv[2], sys.argv[2:])"
+
+
+def test_a_run_starts_the_plugin_under_the_clamp(tmp_path):
+    clamped = tmp_path / "clamped"
+    lane = Lane(tmp_path, "clean", clamp=(sys.executable, "-c", RECORDING_CLAMP, str(clamped)))
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert clamped.read_text() == sys.executable
+    assert lane.summaries.load(THE_PR).exit_status == 0
 
 
 def test_a_run_empties_the_working_folder_before_the_plugin_writes_into_it(tmp_path):

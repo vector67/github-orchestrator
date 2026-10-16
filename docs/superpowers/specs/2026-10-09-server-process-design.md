@@ -308,6 +308,34 @@ changes who supervises it. Lifting the job and starting managers and agent runs
 under a utility clamp keeps their class as it is today. None of these has been
 measured under launchd yet.
 
+### Fix, 2026-10-16: lift the job, clamp the background work
+
+Chosen: the third option, on macOS only. systemd user units have no such limit,
+so the Linux unit is unchanged.
+
+- The launch agent sets `ProcessType` to `Interactive`. The watcher and the server
+  it starts, workers included, run at the normal class.
+- Background work starts under `taskpolicy -c utility`, the class the whole tree
+  had before. `utility_clamp` in `wiring.py` gives that prefix on macOS and
+  nothing elsewhere, and four spawn sites put it in front of what they start:
+  - `BackgroundPrProcesses._start`: every agent manager, so the agent runs it
+    starts, their git and test processes and the terminal sessions it opens all
+    inherit the class. `taskpolicy` execs in place, so the recorded pid is the
+    manager's and `ps` still finds it.
+  - `AgentRuns._start`: each headless agent run (review, re-review, fix-check,
+    rebase, carry-on, thread fix, rework, ticket).
+  - `AgentRuns`' one-shot asks: comment and thread gists, thread verdicts and
+    commit checks. The watcher's notification summaries use them too, outside
+    any manager.
+  - `LocalSummaryLane._plugin_run`: the pr-summary plugin and its witnesses,
+    which the watcher's poll starts.
+- Not clamped: the server itself, the watcher's own git and `gh` calls, and the
+  terminal sessions the board opens through a manager, which already inherit the
+  manager's class.
+
+Still open: measuring the targets with the service running under launchd with
+this change.
+
 ## Settled at review
 
 - `server_workers` is 4. A worker serves many connections at once on its event

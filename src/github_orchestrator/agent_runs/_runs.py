@@ -287,8 +287,9 @@ class AgentRuns:
                  pr_processes: PrProcesses, report_commands: ReportCommands, changes_file: str,
                  agent: Agent, command: str, model: str,
                  summary_model: str, pytest_workers: int, transcripts_dir: Path,
-                 runs_log: Path) -> None:
+                 runs_log: Path, clamp: Sequence[str]) -> None:
         self._popen = popen
+        self._clamp = tuple(clamp)
         self._command = command_argv(command)
         self._commands = report_commands
         self._changes_file = changes_file
@@ -299,9 +300,10 @@ class AgentRuns:
         self._transcripts_dir = transcripts_dir
         self._runs_log = runs_log
         self._lines: CommandLines = command_lines_of(agent)
-        self._summaries = Summaries(run, self._command, summary_model, self._lines)
-        self._checks = Summaries(run, self._command, model, self._lines)
-        self._verdicts = Summaries(run, self._command, agent.verdict_model, self._lines)
+        clamped = [*self._clamp, *self._command]
+        self._summaries = Summaries(run, clamped, summary_model, self._lines)
+        self._checks = Summaries(run, clamped, model, self._lines)
+        self._verdicts = Summaries(run, clamped, agent.verdict_model, self._lines)
         self._jev = jev
         self._pr_runs: dict[Pr, AgentRun] = {}
 
@@ -314,7 +316,7 @@ class AgentRuns:
     def _start(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
                continuing: bool = False, in_flight: Path | None = None) -> AgentRun | str:
         thread = last_thread_in(self._transcript(pr)) if continuing else None
-        argv = [*self._command,
+        argv = [*self._clamp, *self._command,
                 *self._lines.headless(self._model, carrying_on=continuing, thread=thread)]
 
         try:

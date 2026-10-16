@@ -104,7 +104,7 @@ class LocalSummaryLane:
                  plugin: Sequence[str], config_path: Path, clones: Mapping[Repo, Path],
                  head_of: Callable[[Pr], str | None], url_of: Callable[[Pr], str],
                  gh_account: str, mcp_config: str, agents_enabled: bool, timeout: float,
-                 run_in: Callable[[Callable[[], None]], None]) -> None:
+                 run_in: Callable[[Callable[[], None]], None], clamp: Sequence[str]) -> None:
         self._dir = summaries_dir
         self._summaries = summaries
         self._clock = clock
@@ -118,6 +118,7 @@ class LocalSummaryLane:
         self._agents_enabled = agents_enabled
         self._timeout = timeout
         self._run_in = run_in
+        self._clamp = tuple(clamp)
 
     def poll(self) -> None:
         if not self._agents_enabled:
@@ -237,7 +238,7 @@ class LocalSummaryLane:
                    *(["--use-github-api"] if use_github_api else [])]
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
             process = subprocess.Popen(
-                [sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
+                [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
                 cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
                 start_new_session=True, pass_fds=(slot,))
         try:

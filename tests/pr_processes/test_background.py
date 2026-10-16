@@ -69,6 +69,18 @@ def test_opening_starts_the_manager_detached_in_the_worktree(
     assert settings.child_environment().items() <= started.env.items()
 
 
+def test_a_manager_starts_under_the_clamp_and_is_still_found_running(
+        settings, processes, terminals, worktree):
+    clamped = background_pr_processes(settings, processes, terminals,
+                                      clamp=("taskpolicy", "-c", "utility"))
+
+    clamped.open(THE_PR, worktree)
+
+    [started] = processes.spawned
+    assert started.command == f"taskpolicy -c utility {MANAGER}"
+    assert clamped.manager(THE_PR) is ManagerPane.RUNNING
+
+
 def test_a_manager_that_exits_by_itself_reads_exited(windows, processes, worktree):
     windows.open(THE_PR, worktree)
 
