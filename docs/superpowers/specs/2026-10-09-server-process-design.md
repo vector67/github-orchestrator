@@ -333,8 +333,23 @@ so the Linux unit is unchanged.
   terminal sessions the board opens through a manager, which already inherit the
   manager's class.
 
-Still open: measuring the targets with the service running under launchd with
-this change.
+Measured 2026-10-16 against the live, launchd-started server of the main
+instance after the restart, with the same rig: 70 spinners, the probe, and one
+request loop per endpoint, each in its own process, for 5 minutes. Counted only
+the stretch above load average 80 (50 of 60 samples, load 80–158). During the run
+`ps -o pri` showed the watcher, the server and its four workers at 31 and all 24
+agent managers at 20.
+
+|                                   | requests | median | p90    | max    |
+| --------------------------------- | -------- | ------ | ------ | ------ |
+| `/api/health`                     | 1173     | 3 ms   | 5 ms   | 43 ms  |
+| a board's `/health`               | 1173     | 3 ms   | 5 ms   | 75 ms  |
+| `/viewer`                         | 1155     | 5 ms   | 10 ms  | 61 ms  |
+| a proposal's diff                 | 487      | 296 ms | 319 ms | 442 ms |
+| the probe, late from a 5 ms sleep | 34664    | 3 ms   | 3 ms   | 48 ms  |
+
+Both targets are met: a diff's p90 is under 1 s and `/health`'s max is under
+1 s.
 
 ## Settled at review
 
