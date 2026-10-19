@@ -16,6 +16,7 @@ import type { Feed, Following } from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export const LIST_MS = 5000;
+const SECOND_MS = 1000;
 export const OPERATIONS_MS = 1000;
 export const RESTART_MS = 500;
 
@@ -86,6 +87,7 @@ export default class PollService extends Service {
 
   @tracked now = Date.now();
   @tracked hubAt = Date.now();
+  @tracked second = Date.now();
 
   readonly wall: Polled;
   readonly runs: Polled;
@@ -96,6 +98,7 @@ export default class PollService extends Service {
   private listTimer: ReturnType<typeof setInterval> | null = null;
   private dashboardTimer: ReturnType<typeof setInterval> | null = null;
   private hubTimer: ReturnType<typeof setInterval> | null = null;
+  private secondTimer: ReturnType<typeof setInterval> | null = null;
   private summaryTimer: ReturnType<typeof setInterval> | null = null;
   private restartTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -190,11 +193,16 @@ export default class PollService extends Service {
       () => void waitForPromise(this.refreshHub(true)),
       LIST_MS,
     );
+    this.secondTimer ??= setInterval(() => {
+      this.second = Date.now();
+    }, SECOND_MS);
   }
 
   stopHub(): void {
     if (this.hubTimer) clearInterval(this.hubTimer);
     this.hubTimer = null;
+    if (this.secondTimer) clearInterval(this.secondTimer);
+    this.secondTimer = null;
   }
 
   followRestart(): void {

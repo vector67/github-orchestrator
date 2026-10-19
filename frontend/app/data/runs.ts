@@ -66,6 +66,26 @@ export function pollOf(
   return { text: `polled ${agedAt(polled, now)}`, alarm: false };
 }
 
+export interface PollStatus {
+  tone: 'ok' | 'alarm' | 'quiet';
+  headline: string;
+  when: string | null;
+}
+
+export function pollStatusOf(
+  poll: Said,
+  polledAt: string | null,
+  now: number,
+): PollStatus {
+  if (poll.alarm) return { tone: 'alarm', headline: poll.text, when: null };
+  if (!polledAt) return { tone: 'quiet', headline: poll.text, when: null };
+  return {
+    tone: 'ok',
+    headline: 'Polled successfully',
+    when: agedAt(polledAt, now),
+  };
+}
+
 function counted(runs: number): string {
   return runs === 1 ? '1 run' : `${runs} runs`;
 }

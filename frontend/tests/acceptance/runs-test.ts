@@ -63,6 +63,47 @@ module('Acceptance | runs', function (hooks) {
     );
   });
 
+  test('the age moves on every second between refreshes', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger(polledAt());
+    clock().now = POLLED + 19_000;
+    await visit('/');
+
+    await clock().tick(1000);
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      'polled 14:32:05, 20s ago',
+    );
+  });
+
+  test('the settings menu says the watcher polled successfully, when and how long ago, every second', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger(polledAt());
+    clock().now = POLLED + 19_000;
+    await visit('/');
+
+    await click('[data-test-settings-open]');
+
+    assert
+      .dom('[data-test-settings-menu] [data-test-pr-health]')
+      .hasAttribute('data-test-health-tone', 'ok');
+    assert.strictEqual(
+      text('[data-test-settings-menu] [data-test-pr-health]'),
+      'Polled successfully 14:32:05, 19s ago',
+    );
+    assert
+      .dom('[data-test-settings-menu] [data-test-pr-health] .sq')
+      .doesNotExist('a square there reads as a checkbox to tick');
+
+    await clock().tick(1000);
+
+    assert.strictEqual(
+      text('[data-test-settings-menu] [data-test-pr-health]'),
+      'Polled successfully 14:32:05, 20s ago',
+    );
+  });
+
   test('a poll that is due and has not ended yet is no alarm', async function (assert) {
     onTheHub();
     board().ledger = runLedger(polledAt());

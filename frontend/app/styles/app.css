@@ -2751,14 +2751,42 @@ kbd {
 }
 
 .settings-health {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
   align-items: center;
-  padding: 6px 12px;
+  padding: 8px 12px;
   font-size: var(--fs-s);
   white-space: nowrap;
-  color: var(--muted);
+  cursor: default;
+  color: var(--text);
   border-top: 1px solid var(--hairline);
+}
+
+.settings-health .when {
+  grid-column: 2;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--muted);
+  border-radius: 50%;
+}
+
+.settings-health.tone-ok .status-dot {
+  background: var(--green);
+}
+
+.settings-health.tone-ok .headline {
+  color: var(--green-text);
+}
+
+.settings-health.tone-alarm .status-dot {
+  background: var(--red);
 }
 
 #setup {

@@ -85,15 +85,19 @@ export default class SettingsMenu extends Component {
             data-test-theme-toggle
             {{on "click" this.flip}}
           >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
-          {{#if this.hub.poll}}
+          {{#if this.hub.pollStatus}}
             <span
-              class="settings-health"
+              class="settings-health tone-{{this.hub.pollStatus.tone}}"
               title={{this.hub.poll.text}}
               data-test-pr-health
+              data-test-health-tone={{this.hub.pollStatus.tone}}
               data-test-health-alarm={{this.hub.poll.alarm}}
-            ><i
-                class="sq {{if this.hub.poll.alarm 'alarm'}}"
-              ></i>{{this.hub.poll.text}}</span>
+            ><i class="status-dot"></i><span
+                class="headline"
+              >{{this.hub.pollStatus.headline}}</span>
+              {{#if this.hub.pollStatus.when}}<span
+                  class="when"
+                >{{this.hub.pollStatus.when}}</span>{{/if}}</span>
           {{/if}}
         </div>
       {{/if}}
