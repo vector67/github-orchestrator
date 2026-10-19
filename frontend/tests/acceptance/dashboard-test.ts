@@ -1108,6 +1108,20 @@ module('Acceptance | dashboard', function (hooks) {
       .containsText('2 more unresolved on GitHub');
   });
 
+  test('the unresolved threads only GitHub holds count one each', async function (assert) {
+    onTheHub({ facts: { draft: true, unresolved_threads: 2 } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('You have 2 outstanding items.');
+    assert
+      .dom('[data-test-outstanding="unresolved"] .outstanding-count')
+      .hasText('2');
+  });
+
   test('Esc cancels the ready question and marks nothing', async function (assert) {
     onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');

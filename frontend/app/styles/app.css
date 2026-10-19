@@ -1281,9 +1281,14 @@ button.copy-directory {
   text-align: right;
 }
 
-.decide-dialog .outstanding-what {
+.decide-dialog .outstanding-kind .commit-path {
   flex: none;
-  max-width: 60%;
+  max-width: 65%;
+}
+
+.decide-dialog .outstanding-what {
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   color: var(--muted);
   text-overflow: ellipsis;

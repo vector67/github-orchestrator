@@ -67,9 +67,7 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
               open={{isFirst index}}
               data-test-outstanding={{group.kind}}
             >
-              <summary><span
-                  class="outstanding-count"
-                >{{group.items.length}}</span>
+              <summary><span class="outstanding-count">{{group.count}}</span>
                 {{group.label}}</summary>
               <div class="commit-files">
                 {{#each group.items key="key" as |item|}}

@@ -464,6 +464,7 @@ export interface OutstandingItem {
 export interface OutstandingGroup {
   kind: OutstandingKind;
   label: string;
+  count: number;
   items: OutstandingItem[];
 }
 
@@ -501,7 +502,7 @@ function threadItem(one: Thread, what: string | null): OutstandingItem {
 function unresolvedOf(
   all: Thread[],
   facts: PrFacts | null,
-): { items: OutstandingItem[]; unread: string[] } {
+): { items: OutstandingItem[]; count: number; unread: string[] } {
   const open = all.filter(
     (one) => one.kind === 'review' && one.github_resolved === false,
   );
@@ -516,6 +517,7 @@ function unresolvedOf(
   }
   return {
     items,
+    count: open.length + Math.max(more, 0),
     unread: open
       .filter((one) => questionOf(one) === null)
       .map((one) => one.key),
@@ -608,11 +610,12 @@ function outstandingFrom(
     .map((kind) => ({
       kind,
       label: OUTSTANDING_LABELS[kind],
+      count: kind === 'unresolved' ? unresolved.count : items[kind].length,
       items: items[kind],
     }));
   return {
     groups,
-    total: groups.reduce((sum, group) => sum + group.items.length, 0),
+    total: groups.reduce((sum, group) => sum + group.count, 0),
     unread: unresolved.unread,
   };
 }
