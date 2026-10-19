@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { visit, click, currentURL } from '@ember/test-helpers';
+import { visit, click, currentURL, triggerEvent } from '@ember/test-helpers';
 import { heldPr, setupFakeBoard } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 
@@ -120,9 +120,41 @@ module('Acceptance | shell', function (hooks) {
   });
 
   for (const page of ['/pr/o/r/7/conversations', '/']) {
+    test(`on ${page} a gear opens the settings menu, which holds one setting, the theme, and closes on Escape`, async function (assert) {
+      await visit(page);
+      const before = currentURL();
+
+      assert
+        .dom('[data-test-settings-open]')
+        .hasText('')
+        .hasAttribute('aria-label', 'Settings');
+      assert.dom('[data-test-settings-open] svg').exists();
+      assert.dom('[data-test-theme-toggle]').doesNotExist();
+
+      await click('[data-test-settings-open]');
+
+      assert.deepEqual(
+        [
+          ...document.querySelectorAll(
+            '[data-test-settings-menu] [data-test-setting]',
+          ),
+        ].map((one) => one.textContent.trim()),
+        [
+          window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'Light theme'
+            : 'Dark theme',
+        ],
+      );
+
+      await triggerEvent(document, 'keydown', { key: 'Escape' });
+
+      assert.dom('[data-test-settings-menu]').doesNotExist();
+      assert.strictEqual(currentURL(), before);
+    });
+
     test(`the theme toggle on ${page} names the theme it switches to and is never pressed`, async function (assert) {
       await visit(page);
-      if (page !== '/') await click('[data-test-settings-open]');
+      await click('[data-test-settings-open]');
       const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const named = (dark: boolean) => (dark ? 'Light theme' : 'Dark theme');
 

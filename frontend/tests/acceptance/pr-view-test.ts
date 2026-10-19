@@ -139,29 +139,6 @@ module('Acceptance | pr view', function (hooks) {
       .hasAttribute('title', 'the board server is not answering');
   });
 
-  test('the settings menu holds one setting, the theme, and closes on Escape', async function (assert) {
-    onTheHub(heldPr());
-    await visit('/pr/o/r/7/dashboard');
-
-    assert.dom('[data-test-theme-toggle]').doesNotExist();
-
-    await click('[data-test-settings-open]');
-
-    assert.deepEqual(texts('[data-test-settings-menu] [data-test-setting]'), [
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'Light theme'
-        : 'Dark theme',
-    ]);
-    assert
-      .dom('[data-test-settings-menu] [data-test-setting]')
-      .hasAttribute('data-test-theme-toggle');
-
-    await press('Escape');
-
-    assert.dom('[data-test-settings-menu]').doesNotExist();
-    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
-  });
-
   test('the wall is the first entry in the PR switcher and not on the bar', async function (assert) {
     three();
     await visit('/pr/o/r/7/dashboard');
@@ -425,7 +402,10 @@ module('Acceptance | pr view', function (hooks) {
     await visit('/pr/o/r/7');
 
     assert.false(switcherOpen());
-    assert.dom('[data-test-switcher-open]').hasText('PRs \\');
+    assert
+      .dom('[data-test-switcher-open]')
+      .hasText('\\', 'the burger box alone, its key hint aside')
+      .hasAttribute('aria-label', 'PRs');
 
     await click('[data-test-switcher-open]');
 

@@ -121,10 +121,10 @@ module('Acceptance | runs', function (hooks) {
     await visit('/');
 
     const bar = find('.wall-bar')!.getBoundingClientRect();
-    const toggle = find('[data-test-theme-toggle]')!.getBoundingClientRect();
+    const button = find('[data-test-repo-filter]')!.getBoundingClientRect();
     assert.true(
-      bar.height < 2 * toggle.height,
-      `bar ${bar.height}px against a ${toggle.height}px button`,
+      bar.height < 2 * button.height,
+      `bar ${bar.height}px against a ${button.height}px button`,
     );
     assert
       .dom('[data-test-health="poll"]')
