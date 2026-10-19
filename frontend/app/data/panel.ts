@@ -594,19 +594,33 @@ function fixLabelOf(
   return phrase ? phrase + changesClause(plan) : '';
 }
 
+function sentReplyOf(
+  proposal: Proposal | undefined,
+  operations: Operation[],
+): string | null {
+  const approve = newest(operations, ['approve']);
+  if (approve?.reply && approve.proposal === proposal?.id) return approve.reply;
+  return proposal?.reply ?? null;
+}
+
 function bannerOf(
   conversation: Conversation,
   plan: PlanStep[],
   operations: Operation[],
   files: FileStat[],
-  replying: boolean,
+  proposal: Proposal | undefined,
 ): FixBanner | null {
   const phase = phaseOf(conversation);
-  if (phase === 'landed' && replying) {
+  if (phase === 'landed' && withoutCode(proposal)) {
     const filed = newest(operations, ['approve'])?.ticket_key;
+    const edited = sentReplyOf(proposal, operations) !== proposal?.reply;
     return filed
       ? { title: `Filed ${filed}`, body: 'The reply links it.', tone: 'landed' }
-      : { title: 'Reply posted', body: '', tone: 'landed' };
+      : {
+          title: edited ? 'Reply posted (edited by you)' : 'Reply posted',
+          body: '',
+          tone: 'landed',
+        };
   }
   if (phase === 'working') {
     const done = plan.filter((step) => step.done).length;
@@ -974,8 +988,8 @@ export function panelOf(
     fix_label: fixLabelOf(conversation, plan, proposal),
     fix_directory: proposal?.directory ?? null,
     in_session: phase === 'session',
-    banner: bannerOf(conversation, plan, operations, files, replying),
-    proposed_reply: replying ? (proposal?.reply ?? null) : null,
+    banner: bannerOf(conversation, plan, operations, files, proposal),
+    proposed_reply: replying ? sentReplyOf(proposal, operations) : null,
     proposed_ticket: proposal?.ticket ?? null,
     summary: proposal?.summary || proposal?.agent_note || '',
     failure: failure ? failureOf(phase, failure, operations, replying) : null,

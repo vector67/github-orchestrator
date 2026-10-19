@@ -284,6 +284,57 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-decision="approve"]').exists();
   });
 
+  module('an accepted reply', function () {
+    function posted(reply: string) {
+      const reached = board().threadIn('landed', { key: KEY });
+      board().conversations = [reached];
+      board().proposals[KEY] = [
+        proposal({
+          id: `${KEY}.1.proposal`,
+          kind: 'reply',
+          reply: 'It runs once per poll.',
+          commits: null,
+          summary: null,
+          commit_message: null,
+        }),
+      ];
+      board().operations[KEY] = [
+        operation({ id: `${KEY}.1`, conversation: KEY, plan: [] }),
+        operation({
+          id: reached.operations.find((one) => one.kind === 'approve')!.id,
+          conversation: KEY,
+          kind: 'approve',
+          proposal: `${KEY}.1.proposal`,
+          reply,
+        }),
+      ];
+    }
+
+    test('shows the reply you edited, not the one the agent suggested', async function (assert) {
+      posted('It runs once per poll, so the cache is never stale.');
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-proposed-reply]')
+        .hasText('It runs once per poll, so the cache is never stale.');
+      assert
+        .dom('[data-test-banner-fix]')
+        .containsText('Reply posted (edited by you)');
+    });
+
+    test('says only that the reply posted when you left it as suggested', async function (assert) {
+      posted('It runs once per poll.');
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-proposed-reply]')
+        .hasText('It runs once per poll.');
+      assert.dom('[data-test-banner-fix] strong').hasText('Reply posted');
+    });
+  });
+
   test('a proposed ticket is drawn with its project, title, body and reply, and no diff', async function (assert) {
     board().operations[KEY] = [
       operation({ id: `${KEY}.1`, conversation: KEY, plan: [] }),
