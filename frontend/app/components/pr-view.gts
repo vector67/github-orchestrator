@@ -9,7 +9,6 @@ import type RouterService from '@ember/routing/router-service';
 import RebaseButton from 'frontend/components/rebase-button';
 import Switcher from 'frontend/components/switcher';
 import {
-  countsOf,
   dashboardOf,
   threadsWaitingOf,
   type Chip,
@@ -48,10 +47,18 @@ export default class PrView extends Component<PrViewSignature> {
   @service declare toasts: ToastsService;
 
   @tracked switching = false;
+  @tracked showingSettings = false;
 
   private readonly keymap: Keymap = {
     take: (key) => this.switcherTakes(key),
     otherwise: (key) => this.takes(key),
+  };
+
+  private readonly settingsKeymap: Keymap = {
+    take: (key) => {
+      if (key === 'Escape') this.closeSettings();
+      return true;
+    },
   };
 
   constructor(owner: Owner, args: PrViewSignature['Args']) {
@@ -62,6 +69,7 @@ export default class PrView extends Component<PrViewSignature> {
   willDestroy(): void {
     super.willDestroy();
     this.keys.drop(this.keymap);
+    this.keys.drop(this.settingsKeymap);
   }
 
   get shown(): ShownPr | null {
@@ -100,11 +108,6 @@ export default class PrView extends Component<PrViewSignature> {
     return this.store.summary(this.repo, this.args.pr.number);
   }
 
-  get counts(): string[] {
-    const summaries = this.summaries;
-    return summaries ? countsOf(summaries) : [];
-  }
-
   get threadsWaiting(): string | null {
     const summaries = this.summaries;
     return summaries ? threadsWaitingOf(summaries) : null;
@@ -116,11 +119,6 @@ export default class PrView extends Component<PrViewSignature> {
 
   get barChips(): Chip[] {
     return (this.reading?.chips ?? []).filter((chip) => chip.key !== 'draft');
-  }
-
-  get needs(): string {
-    const count = this.store.needYou;
-    return `${count} ${count === 1 ? 'needs' : 'need'} you`;
   }
 
   get onSummaryTab(): boolean {
@@ -161,6 +159,16 @@ export default class PrView extends Component<PrViewSignature> {
   };
 
   flip = () => this.theme.toggle();
+
+  openSettings = () => {
+    this.showingSettings = true;
+    this.keys.push('dialog', this.settingsKeymap);
+  };
+
+  closeSettings = () => {
+    this.showingSettings = false;
+    this.keys.drop(this.settingsKeymap);
+  };
 
   private step(by: number): void {
     const order = this.order;
@@ -221,19 +229,7 @@ export default class PrView extends Component<PrViewSignature> {
           data-test-switcher-open
           {{on "click" this.openSwitcher}}
         ><span class="burger"></span>PRs
-          <span class="n">{{this.needs}}</span>
           <kbd>\</kbd></button>
-        {{#if this.hub.poll}}
-          <span
-            class="pr-health"
-            title={{this.hub.poll.text}}
-            aria-label={{this.hub.poll.text}}
-            data-test-pr-health
-            data-test-health-alarm={{this.hub.poll.alarm}}
-          ><i class="sq {{if this.hub.poll.alarm 'alarm'}}"></i></span>
-        {{/if}}
-        <LinkTo @route="index" class="linkish" data-test-wall-link>Wall
-          <kbd>Esc</kbd></LinkTo>
         <div class="prtitle" data-test-pr-heading>
           <span class="tline">{{#if this.reading.draft}}<span
                 class="draft-pill"
@@ -279,13 +275,6 @@ export default class PrView extends Component<PrViewSignature> {
         {{/if}}
         <span class="grow"></span>
         <span class="prflags">
-          {{#if this.counts.length}}
-            <span class="prcounts">
-              {{#each this.counts key="@index" as |count|}}
-                <span data-test-pr-count>{{count}}</span>
-              {{/each}}
-            </span>
-          {{/if}}
           {{#if this.barChips.length}}
             <span class="state-chips">
               {{#each this.barChips key="key" as |chip|}}
@@ -294,15 +283,6 @@ export default class PrView extends Component<PrViewSignature> {
             </span>
           {{/if}}
         </span>
-        {{#if this.url}}
-          <a
-            class="linkish"
-            href={{this.url}}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test-github
-          >GitHub <kbd>o</kbd></a>
-        {{/if}}
         {{#if this.hub.fontProblem}}
           <span
             class="font-problem"
@@ -310,12 +290,44 @@ export default class PrView extends Component<PrViewSignature> {
             data-test-font-problem
           >Board font missing</span>
         {{/if}}
-        <button
-          type="button"
-          class="theme-toggle btn"
-          data-test-theme-toggle
-          {{on "click" this.flip}}
-        >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
+        <span class="settings">
+          <button
+            type="button"
+            class="settings-pick"
+            aria-haspopup="true"
+            aria-expanded={{if this.showingSettings "true" "false"}}
+            data-test-settings-open
+            {{on "click" this.openSettings}}
+          >Settings</button>
+          {{#if this.showingSettings}}
+            <button
+              type="button"
+              class="settings-scrim"
+              tabindex="-1"
+              aria-label="close the settings"
+              {{on "click" this.closeSettings}}
+            ></button>
+            <div class="settings-menu" data-test-settings-menu>
+              <button
+                type="button"
+                class="setting"
+                data-test-setting
+                data-test-theme-toggle
+                {{on "click" this.flip}}
+              >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
+              {{#if this.hub.poll}}
+                <span
+                  class="settings-health"
+                  title={{this.hub.poll.text}}
+                  data-test-pr-health
+                  data-test-health-alarm={{this.hub.poll.alarm}}
+                ><i
+                    class="sq {{if this.hub.poll.alarm 'alarm'}}"
+                  ></i>{{this.hub.poll.text}}</span>
+              {{/if}}
+            </div>
+          {{/if}}
+        </span>
       </header>
       {{#if this.notHeld}}
         <section id="not-found" data-test-pr-not-found>

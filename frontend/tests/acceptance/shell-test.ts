@@ -100,6 +100,7 @@ module('Acceptance | shell', function (hooks) {
     const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const flipped = wasDark ? 'light' : 'dark';
 
+    await click('[data-test-settings-open]');
     await click('[data-test-theme-toggle]');
 
     assert
@@ -121,6 +122,7 @@ module('Acceptance | shell', function (hooks) {
   for (const page of ['/pr/o/r/7/conversations', '/']) {
     test(`the theme toggle on ${page} names the theme it switches to and is never pressed`, async function (assert) {
       await visit(page);
+      if (page !== '/') await click('[data-test-settings-open]');
       const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const named = (dark: boolean) => (dark ? 'Light theme' : 'Dark theme');
 

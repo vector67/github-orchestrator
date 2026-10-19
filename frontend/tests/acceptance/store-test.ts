@@ -3,13 +3,13 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   currentURL,
-  findAll,
   settled,
   visit,
   waitUntil,
 } from '@ember/test-helpers';
 import {
   dashboard,
+  factsFor,
   heldPr,
   setupFakeBoard,
   threadRow as row,
@@ -34,9 +34,11 @@ module('Acceptance | one store', function (hooks) {
     board().held = held.map((one) => heldPr({ ...LAGGING, ...one }));
   }
 
-  function chips(): string[] {
-    return findAll('[data-test-title-bar] [data-test-pr-count]').map((one) =>
-      one.textContent.trim().replace(/\s+/g, ' '),
+  function reason(): string | null {
+    return (
+      document
+        .querySelector('[data-test-wall-row="o/r#7"] [data-test-reason]')
+        ?.textContent?.trim() ?? null
     );
   }
 
@@ -48,7 +50,7 @@ module('Acceptance | one store', function (hooks) {
     );
   }
 
-  test('the bar counts the threads on your pull request, leaving out your own and the unsent, whatever the hub’s copy says', async function (assert) {
+  test('the Board tab counts what is ready and unsent on your pull request from the threads, whatever the hub’s copy says', async function (assert) {
     onTheHub({});
     board().conversations = [
       board().threadIn('landed', { key: 'h1' }),
@@ -62,14 +64,10 @@ module('Acceptance | one store', function (hooks) {
 
     await visit('/pr/o/r/7/dashboard');
 
-    assert.deepEqual(chips(), [
-      'Human comments 2/3 done',
-      'Bot comments 1/2 done',
-    ]);
     assert.strictEqual(badge(), '1 ready, 1 draft');
   });
 
-  test('on someone else’s pull request the bar counts your threads answered from the threads', async function (assert) {
+  test('on someone else’s pull request the Board tab counts your threads answered from the threads', async function (assert) {
     onTheHub({
       dashboard: { facts: { is_author: false }, pr: { author: 'erin' } },
     });
@@ -84,7 +82,6 @@ module('Acceptance | one store', function (hooks) {
 
     await visit('/pr/o/r/7/dashboard');
 
-    assert.deepEqual(chips(), ['Your threads 2/4 answered']);
     assert.strictEqual(badge(), '1 answered, 1 draft');
   });
 
@@ -102,7 +99,6 @@ module('Acceptance | one store', function (hooks) {
 
     await visit('/pr/o/r/7/dashboard');
 
-    assert.deepEqual(chips(), ['Your threads 1/2 answered']);
     assert.strictEqual(badge(), '2 answered, 1 draft');
     await visit('/pr/o/r/7/conversations');
     assert
@@ -110,7 +106,7 @@ module('Acceptance | one store', function (hooks) {
       .hasText('2 answered', 'the strip counts the same two');
   });
 
-  test('whose pull request it is comes from its facts alone, so the rail, the bar and NEXT read the same role', async function (assert) {
+  test('whose pull request it is comes from its facts alone, so the rail and NEXT read the same role', async function (assert) {
     onTheHub({
       dashboard: { facts: { is_author: false }, pr: { author: 'erin' } },
     });
@@ -122,7 +118,6 @@ module('Acceptance | one store', function (hooks) {
     await visit('/pr/o/r/7/conversations');
 
     assert.dom('[data-test-heading="ready"]').includesText('Answered');
-    assert.deepEqual(chips(), ['Your threads 1/2 answered']);
     assert
       .dom('[data-test-your-move]')
       .hasAttribute('data-move', 'not-reviewing');
@@ -140,14 +135,12 @@ module('Acceptance | one store', function (hooks) {
 
     assert.dom('[data-test-heading]').doesNotExist();
     assert.dom('[data-test-board-waiting]').exists();
-    assert.deepEqual(chips(), []);
     assert.dom('[data-test-your-move]').hasAttribute('data-move', 'first-poll');
 
     board().manager = dashboard({ facts: { is_author: false } });
     await clock().tick(LIST);
 
     assert.dom('[data-test-heading="ready"]').includesText('Answered');
-    assert.deepEqual(chips(), ['Your threads 1/2 answered']);
   });
 
   test('an assumed done thread counts as done and one that is not mine is left out', async function (assert) {
@@ -168,16 +161,14 @@ module('Acceptance | one store', function (hooks) {
     ];
 
     await visit('/pr/o/r/7/dashboard');
+    await visit('/');
 
-    assert.deepEqual(chips(), [
-      'Human comments 2/3 done',
-      'Bot comments 0/0 done',
-    ]);
+    assert.strictEqual(reason(), 'human threads, 2 of 3 done');
   });
 
   test('on someone else’s pull request your assumed done thread is answered and your not mine one is left out', async function (assert) {
     onTheHub({
-      dashboard: { facts: { is_author: false }, pr: { author: 'erin' } },
+      dashboard: { facts: factsFor('rereview'), pr: { author: 'erin' } },
     });
     board().actAs('reviewer');
     board().conversations = [
@@ -188,10 +179,15 @@ module('Acceptance | one store', function (hooks) {
 
     await visit('/pr/o/r/7/dashboard');
 
-    assert.deepEqual(chips(), ['Your threads 1/2 answered']);
+    await visit('/');
+
+    assert.strictEqual(
+      reason(),
+      'asked again · 1 of 2 of your threads answered',
+    );
   });
 
-  test('after an accept the bar, the Board tab and the strip agree with the list at once', async function (assert) {
+  test('after an accept the Board tab and the strip agree with the list at once', async function (assert) {
     onTheHub({
       dashboard: {
         system: { threads: { queued: 0, live: 0, proposed: 1, drafts: 0 } },
@@ -200,27 +196,19 @@ module('Acceptance | one store', function (hooks) {
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), '1 ready');
 
     board().conversations = [board().threadIn('landed', { key: 'k1' })];
     await click('[data-test-decision="approve"]');
     await click('[data-test-dialog-submit]');
 
-    assert.deepEqual(chips(), [
-      'Human comments 1/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), null);
     assert
       .dom('#board-strip [data-test-count="done"]')
       .containsText('1', 'the strip counts it done');
   });
 
-  test('a hub row fills the record of a pull request whose page is not open, so its bar counts before its threads are read', async function (assert) {
+  test('a hub row fills the record of a pull request whose page is not open, so its Board tab counts before its threads are read', async function (assert) {
     const threads = [
       row('h1', 'done', 'resolved', 'human'),
       row('h2', 'ready', 'open', 'human'),
@@ -236,15 +224,12 @@ module('Acceptance | one store', function (hooks) {
     void visit('/pr/o/r/8/dashboard');
     await waitUntil(() => currentURL() === '/pr/o/r/8/dashboard');
 
-    assert.deepEqual(chips(), [
-      'Human comments 1/2 done',
-      'Bot comments 0/1 done',
-    ]);
+    assert.strictEqual(badge(), '1 draft');
     release();
     await settled();
   });
 
-  test('a hub row newer than the thread the page read merges into that one thread, so the chips, the strip and NEXT agree', async function (assert) {
+  test('a hub row newer than the thread the page read merges into that one thread, so the strip and NEXT agree', async function (assert) {
     const read = row('k1', 'ready', 'open', 'human', '2026-10-08T09:00:00Z');
     onTheHub({ dashboard: { threads: [read] } });
     board().conversations = [
@@ -269,10 +254,6 @@ module('Acceptance | one store', function (hooks) {
     ];
     await clock().tick(LIST);
 
-    assert.deepEqual(chips(), [
-      'Human comments 1/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.dom('#board-strip [data-test-count="ready"]').doesNotExist();
     assert.dom('#board-strip [data-test-count="done"]').containsText('1');
     assert
@@ -280,7 +261,7 @@ module('Acceptance | one store', function (hooks) {
       .hasAttribute('data-move', 'await-review');
   });
 
-  test('a pull request you come back to shows its counts before its threads are read again', async function (assert) {
+  test('a pull request you come back to shows its Board tab count before its threads are read again', async function (assert) {
     onTheHub({}, { number: 8 });
     const proposed = board().threadIn('proposed', { key: 'k1' });
     board().held = [
@@ -304,10 +285,6 @@ module('Acceptance | one store', function (hooks) {
     void visit('/pr/o/r/7/dashboard');
     await waitUntil(() => currentURL() === '/pr/o/r/7/dashboard');
 
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), '1 ready');
     release();
     await settled();
@@ -319,18 +296,11 @@ module('Acceptance | one store', function (hooks) {
       board().threadIn('proposed', { key: 'k2' }),
     ];
     await visit('/pr/o/r/7/conversations');
-    assert.deepEqual(chips(), [
-      'Human comments 0/2 done',
-      'Bot comments 0/0 done',
-    ]);
+    assert.strictEqual(badge(), '2 ready');
 
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     await clock().tick(LIST);
 
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), '1 ready');
     assert.dom('#c-k2').doesNotExist();
   });
@@ -357,10 +327,7 @@ module('Acceptance | one store', function (hooks) {
     release();
     await settled();
 
-    assert.deepEqual(chips(), [
-      'Human comments 0/2 done',
-      'Bot comments 0/0 done',
-    ]);
+    assert.strictEqual(badge(), '2 ready');
   });
 
   const READ = '2026-09-12T11:00:00Z';
@@ -393,16 +360,12 @@ module('Acceptance | one store', function (hooks) {
     return document.querySelector('#c-k1');
   }
 
-  test('a click moves the chips, the Board tab badge, NEXT and the row before any poll answers', async function (assert) {
+  test('a click moves the Board tab badge, NEXT and the row before any poll answers', async function (assert) {
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     board().projections = {
       k1: board().threadIn('resolved', { key: 'k1', updated_at: ASKED }),
     };
     await visit('/pr/o/r/7/conversations/k1');
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), '1 ready');
     assert
       .dom('[data-test-your-move]')
@@ -412,10 +375,6 @@ module('Acceptance | one store', function (hooks) {
     const release = board().hold(POLLS);
     await decided();
 
-    assert.deepEqual(chips(), [
-      'Human comments 1/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), null);
     assert
       .dom('[data-test-your-move]')
@@ -440,10 +399,7 @@ module('Acceptance | one store', function (hooks) {
 
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'done');
     assert.dom('#c-k1').hasAttribute('data-provisional');
-    assert.deepEqual(chips(), [
-      'Human comments 1/1 done',
-      'Bot comments 0/0 done',
-    ]);
+    assert.strictEqual(badge(), null);
 
     board().conversations = [
       board().threadIn('proposed', { key: 'k1', updated_at: SETTLED }),
@@ -452,10 +408,7 @@ module('Acceptance | one store', function (hooks) {
 
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'ready');
     assert.dom('#c-k1').doesNotHaveAttribute('data-provisional');
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
+    assert.strictEqual(badge(), '1 ready');
   });
 
   test('a settled copy stamped in the second the verb was asked replaces the projection', async function (assert) {
@@ -510,7 +463,7 @@ module('Acceptance | one store', function (hooks) {
     assert.strictEqual(badge(), '1 ready');
   });
 
-  test('a refused write leaves the chips, the badge, NEXT and the row as they were', async function (assert) {
+  test('a refused write leaves the badge, NEXT and the row as they were', async function (assert) {
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     board().projections = {
       k1: board().threadIn('resolved', { key: 'k1', updated_at: ASKED }),
@@ -526,10 +479,6 @@ module('Acceptance | one store', function (hooks) {
     await click('[data-test-dialog-submit]');
 
     assert.dom('[data-test-toast]').containsText('already on its way');
-    assert.deepEqual(chips(), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
     assert.strictEqual(badge(), '1 ready');
     assert
       .dom('[data-test-your-move]')

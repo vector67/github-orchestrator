@@ -168,6 +168,7 @@ module('Acceptance | hub', function (hooks) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/pr/o/r/7/conversations');
 
+    await click('[data-test-switcher-open]');
     await click('[data-test-wall-link]');
 
     assert.strictEqual(currentURL(), '/');
@@ -187,6 +188,7 @@ module('Acceptance | hub', function (hooks) {
     await click('[data-test-send-review]');
     await fillIn('[data-test-review-body]', 'for seven only');
 
+    await click('[data-test-switcher-open]');
     await click('[data-test-wall-link]');
     await click('[data-test-wall-row="o/r#8"] [data-test-wall-lead]');
 
@@ -238,6 +240,7 @@ module('Acceptance | hub', function (hooks) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/pr/o/r/7/dashboard');
 
+    await click('[data-test-switcher-open]');
     await click('[data-test-wall-link]');
     await visit('/pr/o/r/8/dashboard');
 
@@ -348,6 +351,7 @@ module('Acceptance | hub', function (hooks) {
       .exists(
         'and stays out because the page started far enough to draw its bar',
       );
+    await click('[data-test-switcher-open]');
     await click('[data-test-wall-link]');
     assert.strictEqual(currentURL(), '/');
   });

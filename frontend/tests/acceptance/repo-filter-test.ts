@@ -66,24 +66,20 @@ module('Acceptance | repo filter', function (hooks) {
     );
   });
 
-  test('a pull request’s page counts and lists only the selected repos’ pull requests', async function (assert) {
+  test('a pull request’s page lists only the selected repos’ pull requests', async function (assert) {
     twoRepos();
 
     await visit('/pr/acme/widgets/1?repos=acme/widgets');
-
-    assert.dom('[data-test-switcher-open]').includesText('1 needs you');
 
     await click('[data-test-switcher-open]');
 
     assert.deepEqual(switcherRows(), ['acme/widgets#1']);
   });
 
-  test('without a selection a pull request’s page counts and lists every repo', async function (assert) {
+  test('without a selection a pull request’s page lists every repo', async function (assert) {
     twoRepos();
 
     await visit('/pr/acme/widgets/1');
-
-    assert.dom('[data-test-switcher-open]').includesText('2 need you');
 
     await click('[data-test-switcher-open]');
 

@@ -269,13 +269,15 @@ module('Acceptance | keyboard', function (hooks) {
 
   test('the shortcut hints show only while slash is held', async function (assert) {
     await visit('/pr/o/r/7/conversations');
-    assert.dom('[data-test-github] kbd').isNotVisible('hidden at rest');
+    assert.dom('[data-test-switcher-open] kbd').isNotVisible('hidden at rest');
 
     await triggerEvent(document, 'keydown', { key: '/' });
-    assert.dom('[data-test-github] kbd').isVisible('shown while held');
+    assert.dom('[data-test-switcher-open] kbd').isVisible('shown while held');
 
     await triggerEvent(document, 'keyup', { key: '/' });
-    assert.dom('[data-test-github] kbd').isNotVisible('hidden on release');
+    assert
+      .dom('[data-test-switcher-open] kbd')
+      .isNotVisible('hidden on release');
   });
 
   test("the panel's buttons show their keys while slash is held", async function (assert) {
@@ -303,7 +305,7 @@ module('Acceptance | keyboard', function (hooks) {
 
     await triggerEvent(box, 'keydown', { key: '/' });
 
-    assert.dom('[data-test-github] kbd').isNotVisible();
+    assert.dom('[data-test-switcher-open] kbd').isNotVisible();
   });
 
   test('the hints go when the window loses focus mid-hold', async function (assert) {
@@ -312,7 +314,7 @@ module('Acceptance | keyboard', function (hooks) {
     await triggerEvent(document, 'keydown', { key: '/' });
     await triggerEvent(window, 'blur');
 
-    assert.dom('[data-test-github] kbd').isNotVisible();
+    assert.dom('[data-test-switcher-open] kbd').isNotVisible();
   });
 
   test('a decide key presses the button the panel offers', async function (assert) {

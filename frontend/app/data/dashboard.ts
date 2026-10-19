@@ -1128,18 +1128,6 @@ export function threadsWaitingOf(summaries: Summaries): string | null {
   return parts.length ? parts.join(', ') : null;
 }
 
-export function countsOf(summaries: Summaries): string[] {
-  const { human, bot, yours } = summaries;
-  if (!summaries.role) return [];
-  if (summaries.role === 'reviewer') {
-    return [`Your threads ${yours.answered}/${yours.total} answered`];
-  }
-  return [
-    `Human comments ${human.done}/${human.total} done`,
-    `Bot comments ${bot.done}/${bot.total} done`,
-  ];
-}
-
 export interface Reading {
   number: number;
   code: Move;

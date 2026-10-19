@@ -5,13 +5,10 @@ import {
   currentURL,
   find,
   findAll,
-  settled,
   triggerEvent,
   visit,
-  waitUntil,
 } from '@ember/test-helpers';
 import {
-  dashboard,
   factsFor,
   heldPr,
   runLedger,
@@ -96,41 +93,88 @@ module('Acceptance | pr view', function (hooks) {
     assert.dom('#c-k1').exists('the board is in the Board tab');
   });
 
-  test('on the hub the bar beside PRs carries the watcher’s health', async function (assert) {
+  test('the watcher’s health sits in the settings menu, not on the bar', async function (assert) {
     onTheHub(heldPr());
 
     await visit('/pr/o/r/7/dashboard');
 
+    assert.dom('[data-test-pr-health]').doesNotExist();
+
+    await click('[data-test-settings-open]');
+
     assert
-      .dom('[data-test-switcher-open] + [data-test-pr-health]')
-      .hasAttribute('title', 'no poll yet');
-    assert
-      .dom('[data-test-pr-health]')
+      .dom('[data-test-settings-menu] [data-test-pr-health]')
+      .hasAttribute('title', 'no poll yet')
+      .hasText('no poll yet')
       .doesNotHaveAttribute('data-test-health-alarm');
   });
 
-  test('on the hub a watcher whose cycles fail is an alarm beside PRs', async function (assert) {
+  test('a watcher whose cycles fail is an alarm in the settings menu', async function (assert) {
     onTheHub(heldPr());
     board().ledger = runLedger({ watcher: { last_error: 'gh: HTTP 502' } });
 
     await visit('/pr/o/r/7/dashboard');
+    await click('[data-test-settings-open]');
 
     assert
-      .dom('[data-test-pr-health][data-test-health-alarm]')
+      .dom(
+        '[data-test-settings-menu] [data-test-pr-health][data-test-health-alarm]',
+      )
       .hasAttribute('title', 'polls failing: gh: HTTP 502');
   });
 
-  test('on the hub a hub that stops answering is an alarm beside PRs', async function (assert) {
+  test('a hub that stops answering is an alarm in the settings menu', async function (assert) {
     onTheHub(heldPr());
     await visit('/pr/o/r/7/dashboard');
 
     board().down = true;
     await clock().tick(LIST);
     await clock().tick(LIST);
+    await click('[data-test-settings-open]');
 
     assert
-      .dom('[data-test-pr-health][data-test-health-alarm]')
+      .dom(
+        '[data-test-settings-menu] [data-test-pr-health][data-test-health-alarm]',
+      )
       .hasAttribute('title', 'the board server is not answering');
+  });
+
+  test('the settings menu holds one setting, the theme, and closes on Escape', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-theme-toggle]').doesNotExist();
+
+    await click('[data-test-settings-open]');
+
+    assert.deepEqual(texts('[data-test-settings-menu] [data-test-setting]'), [
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'Light theme'
+        : 'Dark theme',
+    ]);
+    assert
+      .dom('[data-test-settings-menu] [data-test-setting]')
+      .hasAttribute('data-test-theme-toggle');
+
+    await press('Escape');
+
+    assert.dom('[data-test-settings-menu]').doesNotExist();
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+  });
+
+  test('the wall is the first entry in the PR switcher and not on the bar', async function (assert) {
+    three();
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-title-bar] [data-test-wall-link]').doesNotExist();
+
+    await click('[data-test-switcher-open]');
+
+    assert
+      .dom('[data-test-switcher] .switcher-list > :first-child')
+      .hasAttribute('data-test-wall-link');
+    await click('[data-test-switcher] [data-test-wall-link]');
+    assert.strictEqual(currentURL(), '/');
   });
 
   test('the bar stays exactly as it was while a restarted hub waits for the watcher’s first cycle', async function (assert) {
@@ -222,8 +266,9 @@ module('Acceptance | pr view', function (hooks) {
     assert
       .dom('[data-test-title-bar] [data-test-state="reviewer"]')
       .hasAttribute('title', /Detailed reviewer: @/);
+    assert.dom('[data-test-github]').doesNotExist();
     assert
-      .dom('[data-test-github]')
+      .dom('[data-test-repo]')
       .hasAttribute('href', 'https://github.com/o/r/pull/7');
   });
 
@@ -275,71 +320,6 @@ module('Acceptance | pr view', function (hooks) {
     assert.dom('[data-test-draft-pill]').doesNotExist();
     assert.dom('[data-test-your-move]').doesNotHaveAttribute('data-muted');
     assert.dom('[data-test-your-move] [data-test-move-label]').hasText('Next');
-  });
-
-  test('the bar counts the comments on your pull request, and your threads on someone else’s', async function (assert) {
-    onTheHub(
-      heldPr(),
-      heldPr({
-        number: 8,
-        dashboard: {
-          pr: { author: 'erin' },
-          facts: factsFor('await-author'),
-        },
-      }),
-    );
-    board().conversations = [
-      board().threadIn('landed', { key: 'h1' }),
-      board().threadIn('proposed', { key: 'h2' }),
-      board().threadIn('queued', { key: 'h3' }),
-      board().threadIn('resolved', { key: 'b1', author_kind: 'bot' }),
-      board().threadIn('waiting', { key: 'b2', author_kind: 'bot' }),
-    ];
-
-    await visit('/pr/o/r/7');
-    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
-      'Human comments 1/3 done',
-      'Bot comments 2/2 done',
-    ]);
-
-    board().actAs('reviewer');
-    board().conversations = [
-      board().threadIn('answered', { key: 'a' }),
-      board().threadIn('waiting', { key: 'w1' }),
-      board().threadIn('waiting', { key: 'w2' }),
-      board().threadIn('deferred', { key: 'd' }),
-    ];
-    await visit('/pr/o/r/8');
-    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
-      'Your threads 1/4 answered',
-    ]);
-  });
-
-  test('the bar counts the hub’s thread rows until the pull request’s threads have been read, then the threads', async function (assert) {
-    const threads = [threadRow('k1', 'ready', 'open', 'human')];
-    onTheHub(heldPr({ dashboard: { threads } }));
-    board().manager = dashboard({ threads });
-    board().conversations = [
-      board().threadIn('landed', {
-        key: 'k1',
-        updated_at: '2026-10-08T09:00:00Z',
-      }),
-    ];
-    const release = board().hold(/^\/pr\/o\/r\/7\/api\/conversations$/);
-
-    void visit('/pr/o/r/7/dashboard');
-    await waitUntil(() => find('[data-test-pr-heading]'));
-
-    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
-      'Human comments 0/1 done',
-      'Bot comments 0/0 done',
-    ]);
-    release();
-    await settled();
-    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
-      'Human comments 1/1 done',
-      'Bot comments 0/0 done',
-    ]);
   });
 
   test('every link out to GitHub opens in a new tab', async function (assert) {
@@ -445,7 +425,7 @@ module('Acceptance | pr view', function (hooks) {
     await visit('/pr/o/r/7');
 
     assert.false(switcherOpen());
-    assert.dom('[data-test-switcher-open]').includesText('1 needs you');
+    assert.dom('[data-test-switcher-open]').hasText('PRs \\');
 
     await click('[data-test-switcher-open]');
 

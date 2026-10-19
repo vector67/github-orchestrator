@@ -2252,7 +2252,6 @@ kbd {
 
 .flag,
 .loud,
-.switch-btn .n,
 .prtabs .count,
 .standing,
 .alert,
@@ -2630,12 +2629,14 @@ kbd {
   border-color: var(--border-strong);
 }
 
-.repo-filter {
+.repo-filter,
+.settings {
   position: relative;
   flex: none;
 }
 
-.repo-pick {
+.repo-pick,
+.settings-pick {
   padding: 3px 8px;
   font: inherit;
   font-size: var(--fs-s);
@@ -2646,17 +2647,21 @@ kbd {
   border: 1.5px solid transparent;
 }
 
-.repo-pick::after {
+.repo-pick::after,
+.settings-pick::after {
   content: " \25BE";
 }
 
 .repo-pick:hover,
-.repo-pick[aria-expanded="true"] {
+.repo-pick[aria-expanded="true"],
+.settings-pick:hover,
+.settings-pick[aria-expanded="true"] {
   color: var(--text);
   border-color: var(--border-strong);
 }
 
-.repo-scrim {
+.repo-scrim,
+.settings-scrim {
   position: fixed;
   inset: 0;
   z-index: 30;
@@ -2666,7 +2671,8 @@ kbd {
   border: 0;
 }
 
-.repo-menu {
+.repo-menu,
+.settings-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -2679,8 +2685,14 @@ kbd {
   border: 2px solid var(--border-strong);
 }
 
+.settings-menu {
+  right: 0;
+  left: auto;
+}
+
 .repo-all,
-.repo-only {
+.repo-only,
+.setting {
   padding: 6px 12px;
   font: inherit;
   text-align: left;
@@ -2708,7 +2720,8 @@ kbd {
 }
 
 .repo-all:hover,
-.repo-choice:hover {
+.repo-choice:hover,
+.setting:hover {
   background: var(--grey-fill);
 }
 
@@ -2728,9 +2741,15 @@ kbd {
   text-overflow: ellipsis;
 }
 
-.pr-health {
-  display: inline-flex;
+.settings-health {
+  display: flex;
+  gap: 8px;
   align-items: center;
+  padding: 6px 12px;
+  font-size: var(--fs-s);
+  white-space: nowrap;
+  color: var(--muted);
+  border-top: 1px solid var(--hairline);
 }
 
 #setup {
@@ -3038,7 +3057,6 @@ kbd {
   font-size: var(--fs-s);
 }
 
-.switch-btn .n,
 .prtabs .count {
   color: var(--yellow-text);
   background: var(--yellow);
@@ -3186,15 +3204,6 @@ kbd {
   gap: 16px;
   align-items: center;
   font-size: var(--fs-s);
-}
-
-.prcounts {
-  display: flex;
-  flex-direction: column;
-  font-size: var(--fs-xs);
-  line-height: 1.35;
-  white-space: nowrap;
-  color: var(--muted);
 }
 
 .prtabs {
@@ -3488,6 +3497,12 @@ kbd {
 
 .switcher-row:hover {
   background: var(--grey-fill);
+}
+
+.switcher-wall {
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  border-top: 0;
 }
 
 .switcher-row[aria-current="true"] {

@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { pulses } from 'frontend/motion';
 import { fn } from '@ember/helper';
+import { LinkTo } from '@ember/routing';
 import StateChip from 'frontend/components/state-chip';
 import { dashboardOf, type Reading } from 'frontend/data/dashboard';
 import { failingOf, keyOf, type Numbered } from 'frontend/data/wall';
@@ -52,6 +53,11 @@ export default class Switcher extends Component<SwitcherSignature> {
         <button type="button" class="linkish" {{on "click" @close}}>Close
           <kbd>Esc</kbd></button></div>
       <div class="switcher-list">
+        <LinkTo
+          @route="index"
+          class="switcher-row switcher-wall"
+          data-test-wall-link
+        >Wall</LinkTo>
         {{#each this.hub.sections key="group" as |section|}}
           <div
             class="group-head switcher-group lvl-{{section.level}}-h"
