@@ -85,6 +85,36 @@ module('Acceptance | not found', function (hooks) {
     assert.dom('[data-test-tab]').exists({ count: 5 });
   });
 
+  test('a pull request opened before the restarted watcher’s first cycle says the server is starting, not that it is lost', async function (assert) {
+    board().unheld = {
+      code: 'watcher-starting',
+      detail: 'the watcher has not finished its first cycle yet',
+    };
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-title-bar]').exists();
+    assert
+      .dom('[data-test-pr-starting]')
+      .includesText('The server is starting up');
+    assert.dom('[data-test-pr-not-found]').doesNotExist();
+    assert.dom('[data-test-banner]').doesNotExist();
+  });
+
+  test('a pull request page waiting on the watcher’s first cycle opens its tabs once the cycle ends', async function (assert) {
+    board().unheld = {
+      code: 'watcher-starting',
+      detail: 'the watcher has not finished its first cycle yet',
+    };
+    await visit('/pr/o/r/7/summary');
+
+    board().unheld = null;
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-pr-starting]').doesNotExist();
+    assert.dom('[data-test-tab]').exists({ count: 5 });
+  });
+
   test('a pull request the watcher holds keeps its tabs and shows no not-found page', async function (assert) {
     await visit('/pr/o/r/7/summary');
 

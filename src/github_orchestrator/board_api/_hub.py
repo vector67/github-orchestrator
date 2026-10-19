@@ -248,7 +248,9 @@ def read_nothing(unknown: str) -> Response:
     raise Refusal(404, ErrorCode.NOT_FOUND, f"the hub serves nothing at {PREFIX}/{unknown}")
 
 
-def refuse_unheld(owner: Owner, name: Name, number: int, path: str) -> Response:
+def refuse_unheld(owner: Owner, name: Name, number: int, path: str, desk: Serving) -> Response:
+    if not desk.told.held().told:
+        raise _unheld(desk)
     raise Refusal(404, ErrorCode.NOT_FOUND,
                   f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")
 
@@ -262,7 +264,7 @@ async def hang_up_unheld(websocket: WebSocket, owner: Owner, name: Name, number:
 unheld = APIRouter(tags=["hub"])
 unheld.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", refuse_unheld,
                      methods=["GET"], operation_id="readUnheldPullRequest", status_code=404,
-                     responses={404: NOT_FOUND},
+                     responses={404: NOT_FOUND, 503: WATCHER_STARTING},
                      summary="Any read of a pull request the watcher does not hold.")
 unheld.add_api_route("/pr/{owner}/{name}/{number}/api/{path:path}", refuse_unheld,
                      methods=["POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)

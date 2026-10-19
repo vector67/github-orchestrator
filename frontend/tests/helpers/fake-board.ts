@@ -954,6 +954,9 @@ export class FakeBoard {
     const held = this.held.find(
       (one) => one.repo === repo && one.number === number,
     );
+    if (this.unheld) {
+      return this.starting(this.unheld.code, this.unheld.detail);
+    }
     if (!held) {
       return this.json(404, {
         errors: [{ status: 404, code: 'not-found', detail: 'not held' }],

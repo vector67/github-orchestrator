@@ -40,7 +40,7 @@ class Rail {
       reachability.polled(where, (tag) => store.ask(feed, tag), {
         flipped,
         scope,
-        counts: (trouble) => !notHeldBy(trouble),
+        counts: (trouble) => !notHeldBy(trouble) && unheldBy(trouble) === null,
       });
     this.pull = polled('rail', { kind: 'pull-request', pr });
     this.viewer = polled('rail', { kind: 'viewer', pr });
