@@ -187,3 +187,59 @@ def test_a_witness_without_an_mcp_config_keeps_the_servers_claude_finds(tmp_path
 
     assert "--mcp-config" not in argv
     assert "--strict-mcp-config" not in argv
+
+
+MISMATCHES: list[dict[str, object]] = [
+    {"lower": "implementation", "higher": "requested", "kind": "scope-creep", "text": "Also renames the export service.", "claims": ["I2", "R1"]},
+    {"lower": "claimed", "higher": "implementation", "kind": "unsupported", "text": "Claims a cache nothing adds.", "claims": ["C3"]},
+]
+
+
+def challenged(tmp_path: Path, mismatches: list[dict[str, object]], failing: str | None = None) -> tuple[list[tuple[str, str]], dict[str, list[str]], dict[str, str]]:
+    manifest = manifest_in(tmp_path, ["implementation", "tests", "alignment"])
+    (manifest["implementation"] / "changes.diff").write_text("+ renamed")
+    (manifest["tests"] / "changes.diff").write_text("+ tested")
+    launches: list[tuple[str, str]] = []
+    seen: dict[str, list[str]] = {}
+
+    def launch(agent: str, folder: Path) -> bool:
+        launches.append((agent, folder.name))
+        seen[folder.name] = sorted(str(path.relative_to(folder)) for path in folder.rglob("*"))
+        if folder.name == failing:
+            return False
+        if agent == "alignment":
+            (folder / "output.json").write_text(json.dumps({"mismatches": mismatches}))
+        elif agent == "critic":
+            (folder / "output.json").write_text(json.dumps({"falsified": True, "reason": f"{folder.name} says no"}))
+        else:
+            (folder / "output.json").write_text(f'{{"witness": "{agent}"}}')
+        return True
+
+    failures = run_witnesses(manifest, launch, no_wait)
+    return launches, seen, failures
+
+
+def test_each_mismatch_is_challenged_by_a_critic_then_judged_with_the_critics_case(tmp_path: Path) -> None:
+    launches, seen, failures = challenged(tmp_path, MISMATCHES)
+
+    assert failures == {}
+    assert launches.index(("critic", "critic-1")) < launches.index(("verdict", "verdict-1"))
+    assert launches.index(("critic", "critic-2")) < launches.index(("verdict", "verdict-2"))
+    assert seen["critic-1"] == ["implementation", "implementation/changes.diff", "mismatch.json", "tests", "tests/changes.diff", "witnesses", "witnesses/implementation.json", "witnesses/tests.json"]
+    assert "critic.json" in seen["verdict-1"]
+    assert json.loads((tmp_path / "critic-2" / "mismatch.json").read_text()) == MISMATCHES[1]
+    assert json.loads((tmp_path / "verdict-1" / "critic.json").read_text()) == {"falsified": True, "reason": "critic-1 says no"}
+
+
+def test_a_failed_critic_leaves_its_mismatch_unjudged_and_the_others_judged(tmp_path: Path) -> None:
+    launches, _, failures = challenged(tmp_path, MISMATCHES, failing="critic-1")
+
+    assert failures == {"critic-1": "exited with an error"}
+    assert ("verdict", "verdict-1") not in launches
+    assert ("verdict", "verdict-2") in launches
+
+
+def test_no_mismatch_runs_no_critic(tmp_path: Path) -> None:
+    launches, _, _ = challenged(tmp_path, [])
+
+    assert launches[-1] == ("alignment", "alignment")

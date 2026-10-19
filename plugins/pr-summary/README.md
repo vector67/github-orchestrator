@@ -12,7 +12,11 @@ they open the diff:
 4. **Why**: why the change was needed, from tickets, Confluence, earlier pull
    requests and other people's comments, never from the authors.
 5. **Alignment**: every mismatch between them, checked in trust order: why,
-   requested, implementation, tests, claimed.
+   requested, implementation, tests, claimed. Each mismatch is then handed to
+   a critic that tries to falsify it from the witnesses' outputs and the
+   code, and a final judge that decides whether the critic succeeded. The
+   mismatches that stand come first; the falsified ones follow, crossed out,
+   each with the critic's reason.
 
 Each section is written by its own `claude -p --restricted` process whose
 working directory holds only that witness's inputs, so no witness can read
@@ -78,6 +82,8 @@ for a finished witness. The last line of the output names the folder:
   tests/
   why/
   alignment/
+  critic-<n>/       one per mismatch, with the evidence and the code
+  verdict-<n>/      the same, plus the critic's output as critic.json
   <witness>.log     each witness's own stdout and stderr
 ```
 

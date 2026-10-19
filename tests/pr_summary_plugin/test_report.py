@@ -97,3 +97,27 @@ def test_a_witness_whose_tools_stayed_unavailable_fails_naming_why(tmp_path: Pat
     text = report(folders(tmp_path, {**ALL, "requested": unavailable}, []))
 
     assert "## Requested\nRequested failed: its tools stayed unavailable: the Atlassian tools never connected" in text
+
+
+def judged(tmp_path: Path, number: int, critic_reason: str, falsified: bool) -> None:
+    (tmp_path / f"critic-{number}").mkdir()
+    (tmp_path / f"critic-{number}" / "output.json").write_text(json.dumps({"falsified": True, "reason": critic_reason, "evidence": []}))
+    (tmp_path / f"verdict-{number}").mkdir()
+    (tmp_path / f"verdict-{number}" / "output.json").write_text(json.dumps({"falsified": falsified, "reason": "The judge's view."}))
+
+
+def test_falsified_mismatches_follow_the_standing_ones_crossed_out_with_the_critics_reason(tmp_path: Path) -> None:
+    renamed = {"lower": "implementation", "higher": "requested", "kind": "unrequested-refactor", "text": "Also renames the export service.", "claims": ["I1", "R1"]}
+    untested = {"lower": "tests", "higher": "implementation", "kind": "untested", "text": "Nothing pins the hidden button.", "claims": ["I1"]}
+    unsupported = {"lower": "claimed", "higher": "implementation", "kind": "unsupported", "text": "Claims a cache.", "claims": ["C1"]}
+    manifest = folders(tmp_path, ALL, [renamed, untested, unsupported])
+    judged(tmp_path, 1, "The rename is in requested's R1.", falsified=True)
+    judged(tmp_path, 2, "T1 pins it.", falsified=False)
+
+    text = report(manifest)
+
+    assert (
+        "1. **Tests vs Implementation** (untested): Nothing pins the hidden button. [I1]\n"
+        "2. **Claimed vs Implementation** (unsupported): Claims a cache. [C1]\n"
+        "3. ~~**Implementation vs Requested** (unrequested refactor): Also renames the export service. [I1, R1]~~ The rename is in requested's R1.\n"
+    ) in text

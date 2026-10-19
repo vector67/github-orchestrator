@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 from collections.abc import Callable
@@ -41,7 +42,7 @@ def command(witness: str, plugin_root: Path, mcp_config: Path | None) -> list[st
 def launcher(plugin_root: Path, mcp_config: Path | None) -> Launch:
     def launch(witness: str, folder: Path) -> bool:
         result = subprocess.run(command(witness, plugin_root, mcp_config), input=PROMPT, cwd=folder, capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
-        (folder.parent / f"{witness}.log").write_text(result.stdout + result.stderr)
+        (folder.parent / f"{folder.name}.log").write_text(result.stdout + result.stderr)
         return result.returncode == 0
 
     return launch
@@ -55,32 +56,68 @@ def _unavailable(folder: Path) -> str | None:
     return content.get("unavailable") if isinstance(content, dict) else None
 
 
+def challenge_folders(alignment: Path, number: int) -> tuple[Path, Path]:
+    return alignment.parent / f"critic-{number}", alignment.parent / f"verdict-{number}"
+
+
+def _mismatches(alignment: Path) -> list[object]:
+    try:
+        content = json.loads((alignment / "output.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    mismatches = content.get("mismatches") if isinstance(content, dict) else None
+    return mismatches if isinstance(mismatches, list) else []
+
+
+def _evidence_into(folder: Path, manifest: dict[str, Path], mismatch: object) -> None:
+    folder.mkdir()
+    (folder / "mismatch.json").write_text(json.dumps(mismatch, indent=2))
+    shutil.copytree(manifest["alignment"], folder / "witnesses", ignore=shutil.ignore_patterns("output.json"))
+    for code in ("implementation", "tests"):
+        if code in manifest:
+            shutil.copytree(manifest[code], folder / code, ignore=shutil.ignore_patterns("output.json"), copy_function=os.link)
+
+
 def run_witnesses(manifest: dict[str, Path], launch: Launch, wait: Wait) -> dict[str, str]:
     witnesses = [name for name in manifest if name != "alignment"]
     failures: dict[str, str] = {}
 
-    def attempt(witness: str) -> None:
+    def attempt(agent: str, folder: Path) -> bool:
         for attempt_number in range(1, ATTEMPTS + 1):
             try:
-                if not launch(witness, manifest[witness]):
-                    failures[witness] = "exited with an error"
-                    return
+                if not launch(agent, folder):
+                    failures[folder.name] = "exited with an error"
+                    return False
             except Exception as error:
-                failures[witness] = type(error).__name__
-                return
-            reason = _unavailable(manifest[witness])
+                failures[folder.name] = type(error).__name__
+                return False
+            reason = _unavailable(folder)
             if reason is None:
-                return
+                return True
             if attempt_number < ATTEMPTS:
-                (manifest[witness] / "output.json").unlink()
+                (folder / "output.json").unlink()
                 wait(RETRY_WAIT_SECONDS)
-        failures[witness] = f"its tools stayed unavailable: {reason}"
+        failures[folder.name] = f"its tools stayed unavailable: {reason}"
+        return False
+
+    def challenge(number: int, mismatch: object) -> None:
+        critic, verdict = challenge_folders(manifest["alignment"], number)
+        _evidence_into(critic, manifest, mismatch)
+        if not attempt("critic", critic) or not (critic / "output.json").exists():
+            return
+        _evidence_into(verdict, manifest, mismatch)
+        shutil.copy(critic / "output.json", verdict / "critic.json")
+        attempt("verdict", verdict)
 
     with ThreadPoolExecutor(max_workers=len(witnesses)) as pool:
-        list(pool.map(attempt, witnesses))
+        list(pool.map(lambda witness: attempt(witness, manifest[witness]), witnesses))
     for witness in witnesses:
         output = manifest[witness] / "output.json"
         if output.exists() and witness not in failures:
             shutil.copy(output, manifest["alignment"] / f"{witness}.json")
-    attempt("alignment")
+    attempt("alignment", manifest["alignment"])
+    mismatches = _mismatches(manifest["alignment"])
+    if mismatches:
+        with ThreadPoolExecutor(max_workers=len(mismatches)) as pool:
+            list(pool.map(challenge, range(1, len(mismatches) + 1), mismatches))
     return failures
