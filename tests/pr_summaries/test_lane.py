@@ -170,6 +170,23 @@ def test_while_a_run_is_in_flight_its_progress_names_the_witnesses_that_have_fin
     assert lane.lane.progress(THE_PR) is None
 
 
+def test_a_run_in_flight_counts_the_critic_and_the_final_judge_among_its_agents(tmp_path):
+    threads = InAThread()
+    lane = Lane(tmp_path, "partway", run_in=threads)
+    lane.summaries.want(THE_PR)
+    lane.lane.poll()
+    _partway(lane)
+    (lane.folder / "critic").mkdir()
+    (lane.folder / "critic" / "output.json").write_text("{}")
+    (lane.folder / "verdict").mkdir()
+
+    progress = lane.lane.progress(THE_PR)
+
+    threads.finish(lane)
+    assert progress is not None
+    assert dict(progress.done) == {"claimed": True, "implementation": False, "critic": True, "verdict": False}
+
+
 def test_a_pr_with_no_run_in_flight_has_no_progress(tmp_path):
     lane = Lane(tmp_path, "clean")
     lane.summaries.want(THE_PR)

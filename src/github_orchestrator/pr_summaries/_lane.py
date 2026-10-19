@@ -19,7 +19,7 @@ from github_orchestrator.pr_summaries.interface import Progress, PrSummaries, Su
 log = logging.getLogger(__name__)
 
 WORKING_FILES = "Working files: "
-WITNESSES = ("requested", "claimed", "implementation", "tests", "why", "alignment")
+WITNESSES = ("requested", "claimed", "implementation", "tests", "why", "alignment", "critic", "verdict")
 LOST = "github-orchestrator lost the run: it ended without an exit status.\n"
 RECORDING_THE_EXIT = """
 import json, subprocess, sys

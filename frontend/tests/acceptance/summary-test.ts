@@ -151,12 +151,12 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-strip]')
       .hasText(
-        'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/6 witnesses',
+        'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/8 agents',
       );
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
-  test('a rerun over a summary counts its witnesses as the polls come in', async function (assert) {
+  test('a rerun over a summary counts its agents as the polls come in', async function (assert) {
     asReviewer();
     board().summary = prSummary({
       head_sha: 'c0ffee1',
@@ -178,7 +178,7 @@ module('Acceptance | summary tab', function (hooks) {
 
     assert
       .dom('[data-test-summary-rerun]')
-      .hasText('rerun started 5m ago, finished 4/6 witnesses');
+      .hasText('rerun started 5m ago, finished 4/8 agents');
 
     board().summary = {
       ...board().summary,
@@ -188,14 +188,16 @@ module('Acceptance | summary tab', function (hooks) {
         { witness: 'implementation', done: true },
         { witness: 'tests', done: true },
         { witness: 'why', done: true },
-        { witness: 'alignment', done: false },
+        { witness: 'alignment', done: true },
+        { witness: 'critic', done: true },
+        { witness: 'verdict', done: false },
       ],
     };
     await clock().tick(LIST);
 
     assert
       .dom('[data-test-summary-rerun]')
-      .hasText('rerun started 5m ago, finished 5/6 witnesses');
+      .hasText('rerun started 5m ago, finished 7/8 agents');
   });
 
   test('a push since the summary marks it stale, naming both heads and how far behind it is, with when it finished and Rerun at its end', async function (assert) {

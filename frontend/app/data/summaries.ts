@@ -691,7 +691,7 @@ export interface SummaryTab {
   markdown: string | null;
 }
 
-const WITNESS_COUNT = 6;
+const WITNESS_COUNT = 8;
 
 const SHORT_SHA = 7;
 
