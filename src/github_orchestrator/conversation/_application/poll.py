@@ -121,6 +121,7 @@ def _create(key: str, thread: FetchedThread, created_at: str,
         anchor=thread.anchor or Anchor(),
         role=role,
         resolved=bool(thread.is_resolved),
+        fixes_allowed=ports.config.agents_enabled,
     ))
 
 
@@ -139,7 +140,7 @@ def open_one(thread: FetchedThread, created_at: str, ports: Ports, *,
                                  anchor=thread.anchor,
                                  resolved=thread.is_resolved,
                                  as_of=cutoff))
-            if ports.pull_requests.role() == ROLE_AUTHOR:
+            if ports.pull_requests.role() == ROLE_AUTHOR and ports.config.agents_enabled:
                 queued = run(ports, outcome.conversation, First())
                 if isinstance(queued, Accepted):
                     outcome = queued

@@ -271,6 +271,27 @@ def test_nothing_is_spawned_while_claude_is_disabled(settings):
     assert _read(threads, "PRRT_1").standing is ConversationState.QUEUED
 
 
+def test_a_thread_heard_while_claude_is_disabled_waits_on_you_with_no_worktree(settings):
+    here = _world(settings)
+
+    _commented(here, here.threads(agents_enabled=False))
+
+    assert _read(here.threads()).standing is ConversationState.READY
+    assert not here.working_copies.holds_thread(THE_PR, KEY)
+
+
+def test_a_reply_while_claude_is_disabled_queues_no_fix(settings):
+    here = _world(settings)
+    threads = here.threads(agents_enabled=False)
+    _commented(here, threads)
+
+    on_github(here.github, KEY, said(101, "rename this"), said(102, "and this"))
+    hear(threads)
+
+    assert _read(threads).standing is ConversationState.READY
+    assert not here.working_copies.holds_thread(THE_PR, KEY)
+
+
 def test_re_enabling_claude_starts_the_fixes_that_waited(settings):
     agent_runs = _agent_runs()
     here = _world(settings, agent_runs=agent_runs)

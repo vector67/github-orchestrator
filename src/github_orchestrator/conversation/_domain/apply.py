@@ -217,6 +217,7 @@ def create(
     anchor: Anchor = Anchor(),
     role: str = ROLE_AUTHOR,
     resolved: bool = False,
+    fixes_allowed: bool = True,
 ) -> Accepted:
     root = comments[0] if comments else Comment()
     conversation = Conversation(
@@ -251,6 +252,9 @@ def create(
     if role == ROLE_REVIEWER:
         return _read_and_asked(Accepted(replace(conversation, fix=Fix(state=ABSENT)),
                                         (WriteGist(source=GIST_ROOT),)), created_at)
+    if not fixes_allowed:
+        return Accepted(replace(conversation, fix=Fix(state=ABSENT)),
+                        (WriteGist(source=GIST_ROOT),))
     return Accepted(replace(conversation, operations=(first,)),
                     (CutWorkspace(), WriteGist(source=GIST_ROOT)))
 
