@@ -23,6 +23,10 @@ description: Use for any change to this repository — the branch, worktree, tes
    `make lint-python`, not `make test-python`, and only the full targets run the front end's import rules,
    which are what refuse a new import, export or test file. A commit that only
    marks items done in a spec belongs in the same commit as the code it records.
+   A change to an agent prompt (an agent, skill or brief) is not verified until
+   you have run it as the system runs it, or in a subagent given the same prompt
+   and inputs, and seen the requested behaviour change in its output: lint and
+   tests never run a prompt.
 4. Commit with a lowercase imperative subject and no prefix, no co-author trailer.
 5. Check the branch for private information before it reaches `main`: the repo is
    public, and whatever merges is pushed. Read `git diff main...<branch>` and
