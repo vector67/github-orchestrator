@@ -225,7 +225,6 @@ input[type="radio"] {
   cursor: help;
 }
 
-.theme-toggle,
 .send-review {
   flex: none;
 }
@@ -2647,9 +2646,18 @@ kbd {
   border: 1.5px solid transparent;
 }
 
-.repo-pick::after,
-.settings-pick::after {
+.repo-pick::after {
   content: " \25BE";
+}
+
+.settings-pick {
+  display: inline-flex;
+  padding: 5px;
+}
+
+.gear {
+  width: 16px;
+  height: 16px;
 }
 
 .repo-pick:hover,

@@ -7,6 +7,7 @@ import { LinkTo } from '@ember/routing';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import RebaseButton from 'frontend/components/rebase-button';
+import SettingsMenu from 'frontend/components/settings-menu';
 import Switcher from 'frontend/components/switcher';
 import {
   dashboardOf,
@@ -23,7 +24,6 @@ import { stepped, type Keymap } from 'frontend/services/keys';
 import type DashboardService from 'frontend/services/dashboard';
 import type StoreService from 'frontend/services/store';
 import type { ShownPr, Summaries, WallRow } from 'frontend/services/store';
-import type ThemeService from 'frontend/services/theme';
 import type ThreadsService from 'frontend/services/threads';
 import type ToastsService from 'frontend/services/toasts';
 
@@ -43,22 +43,13 @@ export default class PrView extends Component<PrViewSignature> {
   @service declare store: StoreService;
   @service declare router: RouterService;
   @service declare keys: KeysService;
-  @service declare theme: ThemeService;
   @service declare toasts: ToastsService;
 
   @tracked switching = false;
-  @tracked showingSettings = false;
 
   private readonly keymap: Keymap = {
     take: (key) => this.switcherTakes(key),
     otherwise: (key) => this.takes(key),
-  };
-
-  private readonly settingsKeymap: Keymap = {
-    take: (key) => {
-      if (key === 'Escape') this.closeSettings();
-      return true;
-    },
   };
 
   constructor(owner: Owner, args: PrViewSignature['Args']) {
@@ -69,7 +60,6 @@ export default class PrView extends Component<PrViewSignature> {
   willDestroy(): void {
     super.willDestroy();
     this.keys.drop(this.keymap);
-    this.keys.drop(this.settingsKeymap);
   }
 
   get shown(): ShownPr | null {
@@ -158,18 +148,6 @@ export default class PrView extends Component<PrViewSignature> {
     void this.router.transitionTo(pageOf(pr));
   };
 
-  flip = () => this.theme.toggle();
-
-  openSettings = () => {
-    this.showingSettings = true;
-    this.keys.push('dialog', this.settingsKeymap);
-  };
-
-  closeSettings = () => {
-    this.showingSettings = false;
-    this.keys.drop(this.settingsKeymap);
-  };
-
   private step(by: number): void {
     const order = this.order;
     const here = keyOf(this.args.pr);
@@ -228,7 +206,9 @@ export default class PrView extends Component<PrViewSignature> {
           class="switch-btn"
           data-test-switcher-open
           {{on "click" this.openSwitcher}}
-        ><span class="burger"></span>PRs
+          aria-label="PRs"
+          title="PRs"
+        ><span class="burger"></span>
           <kbd>\</kbd></button>
         <div class="prtitle" data-test-pr-heading>
           <span class="tline">{{#if this.reading.draft}}<span
@@ -290,44 +270,7 @@ export default class PrView extends Component<PrViewSignature> {
             data-test-font-problem
           >Board font missing</span>
         {{/if}}
-        <span class="settings">
-          <button
-            type="button"
-            class="settings-pick"
-            aria-haspopup="true"
-            aria-expanded={{if this.showingSettings "true" "false"}}
-            data-test-settings-open
-            {{on "click" this.openSettings}}
-          >Settings</button>
-          {{#if this.showingSettings}}
-            <button
-              type="button"
-              class="settings-scrim"
-              tabindex="-1"
-              aria-label="close the settings"
-              {{on "click" this.closeSettings}}
-            ></button>
-            <div class="settings-menu" data-test-settings-menu>
-              <button
-                type="button"
-                class="setting"
-                data-test-setting
-                data-test-theme-toggle
-                {{on "click" this.flip}}
-              >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
-              {{#if this.hub.poll}}
-                <span
-                  class="settings-health"
-                  title={{this.hub.poll.text}}
-                  data-test-pr-health
-                  data-test-health-alarm={{this.hub.poll.alarm}}
-                ><i
-                    class="sq {{if this.hub.poll.alarm 'alarm'}}"
-                  ></i>{{this.hub.poll.text}}</span>
-              {{/if}}
-            </div>
-          {{/if}}
-        </span>
+        <SettingsMenu />
       </header>
       {{#if this.notHeld}}
         <section id="not-found" data-test-pr-not-found>

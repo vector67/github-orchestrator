@@ -409,11 +409,12 @@ seconds.
 
 Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>`: on its Summary
 when you review it, on its Board when it is yours. The wall goes
-and the PR takes the whole screen. Its title bar has the **PRs** button, the
-title, whose PR it is, the branch, the PR's number linking to it on GitHub,
-your move, the chips its wall row shows and **Settings**. The PRs button opens
-the switcher, whose first entry is **Wall**. Settings holds the theme and the
-watcher's last poll, with an alarm square when polls fail. **N mismatches** is the
+and the PR takes the whole screen. Its title bar has the three-line PRs
+button, the title, whose PR it is, the branch, the PR's number linking to it on
+GitHub, your move, the chips its wall row shows and the settings gear. The PRs
+button opens the switcher, whose first entry is **Wall**. The gear, on the
+wall's bar too, holds the theme and the watcher's last poll, with an alarm
+square when polls fail. **N mismatches** is the
 Alignment judge's count in the PR's latest summary, shown even once the summary
 is stale. A draft has a grey **Draft** pill before its title, and
 its move is outlined in grey, never yellow, since yellow means it needs you now.

@@ -4,12 +4,12 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
+import SettingsMenu from 'frontend/components/settings-menu';
 import { TODAY_HINT, todayOf, type Said } from 'frontend/data/runs';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
-import type ThemeService from 'frontend/services/theme';
 
 interface HubBarSignature {
   Args: { on: 'wall' | 'runs' | 'setup' };
@@ -20,7 +20,6 @@ const eq = (one: string, other: string): boolean => one === other;
 export default class HubBar extends Component<HubBarSignature> {
   @service declare hub: HubService;
   @service declare store: StoreService;
-  @service declare theme: ThemeService;
   @service declare keys: KeysService;
 
   @tracked picking = false;
@@ -81,8 +80,6 @@ export default class HubBar extends Component<HubBarSignature> {
     const ledger = this.store.ledger;
     return ledger ? todayOf(ledger.today) : null;
   }
-
-  flip = () => this.theme.toggle();
 
   <template>
     <header class="wall-bar" data-top-bar>
@@ -185,12 +182,7 @@ export default class HubBar extends Component<HubBarSignature> {
           data-test-update-available
         >Update available</span>
       {{/if}}
-      <button
-        type="button"
-        class="theme-toggle btn"
-        data-test-theme-toggle
-        {{on "click" this.flip}}
-      >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
+      <SettingsMenu />
     </header>
   </template>
 }
