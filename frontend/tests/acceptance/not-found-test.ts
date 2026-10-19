@@ -1,7 +1,7 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
 import { visit } from '@ember/test-helpers';
-import { setupFakeBoard } from 'frontend/tests/helpers/fake-board';
+import { setupFakeBoard, thread } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 
 const LIST = 5000;
@@ -113,6 +113,22 @@ module('Acceptance | not found', function (hooks) {
 
     assert.dom('[data-test-pr-starting]').doesNotExist();
     assert.dom('[data-test-tab]').exists({ count: 5 });
+  });
+
+  test('a board opened during the watcher’s first cycle loads once the cycle ends instead of saying it could not load', async function (assert) {
+    board().conversations = [thread({ key: 'k1' })];
+    board().unheld = {
+      code: 'watcher-starting',
+      detail: 'the watcher has not finished its first cycle yet',
+    };
+    await visit('/pr/o/r/7/conversations');
+
+    board().unheld = null;
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-pr-starting]').doesNotExist();
+    assert.dom('[data-test-load-trouble]').doesNotExist();
+    assert.dom('#c-k1').exists();
   });
 
   test('a pull request the watcher holds keeps its tabs and shows no not-found page', async function (assert) {

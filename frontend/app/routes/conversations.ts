@@ -2,6 +2,7 @@ import Route from '@ember/routing/route';
 import { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
 import type Transition from '@ember/routing/transition';
+import { unheldBy } from 'frontend/data/refusal';
 import type BoardKeysService from 'frontend/services/board-keys';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
@@ -23,7 +24,7 @@ export default class ConversationsRoute extends Route {
     try {
       await Promise.all([this.poll.startRail(), this.poll.held()]);
     } catch (trouble) {
-      if (!this.threads.loaded) throw trouble;
+      if (!this.threads.loaded && !unheldBy(trouble)) throw trouble;
     }
     return this.threads;
   }
