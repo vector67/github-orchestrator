@@ -2672,8 +2672,11 @@
     "on_hold": {
      "type": "boolean"
     },
-    "queued_events": {
-     "type": "integer"
+    "queue": {
+     "items": {
+      "$ref": "#/components/schemas/QueuedEvent"
+     },
+     "type": "array"
     },
     "threads": {
      "$ref": "#/components/schemas/ThreadCounts"
@@ -2695,7 +2698,7 @@
    "required": [
     "agent",
     "last_run",
-    "queued_events",
+    "queue",
     "on_hold",
     "unpushed_commits",
     "threads"
@@ -5289,6 +5292,28 @@
     "commits",
     "additions",
     "deletions"
+   ],
+   "type": "object"
+  },
+  "QueuedEvent": {
+   "properties": {
+    "event": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "queued_at": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "event",
+    "queued_at"
    ],
    "type": "object"
   },

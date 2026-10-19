@@ -36,6 +36,7 @@ import type {
   WatcherHealth,
   HubState,
   NewestRelease,
+  QueuedEvent,
   UnpushedCommit,
 } from 'frontend/data/api';
 import { driftOf } from 'frontend/tests/helpers/contract';
@@ -308,6 +309,13 @@ export function check(
   };
 }
 
+export function waitingEvents(count: number): QueuedEvent[] {
+  return Array.from({ length: count }, (_, at) => ({
+    event: 'ci-failed',
+    queued_at: `2026-09-12T08:3${at % 10}:00Z`,
+  }));
+}
+
 export function unpushed(count: number): UnpushedCommit[] {
   return Array.from({ length: count }, (_, at) => ({
     sha: `c0ffee${at}`,
@@ -451,7 +459,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
         silent_seconds: null,
       },
       last_run: null,
-      queued_events: 0,
+      queue: [],
       on_hold: false,
       unpushed_commits: [],
       threads: { queued: 0, live: 0, proposed: 0, drafts: 0 },

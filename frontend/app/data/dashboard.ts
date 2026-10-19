@@ -454,7 +454,7 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
   const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
   switch (move.code) {
     case 'on-hold':
-      return heldOf(shown.drawn.system.queued_events);
+      return heldOf(shown.drawn.system.queue.length);
     case 'first-poll':
       return 'nothing known yet';
     case 'human-comments':
@@ -704,7 +704,7 @@ function threadsLine(shown: ShownPr): string {
 
 function systemRows(shown: ShownPr, now: number): Row[] {
   const system = shown.drawn.system;
-  const queued = system.queued_events;
+  const queued = system.queue.length;
   const rows = [
     row('agent', system.agent.name, agentLine(system, now)),
     row('queue', 'Queue', queued ? `${queued} pending` : 'empty'),
@@ -1050,7 +1050,7 @@ function chipsOf(
       ? null
       : countChip(
           'queue',
-          system.queued_events,
+          system.queue.length,
           (count) => `${count} queued`,
           ROW_HINTS['queue']!,
           'quiet',

@@ -496,7 +496,8 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             else contract.LastRun(event=dashboard.last_run_event,
                                   exit_code=dashboard.last_run_exit_code,
                                   ended_at=dashboard.last_run_ended_at),
-            queued_events=dashboard.queued_events,
+            queue=[contract.QueuedEvent(event=queued.event, queued_at=queued.queued_at)
+                   for queued in dashboard.queue],
             on_hold=dashboard.on_hold,
             unpushed_commits=None if dashboard.unpushed_commits is None
             else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)

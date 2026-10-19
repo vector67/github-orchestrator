@@ -350,6 +350,9 @@ class DiskPrEventQueue:
         return settling_of(list_pending(self._queues_dir, pr)
                            + list_in_flight(self._queues_dir, pr))
 
+    def queue(self, pr: Pr) -> Queue:
+        return contents(_queue_dir_for_pr(self._queues_dir, pr), pr)
+
     def queues(self) -> list[Queue]:
         found = []
         for directory in _iter_queue_dirs(self._queues_dir):

@@ -525,7 +525,7 @@ def test_the_event_queue_names_only_the_thread_activity_it_holds_from_conversati
 
 PR_EVENT_QUEUE_ROLES = {
     "Intake": frozenset({"add", "add_thread_activity"}),
-    "Worklist": frozenset({"next", "waiting", "settling", "recover", "drop_in_flight",
+    "Worklist": frozenset({"next", "waiting", "queue", "settling", "recover", "drop_in_flight",
                            "is_torn_down", "forget"}),
     "Queues": frozenset({"queues", "failed_since", "archive_other_repos"}),
 }

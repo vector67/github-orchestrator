@@ -220,7 +220,7 @@ export interface DashboardStatus {
 export interface DashboardSystem {
   agent: AgentActivity;
   last_run: LastRun | null;
-  queued_events: number;
+  queue: QueuedEvent[];
   on_hold: boolean;
   unpushed_commits: UnpushedCommit[] | null;
   threads: ThreadCounts;
@@ -644,6 +644,11 @@ export interface PullRequest {
   commits: number | null;
   additions: number;
   deletions: number;
+}
+
+export interface QueuedEvent {
+  event: string | null;
+  queued_at: string;
 }
 
 export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';

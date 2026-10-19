@@ -28,6 +28,12 @@ class ManagerStanding(StrEnum):
 
 
 @dataclass(frozen=True)
+class QueuedEvent:
+    event: str | None
+    queued_at: str
+
+
+@dataclass(frozen=True)
 class UnpushedCommit:
     sha: str
     subject: str
@@ -81,7 +87,7 @@ class Dashboard:
     last_run_event: str | None
     last_run_exit_code: int | None
     last_run_ended_at: str | None
-    queued_events: int
+    queue: tuple[QueuedEvent, ...]
     on_hold: bool
     unpushed_commits: tuple[UnpushedCommit, ...] | None
     threads_queued: int

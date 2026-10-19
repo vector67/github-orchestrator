@@ -32,7 +32,7 @@ IDLE = Dashboard(
     agent_name="Agent",
     working_on=None,
     elapsed_seconds=None, silent_seconds=None, last_run_event=None,
-    last_run_exit_code=None, last_run_ended_at=None, queued_events=0, on_hold=False,
+    last_run_exit_code=None, last_run_ended_at=None, queue=(), on_hold=False,
     unpushed_commits=(), threads_queued=0, threads_live=frozenset(), threads_proposed=0,
     threads_drafts=0, frozen_on=None, expected_branch=None,
     seconds_left=None, run_working=False, release_requested=False,

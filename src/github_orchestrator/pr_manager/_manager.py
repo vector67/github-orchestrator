@@ -230,7 +230,7 @@ class ManagerLoop:
             log.debug("loop %s: ON HOLD — skipping queue", pr)
         elif self._commands.active_run is None:
             log.debug("loop %s: agent idle, checking queue (%d pending)", pr,
-                      dashboard.queued_events)
+                      len(dashboard.queue))
             self._process_next_event()
         else:
             log.debug(

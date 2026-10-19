@@ -22,6 +22,7 @@ import {
   setupFakeBoard,
   threadRow as row,
   unpushed,
+  waitingEvents,
   WALL_GROUPS,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
@@ -152,7 +153,7 @@ module('Acceptance | wall', function (hooks) {
         number: 9,
         dashboard: {
           manager: { on_hold: true },
-          system: { queued_events: 2, on_hold: true },
+          system: { queue: waitingEvents(2), on_hold: true },
         },
       }),
       heldPr({
@@ -213,7 +214,7 @@ module('Acceptance | wall', function (hooks) {
       number,
       dashboard: {
         manager: { on_hold: true },
-        system: { queued_events: 0, on_hold: true },
+        system: { queue: waitingEvents(0), on_hold: true },
       },
     });
   }
@@ -377,7 +378,7 @@ module('Acceptance | wall', function (hooks) {
       needing(1, { manager: { frozen_on: 'another-pr' } }),
       needing(2, {
         manager: { on_hold: true },
-        system: { on_hold: true, queued_events: 2 },
+        system: { on_hold: true, queue: waitingEvents(2) },
       }),
       needing(3, { manager: { on_hold: true }, system: { on_hold: true } }),
       needing(4, {
@@ -919,7 +920,7 @@ module('Acceptance | wall', function (hooks) {
               elapsed_seconds: 134,
               silent_seconds: 6,
             },
-            queued_events: 1,
+            queue: waitingEvents(1),
             unpushed_commits: unpushed(2),
           },
         },
@@ -1058,7 +1059,6 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         dashboard: {
-          system: { queued_events: -1 },
           facts: { unresolved_threads: -2 },
         },
       }),
@@ -1248,7 +1248,7 @@ module('Acceptance | wall', function (hooks) {
             mentioned: true,
           }),
           status: { you_are_the_detailed_reviewer: true },
-          system: { unpushed_commits: unpushed(1), queued_events: 1 },
+          system: { unpushed_commits: unpushed(1), queue: waitingEvents(1) },
           threads: [
             row('d', 'draft', 'draft', 'mine'),
             row('m', 'ready', 'open', 'mine'),

@@ -72,14 +72,16 @@ def test_a_pr_with_no_manager_shows_what_its_manager_would_with_no_run(
     assert unmanaged == managed
 
 
-def test_a_pr_on_hold_with_no_manager_says_how_many_events_it_holds(settings, tmp_path):
+def test_a_pr_on_hold_with_no_manager_says_which_events_it_holds(settings, tmp_path):
     seed(settings, POLLED)
     disk_holds(settings.data_dir).set_on_hold(THE_PR, True)
 
     managed, unmanaged = _both(settings, tmp_path, ci_failed("lint"))
 
     assert unmanaged == managed
-    assert (unmanaged.on_hold, unmanaged.queued_events) == (True, 1)
+    assert unmanaged.on_hold is True
+    assert [(queued.event, bool(queued.queued_at)) for queued in unmanaged.queue] == [
+        ("ci-failed", True)]
 
 
 def test_a_pr_dismissed_until_its_next_event_with_no_manager_says_it_is_hidden(settings, tmp_path):

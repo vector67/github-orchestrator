@@ -7,6 +7,7 @@ import {
   heldPr,
   setupFakeBoard,
   threadRow as row,
+  waitingEvents,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 
@@ -422,7 +423,7 @@ module('Acceptance | next move', function (hooks) {
       const shown = await seen({
         facts: { changes_requested_by: ['bob'], pending_reviewers: [] },
         manager: { on_hold: true },
-        system: { on_hold: true, queued_events: queued },
+        system: { on_hold: true, queue: waitingEvents(queued) },
       });
 
       assert.deepEqual(

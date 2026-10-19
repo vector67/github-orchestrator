@@ -15,6 +15,7 @@ import {
   setupFakeBoard,
   thread,
   threadRow,
+  waitingEvents,
   WALL_GROUPS,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
@@ -47,7 +48,7 @@ module('Acceptance | pr view', function (hooks) {
         number: 9,
         dashboard: {
           manager: { on_hold: true },
-          system: { queued_events: 2, on_hold: true },
+          system: { queue: waitingEvents(2), on_hold: true },
         },
       }),
     );

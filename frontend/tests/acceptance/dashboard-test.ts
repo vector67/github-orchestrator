@@ -15,6 +15,7 @@ import {
   heldPr,
   setupFakeBoard,
   unpushed,
+  waitingEvents,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
@@ -282,7 +283,7 @@ module('Acceptance | dashboard', function (hooks) {
     onTheHub({
       system: {
         agent: WORKING,
-        queued_events: 10,
+        queue: waitingEvents(10),
         unpushed_commits: unpushed(2),
         threads: { queued: 1, live: 2, proposed: 3, drafts: 0 },
       },

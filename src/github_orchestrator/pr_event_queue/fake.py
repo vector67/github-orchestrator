@@ -133,13 +133,14 @@ class FakePrEventQueue:
         queue = self._queues.get(pr, _Queue())
         return settling_of(self._pending(pr) + [entry.event for entry in queue.in_flight])
 
+    def queue(self, pr: Pr) -> Queue:
+        queue = self._queues.get(pr, _Queue())
+        return Queue(pr, (
+            *(Entry(pr, held.event, held.queued_at, State.IN_FLIGHT) for held in queue.in_flight),
+            *(Entry(pr, held.event, held.queued_at, State.PENDING) for held in queue.pending)))
+
     def queues(self) -> list[Queue]:
-        return [Queue(pr, (
-                    *(Entry(pr, held.event, held.queued_at, State.IN_FLIGHT)
-                      for held in queue.in_flight),
-                    *(Entry(pr, held.event, held.queued_at, State.PENDING)
-                      for held in queue.pending)))
-                for pr, queue in sorted(self._queues.items(), key=lambda kv: _order(kv[0]))]
+        return [self.queue(pr) for pr in sorted(self._queues, key=_order)]
 
     def failed_since(self, when: datetime) -> list[Entry]:
         return [

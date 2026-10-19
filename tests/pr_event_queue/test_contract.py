@@ -9,7 +9,7 @@ from github_orchestrator.change_detection.fake import (
 )
 from github_orchestrator.domain import Repo
 from github_orchestrator.pr_event_queue import Response
-from github_orchestrator.pr_event_queue.fake import FakePrEventQueue, Waiting
+from github_orchestrator.pr_event_queue.fake import FakePrEventQueue, State, Waiting
 from tests.builders import a_pr
 from tests.pr_event_queue.support import (
     activity,
@@ -331,6 +331,24 @@ def test_a_pr_whose_events_are_all_done_still_has_an_empty_queue(event_queue):
     assert [(q.pr, q.in_flight, q.pending) for q in event_queue.queues()] == [
         (THE_PR, [], []),
     ]
+
+
+def test_a_prs_queue_holds_its_events_in_flight_then_pending_with_when_each_was_queued(
+        event_queue):
+    event_queue.add(THE_PR, ci_failed())
+    event_queue.add(THE_PR, mergeable())
+    event_queue.add(a_pr(2, REPO), ci_succeeded())
+    _take(event_queue)
+
+    queue = event_queue.queue(THE_PR)
+
+    assert [(entry.event.kind if entry.event else None, entry.state) for entry in queue.entries] == [
+        ("ci-failed", State.IN_FLIGHT), ("became-mergeable", State.PENDING)]
+    assert all(entry.queued_at is not None for entry in queue.entries)
+
+
+def test_a_pr_never_added_to_has_an_empty_queue(event_queue):
+    assert event_queue.queue(a_pr(9, REPO)).entries == ()
 
 
 def test_a_pr_never_added_to_lists_no_queue(event_queue):

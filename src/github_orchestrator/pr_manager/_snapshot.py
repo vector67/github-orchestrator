@@ -1,6 +1,6 @@
 from github_orchestrator.agent_runs import LastRun, Run
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import ManagerStanding
+from github_orchestrator.board_api.interface import ManagerStanding, QueuedEvent
 from github_orchestrator.change_detection import (
     CiStatus,
     Facts,
@@ -32,7 +32,7 @@ def _since_review(state: Facts | None) -> SinceReview | None:
 
 
 def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
-                 last_run: LastRun | None, queued_events: int, on_hold: bool,
+                 last_run: LastRun | None, queue: tuple[QueuedEvent, ...], on_hold: bool,
                  threads: ConversationManager, wrong: WrongBranch | None,
                  notice: str | None, hidden: bool) -> Dashboard:
     counts = threads.counts()
@@ -86,7 +86,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         last_run_event=None if last_run is None else last_run.event_type,
         last_run_exit_code=None if last_run is None else last_run.exit_code,
         last_run_ended_at=None if last_run is None else last_run.ended_at,
-        queued_events=queued_events,
+        queue=queue,
         on_hold=on_hold,
         unpushed_commits=None,
         threads_queued=counts.queued,

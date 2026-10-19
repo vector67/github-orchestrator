@@ -1280,6 +1280,12 @@ class DashboardStatus(BaseModel):
     approved_by: list[str]
 
 
+class QueuedEvent(BaseModel):
+    event: str | None = Field(
+        description="Its kind, such as `ci-failed`. Null where its file would not read.")
+    queued_at: str
+
+
 class UnpushedCommit(BaseModel):
     sha: str = Field(description="The abbreviated sha.")
     subject: str = Field(description="The first line of its message.")
@@ -1290,8 +1296,9 @@ class DashboardSystem(BaseModel):
     last_run: LastRun | None = Field(
         description="How the newest finished run ended. Null before the "
                     "first one.")
-    queued_events: int = Field(
-        description="Events waiting for this pull request's manager to take.")
+    queue: list[QueuedEvent] = Field(
+        description="Events waiting for this pull request's manager to take, "
+                    "oldest first.")
     on_hold: bool = Field(
         description="On hold, the manager takes no events but a closing one.")
     unpushed_commits: list[UnpushedCommit] | None = Field(

@@ -3,7 +3,7 @@ from dataclasses import replace
 
 from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import Told, UnpushedCommit
+from github_orchestrator.board_api.interface import QueuedEvent, Told, UnpushedCommit
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -61,10 +61,15 @@ class DashboardSource:
         facts = self._change_detection.facts(pr)
         queued = self._worklist.waiting(pr).count
         return self._stamped(dashboard_of(
-            config, facts, run=run, last_run=self._history.last_run(pr), queued_events=queued,
+            config, facts, run=run, last_run=self._history.last_run(pr), queue=self._queue(pr),
             on_hold=self._holds.on_hold(pr), threads=threads, wrong=wrong, notice=notice,
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0),
         ))
+
+    def _queue(self, pr: Pr) -> tuple[QueuedEvent, ...]:
+        return tuple(QueuedEvent(None if entry.event is None else entry.event.kind,
+                                 entry.queued_at.isoformat())
+                     for entry in self._worklist.queue(pr).pending)
 
     def _unpushed(self, worktree: str, pr: Pr) -> tuple[UnpushedCommit, ...] | None:
         if not worktree:
