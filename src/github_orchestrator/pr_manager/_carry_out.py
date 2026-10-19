@@ -217,9 +217,6 @@ class EventCarryOut:
     def _absorb(self, activity: ThreadActivity, is_author: bool,
                 conversations: ConversationManager) -> None:
         absorbed = conversations.absorb(activity)
-        if absorbed.drained:
-            self._skipped(activity.kind)
-            return
         if is_author and absorbed.threads:
             self._note(f"Thread activity ({absorbed.threads}): materialised "
                        f"{len(absorbed.created)} thread(s) — they are on the review board.")

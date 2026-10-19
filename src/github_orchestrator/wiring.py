@@ -1403,8 +1403,9 @@ class AnsweringInThePreview:
 
 class PolledInThePreview:
     def health(self) -> Health:
-        return Health(alive=True, since_last_poll=timedelta(seconds=20), last_error=None,
-                      fix=None, polls_every=timedelta(minutes=1))
+        read_at = datetime.now(timezone.utc)
+        return Health(alive=True, polled_at=read_at - timedelta(seconds=20), read_at=read_at,
+                      last_error=None, fix=None, polls_every=timedelta(minutes=1))
 
 
 @wires(PreviewHub)

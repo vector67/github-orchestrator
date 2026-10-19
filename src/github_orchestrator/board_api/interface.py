@@ -1,6 +1,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
@@ -196,7 +196,7 @@ class RunLedger(Protocol):
 
 class Pulse(Protocol):
     @property
-    def since_last_poll(self) -> timedelta | None: ...
+    def polled_at(self) -> datetime | None: ...
 
     @property
     def last_error(self) -> str | None: ...
@@ -208,7 +208,7 @@ class Pulse(Protocol):
     def overdue(self) -> bool: ...
 
     @property
-    def next_poll_in(self) -> timedelta | None: ...
+    def next_poll_at(self) -> datetime | None: ...
 
 
 class WatcherPulse(Protocol):

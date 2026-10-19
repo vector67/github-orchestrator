@@ -1,7 +1,12 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { keyOf, type Numbered } from 'frontend/data/wall';
-import { pollOf, type Said } from 'frontend/data/runs';
+import {
+  pollOf,
+  pollStatusOf,
+  type PollStatus,
+  type Said,
+} from 'frontend/data/runs';
 import type PollService from 'frontend/services/poll';
 import type ReachabilityService from 'frontend/services/reachability';
 import type StoreService from 'frontend/services/store';
@@ -23,13 +28,24 @@ export default class HubService extends Service {
     return this.loader.wall.missed || this.loader.runs.missed;
   }
 
+  get ticking(): number {
+    return Math.max(this.loader.second, this.loader.hubAt);
+  }
+
   get poll(): Said | null {
     if (this.loader.wall.down || this.loader.runs.down) {
       return { text: this.reachability.outage, alarm: true };
     }
     const watcher = this.store.watcher;
     return watcher
-      ? pollOf(watcher, this.store.health?.state ?? null, this.now)
+      ? pollOf(watcher, this.store.health?.state ?? null, this.ticking)
+      : null;
+  }
+
+  get pollStatus(): PollStatus | null {
+    const poll = this.poll;
+    return poll
+      ? pollStatusOf(poll, this.store.watcher?.polled_at ?? null, this.ticking)
       : null;
   }
 

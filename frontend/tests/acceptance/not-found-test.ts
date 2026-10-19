@@ -131,6 +131,21 @@ module('Acceptance | not found', function (hooks) {
     assert.dom('#c-k1').exists();
   });
 
+  test('the columns view opened during the watcher’s first cycle loads once the cycle ends instead of saying it could not load', async function (assert) {
+    board().unheld = {
+      code: 'watcher-starting',
+      detail: 'the watcher has not finished its first cycle yet',
+    };
+    await visit('/pr/o/r/7/board');
+
+    board().unheld = null;
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-pr-starting]').doesNotExist();
+    assert.dom('[data-test-load-trouble]').doesNotExist();
+    assert.dom('[data-test-board-columns]').exists();
+  });
+
   test('a pull request the watcher holds keeps its tabs and shows no not-found page', async function (assert) {
     await visit('/pr/o/r/7/summary');
 
