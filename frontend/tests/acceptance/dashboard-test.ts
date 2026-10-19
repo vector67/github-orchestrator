@@ -14,6 +14,7 @@ import {
   factsFor,
   heldPr,
   setupFakeBoard,
+  unpushed,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
@@ -282,7 +283,7 @@ module('Acceptance | dashboard', function (hooks) {
       system: {
         agent: WORKING,
         queued_events: 10,
-        unpushed_commits: 2,
+        unpushed_commits: unpushed(2),
         threads: { queued: 1, live: 2, proposed: 3, drafts: 0 },
       },
     });
@@ -313,7 +314,7 @@ module('Acceptance | dashboard', function (hooks) {
           exit_code: -9,
           ended_at: ago(50),
         },
-        unpushed_commits: 0,
+        unpushed_commits: unpushed(0),
       },
     });
     await visit('/pr/o/r/7/dashboard');
@@ -807,7 +808,7 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('the detailed reviewer, the queue and what is unpushed each say what they mean', async function (assert) {
-    onTheHub({ system: { unpushed_commits: 2 } });
+    onTheHub({ system: { unpushed_commits: unpushed(2) } });
     await visit('/pr/o/r/7/dashboard');
 
     assert

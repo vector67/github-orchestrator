@@ -21,6 +21,7 @@ import {
   runLedger,
   setupFakeBoard,
   threadRow as row,
+  unpushed,
   WALL_GROUPS,
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
@@ -919,7 +920,7 @@ module('Acceptance | wall', function (hooks) {
               silent_seconds: 6,
             },
             queued_events: 1,
-            unpushed_commits: 2,
+            unpushed_commits: unpushed(2),
           },
         },
       }),
@@ -949,8 +950,11 @@ module('Acceptance | wall', function (hooks) {
 
   test('a backlog of unpushed commits stands out from a few', async function (assert) {
     onTheHub(
-      heldPr({ dashboard: { system: { unpushed_commits: 1 } } }),
-      heldPr({ number: 8, dashboard: { system: { unpushed_commits: 74 } } }),
+      heldPr({ dashboard: { system: { unpushed_commits: unpushed(1) } } }),
+      heldPr({
+        number: 8,
+        dashboard: { system: { unpushed_commits: unpushed(74) } },
+      }),
     );
 
     await visit('/');
@@ -1028,7 +1032,7 @@ module('Acceptance | wall', function (hooks) {
       heldPr({
         dashboard: {
           facts: factsFor('await-review', { unresolved_threads: 2 }),
-          system: { unpushed_commits: 3 },
+          system: { unpushed_commits: unpushed(3) },
         },
       }),
     );
@@ -1054,7 +1058,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         dashboard: {
-          system: { unpushed_commits: -3, queued_events: -1 },
+          system: { queued_events: -1 },
           facts: { unresolved_threads: -2 },
         },
       }),
@@ -1244,7 +1248,7 @@ module('Acceptance | wall', function (hooks) {
             mentioned: true,
           }),
           status: { you_are_the_detailed_reviewer: true },
-          system: { unpushed_commits: 1, queued_events: 1 },
+          system: { unpushed_commits: unpushed(1), queued_events: 1 },
           threads: [
             row('d', 'draft', 'draft', 'mine'),
             row('m', 'ready', 'open', 'mine'),

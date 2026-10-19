@@ -28,6 +28,12 @@ class ManagerStanding(StrEnum):
 
 
 @dataclass(frozen=True)
+class UnpushedCommit:
+    sha: str
+    subject: str
+
+
+@dataclass(frozen=True)
 class Dashboard:
     pr: Pr
     worktree: str
@@ -77,7 +83,7 @@ class Dashboard:
     last_run_ended_at: str | None
     queued_events: int
     on_hold: bool
-    unpushed_commits: int | None
+    unpushed_commits: tuple[UnpushedCommit, ...] | None
     threads_queued: int
     threads_live: frozenset[str]
     threads_proposed: int

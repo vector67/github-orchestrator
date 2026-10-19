@@ -3,13 +3,16 @@ from dataclasses import replace
 import pytest
 
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
-from github_orchestrator.board_api.interface import ManagerStanding
+from github_orchestrator.board_api.interface import ManagerStanding, UnpushedCommit
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
 from tests.board_api.support import BOARD_PATH, board_contract, client_for
 
 WORKING = replace(
     IDLE, working_on="new-comments", elapsed_seconds=75.0, silent_seconds=4.0,
-    queued_events=2, on_hold=True, unpushed_commits=3, last_run_event="ci-failed",
+    queued_events=2, on_hold=True,
+    unpushed_commits=(UnpushedCommit("c0ffee1", "handle empty input"),
+                      UnpushedCommit("badf00d", "add parser tests")),
+    last_run_event="ci-failed",
     last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
     threads_live=frozenset({"PRRT_one", "PRRT_two"}), threads_proposed=4, threads_drafts=0, needs_rebase=True,
     notice="an agent is already running")
@@ -39,7 +42,8 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                          "ended_at": "2026-09-26T21:40:00+00:00"},
             "queued_events": 2,
             "on_hold": True,
-            "unpushed_commits": 3,
+            "unpushed_commits": [{"sha": "c0ffee1", "subject": "handle empty input"},
+                                 {"sha": "badf00d", "subject": "add parser tests"}],
             "threads": {"queued": 1, "live": 2, "proposed": 4, "drafts": 0},
         },
         "frozen": None,

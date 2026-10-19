@@ -710,7 +710,7 @@ function systemRows(shown: ShownPr, now: number): Row[] {
     row('queue', 'Queue', queued ? `${queued} pending` : 'empty'),
     row('threads', 'Threads', threadsLine(shown)),
   ];
-  const ahead = system.unpushed_commits;
+  const ahead = system.unpushed_commits?.length ?? null;
   if (ahead !== null) {
     rows.push(
       row(
@@ -1039,10 +1039,12 @@ function chipsOf(
       : null,
     countChip(
       'unpushed',
-      system.unpushed_commits,
+      system.unpushed_commits?.length ?? null,
       (count) => `${count} unpushed`,
       ROW_HINTS['unpushed']!,
-      (system.unpushed_commits ?? 0) >= UNPUSHED_BACKLOG ? 'warn' : 'plain',
+      (system.unpushed_commits?.length ?? 0) >= UNPUSHED_BACKLOG
+        ? 'warn'
+        : 'plain',
     ),
     code === 'on-hold'
       ? null

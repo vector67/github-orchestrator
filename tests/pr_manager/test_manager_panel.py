@@ -117,14 +117,17 @@ def test_unpushed_commits_go_uncounted_while_nobody_reads_the_board(settings, tm
     assert copies.counted == 0
 
 
-def test_a_board_read_counts_the_commits_made_since_the_last_tick(settings, tmp_path):
+def test_a_board_read_lists_the_commits_made_since_the_last_tick(settings, tmp_path):
     copies = _one_commit_ahead(settings, tmp_path)
     windows = FakePrProcesses()
     windows.open(THE_PR, tmp_path)
     board = _on_the_browser_front(settings, tmp_path, None, working_copies=copies,
                                   pr_processes=windows)
     copies.commit(tmp_path, {"a": "2"}, "another")
-    assert board.panel.dashboard().unpushed_commits == 2
+    unpushed = board.panel.dashboard().unpushed_commits
+    assert unpushed is not None
+    assert [commit.subject for commit in unpushed] == ["another", "change"]
+    assert all(len(commit.sha) == 7 for commit in unpushed)
 
 
 def test_hold_from_the_board_holds_the_pr_and_the_next_status_says_so(settings, tmp_path):

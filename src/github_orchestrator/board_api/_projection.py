@@ -498,7 +498,9 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
                                   ended_at=dashboard.last_run_ended_at),
             queued_events=dashboard.queued_events,
             on_hold=dashboard.on_hold,
-            unpushed_commits=dashboard.unpushed_commits,
+            unpushed_commits=None if dashboard.unpushed_commits is None
+            else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)
+                  for commit in dashboard.unpushed_commits],
             threads=contract.ThreadCounts(
                 queued=dashboard.threads_queued, live=len(dashboard.threads_live),
                 proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts)),

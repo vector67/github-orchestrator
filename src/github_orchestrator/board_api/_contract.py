@@ -1280,6 +1280,11 @@ class DashboardStatus(BaseModel):
     approved_by: list[str]
 
 
+class UnpushedCommit(BaseModel):
+    sha: str = Field(description="The abbreviated sha.")
+    subject: str = Field(description="The first line of its message.")
+
+
 class DashboardSystem(BaseModel):
     agent: AgentActivity
     last_run: LastRun | None = Field(
@@ -1289,9 +1294,9 @@ class DashboardSystem(BaseModel):
         description="Events waiting for this pull request's manager to take.")
     on_hold: bool = Field(
         description="On hold, the manager takes no events but a closing one.")
-    unpushed_commits: int | None = Field(
+    unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
-                    "pull request yet. Null where git could not say.")
+                    "pull request yet, newest first. Null where git could not say.")
     threads: ThreadCounts
 
 

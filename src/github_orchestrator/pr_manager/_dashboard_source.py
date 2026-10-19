@@ -3,7 +3,7 @@ from dataclasses import replace
 
 from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import Told
+from github_orchestrator.board_api.interface import Told, UnpushedCommit
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -66,12 +66,14 @@ class DashboardSource:
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0),
         ))
 
-    def _unpushed(self, worktree: str, pr: Pr) -> int | None:
+    def _unpushed(self, worktree: str, pr: Pr) -> tuple[UnpushedCommit, ...] | None:
         if not worktree:
             return None
         facts = self._change_detection.facts(pr)
         commits = self._working_copies.commits_since(worktree, None if facts is None else facts.head_sha)
-        return None if commits is None else len(commits)
+        if commits is None:
+            return None
+        return tuple(UnpushedCommit(*line.split(" ", 1)) for line in commits)
 
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,

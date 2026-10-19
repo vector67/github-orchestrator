@@ -36,6 +36,7 @@ import type {
   WatcherHealth,
   HubState,
   NewestRelease,
+  UnpushedCommit,
 } from 'frontend/data/api';
 import { driftOf } from 'frontend/tests/helpers/contract';
 import { FakeSetup, type Answer } from 'frontend/tests/helpers/fake-setup';
@@ -307,6 +308,13 @@ export function check(
   };
 }
 
+export function unpushed(count: number): UnpushedCommit[] {
+  return Array.from({ length: count }, (_, at) => ({
+    sha: `c0ffee${at}`,
+    subject: `change ${at + 1}`,
+  }));
+}
+
 export function prFacts(over: Partial<PrFacts> = {}): PrFacts {
   return {
     polled_at: '2026-09-12T08:30:00Z',
@@ -445,7 +453,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       last_run: null,
       queued_events: 0,
       on_hold: false,
-      unpushed_commits: 0,
+      unpushed_commits: [],
       threads: { queued: 0, live: 0, proposed: 0, drafts: 0 },
       ...system,
     },

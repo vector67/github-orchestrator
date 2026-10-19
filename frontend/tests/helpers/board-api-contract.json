@@ -2681,7 +2681,10 @@
     "unpushed_commits": {
      "anyOf": [
       {
-       "type": "integer"
+       "items": {
+        "$ref": "#/components/schemas/UnpushedCommit"
+       },
+       "type": "array"
       },
       {
        "type": "null"
@@ -6473,6 +6476,21 @@
     "reason_code",
     "requested_at",
     "settled_at"
+   ],
+   "type": "object"
+  },
+  "UnpushedCommit": {
+   "properties": {
+    "sha": {
+     "type": "string"
+    },
+    "subject": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sha",
+    "subject"
    ],
    "type": "object"
   },

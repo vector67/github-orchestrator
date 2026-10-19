@@ -222,7 +222,7 @@ export interface DashboardSystem {
   last_run: LastRun | null;
   queued_events: number;
   on_hold: boolean;
-  unpushed_commits: number | null;
+  unpushed_commits: UnpushedCommit[] | null;
   threads: ThreadCounts;
 }
 
@@ -880,6 +880,11 @@ export interface UnparkOperation {
   reason_code: ReasonCode | null;
   requested_at: string | null;
   settled_at: string | null;
+}
+
+export interface UnpushedCommit {
+  sha: string;
+  subject: string;
 }
 
 export type WallGroup = 'needs-you' | 'agent-working' | 'waiting-on-others' | 'parked';
