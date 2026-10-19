@@ -15,11 +15,11 @@ from github_orchestrator.domain import Pr
 LISTED_FOR = timedelta(days=7)
 
 
-def watcher_read(pulse: Pulse, now: datetime) -> contract.WatcherHealth:
-    since, next_in = pulse.since_last_poll, pulse.next_poll_in
+def watcher_read(pulse: Pulse) -> contract.WatcherHealth:
+    polled, next_at = pulse.polled_at, pulse.next_poll_at
     return contract.WatcherHealth(
-        polled_at=None if since is None else (now - since).isoformat(),
-        next_poll_at=None if next_in is None else (now + next_in).isoformat(),
+        polled_at=None if polled is None else polled.isoformat(),
+        next_poll_at=None if next_at is None else next_at.isoformat(),
         overdue=pulse.overdue, last_error=pulse.last_error, fix=pulse.fix)
 
 
@@ -42,5 +42,5 @@ def ledger_read(ledger: RunLedger, pulse: WatcherPulse, held: Sequence[Pr],
                 now: datetime) -> contract.RunLedger:
     finished = ledger.finished_since(now - LISTED_FOR)
     return contract.RunLedger(
-        watcher=watcher_read(pulse.health(), now), today=_today(ledger.finished_today(now)),
+        watcher=watcher_read(pulse.health()), today=_today(ledger.finished_today(now)),
         runs=[_run(run, held) for run in reversed(finished)])

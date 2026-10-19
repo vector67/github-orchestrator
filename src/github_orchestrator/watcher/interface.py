@@ -39,6 +39,10 @@ class Health:
                 and self.since_last_poll > 2 * self.polls_every + OVERDUE_GRACE)
 
     @property
+    def next_poll_at(self) -> datetime | None:
+        return None if self.polled_at is None else self.polled_at + self.polls_every
+
+    @property
     def next_poll_in(self) -> timedelta | None:
         return None if self.since_last_poll is None else self.polls_every - self.since_last_poll
 

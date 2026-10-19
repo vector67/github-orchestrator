@@ -161,7 +161,7 @@ def read_runs(request: Request, desk: Serving) -> Response:
 async def read_health(desk: Serving) -> Health:
     return Health(status="ok", pid=desk.pid, serves="hub", hub_url=desk.url,
                   font_problem=desk.fonts.problem, state=desk.told.state(), version=desk.version,
-                  watcher=watcher_read(desk.pulse.health(), desk.clock()),
+                  watcher=watcher_read(desk.pulse.health()),
                   newest_release=_newest(desk))
 
 
