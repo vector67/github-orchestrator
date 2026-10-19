@@ -239,6 +239,17 @@ def test_closing_a_pr_github_does_not_know_says_why(github):
     assert "Not Found" in (github.close(a_pr(40, REPO)) or "")
 
 
+def test_a_draft_i_mark_ready_is_no_longer_a_draft(world, github):
+    world.add_pr(a_pr(1, REPO), _state(draft=True))
+
+    assert github.mark_ready(a_pr(1, REPO)) is None
+    assert github.pr_state(a_pr(1, REPO)).draft is False
+
+
+def test_marking_ready_a_pr_github_does_not_know_says_why(github):
+    assert "Not Found" in (github.mark_ready(a_pr(40, REPO)) or "")
+
+
 def test_relevance_says_how_the_pr_stands_and_whether_i_wrote_or_reviewed_it(world, github):
     world.add_pr(a_pr(1, REPO), _state(), status="MERGED")
     world.add_pr(a_pr(2, REPO), _state(author="anna"), viewer_reviewed=True)

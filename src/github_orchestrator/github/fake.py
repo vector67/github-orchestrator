@@ -211,6 +211,14 @@ class FakeGitHub:
         record.status = "CLOSED"
         return None
 
+    def mark_ready(self, pr: Pr) -> str | None:
+        record = self.prs.get(pr)
+        if record is None:
+            return (f"gh api repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
+                    "gh: Not Found (HTTP 404)")
+        record.state = replace(record.state, draft=False)
+        return None
+
     def url(self, pr: Pr) -> str:
         return _pages.pr_url(pr)
 

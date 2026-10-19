@@ -10,6 +10,7 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
+from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import Dismissal
@@ -295,6 +296,24 @@ def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):
     board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.close(),
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and "Not Found" in notice
+
+
+def test_mark_ready_from_the_board_marks_the_draft_ready_on_github(settings, tmp_path):
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(draft=True))
+    board = ServerPanel()
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.mark_ready(), None, board=board,
+                          github=github)
+    assert github.pr_state(THE_PR).draft is False
+
+
+def test_a_mark_ready_github_refuses_says_why_in_the_notice(settings, tmp_path):
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.mark_ready(),
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
     assert notice is not None and "Not Found" in notice

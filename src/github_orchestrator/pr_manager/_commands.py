@@ -91,6 +91,8 @@ class ManagerCommands:
                 self._dismiss(True)
             case Command.CLOSE:
                 self._close()
+            case Command.MARK_READY:
+                self._mark_ready()
 
     def _set_on_hold(self, on_hold: bool) -> None:
         pr = self._config.pr
@@ -135,3 +137,12 @@ class ManagerCommands:
             self.notify(refused)
             return
         log.info("Closed %s on GitHub; the watcher tears it down on its next poll", pr)
+
+    def _mark_ready(self) -> None:
+        pr = self._config.pr
+        refused = self._pull_requests.mark_ready(pr)
+        if refused is not None:
+            log.warning("mark ready %s: GitHub refused — %s", pr, refused)
+            self.notify(refused)
+            return
+        log.info("Marked %s ready for review on GitHub", pr)

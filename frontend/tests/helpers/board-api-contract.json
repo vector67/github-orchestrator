@@ -765,6 +765,14 @@
     }
    }
   },
+  "/api/manager:mark-ready": {
+   "post": {
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:resume": {
    "post": {
     "202": {},

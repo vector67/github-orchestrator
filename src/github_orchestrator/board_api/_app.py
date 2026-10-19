@@ -651,6 +651,16 @@ def close_pull_request(board: Serving) -> Response:
     return _handed_over(board, board.manager.close())
 
 
+@writes.post("/manager:mark-ready", status_code=202, tags=["manager"],
+             operation_id="markPullRequestReady", responses=HANDED_TO_THE_MANAGER,
+             summary="Mark this draft pull request ready for review on GitHub.")
+def mark_pull_request_ready(board: Serving) -> Response:
+    """The manager marks the draft ready for review on GitHub, or puts
+    GitHub's refusal in the status's notice.
+    """
+    return _handed_over(board, board.manager.mark_ready())
+
+
 MAX_GIT_LINES = 2000
 
 

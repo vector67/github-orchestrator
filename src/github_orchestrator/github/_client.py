@@ -124,6 +124,13 @@ class GhCliGitHub:
             return str(refused)
         return None
 
+    def mark_ready(self, pr: Pr) -> str | None:
+        try:
+            _pull_requests.mark_ready(self._gh, pr)
+        except GhError as refused:
+            return str(refused)
+        return None
+
     def url(self, pr: Pr) -> str:
         return _pages.pr_url(pr)
 

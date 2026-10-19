@@ -71,6 +71,9 @@ class FilePanel(ManagerPanel):
     def close(self) -> str | None:
         return self._hand(Command.CLOSE)
 
+    def mark_ready(self) -> str | None:
+        return self._hand(Command.MARK_READY)
+
     def run_git(self, keys: str) -> tuple[int, list[str], float]:
         command = resolve(keys)
         if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):

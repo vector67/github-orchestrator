@@ -309,6 +309,20 @@ def is_closed(gh: Gh, pr: Pr) -> bool | None:
     return bool(answer.get("state") == "closed")
 
 
+_MARK_READY_MUTATION = """
+mutation($id: ID!) {
+  markPullRequestReadyForReview(input: {pullRequestId: $id}) {
+    pullRequest { isDraft }
+  }
+}
+"""
+
+
+def mark_ready(gh: Gh, pr: Pr) -> None:
+    pull = gh.api(f"repos/{pr.repo}/pulls/{pr.number}")
+    gh.graphql_mutate(_MARK_READY_MUTATION, {"id": pull["node_id"]})
+
+
 def relevance(gh: Gh, pr: Pr) -> Relevance | None:
     owner, name = pr.repo.owner, pr.repo.name
     gql = gh.graphql(_RELEVANCE_QUERY, {"owner": owner, "name": name, "number": pr.number})

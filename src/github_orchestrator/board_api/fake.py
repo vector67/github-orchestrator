@@ -49,6 +49,7 @@ class FakeManagerPanel:
     reviews_started: int = 0
     dismissed: str | None = None
     closed: int = 0
+    marked_ready: int = 0
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
@@ -87,6 +88,11 @@ class FakeManagerPanel:
     def close(self) -> str | None:
         if self.refusal is None:
             self.closed += 1
+        return self.refusal
+
+    def mark_ready(self) -> str | None:
+        if self.refusal is None:
+            self.marked_ready += 1
         return self.refusal
 
     def run_git(self, keys: str) -> tuple[int, list[str], float]:

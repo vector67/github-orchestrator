@@ -401,6 +401,7 @@ class _World:
             return Failure(NOT_FOUND)
         state = record.state
         return {
+            "node_id": f"PR_{repo}#{number}",
             "number": record.pr.number, "title": state.title, "html_url": state.url,
             "user": None if state.author is None else {"login": state.author},
             "head": {"sha": state.head_sha, "ref": state.branch},
@@ -515,6 +516,11 @@ class _World:
             assert posted is not None
             return {"data": {"addPullRequestReviewThreadReply": {
                 "comment": _comment_node(posted, None)}}}
+        if "markPullRequestReadyForReview" in query:
+            repo, number = variables["id"].removeprefix("PR_").split("#")
+            self.world.mark_ready(a_pr(int(number), repo))
+            return {"data": {"markPullRequestReadyForReview": {
+                "pullRequest": {"isDraft": False}}}}
         if "addPullRequestReviewThread(" in query:
             return self._add_to_pending_review(variables)
         if "states: PENDING" in query:

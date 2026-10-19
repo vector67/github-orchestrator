@@ -21,6 +21,7 @@ class Command(StrEnum):
     DISMISS_UNTIL_NEXT_EVENT = "dismiss-until-next-event"
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
+    MARK_READY = "mark-ready"
 
 
 @dataclass(frozen=True)
