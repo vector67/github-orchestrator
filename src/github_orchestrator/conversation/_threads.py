@@ -574,8 +574,6 @@ class _ConversationManager:
     def _unrecorded(self, found: ThreadPoll, mentioned: Sequence[FetchedThread], *,
                     first: bool) -> list[FetchedThread]:
         ports = self._pr.ports
-        if not first and _drains(ports):
-            return []
         opening = found.open_review_threads
         return without_records(
             opening + [thread for thread in mentioned if thread not in opening], ports)
@@ -602,15 +600,11 @@ class _ConversationManager:
 
     def absorb(self, activity: ThreadActivity) -> Absorbed:
         pr, ports = self._pr.pr, self._pr.ports
-        if _drains(ports):
-            log.info("%s: agents disabled — draining %s without records", pr, activity.kind)
-            return Absorbed(threads=len(activity.threads), created=(), refreshed=(),
-                            drained=True)
         cutoff = activity.cutoff
         created = materialise(pr, list(activity.threads), ports, cutoff=cutoff)
         refreshed = refresh(pr, list(activity.stale), ports, cutoff=cutoff)
         return Absorbed(threads=len(activity.threads), created=tuple(created),
-                        refreshed=tuple(refreshed), drained=False)
+                        refreshed=tuple(refreshed))
 
     def tick(self, news: ThreadNews, *, on_hold: bool) -> None:
         pr, ports = self._pr.pr, self._pr.ports
@@ -673,10 +667,6 @@ def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> N
 
 def _is_author(role: str | None) -> bool | None:
     return None if role is None else role == ROLE_AUTHOR
-
-
-def _drains(ports: Ports) -> bool:
-    return ports.pull_requests.role() == ROLE_AUTHOR and not ports.config.agents_enabled
 
 
 def _review_waiting(ports: Ports) -> bool:

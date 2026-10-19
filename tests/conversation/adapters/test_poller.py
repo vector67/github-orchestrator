@@ -237,13 +237,13 @@ def test_a_poll_that_finds_nothing_new_is_no_thread_activity(settings):
     assert _heard(built).polled.activity is None
 
 
-def test_an_open_thread_with_no_record_is_offered_once_on_my_pr_while_claude_is_disabled(
+def test_an_open_thread_with_no_record_is_offered_again_on_my_pr_while_claude_is_disabled(
         settings):
     built = _world(settings, _thread())
     threads = built.threads(is_author=True, agents_enabled=False)
     threads.poll(PullRequestState()).commit()
 
-    assert threads.poll(PullRequestState()).activity is None
+    assert [thread.key for thread in threads.poll(PullRequestState()).activity.threads] == ["PRRT_one"]
 
 
 def test_an_open_thread_with_no_record_is_offered_on_a_pr_i_review_while_claude_is_disabled(
@@ -254,15 +254,25 @@ def test_an_open_thread_with_no_record_is_offered_on_a_pr_i_review_while_claude_
     assert [thread.key for thread in threads.poll(PullRequestState()).activity.threads] == ["PRRT_one"]
 
 
-def test_thread_activity_on_my_pr_while_claude_is_disabled_is_drained_without_records(
+def test_thread_activity_on_my_pr_while_claude_is_disabled_still_becomes_records(
         settings):
     built = _world(settings, _thread())
     threads = built.threads(is_author=True, agents_enabled=False)
 
-    absorbed = threads.absorb(threads.poll(PullRequestState()).activity)
+    threads.absorb(threads.poll(PullRequestState()).activity)
 
-    assert absorbed.drained
-    assert threads.all() == []
+    assert [conversation.key for conversation in threads.all()] == ["PRRT_one"]
+
+
+def test_a_resolve_on_github_reaches_my_prs_record_while_claude_is_disabled(settings):
+    built = _world(settings, _thread())
+    threads = built.threads(is_author=True, agents_enabled=False)
+    hear(threads)
+    built.github.resolve_thread("PRRT_one")
+
+    hear(threads)
+
+    assert threads.get("PRRT_one").github_resolved is True
 
 
 def test_thread_activity_on_a_pr_i_review_while_claude_is_disabled_still_becomes_records(
@@ -270,9 +280,8 @@ def test_thread_activity_on_a_pr_i_review_while_claude_is_disabled_still_becomes
     built = _world(settings, _thread())
     threads = built.threads(is_author=False, agents_enabled=False)
 
-    absorbed = threads.absorb(threads.poll(PullRequestState()).activity)
+    threads.absorb(threads.poll(PullRequestState()).activity)
 
-    assert not absorbed.drained
     assert [conversation.key for conversation in threads.all()] == ["PRRT_one"]
 
 

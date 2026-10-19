@@ -41,9 +41,6 @@ from tests.conversation.support import (
     without_runs,
 )
 from tests.pr_event_queue.support import (
-    activity as found,
-)
-from tests.pr_event_queue.support import (
     ci_failed,
     ci_succeeded,
     closed,
@@ -317,20 +314,20 @@ def test_new_threads_on_an_authored_pr_are_counted_with_a_board_hint(settings, t
     assert "on the review board" in changes
 
 
-def test_with_claude_disabled_an_authored_prs_threads_drain_without_records(tmp_path):
+def test_with_claude_disabled_an_authored_prs_threads_become_records_and_start_no_run(
+        tmp_path, working_copies):
     settings = fake_settings(tmp_path / "data", agents_enabled=False)
-    worktree = _worktree(tmp_path)
-    manager = manager_over(settings, worktree=worktree, is_author=True)
+    worktree = _checked_out(working_copies, tmp_path)
+    manager = manager_over(settings, worktree=worktree, is_author=True,
+                           working_copies=working_copies)
     _on_github(manager.github, "t1", said(101, "fix this"))
 
     _threads_ticked(manager)
 
-    assert _conversations(manager) == {}
+    assert set(_conversations(manager)) == {"t1"}
     assert manager.agent_runs.started == []
-    assert manager.notifications.gathered == [AgentSkipped(THE_PR, "thread-activity")]
+    assert AgentSkipped(THE_PR, "thread-activity") not in manager.notifications.gathered
     assert manager.notifications.posted == []
-    assert "disabled" in _changes(manager, worktree)
-    assert "thread-activity" in _changes(manager, worktree)
 
 
 def _reviewed(settings, worktree):
@@ -521,8 +518,6 @@ def test_each_change_of_a_prs_status_is_announced_in_its_words(settings, tmp_pat
     (ci_failed("tests"), True, False,
      ["CI check \x27tests\x27 failed. See diagnosis output below.",
       "Agents are disabled (agents_enabled=false) — skipped ci-failed; no agent run."]),
-    (found(stale=("PRRT_one",)), True, False,
-     ["Agents are disabled (agents_enabled=false) — skipped thread-activity; no agent run."]),
 ])
 def test_each_event_carried_out_leaves_its_note_in_agent_changes(tmp_path, event, is_author,
                                                                  agents_enabled, notes):

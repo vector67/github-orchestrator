@@ -83,7 +83,6 @@ class Absorbed:
     threads: int
     created: tuple[Conversation, ...]
     refreshed: tuple[str, ...]
-    drained: bool
 
 
 class EditableConversation(Protocol):
