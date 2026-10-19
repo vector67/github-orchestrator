@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
+import { unheldBy } from 'frontend/data/refusal';
 import type BoardKeysService from 'frontend/services/board-keys';
 import type KeysService from 'frontend/services/keys';
 import type PollService from 'frontend/services/poll';
@@ -15,7 +16,11 @@ export default class BoardRoute extends Route {
 
   async model() {
     this.theme.restore();
-    await this.poll.startRail();
+    try {
+      await this.poll.startRail();
+    } catch (trouble) {
+      if (!unheldBy(trouble)) throw trouble;
+    }
     return this.threads;
   }
 
