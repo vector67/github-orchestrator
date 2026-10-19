@@ -55,17 +55,19 @@ def report(manifest: dict[str, Path]) -> str:
     return "\n\n".join(sections) + "\n"
 
 
-def _falsified_by(alignment: Path, number: int) -> str | None:
-    critic, verdict = challenge_folders(alignment, number)
-    judged = _loaded(verdict, ("falsified",))
-    case = _loaded(critic, ("reason",))
-    if isinstance(judged, str) or isinstance(case, str) or judged["falsified"] is not True:
-        return None
-    return str(case["reason"])
+def _falsified(alignment: Path) -> dict[int, str]:
+    critic, verdict = challenge_folders(alignment)
+    judged = _loaded(verdict, ("mismatch", "falsified"), top="verdicts")
+    cases = _loaded(critic, ("mismatch", "reason"), top="challenges")
+    if isinstance(judged, str) or isinstance(cases, str):
+        return {}
+    reasons = {case["mismatch"]: str(case["reason"]) for case in cases["challenges"]}
+    return {ruling["mismatch"]: reasons[ruling["mismatch"]] for ruling in judged["verdicts"] if ruling["falsified"] is True and ruling["mismatch"] in reasons}
 
 
 def _challenged(alignment: Path, loaded: dict[str, Any]) -> dict[str, Any]:
-    reasons = [_falsified_by(alignment, number) for number in range(1, len(loaded["mismatches"]) + 1)]
+    falsified_by = _falsified(alignment)
+    reasons = [falsified_by.get(number) for number in range(1, len(loaded["mismatches"]) + 1)]
     standing = [mismatch for mismatch, reason in zip(loaded["mismatches"], reasons) if reason is None]
     falsified = [{**mismatch, "falsified_by": reason} for mismatch, reason in zip(loaded["mismatches"], reasons) if reason is not None]
     return {**loaded, "mismatches": standing + falsified}

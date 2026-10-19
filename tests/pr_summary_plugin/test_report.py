@@ -99,11 +99,17 @@ def test_a_witness_whose_tools_stayed_unavailable_fails_naming_why(tmp_path: Pat
     assert "## Requested\nRequested failed: its tools stayed unavailable: the Atlassian tools never connected" in text
 
 
-def judged(tmp_path: Path, number: int, critic_reason: str, falsified: bool) -> None:
-    (tmp_path / f"critic-{number}").mkdir()
-    (tmp_path / f"critic-{number}" / "output.json").write_text(json.dumps({"falsified": True, "reason": critic_reason, "evidence": []}))
-    (tmp_path / f"verdict-{number}").mkdir()
-    (tmp_path / f"verdict-{number}" / "output.json").write_text(json.dumps({"falsified": falsified, "reason": "The judge's view."}))
+def judged(tmp_path: Path) -> None:
+    (tmp_path / "critic").mkdir()
+    (tmp_path / "critic" / "output.json").write_text(json.dumps({"challenges": [
+        {"mismatch": 1, "falsified": True, "reason": "The rename is in requested's R1.", "evidence": []},
+        {"mismatch": 2, "falsified": True, "reason": "T1 pins it.", "evidence": []},
+    ]}))
+    (tmp_path / "verdict").mkdir()
+    (tmp_path / "verdict" / "output.json").write_text(json.dumps({"verdicts": [
+        {"mismatch": 1, "falsified": True, "reason": "The judge's view."},
+        {"mismatch": 2, "falsified": False, "reason": "T1 pins another button."},
+    ]}))
 
 
 def test_falsified_mismatches_follow_the_standing_ones_crossed_out_with_the_critics_reason(tmp_path: Path) -> None:
@@ -111,8 +117,7 @@ def test_falsified_mismatches_follow_the_standing_ones_crossed_out_with_the_crit
     untested = {"lower": "tests", "higher": "implementation", "kind": "untested", "text": "Nothing pins the hidden button.", "claims": ["I1"]}
     unsupported = {"lower": "claimed", "higher": "implementation", "kind": "unsupported", "text": "Claims a cache.", "claims": ["C1"]}
     manifest = folders(tmp_path, ALL, [renamed, untested, unsupported])
-    judged(tmp_path, 1, "The rename is in requested's R1.", falsified=True)
-    judged(tmp_path, 2, "T1 pins it.", falsified=False)
+    judged(tmp_path)
 
     text = report(manifest)
 

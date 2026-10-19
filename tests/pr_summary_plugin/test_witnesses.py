@@ -210,7 +210,7 @@ def challenged(tmp_path: Path, mismatches: list[dict[str, object]], failing: str
         if agent == "alignment":
             (folder / "output.json").write_text(json.dumps({"mismatches": mismatches}))
         elif agent == "critic":
-            (folder / "output.json").write_text(json.dumps({"falsified": True, "reason": f"{folder.name} says no"}))
+            (folder / "output.json").write_text(json.dumps({"challenges": [{"mismatch": 1, "falsified": True, "reason": "R1 asks for it."}]}))
         else:
             (folder / "output.json").write_text(f'{{"witness": "{agent}"}}')
         return True
@@ -219,24 +219,22 @@ def challenged(tmp_path: Path, mismatches: list[dict[str, object]], failing: str
     return launches, seen, failures
 
 
-def test_each_mismatch_is_challenged_by_a_critic_then_judged_with_the_critics_case(tmp_path: Path) -> None:
+def test_one_critic_challenges_every_mismatch_then_one_judge_rules_with_its_case(tmp_path: Path) -> None:
     launches, seen, failures = challenged(tmp_path, MISMATCHES)
 
     assert failures == {}
-    assert launches.index(("critic", "critic-1")) < launches.index(("verdict", "verdict-1"))
-    assert launches.index(("critic", "critic-2")) < launches.index(("verdict", "verdict-2"))
-    assert seen["critic-1"] == ["implementation", "implementation/changes.diff", "mismatch.json", "tests", "tests/changes.diff", "witnesses", "witnesses/implementation.json", "witnesses/tests.json"]
-    assert "critic.json" in seen["verdict-1"]
-    assert json.loads((tmp_path / "critic-2" / "mismatch.json").read_text()) == MISMATCHES[1]
-    assert json.loads((tmp_path / "verdict-1" / "critic.json").read_text()) == {"falsified": True, "reason": "critic-1 says no"}
+    assert launches[-2:] == [("critic", "critic"), ("verdict", "verdict")]
+    assert seen["critic"] == ["implementation", "implementation/changes.diff", "mismatches.json", "tests", "tests/changes.diff", "witnesses", "witnesses/implementation.json", "witnesses/tests.json"]
+    assert "critic.json" in seen["verdict"]
+    assert json.loads((tmp_path / "critic" / "mismatches.json").read_text()) == [{"number": 1, **MISMATCHES[0]}, {"number": 2, **MISMATCHES[1]}]
+    assert json.loads((tmp_path / "verdict" / "critic.json").read_text()) == {"challenges": [{"mismatch": 1, "falsified": True, "reason": "R1 asks for it."}]}
 
 
-def test_a_failed_critic_leaves_its_mismatch_unjudged_and_the_others_judged(tmp_path: Path) -> None:
-    launches, _, failures = challenged(tmp_path, MISMATCHES, failing="critic-1")
+def test_a_failed_critic_leaves_the_mismatches_unjudged(tmp_path: Path) -> None:
+    launches, _, failures = challenged(tmp_path, MISMATCHES, failing="critic")
 
-    assert failures == {"critic-1": "exited with an error"}
-    assert ("verdict", "verdict-1") not in launches
-    assert ("verdict", "verdict-2") in launches
+    assert failures == {"critic": "exited with an error"}
+    assert launches[-1] == ("critic", "critic")
 
 
 def test_no_mismatch_runs_no_critic(tmp_path: Path) -> None:
