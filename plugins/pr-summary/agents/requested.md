@@ -42,7 +42,14 @@ write a partial answer. Write only this to `output.json` and reply
 3. Do not open linked issues, the parent, remote links, the development
    panel, or anything naming pull requests, branches or commits. Do not
    search. You have one ticket and only that ticket.
-4. Write `output.json` (below) into your working directory and reply `done`.
+4. Write `output.json` (below) into your working directory.
+5. Reread what you wrote and find every open question in it: each gap, and
+   each claim that says "may", "possibly" or "check". For each one you can
+   settle from the ticket, settle it now: reread the field, fetch the
+   comment. Turn the answer into a claim with evidence, or drop the
+   question if the answer is "nothing". Rewrite `output.json` and repeat
+   until every question left is one you could not answer. Then reply
+   `done`.
 
 If the ticket cannot be read (no access, no such ticket),
 write an output whose `display` says which, with an empty `claims` list and
@@ -66,6 +73,12 @@ the reason in `gaps`. Never guess what a ticket says.
 - One claim per distinct thing asked for: each acceptance criterion, each
   explicit exclusion ("do not change X"), each constraint. Ids `R1`, `R2`, …
 - `evidence` names the ticket field each claim comes from.
-- `gaps` holds at most three things a reviewer would have to check by hand.
+- `gaps` is optional. When you have none, leave it an empty list rather
+  than fill it. When there are real ones, report at most three: what the
+  ticket leaves unclear, or what you could not read. A question you could
+  answer yourself is not a gap: "check whether a later comment narrows the
+  acceptance criteria" is a read of the comments, so read them and report
+  what they say as a claim. What the pull request does is not your
+  question; leave it to the other witnesses.
   Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.

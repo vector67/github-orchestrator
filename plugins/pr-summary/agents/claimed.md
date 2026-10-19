@@ -43,7 +43,14 @@ Any of these may be missing. Read every one that exists.
 2. Work out what the authors present this pull request as: what it changes,
    what it leaves alone ("no behaviour change", "refactor only"), what it
    fixes, how it was tested, which ticket it closes.
-3. Write `output.json` (below) into your working directory and reply `done`.
+3. Write `output.json` (below) into your working directory.
+4. Reread what you wrote and find every open question in it: each gap, and
+   each claim that says "may", "possibly" or "check". For each one you can
+   settle from your inputs, settle it now: find the commit, the comment or
+   the remark that answers it. Turn the answer into a claim with evidence,
+   or drop the question if the answer is "nothing". Rewrite `output.json`
+   and repeat until every question left is one you could not answer. Then
+   reply `done`.
 
 A ticked checklist item that asserts something specific ("all acceptance
 criteria met", "tests added") is a claim. A template line nobody filled in is
@@ -66,6 +73,11 @@ not.
   make in different places separate when they differ.
 - `evidence` is the file and a short quote.
 - If two of their own statements disagree, say so in `gaps`.
-- `gaps` holds at most three things a reviewer would have to check by hand.
+- `gaps` is optional. When you have none, leave it an empty list rather
+  than fill it. When there are real ones, report at most three: where the
+  authors are silent on something a reader would expect them to address,
+  or where they contradict themselves. A question you could answer yourself
+  is not a gap: "check whether the commits say how this was tested" is a
+  read of `commits.md`, so read it and report what they say as a claim.
   Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.

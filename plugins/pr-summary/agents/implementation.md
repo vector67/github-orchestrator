@@ -58,7 +58,14 @@ write a partial answer. Write only this to `output.json` and reply
 3. Judge behaviour from what the code does, not from what things are named.
    A function called `keep_rows` proves nothing until its body does.
 4. Do not guess why the change was made. You cannot know.
-5. Write `output.json` (below) into your working directory and reply `done`.
+5. Write `output.json` (below) into your working directory.
+6. Reread what you wrote and find every open question in it: each gap, and
+   each claim that says "may", "possibly" or "check". For each one you can
+   settle with your inputs and tools, settle it now: search `repo/` for the
+   callers, read the definition, follow the call. Turn the answer into a
+   claim with evidence, or drop the question if the answer is "nothing".
+   Rewrite `output.json` and repeat until every question left is one you
+   could not answer. Then reply `done`.
 
 ## output.json
 
@@ -77,7 +84,14 @@ write a partial answer. Write only this to `output.json` and reply
   `Behaviour:`, `Refactor:`, `Mechanical:` or `Existing:`.
 - `evidence` is a path and a line range in the new version of the file, from
   the `+` side of the hunk headers, from `files/` or from `repo/`.
-- `gaps` holds at most three things a reviewer would have to check by hand.
+- `gaps` is optional. When you have none, leave it an empty list rather
+  than fill it. When there are real ones, report at most three. A gap is
+  something you could not establish from your inputs, such as a file left
+  out in `truncated.txt` or behaviour that depends on configuration or data
+  outside `repo/`. A question you could answer yourself is not a gap: "check
+  whether any caller relied on the exception `save()` no longer raises" is
+  a search of `repo/` for the callers of `save()`, so do the search and
+  report what you find as a claim.
   Never report that an optional input was absent or that nothing was cut.
 - If the diff is empty, say there is no production code change.
 - Write plain JSON only, with straight quotes.

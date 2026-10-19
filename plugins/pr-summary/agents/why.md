@@ -61,7 +61,14 @@ anything its authors wrote. That is deliberate.
    anything that shows this pull request's title, branch, commits or
    description. You were not given the authors' words; do not go looking
    for them.
-4. Write `output.json` (below) into your working directory and reply `done`.
+4. Write `output.json` (below) into your working directory.
+5. Reread what you wrote and find every open question in it: each gap, and
+   each claim that says "may", "possibly", "check" or "Inferred:". For each
+   one you can settle with your inputs and tools, settle it now: open the
+   linked issue, the epic, the Confluence page, or search for them. Turn
+   the answer into a claim with evidence, or drop the question if the
+   answer is "nothing". Rewrite `output.json` and repeat until every
+   question left is one you could not answer. Then reply `done`.
 
 If an Atlassian call fails for any other reason (no access, no such page),
 work from what you have and say so in `gaps`. If nothing outside the authors explains the change, say exactly
@@ -83,7 +90,12 @@ that in `display`: "No source outside the pull request's authors explains why
 
 - One claim per distinct reason, constraint or decision, ids `W1`, `W2`, …
 - `evidence` is a ticket key and field, a Confluence URL, or a comment URL.
-- `gaps` holds at most three things a reviewer would have to check by hand.
+- `gaps` is optional. When you have none, leave it an empty list rather
+  than fill it. When there are real ones, report at most three: what you
+  looked for and could not find, or could not open. A question you could
+  answer yourself is not a gap: "check whether the epic explains the
+  deadline" is a read of the epic, so open it and report what it says as a
+  claim.
   Never report that an optional input was absent or that nothing was cut.
 - Separate what a source states from what you infer; mark an inference
   "Inferred:" at the start of the claim.

@@ -47,7 +47,14 @@ write a partial answer. Write only this to `output.json` and reply
    - **Unpins**: a test removed or an assertion loosened.
    - **Scaffolding**: fixtures and helpers that assert nothing themselves.
 4. Do not say what the production code does. You cannot see it.
-5. Write `output.json` (below) into your working directory and reply `done`.
+5. Write `output.json` (below) into your working directory.
+6. Reread what you wrote and find every open question in it: each gap, and
+   each claim that says "may", "possibly" or "check". For each one you can
+   settle from `changes.diff` and `files/`, settle it now: read the fixture,
+   the helper, the parametrize list. Turn the answer into a claim with
+   evidence, or drop the question if the answer is "nothing". Rewrite
+   `output.json` and repeat until every question left is one you could not
+   answer. Then reply `done`.
 
 ## output.json
 
@@ -68,6 +75,12 @@ write a partial answer. Write only this to `output.json` and reply
   a removed test, the old one, marked `(removed)`).
 - If the diff is empty, say there are no test changes.
 - `display` names the behaviours that matter most, regression tests first.
-- `gaps` holds at most three things a reviewer would have to check by hand.
+- `gaps` is optional. When you have none, leave it an empty list rather
+  than fill it. When there are real ones, report at most three. A gap is
+  something you could not establish from your inputs, such as a test file
+  left out in `truncated.txt` or a case list built by production code you
+  cannot see. A question you could answer yourself is not a gap: "check
+  whether the fixture creates the record in a locked state" is a read of
+  the fixture in `files/`, so read it and report what it does as a claim.
   Never report that an optional input was absent or that nothing was cut.
 - Write plain JSON only, with straight quotes.
