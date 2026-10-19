@@ -140,7 +140,7 @@ export default class SummaryTab extends Component {
               <span class="rerun" data-test-summary-rerun>rerun started
                 {{this.started}}, finished
                 {{this.tab.witnessesDone}}/{{this.tab.witnessCount}}
-                witnesses</span>
+                agents</span>
             {{else}}
               <span class="live-dot" {{pulses this.tab.since}}></span>
               <span><code>{{this.tab.head}}</code> · {{this.elapsed}}</span>

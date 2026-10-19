@@ -1253,7 +1253,7 @@ def _summary(board: Board) -> PrSummary:
            responses=etag.TAGGED)
 def read_summary(request: Request, board: Serving) -> Response:
     """Always answered, with every stored field null on a pull request never
-    summarised. Poll it while `running` to see the witnesses finish.
+    summarised. Poll it while `running` to see the agents finish.
     """
     return etag.answered(request, _summary(board))
 
