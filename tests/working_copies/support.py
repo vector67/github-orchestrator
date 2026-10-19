@@ -155,6 +155,17 @@ class GitWorld:
         git(seed, "push", "-q", "--force", "origin", BRANCH)
         return git(seed, "rev-parse", "main"), git(seed, "rev-parse", BRANCH)
 
+    def advance_main(self, files: dict[str, str], message: str) -> str:
+        seed = self.root / "seed"
+        git(seed, "checkout", "-q", "main")
+        for name, text in files.items():
+            (seed / name).write_text(text)
+        git(seed, "add", *files)
+        git(seed, "commit", "-q", "-m", message)
+        git(seed, "push", "-q", "origin", "main")
+        git(seed, "checkout", "-q", BRANCH)
+        return git(seed, "rev-parse", "main")
+
 
 class FakeWorld:
     def __init__(self, root: Path) -> None:
@@ -197,3 +208,6 @@ class FakeWorld:
         main = self.fake.publish("main", self.fake.origin["main"], {"m": "more\n"}, "more main")
         head = self.fake.publish(BRANCH, main, {"g": "one\ntwo\nthree\n"}, "feature work")
         return main, head
+
+    def advance_main(self, files: dict[str, str], message: str) -> str:
+        return self.fake.publish("main", self.fake.origin["main"], files, message)

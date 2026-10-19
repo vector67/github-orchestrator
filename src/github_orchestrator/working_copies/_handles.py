@@ -2,8 +2,10 @@ from dataclasses import dataclass, replace
 from typing import Protocol
 
 from github_orchestrator.domain import Pr, Sha
+from github_orchestrator.working_copies._diff import is_branch_name
 from github_orchestrator.working_copies._layout import thread_branch
 from github_orchestrator.working_copies.interface import (
+    BaseStanding,
     Cut,
     FileDiff,
     NamedCommit,
@@ -50,6 +52,8 @@ class Git(Protocol):
     def _fetch(self, worktree: str, base_branch: str | None) -> str | None: ...
 
     def _origin_head(self, worktree: str) -> str | None: ...
+
+    def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None: ...
 
     def _descends(self, path: str | None, onto: str, head: str) -> bool: ...
 
@@ -170,6 +174,12 @@ class BoundCheckout:
         if located.path is None:
             return located.missing
         return self.git._fetch(located.path, base_branch)
+
+    def base_standing(self, base_branch: str | None) -> BaseStanding | None:
+        path = self._path()
+        if path is None or not base_branch or not is_branch_name(base_branch):
+            return None
+        return self.git._base_standing(path, base_branch)
 
     def origin_head(self) -> Sha | None:
         path = self._path()

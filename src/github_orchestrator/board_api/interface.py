@@ -28,6 +28,13 @@ class ManagerStanding(StrEnum):
 
 
 @dataclass(frozen=True)
+class BaseStanding:
+    behind_by: int
+    conflicts: tuple[str, ...]
+    fetched_at: float | None
+
+
+@dataclass(frozen=True)
 class QueuedEvent:
     event: str | None
     queued_at: str
@@ -90,6 +97,7 @@ class Dashboard:
     queue: tuple[QueuedEvent, ...]
     on_hold: bool
     unpushed_commits: tuple[UnpushedCommit, ...] | None
+    base: BaseStanding | None
     threads_queued: int
     threads_live: frozenset[str]
     threads_proposed: int

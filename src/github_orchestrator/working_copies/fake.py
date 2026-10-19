@@ -1,6 +1,7 @@
 import difflib
 import hashlib
 import itertools
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,17 +32,18 @@ from github_orchestrator.working_copies._trouble import (
     Mismatch,
 )
 from github_orchestrator.working_copies.interface import (
-    DiffHunk as DiffHunk,
-)
-from github_orchestrator.working_copies.interface import (
-    DiffLine as DiffLine,
-)
-from github_orchestrator.working_copies.interface import (
+    BaseStanding,
     FileDiff,
     Picked,
     ThreadGitError,
     Verdict,
     WrongBranch,
+)
+from github_orchestrator.working_copies.interface import (
+    DiffHunk as DiffHunk,
+)
+from github_orchestrator.working_copies.interface import (
+    DiffLine as DiffLine,
 )
 
 
@@ -100,6 +102,7 @@ class FakeWorkingCopies:
         self.commits: dict[str, FakeCommit] = {}
         self.origin: dict[str, str] = {}
         self.fetched: dict[str, str] = {}
+        self.fetched_at: float | None = None
         self.branches: dict[str, str] = {}
         self.checkouts: dict[str, FakeCheckout] = {}
         self.flags = FakeFlags()
@@ -225,6 +228,7 @@ class FakeWorkingCopies:
     def _fetch_base(self, base_branch: str | None) -> None:
         if base_branch in self.origin:
             self.fetched[base_branch] = self.origin[base_branch]
+            self.fetched_at = time.time()
 
     def _switch_branch(self, worktree: Path, branch: str) -> str | None:
         if branch not in self.branches and branch not in self.origin:
@@ -466,6 +470,20 @@ class FakeWorkingCopies:
             return str(exc)
         self._fetch_base(base_branch)
         return None
+
+    def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None:
+        head, base = self._head(worktree), self.fetched.get(base_branch)
+        if head is None or base is None:
+            return None
+        behind = self._range(head, base)
+        ours = self._range(base, head)
+        fork = next(sha for sha in self._ancestors(head) if sha in self._ancestors(base))
+        before, mine, theirs = (self.commits[sha].tree for sha in (fork, head, base))
+        conflicts = tuple(sorted(
+            name for name in set(mine) | set(theirs)
+            if ours and mine.get(name) != before.get(name) != theirs.get(name)
+            and mine.get(name) != theirs.get(name)))
+        return BaseStanding(behind_by=len(behind), conflicts=conflicts, fetched_at=self.fetched_at)
 
     def _origin_head(self, worktree: str) -> str | None:
         branch = self.branch_at(worktree)

@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TypedDict
 
 from github_orchestrator import conversation as domain
@@ -504,7 +504,11 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
                   for commit in dashboard.unpushed_commits],
             threads=contract.ThreadCounts(
                 queued=dashboard.threads_queued, live=len(dashboard.threads_live),
-                proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts)),
+                proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts),
+            base=None if dashboard.base is None else contract.BaseStanding(
+                behind_by=dashboard.base.behind_by, conflicts=list(dashboard.base.conflicts),
+                fetched_at=None if dashboard.base.fetched_at is None
+                else datetime.fromtimestamp(dashboard.base.fetched_at, UTC).isoformat())),
         frozen=None if frozen_on is None or expected is None or left is None
         else contract.FrozenWorktree(
             worktree=dashboard.worktree, here=frozen_on, expected=expected,

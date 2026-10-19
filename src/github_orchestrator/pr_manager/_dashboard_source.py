@@ -3,7 +3,12 @@ from dataclasses import replace
 
 from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import QueuedEvent, Told, UnpushedCommit
+from github_orchestrator.board_api.interface import (
+    BaseStanding,
+    QueuedEvent,
+    Told,
+    UnpushedCommit,
+)
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -52,7 +57,7 @@ class DashboardSource:
         drawn = self.drawn(self._config_of(pr, worktree), self._conversation_managers.of(pr),
                            wrong=wrong, run=None, notice=None)
         return self._status_files.laid_over(
-            replace(drawn, unpushed_commits=self._unpushed(worktree, pr)),
+            replace(drawn, unpushed_commits=self._unpushed(worktree, pr), base=self._base(pr)),
             manager=self._told.held().managers.get(pr))
 
     def drawn(self, config: ManagerConfig, threads: ConversationManager, *,
@@ -79,6 +84,15 @@ class DashboardSource:
         if commits is None:
             return None
         return tuple(UnpushedCommit(*line.split(" ", 1)) for line in commits)
+
+    def _base(self, pr: Pr) -> BaseStanding | None:
+        facts = self._change_detection.facts(pr)
+        if facts is None or not facts.needs_rebase:
+            return None
+        standing = self._working_copies.checkout(pr).base_standing(facts.base_branch)
+        if standing is None:
+            return None
+        return BaseStanding(standing.behind_by, standing.conflicts, standing.fetched_at)
 
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,

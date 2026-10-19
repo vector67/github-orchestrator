@@ -111,6 +111,13 @@ class ThreadWorkspace(Protocol):
     def drop(self) -> str | None: ...
 
 
+@dataclass(frozen=True)
+class BaseStanding:
+    behind_by: int
+    conflicts: tuple[str, ...]
+    fetched_at: float | None
+
+
 class PrCheckout(Protocol):
     def no_worktree(self) -> str | None: ...
 
@@ -123,6 +130,8 @@ class PrCheckout(Protocol):
     def unpick(self, landed_base: Sha, landed_sha: Sha) -> str | None: ...
 
     def fetch(self, base_branch: str | None) -> str | None: ...
+
+    def base_standing(self, base_branch: str | None) -> BaseStanding | None: ...
 
     def origin_head(self) -> Sha | None: ...
 

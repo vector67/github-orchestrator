@@ -26,6 +26,7 @@ from github_orchestrator.working_copies._layout import pr_worktrees, thread_work
 from github_orchestrator.working_copies._progress import Progress
 from github_orchestrator.working_copies._trouble import BranchTrouble, Grace
 from github_orchestrator.working_copies.interface import (
+    BaseStanding,
     FileDiff,
     Picked,
     ThreadGitError,
@@ -34,6 +35,15 @@ from github_orchestrator.working_copies.interface import (
 )
 
 log = logging.getLogger(__name__)
+
+
+def _modified_at(worktree: Path, found: subprocess.CompletedProcess[str]) -> float | None:
+    if found.returncode != 0:
+        return None
+    try:
+        return (worktree / found.stdout.strip()).stat().st_mtime
+    except OSError:
+        return None
 
 
 class GitWorkingCopies:
@@ -263,6 +273,21 @@ class GitWorkingCopies:
             return str(exc)
         _worktree.fetch_base(Path(worktree), base_branch)
         return None
+
+    def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None:
+        base = f"refs/remotes/origin/{base_branch}"
+        try:
+            counted = _threads.run_git(worktree, "rev-list", "--count", f"HEAD..{base}")
+            merged = _threads.run_git(worktree, "merge-tree", "--write-tree", "--name-only",
+                                      "--no-messages", "HEAD", base)
+            fetch_head = _threads.run_git(worktree, "rev-parse", "--git-path", "FETCH_HEAD")
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if counted.returncode != 0 or merged.returncode not in (0, 1):
+            return None
+        conflicts = tuple(merged.stdout.splitlines()[1:]) if merged.returncode == 1 else ()
+        return BaseStanding(behind_by=int(counted.stdout.strip()), conflicts=conflicts,
+                            fetched_at=_modified_at(Path(worktree), fetch_head))
 
     def _origin_head(self, worktree: str) -> str | None:
         branch = self._status.current_branch(worktree)

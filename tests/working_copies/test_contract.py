@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from github_orchestrator.desktop import Badge
@@ -384,6 +386,57 @@ def test_fetching_a_prs_checkout_moves_its_origin_head_and_not_its_local_one(
 
     assert (before, pr_checkout.origin_head(), pr_checkout.local_head()) == (
         Sha(pushed), Sha(head), Sha(pushed))
+
+
+def test_a_fetched_base_ahead_of_the_branch_says_how_far_behind_it_is(
+        world, pr_worktree, pr_checkout):
+    world.advance_main({"m": "more\n"}, "more main")
+    world.advance_main({"n": "still more\n"}, "still more main")
+    assert pr_checkout.fetch("main") is None
+
+    standing = pr_checkout.base_standing("main")
+
+    assert standing is not None
+    assert (standing.behind_by, standing.conflicts) == (2, ())
+
+
+@pytest.mark.no_replay
+def test_a_base_standing_says_when_git_last_fetched(tmp_path, settings):
+    build_origin(tmp_path)
+    world = GitWorld(tmp_path, settings)
+    world.copies.pr_worktree(world.repo_dir, THE_PR, None, None)
+    checkout = world.copies.checkout(THE_PR)
+    before = time.time()
+
+    checkout.fetch("main")
+
+    standing = checkout.base_standing("main")
+    assert standing is not None and standing.fetched_at is not None
+    assert standing.fetched_at >= before - 1
+
+
+def test_a_base_not_fetched_since_it_moved_is_not_counted(world, pr_worktree, pr_checkout):
+    pr_checkout.fetch("main")
+    world.advance_main({"m": "more\n"}, "more main")
+
+    standing = pr_checkout.base_standing("main")
+
+    assert standing is not None and standing.behind_by == 0
+
+
+def test_a_base_that_changed_the_branchs_files_names_each_conflict(
+        world, pr_worktree, pr_checkout):
+    world.advance_main({"g": "another\nstart\n", "m": "more\n"}, "main writes g too")
+    pr_checkout.fetch("main")
+
+    standing = pr_checkout.base_standing("main")
+
+    assert standing is not None
+    assert (standing.behind_by, standing.conflicts) == (1, ("g",))
+
+
+def test_a_base_with_no_worktree_has_no_standing(world):
+    assert world.copies.checkout(THE_PR).base_standing("main") is None
 
 
 def test_a_commit_not_pushed_moves_only_the_local_head(world, pr_worktree, pr_checkout):

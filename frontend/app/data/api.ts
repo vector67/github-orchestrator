@@ -56,6 +56,12 @@ export interface ApproveRequest {
 
 export type AuthorKind = 'mine' | 'human' | 'bot';
 
+export interface BaseStanding {
+  behind_by: number;
+  conflicts: string[];
+  fetched_at: string | null;
+}
+
 export interface Brief {
   note: string;
   pointed: PointedLine[];
@@ -224,6 +230,7 @@ export interface DashboardSystem {
   on_hold: boolean;
   unpushed_commits: UnpushedCommit[] | null;
   threads: ThreadCounts;
+  base: BaseStanding | null;
 }
 
 export interface DeferOperation {

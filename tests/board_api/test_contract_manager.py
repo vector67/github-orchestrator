@@ -4,6 +4,7 @@ import pytest
 
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import (
+    BaseStanding,
     ManagerStanding,
     QueuedEvent,
     UnpushedCommit,
@@ -18,6 +19,7 @@ WORKING = replace(
     on_hold=True,
     unpushed_commits=(UnpushedCommit("c0ffee1", "handle empty input"),
                       UnpushedCommit("badf00d", "add parser tests")),
+    base=BaseStanding(14, ("src/widgets/parser.py",), 1790000000.0),
     last_run_event="ci-failed",
     last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
     threads_live=frozenset({"PRRT_one", "PRRT_two"}), threads_proposed=4, threads_drafts=0, needs_rebase=True,
@@ -52,6 +54,8 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
             "unpushed_commits": [{"sha": "c0ffee1", "subject": "handle empty input"},
                                  {"sha": "badf00d", "subject": "add parser tests"}],
             "threads": {"queued": 1, "live": 2, "proposed": 4, "drafts": 0},
+            "base": {"behind_by": 14, "conflicts": ["src/widgets/parser.py"],
+                     "fetched_at": "2026-09-21T14:13:20+00:00"},
         },
         "frozen": None,
         "undismiss_command": "github-orchestrator undismiss --repo o/n 1",

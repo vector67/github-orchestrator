@@ -1,7 +1,7 @@
 import logging
 
 from github_orchestrator.agent_runs import History, LastRun, Run
-from github_orchestrator.change_detection import ChangeDetection, CiFailed
+from github_orchestrator.change_detection import ChangeDetection, CiFailed, Facts
 from github_orchestrator.conversation import (
     ConversationManager,
     ConversationManagerFactory,
@@ -19,6 +19,8 @@ from github_orchestrator.pr_manager.interface import Front
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
 log = logging.getLogger(__name__)
+
+BASE_FETCH_SECONDS = 300.0
 
 
 def agent_status(working_on: str | None) -> str:
@@ -51,6 +53,7 @@ class ManagerLoop:
         self._frozen_on: str | None = None
         self._conversation_manager: ConversationManager | None = None
         self._fix_taken: tuple[Run, Taken] | None = None
+        self._base_fetched_at: float | None = None
 
     def _is_author(self) -> bool | None:
         facts = self._change_detection.facts(self._config.pr)
@@ -193,12 +196,25 @@ class ManagerLoop:
             self._conversation_manager = self._conversation_managers.of(self._config.pr)
         return self._conversation_manager
 
+    def _fetch_the_base_while_behind(self, state: Facts | None) -> None:
+        if state is None or not state.needs_rebase:
+            return
+        now = self._clock().timestamp()
+        if self._base_fetched_at is not None and now - self._base_fetched_at < BASE_FETCH_SECONDS:
+            return
+        self._base_fetched_at = now
+        refused = self._working_copies.checkout(self._config.pr).fetch(state.base_branch)
+        if refused is not None:
+            log.warning("loop %s: could not fetch the base to see how far behind it is: %s",
+                        self._config.pr, refused)
+
     def _tick(self) -> None:
         config = self._config
         pr = config.pr
         state = self._change_detection.facts(pr)
 
         self._pump_active_run()
+        self._fetch_the_base_while_behind(state)
 
         wrong = self._freeze_on_wrong_branch(state.branch if state else None)
         waiting = self._worklist.waiting(pr)

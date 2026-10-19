@@ -1280,6 +1280,14 @@ class DashboardStatus(BaseModel):
     approved_by: list[str]
 
 
+class BaseStanding(BaseModel):
+    behind_by: int = Field(description="Commits on the base that the branch does not have.")
+    conflicts: list[str] = Field(
+        description="The files a merge of the base would leave in conflict.")
+    fetched_at: str | None = Field(
+        description="When the base was last fetched. Null where git could not say.")
+
+
 class QueuedEvent(BaseModel):
     event: str | None = Field(
         description="Its kind, such as `ci-failed`. Null where its file would not read.")
@@ -1305,6 +1313,9 @@ class DashboardSystem(BaseModel):
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")
     threads: ThreadCounts
+    base: BaseStanding | None = Field(
+        description="How the branch stands against its freshly fetched base. Null "
+                    "while GitHub says no rebase is needed, or where git could not say.")
 
 
 class FrozenWorktree(BaseModel):

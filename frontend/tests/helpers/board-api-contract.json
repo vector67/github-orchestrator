@@ -1729,6 +1729,35 @@
    ],
    "type": "string"
   },
+  "BaseStanding": {
+   "properties": {
+    "behind_by": {
+     "type": "integer"
+    },
+    "conflicts": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "fetched_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "behind_by",
+    "conflicts",
+    "fetched_at"
+   ],
+   "type": "object"
+  },
   "Brief": {
    "properties": {
     "include": {
@@ -2659,6 +2688,16 @@
     "agent": {
      "$ref": "#/components/schemas/AgentActivity"
     },
+    "base": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/BaseStanding"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "last_run": {
      "anyOf": [
       {
@@ -2701,7 +2740,8 @@
     "queue",
     "on_hold",
     "unpushed_commits",
-    "threads"
+    "threads",
+    "base"
    ],
    "type": "object"
   },
