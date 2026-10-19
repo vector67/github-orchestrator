@@ -136,7 +136,7 @@ module('Acceptance | pr view', function (hooks) {
   test('the bar stays exactly as it was while a restarted hub waits for the watcher’s first cycle', async function (assert) {
     three();
     await visit('/pr/o/r/7/terminal');
-    const before = find('[data-test-pr-bar]')?.outerHTML;
+    const before = find('[data-test-title-bar]')?.outerHTML;
 
     board().unheld = {
       code: 'watcher-starting',
@@ -146,7 +146,7 @@ module('Acceptance | pr view', function (hooks) {
     await clock().tick(LIST);
     await clock().tick(LIST);
 
-    assert.strictEqual(find('[data-test-pr-bar]')?.outerHTML, before);
+    assert.strictEqual(find('[data-test-title-bar]')?.outerHTML, before);
     assert.dom('[data-test-banner]').doesNotExist();
   });
 
@@ -210,17 +210,17 @@ module('Acceptance | pr view', function (hooks) {
     assert
       .dom('[data-test-tab="board"] [data-test-tab-count]')
       .hasText('1 ready');
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-state]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-state]'), [
       'CI failing',
       'behind main',
       '2 unresolved',
       'detailed reviewer',
     ]);
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-blocking]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-blocking]'), [
       'CI failing',
     ]);
     assert
-      .dom('[data-test-pr-bar] [data-test-state="reviewer"]')
+      .dom('[data-test-title-bar] [data-test-state="reviewer"]')
       .hasAttribute('title', /Detailed reviewer: @/);
     assert
       .dom('[data-test-github]')
@@ -238,8 +238,8 @@ module('Acceptance | pr view', function (hooks) {
 
     await visit('/pr/o/r/7');
 
-    assert.dom('[data-test-pr-bar] [data-test-state]').doesNotExist();
-    assert.dom('[data-test-pr-bar]').doesNotIncludeText('CI failing');
+    assert.dom('[data-test-title-bar] [data-test-state]').doesNotExist();
+    assert.dom('[data-test-title-bar]').doesNotIncludeText('CI failing');
   });
 
   test('a draft shows a Draft pill before its title and its next move muted', async function (assert) {
@@ -265,7 +265,7 @@ module('Acceptance | pr view', function (hooks) {
       .dom('[data-test-your-move] [data-test-move-label]')
       .hasText('Next, when it’s ready');
     assert.deepEqual(
-      texts('[data-test-pr-bar] [data-test-state]'),
+      texts('[data-test-title-bar] [data-test-state]'),
       [],
       'the move names CI and the pill names the draft',
     );
@@ -297,7 +297,7 @@ module('Acceptance | pr view', function (hooks) {
     ];
 
     await visit('/pr/o/r/7');
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-pr-count]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
       'Human comments 1/3 done',
       'Bot comments 2/2 done',
     ]);
@@ -310,7 +310,7 @@ module('Acceptance | pr view', function (hooks) {
       board().threadIn('deferred', { key: 'd' }),
     ];
     await visit('/pr/o/r/8');
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-pr-count]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
       'Your threads 1/4 answered',
     ]);
   });
@@ -330,13 +330,13 @@ module('Acceptance | pr view', function (hooks) {
     void visit('/pr/o/r/7/dashboard');
     await waitUntil(() => find('[data-test-pr-heading]'));
 
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-pr-count]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
       'Human comments 0/1 done',
       'Bot comments 0/0 done',
     ]);
     release();
     await settled();
-    assert.deepEqual(texts('[data-test-pr-bar] [data-test-pr-count]'), [
+    assert.deepEqual(texts('[data-test-title-bar] [data-test-pr-count]'), [
       'Human comments 1/1 done',
       'Bot comments 0/0 done',
     ]);

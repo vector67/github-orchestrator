@@ -35,7 +35,7 @@ module('Acceptance | one store', function (hooks) {
   }
 
   function chips(): string[] {
-    return findAll('[data-test-pr-bar] [data-test-pr-count]').map((one) =>
+    return findAll('[data-test-title-bar] [data-test-pr-count]').map((one) =>
       one.textContent.trim().replace(/\s+/g, ' '),
     );
   }

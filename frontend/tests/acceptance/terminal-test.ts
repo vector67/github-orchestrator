@@ -328,7 +328,7 @@ module('Acceptance | terminal', function (hooks) {
     });
     await visit('/pr/o/r/7/dashboard');
 
-    const bar = find('[data-test-pr-bar]') as HTMLElement;
+    const bar = find('[data-test-title-bar]') as HTMLElement;
     bar.style.width = '900px';
 
     const box = find('[data-test-your-move]')!.getBoundingClientRect();

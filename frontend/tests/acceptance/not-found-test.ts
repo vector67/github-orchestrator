@@ -41,8 +41,8 @@ module('Acceptance | not found', function (hooks) {
     test(`${url}, a pull request the watcher does not hold, keeps the top bar and says it is not watched in place of its tabs`, async function (assert) {
       await visit(url);
 
-      assert.dom('[data-test-pr-bar]').exists();
-      assert.dom('[data-test-pr-bar] [data-test-repo]').hasText('o/r#9');
+      assert.dom('[data-test-title-bar]').exists();
+      assert.dom('[data-test-title-bar] [data-test-repo]').hasText('o/r#9');
       assert.dom('[data-test-pr-not-found]').exists();
       assert
         .dom('[data-test-pr-not-found] h1')

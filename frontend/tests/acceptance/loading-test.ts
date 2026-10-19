@@ -48,14 +48,14 @@ module('Acceptance | loading', function (hooks) {
     assert.dom('[data-test-loading="board"]').doesNotExist();
   });
 
-  test('the PR bar stays up while the board loads under it', async function (assert) {
+  test('the title bar stays up while the board loads under it', async function (assert) {
     onTheHub();
     const release = board().hold(/\/api\/conversations$/);
 
     const visiting = visit('/pr/o/r/7/conversations');
     await waitFor('[data-test-loading="board"]');
 
-    assert.dom('[data-test-pr-bar]').exists();
+    assert.dom('[data-test-title-bar]').exists();
 
     release();
     await visiting;
@@ -68,7 +68,7 @@ module('Acceptance | loading', function (hooks) {
     const visiting = visit('/pr/o/r/7/board');
     await waitFor('[data-test-board-columns]');
 
-    assert.dom('[data-test-pr-bar]').exists();
+    assert.dom('[data-test-title-bar]').exists();
 
     release();
     await visiting;

@@ -2349,7 +2349,7 @@ kbd {
 }
 
 .wall-bar,
-.prbar {
+.titlebar {
   display: flex;
   flex: none;
   gap: 16px;
@@ -3027,7 +3027,7 @@ kbd {
   border-top: 2px solid var(--border-strong);
 }
 
-.prbar {
+.titlebar {
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -4156,7 +4156,7 @@ kbd {
 }
 
 @media (width <= 900px) {
-  .prbar {
+  .titlebar {
     flex-wrap: wrap;
     gap: 8px 12px;
   }
