@@ -557,7 +557,7 @@ export default class StoreService extends Service {
       feed.kind === 'wall'
         ? await this.heldOrNot(asking)
         : 'pr' in feed
-          ? await this.heldHere(feed.pr, asking)
+          ? await this.heldHere(feed.pr, this.heldOrNot(asking))
           : await asking;
     if (!answer.changed) return answer;
     return {

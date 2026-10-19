@@ -1,5 +1,6 @@
 import logging
 
+from github_orchestrator.board_api.interface import NOTHING_HELD
 from tests.board_api.support import SERVER_PID, THE_PR, one_server
 from tests.builders import a_pr
 
@@ -19,6 +20,17 @@ def test_a_pr_the_watcher_does_not_hold_is_not_found():
 
     assert answer.status_code == 404
     assert answer.json()["errors"][0]["code"] == "not-found"
+
+
+def test_a_pr_read_is_refused_as_starting_until_the_watcher_says_what_it_holds():
+    server = one_server(THE_PR)
+    server.told.now = NOTHING_HELD
+
+    answer = server.client.get(f"{BOARD}/api/pull-request")
+
+    assert answer.status_code == 503
+    assert answer.json()["errors"][0]["code"] == "watcher-starting"
+    assert answer.headers["Retry-After"] == "1"
 
 
 def test_a_pr_the_watcher_let_go_of_is_not_found_though_its_board_was_built():

@@ -194,6 +194,10 @@ export default class PrView extends Component<PrViewSignature> {
     return this.store.notHeld(this.repo, this.args.pr.number);
   }
 
+  get starting(): boolean {
+    return this.store.unheld === 'watcher-starting';
+  }
+
   private async copy(): Promise<void> {
     this.toasts.say(await copyAddress(this.url), 'done');
   }
@@ -279,6 +283,13 @@ export default class PrView extends Component<PrViewSignature> {
             {{this.repo}}#{{@pr.number}}. It only watches pull requests you
             wrote or were asked to review.
             <a class="not-found-link" href="/">Back to the board</a>.</p>
+        </section>
+      {{else if this.starting}}
+        <section id="pr-starting" data-test-pr-starting>
+          <h1>The server is starting up</h1>
+          <p>It will be ready shortly. This page loads
+            {{this.repo}}#{{@pr.number}}
+            as soon as the watcher finishes its first poll.</p>
         </section>
       {{else}}
         <nav class="prtabs" aria-label="this pull request">

@@ -1495,6 +1495,7 @@ button.copy-directory {
 }
 
 #not-found,
+#pr-starting,
 #old-link {
   padding: 40px;
 }

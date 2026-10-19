@@ -1317,6 +1317,9 @@
     },
     "404": {
      "$ref": "#/components/schemas/Errors"
+    },
+    "503": {
+     "$ref": "#/components/schemas/Errors"
     }
    }
   }
