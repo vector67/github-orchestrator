@@ -1558,7 +1558,7 @@ module('Acceptance | wall', function (hooks) {
     assert.strictEqual(currentURL(), '/');
   });
 
-  test('each row has a hold and a dismiss button that do what p and x do', async function (assert) {
+  test('each row has a hold and a dismiss button that do what h and d do', async function (assert) {
     onTheHub(
       heldPr(),
       heldPr({
@@ -1620,14 +1620,14 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(selected(), ['o/r#8']);
   });
 
-  test('p holds the selected pull request and p again resumes it', async function (assert) {
+  test('h holds the selected pull request and h again resumes it', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
     await press('j');
 
-    await press('p');
-    await press('p');
+    await press('h');
+    await press('h');
 
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),
@@ -1635,14 +1635,14 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  test('p pressed twice before the hub answers the first hold resumes, rather than holding twice', async function (assert) {
+  test('h pressed twice before the hub answers the first hold resumes, rather than holding twice', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
     const release = board().hold(/\/api\/pull-requests\/o\/r\/7:/);
 
-    tap('p');
-    tap('p');
+    tap('h');
+    tap('h');
     release();
     await settled();
 
@@ -1652,12 +1652,11 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  test('the dashboard’s r, Q and g do nothing on the wall', async function (assert) {
+  test('the dashboard’s Q and g do nothing on the wall', async function (assert) {
     onTheHub(heldPr());
     await visit('/');
     await press('j');
 
-    await press('r');
     await press('Q');
     await press('g');
 
@@ -1667,12 +1666,40 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-toast]').doesNotExist();
   });
 
+  test('c carries on the selected pull request’s last agent run', async function (assert) {
+    onTheHub(
+      heldPr(),
+      heldPr({
+        number: 8,
+        dashboard: {
+          system: {
+            last_run: {
+              event: 'ci-failed',
+              exit_code: 0,
+              ended_at: new Date(clock().now - 60_000).toISOString(),
+            },
+          },
+        },
+      }),
+    );
+    await visit('/');
+    await press('j');
+    await press('j');
+
+    await press('c');
+
+    assert.deepEqual(
+      board().posted.map((one) => one.url),
+      ['/pr/o/r/8/api/manager:carry-on'],
+    );
+  });
+
   test('the dismiss question takes the focus and holds j and k', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
 
-    await press('x');
+    await press('d');
 
     assert.ok(
       document
@@ -1683,7 +1710,7 @@ module('Acceptance | wall', function (hooks) {
     await press('j');
     assert.deepEqual(selected(), ['o/r#7']);
 
-    await press('p');
+    await press('h');
     assert.dom('[data-test-dismiss-confirm]').exists();
     assert.deepEqual(verbs(), []);
   });
@@ -1692,7 +1719,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
     assert.dom('[data-test-dismiss-confirm]').exists();
 
     board().held = [heldPr({ number: 8 })];
@@ -1718,7 +1745,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
 
     board().held = [
       heldPr({
@@ -1739,12 +1766,12 @@ module('Acceptance | wall', function (hooks) {
     ]);
   });
 
-  test('x asks how long to dismiss for, u and f answer, Esc cancels', async function (assert) {
+  test('d asks how long to dismiss for, u and f answer, Esc cancels', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
 
-    await press('x');
+    await press('d');
 
     assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7?');
     assert
@@ -1758,10 +1785,10 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert.deepEqual(verbs(), []);
 
-    await press('x');
+    await press('d');
     await press('u');
     await press('j');
-    await press('x');
+    await press('d');
     await press('f');
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
@@ -1771,14 +1798,14 @@ module('Acceptance | wall', function (hooks) {
     ]);
   });
 
-  test('x on a row whose board is not answering says dismiss waits for it and asks nothing', async function (assert) {
+  test('d on a row whose board is not answering says dismiss waits for it and asks nothing', async function (assert) {
     onTheHub(
       heldPr({ dashboard: { standing: 'gone' } }),
       heldPr({ number: 8, dashboard: { standing: 'gone' } }),
     );
     await visit('/');
 
-    for (const step of ['j', 'x', 'j', 'x']) await press(step);
+    for (const step of ['j', 'd', 'j', 'd']) await press(step);
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert.deepEqual(
@@ -1796,7 +1823,7 @@ module('Acceptance | wall', function (hooks) {
     await press('j');
     board().broken = /\/api\/manager:dismiss$/;
 
-    await press('x');
+    await press('d');
     await press('u');
 
     assert
@@ -1812,7 +1839,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(...listed('2026-10-08T09:30:00Z', 7, 8));
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
 
     onTheHub(...listed('2026-10-08T09:30:30Z', 7, 8));
     const reads = board().askedFor(/\/api\/pull-requests$/).length;
@@ -1842,7 +1869,7 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(rows(), ['o/r#8'], 'the dismissed row stays gone');
   });
 
-  test('a frozen row takes only w: p and x say so and send nothing, and w releases it', async function (assert) {
+  test('a frozen row takes only w: h and d say so and send nothing, and w releases it', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -1860,8 +1887,8 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
     await press('j');
 
-    await press('p');
-    await press('x');
+    await press('h');
+    await press('d');
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert.deepEqual(
@@ -1914,7 +1941,7 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
     await press('j');
 
-    await press('x');
+    await press('d');
 
     assert
       .dom('[data-test-dismiss-confirm]')
@@ -1936,7 +1963,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(heldPr());
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
     await press('f');
     board().held = [heldPr({ dashboard: { standing: 'gone' } })];
     await clock().tick(LIST);
@@ -1948,7 +1975,7 @@ module('Acceptance | wall', function (hooks) {
       .hasText(
         'Dismissed #7 forever. Its manager has exited. This page has nothing more to show.',
       );
-    await press('p');
+    await press('h');
     assert.deepEqual(verbs(), [
       '/pr/o/r/7/api/manager:dismiss {"forever":true}',
     ]);
@@ -1958,7 +1985,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
     const release = board().hold(/\/api\/manager:dismiss$/);
 
     tap('u');
@@ -1982,7 +2009,7 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(heldPr());
     await visit('/');
     await press('j');
-    await press('x');
+    await press('d');
     await press('u');
 
     await visit('/pr/o/r/7/dashboard');
@@ -2069,7 +2096,7 @@ module('Acceptance | wall', function (hooks) {
       detail: 'the watcher holds no pull request o/r#7',
     };
 
-    await press('p');
+    await press('h');
 
     assert
       .dom('[data-test-toast]')
@@ -2124,10 +2151,10 @@ module('Acceptance | wall', function (hooks) {
     const release = board().hold(/\/api\/pull-requests$/);
     const ticking = clock().tick(LIST);
 
-    tap('p');
+    tap('h');
     await waitUntil(() => board().posted.length === 1);
     tap('j');
-    tap('p');
+    tap('h');
     await waitUntil(() => board().posted.length === 2);
     await waitUntil(() => board().askedFor(/\/api\/runs$/).length === runs + 3);
 

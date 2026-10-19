@@ -139,10 +139,10 @@ function offerOf(
 }
 
 const KEYS: Record<Control, string> = {
-  hold: 'p',
-  'carry-on': 'r',
+  hold: 'h',
+  'carry-on': 'c',
   'start-review': 'a',
-  dismiss: 'x',
+  dismiss: 'd',
   close: 'Q',
   git: 'g',
   release: 'w',

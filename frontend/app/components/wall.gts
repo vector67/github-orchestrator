@@ -28,7 +28,7 @@ import { moves, pulses, selects } from 'frontend/motion';
 
 const same = (one: unknown, other: unknown): boolean => one === other;
 
-const KEYED = ['hold', 'dismiss', 'release'] as const;
+const KEYED = ['hold', 'carry-on', 'dismiss', 'release'] as const;
 
 const FOLDABLE = 'parked';
 const PARKED_FOLDED = 'wall-parked-folded';

@@ -97,6 +97,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { keys: ['j', 'k'], does: 'Walk the pull requests' },
       { keys: ['Enter'], does: 'Open the chosen one' },
       { keys: [capOfControl('hold')], does: 'Put on hold or resume' },
+      { keys: [capOfControl('carry-on')], does: 'Carry on' },
       { keys: [capOfControl('dismiss')], does: 'Dismiss' },
       { keys: [capOfControl('release')], does: 'Release a frozen worktree' },
       { keys: ['o'], does: 'Open on GitHub' },

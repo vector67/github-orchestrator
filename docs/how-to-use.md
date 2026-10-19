@@ -390,8 +390,9 @@ PR frozen on the wrong branch has a **Release** button on its row.
 | --------- | ----------------------------------------------------------------------- |
 | `j` / `k` | move the selection down / up                                            |
 | `Enter`   | open the selected PR                                                    |
-| `p`       | put the selected PR on hold, or resume one on hold                      |
-| `x`       | ask to dismiss it: `u` until the next event, `f` forever, `Esc` cancels |
+| `h`       | put the selected PR on hold, or resume one on hold                      |
+| `c`       | carry on its agent's last run                                           |
+| `d`       | ask to dismiss it: `u` until the next event, `f` forever, `Esc` cancels |
 | `o`       | open the PR on GitHub                                                   |
 | `y`       | copy the PR's link                                                      |
 
@@ -461,10 +462,10 @@ ones." A draft on its way to GitHub cannot change.
 **Dashboard** is the PR's state as its agent manager last saw it.
 The band at the top has your move and why, and the buttons: **Open the Board**
 (`1`) when threads wait for you, **Put on hold** or **Resume the agent**
-(`p`), **Carry on** (`r`), **Start a review agent** (`a`) when your move is to
+(`h`), **Carry on** (`c`), **Start a review agent** (`a`) when your move is to
 review or re-review, which starts the review agent a review request would, for
 when the automatic one went wrong, **Git** (`g`), **Terminal** (`t`), **Close PR #N**
-(`⇧Q`, then `y`), which closes the PR on GitHub, and **Dismiss #N** (`x`, then
+(`⇧Q`, then `y`), which closes the PR on GitHub, and **Dismiss #N** (`d`, then
 `u` or `f`), which takes the PR off the wall. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.

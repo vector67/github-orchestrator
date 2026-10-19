@@ -340,7 +340,7 @@ module('Acceptance | pr view', function (hooks) {
     await press('\\');
     assert.true(switcherOpen());
 
-    await press('x');
+    await press('d');
     assert.true(switcherOpen());
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
 
@@ -621,7 +621,7 @@ module('Acceptance | pr view', function (hooks) {
     await press('2');
     await press('?');
     await press('o');
-    await press('p');
+    await press('h');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
     assert.dom('[data-test-dismiss-confirm]').exists();

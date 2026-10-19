@@ -626,14 +626,14 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
-  test('p puts it on hold through the board and the band becomes the on-hold band with Resume; p again resumes', async function (assert) {
+  test('h puts it on hold through the board and the band becomes the on-hold band with Resume; h again resumes', async function (assert) {
     onTheHub({
       facts: factsFor('fix-ci'),
       status: { failed_checks: ['unit-tests'] },
     });
     await visit('/pr/o/r/7/dashboard');
 
-    await press('p');
+    await press('h');
 
     assert.deepEqual(verbs(), ['hold']);
     assert
@@ -651,12 +651,12 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-control="hold"]').exists();
   });
 
-  test('r carries on, and Open the Board is offered where threads wait on you', async function (assert) {
+  test('c carries on, and Open the Board is offered where threads wait on you', async function (assert) {
     onTheHub({ system: { last_run: EARLIER_RUN } });
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     await visit('/pr/o/r/7/dashboard');
 
-    await press('r');
+    await press('c');
 
     assert.deepEqual(verbs(), ['carry-on']);
 
@@ -681,7 +681,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-close-option]').hasClass('danger');
   });
 
-  test('carry on is held back with the reason on hover while Claude works or is disabled, and r says why', async function (assert) {
+  test('carry on is held back with the reason on hover while Claude works or is disabled, and c says why', async function (assert) {
     onTheHub({ system: { agent: WORKING } });
     await visit('/pr/o/r/7/dashboard');
 
@@ -691,7 +691,7 @@ module('Acceptance | dashboard', function (hooks) {
       .hasAttribute('title', 'The agent is already working.');
     assert.dom('.controls').doesNotIncludeText('The agent is already working.');
 
-    await press('r');
+    await press('c');
 
     assert.deepEqual(verbs(), []);
     assert.dom('[data-test-toast]').hasText('The agent is already working.');
@@ -721,7 +721,7 @@ module('Acceptance | dashboard', function (hooks) {
         'The agent has no earlier run here to carry on from.',
       );
 
-    await press('r');
+    await press('c');
 
     assert.deepEqual(verbs(), []);
   });
@@ -801,7 +801,7 @@ module('Acceptance | dashboard', function (hooks) {
       .dom('[data-test-control="carry-on"]')
       .hasAttribute('title', /carrying on its last conversation/);
 
-    await press('p');
+    await press('h');
 
     assert.strictEqual(labelOf('resume'), 'Resume the agent');
     assert.dom('[data-test-control="resume"]').hasAttribute('title', /\w/);
@@ -828,11 +828,11 @@ module('Acceptance | dashboard', function (hooks) {
       .hasAttribute('title', /Detailed reviewer: @/);
   });
 
-  test('x asks first with the dashboard’s own wording, and Esc cancels without leaving the tab', async function (assert) {
+  test('d asks first with the dashboard’s own wording, and Esc cancels without leaving the tab', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
 
-    await press('x');
+    await press('d');
 
     assert.ok(
       document
@@ -862,11 +862,11 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
-  test('x then u dismisses until the next event and, the manager gone, the page goes back to the wall', async function (assert) {
+  test('d then u dismisses until the next event and, the manager gone, the page goes back to the wall', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
 
-    await press('x');
+    await press('d');
     await press('u');
 
     assert.deepEqual(board().posted.at(-1)?.verb, 'dismiss');
@@ -923,7 +923,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
 
     await press('Q');
-    await press('p');
+    await press('h');
 
     assert.dom('[data-test-close-confirm]').doesNotExist();
     assert.deepEqual(verbs(), []);
@@ -998,7 +998,7 @@ module('Acceptance | dashboard', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     board().broken = /\/api\/manager:hold$/;
 
-    await press('p');
+    await press('h');
 
     assert
       .dom('[data-test-toast]')
@@ -1083,7 +1083,7 @@ module('Acceptance | dashboard', function (hooks) {
     onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
     await visit('/pr/o/r/7/dashboard');
 
-    await press('p');
+    await press('h');
 
     assert.deepEqual(verbs(), []);
     assert
@@ -1112,7 +1112,7 @@ module('Acceptance | dashboard', function (hooks) {
         'The notes come from the manager’s board, which is not answering.',
       );
 
-    await press('x');
+    await press('d');
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert
@@ -1122,7 +1122,7 @@ module('Acceptance | dashboard', function (hooks) {
       );
     assert.deepEqual(verbs(), []);
 
-    await press('p');
+    await press('h');
 
     assert.deepEqual(board().posted.at(-1)?.verb, 'hold');
     assert.deepEqual(board().posted.at(-1)?.key, 'o/r#7');
