@@ -13,7 +13,7 @@ from github_orchestrator.board_api.interface import (
     SetupRead,
     SetupWrite,
 )
-from github_orchestrator.domain import HubState, Pr, Repo
+from github_orchestrator.domain import CiCheck, HubState, Pr, Repo
 
 IDLE = Dashboard(
     pr=Pr(Repo("o", "n"), 1), worktree="/wt", polled=True,
@@ -23,7 +23,8 @@ IDLE = Dashboard(
     needs_rebase=False,    review_decision=None, my_review=None, last_event_at="2026-06-10T10:30:00Z",
     review_ready_at="2026-06-09T08:00:00Z", since_commits=None,
     since_force_push=False, since_reviews=0, since_comments=0, since_resolved=0,
-    failed_checks=(), checks_done=4, checks_total=4, changed_files=7, approved_by=(),
+    checks=(CiCheck("tests", passed=True, failed=False, done=True, url="https://ci/tests",
+                    summary="tests passed"),), changed_files=7, approved_by=(),
     changes_requested_by=(), pending_reviewers=("carol",), unresolved_threads=0,
     polled_at="2026-06-10T10:30:00Z", ended=False, draft=False, merge_state="clean",
     viewer_requested=False, mentioned=False, mentions=(), my_review_at=None,

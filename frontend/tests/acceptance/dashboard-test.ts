@@ -9,6 +9,7 @@ import {
   visit,
 } from '@ember/test-helpers';
 import {
+  check,
   dashboard,
   factsFor,
   heldPr,
@@ -151,8 +152,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('when your move and the PR state agree, the band gives the state’s detail alone', async function (assert) {
     onTheHub({
-      facts: factsFor('fix-ci'),
-      status: { failed_checks: ['unit-tests'] },
+      facts: factsFor('fix-ci', { checks: [check('unit-tests', 'failed')] }),
     });
 
     await visit('/pr/o/r/7/dashboard');
@@ -628,8 +628,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('h puts it on hold through the board and the band becomes the on-hold band with Resume; h again resumes', async function (assert) {
     onTheHub({
-      facts: factsFor('fix-ci'),
-      status: { failed_checks: ['unit-tests'] },
+      facts: factsFor('fix-ci', { checks: [check('unit-tests', 'failed')] }),
     });
     await visit('/pr/o/r/7/dashboard');
 

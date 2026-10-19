@@ -4,7 +4,7 @@ from github_orchestrator.change_detection import (
     SinceReview,
 )
 from github_orchestrator.change_detection.fake import ReviewDecision
-from github_orchestrator.domain import Mention
+from github_orchestrator.domain import CiCheck, Mention
 from github_orchestrator.github import ReviewState
 from github_orchestrator.github.fake import Check, PushEvent, Review
 from tests.builders import a_pr
@@ -48,6 +48,22 @@ def test_the_checks_are_summed_up_as_failed_names_and_how_many_are_done(detectio
 
     assert facts.failed_checks == ("tests", "types")
     assert (facts.checks_done, facts.checks_total) == (3, 4)
+
+
+def test_each_check_keeps_how_it_stands_its_link_and_its_summary(detection):
+    running = Check("e2e", "in_progress", None, None, None)
+    detection.advance(THE_PR, poll(pr_state(checks=(failing("tests"), passing("lint"), running))),
+                      set())
+
+    facts = detection.facts(THE_PR)
+
+    assert facts.checks == (
+        CiCheck("tests", passed=False, failed=True, done=True,
+                url="https://ci/tests", summary="tests failed"),
+        CiCheck("lint", passed=True, failed=False, done=True,
+                url="https://ci/lint", summary="lint passed"),
+        CiCheck("e2e", passed=False, failed=False, done=False, url=None, summary=None),
+    )
 
 
 def test_the_reviewers_are_grouped_by_their_verdict_and_mine_is_picked_out(detection):

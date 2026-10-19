@@ -152,6 +152,7 @@ type Polled = Pick<
   | 'changes_requested_by'
   | 'pending_reviewers'
   | 'unresolved_threads'
+  | 'checks'
 >;
 
 const UNPOLLED: Polled = {
@@ -162,10 +163,20 @@ const UNPOLLED: Polled = {
   changes_requested_by: [],
   pending_reviewers: [],
   unresolved_threads: null,
+  checks: [],
 };
 
 function polledOf(shown: ShownPr): Polled {
   return shown.facts ?? UNPOLLED;
+}
+
+function failedOf(facts: Polled): string[] {
+  return facts.checks.filter((one) => one.failed).map((one) => one.name);
+}
+
+function checksDoneOf(facts: Polled): { done: number; total: number } {
+  const done = facts.checks.filter((one) => one.done).length;
+  return { done, total: facts.checks.length };
 }
 
 function unresolvedOf(facts: Polled): string {
@@ -220,8 +231,8 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
   const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
   switch (state) {
     case 'fix-ci':
-      return status.failed_checks.length
-        ? `Failed: ${listed(status.failed_checks)}`
+      return failedOf(facts).length
+        ? `Failed: ${listed(failedOf(facts))}`
         : 'Fix CI failures';
     case 'rebase':
       return facts.merge_state === 'conflicts'
@@ -238,7 +249,7 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'await-rereview':
       return `Waiting on ${listed(move.reviewers)} to re-review`;
     case 'await-ci':
-      return `${status.checks_done}/${status.checks_total} checks complete`;
+      return `${checksDoneOf(facts).done}/${checksDoneOf(facts).total} checks complete`;
     case 'review':
       return `${ci} · ${status.changed_files ?? '?'} files changed · ${reviewsSoFarOf(status, facts).replace(', ', ' · ')}`;
     case 'rereview':
@@ -469,8 +480,8 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
         ? 'requested changes and is not asked to review again'
         : 'requested changes and are not asked to review again';
     case 'fix-ci':
-      return status.failed_checks.length
-        ? `${listed(status.failed_checks)} failing`
+      return failedOf(facts).length
+        ? `${listed(failedOf(facts))} failing`
         : 'a check is failing';
     case 'rebase':
       return facts.merge_state === 'conflicts'
@@ -479,7 +490,7 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
     case 'ready-to-merge':
       return `${status.approved_by.length ? `approved by ${listed(status.approved_by)}` : 'no approval needed'}, ${ci}`;
     case 'await-ci':
-      return `${status.checks_done} of ${status.checks_total} checks done`;
+      return `${checksDoneOf(facts).done} of ${checksDoneOf(facts).total} checks done`;
     case 'await-rereview':
       return 'asked again after requesting changes';
     case 'await-review':
@@ -839,7 +850,7 @@ function chip(key: string, text: string, hint: string, tone: ChipTone): Chip {
 function ciChip(shown: ShownPr, code: Move): Chip | null {
   if (shown.facts?.ci_status !== 'failing' || code === 'fix-ci') return null;
   if (fixingNow(shown, 'ci')) return null;
-  const failed = shown.drawn.status.failed_checks;
+  const failed = failedOf(polledOf(shown));
   return chip(
     'ci',
     'CI failing',

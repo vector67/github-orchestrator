@@ -6,7 +6,7 @@ from typing import Protocol
 
 from starlette.types import ASGIApp
 
-from github_orchestrator.domain import HubState, Mention, Pr, Repo, ThreadRow
+from github_orchestrator.domain import CiCheck, HubState, Mention, Pr, Repo, ThreadRow
 
 
 class WallGroup(StrEnum):
@@ -53,9 +53,7 @@ class Dashboard:
     since_reviews: int
     since_comments: int
     since_resolved: int
-    failed_checks: tuple[str, ...]
-    checks_done: int
-    checks_total: int
+    checks: tuple[CiCheck, ...]
     changed_files: int | None
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]

@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import ClassVar, Protocol
 
-from github_orchestrator.domain import Mention, Pr, Repo
+from github_orchestrator.domain import CiCheck, Mention, Pr, Repo
 from github_orchestrator.github import PullRequestState
 
 
@@ -186,9 +186,7 @@ class Facts:
     mergeable: bool | None
     needs_rebase: bool
     review_decision: ReviewDecision | None
-    failed_checks: tuple[str, ...]
-    checks_done: int
-    checks_total: int
+    checks: tuple[CiCheck, ...]
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
@@ -211,6 +209,18 @@ class Facts:
     @property
     def ci_passed(self) -> bool:
         return self.ci_status is CiStatus.PASSING
+
+    @property
+    def failed_checks(self) -> tuple[str, ...]:
+        return tuple(check.name for check in self.checks if check.failed)
+
+    @property
+    def checks_done(self) -> int:
+        return sum(1 for check in self.checks if check.done)
+
+    @property
+    def checks_total(self) -> int:
+        return len(self.checks)
 
     @property
     def ticket(self) -> str | None:

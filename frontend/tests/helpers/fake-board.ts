@@ -1,5 +1,6 @@
 import type {
   AuthorKind,
+  CiCheck,
   Comment,
   Conversation,
   ConversationState,
@@ -292,6 +293,20 @@ export function threadRow(
   return { key, state, record_state, author_kind, updated_at };
 }
 
+export function check(
+  name: string,
+  state: 'passed' | 'failed' | 'running' = 'passed',
+): CiCheck {
+  return {
+    name,
+    passed: state === 'passed',
+    failed: state === 'failed',
+    done: state !== 'running',
+    url: `https://ci.example/${name}`,
+    summary: null,
+  };
+}
+
 export function prFacts(over: Partial<PrFacts> = {}): PrFacts {
   return {
     polled_at: '2026-09-12T08:30:00Z',
@@ -300,6 +315,7 @@ export function prFacts(over: Partial<PrFacts> = {}): PrFacts {
     changes_requested_by: [],
     pending_reviewers: ['carol'],
     ci_status: 'passing',
+    checks: ['build', 'lint', 'tests', 'types'].map((name) => check(name)),
     merge_state: 'blocked',
     draft: false,
     review_decision: null,
@@ -413,9 +429,6 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       last_event_at: '2026-09-12T08:30:00Z',
       review_ready_at: '2026-09-11T08:00:00Z',
       since_you_last_acted: null,
-      failed_checks: [],
-      checks_done: 4,
-      checks_total: 4,
       changed_files: 3,
       approved_by: [],
       ...status,

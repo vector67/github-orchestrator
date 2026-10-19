@@ -1276,9 +1276,6 @@ class DashboardStatus(BaseModel):
     since_you_last_acted: SinceYouActed | None = Field(
         description="Null on your own pull requests and before your first "
                     "review.")
-    failed_checks: list[str] = Field(description="The checks failing on the head commit.")
-    checks_done: int
-    checks_total: int
     changed_files: int | None
     approved_by: list[str]
 
@@ -1325,6 +1322,18 @@ class MergeState(StrEnum):
     OTHER = "other"
 
 
+class CiCheck(BaseModel):
+    """One check on the head commit, as the watcher last polled it."""
+
+    name: str
+    passed: bool
+    failed: bool
+    done: bool = Field(description="It has finished, whatever its outcome.")
+    url: str | None = Field(description="Its page on the CI. Null where GitHub did not say.")
+    summary: str | None = Field(
+        description="What the check said of its run. Null where it said nothing.")
+
+
 class MentionFact(BaseModel):
     author: str
     at: str | None = Field(description="When they wrote it. Null where GitHub did not say.")
@@ -1347,6 +1356,7 @@ class PrFacts(BaseModel):
     pending_reviewers: list[str] = Field(
         description="Reviewers asked for a review who have not given one.")
     ci_status: str = Field(description="`passing`, `failing`, `pending`, or `none` when the head has no checks.")
+    checks: list[CiCheck] = Field(description="Every check on the head commit.")
     merge_state: MergeState | None = Field(
         description="Null where GitHub did not say.")
     draft: bool

@@ -70,6 +70,15 @@ export interface BriefRequest {
 
 export type CapturedGit = 'f' | 'p' | 'pra' | 's' | 'l' | 'd';
 
+export interface CiCheck {
+  name: string;
+  passed: boolean;
+  failed: boolean;
+  done: boolean;
+  url: string | null;
+  summary: string | null;
+}
+
 export type Classification = 'risky' | 'unclear' | 'out-of-scope' | 'already-done' | 'acknowledgement' | 'question' | 'needs-human';
 
 export interface ClientError {
@@ -204,9 +213,6 @@ export interface DashboardStatus {
   last_event_at: string | null;
   review_ready_at: string | null;
   since_you_last_acted: SinceYouActed | null;
-  failed_checks: string[];
-  checks_done: number;
-  checks_total: number;
   changed_files: number | null;
   approved_by: string[];
 }
@@ -571,6 +577,7 @@ export interface PrFacts {
   changes_requested_by: string[];
   pending_reviewers: string[];
   ci_status: string;
+  checks: CiCheck[];
   merge_state: MergeState | null;
   draft: boolean;
   review_decision: string | null;

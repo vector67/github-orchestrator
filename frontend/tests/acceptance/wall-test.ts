@@ -14,6 +14,7 @@ import {
 } from '@ember/test-helpers';
 import type { HeldPullRequest, ThreadCounts } from 'frontend/data/api';
 import {
+  check,
   factsFor,
   finishedRun,
   heldPr,
@@ -532,8 +533,9 @@ module('Acceptance | wall', function (hooks) {
   test('each row’s reason explains its move, from the facts the board sends', async function (assert) {
     onTheHub(
       needing(1, {
-        facts: factsFor('fix-ci'),
-        status: { failed_checks: ['lint', 'unit'] },
+        facts: factsFor('fix-ci', {
+          checks: [check('lint', 'failed'), check('unit', 'failed')],
+        }),
       }),
       needing(2, { facts: factsFor('fix-ci') }),
       needing(3, { facts: factsFor('rebase') }),
@@ -556,8 +558,15 @@ module('Acceptance | wall', function (hooks) {
         facts: factsFor('request-reviewers'),
       }),
       needing(9, {
-        facts: factsFor('await-ci'),
-        status: { checks_done: 2, checks_total: 5 },
+        facts: factsFor('await-ci', {
+          checks: [
+            check('build'),
+            check('lint'),
+            check('tests', 'running'),
+            check('types', 'running'),
+            check('e2e', 'running'),
+          ],
+        }),
       }),
       needing(10, {
         facts: factsFor('review', { ci_status: 'failing' }),
@@ -633,8 +642,9 @@ module('Acceptance | wall', function (hooks) {
           facts: factsFor('ready-to-merge', {
             ci_status: 'pending',
             review_decision: null,
+            checks: [],
           }),
-          status: { approved_by: [], checks_done: 0, checks_total: 0 },
+          status: { approved_by: [] },
         },
       }),
     );
@@ -864,8 +874,11 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         dashboard: {
-          facts: factsFor('fix-ci'),
-          status: { failed_checks: [`${RLO}tnil`, 'build', 'deploy'] },
+          facts: factsFor('fix-ci', {
+            checks: [`${RLO}tnil`, 'build', 'deploy'].map((name) =>
+              check(name, 'failed'),
+            ),
+          }),
         },
       }),
     );
@@ -888,11 +901,9 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         dashboard: {
-          status: {
-            mergeable: false,
-            failed_checks: ['unit-tests'],
-          },
+          status: { mergeable: false },
           facts: factsFor('fix-ci', {
+            checks: [check('unit-tests', 'failed')],
             review_decision: 'changes-requested',
             merge_state: 'conflicts',
           }),

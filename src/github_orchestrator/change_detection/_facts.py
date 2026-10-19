@@ -9,6 +9,7 @@ from github_orchestrator.change_detection.interface import (
     ReviewerStatus,
     SinceReview,
 )
+from github_orchestrator.domain import CiCheck
 
 
 def _reviewers_who(words: Words, status: ReviewerStatus) -> tuple[str, ...]:
@@ -35,6 +36,12 @@ def _since_review(snapshot: dict[str, Any]) -> SinceReview | None:
         comments=snapshot.get("since_anchor_comments", 0),
         resolved=snapshot.get("since_anchor_resolved", 0),
     )
+
+
+def _check(check: dict[str, Any]) -> CiCheck:
+    return CiCheck(name=check["name"], passed=bool(check.get("passed")),
+                   failed=bool(check.get("failed")), done=bool(check.get("done")),
+                   url=check.get("html_url"), summary=check.get("summary"))
 
 
 def _text(snapshot: dict[str, Any], key: str) -> str | None:
@@ -77,9 +84,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         mergeable=_mergeable(snapshot, words),
         needs_rebase=words.mergeability in REBASE_STATES,
         review_decision=words.decision,
-        failed_checks=tuple(c["name"] for c in checks if c.get("failed")),
-        checks_done=sum(1 for c in checks if c.get("done")),
-        checks_total=len(checks),
+        checks=tuple(_check(c) for c in checks),
         approved_by=_reviewers_who(words, ReviewerStatus.APPROVED),
         changes_requested_by=_reviewers_who(words, ReviewerStatus.CHANGES_REQUESTED),
         pending_reviewers=tuple(_pending_reviewers(snapshot)),

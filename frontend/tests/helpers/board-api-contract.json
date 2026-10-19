@@ -1785,6 +1785,51 @@
    ],
    "type": "string"
   },
+  "CiCheck": {
+   "properties": {
+    "done": {
+     "type": "boolean"
+    },
+    "failed": {
+     "type": "boolean"
+    },
+    "name": {
+     "type": "string"
+    },
+    "passed": {
+     "type": "boolean"
+    },
+    "summary": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "name",
+    "passed",
+    "failed",
+    "done",
+    "url",
+    "summary"
+   ],
+   "type": "object"
+  },
   "Classification": {
    "enum": [
     "risky",
@@ -2539,12 +2584,6 @@
       }
      ]
     },
-    "checks_done": {
-     "type": "integer"
-    },
-    "checks_total": {
-     "type": "integer"
-    },
     "detailed_reviewer": {
      "anyOf": [
       {
@@ -2554,12 +2593,6 @@
        "type": "null"
       }
      ]
-    },
-    "failed_checks": {
-     "items": {
-      "type": "string"
-     },
-     "type": "array"
     },
     "last_event_at": {
      "anyOf": [
@@ -2616,9 +2649,6 @@
     "last_event_at",
     "review_ready_at",
     "since_you_last_acted",
-    "failed_checks",
-    "checks_done",
-    "checks_total",
     "changed_files",
     "approved_by"
    ],
@@ -4701,6 +4731,12 @@
      },
      "type": "array"
     },
+    "checks": {
+     "items": {
+      "$ref": "#/components/schemas/CiCheck"
+     },
+     "type": "array"
+    },
     "ci_status": {
      "type": "string"
     },
@@ -4806,6 +4842,7 @@
     "changes_requested_by",
     "pending_reviewers",
     "ci_status",
+    "checks",
     "merge_state",
     "draft",
     "review_decision",

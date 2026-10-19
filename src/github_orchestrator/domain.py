@@ -136,6 +136,16 @@ class Location:
 
 
 @dataclass(frozen=True)
+class CiCheck:
+    name: str
+    passed: bool
+    failed: bool
+    done: bool
+    url: str | None
+    summary: str | None
+
+
+@dataclass(frozen=True)
 class Mention:
     author: str
     at: str | None

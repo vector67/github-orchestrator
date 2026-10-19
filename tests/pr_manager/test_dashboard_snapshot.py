@@ -24,8 +24,8 @@ def test_the_dashboard_holds_the_pr_and_its_status_as_values(settings, tmp_path)
     assert (dashboard.detailed_reviewer, dashboard.is_detailed_reviewer) == ("carol", False)
     assert (dashboard.last_event_at, dashboard.review_ready_at) == (
         "2026-06-10T10:30:00+00:00", "2026-06-09T08:00:00Z")
-    assert (dashboard.changes_requested_by, dashboard.failed_checks) == (
-        ("bob",), ("unit-tests",))
+    assert dashboard.changes_requested_by == ("bob",)
+    assert [check.name for check in dashboard.checks if check.failed] == ["unit-tests"]
     assert dashboard.since_commits is None
 
 

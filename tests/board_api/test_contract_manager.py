@@ -31,7 +31,6 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                    "mergeable": True, "needs_rebase": True,
                    "last_event_at": "2026-06-10T10:30:00Z",
                    "review_ready_at": "2026-06-09T08:00:00Z", "since_you_last_acted": None,
-                   "failed_checks": [], "checks_done": 4, "checks_total": 4,
                    "changed_files": 7, "approved_by": []},
         "system": {
             "agent": {"name": "Agent", "enabled": True, "state": "working",
@@ -49,7 +48,10 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
         "standing": "answering",
         "facts": {"polled_at": "2026-06-10T10:30:00Z", "ended": False, "is_author": True,
                   "changes_requested_by": [], "pending_reviewers": ["carol"],
-                  "ci_status": "passing", "merge_state": "clean", "draft": False,
+                  "ci_status": "passing",
+                  "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
+                              "url": "https://ci/tests", "summary": "tests passed"}],
+                  "merge_state": "clean", "draft": False,
                   "review_decision": None, "my_review": None, "my_review_at": None,
                   "viewer_requested": False, "mentioned": False, "mentions": [],
                   "unresolved_threads": 0},
@@ -79,6 +81,8 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
     assert answer["facts"] == {
         "polled_at": "2026-10-08T09:00:00Z", "ended": False, "is_author": True,
         "changes_requested_by": ["bob"], "pending_reviewers": ["carol"], "ci_status": "passing",
+        "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
+                    "url": "https://ci/tests", "summary": "tests passed"}],
         "merge_state": "behind", "draft": True, "review_decision": "changes-requested",
         "my_review": "approved", "my_review_at": "2026-10-07T12:00:00Z",
         "viewer_requested": True, "mentioned": True,

@@ -482,8 +482,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
                 commits=dashboard.since_commits, force_pushed=dashboard.since_force_push,
                 reviews=dashboard.since_reviews, comments=dashboard.since_comments,
                 threads_resolved=dashboard.since_resolved),
-            failed_checks=list(dashboard.failed_checks), checks_done=dashboard.checks_done,
-            checks_total=dashboard.checks_total, changed_files=dashboard.changed_files,
+            changed_files=dashboard.changed_files,
             approved_by=list(dashboard.approved_by)),
         system=contract.DashboardSystem(
             agent=contract.AgentActivity(
@@ -530,6 +529,9 @@ def _facts_of(dashboard: Dashboard) -> contract.PrFacts:
         polled_at=dashboard.polled_at, ended=dashboard.ended, is_author=dashboard.is_author,
         changes_requested_by=list(dashboard.changes_requested_by),
         pending_reviewers=list(dashboard.pending_reviewers), ci_status=dashboard.ci,
+        checks=[contract.CiCheck(name=check.name, passed=check.passed, failed=check.failed,
+                                 done=check.done, url=check.url, summary=check.summary)
+                for check in dashboard.checks],
         merge_state=None if dashboard.merge_state is None
         else contract.MergeState(dashboard.merge_state),
         draft=dashboard.draft, review_decision=dashboard.review_decision,
