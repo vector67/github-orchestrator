@@ -19,13 +19,19 @@ export type Control =
   | 'hold'
   | 'carry-on'
   | 'start-review'
+  | 'mark-ready'
   | 'dismiss'
   | 'close'
   | 'git'
   | 'release';
 
 export type Pressed =
-  'nothing' | 'done' | 'palette' | 'confirm-dismiss' | 'confirm-close';
+  | 'nothing'
+  | 'done'
+  | 'palette'
+  | 'confirm-dismiss'
+  | 'confirm-close'
+  | 'confirm-ready';
 
 export interface Controlled {
   number: number;
@@ -56,6 +62,8 @@ const HINTS = {
     'Starts a review agent as a review request does, for when the automatic one went wrong: a re-review when you have reviewed before',
   dismiss:
     'Takes this PR off the wall, until its next event or forever; you choose after the click',
+  'mark-ready':
+    'Marks this draft ready for review on GitHub, after you confirm with what is still outstanding in front of you',
 };
 
 const BOARD_DOWN = {
@@ -64,6 +72,8 @@ const BOARD_DOWN = {
     'Start a review agent waits for the manager’s board, which is not answering.',
   dismiss: 'Dismiss goes through the manager’s board, which is not answering.',
   close: 'Close goes through the manager’s board, which is not answering.',
+  'mark-ready':
+    'Ready for review goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
 };
 
@@ -128,6 +138,8 @@ function offerOf(
     };
   }
   if (control === 'close' && !on.yours) return ABSENT;
+  if (control === 'mark-ready' && !(on.yours && shown.facts?.draft))
+    return ABSENT;
   if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
   const why = heldBackOf(control, shown);
   if (why) return held(why);
@@ -142,6 +154,7 @@ const KEYS: Record<Control, string> = {
   hold: 'h',
   'carry-on': 'c',
   'start-review': 'a',
+  'mark-ready': 'r',
   dismiss: 'd',
   close: 'Q',
   git: 'g',
@@ -159,7 +172,8 @@ export function capOfControl(control: Control): string {
   return capOf(KEYS[control]);
 }
 
-type Command = 'hold' | 'carry-on' | 'start-review' | 'close' | 'release';
+type Command =
+  'hold' | 'carry-on' | 'start-review' | 'mark-ready' | 'close' | 'release';
 
 export default class PrControlsService extends Service {
   @service declare dashboard: DashboardService;
@@ -221,12 +235,19 @@ export default class PrControlsService extends Service {
     if (offer.state !== 'ready') return 'done';
     if (control === 'dismiss') return 'confirm-dismiss';
     if (control === 'close') return 'confirm-close';
+    if (control === 'mark-ready') {
+      void waitForPromise(this.readOutstanding(on));
+      return 'confirm-ready';
+    }
     if (control === 'git') return 'palette';
     void this.carryOut(on, control);
     return 'done';
   }
 
   close = (on: Controlled): Promise<void> => this.carryOut(on, 'close');
+
+  markReady = (on: Controlled): Promise<void> =>
+    this.carryOut(on, 'mark-ready');
 
   dismiss = (on: Controlled, forever: boolean): Promise<void> =>
     waitForPromise(this.dismissing(on, forever));
@@ -279,6 +300,28 @@ export default class PrControlsService extends Service {
         'done',
       );
     }
+    if (control === 'mark-ready') {
+      this.toasts.say(
+        `Asked GitHub to mark #${on.number} ready for review.`,
+        'done',
+      );
+    }
+  }
+
+  private async readOutstanding(on: Controlled): Promise<void> {
+    const pr = on.shown;
+    if (on.showing === 'hub') {
+      const asked = await this.store
+        .ask({ kind: 'conversations', pr }, null)
+        .catch(() => null);
+      if (asked?.changed) asked.take();
+    }
+    const unread = this.store.outstanding(pr.repo, pr.number)?.unread ?? [];
+    await Promise.all(
+      unread.map((key) =>
+        this.store.readThread(pr, key).catch(() => undefined),
+      ),
+    );
   }
 
   private async dismissing(on: Controlled, forever: boolean): Promise<void> {

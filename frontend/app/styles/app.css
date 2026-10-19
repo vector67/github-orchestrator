@@ -1255,6 +1255,49 @@ button.copy-directory {
   white-space: nowrap;
 }
 
+.decide-dialog .outstanding {
+  border-top: 1px solid var(--hairline);
+}
+
+.decide-dialog .outstanding-kind {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.decide-dialog .outstanding-kind > summary {
+  padding: 6px 0;
+  font-size: var(--fs-m);
+  cursor: pointer;
+}
+
+.decide-dialog .outstanding-kind > .commit-files {
+  margin: 0 0 8px 22px;
+}
+
+.decide-dialog .outstanding-count {
+  display: inline-block;
+  min-width: 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: var(--fw-strong);
+  text-align: right;
+}
+
+.decide-dialog .outstanding-what {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decide-dialog .outstanding-placeholder {
+  flex: none;
+  width: 14em;
+  height: 0.9em;
+  margin-top: 0.35em;
+  background: var(--hairline);
+}
+
 .decide-dialog .note {
   margin: 0;
   font-size: var(--fs-m);

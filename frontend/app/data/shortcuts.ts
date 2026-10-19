@@ -74,6 +74,10 @@ export const SHORTCUTS: ShortcutGroup[] = [
         keys: [capOfControl('start-review')],
         does: 'Start a review agent, where the next move is a review',
       },
+      {
+        keys: [capOfControl('mark-ready')],
+        does: 'Ready for review, after you confirm',
+      },
       { keys: [capOfControl('close')], does: 'Close the pull request' },
       { keys: [capOfControl('dismiss')], does: 'Dismiss' },
       { keys: [capOfControl('git')], does: 'Git palette' },
@@ -98,6 +102,10 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { keys: ['Enter'], does: 'Open the chosen one' },
       { keys: [capOfControl('hold')], does: 'Put on hold or resume' },
       { keys: [capOfControl('carry-on')], does: 'Carry on' },
+      {
+        keys: [capOfControl('mark-ready')],
+        does: 'Ready for review, after you confirm',
+      },
       { keys: [capOfControl('dismiss')], does: 'Dismiss' },
       { keys: [capOfControl('release')], does: 'Release a frozen worktree' },
       { keys: ['o'], does: 'Open on GitHub' },

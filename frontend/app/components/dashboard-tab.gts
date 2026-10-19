@@ -36,10 +36,11 @@ import {
   type Offer,
 } from 'frontend/services/pr-controls';
 import type StoreService from 'frontend/services/store';
-import type { Summaries } from 'frontend/services/store';
+import type { Outstanding, Summaries } from 'frontend/services/store';
 import type TerminalService from 'frontend/services/terminal';
 import type ToastsService from 'frontend/services/toasts';
 import modal from 'frontend/modifiers/modal';
+import ReadyConfirm from 'frontend/components/ready-confirm';
 
 type Pane = 'notes' | 'agent';
 
@@ -47,6 +48,7 @@ const KEYED = [
   'hold',
   'carry-on',
   'start-review',
+  'mark-ready',
   'dismiss',
   'close',
   'git',
@@ -71,7 +73,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: 'dismiss' | 'close' | null = null;
+  @tracked asking: 'dismiss' | 'close' | 'ready' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -192,6 +194,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     const next = this.controls.press(this.on, control);
     if (next === 'confirm-dismiss') this.asking = 'dismiss';
     else if (next === 'confirm-close') this.asking = 'close';
+    else if (next === 'confirm-ready') this.asking = 'ready';
     else if (next === 'palette') this.palette.open();
     return next !== 'nothing';
   };
@@ -211,6 +214,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     const on = this.on;
     if (on) void this.controls.close(on);
   };
+
+  markReady = () => {
+    this.cancelAsking();
+    const on = this.on;
+    if (on) void this.controls.markReady(on);
+  };
+
+  get outstanding(): Outstanding | null {
+    const pr = this.here.pr;
+    return pr ? this.store.outstanding(pr.repo, pr.number) : null;
+  }
 
   closeSubmitted = (event: Event) => {
     event.preventDefault();
@@ -299,17 +313,6 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   {{on "click" this.toBoard}}
                 >Open the Board <kbd>1</kbd></button>
               {{/if}}
-              {{#if (this.offered "close")}}
-                <button
-                  type="button"
-                  class="btn danger"
-                  disabled={{this.heldBack "close"}}
-                  title={{this.titleOf "close"}}
-                  data-test-control="close"
-                  {{on "click" (fn this.press "close")}}
-                >Close PR #{{this.reading.number}}
-                  <kbd>{{capOfControl "close"}}</kbd></button>
-              {{/if}}
               {{#if this.reading.onHold}}
                 <button
                   type="button"
@@ -346,6 +349,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 >Start a review agent
                   <kbd>{{capOfControl "start-review"}}</kbd></button>
               {{/if}}
+              {{#if (this.offered "mark-ready")}}
+                <button
+                  type="button"
+                  class="btn"
+                  disabled={{this.heldBack "mark-ready"}}
+                  title={{this.titleOf "mark-ready"}}
+                  data-test-control="mark-ready"
+                  {{on "click" (fn this.press "mark-ready")}}
+                >Ready for review
+                  <kbd>{{capOfControl "mark-ready"}}</kbd></button>
+              {{/if}}
               <button
                 type="button"
                 class="btn"
@@ -355,6 +369,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 {{on "click" (fn this.press "dismiss")}}
               >Dismiss #{{this.reading.number}}
                 <kbd>{{capOfControl "dismiss"}}</kbd></button>
+              {{#if (this.offered "close")}}
+                <button
+                  type="button"
+                  class="btn danger"
+                  disabled={{this.heldBack "close"}}
+                  title={{this.titleOf "close"}}
+                  data-test-control="close"
+                  {{on "click" (fn this.press "close")}}
+                >Close PR #{{this.reading.number}}
+                  <kbd>{{capOfControl "close"}}</kbd></button>
+              {{/if}}
             {{/if}}
           </div>
         </section>
@@ -394,6 +419,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
               </div>
             </form>
           </div>
+        {{/if}}
+        {{#if (eq this.asking "ready")}}
+          <ReadyConfirm
+            @number={{this.reading.number}}
+            @outstanding={{this.outstanding}}
+            @mark={{this.markReady}}
+            @cancel={{this.cancelAsking}}
+          />
         {{/if}}
         {{#if (eq this.asking "dismiss")}}
           <DismissConfirm

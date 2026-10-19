@@ -7,6 +7,7 @@ import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
+import ReadyConfirm from 'frontend/components/ready-confirm';
 import HubBar from 'frontend/components/hub-bar';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
@@ -14,7 +15,11 @@ import { ageOf, dashboardOf, type Reading } from 'frontend/data/dashboard';
 import { failingOf, keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
-import type { WallRow, WallSection } from 'frontend/services/store';
+import type {
+  Outstanding,
+  WallRow,
+  WallSection,
+} from 'frontend/services/store';
 import type KeysService from 'frontend/services/keys';
 import { stepped, type Keymap } from 'frontend/services/keys';
 import type PrControlsService from 'frontend/services/pr-controls';
@@ -28,7 +33,7 @@ import { moves, pulses, selects } from 'frontend/motion';
 
 const same = (one: unknown, other: unknown): boolean => one === other;
 
-const KEYED = ['hold', 'carry-on', 'dismiss', 'release'] as const;
+const KEYED = ['hold', 'carry-on', 'mark-ready', 'dismiss', 'release'] as const;
 
 const FOLDABLE = 'parked';
 const PARKED_FOLDED = 'wall-parked-folded';
@@ -50,6 +55,7 @@ export default class Wall extends Component {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
+  @tracked readying: Pick<WallRow, 'key' | 'arrived'> | null = null;
   @tracked parkedFolded = foldedBefore();
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
@@ -128,6 +134,17 @@ export default class Wall extends Component {
   isConfirming = (pr: WallRow): boolean =>
     pr.key === this.confirming?.key && pr.arrived === this.confirming.arrived;
 
+  isReadying = (pr: WallRow): boolean =>
+    pr.key === this.readying?.key && pr.arrived === this.readying.arrived;
+
+  outstandingOf = (pr: WallRow): Outstanding | null =>
+    this.store.outstanding(pr.repo, pr.number);
+
+  markReady = (pr: WallRow) => {
+    this.readying = null;
+    void this.controls.markReady(this.controls.ofRow(pr));
+  };
+
   open = (pr: WallRow) => {
     void this.router.transitionTo(pageOf(pr));
   };
@@ -158,11 +175,14 @@ export default class Wall extends Component {
     const next = this.controls.press(this.controls.ofRow(pr), control);
     if (next === 'confirm-dismiss')
       this.confirming = { key: pr.key, arrived: pr.arrived };
+    if (next === 'confirm-ready')
+      this.readying = { key: pr.key, arrived: pr.arrived };
     return next !== 'nothing';
   }
 
   cancel = () => {
     this.confirming = null;
+    this.readying = null;
   };
 
   private move(by: number): void {
@@ -358,6 +378,14 @@ export default class Wall extends Component {
                   @number={{pr.number}}
                   @wording={{reading.dismiss}}
                   @dismiss={{fn this.dismiss pr}}
+                  @cancel={{this.cancel}}
+                />
+              {{/if}}
+              {{#if (this.isReadying pr)}}
+                <ReadyConfirm
+                  @number={{pr.number}}
+                  @outstanding={{this.outstandingOf pr}}
+                  @mark={{fn this.markReady pr}}
                   @cancel={{this.cancel}}
                 />
               {{/if}}

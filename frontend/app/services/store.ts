@@ -81,6 +81,7 @@ import {
   detailsOf,
   enteredAt,
   filesOf,
+  outstandingOf,
   placeOf,
   prHeaderOf,
   readOf,
@@ -89,6 +90,7 @@ import {
   summaryTabOf,
   wallOf,
   type Entered,
+  type Outstanding,
   type Place,
   type PrHeader,
   type Shown,
@@ -104,6 +106,8 @@ export type {
   Flag,
   Move,
   NextMove,
+  Outstanding,
+  OutstandingGroup,
   PrHeader,
   Summaries,
   SummaryState,
@@ -408,6 +412,12 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  outstanding(repo: string, number: number): Outstanding | null {
+    const key = keyOf(repo, number);
+    const pr = this.prs[key];
+    return pr ? outstandingOf(pr, this.threads[key]) : null;
   }
 
   prHeader(repo: string, number: number): PrHeader | null {

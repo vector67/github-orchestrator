@@ -392,6 +392,7 @@ PR frozen on the wrong branch has a **Release** button on its row.
 | `Enter`   | open the selected PR                                                    |
 | `h`       | put the selected PR on hold, or resume one on hold                      |
 | `c`       | carry on its agent's last run                                           |
+| `r`       | ask to mark your draft ready for review: `y` marks it, `Esc` cancels    |
 | `d`       | ask to dismiss it: `u` until the next event, `f` forever, `Esc` cancels |
 | `o`       | open the PR on GitHub                                                   |
 | `y`       | copy the PR's link                                                      |
@@ -464,9 +465,13 @@ The band at the top has your move and why, and the buttons: **Open the Board**
 (`1`) when threads wait for you, **Put on hold** or **Resume the agent**
 (`h`), **Carry on** (`c`), **Start a review agent** (`a`) when your move is to
 review or re-review, which starts the review agent a review request would, for
-when the automatic one went wrong, **Git** (`g`), **Terminal** (`t`), **Close PR #N**
-(`⇧Q`, then `y`), which closes the PR on GitHub, and **Dismiss #N** (`d`, then
-`u` or `f`), which takes the PR off the wall. Each button's tooltip says what
+when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
+own draft, which first lists what is still outstanding (unsent drafts, Board
+threads waiting on you, unresolved review threads, failing CI, a needed rebase,
+unpushed commits and agent work) and then marks it ready on GitHub, **Git**
+(`g`), **Terminal** (`t`), **Dismiss #N** (`d`, then `u` or `f`), which takes the
+PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
+GitHub. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
 Unpushed in the System block is the count behind the wall's unpushed chip.
@@ -694,7 +699,7 @@ and a click opens one too. Clicking the open row again, pressing Escape, or the
 panel's `×` closes it. The decision keys act on the open thread and do nothing
 while the panel is closed, and `c` opens its reply box. A letter that reaches
 GitHub or stops work here never does something harmless on another tab: reject
-is `⇧R`, because `r` is Carry on on the Dashboard, and post now is `⇧G`, because
+is `⇧R`, because `r` is Ready for review on the Dashboard, and post now is `⇧G`, because
 `g` is the git palette there. `?` shows the keys, with a capital written `⇧R`.
 
 The rail is grouped, under a heading that carries the group's name and how many

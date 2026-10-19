@@ -452,6 +452,186 @@ export function summaryOf(
   return summary;
 }
 
+export type OutstandingKind =
+  'drafts' | 'board' | 'unresolved' | 'ci' | 'rebase' | 'unpushed' | 'agent';
+
+export interface OutstandingItem {
+  key: string;
+  where: string;
+  what: string | null;
+}
+
+export interface OutstandingGroup {
+  kind: OutstandingKind;
+  label: string;
+  items: OutstandingItem[];
+}
+
+export interface Outstanding {
+  groups: OutstandingGroup[];
+  total: number;
+  unread: string[];
+}
+
+const OUTSTANDING_LABELS: Record<OutstandingKind, string> = {
+  drafts: 'Unsent draft comments',
+  board: 'Board threads waiting on you',
+  unresolved: 'Unresolved review threads',
+  ci: 'Failing CI',
+  rebase: 'Needs a rebase',
+  unpushed: 'Unpushed commits',
+  agent: 'Agent still working',
+};
+
+function whereOf(one: Thread): string {
+  const path = one.anchor?.path;
+  if (!path) return 'conversation';
+  return one.anchor?.line ? `${path}:${one.anchor.line}` : path;
+}
+
+function questionOf(one: Thread): string | null {
+  const first = one.comments?.[0];
+  return first?.body === undefined ? null : `${first.author}: ${first.body}`;
+}
+
+function threadItem(one: Thread, what: string | null): OutstandingItem {
+  return { key: one.key, where: whereOf(one), what };
+}
+
+function unresolvedOf(
+  all: Thread[],
+  facts: PrFacts | null,
+): { items: OutstandingItem[]; unread: string[] } {
+  const open = all.filter(
+    (one) => one.kind === 'review' && one.github_resolved === false,
+  );
+  const items = open.map((one) => threadItem(one, questionOf(one)));
+  const more = (facts?.unresolved_threads ?? 0) - open.length;
+  if (more > 0) {
+    items.push({
+      key: 'more-unresolved',
+      where: 'GitHub',
+      what: `${more} more unresolved on GitHub`,
+    });
+  }
+  return {
+    items,
+    unread: open
+      .filter((one) => questionOf(one) === null)
+      .map((one) => one.key),
+  };
+}
+
+function rebaseOf(pr: PrEntity): OutstandingItem[] {
+  const facts = pr.facts;
+  if (!facts || !behindMain(facts)) return [];
+  const base = pr.drawn?.system.base ?? null;
+  const onto = pr.base_branch ?? 'the base';
+  const standing = base
+    ? `${base.behind_by} commits behind`
+    : facts.merge_state === 'conflicts'
+      ? 'conflicts'
+      : 'behind';
+  return [
+    { key: 'base', where: onto, what: standing },
+    ...(base?.conflicts ?? []).map((path) => ({
+      key: `conflict:${path}`,
+      where: path,
+      what: 'conflicts',
+    })),
+  ];
+}
+
+function agentOutstandingOf(pr: PrEntity): OutstandingItem[] {
+  const system = pr.drawn?.system;
+  if (!system) return [];
+  const working: OutstandingItem[] =
+    system.agent.state === 'working'
+      ? [
+          {
+            key: 'agent',
+            where: system.agent.name,
+            what: `working on ${system.agent.event ?? 'a run'}`,
+          },
+        ]
+      : [];
+  return [
+    ...working,
+    ...system.queue.map((queued, at) => ({
+      key: `queued:${at}`,
+      where: 'queued',
+      what: queued.event ?? 'an event',
+    })),
+  ];
+}
+
+function outstandingFrom(
+  pr: PrEntity,
+  threads: Threads | undefined,
+): Outstanding {
+  const all = Object.values(threads ?? {});
+  const facts = pr.facts;
+  const unresolved = unresolvedOf(all, facts);
+  const items: Record<OutstandingKind, OutstandingItem[]> = {
+    drafts: all
+      .filter((one) => one.state === 'draft')
+      .map((one) => threadItem(one, one.gist ?? 'unsent comment')),
+    board:
+      roleOf(facts) === 'author'
+        ? all
+            .filter(
+              (one) =>
+                one.state === 'ready' &&
+                one.author_kind !== 'mine' &&
+                !LEFT_OUT.includes(one.record_state),
+            )
+            .map((one) => threadItem(one, one.gist ?? 'waiting on you'))
+        : [],
+    unresolved: unresolved.items,
+    ci: (facts?.checks ?? [])
+      .filter((one) => one.failed)
+      .map((one) => ({
+        key: `check:${one.name}`,
+        where: one.name,
+        what: one.summary ?? 'failed',
+      })),
+    rebase: rebaseOf(pr),
+    unpushed: (pr.drawn?.system.unpushed_commits ?? []).map((commit) => ({
+      key: `commit:${commit.sha}`,
+      where: commit.sha,
+      what: commit.subject,
+    })),
+    agent: agentOutstandingOf(pr),
+  };
+  const groups = (Object.keys(OUTSTANDING_LABELS) as OutstandingKind[])
+    .filter((kind) => items[kind].length)
+    .map((kind) => ({
+      kind,
+      label: OUTSTANDING_LABELS[kind],
+      items: items[kind],
+    }));
+  return {
+    groups,
+    total: groups.reduce((sum, group) => sum + group.items.length, 0),
+    unread: unresolved.unread,
+  };
+}
+
+const outstandingMemo = new WeakMap<object, WeakMap<object, Outstanding>>();
+
+export function outstandingOf(
+  pr: PrEntity,
+  threads: Threads | undefined,
+): Outstanding {
+  const byPr = outstandingMemo.get(pr) ?? new WeakMap<object, Outstanding>();
+  outstandingMemo.set(pr, byPr);
+  const known = byPr.get(threads ?? NONE);
+  if (known) return known;
+  const found = outstandingFrom(pr, threads);
+  byPr.set(threads ?? NONE, found);
+  return found;
+}
+
 const counted = new WeakMap<Diff, FileStat[]>();
 
 export function filesOf(diff: Diff): FileStat[] {

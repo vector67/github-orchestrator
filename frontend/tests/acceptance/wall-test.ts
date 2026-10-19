@@ -1709,6 +1709,27 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
+  test('r on your draft asks the ready question, and y marks it ready', async function (assert) {
+    onTheHub(heldPr({ dashboard: { facts: { draft: true } } }));
+    await visit('/');
+    await press('j');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('Mark #7 ready for review?');
+    assert.deepEqual(board().posted, []);
+
+    await press('y');
+
+    assert.deepEqual(
+      board().posted.map((one) => one.url),
+      ['/pr/o/r/7/api/manager:mark-ready'],
+    );
+    assert.dom('[data-test-ready-confirm]').doesNotExist();
+  });
+
   test('the dismiss question takes the focus and holds j and k', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
