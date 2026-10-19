@@ -303,18 +303,18 @@ def test_the_next_poll_is_due_a_poll_interval_after_the_last(settings):
 
 
 def test_a_poll_gap_past_two_intervals_and_the_grace_is_overdue():
-    late = Health(alive=True, since_last_poll=timedelta(seconds=241), last_error=None, fix=None,
-                  polls_every=timedelta(minutes=1))
+    late = Health(alive=True, polled_at=NOW - timedelta(seconds=241), read_at=NOW,
+                  last_error=None, fix=None, polls_every=timedelta(minutes=1))
 
     assert late.overdue
 
 
 def test_the_overdue_threshold_scales_with_the_poll_interval():
     polls_every = timedelta(minutes=5)
-    within = Health(alive=True, since_last_poll=timedelta(minutes=11), last_error=None, fix=None,
-                    polls_every=polls_every)
-    past = Health(alive=True, since_last_poll=timedelta(minutes=13), last_error=None, fix=None,
-                  polls_every=polls_every)
+    within = Health(alive=True, polled_at=NOW - timedelta(minutes=11), read_at=NOW,
+                    last_error=None, fix=None, polls_every=polls_every)
+    past = Health(alive=True, polled_at=NOW - timedelta(minutes=13), read_at=NOW,
+                  last_error=None, fix=None, polls_every=polls_every)
 
     assert (within.overdue, past.overdue) == (False, True)
 

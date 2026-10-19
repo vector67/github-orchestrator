@@ -218,8 +218,8 @@ class Pulse:
         return self.now
 
 
-POLLED = Health(alive=True, since_last_poll=timedelta(seconds=20), last_error=None, fix=None,
-                polls_every=timedelta(minutes=1))
+POLLED = Health(alive=True, polled_at=at(MOMENT)() - timedelta(seconds=20), read_at=at(MOMENT)(),
+                last_error=None, fix=None, polls_every=timedelta(minutes=1))
 
 
 @dataclass

@@ -13,8 +13,8 @@ CLOSED = a_pr(82, REPO)
 NOW = datetime(2026, 9, 28, 10, 0, tzinfo=timezone.utc)
 MINUTE = timedelta(minutes=1)
 
-POLLING = Health(alive=True, since_last_poll=timedelta(seconds=19), last_error=None, fix=None,
-                 polls_every=MINUTE)
+POLLING = Health(alive=True, polled_at=NOW - timedelta(seconds=19), read_at=NOW, last_error=None,
+                 fix=None, polls_every=MINUTE)
 
 
 def ledger():
@@ -98,7 +98,8 @@ def test_the_watcher_says_when_it_last_polled_and_when_it_polls_next():
 
 
 def test_a_watcher_that_never_polled_says_no_time():
-    never = Health(alive=True, since_last_poll=None, last_error=None, fix=None, polls_every=MINUTE)
+    never = Health(alive=True, polled_at=None, read_at=NOW, last_error=None, fix=None,
+                   polls_every=MINUTE)
 
     watcher = runs_read(health=never).json()["watcher"]
 
@@ -115,7 +116,7 @@ def test_the_runs_are_not_modified_while_nothing_changes():
 
 
 def test_a_failing_watcher_says_why_and_what_to_do_about_it():
-    failing = Health(alive=True, since_last_poll=None, last_error="gh auth token failed",
+    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="gh auth token failed",
                      fix="Log in with `gh auth login`, then this page retries.",
                      polls_every=MINUTE)
 

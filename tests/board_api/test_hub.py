@@ -222,7 +222,8 @@ def test_the_list_is_refused_as_starting_before_the_watcher_tells_its_state():
     assert answer.json()["errors"][0]["code"] == "watcher-starting"
 
 
-FAILING = Health(alive=True, since_last_poll=None, last_error="gh auth token failed",
+FAILING = Health(alive=True, polled_at=None, read_at=datetime(2026, 9, 28, tzinfo=timezone.utc),
+                 last_error="gh auth token failed",
                  fix="Log in with `gh auth login`, then this page retries.",
                  polls_every=timedelta(minutes=1))
 

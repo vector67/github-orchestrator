@@ -23,10 +23,15 @@ class Watcher(Protocol):
 @dataclass(frozen=True)
 class Health:
     alive: bool
-    since_last_poll: timedelta | None
+    polled_at: datetime | None
+    read_at: datetime
     last_error: str | None
     fix: str | None
     polls_every: timedelta
+
+    @property
+    def since_last_poll(self) -> timedelta | None:
+        return None if self.polled_at is None else self.read_at - self.polled_at
 
     @property
     def overdue(self) -> bool:
