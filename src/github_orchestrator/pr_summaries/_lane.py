@@ -169,7 +169,7 @@ class LocalSummaryLane:
             return None
         if held.pr != pr:
             return None
-        return Progress(since=held.since, done=_done(working_folder(self._dir, pr)))
+        return Progress(since=held.since, done=_done(working_folder(self._dir, pr)), agents=len(WITNESSES))
 
     def behind(self, pr: Pr, head: str | None) -> int | None:
         read = (self._summaries.load(pr) or Summary()).head_sha

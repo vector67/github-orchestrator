@@ -1503,9 +1503,8 @@ class AgentOutput(BaseModel):
 
 class WitnessProgress(BaseModel):
     witness: str = Field(
-        description="One of the pr-summary plugin's nine agents (its primer, five "
-                    "witnesses, alignment, critic and verdict), in the order "
-                    "the plugin runs them.")
+        description="One of the pr-summary plugin's agents, in the order the "
+                    "plugin runs them.")
     done: bool = Field(
         description="The agent has written its `output.json`.")
 
@@ -1552,6 +1551,9 @@ class PrSummary(BaseModel):
                     "the plugin's order. `requested` has none on a pull request "
                     "with no ticket. Empty when no run is in flight, or before "
                     "the plugin has prepared its inputs.")
+    agents: int | None = Field(
+        description="How many agents the plugin runs, for counting `witnesses` "
+                    "against. Null when no run is in flight.")
     behind: int | None = Field(
         description="How many commits the pull request's head is past "
                     "`head_sha`, counted in the local clone. Null when either "

@@ -33,6 +33,7 @@ class PrSummaries(Protocol):
 class Progress:
     since: datetime
     done: Mapping[str, bool]
+    agents: int
 
 
 class SummaryLane(Protocol):

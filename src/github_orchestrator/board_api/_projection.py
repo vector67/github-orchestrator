@@ -195,6 +195,7 @@ def summary_of(pr: Pr, summaries: PrSummaries, lane: SummaryLane,
         witnesses=[] if progress is None else [
             contract.WitnessProgress(witness=witness, done=done)
             for witness, done in progress.done.items()],
+        agents=None if progress is None else progress.agents,
         behind=lane.behind(pr, head),
         etag="",
     )

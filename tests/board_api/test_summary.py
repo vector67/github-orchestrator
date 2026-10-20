@@ -55,7 +55,7 @@ def test_a_pr_never_summarised_serves_a_summary_with_nothing_stored_and_nothing_
         "repo": "acme/widgets", "number": 54, "head_sha": None, "wanted": None,
         "answered": None, "started": None, "finished": None, "exit_status": None,
         "stderr": None, "markdown": None, "mismatches": None, "running": False,
-        "since": None, "witnesses": [], "behind": None}
+        "since": None, "witnesses": [], "agents": None, "behind": None}
 
 
 def test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head_has_moved_since(
@@ -72,7 +72,7 @@ def test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head
         "wanted": "2026-08-28T09:00:00+00:00", "answered": "2026-08-28T09:00:00+00:00",
         "started": STARTED, "finished": STARTED, "exit_status": 0, "stderr": "",
         "markdown": "# Summary\n\nIt does what it says.\n", "mismatches": 2,
-        "running": False, "since": None, "witnesses": [], "behind": 2}
+        "running": False, "since": None, "witnesses": [], "agents": None, "behind": 2}
 
 
 def test_a_run_that_needs_the_github_api_serves_its_exit_status_and_the_plugins_reason(tmp_path):
@@ -110,6 +110,24 @@ def test_a_running_summary_serves_when_it_started_and_a_flag_for_each_witness_it
         {"witness": "requested", "done": False}, {"witness": "claimed", "done": True},
         {"witness": "implementation", "done": False}, {"witness": "tests", "done": False},
         {"witness": "why", "done": False}, {"witness": "alignment", "done": False}]
+
+
+PLUGIN_AGENTS = sorted(path.stem for path in (Path(__file__).resolve().parents[2] / "plugins" / "pr-summary" / "agents").glob("*.md"))
+
+
+def test_a_running_summary_counts_every_agent_the_plugin_has_and_flags_each_by_name(tmp_path):
+    held = Held()
+    client = client_for(summaries=summary_parts(tmp_path, run_in=held))
+    summarised(client)
+    prepared(tmp_path, *PLUGIN_AGENTS, finished=tuple(PLUGIN_AGENTS))
+
+    served = client.get("/api/summary").json()
+
+    held.finish()
+    assert sorted(one["witness"] for one in served["witnesses"]) == PLUGIN_AGENTS, (
+        "every agent in plugins/pr-summary/agents must be listed, in run order, in WITNESSES in "
+        "src/github_orchestrator/pr_summaries/_lane.py, which the board counts its progress from")
+    assert served["agents"] == len(PLUGIN_AGENTS)
 
 
 def test_a_running_summary_on_a_pr_with_no_ticket_has_no_requested_witness(tmp_path):

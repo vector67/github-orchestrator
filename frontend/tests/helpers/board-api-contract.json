@@ -4958,6 +4958,16 @@
   },
   "PrSummary": {
    "properties": {
+    "agents": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "answered": {
      "anyOf": [
       {
@@ -5103,6 +5113,7 @@
     "running",
     "since",
     "witnesses",
+    "agents",
     "behind",
     "etag"
    ],

@@ -200,7 +200,7 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-strip]')
       .hasText(
-        'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/8 agents',
+        'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/9 agents',
       );
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
@@ -214,6 +214,7 @@ module('Acceptance | summary tab', function (hooks) {
       markdown: '# What it asks',
       running: true,
       since: ago(5),
+      agents: 9,
       witnesses: [
         { witness: 'requested', done: true },
         { witness: 'claimed', done: true },
@@ -227,7 +228,7 @@ module('Acceptance | summary tab', function (hooks) {
 
     assert
       .dom('[data-test-summary-rerun]')
-      .hasText('rerun started 5m ago, finished 4/8 agents');
+      .hasText('rerun started 5m ago, finished 4/9 agents');
 
     board().summary = {
       ...board().summary,
@@ -246,7 +247,7 @@ module('Acceptance | summary tab', function (hooks) {
 
     assert
       .dom('[data-test-summary-rerun]')
-      .hasText('rerun started 5m ago, finished 7/8 agents');
+      .hasText('rerun started 5m ago, finished 7/9 agents');
   });
 
   test('a push since the summary marks it stale, naming both heads and how far behind it is, with when it finished and Rerun at its end', async function (assert) {

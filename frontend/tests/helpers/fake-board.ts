@@ -270,6 +270,7 @@ export function prSummary(over: Partial<PrSummary> = {}): PrSummary {
     running: false,
     since: null,
     witnesses: [],
+    agents: null,
     behind: null,
     etag: '"summary-1"',
     ...over,
@@ -1381,6 +1382,7 @@ export class FakeBoard {
       running: true,
       since: new Date(Date.now()).toISOString(),
       witnesses: [],
+      agents: 9,
       etag: `"summary-${this.posted.length}-running"`,
     };
     return respond(JSON.stringify(this.summary), {

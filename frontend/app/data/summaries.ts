@@ -840,8 +840,6 @@ export interface SummaryTab {
   markdown: string | null;
 }
 
-const WITNESS_COUNT = 8;
-
 const SHORT_SHA = 7;
 
 const NEEDS_GITHUB_API = 3;
@@ -900,7 +898,7 @@ export function summaryTabOf(
     since: summary.since,
     witnesses: summary.witnesses,
     witnessesDone: summary.witnesses.filter((one) => one.done).length,
-    witnessCount: WITNESS_COUNT,
+    witnessCount: summary.agents ?? 0,
     exitStatus: summary.exit_status,
     reason: reasonOf(state, summary.stderr),
     calls: calls === undefined ? null : Number(calls),

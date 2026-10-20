@@ -613,6 +613,7 @@ export interface PrSummary {
   running: boolean;
   since: string | null;
   witnesses: WitnessProgress[];
+  agents: number | null;
   behind: number | null;
   etag: string;
 }
