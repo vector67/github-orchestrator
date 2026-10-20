@@ -3853,10 +3853,9 @@ kbd {
 
 .controls {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
   justify-content: flex-end;
-  max-width: 560px;
+  white-space: nowrap;
 }
 
 .not-live {
