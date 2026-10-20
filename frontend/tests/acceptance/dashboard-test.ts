@@ -5,10 +5,8 @@ import {
   currentURL,
   find,
   findAll,
-  settled,
   triggerEvent,
   visit,
-  waitFor,
 } from '@ember/test-helpers';
 import {
   check,
@@ -1016,12 +1014,10 @@ module('Acceptance | dashboard', function (hooks) {
         kind: 'draft',
         author_kind: 'mine',
       }),
-      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
     ];
     onTheHub({
       facts: {
         draft: true,
-        unresolved_threads: 1,
         ci_status: 'failing',
         checks: [check('lint', 'failed'), check('tests')],
         merge_state: 'conflicts',
@@ -1038,10 +1034,9 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert
       .dom('[data-test-ready-confirm]')
-      .containsText('You have 8 outstanding items.');
+      .containsText('You have 7 outstanding items.');
     assert.deepEqual(texts('[data-test-outstanding] summary'), [
       '1 Unsent draft comments',
-      '1 Unresolved review threads',
       '1 Failing CI',
       '2 Needs a rebase',
       '2 Unpushed commits',
@@ -1049,77 +1044,9 @@ module('Acceptance | dashboard', function (hooks) {
     ]);
     assert.deepEqual(
       findAll('[data-test-outstanding]').map((one) => one.hasAttribute('open')),
-      [true, false, false, false, false, false],
+      [true, false, false, false, false],
     );
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
-  });
-
-  test('an unresolved thread shows a placeholder until its question is read, then the question', async function (assert) {
-    board().conversations = [
-      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
-    ];
-    board().comments['PRRT_r'] = [
-      {
-        id: 1,
-        author: 'anna',
-        created_at: '2026-09-12T10:00:00Z',
-        review_state: null,
-        body: 'Should this handle empty input?',
-        updated_at: null,
-        html_url: null,
-        posted_by_board: false,
-        deleted: false,
-        deleted_by_board: false,
-      },
-    ];
-    onTheHub({ facts: { draft: true, unresolved_threads: 1 } });
-    await visit('/pr/o/r/7/dashboard');
-    const release = board().hold(/\/api\/conversations\/PRRT_r\/comments$/);
-
-    void triggerEvent(document, 'keydown', { key: 'r' });
-    await waitFor('[data-test-ready-confirm]');
-
-    assert
-      .dom('[data-test-outstanding-item="PRRT_r"]')
-      .containsText('src/foo.py:42');
-    assert
-      .dom('[data-test-outstanding-item="PRRT_r"] [data-test-placeholder]')
-      .exists();
-
-    release();
-    await settled();
-
-    assert
-      .dom('[data-test-outstanding-item="PRRT_r"]')
-      .containsText('Should this handle empty input?');
-    assert
-      .dom('[data-test-outstanding-item="PRRT_r"] [data-test-placeholder]')
-      .doesNotExist();
-  });
-
-  test('GitHub counting more unresolved threads than the board holds says how many more', async function (assert) {
-    onTheHub({ facts: { draft: true, unresolved_threads: 2 } });
-    await visit('/pr/o/r/7/dashboard');
-
-    await press('r');
-
-    assert
-      .dom('[data-test-ready-confirm]')
-      .containsText('2 more unresolved on GitHub');
-  });
-
-  test('the unresolved threads only GitHub holds count one each', async function (assert) {
-    onTheHub({ facts: { draft: true, unresolved_threads: 2 } });
-    await visit('/pr/o/r/7/dashboard');
-
-    await press('r');
-
-    assert
-      .dom('[data-test-ready-confirm]')
-      .containsText('You have 2 outstanding items.');
-    assert
-      .dom('[data-test-outstanding="unresolved"] .outstanding-count')
-      .hasText('2');
   });
 
   test('Esc cancels the ready question and marks nothing', async function (assert) {

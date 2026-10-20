@@ -77,15 +77,7 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
                     data-test-outstanding-item={{item.key}}
                   >
                     <span class="outstanding-where">{{item.where}}</span>
-                    {{#if item.what}}
-                      <span class="outstanding-what">{{item.what}}</span>
-                    {{else}}
-                      <span
-                        class="outstanding-placeholder"
-                        aria-label="loading"
-                        data-test-placeholder
-                      ></span>
-                    {{/if}}
+                    <span class="outstanding-what">{{item.what}}</span>
                   </li>
                 {{/each}}
               </ul>

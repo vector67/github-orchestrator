@@ -1316,13 +1316,6 @@ button.copy-directory {
   -webkit-line-clamp: 4;
 }
 
-.decide-dialog .outstanding-placeholder {
-  width: 60%;
-  height: 0.9em;
-  margin: 0.3em 0;
-  background: var(--hairline);
-}
-
 .decide-dialog .note {
   margin: 0;
   font-size: var(--fs-m);

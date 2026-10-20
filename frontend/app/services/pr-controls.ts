@@ -316,12 +316,6 @@ export default class PrControlsService extends Service {
         .catch(() => null);
       if (asked?.changed) asked.take();
     }
-    const unread = this.store.outstanding(pr.repo, pr.number)?.unread ?? [];
-    await Promise.all(
-      unread.map((key) =>
-        this.store.readThread(pr, key).catch(() => undefined),
-      ),
-    );
   }
 
   private async dismissing(on: Controlled, forever: boolean): Promise<void> {
