@@ -40,6 +40,7 @@ const isFirst = (index: number): boolean => index === 0;
 const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
   <div class="decide-dialog">
     <form
+      class="ready"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ready-confirm-question"
@@ -69,13 +70,13 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
             >
               <summary><span class="outstanding-count">{{group.count}}</span>
                 {{group.label}}</summary>
-              <div class="commit-files">
+              <ul class="outstanding-items">
                 {{#each group.items key="key" as |item|}}
-                  <p
-                    class="commit-file"
+                  <li
+                    class="outstanding-item"
                     data-test-outstanding-item={{item.key}}
                   >
-                    <span class="commit-path">{{item.where}}</span>
+                    <span class="outstanding-where">{{item.where}}</span>
                     {{#if item.what}}
                       <span class="outstanding-what">{{item.what}}</span>
                     {{else}}
@@ -85,9 +86,9 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
                         data-test-placeholder
                       ></span>
                     {{/if}}
-                  </p>
+                  </li>
                 {{/each}}
-              </div>
+              </ul>
             </details>
           {{/each}}
         </div>

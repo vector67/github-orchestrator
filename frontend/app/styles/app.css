@@ -1269,8 +1269,25 @@ button.copy-directory {
   cursor: pointer;
 }
 
-.decide-dialog .outstanding-kind > .commit-files {
-  margin: 0 0 8px 22px;
+.decide-dialog > form.ready {
+  width: min(760px, calc(100vw - 48px));
+}
+
+.decide-dialog .outstanding-items {
+  margin: 0 0 10px 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.decide-dialog .outstanding-item {
+  display: grid;
+  gap: 3px;
+  padding: 9px 12px;
+  background: var(--grey-fill);
+}
+
+.decide-dialog .outstanding-item + .outstanding-item {
+  margin-top: 4px;
 }
 
 .decide-dialog .outstanding-count {
@@ -1281,25 +1298,28 @@ button.copy-directory {
   text-align: right;
 }
 
-.decide-dialog .outstanding-kind .commit-path {
-  flex: none;
-  max-width: 65%;
+.decide-dialog .outstanding-where {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-s);
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .decide-dialog .outstanding-what {
-  flex: 0 1 auto;
-  min-width: 0;
+  display: -webkit-box;
   overflow: hidden;
-  color: var(--muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: var(--fs-m);
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .decide-dialog .outstanding-placeholder {
-  flex: none;
-  width: 14em;
+  width: 60%;
   height: 0.9em;
-  margin-top: 0.35em;
+  margin: 0.3em 0;
   background: var(--hairline);
 }
 
