@@ -29,6 +29,7 @@ from github_orchestrator.conversation._domain.effects import (
     DeleteComment,
     DropWorkspace,
     Effect,
+    OpenLoginShell,
     OpenSession,
     Pick,
     PostDraft,
@@ -271,6 +272,9 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
                                                 effect.brief)
             return (None if refused is None
                     else SessionRefused(reason=refused, back_to=effect.back_to))
+        case OpenLoginShell():
+            ports.agents.open_shell(thread_workspace(ports, conversation).path)
+            return None
         case Pick():
             return _pick_outcome(ports, conversation, effect)
         case Push():

@@ -8,7 +8,7 @@ interface DashboardSignature {
 }
 
 const Dashboard: TOC<DashboardSignature> = <template>
-  <DashboardTab @pane={{@controller.pane}} />
+  <DashboardTab @pane={{@controller.pane}} @ready={{@controller.ready}} />
   <ToastRail />
 </template>;
 

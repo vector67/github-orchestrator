@@ -19,6 +19,7 @@ import {
   type Reading,
 } from 'frontend/data/dashboard';
 import { notesOf } from 'frontend/data/markdown';
+import type { Numbered } from 'frontend/data/wall';
 import drawn from 'frontend/modifiers/drawn';
 import followsEnd from 'frontend/modifiers/follows-end';
 import AgentOutput from 'frontend/components/agent-output';
@@ -58,7 +59,7 @@ const KEYED = [
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
 interface DashboardTabSignature {
-  Args: { pane?: string | null };
+  Args: { pane?: string | null; ready?: boolean };
 }
 
 export default class DashboardTab extends Component<DashboardTabSignature> {
@@ -73,7 +74,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: 'dismiss' | 'close' | 'ready' | null = null;
+  @tracked asking: 'dismiss' | 'close' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -194,7 +195,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     const next = this.controls.press(this.on, control);
     if (next === 'confirm-dismiss') this.asking = 'dismiss';
     else if (next === 'confirm-close') this.asking = 'close';
-    else if (next === 'confirm-ready') this.asking = 'ready';
+    else if (next === 'confirm-ready') this.askReady(true);
     else if (next === 'palette') this.palette.open();
     return next !== 'nothing';
   };
@@ -215,11 +216,23 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     if (on) void this.controls.close(on);
   };
 
+  private askReady(ready: boolean): void {
+    void this.router.replaceWith({ queryParams: { ready } });
+  }
+
+  cancelReady = () => {
+    this.askReady(false);
+  };
+
   markReady = () => {
-    this.cancelAsking();
+    this.cancelReady();
     const on = this.on;
     if (on) void this.controls.markReady(on);
   };
+
+  get readyAbout(): Numbered | null {
+    return this.args.ready ? this.here.pr : null;
+  }
 
   get outstanding(): Outstanding | null {
     const pr = this.here.pr;
@@ -420,12 +433,13 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             </form>
           </div>
         {{/if}}
-        {{#if (eq this.asking "ready")}}
+        {{#if this.readyAbout}}
           <ReadyConfirm
-            @number={{this.reading.number}}
+            @repo={{this.readyAbout.repo}}
+            @number={{this.readyAbout.number}}
             @outstanding={{this.outstanding}}
             @mark={{this.markReady}}
-            @cancel={{this.cancelAsking}}
+            @cancel={{this.cancelReady}}
           />
         {{/if}}
         {{#if (eq this.asking "dismiss")}}

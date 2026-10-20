@@ -46,7 +46,11 @@ function foldedBefore(): boolean {
   }
 }
 
-export default class Wall extends Component {
+interface WallSignature {
+  Args: { ready?: string | null };
+}
+
+export default class Wall extends Component<WallSignature> {
   @service declare hub: HubService;
   @service declare store: StoreService;
   @service declare router: RouterService;
@@ -55,13 +59,12 @@ export default class Wall extends Component {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
-  @tracked readying: Pick<WallRow, 'key' | 'arrived'> | null = null;
   @tracked parkedFolded = foldedBefore();
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private lastAt = -1;
 
-  constructor(owner: Owner, args: object) {
+  constructor(owner: Owner, args: WallSignature['Args']) {
     super(owner, args);
     this.keys.push('screen', this.keymap);
   }
@@ -134,14 +137,21 @@ export default class Wall extends Component {
   isConfirming = (pr: WallRow): boolean =>
     pr.key === this.confirming?.key && pr.arrived === this.confirming.arrived;
 
-  isReadying = (pr: WallRow): boolean =>
-    pr.key === this.readying?.key && pr.arrived === this.readying.arrived;
+  isReadying = (pr: WallRow): boolean => keyOf(pr) === this.args.ready;
 
   outstandingOf = (pr: WallRow): Outstanding | null =>
     this.store.outstanding(pr.repo, pr.number);
 
+  private askReady(ready: string | null): void {
+    void this.router.replaceWith({ queryParams: { ready } });
+  }
+
+  cancelReady = () => {
+    this.askReady(null);
+  };
+
   markReady = (pr: WallRow) => {
-    this.readying = null;
+    this.cancelReady();
     void this.controls.markReady(this.controls.ofRow(pr));
   };
 
@@ -175,14 +185,12 @@ export default class Wall extends Component {
     const next = this.controls.press(this.controls.ofRow(pr), control);
     if (next === 'confirm-dismiss')
       this.confirming = { key: pr.key, arrived: pr.arrived };
-    if (next === 'confirm-ready')
-      this.readying = { key: pr.key, arrived: pr.arrived };
+    if (next === 'confirm-ready') this.askReady(keyOf(pr));
     return next !== 'nothing';
   }
 
   cancel = () => {
     this.confirming = null;
-    this.readying = null;
   };
 
   private move(by: number): void {
@@ -383,10 +391,11 @@ export default class Wall extends Component {
               {{/if}}
               {{#if (this.isReadying pr)}}
                 <ReadyConfirm
+                  @repo={{pr.repo}}
                   @number={{pr.number}}
                   @outstanding={{this.outstandingOf pr}}
                   @mark={{fn this.markReady pr}}
-                  @cancel={{this.cancel}}
+                  @cancel={{this.cancelReady}}
                 />
               {{/if}}
             {{/let}}

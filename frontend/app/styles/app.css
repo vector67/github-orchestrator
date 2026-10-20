@@ -1286,6 +1286,17 @@ button.copy-directory {
   background: var(--grey-fill);
 }
 
+.decide-dialog .outstanding-link {
+  display: grid;
+  gap: 3px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.decide-dialog .outstanding-link:hover {
+  text-decoration: underline;
+}
+
 .decide-dialog .outstanding-item + .outstanding-item {
   margin-top: 4px;
 }

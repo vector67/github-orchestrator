@@ -108,6 +108,7 @@ export type {
   NextMove,
   Outstanding,
   OutstandingGroup,
+  OutstandingItem,
   PrHeader,
   Summaries,
   SummaryState,

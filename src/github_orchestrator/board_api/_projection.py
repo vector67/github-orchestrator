@@ -250,6 +250,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
                 note=view.text or None)
         case OperationKind.UNPARK as unpark:
             return contract.UnparkOperation(**envelope, kind=unpark)
+        case OperationKind.OPEN_SHELL as shell:
+            return contract.ShellOperation(**envelope, kind=shell)
         case OperationKind.CONFIRM | OperationKind.PLACE as placing:
             return contract.PlaceOperation(**envelope, kind=placing)
         case OperationKind.REPLY as reply:

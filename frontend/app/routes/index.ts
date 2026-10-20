@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
+import type IndexController from 'frontend/controllers/index';
 import type HubService from 'frontend/services/hub';
 import type PollService from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
@@ -16,5 +17,9 @@ export default class IndexRoute extends Route {
     this.poll.startHub();
     await Promise.all([this.poll.refreshHub(), this.store.readTour()]);
     return this.hub;
+  }
+
+  resetController(controller: IndexController): void {
+    controller.ready = null;
   }
 }

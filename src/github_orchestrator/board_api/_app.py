@@ -929,6 +929,19 @@ def start_session(key: ThreadKey, board: Serving, if_match: IfMatch,
             include=asked.include))
 
 
+@writes.post("/conversations/{key}/operations:open-shell", status_code=202,
+             response_model=Outcome, operation_id="openShell",
+             summary="Open a login shell in this thread's own worktree.",
+             responses=ACCEPTED)
+def open_shell(key: ThreadKey, board: Serving, if_match: IfMatch) -> Response:
+    """No agent, unlike `:start-session`, so it opens with agents disabled
+    too. The board cuts the thread's worktree first where it has none, and
+    the fix is left as it was.
+    """
+    return _queued(board, _thread(board, key), if_match,
+                   lambda editable: editable.open_shell())
+
+
 @writes.post("/conversations/{key}/operations:retry", status_code=202,
              response_model=Outcome, operation_id="retryThread",
              summary="Run the agent again with a fresh attempt budget.",

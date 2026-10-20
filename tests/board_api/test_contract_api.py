@@ -122,8 +122,8 @@ def test_every_read_that_declares_a_304_declares_the_tag_with_it(contract):
                for answers in conditional)
 
 
-VERBS = ("stop", "approve", "rework", "start-session", "retry", "resolve",
-         "reject", "defer", "unpark", "reply")
+VERBS = ("stop", "approve", "rework", "start-session", "open-shell", "retry",
+         "resolve", "reject", "defer", "unpark", "reply")
 
 
 @pytest.mark.parametrize("verb", VERBS)

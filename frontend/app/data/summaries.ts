@@ -459,6 +459,7 @@ export interface OutstandingItem {
   key: string;
   where: string;
   what: string;
+  thread?: string;
 }
 
 export interface OutstandingGroup {
@@ -489,7 +490,7 @@ function whereOf(one: Thread): string {
 }
 
 function threadItem(one: Thread, what: string): OutstandingItem {
-  return { key: one.key, where: whereOf(one), what };
+  return { key: one.key, where: whereOf(one), what, thread: one.key };
 }
 
 function rebaseOf(pr: PrEntity): OutstandingItem[] {

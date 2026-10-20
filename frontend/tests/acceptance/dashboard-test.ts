@@ -1049,6 +1049,52 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
   });
 
+  test('a board thread in the ready question links to the thread, and Back brings the question back open', async function (assert) {
+    board().conversations = [thread({ key: 'PRRT_r', state: 'ready' })];
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    const asked = currentURL();
+    await click('[data-test-outstanding-item="PRRT_r"] a');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/PRRT_r');
+
+    await visit(asked);
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('Mark #7 ready for review?');
+    assert.dom('[data-test-outstanding-item="PRRT_r"] a').exists();
+  });
+
+  test('the open ready question is in the URL, and cancelling it takes it out', async function (assert) {
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard?ready=true');
+
+    await press('Escape');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+  });
+
+  test('the Dashboard tab after following a thread does not reopen the ready question', async function (assert) {
+    board().conversations = [thread({ key: 'PRRT_r', state: 'ready' })];
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+    await click('[data-test-outstanding-item="PRRT_r"] a');
+    await click('[data-test-tab="dashboard"]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+    assert.dom('[data-test-ready-confirm]').doesNotExist();
+  });
+
   test('Esc cancels the ready question and marks nothing', async function (assert) {
     onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');

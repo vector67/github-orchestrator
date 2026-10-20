@@ -376,6 +376,17 @@ def test_start_session_hands_the_session_the_lines_it_was_pointed_at(ready):
     assert [one.text for one in opened.fix.pointed] == ["here"]
 
 
+def test_open_shell_opens_a_login_shell_in_the_threads_own_worktree(ready):
+    answer = asked(client_of(ready), "open-shell")
+
+    assert answer.status_code == 202
+    assert answer.json()["operation"]["kind"] == "open-shell"
+    drained(ready)
+    [pane] = ready.stage.agent_runs.pr_processes.sessions[THE_PR]
+    assert pane.argv[-1] == "-l"
+    assert ready.stage.agent_runs.sessions == []
+
+
 def test_start_session_refuses_a_thread_that_is_parked(ready):
     settled_by(ready, "defer", until="manual")
 

@@ -2,6 +2,46 @@ import type { Conversation } from 'frontend/data/api';
 
 export const RECORDED = {
  "author": {
+  "answered": {
+   "anchor": {
+    "is_outdated": false,
+    "line": 42,
+    "original_commit": "a1b2c3d",
+    "original_line": 42,
+    "original_start_line": null,
+    "path": "src/foo.py",
+    "side": "RIGHT",
+    "start_line": null,
+    "start_side": null
+   },
+   "author_kind": "human",
+   "comments": [
+    {
+     "author": "anna",
+     "created_at": "2026-09-12T10:00:00Z",
+     "id": 1,
+     "review_state": "CHANGES_REQUESTED"
+    }
+   ],
+   "commit_check": null,
+   "created_at": "2026-09-12T11:00:00.000000Z",
+   "etag": "\"answered\"",
+   "gist": "rename the helper",
+   "github_node_id": "PRRT_a",
+   "github_removed": false,
+   "github_resolved": null,
+   "github_resolved_at": null,
+   "key": "PRRT_a",
+   "kind": "review",
+   "mention": false,
+   "operations": [],
+   "record_state": "open",
+   "reopened": false,
+   "state": "ready",
+   "state_changed_at": null,
+   "unread": false,
+   "updated_at": "2026-09-12T11:00:00Z"
+  },
   "assumed-done": {
    "anchor": {
     "is_outdated": false,

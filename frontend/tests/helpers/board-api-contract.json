@@ -98,6 +98,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
@@ -139,6 +140,9 @@
       },
       {
        "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
@@ -308,6 +312,28 @@
    }
   },
   "/api/conversations/{key}/operations:fix": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:open-shell": {
    "post": {
     "202": {
      "$ref": "#/components/schemas/Outcome"
@@ -811,6 +837,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
@@ -852,6 +879,9 @@
       },
       {
        "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
@@ -893,6 +923,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
@@ -934,6 +965,9 @@
       },
       {
        "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
@@ -974,6 +1008,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
@@ -1015,6 +1050,9 @@
       },
       {
        "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
@@ -4153,6 +4191,7 @@
     "rework",
     "retry",
     "start-session",
+    "open-shell",
     "approve",
     "stop",
     "resolve",
@@ -4186,6 +4225,7 @@
       "enrol": "#/components/schemas/DraftOperation",
       "file": "#/components/schemas/FileOperation",
       "first": "#/components/schemas/FixOperation",
+      "open-shell": "#/components/schemas/ShellOperation",
       "place": "#/components/schemas/PlaceOperation",
       "post-now": "#/components/schemas/DraftOperation",
       "posted": "#/components/schemas/PostedOperation",
@@ -4227,6 +4267,9 @@
      },
      {
       "$ref": "#/components/schemas/UnparkOperation"
+     },
+     {
+      "$ref": "#/components/schemas/ShellOperation"
      },
      {
       "$ref": "#/components/schemas/PlaceOperation"
@@ -4403,6 +4446,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
@@ -4444,6 +4488,9 @@
       },
       {
        "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
@@ -6178,6 +6225,82 @@
    "required": [
     "program",
     "fix"
+   ],
+   "type": "object"
+  },
+  "ShellOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "open-shell",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
    ],
    "type": "object"
   },

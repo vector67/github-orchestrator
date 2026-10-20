@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
+import type DashboardController from 'frontend/controllers/dashboard';
 import { reportError } from 'frontend/data/report';
 import type PollService from 'frontend/services/poll';
 import type ThemeService from 'frontend/services/theme';
@@ -20,6 +21,10 @@ export default class DashboardRoute extends Route {
       this.poll.follow(),
     ]);
     return this.threads;
+  }
+
+  resetController(controller: DashboardController): void {
+    controller.ready = false;
   }
 
   deactivate(): void {

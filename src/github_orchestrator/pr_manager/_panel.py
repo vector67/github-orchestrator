@@ -14,12 +14,11 @@ from github_orchestrator.pr_manager._git_palette import (
     open_in_terminal,
     resolve,
     run_captured,
-    shell_argv,
 )
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._refusals import refusal
 from github_orchestrator.pr_manager._status import StatusFiles
-from github_orchestrator.pr_processes import AgentChanges, PrProcesses
+from github_orchestrator.pr_processes import AgentChanges, PrProcesses, shell_argv
 
 log = logging.getLogger(__name__)
 

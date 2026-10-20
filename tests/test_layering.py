@@ -314,7 +314,7 @@ PACKAGES = {
         entries=frozenset({"__main__"}),
     ),
     "pr_processes": Package(
-        pinned=frozenset({"AgentChanges", "ManagerPane", "PrProcesses"}),
+        pinned=frozenset({"AgentChanges", "ManagerPane", "PrProcesses", "shell_argv"}),
         may_import=("terminal_sessions",),
         role="PR windows run each PR's agent manager in the background and open its terminal sessions, and are handed the worktree by their callers",
     ),
@@ -664,7 +664,7 @@ ROLE_MEMBERS = {
         "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
         "recheck"}),
     "EditableConversation": frozenset({
-        "approve", "rework", "start_session", "retry", "fix", "stop", "resolve", "reject", "place",
+        "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
         "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "set_commit_verdict"}),
 }
