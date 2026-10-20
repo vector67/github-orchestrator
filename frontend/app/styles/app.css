@@ -3528,6 +3528,21 @@ kbd {
   border-collapse: collapse;
 }
 
+.summary-body details > :not(summary) {
+  margin-left: 6px;
+  padding-left: 14px;
+  border-left: 2px solid var(--hairline);
+}
+
+.summary-body details > :not(summary, :last-child) {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+
+.summary-body details > :not(summary) + :not(summary) {
+  margin-top: 0;
+}
+
 .summary-body th,
 .summary-body td {
   padding: 4px 10px;
