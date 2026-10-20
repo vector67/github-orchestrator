@@ -72,6 +72,34 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
+  test('the concepts before the review open one at a time, each nesting what it leans on, and nothing else of the html runs', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      markdown:
+        '## Before you review\n' +
+        '<details>\n<summary>Toolbar</summary>\n\nThe row of **buttons**.\n\n' +
+        '<details>\n<summary>Feature flags</summary>\n\nPer-shop switches.\n\n</details>\n\n' +
+        '</details>\n\n' +
+        '<script>window.ran = true</script>\n\n' +
+        '## Requested\nHide it.',
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.deepEqual(texts('[data-test-summary-markdown] summary'), [
+      'Toolbar',
+      'Feature flags',
+    ]);
+    assert.dom('[data-test-summary-markdown] details details').exists();
+    assert
+      .dom('[data-test-summary-markdown] details')
+      .doesNotHaveAttribute('open');
+    assert
+      .dom('[data-test-summary-markdown] details strong')
+      .hasText('buttons');
+    assert.dom('[data-test-summary-markdown] script').doesNotExist();
+  });
+
   function squares(): (string | undefined)[] {
     return findAll('[data-test-diffstat-square]').map(
       (one) => (one as HTMLElement).dataset['testDiffstatSquare'],

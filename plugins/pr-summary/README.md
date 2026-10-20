@@ -3,6 +3,12 @@
 A Claude Code plugin that tells a reviewer what a pull request is for before
 they open the diff:
 
+0. **Before you review**: the three to six concepts, modules and processes a
+   reviewer must understand to follow the change, each a collapsed
+   `<details>` with the concepts it leans on nested inside. Its primer reads
+   the production code with its comments, the description, the ticket and
+   Confluence, authors' pages included: it explains rather than judges, so it
+   is no witness and alignment never sees it.
 1. **Requested**: what the ticket asked for, from the ticket alone.
 2. **Claimed**: what the authors say they did, from their words alone.
 3. **Intent**: what the production code does and what the tests pin, each read

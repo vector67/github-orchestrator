@@ -5,7 +5,7 @@ import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
 import { pulses } from 'frontend/motion';
 import { exitWordOf, lengthOf, relativeOf } from 'frontend/data/dashboard';
-import { markdownOf } from 'frontend/data/markdown';
+import { summaryOf } from 'frontend/data/markdown';
 import drawn from 'frontend/modifiers/drawn';
 import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
@@ -214,7 +214,7 @@ export default class SummaryTab extends Component {
           <div
             class="summary-body comment-body"
             data-test-summary-markdown
-            {{drawn markdownOf this.tab.markdown}}
+            {{drawn summaryOf this.tab.markdown}}
           ></div>
         {{/if}}
       {{/if}}

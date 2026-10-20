@@ -6,7 +6,8 @@ argument-hint: <pr-url-or-number> [--config <toml>]
 
 # PR summary
 
-Summarises a pull request in five sections: what the ticket requested, what
+Opens with the concepts a reviewer needs before the diff, as collapsed
+sections, then summarises a pull request in five sections: what the ticket requested, what
 the authors claim, what the implementation and tests do, why the change was
 needed, and every mismatch between them in trust order.
 

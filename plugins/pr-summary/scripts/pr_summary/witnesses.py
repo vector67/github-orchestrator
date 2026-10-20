@@ -82,6 +82,7 @@ def _evidence_into(folder: Path, manifest: dict[str, Path], mismatches: list[dic
 
 def run_witnesses(manifest: dict[str, Path], launch: Launch, wait: Wait) -> dict[str, str]:
     witnesses = [name for name in manifest if name != "alignment"]
+    judged = [name for name in witnesses if name != "primer"]
     failures: dict[str, str] = {}
 
     def attempt(agent: str, folder: Path) -> bool:
@@ -104,7 +105,7 @@ def run_witnesses(manifest: dict[str, Path], launch: Launch, wait: Wait) -> dict
 
     with ThreadPoolExecutor(max_workers=len(witnesses)) as pool:
         list(pool.map(lambda witness: attempt(witness, manifest[witness]), witnesses))
-    for witness in witnesses:
+    for witness in judged:
         output = manifest[witness] / "output.json"
         if output.exists() and witness not in failures:
             shutil.copy(output, manifest["alignment"] / f"{witness}.json")

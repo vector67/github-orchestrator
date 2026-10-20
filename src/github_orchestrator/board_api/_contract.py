@@ -1503,7 +1503,7 @@ class AgentOutput(BaseModel):
 
 class WitnessProgress(BaseModel):
     witness: str = Field(
-        description="One of the pr-summary plugin's eight agents (its five "
+        description="One of the pr-summary plugin's nine agents (its primer, five "
                     "witnesses, alignment, critic and verdict), in the order "
                     "the plugin runs them.")
     done: bool = Field(

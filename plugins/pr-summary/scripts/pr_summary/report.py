@@ -46,6 +46,7 @@ def report(manifest: dict[str, Path]) -> str:
     if not isinstance(alignment, str):
         alignment = _challenged(manifest["alignment"], alignment)
     sections = [
+        f"## Before you review\n{_primer(_loaded(manifest.get('primer'), ('name', 'explanation'), top='concepts'))}",
         f"## Requested\n{_said('requested', witnesses['requested'])}",
         f"## Claimed\n{_said('claimed', witnesses['claimed'])}",
         f"## Intent\n**Implementation:** {_said('implementation', witnesses['implementation'])}\n\n**Tests:** {_said('tests', witnesses['tests'])}",
@@ -53,6 +54,17 @@ def report(manifest: dict[str, Path]) -> str:
         f"## Alignment\n{_alignment(witnesses, alignment)}",
     ]
     return "\n\n".join(sections) + "\n"
+
+
+def _primer(loaded: dict[str, Any] | str) -> str:
+    if isinstance(loaded, str):
+        return f"Primer failed: {loaded}"
+    return "".join(_concept(concept) for concept in loaded["concepts"]).rstrip("\n")
+
+
+def _concept(concept: dict[str, Any]) -> str:
+    inner = "".join(_concept(child) for child in concept.get("concepts", []))
+    return f"<details>\n<summary>{concept['name']}</summary>\n\n{concept['explanation']}\n\n{inner}</details>\n\n"
 
 
 def _falsified(alignment: Path) -> dict[int, str]:

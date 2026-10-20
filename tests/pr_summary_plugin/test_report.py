@@ -14,7 +14,7 @@ def output(witness: str, display: str, gaps: list[str] | None = None) -> dict[st
 
 def folders(tmp_path: Path, outputs: dict[str, Any], mismatches: list[dict[str, Any]] | None) -> dict[str, Path]:
     manifest = {}
-    for witness in [*WITNESSES, "alignment"]:
+    for witness in [*WITNESSES, "primer", "alignment"]:
         folder = tmp_path / witness
         folder.mkdir()
         manifest[witness] = folder
@@ -38,10 +38,37 @@ def test_sections_print_in_order(tmp_path: Path) -> None:
     text = report(folders(tmp_path, ALL, []))
 
     headings = [line for line in text.splitlines() if line.startswith("## ")]
-    assert headings == ["## Requested", "## Claimed", "## Intent", "## Why", "## Alignment"]
+    assert headings == ["## Before you review", "## Requested", "## Claimed", "## Intent", "## Why", "## Alignment"]
     assert "**Implementation:** Returns no export button" in text
     assert "**Tests:** Pins that the toolbar" in text
     assert "No Confluence page found." in text
+
+
+def test_the_primer_opens_the_summary_as_collapsed_concepts_nested_under_what_they_explain(tmp_path: Path) -> None:
+    primer = {"witness": "primer", "concepts": [
+        {"name": "Toolbar", "explanation": "The row of buttons above a shop's orders.", "concepts": [
+            {"name": "Feature flags", "explanation": "Switches that turn a feature on per shop.", "concepts": []},
+        ]},
+        {"name": "Exports", "explanation": "A CSV of a shop's orders.", "concepts": []},
+    ]}
+
+    text = report(folders(tmp_path, {**ALL, "primer": primer}, []))
+
+    assert text.startswith(
+        "## Before you review\n"
+        "<details>\n<summary>Toolbar</summary>\n\nThe row of buttons above a shop's orders.\n\n"
+        "<details>\n<summary>Feature flags</summary>\n\nSwitches that turn a feature on per shop.\n\n</details>\n\n"
+        "</details>\n\n"
+        "<details>\n<summary>Exports</summary>\n\nA CSV of a shop's orders.\n\n</details>\n\n"
+        "## Requested\n"
+    )
+
+
+def test_a_failed_primer_says_so_and_is_no_rung_of_alignment(tmp_path: Path) -> None:
+    text = report(folders(tmp_path, ALL, []))
+
+    assert "## Before you review\nPrimer failed: no output.json." in text
+    assert "Everything matches." in text
 
 
 def test_everything_matches_only_when_all_witnesses_spoke_and_no_mismatch(tmp_path: Path) -> None:

@@ -39,9 +39,11 @@ const DRAWN_TAGS = [
   'span',
 ];
 
-function parser(breaks: boolean): ReturnType<typeof MarkdownIt> {
+const COLLAPSIBLE_TAGS = ['details', 'summary'];
+
+function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
   const made = new MarkdownIt('default', {
-    html: false,
+    html,
     linkify: true,
     breaks,
     highlight: (code, info) => {
@@ -65,6 +67,8 @@ const COMMENTS = parser(true);
 
 const NOTES = parser(false);
 
+const SUMMARIES = parser(true, true);
+
 const SANITISER = DOMPurify(window);
 
 SANITISER.addHook('uponSanitizeAttribute', keepingClasses(true));
@@ -83,9 +87,13 @@ export function notesOf(text: string): DocumentFragment {
   return sanitised(NOTES.render(text));
 }
 
-function sanitised(html: string): DocumentFragment {
+export function summaryOf(text: string): DocumentFragment {
+  return sanitised(SUMMARIES.render(text), COLLAPSIBLE_TAGS);
+}
+
+function sanitised(html: string, extraTags: string[] = []): DocumentFragment {
   return SANITISER.sanitize(html, {
-    ALLOWED_TAGS: DRAWN_TAGS,
+    ALLOWED_TAGS: [...DRAWN_TAGS, ...extraTags],
     ALLOWED_ATTR: ['href', 'class', 'start'],
     ALLOWED_URI_REGEXP: SAFE_HREF,
     RETURN_DOM_FRAGMENT: true,

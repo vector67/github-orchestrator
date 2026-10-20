@@ -96,7 +96,8 @@ def main() -> None:
     out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
     if clone is not None:
-        write_surroundings(manifest["implementation"], files, settings, functools.partial(clone.export, pr.head_sha))
+        for reader in ("implementation", "primer"):
+            write_surroundings(manifest[reader], files, settings, functools.partial(clone.export, pr.head_sha))
     if arguments.prepare_only:
         print(f"Working files: {out}")
         return

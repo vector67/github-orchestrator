@@ -151,7 +151,7 @@ def write_inputs(
     out: Path,
     limit: int = LIMIT,
 ) -> dict[str, Path]:
-    witnesses = ["claimed", "implementation", "tests", "why", "alignment", *(["requested"] if ticket else [])]
+    witnesses = ["claimed", "implementation", "tests", "why", "primer", "alignment", *(["requested"] if ticket else [])]
     manifest = {name: out / name for name in witnesses}
     for folder in manifest.values():
         folder.mkdir()
@@ -160,6 +160,8 @@ def write_inputs(
     wholes: dict[str, dict[str, str]] = {"production": {}, "tests": {}}
     skipped: dict[str, list[str]] = {"production": [], "tests": []}
     unstripped: dict[str, list[str]] = {"production": [], "tests": []}
+    commented_diffs: dict[str, str] = {}
+    commented_wholes: dict[str, str] = {}
     remarks_added: list[str] = []
     docs: list[str] = []
     kept_files = [changed for changed in files if kind_of(changed.path, settings) != "ignored"]
@@ -178,6 +180,10 @@ def write_inputs(
         if not diff and changed.previous and changed.previous != changed.path:
             diff = f"rename from {changed.previous}\nrename to {changed.path}\n"
         diffs[kind][changed.path] = diff
+        if kind == "production":
+            commented_diffs[changed.path] = _raw_diff(changed, side)
+            if side.after is not None:
+                commented_wholes[changed.path] = side.after
         if side.after is not None:
             whole = stripped(side.after, changed.path)
             wholes[kind][changed.path] = side.after if whole is None else whole
@@ -205,6 +211,11 @@ def write_inputs(
     _write(why, "guidance.md", [settings.why_guidance] if settings.why_guidance else [])
     _write(why, "comments.md", _remark_lines(by_others))
     _write(why, "earlier_prs.md", [line for earlier_pr in earlier for line in _earlier_lines(earlier_pr, pr.authors, settings)])
+
+    primer = manifest["primer"]
+    _code_folder(primer, commented_diffs, commented_wholes, skipped["production"], [], limit)
+    _write(primer, "pull_request.md", [f"# {pr.title}\n", pr.body])
+    _write(primer, "ticket.txt", [ticket or "No ticket found."])
 
     _capped(claimed, limit)
     _capped(why, limit)

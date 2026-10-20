@@ -100,7 +100,7 @@ def everything_in(folder: Path) -> str:
 def test_every_witness_gets_its_own_folder(tmp_path: Path) -> None:
     manifest = written(tmp_path)
 
-    assert sorted(manifest) == ["alignment", "claimed", "implementation", "requested", "tests", "why"]
+    assert sorted(manifest) == ["alignment", "claimed", "implementation", "primer", "requested", "tests", "why"]
     assert all(folder.parent == tmp_path for folder in manifest.values())
 
 
@@ -132,6 +132,7 @@ def test_each_witness_leaves_its_output_in_its_own_folder_of_the_work_dir(tmp_pa
         "alignment/output.json",
         "claimed/output.json",
         "implementation/output.json",
+        "primer/output.json",
         "requested/output.json",
         "tests/output.json",
         "why/output.json",
@@ -150,6 +151,18 @@ def test_implementation_sees_stripped_production_code_and_nothing_of_the_author(
     assert "hide the button behind" not in seen
     assert "Export from the toolbar" not in seen
     assert "lock" not in seen
+
+
+def test_primer_sees_production_code_with_its_comments_and_what_the_pull_request_says_it_is(tmp_path: Path) -> None:
+    primer = written(tmp_path)["primer"]
+    seen = everything_in(primer)
+
+    assert "+    # hidden while exports are rewritten" in seen
+    assert "# hidden while exports are rewritten" in (primer / "files" / "src" / "toolbar.py").read_text()
+    assert "Hide the export button" in seen
+    assert "Hides the button when exports are off." in seen
+    assert (primer / "ticket.txt").read_text() == "SHOP-3\n"
+    assert "test_hidden" not in seen
 
 
 def test_code_witnesses_also_get_each_changed_file_whole_and_stripped(tmp_path: Path) -> None:

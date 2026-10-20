@@ -96,6 +96,25 @@ def test_a_failed_witness_leaves_the_rest_and_the_judge_running(tmp_path: Path) 
     assert judged == ["claimed.json", "implementation.json", "tests.json"]
 
 
+def test_the_primer_runs_beside_the_witnesses_but_is_never_judged(tmp_path: Path) -> None:
+    manifest = manifest_in(tmp_path, ["claimed", "primer", "alignment"])
+    launched: list[str] = []
+    judged: list[str] = []
+
+    def launch(witness: str, folder: Path) -> bool:
+        launched.append(witness)
+        if witness == "alignment":
+            judged.extend(sorted(path.name for path in folder.iterdir()))
+            return True
+        (folder / "output.json").write_text("{}")
+        return True
+
+    run_witnesses(manifest, launch, no_wait)
+
+    assert "primer" in launched
+    assert judged == ["claimed.json"]
+
+
 def test_the_prompt_names_no_pull_request() -> None:
     assert "output.json" in PROMPT
 
