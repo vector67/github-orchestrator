@@ -118,3 +118,6 @@ class ThreadAgents:
                      skipped: bool, brief: Brief | None) -> str | None:
         return self.thread_work.open_session(
             self._asked(conversation, _worktree_of(worktree), skipped, brief), steer)
+
+    def open_shell(self, worktree: str | None) -> str | None:
+        return self.thread_work.open_shell(self.pr, _worktree_of(worktree))

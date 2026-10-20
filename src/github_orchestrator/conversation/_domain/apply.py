@@ -13,6 +13,7 @@ from github_orchestrator.conversation._domain.commands import (
     Enrol,
     Fail,
     MoveBase,
+    OpenShell,
     Place,
     PostNow,
     Reject,
@@ -100,6 +101,7 @@ from github_orchestrator.conversation._domain.effects import (
     CutWorkspace,
     DeleteComment,
     DropWorkspace,
+    OpenLoginShell,
     OpenSession,
     Pick,
     PostDraft,
@@ -1139,6 +1141,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _rework(conversation, command)
         case StartSession():
             return _start_session(conversation, command)
+        case OpenShell():
+            return Accepted(conversation, (CutWorkspace(), OpenLoginShell()))
         case Retry():
             return _retry(conversation)
         case WriteFix():

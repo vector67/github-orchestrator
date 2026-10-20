@@ -714,6 +714,13 @@ class SessionOperation(OperationEnvelope):
     proposal: str | None
 
 
+class ShellOperation(OperationEnvelope):
+    """A login shell opened in the thread's own worktree, cut first where the
+    thread has none. No agent runs and the fix stays as it was."""
+
+    kind: Literal[OperationKind.OPEN_SHELL]
+
+
 class ApproveOperation(OperationEnvelope):
     """Landing a proposal on the pull request branch and answering the
     comment."""
@@ -867,7 +874,8 @@ class PostedOperation(OperationEnvelope):
 
 Operation = Annotated[
     FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation
-    | CloseOperation | DeferOperation | UnparkOperation | PlaceOperation | ReplyOperation
+    | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
+    | ReplyOperation
     | DraftOperation | ReviewOperation | PostedOperation,
     Field(discriminator="kind",
           description="A piece of work. Every kind carries the same "

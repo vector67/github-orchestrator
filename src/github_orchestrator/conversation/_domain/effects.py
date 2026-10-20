@@ -27,6 +27,11 @@ class OpenSession:
 
 
 @dataclass(frozen=True)
+class OpenLoginShell:
+    pass
+
+
+@dataclass(frozen=True)
 class CutWorkspace:
     pass
 
@@ -102,6 +107,7 @@ Effect = (
       StartRun
     | StopRun
     | OpenSession
+    | OpenLoginShell
     | CutWorkspace
     | DropWorkspace
     | Pick

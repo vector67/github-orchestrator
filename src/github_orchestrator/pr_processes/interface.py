@@ -1,10 +1,15 @@
 import enum
+import os
 from collections.abc import Set
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
 from github_orchestrator.domain import Pr, Repo
+
+
+def shell_argv() -> list[str]:
+    return [os.environ.get("SHELL") or "/bin/sh", "-l"]
 
 
 class ManagerPane(enum.Enum):

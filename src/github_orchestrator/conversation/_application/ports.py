@@ -167,6 +167,8 @@ class Agents(Protocol):
                      conversation: Conversation, steer: str | None,
                      skipped: bool, brief: Brief | None) -> str | None: ...
 
+    def open_shell(self, worktree: str | None) -> str | None: ...
+
 
 class Summaries(Protocol):
     def write_gist(self, conversation: Conversation, source: str,

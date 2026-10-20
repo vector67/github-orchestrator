@@ -33,7 +33,7 @@ from github_orchestrator.agent_runs.interface import (
     ThreadFix,
 )
 from github_orchestrator.domain import Pr, Repo
-from github_orchestrator.pr_processes import PrProcesses
+from github_orchestrator.pr_processes import PrProcesses, shell_argv
 
 TERMINATED = -15
 
@@ -349,6 +349,9 @@ class FakeAgentRuns:
         if refused is None:
             self.sessions.append(Session(fix, steer))
         return refused
+
+    def open_shell(self, pr: Pr, worktree: str) -> str | None:
+        return self.pr_processes.split(pr, worktree, shell_argv())
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in((json.dumps(entry) for entry in reversed(self.ledger)), pr)

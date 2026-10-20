@@ -12,6 +12,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     EditDraft,
     Enrol,
+    OpenShell,
     Place,
     PostNow,
     Reject,
@@ -182,6 +183,8 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
                 pointed=intent.pointed,
                 include=intent.include,
                 sessions_allowed=ports.config.agents_enabled)
+        case "shell":
+            return OpenShell()
         case "resolve":
             return Resolve(reply=payload,
                            delete_comment=intent.delete_comment,

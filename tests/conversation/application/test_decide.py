@@ -148,14 +148,15 @@ class Scene:
 
 def scene(settings, *, github=None, working_copies=None, thread_records=None,
           comments=((COMMENT_ID, "reviewer", BODY),), is_author: bool | None = None,
-          key: str = KEY, kind: CommentKind = CommentKind.REVIEW) -> Scene:
+          key: str = KEY, kind: CommentKind = CommentKind.REVIEW,
+          agents_enabled: bool | None = None) -> Scene:
     github = github or FakeGitHub()
     here = world(settings, github=github,
                  working_copies=working_copies or FakeWorkingCopies(github),
                  thread_records=thread_records, clock=at(NOW))
     repo_at(here.working_copies, WORKTREE)
     review = kind is CommentKind.REVIEW
-    threads = here.threads(is_author=is_author)
+    threads = here.threads(is_author=is_author, agents_enabled=agents_enabled)
     first_poll(github, threads)
     on_github(github, key, *(said(id, body, author=author) for id, author, body in comments),
               kind=kind, path="f" if review else None, line=1 if review else None)
@@ -412,6 +413,23 @@ def test_a_declined_fix_whose_session_is_refused_is_still_declined(settings):
 
     assert s.stored().fix.is_declined
     assert s.stored().fix.decision_error == REFUSAL
+
+
+def test_a_shell_opens_in_the_threads_own_worktree_while_claude_is_disabled(
+        settings, monkeypatch):
+    monkeypatch.setenv("SHELL", "/bin/zsh")
+    s = scene(settings, agents_enabled=False)
+    assert not s.still_cut()
+
+    asked = s.ask("open_shell")
+    drain(s.threads)
+
+    [pane] = s.sessions()
+    assert (pane.worktree, pane.argv) == (
+        s.here.working_copies.thread_checkout(THE_PR, KEY), ["/bin/zsh", "-l"])
+    assert s.here.agent_runs.sessions == []
+    assert s.stored().standing is ConversationState.READY
+    assert s.taken(asked)
 
 
 def test_no_session_starts_while_claude_is_disabled(settings):
