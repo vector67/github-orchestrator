@@ -1731,15 +1731,13 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-ready-confirm]').doesNotExist();
   });
 
-  test("an unresolved thread in the wall's ready question opens in a tab that closes on Back", async function (assert) {
-    board().conversations = [
-      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
-    ];
+  test("a board thread in the wall's ready question opens in a tab that closes on Back", async function (assert) {
+    board().conversations = [thread({ key: 'PRRT_r', state: 'ready' })];
     onTheHub(
       heldPr(),
       heldPr({
         number: 8,
-        dashboard: { facts: { draft: true, unresolved_threads: 1 } },
+        dashboard: { facts: { draft: true } },
       }),
     );
     await visit('/');

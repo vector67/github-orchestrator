@@ -2,7 +2,7 @@ import type { TOC } from '@ember/component/template-only';
 import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
-import type { Outstanding, OutstandingItem } from 'frontend/services/store';
+import type { Outstanding } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 
 interface ReadyConfirmSignature {
@@ -51,18 +51,6 @@ const inATab = (event: MouseEvent): void => {
   const link = event.currentTarget as HTMLAnchorElement;
   window.open(link.getAttribute('href') ?? link.href, '_blank');
 };
-
-const ItemWhat: TOC<{ Args: { item: OutstandingItem } }> = <template>
-  {{#if @item.what}}
-    <span class="outstanding-what">{{@item.what}}</span>
-  {{else}}
-    <span
-      class="outstanding-placeholder"
-      aria-label="loading"
-      data-test-placeholder
-    ></span>
-  {{/if}}
-</template>;
 
 const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
   <div class="decide-dialog">
@@ -120,7 +108,7 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
                     {{else}}
                       <span class="outstanding-where">{{item.where}}</span>
                     {{/if}}
-                    <ItemWhat @item={{item}} />
+                    <span class="outstanding-what">{{item.what}}</span>
                   </li>
                 {{/each}}
               </ul>
