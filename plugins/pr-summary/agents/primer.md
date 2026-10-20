@@ -41,8 +41,17 @@ the code alone.
 - `repo/`: every other production file at the pull request's head. Search it
   for what the changed code calls and what calls it. May be missing.
 - `skipped.txt`, `truncated.txt`: files left out. May be missing.
+- `earlier_primer.json`: your own output from an earlier run on this pull
+  request, at an older head. May be missing.
 
 ## What to do
+
+If `earlier_primer.json` exists, start from it rather than from nothing. Its
+concepts were built against an older head: check each against the diff and
+code you have now, keep what still holds as it is, rewrite what the new
+commits changed (an **In this PR:** line, a diagram, a renamed function),
+drop concepts the change no longer touches, and add any it now needs. Do the
+steps below only for what you add or rewrite.
 
 1. Read the description and the diff. List every term, module, data
    structure and process the change touches or relies on.

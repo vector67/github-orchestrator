@@ -16,6 +16,7 @@ parser.add_argument("--work-dir", type=Path, required=True)
 parser.add_argument("--use-github-api", action="store_true")
 parser.add_argument("--gh-account")
 parser.add_argument("--mcp-config")
+parser.add_argument("--earlier-primer", type=Path)
 arguments = parser.parse_args()
 
 out = arguments.work_dir
@@ -29,6 +30,7 @@ out.mkdir(parents=True, exist_ok=True)
     "use_github_api": arguments.use_github_api,
     "gh_account": arguments.gh_account,
     "mcp_config": arguments.mcp_config,
+    "earlier_primer": json.loads(arguments.earlier_primer.read_text()) if arguments.earlier_primer else None,
 }))
 
 
@@ -58,6 +60,7 @@ if behaviour in ("partway", "partway-then-a-witness-fails"):
 for witness in WITNESSES:
     finish(witness, {})
 if behaviour == "clean":
+    finish("primer", {"witness": "primer", "concepts": [{"name": "Toolbar", "explanation": "The row of buttons.", "concepts": []}]})
     finish("alignment", {"mismatches": [{"rung": "requested"}, {"rung": "claimed"}]})
 elif behaviour == "malformed-alignment":
     (out / "alignment").mkdir()

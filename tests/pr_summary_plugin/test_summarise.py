@@ -126,6 +126,17 @@ def test_an_mcp_config_reaches_the_witness_launcher(tmp_path: Path, monkeypatch:
     assert launched_with == [tmp_path / "mcp.json"]
 
 
+def test_an_earlier_primer_is_handed_to_the_primer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    summarising_offline(monkeypatch)
+    earlier = tmp_path / "earlier.json"
+    earlier.write_text('{"witness": "primer", "concepts": []}')
+    monkeypatch.setattr("sys.argv", ["summarise.py", "7", "--use-github-api", "--work-dir", str(tmp_path / "work"), "--earlier-primer", str(earlier), "--prepare-only"])
+
+    summarise.main()
+
+    assert (tmp_path / "work" / "primer" / "earlier_primer.json").read_text() == earlier.read_text()
+
+
 def test_a_witness_that_failed_prints_the_report_then_exits_naming_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     summarising_offline(monkeypatch)
     monkeypatch.setattr(summarise, "run_witnesses", lambda manifest, launch, wait: {"requested": "its tools stayed unavailable: the Atlassian tools never connected"})

@@ -73,6 +73,10 @@ connecting when a witness starts, so the Jira witnesses report their tools
 unavailable. Name each server in the file as `claude mcp list` does, so its
 login carries over.
 
+`--earlier-primer <file>` hands the primer its `output.json` from an earlier
+run, so a rerun updates those concepts against the new head instead of
+building them again.
+
 ## Working files
 
 Each run writes its witness folders into a fresh temporary folder, or into

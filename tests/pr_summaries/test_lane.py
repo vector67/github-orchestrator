@@ -1,3 +1,4 @@
+import json
 import os
 import signal
 import sys
@@ -25,8 +26,28 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
     assert wanted < stored.started < stored.finished
     assert lane.call() == {"pr": "https://github.com/acme/widgets/pull/7", "config": str(lane.config),
                            "cwd": str(lane.clone.resolve()), "use_github_api": False, "gh_account": "octocat",
-                           "mcp_config": None}
+                           "mcp_config": None, "earlier_primer": None}
     assert lane.summaries.due(set()) == []
+
+
+def test_a_rerun_hands_the_plugin_the_primer_the_last_run_wrote(tmp_path):
+    lane = Lane(tmp_path, "clean")
+    lane.lane.start(THE_PR, use_github_api=False)
+    written = json.loads((lane.folder / "primer" / "output.json").read_text())
+
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    assert lane.call()["earlier_primer"] == written
+
+
+def test_a_run_that_wrote_no_primer_leaves_the_one_before_for_the_next(tmp_path):
+    Lane(tmp_path, "clean").lane.start(THE_PR, use_github_api=False)
+    Lane(tmp_path, "crash").lane.start(THE_PR, use_github_api=False)
+    lane = Lane(tmp_path, "clean")
+
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    assert lane.call()["earlier_primer"]["concepts"][0]["name"] == "Toolbar"
 
 
 RECORDING_CLAMP = "import os, sys; open(sys.argv[1], 'w').write(sys.argv[2]); os.execv(sys.argv[2], sys.argv[2:])"

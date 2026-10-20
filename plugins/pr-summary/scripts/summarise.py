@@ -5,6 +5,7 @@
 import argparse
 import dataclasses
 import functools
+import shutil
 import sys
 import tempfile
 import time
@@ -50,6 +51,7 @@ def main() -> None:
     parser.add_argument("--use-github-api", action="store_true", help="read files over the GitHub API when the working directory is not a clone of the repository")
     parser.add_argument("--gh-account", help="run gh as this logged-in account, with the token gh auth token --user gives for it, instead of gh's active account")
     parser.add_argument("--mcp-config", type=Path, help="an MCP config file the witnesses load instead of every MCP server claude would find, so their servers are connected before they start")
+    parser.add_argument("--earlier-primer", type=Path, help="the primer's output.json from an earlier run on this pull request, for the primer to start from")
     arguments = parser.parse_args()
 
     named = work_dir(arguments.work_dir) if arguments.work_dir else None
@@ -95,6 +97,8 @@ def main() -> None:
     earlier = earlier_prs(gh, owner, repo, pr, ticket, files, settings, history_of)
     out = named or Path(tempfile.mkdtemp(prefix="pr-summary-"))
     manifest = write_inputs(pr, files, read, earlier, settings, ticket, out)
+    if arguments.earlier_primer:
+        shutil.copy(arguments.earlier_primer, manifest["primer"] / "earlier_primer.json")
     if clone is not None:
         for reader in ("implementation", "primer"):
             write_surroundings(manifest[reader], files, settings, functools.partial(clone.export, pr.head_sha))

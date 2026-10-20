@@ -66,6 +66,20 @@ def _outputs(pr_folder: Path) -> Path:
     return pr_folder.with_suffix(".run")
 
 
+def _kept_primer(pr_folder: Path) -> Path:
+    return pr_folder.with_suffix(".primer.json")
+
+
+def _keep_primer(pr_folder: Path) -> None:
+    written = pr_folder / "primer" / "output.json"
+    try:
+        primer = json.loads(written.read_text())
+    except (OSError, ValueError):
+        return
+    if isinstance(primer, dict) and "concepts" in primer:
+        shutil.copy(written, _kept_primer(pr_folder))
+
+
 def _read(path: Path) -> str:
     try:
         return path.read_text()
@@ -140,6 +154,7 @@ class LocalSummaryLane:
         run = _Run(pr, self._clock(), self._head_of(pr),
                    (self._summaries.load(pr) or Summary()).wanted)
         folder = working_folder(self._dir, pr)
+        _keep_primer(folder)
         shutil.rmtree(folder, ignore_errors=True)
         shutil.rmtree(_outputs(folder), ignore_errors=True)
         os.ftruncate(slot, 0)
@@ -232,10 +247,12 @@ class LocalSummaryLane:
         folder = working_folder(self._dir, pr)
         outputs = _outputs(folder)
         outputs.mkdir(parents=True)
+        kept = _kept_primer(folder)
         command = [*self._plugin, self._url_of(pr), "--config", str(self._config_path),
                    "--work-dir", str(folder), "--gh-account", self._gh_account,
                    *(["--mcp-config", self._mcp_config] if self._mcp_config else []),
-                   *(["--use-github-api"] if use_github_api else [])]
+                   *(["--use-github-api"] if use_github_api else []),
+                   *(["--earlier-primer", str(kept)] if kept.exists() else [])]
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
             process = subprocess.Popen(
                 [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
