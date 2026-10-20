@@ -68,10 +68,6 @@ def argv_for(command: GitCommand, buffer: str) -> list[str]:
     return [part.replace("{n}", digits) for part in command.argv]
 
 
-def shell_argv() -> list[str]:
-    return [os.environ.get("SHELL") or "/bin/sh", "-l"]
-
-
 def open_in_terminal(command: GitCommand, argv: list[str], pr: Pr, worktree: str,
                      pr_processes: PrProcesses, pr_work: PrWork) -> str | None:
     if command.mode == "agent":

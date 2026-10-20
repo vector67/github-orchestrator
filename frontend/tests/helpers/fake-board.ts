@@ -150,6 +150,7 @@ const DETAILS: {
   rework: FIX,
   retry: FIX,
   'start-session': { ...RUN, steer: null },
+  'open-shell': {},
   approve: {
     ...CLOSE,
     landed_base: null,
@@ -1304,6 +1305,9 @@ export class FakeBoard {
     const id = `op_${this.posted.length}`;
     if (verb === 'start-session') {
       this.startSession(['claude', '--resume', key], `/wt/thread-${key}`);
+    }
+    if (verb === 'open-shell') {
+      this.startSession(['/bin/zsh', '-l'], `/wt/thread-${key}`);
     }
     if (verb === 'send-review') {
       const review = operation({

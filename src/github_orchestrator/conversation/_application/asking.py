@@ -18,6 +18,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     EditDraft,
     Enrol,
+    OpenShell,
     Place,
     PostNow,
     Reject,
@@ -64,6 +65,7 @@ KIND_OF_DECISION = {
     "approve": OperationKind.APPROVE,
     "rework": OperationKind.REWORK,
     "session": OperationKind.START_SESSION,
+    "shell": OperationKind.OPEN_SHELL,
     "resolve": OperationKind.RESOLVE,
     "retry": OperationKind.RETRY,
     "fix": OperationKind.FIRST,
@@ -141,6 +143,8 @@ def _intent_of(command: Command) -> Intent:
         case StartSession():
             return Intent(decision="session", payload=command.steer or None,
                           pointed=command.pointed, include=command.include)
+        case OpenShell():
+            return Intent(decision="shell")
         case Resolve():
             return Intent(decision="resolve", payload=command.reply or None,
                           delete_comment=command.delete_comment,

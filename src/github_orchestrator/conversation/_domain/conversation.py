@@ -17,6 +17,7 @@ class OperationKind(StrEnum):
     REWORK = "rework"
     RETRY = "retry"
     START_SESSION = "start-session"
+    OPEN_SHELL = "open-shell"
     APPROVE = "approve"
     STOP = "stop"
     RESOLVE = "resolve"

@@ -33,7 +33,7 @@ EDIT_DRAFT = "edit-draft"
 
 PLACE = "place"
 
-DECISIONS = (APPROVE, REWORK, SESSION, "resolve", "retry", "fix", "reject",
+DECISIONS = (APPROVE, REWORK, SESSION, "shell", "resolve", "retry", "fix", "reject",
              "defer", "unpark", "confirm", "place", "not_fixed", "stop", "reply", EDIT_DRAFT,
              "enrol", "withdraw-from-review", "discard", "post-now")
 

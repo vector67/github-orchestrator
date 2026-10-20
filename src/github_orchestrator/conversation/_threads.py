@@ -65,6 +65,7 @@ from github_orchestrator.conversation._domain.commands import (
     Enrol,
     Fail,
     MoveBase,
+    OpenShell,
     Place,
     PostNow,
     Reject,
@@ -338,6 +339,9 @@ class _Editable:
         lines = tuple(PointedLine(file=file, line=line, text=text)
                       for file, line, text in pointed)
         return self._ask(StartSession(steer=steer, pointed=lines, include=tuple(include)))
+
+    def open_shell(self) -> Conversation | Denied:
+        return self._ask(OpenShell())
 
     def retry(self) -> Conversation | Denied:
         return self._ask(Retry())

@@ -52,6 +52,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       decides('place', 'Not confirm, or Move…'),
       decides('not-fixed', 'Not fixed'),
       decides('fix', 'Write a fix'),
+      decides('open-shell', "Open a shell in the comment's own worktree"),
       decides('retry', 'Try again'),
       decides('stop', 'Stop'),
       decides(

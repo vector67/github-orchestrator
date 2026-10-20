@@ -73,7 +73,7 @@ from github_orchestrator.agent_runs.interface import (
     ThreadFix,
 )
 from github_orchestrator.domain import Monotonic, Pr, Repo
-from github_orchestrator.pr_processes import PrProcesses
+from github_orchestrator.pr_processes import PrProcesses, shell_argv
 
 log = logging.getLogger(__name__)
 
@@ -413,6 +413,9 @@ class AgentRuns:
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
                         rework_prompt(self._commands, fix, steer, self._workers))
+
+    def open_shell(self, pr: Pr, worktree: str) -> str | None:
+        return self._pr_processes.split(pr, worktree, shell_argv())
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in(iter_lines_reverse(self._runs_log, max_bytes=SEED_SCAN_BYTES),

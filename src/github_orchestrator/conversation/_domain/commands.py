@@ -140,6 +140,11 @@ class StartSession:
 
 
 @dataclass(frozen=True)
+class OpenShell:
+    pass
+
+
+@dataclass(frozen=True)
 class Retry:
     pass
 
@@ -213,6 +218,7 @@ Command = (
     | Approve
     | Rework
     | StartSession
+    | OpenShell
     | Retry
     | WriteFix
     | Stop

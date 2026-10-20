@@ -495,9 +495,9 @@ export interface NewestRelease {
   newer: boolean;
 }
 
-export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'approve' | 'stop' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
 
-export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
 
 export type OperationList = Operation[];
 
@@ -520,7 +520,7 @@ export interface OperationSummary {
 }
 
 export interface Outcome {
-  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
   conversation: Conversation;
 }
 
@@ -814,6 +814,17 @@ export interface SetupRequest {
 export interface SetupRequirement {
   program: string;
   fix: string | null;
+}
+
+export interface ShellOperation {
+  id: string;
+  conversation: string | null;
+  kind: 'open-shell';
+  state: OperationState;
+  reason: string | null;
+  reason_code: ReasonCode | null;
+  requested_at: string | null;
+  settled_at: string | null;
 }
 
 export interface SinceYouActed {
