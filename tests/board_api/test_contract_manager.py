@@ -5,6 +5,7 @@ import pytest
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import (
     BaseStanding,
+    DismissUntil,
     ManagerStanding,
     QueuedEvent,
     UnpushedCommit,
@@ -240,14 +241,14 @@ def test_start_review_is_accepted_and_handed_to_the_manager():
     assert panel.reviews_started == 1
 
 
-def test_dismiss_is_accepted_and_handed_to_the_manager_until_the_next_event_or_forever():
-    until, forever = FakeManagerPanel(), FakeManagerPanel()
+@pytest.mark.parametrize("until", list(DismissUntil))
+def test_dismiss_is_accepted_and_handed_to_the_manager_with_how_long(until):
+    panel = FakeManagerPanel()
 
-    one = client_for(manager=until).post("/api/manager:dismiss", json={"forever": False})
-    other = client_for(manager=forever).post("/api/manager:dismiss", json={"forever": True})
+    answer = client_for(manager=panel).post("/api/manager:dismiss", json={"until": until.value})
 
-    assert (one.status_code, other.status_code) == (202, 202)
-    assert (until.dismissed, forever.dismissed) == ("until the next event", "forever")
+    assert answer.status_code == 202
+    assert panel.dismissed is until
 
 
 def test_dismiss_that_does_not_say_how_long_is_refused_and_dismisses_nothing():
@@ -280,7 +281,7 @@ def test_mark_ready_is_accepted_and_handed_to_the_manager():
 @pytest.mark.parametrize(("path", "body"), [
     ("/api/manager:hold", None), ("/api/manager:resume", None),
     ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
-    ("/api/manager:dismiss", {"forever": False}), ("/api/manager:close", None),
+    ("/api/manager:dismiss", {"until": "next-event"}), ("/api/manager:close", None),
     ("/api/manager:mark-ready", None),
 ])
 def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):

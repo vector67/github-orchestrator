@@ -2,7 +2,7 @@ import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type RouterService from '@ember/routing/router-service';
-import type { GitRun } from 'frontend/data/api';
+import type { DismissUntil, GitRun } from 'frontend/data/api';
 import { dismissedSaying, type Dismissal } from 'frontend/data/dashboard';
 import { capOf } from 'frontend/data/decisions';
 import { tried, type Tried } from 'frontend/data/tried';
@@ -75,6 +75,12 @@ const BOARD_DOWN = {
   'mark-ready':
     'Ready for review goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
+};
+
+const DISMISSALS: Record<DismissUntil, Dismissal> = {
+  'next-event': 'until its next event',
+  'ready-for-review': 'until it is ready for review',
+  forever: 'forever',
 };
 
 const ABSENT: Offer = { state: 'absent' };
@@ -249,8 +255,8 @@ export default class PrControlsService extends Service {
   markReady = (on: Controlled): Promise<void> =>
     this.carryOut(on, 'mark-ready');
 
-  dismiss = (on: Controlled, forever: boolean): Promise<void> =>
-    waitForPromise(this.dismissing(on, forever));
+  dismiss = (on: Controlled, until: DismissUntil): Promise<void> =>
+    waitForPromise(this.dismissing(on, until));
 
   dismissedOf(pr: Numbered | null): Dismissal | null {
     if (pr === null) return null;
@@ -318,9 +324,9 @@ export default class PrControlsService extends Service {
     }
   }
 
-  private async dismissing(on: Controlled, forever: boolean): Promise<void> {
-    const how: Dismissal = forever ? 'forever' : 'until its next event';
-    if (!(await this.throughTheManager(on, 'dismiss', { forever }))) return;
+  private async dismissing(on: Controlled, until: DismissUntil): Promise<void> {
+    const how = DISMISSALS[until];
+    if (!(await this.throughTheManager(on, 'dismiss', { until }))) return;
     this.dismissals = new Map(this.dismissals).set(keyOf(on.shown), how);
     this.toasts.say(dismissedSaying(on.number, how), 'done');
     await this.loader.refreshHub();

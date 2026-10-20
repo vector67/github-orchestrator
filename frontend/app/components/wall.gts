@@ -11,6 +11,7 @@ import ReadyConfirm from 'frontend/components/ready-confirm';
 import HubBar from 'frontend/components/hub-bar';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
+import type { DismissUntil } from 'frontend/data/api';
 import { ageOf, dashboardOf, type Reading } from 'frontend/data/dashboard';
 import { failingOf, keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
@@ -176,9 +177,9 @@ export default class Wall extends Component<WallSignature> {
     this.press(pr, control);
   };
 
-  dismiss = (pr: WallRow, forever: boolean) => {
+  dismiss = (pr: WallRow, until: DismissUntil) => {
     this.confirming = null;
-    void this.controls.dismiss(this.controls.ofRow(pr), forever);
+    void this.controls.dismiss(this.controls.ofRow(pr), until);
   };
 
   private press(pr: WallRow, control: Control): boolean {

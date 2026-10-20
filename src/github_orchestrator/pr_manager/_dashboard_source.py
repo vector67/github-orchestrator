@@ -68,7 +68,8 @@ class DashboardSource:
         return self._stamped(dashboard_of(
             config, facts, run=run, last_run=self._history.last_run(pr), queue=self._queue(pr),
             on_hold=self._holds.on_hold(pr), threads=threads, wrong=wrong, notice=notice,
-            hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0),
+            hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0,
+                                              draft=facts is None or facts.draft),
         ))
 
     def _queue(self, pr: Pr) -> tuple[QueuedEvent, ...]:

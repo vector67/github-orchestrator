@@ -1860,7 +1860,7 @@ module('Acceptance | wall', function (hooks) {
     );
     await press('u');
     assert.deepEqual(verbs(), [
-      '/pr/o/r/7/api/manager:dismiss {"forever":false}',
+      '/pr/o/r/7/api/manager:dismiss {"until":"next-event"}',
     ]);
   });
 
@@ -1891,8 +1891,29 @@ module('Acceptance | wall', function (hooks) {
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert.deepEqual(verbs(), [
-      '/pr/o/r/7/api/manager:dismiss {"forever":false}',
-      '/pr/o/r/8/api/manager:dismiss {"forever":true}',
+      '/pr/o/r/7/api/manager:dismiss {"until":"next-event"}',
+      '/pr/o/r/8/api/manager:dismiss {"until":"forever"}',
+    ]);
+  });
+
+  test('d on a draft row offers r, which dismisses it until it is ready for review', async function (assert) {
+    onTheHub(
+      heldPr({ dashboard: { facts: factsFor('fix-ci', { draft: true }) } }),
+    );
+    await visit('/');
+    await press('j');
+
+    await press('d');
+
+    assert
+      .dom('[data-test-dismiss-confirm] [data-test-dismiss-option="r"]')
+      .hasText('until ready for review r');
+
+    await press('r');
+
+    assert.dom('[data-test-dismiss-confirm]').doesNotExist();
+    assert.deepEqual(verbs(), [
+      '/pr/o/r/7/api/manager:dismiss {"until":"ready-for-review"}',
     ]);
   });
 
@@ -2050,7 +2071,7 @@ module('Acceptance | wall', function (hooks) {
 
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
     assert.deepEqual(verbs(), [
-      '/pr/o/r/7/api/manager:dismiss {"forever":false}',
+      '/pr/o/r/7/api/manager:dismiss {"until":"next-event"}',
     ]);
     assert
       .dom('[data-test-toast]')
@@ -2075,7 +2096,7 @@ module('Acceptance | wall', function (hooks) {
       );
     await press('h');
     assert.deepEqual(verbs(), [
-      '/pr/o/r/7/api/manager:dismiss {"forever":true}',
+      '/pr/o/r/7/api/manager:dismiss {"until":"forever"}',
     ]);
   });
 

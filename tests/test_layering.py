@@ -332,7 +332,7 @@ PACKAGES = {
         builds_the_container=frozenset({"__main__", "_worker"}),
     ),
     "settings": Package(
-        pinned=frozenset({"ConfigFile", "Dismissals", "Logs", "Holds", "Process"}),
+        pinned=frozenset({"ConfigFile", "Dismissal", "Dismissals", "Logs", "Holds", "Process"}),
         wiring_skips=frozenset({"_paths"}),
     ),
     "terminal_sessions": Package(

@@ -27,6 +27,12 @@ class ManagerStanding(StrEnum):
     GONE = "gone"
 
 
+class DismissUntil(StrEnum):
+    NEXT_EVENT = "next-event"
+    READY_FOR_REVIEW = "ready-for-review"
+    FOREVER = "forever"
+
+
 @dataclass(frozen=True)
 class BaseStanding:
     behind_by: int
@@ -130,7 +136,7 @@ class ManagerPanel(Protocol):
 
     def start_review(self) -> str | None: ...
 
-    def dismiss(self, forever: bool) -> str | None: ...
+    def dismiss(self, until: DismissUntil) -> str | None: ...
 
     def close(self) -> str | None: ...
 

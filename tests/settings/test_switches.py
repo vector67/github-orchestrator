@@ -53,7 +53,7 @@ def test_a_dismissal_forever_is_written_in_a_flag_file(switches, tmp_path):
 
 def test_a_dismissal_until_the_next_event_written_before_still_reads(switches, tmp_path):
     _write(dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)), "until-event")
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False) is True
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is True
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
 
 

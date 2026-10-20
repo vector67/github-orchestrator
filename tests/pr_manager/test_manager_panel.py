@@ -10,6 +10,7 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
+from github_orchestrator.board_api.interface import DismissUntil
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -303,15 +304,16 @@ def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings
     assert answers == ["agents are disabled in config.toml"]
 
 
-@pytest.mark.parametrize(("forever", "dismissal"), [
-    (False, Dismissal.UNTIL_NEXT_EVENT),
-    (True, Dismissal.FOREVER),
+@pytest.mark.parametrize(("until", "dismissal"), [
+    (DismissUntil.NEXT_EVENT, Dismissal.UNTIL_NEXT_EVENT),
+    (DismissUntil.READY_FOR_REVIEW, Dismissal.UNTIL_READY_FOR_REVIEW),
+    (DismissUntil.FOREVER, Dismissal.FOREVER),
 ])
-def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_path, forever,
+def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_path, until,
                                                                   dismissal):
     board = ServerPanel()
     reached = []
-    _on_the_browser_front(settings, tmp_path, lambda: board.panel.dismiss(forever),
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.dismiss(until),
               lambda: reached.append(True), board=board)
     assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is dismissal
     assert reached == []
@@ -372,7 +374,7 @@ def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):
     board = ServerPanel()
 
     def dismiss_then_hold():
-        board.panel.dismiss(False)
+        board.panel.dismiss(DismissUntil.NEXT_EVENT)
         board.panel.set_on_hold(True)
 
     _on_the_browser_front(settings, tmp_path, dismiss_then_hold, None, board=board)

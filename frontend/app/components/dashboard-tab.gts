@@ -7,6 +7,7 @@ import { fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
+import type { DismissUntil } from 'frontend/data/api';
 import GitPalette from 'frontend/components/git-palette';
 import GitPaletteState from 'frontend/components/git-palette-state';
 import RebaseButton from 'frontend/components/rebase-button';
@@ -204,10 +205,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.asking = null;
   };
 
-  dismiss = (forever: boolean) => {
+  dismiss = (until: DismissUntil) => {
     this.cancelAsking();
     const on = this.on;
-    if (on) void this.controls.dismiss(on, forever);
+    if (on) void this.controls.dismiss(on, until);
   };
 
   close = () => {

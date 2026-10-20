@@ -872,7 +872,7 @@ module('Acceptance | dashboard', function (hooks) {
     await press('u');
 
     assert.deepEqual(board().posted.at(-1)?.verb, 'dismiss');
-    assert.deepEqual(board().posted.at(-1)?.body, { forever: false });
+    assert.deepEqual(board().posted.at(-1)?.body, { until: 'next-event' });
     assert.strictEqual(currentURL(), '/');
     assert
       .dom('[data-test-toast]')
@@ -893,7 +893,44 @@ module('Acceptance | dashboard', function (hooks) {
     await click('[data-test-dismiss-option="f"]');
 
     assert.deepEqual(board().posted.at(-1)?.verb, 'dismiss');
-    assert.deepEqual(board().posted.at(-1)?.body, { forever: true });
+    assert.deepEqual(board().posted.at(-1)?.body, { until: 'forever' });
+  });
+
+  test('on a draft, d then r dismisses until it is ready for review', async function (assert) {
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('d');
+
+    assert
+      .dom('[data-test-dismiss-option="r"]')
+      .hasText('until ready for review r');
+    assert
+      .dom('[data-test-dismiss-confirm] .dialog-actions button')
+      .exists({ count: 3 });
+
+    await press('r');
+
+    assert.deepEqual(board().posted.at(-1)?.verb, 'dismiss');
+    assert.deepEqual(board().posted.at(-1)?.body, {
+      until: 'ready-for-review',
+    });
+    assert
+      .dom('[data-test-toast]')
+      .hasText(
+        'Dismissed #7 until it is ready for review. Its manager has exited.',
+      );
+  });
+
+  test('r on a PR that is not a draft answers nothing in the dismiss question', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('d');
+    await press('r');
+
+    assert.dom('[data-test-dismiss-confirm]').exists();
+    assert.deepEqual(verbs(), []);
   });
 
   test('c, which is Reply on the Board, closes nothing here', async function (assert) {

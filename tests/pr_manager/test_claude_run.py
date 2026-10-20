@@ -3,6 +3,7 @@ import dataclasses
 import pytest
 
 from github_orchestrator.agent_runs.fake import CarryingOn, FakeAgentRuns, Outcome
+from github_orchestrator.board_api.interface import DismissUntil
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
 from tests.pr_manager.support import ServerPanel, manager_over, run_manager, seed_state
@@ -93,6 +94,6 @@ def test_sigterm_leaves_the_live_run_for_the_next_manager_to_carry_on(settings, 
 def test_dismissing_ends_the_live_run_for_good(settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
     board = ServerPanel()
-    run_manager(settings, _carry_on(board), lambda: board.panel.dismiss(False),
+    run_manager(settings, _carry_on(board), lambda: board.panel.dismiss(DismissUntil.NEXT_EVENT),
                 worktree=tmp_path, is_author=True, board=board, agent_runs=runs)
     assert runs.restarted().interrupted(a_pr(1, "o/n")) is None

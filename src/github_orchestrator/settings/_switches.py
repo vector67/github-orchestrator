@@ -8,7 +8,8 @@ from github_orchestrator.settings.interface import Dismissal
 
 log = logging.getLogger(__name__)
 
-_STORED = {"until-event": Dismissal.UNTIL_NEXT_EVENT, "forever": Dismissal.FOREVER}
+_STORED = {"until-event": Dismissal.UNTIL_NEXT_EVENT, "forever": Dismissal.FOREVER,
+           "until-ready": Dismissal.UNTIL_READY_FOR_REVIEW}
 _WORDS = {dismissal: word for word, dismissal in _STORED.items()}
 
 
@@ -110,10 +111,17 @@ class FlagFileDismissals:
     def dismiss_until_next_event(self, pr: Pr) -> None:
         self._dismiss(pr, Dismissal.UNTIL_NEXT_EVENT)
 
-    def is_hidden(self, pr: Pr, events_waiting: bool) -> bool:
+    def dismiss_until_ready_for_review(self, pr: Pr) -> None:
+        self._dismiss(pr, Dismissal.UNTIL_READY_FOR_REVIEW)
+
+    def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool:
         dismissal = self.dismissal(pr)
         if dismissal is Dismissal.UNTIL_NEXT_EVENT and events_waiting:
             log.info("%s: an event is waiting — ending its dismissal until the next event", pr)
+            self.undismiss(pr)
+            return False
+        if dismissal is Dismissal.UNTIL_READY_FOR_REVIEW and not draft:
+            log.info("%s: no longer a draft — ending its dismissal until ready for review", pr)
             self.undismiss(pr)
             return False
         return dismissal is not None

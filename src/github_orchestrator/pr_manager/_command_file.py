@@ -19,6 +19,7 @@ class Command(StrEnum):
     CARRY_ON = "carry-on"
     START_REVIEW = "start-review"
     DISMISS_UNTIL_NEXT_EVENT = "dismiss-until-next-event"
+    DISMISS_UNTIL_READY_FOR_REVIEW = "dismiss-until-ready-for-review"
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
     MARK_READY = "mark-ready"

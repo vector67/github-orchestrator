@@ -546,6 +546,7 @@ function whoseOf(shown: ShownPr, summaries: Summaries): string | null {
 
 export interface DismissWording {
   untilNextEvent: string;
+  untilReady: string | null;
   forever: string;
   foreverDetail: string;
 }
@@ -553,6 +554,7 @@ export interface DismissWording {
 function dismissOf(shown: ShownPr): DismissWording {
   return {
     untilNextEvent: 'until next event',
+    untilReady: shown.facts?.draft ? 'until ready for review' : null,
     forever: 'forever — removes the worktree',
     foreverDetail: `Stops the watcher tracking this PR. Reverse it with: ${shown.drawn.undismiss_command}`,
   };
@@ -1224,7 +1226,8 @@ export function dashboardOf(
   };
 }
 
-export type Dismissal = 'until its next event' | 'forever';
+export type Dismissal =
+  'until its next event' | 'until it is ready for review' | 'forever';
 
 export function dismissedSaying(number: number, how: Dismissal): string {
   return `Dismissed #${number} ${how}. Its manager has exited.`;

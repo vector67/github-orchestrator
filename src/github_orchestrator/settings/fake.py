@@ -69,9 +69,15 @@ class FakeDismissals:
     def dismiss_until_next_event(self, pr: Pr) -> None:
         self._dismissed[pr] = Dismissal.UNTIL_NEXT_EVENT
 
-    def is_hidden(self, pr: Pr, events_waiting: bool) -> bool:
+    def dismiss_until_ready_for_review(self, pr: Pr) -> None:
+        self._dismissed[pr] = Dismissal.UNTIL_READY_FOR_REVIEW
+
+    def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool:
         dismissal = self._dismissed.get(pr)
         if dismissal is Dismissal.UNTIL_NEXT_EVENT and events_waiting:
+            del self._dismissed[pr]
+            return False
+        if dismissal is Dismissal.UNTIL_READY_FOR_REVIEW and not draft:
             del self._dismissed[pr]
             return False
         return dismissal is not None

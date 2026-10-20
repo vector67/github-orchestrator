@@ -24,6 +24,7 @@ class Logs(Protocol):
 class Dismissal(Enum):
     UNTIL_NEXT_EVENT = "until-event"
     FOREVER = "forever"
+    UNTIL_READY_FOR_REVIEW = "until-ready"
 
 
 @dataclass(frozen=True)
@@ -93,7 +94,9 @@ class Dismissals(Protocol):
 
     def dismiss_until_next_event(self, pr: Pr) -> None: ...
 
-    def is_hidden(self, pr: Pr, events_waiting: bool) -> bool: ...
+    def dismiss_until_ready_for_review(self, pr: Pr) -> None: ...
+
+    def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool: ...
 
     def is_dismissed_forever(self, pr: Pr) -> bool: ...
 

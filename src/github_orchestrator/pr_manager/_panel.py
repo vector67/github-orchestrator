@@ -4,6 +4,7 @@ from pathlib import Path
 
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel
+from github_orchestrator.board_api.interface import DismissUntil
 from github_orchestrator.domain import Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
@@ -25,6 +26,12 @@ log = logging.getLogger(__name__)
 NO_WORKTREE = "refused: this pull request has no worktree yet, since its manager has not started"
 
 SHOWN_READ_ONLY = frozenset({"l", "d"})
+
+_DISMISS_COMMANDS = {
+    DismissUntil.NEXT_EVENT: Command.DISMISS_UNTIL_NEXT_EVENT,
+    DismissUntil.READY_FOR_REVIEW: Command.DISMISS_UNTIL_READY_FOR_REVIEW,
+    DismissUntil.FOREVER: Command.DISMISS_FOREVER,
+}
 
 
 class FilePanel(ManagerPanel):
@@ -64,8 +71,8 @@ class FilePanel(ManagerPanel):
     def start_review(self) -> str | None:
         return self._hand(Command.START_REVIEW)
 
-    def dismiss(self, forever: bool) -> str | None:
-        return self._hand(Command.DISMISS_FOREVER if forever else Command.DISMISS_UNTIL_NEXT_EVENT)
+    def dismiss(self, until: DismissUntil) -> str | None:
+        return self._hand(_DISMISS_COMMANDS[until])
 
     def close(self) -> str | None:
         return self._hand(Command.CLOSE)

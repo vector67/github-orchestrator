@@ -876,8 +876,10 @@ class WouldWatchProvider(Provider):
 
     @provide
     def placement(self, wiring: WouldWatchWiring, config: WatcherConfig, dismissals: Dismissals,
-                  worklist: Worklist, would_intake: WouldIntake) -> Placement:
+                  worklist: Worklist, change_detection: ChangeDetection,
+                  would_intake: WouldIntake) -> Placement:
         return WouldPlace(config, dismissals=dismissals, worklist=worklist,
+                          change_detection=change_detection,
                           enqueued=would_intake.enqueued, say=wiring.say)
 
     @provide

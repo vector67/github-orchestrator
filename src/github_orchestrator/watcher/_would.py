@@ -1,11 +1,12 @@
 from collections.abc import Callable, Mapping
 from datetime import datetime
 
+from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.pr_summaries import PrSummaries
-from github_orchestrator.settings import Dismissals
+from github_orchestrator.settings import Dismissal, Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._poll import Fetched
 from github_orchestrator.watcher._teardown import Reason
@@ -13,17 +14,26 @@ from github_orchestrator.watcher._teardown import Reason
 
 class WouldPlace:
     def __init__(self, config: WatcherConfig, *, dismissals: Dismissals, worklist: Worklist,
-                 enqueued: Callable[[Pr], int], say: Callable[[str], None]) -> None:
+                 change_detection: ChangeDetection, enqueued: Callable[[Pr], int],
+                 say: Callable[[str], None]) -> None:
         self._repos = config.repos
         self._dismissals = dismissals
         self._worklist = worklist
+        self._change_detection = change_detection
         self._enqueued = enqueued
         self._say = say
 
     def ensure(self, pr: Pr, *, fetch: bool = False) -> None:
         waiting = self._worklist.waiting(pr).count + self._enqueued(pr)
-        if self._dismissals.is_hidden(pr, events_waiting=bool(waiting)):
-            self._say(f"would leave PR {pr.number} alone (dismissed until the next event)")
+        facts = self._change_detection.facts(pr)
+        if self._dismissals.is_hidden(pr, events_waiting=bool(waiting),
+                                      draft=facts is None or facts.draft):
+            match self._dismissals.dismissal(pr):
+                case Dismissal.UNTIL_READY_FOR_REVIEW:
+                    until = "ready for review"
+                case _:
+                    until = "the next event"
+            self._say(f"would leave PR {pr.number} alone (dismissed until {until})")
             return
         clone = self._repos[pr.repo]
         self._say(f"would open or revive PR {pr.number}'s window — a worktree for its head "

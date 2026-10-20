@@ -457,6 +457,25 @@ def test_dry_run_promises_the_window_when_this_cycle_would_enqueue(
     assert "dismissed until the next event" not in out
 
 
+def _draft_dismissed_until_ready(settings, *, draft_now):
+    github = watching(settings)
+    _mine(github, 23, draft=True)
+    watcher_over(settings, github=github).run_cycle()
+    disk_dismissals(settings.data_dir).dismiss_until_ready_for_review(a_pr(23, REPO))
+    _mine(github, 23, draft=draft_now)
+    return github
+
+
+def test_dry_run_leaves_a_draft_dismissed_until_ready_for_review_alone(settings, capsys):
+    github = _draft_dismissed_until_ready(settings, draft_now=True)
+    capsys.readouterr()
+
+    out = _dry_run(settings, capsys, github)
+
+    assert "would leave PR 23 alone (dismissed until ready for review)" in out
+    assert "would open or revive PR 23's window" not in out
+
+
 def test_dry_run_summary_counts_the_prs_the_events_and_the_teardowns(settings, capsys):
     github = watching(settings)
     _theirs(github, 1)

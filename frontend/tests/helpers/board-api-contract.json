@@ -3033,14 +3033,22 @@
   },
   "DismissRequest": {
    "properties": {
-    "forever": {
-     "type": "boolean"
+    "until": {
+     "$ref": "#/components/schemas/DismissUntil"
     }
    },
    "required": [
-    "forever"
+    "until"
    ],
    "type": "object"
+  },
+  "DismissUntil": {
+   "enum": [
+    "next-event",
+    "ready-for-review",
+    "forever"
+   ],
+   "type": "string"
   },
   "DraftBody": {
    "properties": {

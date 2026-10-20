@@ -1,5 +1,6 @@
 from github_orchestrator.settings.interface import (
     ConfigFile,
+    Dismissal,
     Dismissals,
     Holds,
     Logs,
@@ -8,6 +9,7 @@ from github_orchestrator.settings.interface import (
 
 __all__ = [
     "ConfigFile",
+    "Dismissal",
     "Dismissals",
     "Logs",
     "Holds",

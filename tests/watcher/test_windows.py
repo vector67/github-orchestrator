@@ -130,6 +130,36 @@ def test_a_pr_dismissed_until_its_next_event_opens_again_when_one_waits(
     assert world.manager(THE_PR) is ManagerPane.RUNNING
 
 
+def _draft_github(settings, *, draft):
+    github = watching(settings)
+    github.add_pr(THE_PR, PullRequestState(author=github.account, head_sha="sha1",
+                                           branch=EXPECTED, draft=draft))
+    return github
+
+
+def test_a_draft_dismissed_until_ready_for_review_stays_closed_while_an_event_waits(
+        settings, world, copies, notifications, tmp_path):
+    checked_out(copies, tmp_path / EXPECTED, EXPECTED)
+    disk_dismissals(settings.data_dir).dismiss_until_ready_for_review(THE_PR)
+    disk_event_queue(settings.queues_dir).add(THE_PR, mergeable())
+
+    _cycle(settings, world, copies, notifications, _draft_github(settings, draft=True))
+
+    assert world.managers == {}
+    assert dismissed_file(settings.dismissed_dir, THE_PR).exists()
+
+
+def test_a_pr_dismissed_until_ready_for_review_opens_again_once_it_is_not_a_draft(
+        settings, world, copies, notifications, tmp_path):
+    checked_out(copies, tmp_path / EXPECTED, EXPECTED)
+    disk_dismissals(settings.data_dir).dismiss_until_ready_for_review(THE_PR)
+
+    _cycle(settings, world, copies, notifications, _draft_github(settings, draft=False))
+
+    assert not dismissed_file(settings.dismissed_dir, THE_PR).exists()
+    assert world.manager(THE_PR) is ManagerPane.RUNNING
+
+
 def test_a_dead_manager_is_started_again_in_its_window(settings, world, copies, notifications):
     manager = _window(world, copies, running=False)
 

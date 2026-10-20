@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, RootModel, StringConstraints
 from github_orchestrator import conversation as domain
 from github_orchestrator.board_api.interface import (
     CloneState,
+    DismissUntil,
     ManagerStanding,
     WallGroup,
     WriteState,
@@ -1615,10 +1616,11 @@ class TerminalSessionList(BaseModel):
 
 
 class DismissRequest(BaseModel):
-    forever: bool = Field(
-        description="False dismisses the pull request until its next event; "
-                    "true dismisses it for good. Either way the manager "
-                    "stops its run and exits, and the board goes with it.")
+    until: DismissUntil = Field(
+        description="How long the pull request stays dismissed: until its "
+                    "next event, until it is no longer a draft, or for good. "
+                    "Whichever it is, the manager stops its run and exits, "
+                    "and the board goes with it.")
 
 
 class HeldPullRequest(BaseModel):

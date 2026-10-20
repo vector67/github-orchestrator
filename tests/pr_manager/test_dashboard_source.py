@@ -35,6 +35,7 @@ from tests.pr_manager.polls import (
     REVIEWED,
     REVIEWED_AT,
     WAITING_ON_REVIEW,
+    polled_pr,
     seed,
 )
 from tests.pr_manager.scripted_terminal import ManualClock
@@ -92,6 +93,17 @@ def test_a_pr_dismissed_until_its_next_event_with_no_manager_says_it_is_hidden(s
 
     assert unmanaged == managed
     assert unmanaged.hidden is True
+
+
+@pytest.mark.parametrize(("draft", "hidden"), [(True, True), (False, False)])
+def test_a_pr_dismissed_until_ready_for_review_is_hidden_while_it_is_a_draft(
+        settings, tmp_path, draft, hidden):
+    seed(settings, polled_pr(draft=draft))
+    disk_dismissals(settings.data_dir).dismiss_until_ready_for_review(THE_PR)
+
+    _, unmanaged = _both(settings, tmp_path)
+
+    assert unmanaged.hidden is hidden
 
 
 def test_proposed_fixes_are_counted_with_no_manager(settings, tmp_path):

@@ -4,6 +4,7 @@ from github_orchestrator.board_api.interface import (
     NOTHING_HELD,
     CloneSpot,
     Dashboard,
+    DismissUntil,
     FieldRefusal,
     Held,
     ManagerStanding,
@@ -48,7 +49,7 @@ class FakeManagerPanel:
     output: list[tuple[str, bool]] = field(default_factory=list)
     carried_on: int = 0
     reviews_started: int = 0
-    dismissed: str | None = None
+    dismissed: DismissUntil | None = None
     closed: int = 0
     marked_ready: int = 0
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
@@ -81,9 +82,9 @@ class FakeManagerPanel:
             self.reviews_started += 1
         return self.refusal
 
-    def dismiss(self, forever: bool) -> str | None:
+    def dismiss(self, until: DismissUntil) -> str | None:
         if self.refusal is None:
-            self.dismissed = "forever" if forever else "until the next event"
+            self.dismissed = until
         return self.refusal
 
     def close(self) -> str | None:

@@ -86,9 +86,14 @@ class ManagerCommands:
             case Command.START_REVIEW:
                 self._start_review()
             case Command.DISMISS_UNTIL_NEXT_EVENT:
-                self._dismiss(False)
+                self._dismissals.dismiss_until_next_event(self._config.pr)
+                self._leave("until the next event")
+            case Command.DISMISS_UNTIL_READY_FOR_REVIEW:
+                self._dismissals.dismiss_until_ready_for_review(self._config.pr)
+                self._leave("until ready for review")
             case Command.DISMISS_FOREVER:
-                self._dismiss(True)
+                self._dismissals.dismiss_forever(self._config.pr)
+                self._leave("forever")
             case Command.CLOSE:
                 self._close()
             case Command.MARK_READY:
@@ -116,17 +121,12 @@ class ManagerCommands:
             return
         self.active_run = started
 
-    def _dismiss(self, forever: bool) -> None:
+    def _leave(self, how_long: str) -> None:
         pr = self._config.pr
-        if forever:
-            self._dismissals.dismiss_forever(pr)
-        else:
-            self._dismissals.dismiss_until_next_event(pr)
         if self.active_run is not None:
             self.active_run.terminate()
         self._worklist.drop_in_flight(pr)
-        log.info("Dismissed %s %s — exiting; the watcher closes its window",
-                 "forever" if forever else "until the next event", pr)
+        log.info("Dismissed %s %s — exiting; the watcher closes its window", pr, how_long)
         self._dismissed = True
 
     def _close(self) -> None:

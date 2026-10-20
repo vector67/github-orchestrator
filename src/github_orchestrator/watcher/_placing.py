@@ -33,7 +33,9 @@ class WindowPlacement:
         self._dismissals = dismissals
 
     def ensure(self, pr: Pr, *, fetch: bool = False) -> None:
-        if self._dismissals.is_hidden(pr, events_waiting=bool(self._worklist.waiting(pr).count)):
+        facts = self._change_detection.facts(pr)
+        if self._dismissals.is_hidden(pr, events_waiting=bool(self._worklist.waiting(pr).count),
+                                      draft=facts is None or facts.draft):
             if (not self._dismissals.is_dismissed_forever(pr)
                     and self._pr_processes.manager(pr) is ManagerPane.EXITED):
                 log.info("ensure_pr_window %s: dismissed and its manager has exited; "
@@ -42,7 +44,6 @@ class WindowPlacement:
             else:
                 log.debug("ensure_pr_window %s: dismissed; skipping", pr)
             return
-        facts = self._change_detection.facts(pr)
         if facts is None or facts.is_author is None:
             log.info("ensure_pr_window %s: whose PR this is is not known yet; "
                      "leaving its window for the next cycle", pr)

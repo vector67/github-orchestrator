@@ -282,8 +282,10 @@ export type DiffSide = 'LEFT' | 'RIGHT';
 export type DiffSource = 'origin' | 'local';
 
 export interface DismissRequest {
-  forever: boolean;
+  until: DismissUntil;
 }
+
+export type DismissUntil = 'next-event' | 'ready-for-review' | 'forever';
 
 export interface DraftBody {
   body: string;

@@ -631,13 +631,14 @@ def start_review(board: Serving) -> Response:
 
 @writes.post("/manager:dismiss", status_code=202, tags=["manager"],
              operation_id="dismissManager", responses=HANDED_TO_THE_MANAGER,
-             summary="Dismiss this pull request until its next event, or for "
-                     "good.")
+             summary="Dismiss this pull request until its next event, until "
+                     "it is ready for review, or for good.")
 def dismiss_manager(board: Serving, asked: DismissRequest) -> Response:
-    """The dashboard's `x u` and `x f`. The manager records the dismissal,
-    stops its run and exits, so this board stops answering soon after.
+    """The dashboard's `x u`, `x r` and `x f`. The manager records the
+    dismissal, stops its run and exits, so this board stops answering soon
+    after.
     """
-    return _handed_over(board, board.manager.dismiss(asked.forever))
+    return _handed_over(board, board.manager.dismiss(asked.until))
 
 
 @writes.post("/manager:close", status_code=202, tags=["manager"],
