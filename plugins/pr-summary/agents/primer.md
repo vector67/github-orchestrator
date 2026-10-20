@@ -81,6 +81,17 @@ the code alone.
 - `explanation` is markdown. Explain with the mechanism and a concrete
   example, not a definition that restates the name. Only top-level concepts
   need **In this PR:**; a child may have one when the change touches it.
+- Show, where a picture says it faster than prose. When a concept is a flow,
+  a pipeline, a structure or a set of relations (data moving between steps,
+  which table feeds which function, what calls what, how a value is
+  derived), draw it in a fenced `mermaid` block inside the explanation:
+  `flowchart LR` or `TD` for flows and structures, `sequenceDiagram` for
+  calls over time. Keep a diagram to about a dozen nodes, quote every label
+  (`A["wet mass (kg/m3)"]`), and mark what this pull request changes, for
+  example with a `classDef changed` style or a "new" label. When a concept is
+  a calculation or a comparison, put its worked example in a markdown table
+  instead. Not every concept needs either: a diagram must show something the
+  prose does not.
 - Never say whether the change is right, complete or risky. That is the
   other agents' job.
 - Write plain JSON only, with straight quotes.

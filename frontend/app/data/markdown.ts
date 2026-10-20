@@ -39,7 +39,7 @@ const DRAWN_TAGS = [
   'span',
 ];
 
-const COLLAPSIBLE_TAGS = ['details', 'summary'];
+const SUMMARY_TAGS = ['details', 'summary', 'figure'];
 
 function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
   const made = new MarkdownIt('default', {
@@ -69,6 +69,15 @@ const NOTES = parser(false);
 
 const SUMMARIES = parser(true, true);
 
+const fence = SUMMARIES.renderer.rules.fence;
+
+SUMMARIES.renderer.rules.fence = (tokens, at, options, env, self) => {
+  const block = tokens[at];
+  if (block?.info.trim() !== 'mermaid' || !fence)
+    return fence?.(tokens, at, options, env, self) ?? '';
+  return `<figure><pre><code>${SUMMARIES.utils.escapeHtml(block.content)}</code></pre></figure>`;
+};
+
 const SANITISER = DOMPurify(window);
 
 SANITISER.addHook('uponSanitizeAttribute', keepingClasses(true));
@@ -88,7 +97,7 @@ export function notesOf(text: string): DocumentFragment {
 }
 
 export function summaryOf(text: string): DocumentFragment {
-  return sanitised(SUMMARIES.render(text), COLLAPSIBLE_TAGS);
+  return sanitised(SUMMARIES.render(text), SUMMARY_TAGS);
 }
 
 function sanitised(html: string, extraTags: string[] = []): DocumentFragment {

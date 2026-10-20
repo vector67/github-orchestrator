@@ -100,6 +100,27 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-markdown] script').doesNotExist();
   });
 
+  test('a diagram in a summary is drawn, and one that will not draw keeps its source', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      markdown:
+        '## Before you review\n' +
+        '<details>\n<summary>Toolbar</summary>\n\n' +
+        '```mermaid\nflowchart LR\n  Flags --> Toolbar\n```\n\n' +
+        '</details>\n\n' +
+        '```mermaid\nnot a diagram at all\n```\n',
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    const figures = findAll('[data-test-summary-markdown] figure');
+    assert.strictEqual(figures.length, 2);
+    assert.dom('svg', figures[0]).exists();
+    assert.dom(figures[0]).includesText('Flags');
+    assert.dom('svg', figures[1]).doesNotExist();
+    assert.dom(figures[1]).hasText('not a diagram at all');
+  });
+
   function squares(): (string | undefined)[] {
     return findAll('[data-test-diffstat-square]').map(
       (one) => (one as HTMLElement).dataset['testDiffstatSquare'],

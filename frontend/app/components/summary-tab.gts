@@ -6,10 +6,12 @@ import { waitForPromise } from '@ember/test-waiters';
 import { pulses } from 'frontend/motion';
 import { exitWordOf, lengthOf, relativeOf } from 'frontend/data/dashboard';
 import { summaryOf } from 'frontend/data/markdown';
+import diagrams from 'frontend/modifiers/diagrams';
 import drawn from 'frontend/modifiers/drawn';
 import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
+import type ThemeService from 'frontend/services/theme';
 import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
 
 function is(one: string, other: string): boolean {
@@ -24,6 +26,7 @@ export default class SummaryTab extends Component {
   @service declare here: HereService;
   @service declare hub: HubService;
   @service declare store: StoreService;
+  @service declare theme: ThemeService;
 
   @tracked said: string | null = null;
 
@@ -215,6 +218,7 @@ export default class SummaryTab extends Component {
             class="summary-body comment-body"
             data-test-summary-markdown
             {{drawn summaryOf this.tab.markdown}}
+            {{diagrams this.tab.markdown this.theme.dark}}
           ></div>
         {{/if}}
       {{/if}}
