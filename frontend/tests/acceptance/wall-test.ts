@@ -20,6 +20,7 @@ import {
   heldPr,
   runLedger,
   setupFakeBoard,
+  thread,
   threadRow as row,
   unpushed,
   waitingEvents,
@@ -1728,6 +1729,69 @@ module('Acceptance | wall', function (hooks) {
       ['/pr/o/r/7/api/manager:mark-ready'],
     );
     assert.dom('[data-test-ready-confirm]').doesNotExist();
+  });
+
+  test('an unresolved thread in the ready question links to the thread, and Back brings the question back open', async function (assert) {
+    board().conversations = [
+      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
+    ];
+    onTheHub(
+      heldPr(),
+      heldPr({
+        number: 8,
+        dashboard: { facts: { draft: true, unresolved_threads: 1 } },
+      }),
+    );
+    await visit('/');
+    await press('j');
+    await press('j');
+
+    await press('r');
+    const asked = currentURL();
+    await click('[data-test-outstanding-item="PRRT_r"] a');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/8/conversations/PRRT_r');
+
+    await visit(asked);
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('Mark #8 ready for review?');
+    assert.dom('[data-test-outstanding-item="PRRT_r"] a').exists();
+  });
+
+  test('the wall reached again after following a thread does not reopen the ready question', async function (assert) {
+    board().conversations = [
+      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
+    ];
+    onTheHub(
+      heldPr({ dashboard: { facts: { draft: true, unresolved_threads: 1 } } }),
+    );
+    await visit('/');
+    await press('j');
+
+    await press('r');
+    await click('[data-test-outstanding-item="PRRT_r"] a');
+    await click('[data-test-switcher-open]');
+    await click('[data-test-wall-link]');
+
+    assert.strictEqual(currentURL(), '/');
+    assert.dom('[data-test-ready-confirm]').doesNotExist();
+  });
+
+  test('the open ready question on the wall is in the URL, and cancelling it takes it out', async function (assert) {
+    onTheHub(heldPr({ dashboard: { facts: { draft: true } } }));
+    await visit('/');
+    await press('j');
+
+    await press('r');
+
+    assert.strictEqual(currentURL(), '/?ready=o%2Fr%237');
+
+    await press('Escape');
+
+    assert.dom('[data-test-ready-confirm]').doesNotExist();
+    assert.strictEqual(currentURL(), '/');
   });
 
   test('the dismiss question takes the focus and holds j and k', async function (assert) {

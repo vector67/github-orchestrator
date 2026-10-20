@@ -1,10 +1,12 @@
 import type { TOC } from '@ember/component/template-only';
 import { on } from '@ember/modifier';
-import type { Outstanding } from 'frontend/services/store';
+import { LinkTo } from '@ember/routing';
+import type { Outstanding, OutstandingItem } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 
 interface ReadyConfirmSignature {
   Args: {
+    repo: string;
     number: number;
     outstanding: Outstanding | null;
     mark: () => void;
@@ -36,6 +38,25 @@ const sentenceOf = (outstanding: Outstanding | null): string => {
 };
 
 const isFirst = (index: number): boolean => index === 0;
+
+const threadAt = (repo: string, number: number, key: string): string[] => [
+  ...repo.split('/'),
+  String(number),
+  key,
+];
+
+const ItemWords: TOC<{ Args: { item: OutstandingItem } }> = <template>
+  <span class="outstanding-where">{{@item.where}}</span>
+  {{#if @item.what}}
+    <span class="outstanding-what">{{@item.what}}</span>
+  {{else}}
+    <span
+      class="outstanding-placeholder"
+      aria-label="loading"
+      data-test-placeholder
+    ></span>
+  {{/if}}
+</template>;
 
 const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
   <div class="decide-dialog">
@@ -76,15 +97,14 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
                     class="outstanding-item"
                     data-test-outstanding-item={{item.key}}
                   >
-                    <span class="outstanding-where">{{item.where}}</span>
-                    {{#if item.what}}
-                      <span class="outstanding-what">{{item.what}}</span>
+                    {{#if item.thread}}
+                      <LinkTo
+                        @route="conversations.detail"
+                        @models={{threadAt @repo @number item.thread}}
+                        class="outstanding-link"
+                      ><ItemWords @item={{item}} /></LinkTo>
                     {{else}}
-                      <span
-                        class="outstanding-placeholder"
-                        aria-label="loading"
-                        data-test-placeholder
-                      ></span>
+                      <ItemWords @item={{item}} />
                     {{/if}}
                   </li>
                 {{/each}}

@@ -459,6 +459,7 @@ export interface OutstandingItem {
   key: string;
   where: string;
   what: string | null;
+  thread?: string;
 }
 
 export interface OutstandingGroup {
@@ -506,7 +507,10 @@ function unresolvedOf(
   const open = all.filter(
     (one) => one.kind === 'review' && one.github_resolved === false,
   );
-  const items = open.map((one) => threadItem(one, questionOf(one)));
+  const items: OutstandingItem[] = open.map((one) => ({
+    ...threadItem(one, questionOf(one)),
+    thread: one.key,
+  }));
   const more = (facts?.unresolved_threads ?? 0) - open.length;
   if (more > 0) {
     items.push({
