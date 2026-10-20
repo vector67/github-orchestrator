@@ -494,7 +494,10 @@ worktree and how it ended, and starts new ones: a login shell (`$SHELL -l`),
 `git add -p`, `git commit`, `git rebase -i HEAD~<N>`, which asks for the count
 (3 unless you change it), and `claude "/rebase-on-main"` for you to steer. The
 board's **Steer it yourself** opens its Claude session here, in the thread's
-own worktree, and the page switches to this tab. **Send back for rework** is the
+own worktree, and the page switches to this tab. **Open a shell** (`q`), on
+your own thread with no fix, opens a login shell there instead, cutting the
+thread's worktree first; it runs no agent, so it works with agents disabled,
+which is when your new threads arrive with no fix. **Send back for rework** is the
 unattended one: the agent re-runs with your note and nothing opens here. A thread whose panel says
 **Session open** offers **Go to the session in the Terminal tab**, which
 switches here and picks the session running in that thread's worktree.

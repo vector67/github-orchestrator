@@ -289,6 +289,20 @@ const ENTRIES = {
     square: 'rework',
     opensTerminal: true,
   },
+  'open-shell': {
+    key: 'q',
+    label: 'Open a shell',
+    weight: 'ghost',
+    title:
+      'opens a login shell in the Terminal tab, in a worktree of its own for ' +
+      'this comment, made first if it has none — no agent runs, and nothing ' +
+      'reaches the PR branch',
+    asks: null,
+    request: () => ({ verb: 'open-shell', body: {} }),
+    doing: 'opening a shell',
+    square: 'ready',
+    opensTerminal: true,
+  },
   fix: {
     key: 'i',
     label: 'Write a fix',
@@ -741,6 +755,7 @@ const LANDING_AGAIN: Decision[] = [
 ];
 const TRY_AGAIN: Decision[] = [
   'fix',
+  'open-shell',
   'retry',
   'rework',
   'start-session',

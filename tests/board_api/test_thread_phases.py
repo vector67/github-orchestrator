@@ -54,8 +54,8 @@ def _asking_for_a_change():
                          review_state=ReviewState.CHANGES_REQUESTED)
 
 
-def _heard(github=None):
-    board = board_on(fake_threads(github or FakeGitHub(account=VIEWER), clock=at(NOW)),
+def _heard(github=None, **config):
+    board = board_on(fake_threads(github or FakeGitHub(account=VIEWER), clock=at(NOW), **config),
                      is_author=True,
                      base_branch="main", head_sha="c0ffee1", branch="fix-the-widget")
     heard_on(board, KEY, _asking_for_a_change(), **WHERE)
@@ -83,6 +83,10 @@ def _reported(board, verb, *args, **kwargs):
 
 def queued():
     return _heard()
+
+
+def answered():
+    return _heard(agents_enabled=False)
 
 
 def working():
@@ -206,7 +210,7 @@ def resolved():
 
 
 AUTHOR = {
-    "queued": queued, "working": working, "session": session, "rework": rework,
+    "queued": queued, "answered": answered, "working": working, "session": session, "rework": rework,
     "landing": landing, "rebasing": rebasing, "proposed": proposed_,
     "declined": declined, "assumed-done": assumed_done, "failed": failed, "stopped": stopped, "removed": removed,
     "push failed": push_failed, "reply failed": reply_failed,

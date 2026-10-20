@@ -457,6 +457,22 @@ module('Acceptance | terminal', function (hooks) {
       .hasAttribute('aria-current', 'true');
   });
 
+  test('a thread with no fix opens a shell in its own worktree and takes you to the Terminal tab with it', async function (assert) {
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="open-shell"]');
+    await clock().tick(500);
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    assert.deepEqual(texts('[data-test-session]'), [
+      '/bin/zsh -l /wt/thread-k1',
+    ]);
+    assert
+      .dom('[data-test-session="made-1"]')
+      .hasAttribute('aria-current', 'true');
+  });
+
   test('a session whose command exits keeps its screen and its place in the list, with a bar that says its exit code', async function (assert) {
     onTheHub();
     board().terminalSessions = [SHELL];

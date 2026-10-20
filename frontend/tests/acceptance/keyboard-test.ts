@@ -212,6 +212,7 @@ module('Acceptance | keyboard', function (hooks) {
       'm Not confirm, or Move…',
       'b Not fixed',
       'i Write a fix',
+      "q Open a shell in the comment's own worktree",
       't Try again',
       'x Stop',
       'o Steer it yourself where the panel offers it, GitHub otherwise',
