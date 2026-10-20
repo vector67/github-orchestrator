@@ -1287,14 +1287,21 @@ button.copy-directory {
 }
 
 .decide-dialog .outstanding-link {
-  display: grid;
-  gap: 3px;
-  color: inherit;
-  text-decoration: none;
+  justify-self: start;
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 2px;
 }
 
 .decide-dialog .outstanding-link:hover {
-  text-decoration: underline;
+  text-decoration-color: currentcolor;
+}
+
+.decide-dialog .outstanding-opens {
+  margin-left: 4px;
+  color: var(--muted);
+  text-decoration: none;
 }
 
 .decide-dialog .outstanding-item + .outstanding-item {

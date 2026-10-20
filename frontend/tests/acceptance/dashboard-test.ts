@@ -1122,7 +1122,7 @@ module('Acceptance | dashboard', function (hooks) {
       .hasText('2');
   });
 
-  test('an unresolved thread in the ready question links to the thread, and Back brings the question back open', async function (assert) {
+  test("only an unresolved thread's file and line in the ready question link to it", async function (assert) {
     board().conversations = [
       thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
     ];
@@ -1131,24 +1131,41 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('r');
 
+    assert.dom('[data-test-outstanding-item="PRRT_r"] a').exists({ count: 1 });
     assert
-      .dom('[data-test-outstanding-item="more-unresolved"]')
-      .containsText('1 more unresolved on GitHub');
+      .dom('[data-test-outstanding-item="PRRT_r"] a .outstanding-what')
+      .doesNotExist();
+    assert
+      .dom('[data-test-outstanding-item="PRRT_r"] a [data-test-opens-a-tab]')
+      .exists();
     assert
       .dom('[data-test-outstanding-item="more-unresolved"] a')
       .doesNotExist();
+  });
 
-    const asked = currentURL();
-    await click('[data-test-outstanding-item="PRRT_r"] a');
+  test('following a thread from the ready question opens it in a tab that closes on Back, and leaves the question open', async function (assert) {
+    board().conversations = [
+      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
+    ];
+    onTheHub({ facts: { draft: true, unresolved_threads: 1 } });
+    await visit('/pr/o/r/7/dashboard');
+    await press('r');
+    const opened: (string | URL | undefined)[] = [];
+    const open = window.open.bind(window);
+    window.open = (url) => {
+      opened.push(url);
+      return null;
+    };
 
-    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/PRRT_r');
+    try {
+      await click('[data-test-outstanding-item="PRRT_r"] a');
+    } finally {
+      window.open = open;
+    }
 
-    await visit(asked);
-
-    assert
-      .dom('[data-test-ready-confirm]')
-      .containsText('Mark #7 ready for review?');
-    assert.dom('[data-test-outstanding-item="PRRT_r"] a').exists();
+    assert.deepEqual(opened, ['/pr/o/r/7/conversations/PRRT_r?back=close']);
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard?ready=true');
+    assert.dom('[data-test-ready-confirm]').exists();
   });
 
   test('the open ready question is in the URL, and cancelling it takes it out', async function (assert) {
@@ -1164,15 +1181,12 @@ module('Acceptance | dashboard', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
   });
 
-  test('the Dashboard tab after following a thread does not reopen the ready question', async function (assert) {
-    board().conversations = [
-      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
-    ];
-    onTheHub({ facts: { draft: true, unresolved_threads: 1 } });
+  test('the Dashboard tab after leaving it with the ready question open does not reopen it', async function (assert) {
+    onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');
 
     await press('r');
-    await click('[data-test-outstanding-item="PRRT_r"] a');
+    await visit('/pr/o/r/7/board');
     await click('[data-test-tab="dashboard"]');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');

@@ -1,4 +1,5 @@
 import type { TOC } from '@ember/component/template-only';
+import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
 import type { Outstanding, OutstandingItem } from 'frontend/services/store';
@@ -45,8 +46,13 @@ const threadAt = (repo: string, number: number, key: string): string[] => [
   key,
 ];
 
-const ItemWords: TOC<{ Args: { item: OutstandingItem } }> = <template>
-  <span class="outstanding-where">{{@item.where}}</span>
+const inATab = (event: MouseEvent): void => {
+  event.preventDefault();
+  const link = event.currentTarget as HTMLAnchorElement;
+  window.open(link.getAttribute('href') ?? link.href, '_blank');
+};
+
+const ItemWhat: TOC<{ Args: { item: OutstandingItem } }> = <template>
   {{#if @item.what}}
     <span class="outstanding-what">{{@item.what}}</span>
   {{else}}
@@ -101,11 +107,20 @@ const ReadyConfirm: TOC<ReadyConfirmSignature> = <template>
                       <LinkTo
                         @route="conversations.detail"
                         @models={{threadAt @repo @number item.thread}}
-                        class="outstanding-link"
-                      ><ItemWords @item={{item}} /></LinkTo>
+                        @query={{hash back="close"}}
+                        class="outstanding-where outstanding-link"
+                        target="_blank"
+                        title="open the thread in a new tab; Back there closes it"
+                        {{on "click" inATab}}
+                      >{{item.where}}<span
+                          class="outstanding-opens"
+                          aria-hidden="true"
+                          data-test-opens-a-tab
+                        >↗</span></LinkTo>
                     {{else}}
-                      <ItemWords @item={{item}} />
+                      <span class="outstanding-where">{{item.where}}</span>
                     {{/if}}
+                    <ItemWhat @item={{item}} />
                   </li>
                 {{/each}}
               </ul>

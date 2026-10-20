@@ -1731,7 +1731,7 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-ready-confirm]').doesNotExist();
   });
 
-  test('an unresolved thread in the ready question links to the thread, and Back brings the question back open', async function (assert) {
+  test("an unresolved thread in the wall's ready question opens in a tab that closes on Back", async function (assert) {
     board().conversations = [
       thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
     ];
@@ -1745,33 +1745,33 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
     await press('j');
     await press('j');
-
     await press('r');
-    const asked = currentURL();
-    await click('[data-test-outstanding-item="PRRT_r"] a');
+    const opened: (string | URL | undefined)[] = [];
+    const open = window.open.bind(window);
+    window.open = (url) => {
+      opened.push(url);
+      return null;
+    };
 
-    assert.strictEqual(currentURL(), '/pr/o/r/8/conversations/PRRT_r');
+    try {
+      await click('[data-test-outstanding-item="PRRT_r"] a');
+    } finally {
+      window.open = open;
+    }
 
-    await visit(asked);
-
+    assert.deepEqual(opened, ['/pr/o/r/8/conversations/PRRT_r?back=close']);
     assert
       .dom('[data-test-ready-confirm]')
       .containsText('Mark #8 ready for review?');
-    assert.dom('[data-test-outstanding-item="PRRT_r"] a').exists();
   });
 
-  test('the wall reached again after following a thread does not reopen the ready question', async function (assert) {
-    board().conversations = [
-      thread({ key: 'PRRT_r', state: 'waiting', github_resolved: false }),
-    ];
-    onTheHub(
-      heldPr({ dashboard: { facts: { draft: true, unresolved_threads: 1 } } }),
-    );
+  test('the wall reached again after leaving it with the ready question open does not reopen it', async function (assert) {
+    onTheHub(heldPr({ dashboard: { facts: { draft: true } } }));
     await visit('/');
     await press('j');
 
     await press('r');
-    await click('[data-test-outstanding-item="PRRT_r"] a');
+    await visit('/pr/o/r/7/board');
     await click('[data-test-switcher-open]');
     await click('[data-test-wall-link]');
 
