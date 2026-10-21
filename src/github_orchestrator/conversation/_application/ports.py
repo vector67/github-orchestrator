@@ -177,7 +177,7 @@ class Summaries(Protocol):
     def ask_verdict(self, conversation: Conversation,
                     done: Callable[[ThreadVerdict], None]) -> None: ...
 
-    def check_commit(self, conversation: Conversation, sha: Sha, worktree: str,
+    def check_commit(self, conversation: Conversation, sha: Sha, shown: str, worktree: str,
                      done: Callable[[CommitVerdict, str], None]) -> None: ...
 
 

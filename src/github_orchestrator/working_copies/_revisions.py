@@ -48,18 +48,25 @@ def blob(worktree: str, sha: str, path: str) -> bytes | None:
     return shown.stdout if shown.returncode == 0 else None
 
 
-def named_commit(worktree: str, sha: str) -> tuple[str, str] | None:
+def named_commit(worktree: str, sha: str) -> tuple[str, str, str] | None:
     if Sha.parse(sha) is None or not os.path.isdir(worktree):
         return None
     try:
-        shown = _git(worktree, "log", "-1", "--format=%H %P", "--end-of-options",
-                     f"{sha}^{{commit}}")
+        logged = _git(worktree, "log", "-1", "--format=%H %P", "--end-of-options",
+                      f"{sha}^{{commit}}")
     except (OSError, subprocess.TimeoutExpired) as exc:
         log.warning("git log %s in %s failed to run: %s", sha, worktree, exc)
         return None
-    if shown.returncode != 0:
+    if logged.returncode != 0:
         return None
-    full, *parents = shown.stdout.decode().split()
+    full, *parents = logged.stdout.decode().split()
     if not parents:
         return None
-    return full, parents[0]
+    try:
+        shown = _git(worktree, "show", "--end-of-options", full)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        log.warning("git show %s in %s failed to run: %s", full, worktree, exc)
+        return None
+    if shown.returncode != 0:
+        return None
+    return full, parents[0], shown.stdout.decode(errors="replace")

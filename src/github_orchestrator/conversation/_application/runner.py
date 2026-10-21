@@ -247,7 +247,7 @@ def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommi
             if outcome.conversation != stored:
                 update.conversation = outcome.conversation
 
-    ports.summaries.check_commit(conversation, sha, commit.worktree, record)
+    ports.summaries.check_commit(conversation, sha, commit.shown, commit.worktree, record)
 
 
 def _unpick_outcome(ports: Ports, conversation: Conversation) -> Change:

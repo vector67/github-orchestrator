@@ -40,14 +40,14 @@ class Gists:
             mentions_viewer=facts.mentions_viewer, kind=facts.kind, answers=ANSWERS,
             done=lambda word: done(ThreadVerdict(word)))
 
-    def check_commit(self, conversation: Conversation, sha: Sha, worktree: str,
+    def check_commit(self, conversation: Conversation, sha: Sha, shown: str, worktree: str,
                      done: Callable[[CommitVerdict, str], None]) -> None:
         if not self.enabled:
             return
         facts = facts_of(conversation, self.viewer, self.pr_author())
         self.summaries.check_commit(
             conversation.key, facts.comments, path=conversation.path, line=conversation.line,
-            sha=str(sha), worktree=worktree, answers=CHECK_ANSWERS,
+            sha=str(sha), shown=shown, worktree=worktree, answers=CHECK_ANSWERS,
             done=lambda word, reasoning: done(CommitVerdict(word), reasoning))
 
     def write_gist(self, conversation: Conversation, source: str,

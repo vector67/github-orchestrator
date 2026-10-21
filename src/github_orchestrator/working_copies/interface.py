@@ -80,6 +80,7 @@ class NamedCommit:
     sha: Sha
     parent: Sha
     worktree: str
+    shown: str
 
 
 @dataclass(frozen=True)
