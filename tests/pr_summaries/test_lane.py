@@ -8,6 +8,8 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from tests.builders import a_pr
 from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
 
@@ -332,6 +334,28 @@ def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
     assert lane.lane.progress(earlier) is None
     assert lane.lane.progress(THE_PR) is not None
     held.work.pop()()
+
+
+class FailsOnce:
+    def __init__(self) -> None:
+        self.failed = False
+
+    def __call__(self, work: Callable[[], None]) -> None:
+        if not self.failed:
+            self.failed = True
+            raise RuntimeError("can't start new thread")
+        work()
+
+
+def test_a_start_that_fails_after_taking_the_slot_gives_it_back(tmp_path):
+    lane = Lane(tmp_path, "clean", run_in=FailsOnce())
+    with pytest.raises(RuntimeError):
+        lane.lane.start(THE_PR, use_github_api=False)
+
+    refused = lane.lane.start(THE_PR, use_github_api=False)
+
+    assert refused is None
+    assert lane.summaries.load(THE_PR).markdown == "# Summary\n\nIt does what it says.\n"
 
 
 def _a_server_that_dies_partway(tmp_path: Path, lane: Lane, behaviour: str) -> None:
