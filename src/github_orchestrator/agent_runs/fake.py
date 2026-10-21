@@ -174,7 +174,7 @@ class CommitCheckAsked:
     worktree: str
 
 
-Asked =(CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
+Asked = (CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
          | CommitCheckAsked)
 
 
