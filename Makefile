@@ -64,7 +64,7 @@ lint:
 	@$(MAKE) fmt-check
 
 lint-python:
-	uv run ruff check src tests plugins; ruff=$$?; uv run mypy; mypy=$$?; \
+	uv run ruff check src tests plugins .claude/skills; ruff=$$?; uv run mypy; mypy=$$?; \
 	uv run pytest tests/test_layering.py -q -p no:randomly; layering=$$?; \
 	[ $$ruff -eq 0 ] && [ $$mypy -eq 0 ] && [ $$layering -eq 0 ]
 
@@ -81,7 +81,7 @@ lint-fix:
 	@$(MAKE) fmt
 
 lint-python-fix:
-	uv run ruff check --fix src tests plugins
+	uv run ruff check --fix src tests plugins .claude/skills
 
 lint-frontend-fix:
 	@$(MAKE) frontend_deps

@@ -26,7 +26,7 @@ artifacts = ["src/github_orchestrator/board_api/static/app/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "plugins/pr-summary/scripts"]
+pythonpath = ["src", "plugins/pr-summary/scripts", ".claude/skills/push-properly"]
 tmp_path_retention_policy = "failed"
 addopts = ["--dist", "loadgroup"]
 timeout = 60
@@ -56,6 +56,7 @@ ignore = ["E501"]
 files = [
     "src",
     "plugins/pr-summary/scripts",
+    ".claude/skills/push-properly",
     "tests/conftest.py",
     "tests/subprocess_recording.py",
     "tests/forked_run.py",
