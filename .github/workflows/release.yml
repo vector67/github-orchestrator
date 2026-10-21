@@ -12,6 +12,31 @@ jobs:
   test:
     uses: ./.github/workflows/ci.yml
 
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: uv sync --all-groups --python ${{ matrix.python }}
+
+      - name: Run the python suite on ${{ matrix.os }}, Python ${{ matrix.python }}
+        run: uv run --python ${{ matrix.python }} pytest tests/ -q --no-replay
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -187,8 +212,68 @@ jobs:
           fi
           [ -z "$left" ]
 
+  upgrade:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Give the runner a user manager
+        if: runner.os == 'Linux'
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+
+      - name: Use a scratch HOME
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "$RUNNER_TEMP/home"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+
+      - name: Install the last published release with its own install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          previous=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          echo "upgrading from $previous"
+          gh release download "$previous" --repo "$GITHUB_REPOSITORY" --pattern install.sh --output previous-install.sh
+          sh previous-install.sh -y --no-open --version "$previous"
+          curl -fsS http://127.0.0.1:8720/api/health
+
+      - name: Give the old release a config
+        run: |
+          mkdir -p "$HOME/.config/github-orchestrator"
+          printf '%s\n' 'gh_account = "octocat"' '' '[[repos]]' 'repo = "octocat/hello-world"' 'local_path = "~/repositories/hello-world"' \
+            > "$HOME/.config/github-orchestrator/config.toml"
+
+      - name: Install the new wheel over it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub runs the new version and kept the config
+        run: |
+          wheel=$(basename dist/*.whl)
+          version=$(echo "$wheel" | cut -d- -f2)
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json, sys; got = json.load(open("health.json"))["version"]; assert got == sys.argv[1], f"hub runs {got}, not {sys.argv[1]}"' "$version"
+          grep -q 'octocat/hello-world' "$HOME/.config/github-orchestrator/config.toml"
+          "$HOME/.local/bin/github-orchestrator" config
+
   publish:
-    needs: [test, smoke-macos, smoke-linux]
+    needs: [test, test-matrix, smoke-macos, smoke-linux, upgrade]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -197,6 +282,17 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: release
+
+      - name: Read the notes from the annotated tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME")
+          if [ "$(echo "$ref" | jq -r .object.type)" != tag ]; then
+            echo "$GITHUB_REF_NAME is a lightweight tag; a release tag carries its notes, so make it with git tag -a"; exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$(echo "$ref" | jq -r .object.sha)" -q .message > notes.md
+          cat notes.md
 
       - name: Publish the release
         env:
@@ -207,7 +303,7 @@ jobs:
             *) prerelease= ;;
           esac
           gh release create "$GITHUB_REF_NAME" dist/*.whl install.sh \
-            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes $prerelease
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes-file notes.md $prerelease
 
   install-the-release:
     needs: publish
