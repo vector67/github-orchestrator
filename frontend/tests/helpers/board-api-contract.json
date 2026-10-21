@@ -711,38 +711,6 @@
     }
    }
   },
-  "/api/harvest-timer": {
-   "get": {
-    "200": {
-     "$ref": "#/components/schemas/HarvestTimer"
-    },
-    "502": {
-     "$ref": "#/components/schemas/Errors"
-    }
-   }
-  },
-  "/api/harvest-timer:start": {
-   "post": {
-    "204": null,
-    "404": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "502": {
-     "$ref": "#/components/schemas/Errors"
-    }
-   }
-  },
-  "/api/harvest-timer:stop": {
-   "post": {
-    "204": null,
-    "404": {
-     "$ref": "#/components/schemas/Errors"
-    },
-    "502": {
-     "$ref": "#/components/schemas/Errors"
-    }
-   }
-  },
   "/api/health": {
    "get": {
     "200": {
@@ -3331,7 +3299,6 @@
     "setup-refused",
     "not-broken",
     "summary-refused",
-    "harvest-refused",
     "server-error"
    ],
    "type": "string"
@@ -3906,21 +3873,6 @@
     "lines",
     "seconds",
     "truncated"
-   ],
-   "type": "object"
-  },
-  "HarvestTimer": {
-   "properties": {
-    "running": {
-     "type": "boolean"
-    },
-    "tracked": {
-     "type": "boolean"
-    }
-   },
-   "required": [
-    "tracked",
-    "running"
    ],
    "type": "object"
   },

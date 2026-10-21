@@ -10,7 +10,6 @@ from github_orchestrator.settings._config import Tracker as Tracker
 from github_orchestrator.settings._settings import Settings as Settings
 from github_orchestrator.settings.interface import ConfigRow as ConfigRow
 from github_orchestrator.settings.interface import Dismissal as Dismissal
-from github_orchestrator.settings.interface import HarvestProject as HarvestProject
 from github_orchestrator.settings.interface import Process
 from github_orchestrator.settings.interface import RepoEntry as RepoEntry
 

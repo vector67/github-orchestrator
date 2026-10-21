@@ -2740,30 +2740,6 @@ kbd {
   height: 16px;
 }
 
-.harvest-pick {
-  display: inline-flex;
-  flex: none;
-  padding: 5px;
-  cursor: pointer;
-  color: var(--muted);
-  background: none;
-  border: 1.5px solid transparent;
-}
-
-.harvest-pick:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-
-.harvest-pick.running {
-  color: var(--green-text);
-}
-
-.stopwatch {
-  width: 16px;
-  height: 16px;
-}
-
 .repo-pick:hover,
 .repo-pick[aria-expanded="true"],
 .settings-pick:hover,

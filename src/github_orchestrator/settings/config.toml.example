@@ -176,14 +176,6 @@ gh_account = "your-github-username"
 # check; status and update still ask when you run them.
 # check_for_updates = true
 
-# Your Harvest account's id, the number in the address of your Harvest
-# account. With it, a [[repos]] entry that names harvest_project_id and
-# harvest_task_id gets a timer button beside the settings gear on each of its
-# pull requests' pages, once "Harvest timer" is switched on in that menu. The
-# personal access token is read from the macOS keychain item `harvest-api`.
-# Starting a timer stops whatever timer was running in Harvest.
-# harvest_account_id = 123456
-
 # Cap on concurrent per-thread agents.
 # max_thread_runs = 4
 
@@ -203,11 +195,8 @@ gh_account = "your-github-username"
 # PRs by and for gh_account, and the hub shows them together. `repo` is
 # owner/name; `local_path` is your clone of it, where its PRs' worktrees are cut
 # from. An entry may set its own new_worktree_command, which replaces the
-# top-level one for that repo's worktrees, and the Harvest project and task its
-# pull requests' timer tracks, both as numbers.
+# top-level one for that repo's worktrees.
 [[repos]]
 repo = "owner/repo"
 local_path = "~/repositories/repo"
 # new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env ."
-# harvest_project_id = 1234567
-# harvest_task_id = 7654321

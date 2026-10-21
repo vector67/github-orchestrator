@@ -12,7 +12,6 @@ import type {
   FileLines,
   FinishedRun,
   GitRun,
-  HarvestTimer,
   HeldPullRequest,
   Dashboard,
   DashboardPr,
@@ -561,7 +560,6 @@ export function heldPr(over: HeldOver = {}): HeldPullRequest {
 }
 
 const MANAGER_VERB = /\/api\/manager:([a-z-]+)$/;
-const HARVEST_VERB = /\/api\/harvest-timer:(start|stop)$/;
 
 const SUMMARISE =
   /\/api\/summary\/operations:(summarise|summarise-with-github-api)$/;
@@ -689,7 +687,6 @@ export class FakeBoard {
   inFlight: Operation[] = [];
   reviews: Record<string, Operation> = {};
   summary: PrSummary = prSummary();
-  harvestTimer: HarvestTimer = { tracked: false, running: false };
   private managed: Dashboard = dashboard();
   private managerSet = false;
 
@@ -1210,7 +1207,6 @@ export class FakeBoard {
     if (path === '/api/people') return this.people;
     if (path === '/api/operations') return this.inFlight;
     if (path === '/api/summary') return this.summary;
-    if (path === '/api/harvest-timer') return this.harvestTimer;
     const review = /^\/api\/operations\/([^/]+)$/.exec(path);
     if (review) return this.reviews[decodeURIComponent(review[1]!)];
     if (path === '/api/files') {
@@ -1295,8 +1291,6 @@ export class FakeBoard {
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
-    const timed = HARVEST_VERB.exec(url);
-    if (timed) return this.time(url, timed[1]!);
     const summarised = SUMMARISE.exec(url);
     if (summarised) return this.summarise(url, summarised[1]!, headers);
     const found =
@@ -1370,17 +1364,6 @@ export class FakeBoard {
       }),
       conversation: asked,
     });
-  }
-
-  private time(url: string, verb: string): Response {
-    this.posted.push({ url, key: '', verb, ifMatch: null, body: null });
-    if (this.refusal) {
-      const refusal = this.refusal;
-      this.refusal = null;
-      return this.json(refusal.status, { errors: [refusal] });
-    }
-    this.harvestTimer = { ...this.harvestTimer, running: verb === 'start' };
-    return respond(null, { status: 204 });
   }
 
   private summarise(url: string, verb: string, headers: Headers): Response {
