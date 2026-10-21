@@ -36,10 +36,17 @@ class ConfigRow:
 
 
 @dataclass(frozen=True)
+class HarvestProject:
+    project_id: int
+    task_id: int
+
+
+@dataclass(frozen=True)
 class RepoEntry:
     repo: Repo
     local_path: str
     new_worktree_command: str | None = None
+    harvest: HarvestProject | None = None
 
     def __str__(self) -> str:
         return f"{self.repo} at {self.local_path}"

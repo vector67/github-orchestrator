@@ -15,7 +15,11 @@ from typing import Any
 from github_orchestrator.agent_runs import Agent
 from github_orchestrator.domain import Clone, HubState, Repo
 from github_orchestrator.settings._renamed_keys import RENAMED_KEYS, doubled, renamed
-from github_orchestrator.settings.interface import ConfigDescription, ConfigRow
+from github_orchestrator.settings.interface import (
+    ConfigDescription,
+    ConfigRow,
+    HarvestProject,
+)
 from github_orchestrator.settings.interface import RepoEntry as RepoEntry
 
 
@@ -80,6 +84,7 @@ class OrchestratorConfig:
     tracker: Tracker = Tracker.NONE
     tracker_project: str = ""
     check_for_updates: bool = True
+    harvest_account_id: int = 0
     repos: tuple[RepoEntry, ...] = ()
 
 
@@ -155,11 +160,13 @@ def _read(config_path: Path) -> dict[str, Any]:
             f"{config_path}: hub_port must be a port from 1 to 65535, got {hub_port}"
         )
     _check_tracker(config_path, data.get("tracker", Tracker.NONE), data.get("tracker_project", ""))
+    _check_harvest(config_path, data)
     return data
 
 
 _OLD_REPO_KEYS = {"watch_repo": "repo", "local_path": "local_path"}
-_ENTRY_KEYS = ("repo", "local_path", "new_worktree_command")
+_HARVEST_KEYS = ("harvest_project_id", "harvest_task_id")
+_ENTRY_KEYS = ("repo", "local_path", "new_worktree_command", *_HARVEST_KEYS)
 
 
 def _old_repo_table(data: dict[str, Any]) -> dict[str, Any] | None:
@@ -200,6 +207,8 @@ def _repo_entry(config_path: Path, table: Mapping[str, object]) -> RepoEntry:
             raise ConfigError(f"{config_path}: unknown key {key!r} in [[repos]] — {hint}")
     strings: dict[str, str] = {}
     for key, value in table.items():
+        if key in _HARVEST_KEYS:
+            continue
         if not isinstance(value, str):
             raise ConfigError(
                 f"{config_path}: [[repos]] {key} must be str, got {type(value).__name__} "
@@ -214,7 +223,32 @@ def _repo_entry(config_path: Path, table: Mapping[str, object]) -> RepoEntry:
         raise ConfigError(
             f"{config_path}: [[repos]] repo must be owner/name, got {strings['repo']!r}"
         ) from e
-    return RepoEntry(repo, strings["local_path"], strings.get("new_worktree_command"))
+    return RepoEntry(repo, strings["local_path"], strings.get("new_worktree_command"),
+                     _harvest_project(config_path, table))
+
+
+def _harvest_project(config_path: Path, table: Mapping[str, object]) -> HarvestProject | None:
+    named = [key for key in _HARVEST_KEYS if key in table]
+    if not named:
+        return None
+    if len(named) == 1:
+        missing = next(key for key in _HARVEST_KEYS if key not in table)
+        raise ConfigError(f"{config_path}: [[repos]] {table['repo']} sets {named[0]} without "
+                          f"{missing}; a Harvest timer needs both")
+    for key in _HARVEST_KEYS:
+        if type(table[key]) is not int:
+            raise ConfigError(
+                f"{config_path}: [[repos]] {key} must be int, got "
+                f"{type(table[key]).__name__} ({table[key]!r})")
+    return HarvestProject(typing.cast(int, table["harvest_project_id"]),
+                          typing.cast(int, table["harvest_task_id"]))
+
+
+def _check_harvest(config_path: Path, data: Mapping[str, Any]) -> None:
+    tracked = [str(entry.repo) for entry in data.get("repos", ()) if entry.harvest is not None]
+    if tracked and not data.get("harvest_account_id"):
+        raise ConfigError(f"{config_path}: {', '.join(tracked)} names a Harvest project, "
+                          "which needs harvest_account_id")
 
 
 def _repos_unset(entries: tuple[RepoEntry, ...]) -> bool:
@@ -481,11 +515,16 @@ class TomlConfigFile:
 
     def _written(self, values: Mapping[str, str | int | bool],
                  repos: Mapping[Repo, Clone]) -> str:
-        kept = {key: value for key, value in _read(self._path).items() if key != "repos"}
+        read = _read(self._path)
+        kept = {key: value for key, value in read.items() if key != "repos"}
+        harvest = {entry.repo: entry.harvest for entry in read.get("repos", ())
+                   if entry.harvest is not None}
         return _rendered({**kept, **values}, [
             {"repo": str(repo), "local_path": str(clone.path),
              **({"new_worktree_command": clone.new_worktree_command}
-                if clone.new_worktree_command else {})}
+                if clone.new_worktree_command else {}),
+             **({"harvest_project_id": harvest[repo].project_id,
+                 "harvest_task_id": harvest[repo].task_id} if repo in harvest else {})}
             for repo, clone in repos.items()])
 
     def move_aside(self, now: datetime) -> str:

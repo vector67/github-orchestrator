@@ -5,7 +5,11 @@ import pytest
 
 from github_orchestrator.domain import Clone, HubState, Repo
 from github_orchestrator.settings import ConfigFile
-from github_orchestrator.settings.fake import OrchestratorConfig, Tracker
+from github_orchestrator.settings.fake import (
+    HarvestProject,
+    OrchestratorConfig,
+    Tracker,
+)
 from tests.settings.support import (
     ConfigProblem,
     describe_config,
@@ -118,6 +122,47 @@ def test_the_same_repo_watched_twice_is_refused(tmp_path):
 
     assert "acme/widgets" in str(e.value)
     assert "twice" in str(e.value)
+
+
+WIDGETS_TRACKED = ('harvest_account_id = 900\n'
+                   '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+                   'harvest_project_id = 111\nharvest_task_id = 222\n'
+                   '[[repos]]\nrepo = "acme/gadgets"\nlocal_path = "/src/gadgets"\n')
+
+
+def test_a_repo_s_harvest_project_and_task_are_read_and_a_repo_without_them_tracks_nothing(
+        tmp_path):
+    settings = settings_read_from(write_config(tmp_path, WIDGETS_TRACKED))
+
+    assert settings.config.harvest_account_id == 900
+    assert settings.harvest_projects == {Repo("acme", "widgets"): HarvestProject(111, 222)}
+
+
+@pytest.mark.parametrize("entry, named", [
+    ("harvest_project_id = 111\n", "harvest_task_id"),
+    ("harvest_task_id = 222\n", "harvest_project_id"),
+    ('harvest_project_id = "111"\nharvest_task_id = 222\n', "harvest_project_id must be int"),
+])
+def test_a_repo_s_harvest_project_needs_both_ids_as_numbers(tmp_path, entry, named):
+    toml_file = write_config(tmp_path, (
+        'harvest_account_id = 900\n'
+        f'[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n{entry}'))
+
+    with pytest.raises(ConfigProblem) as e:
+        load_config(toml_file)
+
+    assert named in str(e.value)
+
+
+def test_a_harvest_project_with_no_harvest_account_is_refused(tmp_path):
+    toml_file = write_config(tmp_path, (
+        '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+        'harvest_project_id = 111\nharvest_task_id = 222\n'))
+
+    with pytest.raises(ConfigProblem) as e:
+        load_config(toml_file)
+
+    assert "harvest_account_id" in str(e.value)
 
 
 def test_load_config_keeps_the_defaults_the_file_leaves_alone(tmp_path):
@@ -496,6 +541,17 @@ def test_writing_keeps_a_repo_s_own_new_worktree_command_and_leaves_an_empty_one
     assert repos_read_from(toml_file) == {
         Repo("acme", "widgets"): Clone(Path("/src/widgets"), "cp .env ."),
         Repo("acme", "gadgets"): Clone(Path("/src/gadgets"), "make")}
+
+
+def test_writing_keeps_each_repo_s_harvest_project(tmp_path):
+    toml_file = write_config(tmp_path, WIDGETS_TRACKED)
+
+    read_from(toml_file).get(ConfigFile).write({}, repos={
+        Repo("acme", "widgets"): Clone(Path("/src/widgets"), ""),
+        Repo("acme", "gadgets"): Clone(Path("/src/gadgets"), "")})
+
+    assert settings_read_from(toml_file).harvest_projects == {
+        Repo("acme", "widgets"): HarvestProject(111, 222)}
 
 
 def test_writing_true_false_and_numbers_reads_them_back_as_written(tmp_path):
