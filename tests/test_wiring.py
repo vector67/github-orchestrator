@@ -1,10 +1,20 @@
 import ast
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
 from dishka import Provider, Scope, from_context, provide
 
-from github_orchestrator.wiring import SUMMARISE, Wiring, utility_clamp, wire, wires
+from github_orchestrator.wiring import (
+    SUMMARISE,
+    FetchedEmojis,
+    Wiring,
+    utility_clamp,
+    wire,
+    wires,
+)
+
+SHIPIT = "https://github.githubassets.com/images/icons/emoji/shipit.png?v8"
 
 
 @dataclass(frozen=True)
@@ -75,3 +85,19 @@ def test_the_summary_lane_runs_the_plugin_this_checkout_carries():
 def test_background_work_is_clamped_to_the_utility_class_on_macos_only():
     assert utility_clamp("darwin") == ("taskpolicy", "-c", "utility")
     assert utility_clamp("linux") == ()
+
+
+def test_the_emojis_are_asked_of_github_as_soon_as_they_are_made():
+    asked = threading.Event()
+
+    def listed():
+        asked.set()
+        return {}
+
+    FetchedEmojis(listed)
+
+    assert asked.wait(5)
+
+
+def test_the_emojis_are_the_ones_github_listed():
+    assert FetchedEmojis(lambda: {"shipit": SHIPIT}).named() == {"shipit": SHIPIT}

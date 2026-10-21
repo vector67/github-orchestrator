@@ -13,7 +13,7 @@ from tests.board_api.support import (
 )
 from tests.board_api.test_page import built_app
 
-POLICY = ("default-src 'self'; img-src 'self'; object-src 'none'; "
+POLICY = ("default-src 'self'; img-src 'self' https://github.githubassets.com; object-src 'none'; "
           "style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; "
           "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 

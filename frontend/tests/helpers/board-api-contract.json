@@ -686,6 +686,14 @@
     }
    }
   },
+  "/api/emojis": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/EmojiList"
+    },
+    "304": null
+   }
+  },
   "/api/files": {
    "get": {
     "200": {
@@ -3210,6 +3218,20 @@
     "body",
     "anchor",
     "posted_comment"
+   ],
+   "type": "object"
+  },
+  "EmojiList": {
+   "properties": {
+    "named": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "type": "object"
+    }
+   },
+   "required": [
+    "named"
    ],
    "type": "object"
   },

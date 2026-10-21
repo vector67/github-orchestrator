@@ -533,6 +533,13 @@ def test_login_and_access_without_gh_installed_say_gh_is_not_on_path():
     assert "gh is not on PATH" in github.check_access(ME, Repo.parse(REPO))
 
 
+@pytest.mark.parametrize("answer", [Failure("gh: Something went wrong (HTTP 502)"), Timeout()])
+def test_emojis_github_will_not_list_are_none(answer):
+    gh = ScriptedGh().answer("GET emojis", answer)
+
+    assert real_github(gh=gh).emojis() == {}
+
+
 def test_a_clone_without_gh_installed_says_gh_is_not_on_path(tmp_path):
     gh = ScriptedGh()
     gh.installed = False

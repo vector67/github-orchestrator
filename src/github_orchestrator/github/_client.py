@@ -70,6 +70,13 @@ class GhCliGitHub:
         except (GhError, subprocess.TimeoutExpired):
             return ()
 
+    def emojis(self) -> dict[str, str]:
+        try:
+            named: dict[str, str] = self._gh.api("emojis")
+        except (GhError, subprocess.TimeoutExpired):
+            return {}
+        return named
+
     def repos_of(self, account: str) -> list[Listed] | str:
         gh = self._gh_as(account)
         try:

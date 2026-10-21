@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 MAX_REQUEST_BYTES = 1024 * 1024
 
-POLICY = ("default-src 'self'; img-src 'self'; object-src 'none'; "
+POLICY = ("default-src 'self'; img-src 'self' https://github.githubassets.com; object-src 'none'; "
           "style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; "
           "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 

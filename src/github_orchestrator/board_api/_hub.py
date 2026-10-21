@@ -19,6 +19,7 @@ from github_orchestrator.board_api._app import (
     report_client_error,
 )
 from github_orchestrator.board_api._contract import (
+    EmojiList,
     ErrorCode,
     Errors,
     Health,
@@ -38,6 +39,7 @@ from github_orchestrator.board_api._runs import ledger_read, watcher_read
 from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
+    Emojis,
     Holdings,
     ReleaseRecord,
     SetupDesk,
@@ -86,6 +88,7 @@ class Desk:
     setup: SetupDesk
     releases: ReleaseRecord
     tour: TourMarker
+    emojis: Emojis
     pid: int
 
 
@@ -177,6 +180,16 @@ def _newest(desk: Desk) -> NewestRelease | None:
            summary="Whether the board's first-run tour is still to be shown.")
 def read_tour(desk: Serving) -> Tour:
     return Tour(due=desk.tour.due())
+
+
+@reads.get("/emojis", response_model=EmojiList, tags=["hub"], operation_id="readEmojis",
+           summary="Every emoji GitHub knows, by name, with its picture.",
+           responses=etag.TAGGED)
+def read_emojis(request: Request, desk: Serving) -> Response:
+    """What the comment boxes offer after a colon and what `:name:` in a
+    comment is drawn as. Asked of GitHub once, when the server starts.
+    """
+    return etag.answered(request, EmojiList(named=desk.emojis.named()))
 
 
 @writes.post("/tour:seen", status_code=204, operation_id="sawTour",

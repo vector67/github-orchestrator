@@ -3,7 +3,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from github_orchestrator.board_api.fake import FakeHoldings, FakeTold, FakeTour
+from github_orchestrator.board_api.fake import (
+    FakeEmojis,
+    FakeHoldings,
+    FakeTold,
+    FakeTour,
+)
 from github_orchestrator.board_api.interface import Held
 from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.watcher import Health
@@ -310,3 +315,9 @@ def test_seeing_the_tour_clears_the_marker_so_it_is_shown_once():
 
     assert (answer.status_code, marker.is_due, tour.get("/api/tour").json()) == (
         204, False, {"due": False})
+
+
+def test_the_emojis_are_every_name_github_listed_with_its_picture():
+    named = {"shipit": "https://github.githubassets.com/images/icons/emoji/shipit.png?v8"}
+
+    assert served_hub(emojis=FakeEmojis(named)).get("/api/emojis").json() == {"named": named}

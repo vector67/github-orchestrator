@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass, replace
@@ -39,6 +40,7 @@ from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
     Dashboard,
     Dashboards,
+    Emojis,
     Holdings,
     ManagerPanels,
     ManagerStanding,
@@ -376,6 +378,10 @@ class GitHubProvider(Provider):
     @provide
     def access(self, client: GhCliGitHub) -> Access:
         return client
+
+    @provide
+    def emojis(self, client: GhCliGitHub) -> Emojis:
+        return FetchedEmojis(client.emojis)
 
 
 @dataclass(frozen=True)
@@ -962,7 +968,8 @@ class ServerAppProvider(Provider):
     @provide
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
-                   setup: SetupDesk, releases: Releases, tour: TourMarker, told: Told,
+                   setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
+                   told: Told,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -972,6 +979,7 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
+                         emojis=emojis,
                          told=told, holdings=holdings,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1067,6 +1075,20 @@ class DashboardSourceProvider(Provider):
     @provide
     def command_files(self, wiring: DashboardSourceWiring) -> CommandFiles:
         return CommandFiles(wiring.data_dir)
+
+
+class FetchedEmojis:
+    def __init__(self, listed: Callable[[], dict[str, str]]) -> None:
+        self._named: dict[str, str] = {}
+        self._fetching = threading.Thread(target=self._fetch, args=(listed,), daemon=True)
+        self._fetching.start()
+
+    def _fetch(self, listed: Callable[[], dict[str, str]]) -> None:
+        self._named = listed()
+
+    def named(self) -> dict[str, str]:
+        self._fetching.join()
+        return self._named
 
 
 class EveryTerminal:
@@ -1432,6 +1454,10 @@ class PreviewHubProvider(Provider):
     @provide
     def tour(self, hub: PreviewHub) -> TourMarker:
         return hub.tour
+
+    @provide
+    def emojis(self, access: Access) -> Emojis:
+        return FetchedEmojis(access.emojis)
 
     @provide
     def watcher_health(self) -> WatcherHealth:

@@ -563,6 +563,15 @@ def test_a_token_s_scopes_are_listed_for_the_account_given(world, github):
     assert github.scopes("anna") == ("read:org", "repo")
 
 
+def test_the_emojis_are_every_name_github_knows_with_its_picture(world, github):
+    world.emojis_named = {
+        "+1": "https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png?v8",
+        "shipit": "https://github.githubassets.com/images/icons/emoji/shipit.png?v8",
+    }
+
+    assert github.emojis() == world.emojis_named
+
+
 def test_the_repos_an_account_lists_come_newest_push_first_with_what_it_may_do_there(
         world, github):
     world.listed = [Repo.parse("acme/gadgets"), Repo.parse(REPO), Repo.parse("octocat/spoon-knife")]

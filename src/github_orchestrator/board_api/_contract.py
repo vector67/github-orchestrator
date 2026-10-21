@@ -1847,6 +1847,12 @@ class SetupOperation(BaseModel):
                     "left where they are.")
 
 
+class EmojiList(BaseModel):
+    named: dict[str, str] = Field(description="Every emoji GitHub knows, by the name typed "
+                                              "between colons, with the address of its "
+                                              "picture. Empty when GitHub could not be asked.")
+
+
 class Tour(BaseModel):
     due: bool = Field(description="Whether the board's first-run tour is still to be shown: "
                                   "true from the first setup that leaves setup state until the "

@@ -15,6 +15,7 @@ from github_orchestrator.board_api._pages import pr_page
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
     Dashboards,
+    Emojis,
     Holdings,
     ManagerPanels,
     ReleaseRecord,
@@ -77,7 +78,7 @@ class OneServer:
                  ledger: Ledger, pulse: WatcherPulse, clock: UtcClock,
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, told: Told, holdings: Holdings,
+                 tour: TourMarker, emojis: Emojis, told: Told, holdings: Holdings,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
                  summaries: PrSummaries, lane: SummaryLane,
@@ -94,6 +95,7 @@ class OneServer:
         self._setup = setup
         self._releases = releases
         self._tour = tour
+        self._emojis = emojis
         self._told = told
         self._holdings = holdings
         self._conversation_managers = conversation_managers
@@ -113,7 +115,8 @@ class OneServer:
                     ledger=self._ledger, pulse=self._pulse, clock=self._clock, url=url,
                     app_root=self._app_root, fonts=self._fonts,
                     version=self._version, problem=self._problem, setup=self._setup,
-                    releases=self._releases, tour=self._tour, pid=pid)
+                    releases=self._releases, tour=self._tour, emojis=self._emojis,
+                    pid=pid)
 
         def board(pr: Pr) -> ASGIApp:
             return board_app(Board(

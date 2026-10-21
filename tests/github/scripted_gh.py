@@ -351,6 +351,7 @@ class _World:
         routes = (
             ("GET", r"user", self._user),
             ("GET", r"user/repos\?.*", self._listed),
+            ("GET", r"emojis", self._emojis),
             ("GET", r"repos/([^/]+/[^/]+)", self._repo),
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._pull),
             ("PATCH", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._close),
@@ -390,6 +391,9 @@ class _World:
     def _repo_answer(self, repo: Repo) -> dict[str, Any]:
         return {"full_name": str(repo), "default_branch": "main",
                 "permissions": {"pull": True, "push": repo not in self.world.read_only}}
+
+    def _emojis(self, request: GhRequest) -> Any:
+        return self.world.emojis_named
 
     def _listed(self, request: GhRequest) -> Any:
         return [self._repo_answer(repo) for repo in self.world.listed]

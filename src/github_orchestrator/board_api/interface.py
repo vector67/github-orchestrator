@@ -261,6 +261,10 @@ class TourMarker(Protocol):
     def seen(self) -> None: ...
 
 
+class Emojis(Protocol):
+    def named(self) -> dict[str, str]: ...
+
+
 class ServerApp(Protocol):
     def app(self, port: int, pid: int) -> ASGIApp: ...
 

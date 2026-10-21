@@ -182,6 +182,14 @@ class FakeSetupDesk:
 
 
 @dataclass
+class FakeEmojis:
+    listed: dict[str, str] = field(default_factory=dict)
+
+    def named(self) -> dict[str, str]:
+        return self.listed
+
+
+@dataclass
 class FakeTour:
     is_due: bool = False
 

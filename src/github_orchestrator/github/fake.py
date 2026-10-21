@@ -93,6 +93,7 @@ class FakeGitHub:
         self.cloned: list[tuple[Repo, Path]] = []
         self.prs: dict[Pr, FakePullRequest] = {}
         self.reactions: dict[int, list[str]] = {}
+        self.emojis_named: dict[str, str] = {}
         self._ids = itertools.count(9001)
 
     def add_pr(self, pr: Pr,
@@ -133,6 +134,9 @@ class FakeGitHub:
 
     def scopes(self, account: str) -> tuple[str, ...]:
         return self.granted.get(account, ())
+
+    def emojis(self) -> dict[str, str]:
+        return self.emojis_named
 
     def repos_of(self, account: str) -> list[Listed] | str:
         refused = self.check_login(account)
