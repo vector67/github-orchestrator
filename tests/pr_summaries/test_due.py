@@ -89,6 +89,16 @@ def test_a_request_made_during_a_run_stays_due_after_the_run_saves(tmp_path):
     assert summaries.due(set()) == [THE_PR]
 
 
+def test_a_corrupt_summary_file_leaves_the_other_summaries_due(tmp_path):
+    summaries = summaries_in(tmp_path)
+    corrupt = a_pr(2, "o/n")
+    summaries.want(THE_PR)
+    summaries.want(corrupt)
+    (tmp_path / "o" / "n" / "2.json").write_text("{not json")
+
+    assert summaries.due(set()) == [THE_PR]
+
+
 STARTED = datetime(2026, 10, 15, 9, 0, tzinfo=timezone.utc)
 FINISHED = datetime(2026, 10, 15, 9, 7, tzinfo=timezone.utc)
 

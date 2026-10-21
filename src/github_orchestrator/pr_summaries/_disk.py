@@ -78,9 +78,15 @@ class DiskPrSummaries:
             _replaced(self._file(pr), _encoded(replace(summary, wanted=stored.wanted)))
 
     def due(self, in_flight: Set[Pr]) -> list[Pr]:
-        stored = {Pr(Repo(path.parent.parent.name, path.parent.name), int(path.stem)):
-                  _decoded(path.read_bytes())
-                  for path in self._dir.glob("*/*/*.json") if path.stem.isdigit()}
+        stored = {}
+        for path in self._dir.glob("*/*/*.json"):
+            if not path.stem.isdigit():
+                continue
+            try:
+                summary = _decoded(path.read_bytes())
+            except ValueError:
+                continue
+            stored[Pr(Repo(path.parent.parent.name, path.parent.name), int(path.stem))] = summary
         return due(stored, in_flight)
 
     @contextmanager
