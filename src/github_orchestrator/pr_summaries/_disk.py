@@ -80,7 +80,7 @@ class DiskPrSummaries:
     def due(self, in_flight: Set[Pr]) -> list[Pr]:
         stored = {Pr(Repo(path.parent.parent.name, path.parent.name), int(path.stem)):
                   _decoded(path.read_bytes())
-                  for path in self._dir.glob("*/*/*.json")}
+                  for path in self._dir.glob("*/*/*.json") if path.stem.isdigit()}
         return due(stored, in_flight)
 
     @contextmanager

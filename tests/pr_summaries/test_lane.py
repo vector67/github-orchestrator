@@ -50,6 +50,16 @@ def test_a_run_that_wrote_no_primer_leaves_the_one_before_for_the_next(tmp_path)
     assert lane.call()["earlier_primer"]["concepts"][0]["name"] == "Toolbar"
 
 
+def test_a_pr_whose_last_run_kept_a_primer_is_due_again_once_wanted(tmp_path):
+    lane = Lane(tmp_path, "clean")
+    lane.lane.start(THE_PR, use_github_api=False)
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    lane.summaries.want(THE_PR)
+
+    assert lane.summaries.due(set()) == [THE_PR]
+
+
 RECORDING_CLAMP = "import os, sys; open(sys.argv[1], 'w').write(sys.argv[2]); os.execv(sys.argv[2], sys.argv[2:])"
 
 
