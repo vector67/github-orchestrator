@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
@@ -12,6 +13,7 @@ const TEETH = 8;
 const TOOTH = (Math.PI * TOOTH_RADIUS) / TEETH;
 
 export default class SettingsMenu extends Component {
+  @service declare harvestSwitch: HarvestSwitchService;
   @service declare hub: HubService;
   @service declare keys: KeysService;
   @service declare theme: ThemeService;
@@ -43,6 +45,12 @@ export default class SettingsMenu extends Component {
   };
 
   flip = () => this.theme.toggle();
+
+  flipHarvest = () => this.harvestSwitch.toggle();
+
+  get harvestLabel(): string {
+    return `Harvest timer: ${this.harvestSwitch.on ? 'on' : 'off'}`;
+  }
 
   <template>
     <span class="settings">
@@ -85,6 +93,13 @@ export default class SettingsMenu extends Component {
             data-test-theme-toggle
             {{on "click" this.flip}}
           >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
+          <button
+            type="button"
+            class="setting"
+            data-test-setting
+            data-test-harvest-toggle
+            {{on "click" this.flipHarvest}}
+          >{{this.harvestLabel}}</button>
           {{#if this.hub.pollStatus}}
             <span
               class="settings-health tone-{{this.hub.pollStatus.tone}}"

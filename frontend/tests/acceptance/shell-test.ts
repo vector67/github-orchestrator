@@ -120,7 +120,7 @@ module('Acceptance | shell', function (hooks) {
   });
 
   for (const page of ['/pr/o/r/7/conversations', '/']) {
-    test(`on ${page} a gear opens the settings menu, which holds one setting, the theme, and closes on Escape`, async function (assert) {
+    test(`on ${page} a gear opens the settings menu, which holds the theme and the Harvest timer, and closes on Escape`, async function (assert) {
       await visit(page);
       const before = currentURL();
 
@@ -143,6 +143,7 @@ module('Acceptance | shell', function (hooks) {
           window.matchMedia('(prefers-color-scheme: dark)').matches
             ? 'Light theme'
             : 'Dark theme',
+          'Harvest timer: off',
         ],
       );
 
