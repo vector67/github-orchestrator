@@ -47,3 +47,8 @@ def test_an_email_is_found_but_github_noreply_and_example_addresses_are_not() ->
 
 def test_a_clean_range_finds_nothing() -> None:
     assert findings({"abc1234": "add a button"}, "+++ b/x.py\n+print('hi')\n", ["Initech"]) == []
+
+
+def test_an_added_line_starting_with_two_pluses_is_scanned() -> None:
+    diff = "diff --git a/notes.md b/notes.md\n--- a/notes.md\n+++ b/notes.md\n@@ -0,0 +1 @@\n+++ see /Users/jdoe/notes\n"
+    assert findings({}, diff, []) == [Finding("home path", "notes.md", "++ see /Users/jdoe/notes")]

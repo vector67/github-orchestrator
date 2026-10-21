@@ -37,8 +37,13 @@ def _kinds(text: str, denylist: list[str]) -> list[str]:
 
 def _added_lines(diff: str) -> Iterable[tuple[str, str]]:
     path = ""
+    in_hunk = False
     for line in diff.splitlines():
-        if line.startswith("+++ "):
+        if line.startswith("diff --git "):
+            in_hunk = False
+        elif line.startswith("@@"):
+            in_hunk = True
+        elif line.startswith("+++ ") and not in_hunk:
             path = line.removeprefix("+++ ").removeprefix("b/")
         elif line.startswith("+"):
             yield path, line[1:]
