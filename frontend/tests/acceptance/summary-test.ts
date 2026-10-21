@@ -526,6 +526,19 @@ module('Acceptance | summary tab', function (hooks) {
       );
   });
 
+  test('a summary that moved and then cannot be read again says the board is not answering', async function (assert) {
+    board().summary = prSummary({ etag: '"summary-1"' });
+    await visit('/pr/o/r/7/summary');
+    board().summary = prSummary({ etag: '"summary-2"' });
+    board().broken = /\/api\/summary$/;
+
+    await click('[data-test-summary-run]');
+
+    assert
+      .dom('[data-test-summary-said]')
+      .hasText('the board server is not answering');
+  });
+
   test('a run in flight is shown as running whatever the last run left', async function (assert) {
     asReviewer();
     board().summary = prSummary({

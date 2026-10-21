@@ -467,8 +467,17 @@ export default class StoreService extends Service {
         return DOWN;
       }
       if (trouble.code !== 'precondition-failed') return trouble.detail;
+      return this.summaryReadAgain(pr, at);
+    }
+  }
+
+  private async summaryReadAgain(pr: Numbered, at: string): Promise<string> {
+    try {
       this.takePrSummary(pr, await fetched<PrSummary>(at));
       return SUMMARY_MOVED;
+    } catch (trouble) {
+      void reportError(`read ${at} again`, trouble);
+      return DOWN;
     }
   }
 
