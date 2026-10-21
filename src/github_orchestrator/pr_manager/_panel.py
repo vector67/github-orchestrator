@@ -17,7 +17,7 @@ from github_orchestrator.pr_manager._git_palette import (
     run_captured,
 )
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
-from github_orchestrator.pr_manager._refusals import refusal
+from github_orchestrator.pr_manager._refusals import AGENTS_DISABLED, refusal
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses, shell_argv
 
@@ -119,6 +119,9 @@ class FilePanel(ManagerPanel):
         refused = self._refusal("a question for the agent")
         if refused is not None:
             return refused
+        if not self._agents_enabled:
+            log.info("%s: a question for the agent refused — %s", self._pr, AGENTS_DISABLED)
+            return AGENTS_DISABLED
         log.info("%s: asking the agent in a terminal", self._pr)
         return self._pr_work.ask_in_session(self._pr, worktree, prompt)
 
