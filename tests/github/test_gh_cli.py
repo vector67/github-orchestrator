@@ -531,3 +531,32 @@ def test_login_and_access_without_gh_installed_say_gh_is_not_on_path():
 
     assert "gh is not on PATH" in github.check_login(ME)
     assert "gh is not on PATH" in github.check_access(ME, Repo.parse(REPO))
+
+
+def test_a_clone_without_gh_installed_says_gh_is_not_on_path(tmp_path):
+    gh = ScriptedGh()
+    gh.installed = False
+
+    assert "gh is not on PATH" in real_github(gh=gh).clone(Repo.parse(REPO), tmp_path / "widgets")
+
+
+def test_a_clone_goes_out_as_the_account_the_github_was_built_for(tmp_path):
+    world = _world()
+    world.repos.add(Repo.parse(REPO))
+    world.tokens["anna"] = "gho_anna"
+    gh = ScriptedGh(world)
+
+    real_github(gh=gh, account="anna").clone(Repo.parse(REPO), tmp_path / "widgets")
+
+    assert [call.token for call in gh.calls if call.route == "repo clone"] == ["gho_anna"]
+
+
+def test_access_for_another_account_goes_out_as_that_account():
+    world = _world()
+    world.repos.add(Repo.parse(REPO))
+    world.tokens["anna"] = "gho_anna"
+    gh = ScriptedGh(world)
+
+    real_github(gh=gh).check_access("anna", Repo.parse(REPO))
+
+    assert [call.token for call in gh.calls if call.route == "repo view"] == ["gho_anna"]

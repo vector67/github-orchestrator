@@ -51,7 +51,7 @@ class GhCliGitHub:
 
     def check_login(self, account: str) -> str | None:
         try:
-            self._gh.check_login(account)
+            Gh(account, self._run).check_login()
         except GhError as refused:
             return str(refused)
         return None
@@ -89,7 +89,7 @@ class GhCliGitHub:
 
     def check_access(self, account: str, repo: Repo) -> str | None:
         try:
-            self._gh.check_access(account, repo)
+            Gh(account, self._run).check_access(repo)
         except GhError as refused:
             return str(refused)
         return None
