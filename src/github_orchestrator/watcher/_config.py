@@ -24,3 +24,4 @@ class WatcherConfig:
     tour_due: Path
     check_for_updates: bool
     github_token: str | None
+    releases_address: str

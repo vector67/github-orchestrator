@@ -185,6 +185,7 @@ from github_orchestrator.watcher._health import HealthFiles
 from github_orchestrator.watcher._holdings import WatchedHoldings
 from github_orchestrator.watcher._placing import Placement, WindowPlacement
 from github_orchestrator.watcher._releases import (
+    API,
     Get,
     GitHubReleases,
     ReleasesApi,
@@ -876,7 +877,8 @@ class WatcherProvider(Provider):
     @provide
     def releases(self, config: WatcherConfig, api: ReleasesApi, clock: UtcClock) -> Releases:
         return GitHubReleases(api.get, config.newest_release, clock,
-                              enabled=config.check_for_updates, token=config.github_token)
+                              enabled=config.check_for_updates, token=config.github_token,
+                              address=config.releases_address)
 
     @provide
     def archives(self, change_detection: ChangeDetection, queues: Queues, history: History,
@@ -1306,7 +1308,8 @@ def board_font_dir(settings: Settings) -> str | None:
     return os.path.expanduser(settings.config.board_font_dir) or None
 
 
-def watcher_config(settings: Settings, home: Path, github_token: str | None) -> WatcherConfig:
+def watcher_config(settings: Settings, home: Path, github_token: str | None,
+                   releases_address: str) -> WatcherConfig:
     config = settings.config
     return WatcherConfig(
         repos=settings.repos,
@@ -1326,6 +1329,7 @@ def watcher_config(settings: Settings, home: Path, github_token: str | None) -> 
         tour_due=settings.tour_due,
         check_for_updates=config.check_for_updates,
         github_token=github_token,
+        releases_address=releases_address,
     )
 
 
@@ -1402,9 +1406,10 @@ def watcher_wiring(settings: Settings, home: Path, *,
                    requirements: Callable[[], Sequence[tuple[str, str | None]]] | None = None,
                    run_in: Callable[[Callable[[], None]], None] = in_a_thread,
                    releases_api: Get = http_get,
-                   github_token: str | None = None) -> WatcherWiring:
+                   github_token: str | None = None,
+                   releases_address: str | None = None) -> WatcherWiring:
     agent = command_program(settings.config.agent_command)
-    return WatcherWiring(watcher_config(settings, home, github_token), SetupSeams(
+    return WatcherWiring(watcher_config(settings, home, github_token, releases_address or API), SetupSeams(
         clone_problem=clone_problem_at or clone_problem(subprocess.run),
         requirements=requirements or (lambda: requirement_fixes(which, settings.config.agent, agent,
                                                                       sys.platform)),
@@ -1533,7 +1538,7 @@ class PreviewHubProvider(Provider):
     @provide
     def releases(self, settings: Settings, clock: UtcClock) -> Releases:
         return GitHubReleases(http_get, settings.newest_release, clock, enabled=False,
-                              token=None)
+                              token=None, address=API)
 
 
 def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
@@ -1621,7 +1626,8 @@ def make_container(env: Mapping[str, str], home: Path,
             clamp=clamp,
         ),
         conversation_wiring(settings),
-        watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN")),
+        watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN"),
+                       releases_address=env.get("GITHUB_ORCHESTRATOR_RELEASES_API")),
         CliWiring(cli_config(settings, home, platform=sys.platform, uid=os.getuid(),
                              shell_path=env.get("PATH", ""), python=sys.executable,
                              tool_dir=uv_tool_dir(env, home),
