@@ -110,6 +110,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       requirements: Callable[[], list[tuple[str, str | None]]] | None = None,
                       releases_api: ScriptedReleasesApi | None = None,
                       github_token: str | None = None,
+                      releases_address: str | None = None,
                       summary_lane: SummaryLane | None = None,
                       ) -> dishka.Container:
     github = github or watching(settings)
@@ -124,7 +125,8 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
         watcher_wiring(settings, home or settings.data_dir / "home",
                        clone_problem_at=clone_problem or (lambda repo, path: None),
                        requirements=requirements or (lambda: []), run_in=lambda work: work(),
-                       releases_api=releases_api or ScriptedReleasesApi(), github_token=github_token),
+                       releases_api=releases_api or ScriptedReleasesApi(), github_token=github_token,
+                       releases_address=releases_address),
         notifications_wiring(settings),
         fake_provider(BoardPages, FakeBoardPages()),
     ]

@@ -1,0 +1,375 @@
+name: Pre-release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: uv sync --all-groups --python ${{ matrix.python }}
+
+      - name: Run the python suite on ${{ matrix.os }}, Python ${{ matrix.python }}
+        run: uv run --python ${{ matrix.python }} pytest tests/ -q --no-replay
+
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version is above the last release and not tagged yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          last=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v$version" >/dev/null 2>&1; then
+            echo "v$version is already tagged; bump the version in pyproject.toml"; exit 1
+          fi
+          if [ "$(printf '%s\n%s\n' "${last#v}" "$version" | sort -V | tail -1)" != "$version" ]; then
+            echo "$version is not above the last release $last"; exit 1
+          fi
+          echo "$version follows $last"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build the board
+        run: make build_frontend
+
+      - name: Build the wheel
+        run: uv build --wheel --out-dir dist
+
+      - name: Check the wheel carries the board, the skill, the notifier, the unit template and the pr-summary plugin
+        run: |
+          python3 - dist/*.whl <<'EOF'
+          import sys
+          import zipfile
+
+          names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+          needed = [
+              "github_orchestrator/board_api/static/app/index.html",
+              "github_orchestrator/cli/skills/rebase-on-main/SKILL.md",
+              "github_orchestrator/desktop/notifier/build.sh",
+              "github_orchestrator/desktop/notifier/notify.swift",
+              "github_orchestrator/desktop/notifier/icon.swift",
+              "github_orchestrator/cli/services/github-orchestrator.service.template",
+              "github_orchestrator/plugins/pr-summary/scripts/summarise.py",
+              "github_orchestrator/plugins/pr-summary/agents/alignment.md",
+          ]
+          missing = [name for name in needed if name not in names]
+          if not any(name.startswith("github_orchestrator/desktop/notifier/badges/") for name in names):
+              missing.append("github_orchestrator/desktop/notifier/badges/")
+          if not any(name.startswith("github_orchestrator/board_api/static/app/assets/") for name in names):
+              missing.append("github_orchestrator/board_api/static/app/assets/")
+          if missing:
+              sys.exit("the wheel lacks: " + ", ".join(missing))
+          print(f"{sys.argv[1]} carries all {len(needed) + 2} required paths")
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            dist/*.whl
+            install.sh
+          if-no-files-found: error
+
+  smoke-macos:
+    needs: build
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Install into a scratch HOME
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          mkdir -p "$HOME"
+          echo "HOME=$HOME" >> "$GITHUB_ENV"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub answers in setup and serves the setup page
+        run: |
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json; state = json.load(open("health.json"))["state"]; assert state == "setup", state'
+          curl -fsS http://127.0.0.1:8720/setup | grep -q '<div id="app"\|<script'
+
+      - name: The board loads in headless Chrome without a script error
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+            --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
+          if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
+          grep -q '<script' board.html
+
+      - name: doctor passes on a fresh install
+        run: |
+          set +e
+          "$HOME/.local/bin/github-orchestrator" doctor
+          code=$?
+          echo "doctor exited $code"
+          [ "$code" -eq 0 ]
+
+      - name: uninstall with yes leaves nothing behind
+        run: |
+          "$HOME/.local/bin/github-orchestrator" uninstall --yes
+          left=
+          for path in "$HOME/Library/LaunchAgents/com.github-orchestrator.watcher.plist" \
+                      "$HOME/.config/github-orchestrator" \
+                      "$HOME/.local/share/github-orchestrator" \
+                      "$HOME/.local/bin/github-orchestrator" \
+                      "$HOME/.local/share/uv/tools/github-orchestrator"; do
+            if [ -e "$path" ]; then echo "left behind: $path"; left=1; fi
+          done
+          if launchctl print "gui/$(id -u)/com.github-orchestrator.watcher" >/dev/null 2>&1; then
+            echo "launchd still holds com.github-orchestrator.watcher"; left=1
+          fi
+          if curl -fsS http://127.0.0.1:8720/api/health >/dev/null 2>&1; then
+            echo "the hub still answers"; left=1
+          fi
+          [ -z "$left" ]
+
+  smoke-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Give the runner a user manager
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
+
+      - name: Install
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub answers in setup and serves the setup page
+        run: |
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json; state = json.load(open("health.json"))["state"]; assert state == "setup", state'
+          curl -fsS http://127.0.0.1:8720/setup | grep -q '<div id="app"\|<script'
+
+      - name: The board loads in headless Chrome without a script error
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+            --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
+          if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
+          grep -q '<script' board.html
+
+      - name: doctor passes on a fresh install
+        run: |
+          set +e
+          "$HOME/.local/bin/github-orchestrator" doctor
+          code=$?
+          echo "doctor exited $code"
+          [ "$code" -eq 0 ]
+
+      - name: uninstall with yes leaves nothing behind
+        run: |
+          "$HOME/.local/bin/github-orchestrator" uninstall --yes
+          left=
+          for path in "$HOME/.config/systemd/user/github-orchestrator.service" \
+                      "$HOME/.config/github-orchestrator" \
+                      "$HOME/.local/share/github-orchestrator" \
+                      "$HOME/.local/bin/github-orchestrator" \
+                      "$HOME/.local/share/uv/tools/github-orchestrator"; do
+            if [ -e "$path" ]; then echo "left behind: $path"; left=1; fi
+          done
+          if systemctl --user list-units --all --no-legend | grep -q github-orchestrator; then
+            echo "systemd still lists the unit"; left=1
+          fi
+          if curl -fsS http://127.0.0.1:8720/api/health >/dev/null 2>&1; then
+            echo "the hub still answers"; left=1
+          fi
+          [ -z "$left" ]
+
+  upgrade:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Give the runner a user manager
+        if: runner.os == 'Linux'
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+
+      - name: Use a scratch HOME
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "$RUNNER_TEMP/home"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+
+      - name: Install the last published release with its own install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          previous=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          echo "upgrading from $previous"
+          gh release download "$previous" --repo "$GITHUB_REPOSITORY" --pattern install.sh --output previous-install.sh
+          sh previous-install.sh -y --no-open --version "$previous"
+          curl -fsS http://127.0.0.1:8720/api/health
+
+      - name: Give the old release a config
+        run: |
+          mkdir -p "$HOME/.config/github-orchestrator"
+          printf '%s\n' 'gh_account = "octocat"' '' '[[repos]]' 'repo = "octocat/hello-world"' 'local_path = "~/repositories/hello-world"' \
+            > "$HOME/.config/github-orchestrator/config.toml"
+
+      - name: Install the new wheel over it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: sh install.sh -y --no-open --wheel dist/*.whl
+
+      - name: The hub runs the new version and kept the config
+        run: |
+          wheel=$(basename dist/*.whl)
+          version=$(echo "$wheel" | cut -d- -f2)
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json, sys; got = json.load(open("health.json"))["version"]; assert got == sys.argv[1], f"hub runs {got}, not {sys.argv[1]}"' "$version"
+          grep -q 'octocat/hello-world' "$HOME/.config/github-orchestrator/config.toml"
+          "$HOME/.local/bin/github-orchestrator" config
+
+      - name: The board loads in headless Chrome without a script error
+        run: |
+          chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+            --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
+          if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
+          grep -q '<script' board.html
+
+  update-command:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Give the runner a user manager
+        if: runner.os == 'Linux'
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          for second in $(seq 1 30); do
+            [ -S "/run/user/$(id -u)/systemd/private" ] && break
+            sleep 1
+          done
+
+      - name: Use a scratch HOME
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "$RUNNER_TEMP/home"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+
+      - name: Install the last published release with its own install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          previous=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          echo "upgrading from $previous"
+          gh release download "$previous" --repo "$GITHUB_REPOSITORY" --pattern install.sh --output previous-install.sh
+          sh previous-install.sh -y --no-open --version "$previous"
+          curl -fsS http://127.0.0.1:8720/api/health
+
+      - name: Check the old release can be pointed at another releases API
+        id: seam
+        run: |
+          if grep -rqs GITHUB_ORCHESTRATOR_RELEASES_API "$HOME/.local/share/uv/tools/github-orchestrator"; then
+            echo "able=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::the last release predates GITHUB_ORCHESTRATOR_RELEASES_API, so its update command is tested against GitHub after publishing instead"
+          fi
+
+      - name: Serve a fake releases API that offers the new wheel
+        if: steps.seam.outputs.able == 'yes'
+        run: |
+          wheel=$(basename dist/*.whl)
+          version=$(echo "$wheel" | cut -d- -f2)
+          mkdir -p fake/releases fake/assets
+          cp dist/*.whl fake/assets/wheel
+          printf '{"tag_name": "v%s", "assets": [{"name": "%s", "url": "http://127.0.0.1:8799/assets/wheel"}]}' "$version" "$wheel" > fake/releases/latest
+          nohup python3 -m http.server 8799 --bind 127.0.0.1 --directory fake > fake.log 2>&1 &
+          for second in $(seq 1 10); do curl -fsS http://127.0.0.1:8799/releases/latest && break; sleep 1; done
+
+      - name: update installs the new version
+        if: steps.seam.outputs.able == 'yes'
+        env:
+          GITHUB_ORCHESTRATOR_RELEASES_API: http://127.0.0.1:8799/releases
+        run: |
+          "$HOME/.local/bin/github-orchestrator" update
+          version=$(basename dist/*.whl | cut -d- -f2)
+          curl -fsS http://127.0.0.1:8720/api/health | tee health.json
+          python3 -c 'import json, sys; got = json.load(open("health.json"))["version"]; assert got == sys.argv[1], f"hub runs {got}, not {sys.argv[1]}"' "$version"

@@ -47,8 +47,9 @@ def _release(body: bytes) -> Release:
 
 class GitHubReleases:
     def __init__(self, get: Get, record: Path, clock: UtcClock, *, enabled: bool,
-                 token: str | None) -> None:
+                 token: str | None, address: str) -> None:
         self._get = get
+        self._address = address
         self._record = record
         self._clock = clock
         self._enabled = enabled
@@ -84,7 +85,7 @@ class GitHubReleases:
                                             "checked_at": now.isoformat()}))
 
     def look_up(self, version: str | None) -> Release | str:
-        url = f"{API}/latest" if version is None else f"{API}/tags/v{version.removeprefix('v')}"
+        url = f"{self._address}/latest" if version is None else f"{self._address}/tags/v{version.removeprefix('v')}"
         named = "the newest release" if version is None else f"release {version}"
         try:
             return _release(self._get(url, JSON, self._token))
