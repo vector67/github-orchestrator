@@ -576,6 +576,9 @@ module('Acceptance | pr diff', function (hooks) {
     });
 
     test('escape over the offered emoji puts them away and keeps the comment box', async function (assert) {
+      board().emojis = {
+        tada: 'https://github.githubassets.com/images/icons/emoji/unicode/1f389.png?v8',
+      };
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
       await click(`${row('+20')} [data-test-add]`);
       await fillIn('[data-test-comment-box] textarea', 'ship it :tad');

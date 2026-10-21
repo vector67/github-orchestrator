@@ -317,7 +317,10 @@ def test_seeing_the_tour_clears_the_marker_so_it_is_shown_once():
         204, False, {"due": False})
 
 
-def test_the_emojis_are_every_name_github_listed_with_its_picture():
-    named = {"shipit": "https://github.githubassets.com/images/icons/emoji/shipit.png?v8"}
+def test_the_emojis_are_every_name_github_listed_with_its_picture_in_its_order():
+    shipit = "https://github.githubassets.com/images/icons/emoji/shipit.png?v8"
+    tada = "https://github.githubassets.com/images/icons/emoji/unicode/1f389.png?v8"
+    named = {"shipit": shipit, "tada": tada}
 
-    assert served_hub(emojis=FakeEmojis(named)).get("/api/emojis").json() == {"named": named}
+    assert served_hub(emojis=FakeEmojis(named)).get("/api/emojis").json() == {"emojis": [
+        {"name": "shipit", "picture": shipit}, {"name": "tada", "picture": tada}]}

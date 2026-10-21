@@ -3221,17 +3221,32 @@
    ],
    "type": "object"
   },
-  "EmojiList": {
+  "Emoji": {
    "properties": {
-    "named": {
-     "additionalProperties": {
-      "type": "string"
-     },
-     "type": "object"
+    "name": {
+     "type": "string"
+    },
+    "picture": {
+     "type": "string"
     }
    },
    "required": [
-    "named"
+    "name",
+    "picture"
+   ],
+   "type": "object"
+  },
+  "EmojiList": {
+   "properties": {
+    "emojis": {
+     "items": {
+      "$ref": "#/components/schemas/Emoji"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "emojis"
    ],
    "type": "object"
   },

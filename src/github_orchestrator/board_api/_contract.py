@@ -1847,10 +1847,16 @@ class SetupOperation(BaseModel):
                     "left where they are.")
 
 
+class Emoji(BaseModel):
+    name: str = Field(description="What is typed between colons, without them.")
+    picture: str = Field(description="The address of GitHub's picture of it, under "
+                                     "`/unicode/` for an emoji Unicode has.")
+
+
 class EmojiList(BaseModel):
-    named: dict[str, str] = Field(description="Every emoji GitHub knows, by the name typed "
-                                              "between colons, with the address of its "
-                                              "picture. Empty when GitHub could not be asked.")
+    emojis: list[Emoji] = Field(description="Every emoji GitHub knows, in the order it "
+                                            "lists them. Empty when GitHub could not "
+                                            "be asked.")
 
 
 class Tour(BaseModel):

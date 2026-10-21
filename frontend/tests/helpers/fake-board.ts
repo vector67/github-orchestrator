@@ -565,7 +565,7 @@ const SUMMARISE =
   /\/api\/summary\/operations:(summarise|summarise-with-github-api)$/;
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
 export const ONE_PR_READ =
-  /^\/api\/(?!health$|pull-requests$|runs$|tour$|client-errors$)/;
+  /^\/api\/(?!health$|pull-requests$|runs$|tour$|emojis$|client-errors$)/;
 const THROUGH_THE_HUB = /^\/pr\/([^/]+\/[^/]+)\/(\d+)(\/api\/.*)$/;
 
 type Side = 'board' | 'hub';
@@ -716,6 +716,7 @@ export class FakeBoard {
   state: HubState = 'watching';
   tourDue = false;
   toursSeen = 0;
+  emojis: Record<string, string> = {};
   pid = 4242;
   setup = new FakeSetup();
   held: HeldPullRequest[] = [heldPr()];
@@ -1164,6 +1165,13 @@ export class FakeBoard {
     if (side === 'hub') {
       if (path === '/api/runs') return this.ledger;
       if (path === '/api/tour') return { due: this.tourDue };
+      if (path === '/api/emojis')
+        return {
+          emojis: Object.entries(this.emojis).map(([name, picture]) => ({
+            name,
+            picture,
+          })),
+        };
       return path === '/api/pull-requests'
         ? {
             watching: this.watching,

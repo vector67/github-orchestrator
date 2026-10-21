@@ -17,6 +17,19 @@ const SUGGESTIONS = '[data-test-emoji-suggestions]';
 
 const OPTION = '[data-test-emoji-option]';
 
+const PICTURES = 'https://github.githubassets.com/images/icons/emoji';
+
+const SHIPIT = `${PICTURES}/shipit.png?v8`;
+
+const EMOJIS = {
+  '+1': `${PICTURES}/unicode/1f44d.png?v8`,
+  lithuania: `${PICTURES}/unicode/1f1f1-1f1f9.png?v8`,
+  shipit: SHIPIT,
+  tada: `${PICTURES}/unicode/1f389.png?v8`,
+  thumbsdown: `${PICTURES}/unicode/1f44e.png?v8`,
+  thumbsup: `${PICTURES}/unicode/1f44d.png?v8`,
+};
+
 module('Acceptance | reply', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
@@ -25,6 +38,7 @@ module('Acceptance | reply', function (hooks) {
     board().conversations = [thread({ key: 'k1' }), thread({ key: 'k2' })];
     board().comments['k1'] = [comment()];
     board().comments['k2'] = [comment()];
+    board().emojis = EMOJIS;
   });
 
   test('the composer is a link until it is asked for', async function (assert) {
@@ -151,7 +165,7 @@ module('Acceptance | reply', function (hooks) {
     assert.dom(BOX).doesNotExist();
   });
 
-  test('a colon and a few letters offer the emoji they name', async function (assert) {
+  test('a colon and a few letters offer the emoji github names that way', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     await click(OPEN);
 
@@ -159,10 +173,10 @@ module('Acceptance | reply', function (hooks) {
 
     assert
       .dom(OPTION)
-      .hasText('👍 :thumbsup:')
+      .hasText('👎 :thumbsdown:')
       .hasAttribute('aria-selected', 'true');
-    assert.dom(`${OPTION}:nth-child(2)`).hasText('👎 :thumbsdown:');
-    assert.dom(`${OPTION}:nth-child(4)`).hasText('🇱🇹 :lithuania:');
+    assert.dom(`${OPTION}:nth-child(2)`).hasText('👍 :thumbsup:');
+    assert.dom(`${OPTION}:nth-child(3)`).hasText('🇱🇹 :lithuania:');
   });
 
   test('tab puts the offered emoji in place of the colon and its letters', async function (assert) {
@@ -172,11 +186,11 @@ module('Acceptance | reply', function (hooks) {
 
     await triggerKeyEvent(BOX, 'keydown', 'Tab');
 
-    assert.dom(BOX).hasValue('nice 👍').isFocused();
+    assert.dom(BOX).hasValue('nice 👎').isFocused();
     assert.dom(SUGGESTIONS).doesNotExist();
     await visit('/pr/o/r/7/conversations/k2');
     await visit('/pr/o/r/7/conversations/k1');
-    assert.dom(BOX).hasValue('nice 👍');
+    assert.dom(BOX).hasValue('nice 👎');
   });
 
   test('the arrow keys pick another emoji and enter puts it in', async function (assert) {
@@ -187,7 +201,7 @@ module('Acceptance | reply', function (hooks) {
     await triggerKeyEvent(BOX, 'keydown', 'ArrowDown');
     await triggerKeyEvent(BOX, 'keydown', 'Enter');
 
-    assert.dom(BOX).hasValue('👎');
+    assert.dom(BOX).hasValue('👍');
   });
 
   test('clicking an emoji puts it in', async function (assert) {
@@ -198,6 +212,19 @@ module('Acceptance | reply', function (hooks) {
     await click(OPTION);
 
     assert.dom(BOX).hasValue('shipped 🎉').isFocused();
+  });
+
+  test('an emoji only github draws is offered as its picture and put in by name', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'lgtm :ship');
+
+    assert.dom(OPTION).hasText(':shipit:');
+    assert.dom(`${OPTION} img`).hasAttribute('src', SHIPIT);
+
+    await triggerKeyEvent(BOX, 'keydown', 'Tab');
+
+    assert.dom(BOX).hasValue('lgtm :shipit:');
   });
 
   test('escape puts the offer away and leaves the words', async function (assert) {

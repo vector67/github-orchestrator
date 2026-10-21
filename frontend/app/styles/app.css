@@ -4899,3 +4899,14 @@ button.tree-row[aria-current="true"] {
   display: inline-block;
   width: 1.4em;
 }
+
+img.emoji-glyph {
+  height: 1.2em;
+  margin-right: 0.2em;
+  vertical-align: -0.2em;
+}
+
+.comment-body img {
+  height: 1.25em;
+  vertical-align: -0.25em;
+}

@@ -1,5 +1,9 @@
-import { modifier } from 'ember-modifier';
-import { emojiNamed, type Emoji } from 'frontend/data/emoji';
+import Modifier from 'ember-modifier';
+import { registerDestructor } from '@ember/destroyable';
+import { service } from '@ember/service';
+import type { Emoji } from 'frontend/data/api';
+import { emojiNamed, glyphOf, typedAs } from 'frontend/data/emoji';
+import type StoreService from 'frontend/services/store';
 
 const TYPED = /(?:^|\s):([\w+-]+)$/;
 
@@ -32,12 +36,15 @@ interface Typed {
   at: number;
 }
 
-function typedAtCaret(field: HTMLTextAreaElement): Typed | null {
+function typedAtCaret(
+  field: HTMLTextAreaElement,
+  emojis: Emoji[],
+): Typed | null {
   const end = field.selectionEnd;
   if (field.selectionStart !== end) return null;
   const match = TYPED.exec(field.value.slice(0, end));
   if (!match?.[1]) return null;
-  const offered = emojiNamed(match[1]);
+  const offered = emojiNamed(emojis, match[1]);
   if (!offered.length) return null;
   return { start: end - match[1].length - 1, end, offered, at: 0 };
 }
@@ -65,7 +72,25 @@ function caretBelow(
   return { left, top };
 }
 
-export default modifier((field: HTMLTextAreaElement) => {
+function pictured(emoji: Emoji): HTMLElement {
+  const glyph = glyphOf(emoji);
+  if (glyph) {
+    const drawn = document.createElement('span');
+    drawn.className = 'emoji-glyph';
+    drawn.textContent = glyph;
+    return drawn;
+  }
+  const picture = document.createElement('img');
+  picture.className = 'emoji-glyph';
+  picture.src = emoji.picture;
+  picture.alt = '';
+  return picture;
+}
+
+function completing(
+  field: HTMLTextAreaElement,
+  emojis: () => Emoji[],
+): () => void {
   let typed: Typed | null = null;
   const list = document.createElement('ul');
   list.className = 'emoji-suggestions';
@@ -85,10 +110,7 @@ export default modifier((field: HTMLTextAreaElement) => {
         option.setAttribute('role', 'option');
         option.setAttribute('aria-selected', String(index === shown.at));
         option.dataset['testEmojiOption'] = '';
-        const glyph = document.createElement('span');
-        glyph.className = 'emoji-glyph';
-        glyph.textContent = emoji.glyph;
-        option.append(glyph, ` :${emoji.name}:`);
+        option.append(pictured(emoji), ` :${emoji.name}:`);
         option.addEventListener('mousedown', (event) => event.preventDefault());
         option.addEventListener('click', () => put(shown, emoji));
         return option;
@@ -104,11 +126,11 @@ export default modifier((field: HTMLTextAreaElement) => {
     close();
     field.focus();
     field.setSelectionRange(shown.start, shown.end);
-    document.execCommand('insertText', false, emoji.glyph);
+    document.execCommand('insertText', false, typedAs(emoji));
   };
 
   const look = () => {
-    typed = typedAtCaret(field);
+    typed = typedAtCaret(field, emojis());
     if (typed) draw(typed);
     else close();
   };
@@ -147,4 +169,23 @@ export default modifier((field: HTMLTextAreaElement) => {
     field.removeEventListener('keydown', press, { capture: true });
     field.removeEventListener('blur', close);
   };
-});
+}
+
+interface EmojiCompleteSignature {
+  Element: HTMLTextAreaElement;
+}
+
+export default class EmojiComplete extends Modifier<EmojiCompleteSignature> {
+  @service declare store: StoreService;
+
+  private completing = false;
+
+  modify(field: HTMLTextAreaElement): void {
+    if (this.completing) return;
+    this.completing = true;
+    registerDestructor(
+      this,
+      completing(field, () => this.store.emojis),
+    );
+  }
+}

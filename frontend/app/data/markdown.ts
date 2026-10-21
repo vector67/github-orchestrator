@@ -1,5 +1,8 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
+import type { StateInline } from 'markdown-it';
+import type { Emoji } from 'frontend/data/api';
+import { glyphOf } from 'frontend/data/emoji';
 import {
   highlightedHtml,
   keepingClasses,
@@ -41,6 +44,26 @@ const DRAWN_TAGS = [
 
 const SUMMARY_TAGS = ['details', 'summary', 'figure'];
 
+const EMOJI_TAGS = ['img'];
+
+const EMOJI_ATTRIBUTES = ['src', 'alt'];
+
+const EMOJI_TYPED = /^:([\w+-]+):/;
+
+interface Named {
+  emojis?: Map<string, Emoji>;
+}
+
+function emojiTyped(state: StateInline, silent: boolean): boolean {
+  if (state.src[state.pos] !== ':') return false;
+  const typed = EMOJI_TYPED.exec(state.src.slice(state.pos));
+  const emoji = typed?.[1] && (state.env as Named).emojis?.get(typed[1]);
+  if (!typed || !emoji) return false;
+  if (!silent) state.push('emoji', '', 0).meta = { emoji };
+  state.pos += typed[0].length;
+  return true;
+}
+
 function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
   const made = new MarkdownIt('default', {
     html,
@@ -65,6 +88,16 @@ function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
 
 const COMMENTS = parser(true);
 
+COMMENTS.inline.ruler.push('emoji', emojiTyped);
+
+COMMENTS.renderer.rules.emoji = (tokens, at) => {
+  const emoji = tokens[at]?.meta?.['emoji'] as Emoji;
+  const glyph = glyphOf(emoji);
+  if (glyph) return glyph;
+  const name = COMMENTS.utils.escapeHtml(`:${emoji.name}:`);
+  return `<img src="${COMMENTS.utils.escapeHtml(emoji.picture)}" alt="${name}">`;
+};
+
 const NOTES = parser(false);
 
 const SUMMARIES = parser(true, true);
@@ -88,8 +121,21 @@ SANITISER.addHook('afterSanitizeAttributes', (node) => {
   node.setAttribute('rel', 'noopener noreferrer');
 });
 
-export function markdownOf(text: string): DocumentFragment {
-  return sanitised(COMMENTS.render(text));
+const DRAWN_WITH = new WeakMap<Emoji[], (text: string) => DocumentFragment>();
+
+export function markdownWith(
+  emojis: Emoji[],
+): (text: string) => DocumentFragment {
+  let drawing = DRAWN_WITH.get(emojis);
+  if (!drawing) {
+    const named = {
+      emojis: new Map(emojis.map((emoji) => [emoji.name, emoji])),
+    };
+    drawing = (text) =>
+      sanitised(COMMENTS.render(text, named), EMOJI_TAGS, EMOJI_ATTRIBUTES);
+    DRAWN_WITH.set(emojis, drawing);
+  }
+  return drawing;
 }
 
 export function notesOf(text: string): DocumentFragment {
@@ -100,10 +146,14 @@ export function summaryOf(text: string): DocumentFragment {
   return sanitised(SUMMARIES.render(text), SUMMARY_TAGS);
 }
 
-function sanitised(html: string, extraTags: string[] = []): DocumentFragment {
+function sanitised(
+  html: string,
+  extraTags: string[] = [],
+  extraAttributes: string[] = [],
+): DocumentFragment {
   return SANITISER.sanitize(html, {
     ALLOWED_TAGS: [...DRAWN_TAGS, ...extraTags],
-    ALLOWED_ATTR: ['href', 'class', 'start'],
+    ALLOWED_ATTR: ['href', 'class', 'start', ...extraAttributes],
     ALLOWED_URI_REGEXP: SAFE_HREF,
     RETURN_DOM_FRAGMENT: true,
   });

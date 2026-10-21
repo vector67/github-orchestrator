@@ -19,6 +19,7 @@ from github_orchestrator.board_api._app import (
     report_client_error,
 )
 from github_orchestrator.board_api._contract import (
+    Emoji,
     EmojiList,
     ErrorCode,
     Errors,
@@ -189,7 +190,8 @@ def read_emojis(request: Request, desk: Serving) -> Response:
     """What the comment boxes offer after a colon and what `:name:` in a
     comment is drawn as. Asked of GitHub once, when the server starts.
     """
-    return etag.answered(request, EmojiList(named=desk.emojis.named()))
+    return etag.answered(request, EmojiList(emojis=[
+        Emoji(name=name, picture=picture) for name, picture in desk.emojis.named().items()]))
 
 
 @writes.post("/tour:seen", status_code=204, operation_id="sawTour",

@@ -13,6 +13,8 @@ import type {
   DashboardStatus,
   DashboardSystem,
   Diff,
+  Emoji,
+  EmojiList,
   FileLines,
   FrozenWorktree,
   GitRun,
@@ -379,6 +381,7 @@ export default class StoreService extends Service {
   @tracked setupOperation: SetupOperation | null = null;
   @tracked movedTo: string | null = null;
   @tracked tour: Tour | null = null;
+  @tracked emojis: Emoji[] = [];
   private restarting: Restarting | null = null;
 
   private joins = 0;
@@ -697,6 +700,14 @@ export default class StoreService extends Service {
     this.movedTo = null;
     this.setupOperation = null;
     return 'back';
+  }
+
+  async readEmojis(): Promise<void> {
+    try {
+      this.emojis = (await fetched<EmojiList>('/api/emojis')).emojis;
+    } catch (trouble) {
+      void reportError('emojis', trouble);
+    }
   }
 
   async readTour(): Promise<void> {

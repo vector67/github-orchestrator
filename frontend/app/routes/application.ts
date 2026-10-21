@@ -28,6 +28,7 @@ export default class ApplicationRoute extends Route {
 
   async beforeModel(transition: Transition): Promise<void> {
     this.keys.listen();
+    void this.store.readEmojis();
     await this.poll.locate();
     const state = this.store.health?.state;
     const settingUp = state === 'setup' || state === 'broken';

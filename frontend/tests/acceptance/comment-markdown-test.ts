@@ -253,6 +253,24 @@ module('Acceptance | comment markdown', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
 
+  test('a :name: github knows is drawn as its emoji, or as its picture when it has only that', async function (assert) {
+    const shipit =
+      'https://github.githubassets.com/images/icons/emoji/shipit.png?v8';
+    board().emojis = {
+      '+1': 'https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png?v8',
+      shipit,
+    };
+
+    await shown(board(), ':+1: :shipit: :nope: `:shipit:`');
+
+    assert.dom(body()).hasText('👍 :nope: :shipit:');
+    assert
+      .dom('[data-test-entry-body] img')
+      .exists({ count: 1 })
+      .hasAttribute('src', shipit)
+      .hasAttribute('alt', ':shipit:');
+  });
+
   test('a body is drawn as github-flavoured markdown', async function (assert) {
     await shown(
       board(),
