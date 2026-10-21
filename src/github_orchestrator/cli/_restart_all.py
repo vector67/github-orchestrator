@@ -17,7 +17,7 @@ from github_orchestrator.cli._restart import (
     stop_server,
 )
 from github_orchestrator.cli._service import Service
-from github_orchestrator.domain import HubState, LocalClock, Sleep
+from github_orchestrator.domain import HubState, LocalClock, Pr, Sleep
 from github_orchestrator.pr_event_queue import Queues
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.settings import ConfigFile
@@ -78,13 +78,18 @@ def _named(instance: Instance) -> str:
     return "" if instance.name is None else f" for {instance.name}"
 
 
-def _restart_instance(sleep: Sleep, clock: LocalClock, instance: Instance) -> None:
+def stop_managers_and_server(instance: Instance) -> tuple[set[Pr], int | None]:
     named = _named(instance)
     _heading(f"Restarting the agent managers{named}")
-    restarted = clock()
     stopped = restart(instance.pr_processes)
     _heading(f"Stopping the server{named}")
-    gone = stop_server(instance.server)
+    return stopped, stop_server(instance.server)
+
+
+def _restart_instance(sleep: Sleep, clock: LocalClock, instance: Instance) -> None:
+    named = _named(instance)
+    restarted = clock()
+    stopped, gone = stop_managers_and_server(instance)
     _heading(f"Restarting the watcher{named}")
     restart_watcher(instance.service)
     _heading(f"Confirming the server came back{named}")

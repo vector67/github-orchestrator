@@ -56,6 +56,15 @@ def test_the_pull_request_keeps_its_identity_and_commit_messages() -> None:
     assert pr.commit_messages == ("hide the button", "pair on tests")
 
 
+def test_a_deleted_author_reads_as_ghost() -> None:
+    graphql = {"data": {"repository": {"pullRequest": {**GRAPHQL["data"]["repository"]["pullRequest"], "author": None}}}}
+
+    pr = pull_request_from(graphql)
+
+    assert pr.author == "ghost"
+    assert pr.authors == frozenset({"ghost", "octocat", "hubot"})
+
+
 def test_empty_remarks_are_dropped() -> None:
     bodies = [found.body for found in pull_request_from(GRAPHQL).remarks]
 

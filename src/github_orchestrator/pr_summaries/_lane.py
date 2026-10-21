@@ -150,16 +150,20 @@ class LocalSummaryLane:
         slot = self._slot()
         if slot is None:
             return "another summary is running"
-        self._store(slot)
-        run = _Run(pr, self._clock(), self._head_of(pr),
-                   (self._summaries.load(pr) or Summary()).wanted)
-        folder = working_folder(self._dir, pr)
-        _keep_primer(folder)
-        shutil.rmtree(folder, ignore_errors=True)
-        shutil.rmtree(_outputs(folder), ignore_errors=True)
-        os.ftruncate(slot, 0)
-        os.pwrite(slot, _in_flight(run), 0)
-        self._run_in(lambda: self._run(pr, slot, use_github_api=use_github_api))
+        try:
+            self._store(slot)
+            run = _Run(pr, self._clock(), self._head_of(pr),
+                       (self._summaries.load(pr) or Summary()).wanted)
+            folder = working_folder(self._dir, pr)
+            _keep_primer(folder)
+            shutil.rmtree(folder, ignore_errors=True)
+            shutil.rmtree(_outputs(folder), ignore_errors=True)
+            os.ftruncate(slot, 0)
+            os.pwrite(slot, _in_flight(run), 0)
+            self._run_in(lambda: self._run(pr, slot, use_github_api=use_github_api))
+        except BaseException:
+            os.close(slot)
+            raise
         return None
 
     def progress(self, pr: Pr) -> Progress | None:

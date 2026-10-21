@@ -1,3 +1,4 @@
+import dataclasses
 import shlex
 import subprocess
 
@@ -155,6 +156,16 @@ def test_the_manager_asks_claude_in_the_prs_worktree(settings, tmp_path):
     assert side.settle().ask("Why this name?") is None
 
     assert side.opened() == [(str(tmp_path), "claude 'Why this name?'")]
+
+
+def test_the_manager_refuses_a_question_while_agents_are_disabled(settings, tmp_path):
+    disabled = dataclasses.replace(settings, config=dataclasses.replace(settings.config,
+                                                                         agents_enabled=False))
+    side = ManagerSide(disabled, tmp_path)
+
+    assert side.settle().ask("Why this name?") == "agents are disabled in config.toml"
+
+    assert side.opened() == []
 
 
 def test_the_manager_opens_each_terminal_command_in_the_prs_worktree(

@@ -1,15 +1,44 @@
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from pr_summary.witnesses import challenge_folders
 
-WITNESS_FIELDS = ("witness", "display", "claims", "gaps")
-MISMATCH_FIELDS = ("lower", "higher", "kind", "text", "claims")
+Check = Callable[[Any], bool]
+
+
+def _known(value: Any) -> bool:
+    return value is not None
+
+
+def _text(value: Any) -> bool:
+    return isinstance(value, str)
+
+
+def _number(value: Any) -> bool:
+    return isinstance(value, int)
+
+
+def _texts(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+
+
+def _concept_shaped(value: Any) -> bool:
+    return isinstance(value, dict) and _text(value.get("name")) and _text(value.get("explanation")) and _subconcepts(value.get("concepts"))
+
+
+def _subconcepts(value: Any) -> bool:
+    return value is None or (isinstance(value, list) and all(_concept_shaped(child) for child in value))
+
+
+WITNESS_FIELDS: dict[str, Check] = {"witness": _known, "display": _text, "claims": _known, "gaps": _texts}
+MISMATCH_FIELDS: dict[str, Check] = {"lower": _text, "higher": _text, "kind": _text, "text": _text, "claims": _texts}
+CONCEPT_FIELDS: dict[str, Check] = {"name": _text, "explanation": _text, "concepts": _subconcepts}
 ORDER = ("requested", "claimed", "implementation", "tests", "why")
 
 
-def _loaded(folder: Path | None, fields: tuple[str, ...], top: str | None = None) -> dict[str, Any] | str:
+def _loaded(folder: Path | None, fields: dict[str, Check], top: str | None = None) -> dict[str, Any] | str:
     if folder is None:
         return "No ticket found."
     path = folder / "output.json"
@@ -27,9 +56,10 @@ def _loaded(folder: Path | None, fields: tuple[str, ...], top: str | None = None
     if not isinstance(items, list):
         return f"output.json has no {top}."
     for item in items:
-        missing = [field for field in fields if not isinstance(item, dict) or field not in item]
-        if missing:
-            return f"output.json has no {missing[0]}."
+        found = item if isinstance(item, dict) else {}
+        for field, check in fields.items():
+            if not check(found.get(field)):
+                return f"output.json has a malformed {field}." if field in found else f"output.json has no {field}."
     return content
 
 
@@ -46,7 +76,7 @@ def report(manifest: dict[str, Path]) -> str:
     if not isinstance(alignment, str):
         alignment = _challenged(manifest["alignment"], alignment)
     sections = [
-        f"## Before you review\n{_primer(_loaded(manifest.get('primer'), ('name', 'explanation'), top='concepts'))}",
+        f"## Before you review\n{_primer(_loaded(manifest.get('primer'), CONCEPT_FIELDS, top='concepts'))}",
         f"## Requested\n{_said('requested', witnesses['requested'])}",
         f"## Claimed\n{_said('claimed', witnesses['claimed'])}",
         f"## Intent\n**Implementation:** {_said('implementation', witnesses['implementation'])}\n\n**Tests:** {_said('tests', witnesses['tests'])}",
@@ -69,8 +99,8 @@ def _concept(concept: dict[str, Any]) -> str:
 
 def _falsified(alignment: Path) -> dict[int, str]:
     critic, verdict = challenge_folders(alignment)
-    judged = _loaded(verdict, ("mismatch", "falsified"), top="verdicts")
-    cases = _loaded(critic, ("mismatch", "reason"), top="challenges")
+    judged = _loaded(verdict, {"mismatch": _number, "falsified": _known}, top="verdicts")
+    cases = _loaded(critic, {"mismatch": _number, "reason": _known}, top="challenges")
     if isinstance(judged, str) or isinstance(cases, str):
         return {}
     reasons = {case["mismatch"]: str(case["reason"]) for case in cases["challenges"]}
