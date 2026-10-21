@@ -2,6 +2,7 @@ import plistlib
 
 import pytest
 
+from tests.builders import a_pr
 from tests.cli.scripted_system import Job
 from tests.cli.support import CONFIGURED
 
@@ -111,6 +112,26 @@ def test_the_installer_s_start_rewrites_every_instance_s_service_keeping_the_old
     assert unpinned.system.jobs[f"{LABEL}.work"] is not None
     assert work.config_path.exists()
     assert ran.out.endswith(f"Hub: {HUB} (watching)\n")
+
+
+def test_the_installer_s_start_stops_every_instance_s_managers_and_server_before_the_watcher(
+        unpinned, run_cli, tmp_path):
+    unpinned.configure()
+    unpinned.serving()
+    work = unpinned.another_instance("work")
+    for instance, number in ((unpinned, 12), (work, 22)):
+        worktree = tmp_path / f"feature-{number}"
+        worktree.mkdir()
+        instance.processes().open(a_pr(number, "acme/app"), worktree)
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    for named in ("", " for work"):
+        assert ran.under(f"Restarting the agent managers{named}") == (
+            "Killed agent manager processes. Watcher will restart them within 1 minute.\n")
+        assert ran.under(f"Stopping the server{named}") == "Stopped the server, pid 4242.\n"
+    assert ran.out.index("Stopping the server for work") < ran.out.index("Starting the watcher")
 
 
 def test_a_service_already_in_the_new_layout_gets_no_backup(unpinned, run_cli):

@@ -53,6 +53,7 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
     commits = [node["commit"] for node in pr["commits"]["nodes"]]
     commit_authors = {author["user"]["login"] for commit in commits for author in commit["authors"]["nodes"] if author["user"]}
     commit_names = {author["name"] for commit in commits for author in commit["authors"]["nodes"] if author.get("name")}
+    opener = pr["author"] or {"login": "ghost"}
     return PullRequest(
         number=pr["number"],
         url=pr["url"],
@@ -62,9 +63,9 @@ def pull_request_from(graphql: dict[str, Any]) -> PullRequest:
         branch=pr["headRefName"],
         base_sha=pr["baseRefOid"],
         head_sha=pr["headRefOid"],
-        author=pr["author"]["login"],
-        authors=frozenset({pr["author"]["login"], *commit_authors}),
-        author_names=frozenset({*([pr["author"]["name"]] if pr["author"].get("name") else []), *commit_names}),
+        author=opener["login"],
+        authors=frozenset({opener["login"], *commit_authors}),
+        author_names=frozenset({*([opener["name"]] if opener.get("name") else []), *commit_names}),
         commit_messages=tuple(commit["message"] for commit in commits),
         remarks=remarks_from(pr),
         changed_file_count=pr["changedFiles"],
