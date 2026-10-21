@@ -153,3 +153,41 @@ def test_falsified_mismatches_follow_the_standing_ones_crossed_out_with_the_crit
         "2. **Claimed vs Implementation** (unsupported): Claims a cache. [C1]\n"
         "3. ~~**Implementation vs Requested** (unrequested refactor): Also renames the export service. [I1, R1]~~ The rename is in requested's R1.\n"
     ) in text
+
+
+def test_a_malformed_nested_primer_concept_fails_the_primer_alone(tmp_path: Path) -> None:
+    primer = {"witness": "primer", "concepts": [
+        {"name": "Toolbar", "explanation": "The row of buttons above a shop's orders.", "concepts": [{"name": "Feature flags"}]},
+    ]}
+
+    text = report(folders(tmp_path, {**ALL, "primer": primer}, []))
+
+    assert "## Before you review\nPrimer failed: output.json has a malformed concepts." in text
+    assert "Everything matches." in text
+
+
+def test_gaps_that_are_not_a_list_of_text_fail_that_witness(tmp_path: Path) -> None:
+    text = report(folders(tmp_path, {**ALL, "why": {**ALL["why"], "gaps": 3}}, []))
+
+    assert "## Why\nWhy failed: output.json has a malformed gaps." in text
+
+
+def test_a_mismatch_whose_claims_are_not_text_fails_the_alignment(tmp_path: Path) -> None:
+    mismatch = {"lower": "implementation", "higher": "requested", "kind": "unrequested-refactor", "text": "Also renames the export service.", "claims": [1, 2]}
+
+    text = report(folders(tmp_path, ALL, [mismatch]))
+
+    assert "1. **Alignment**: Alignment failed: output.json has a malformed claims." in text
+
+
+def test_a_verdict_naming_no_mismatch_number_leaves_every_mismatch_standing(tmp_path: Path) -> None:
+    mismatch = {"lower": "implementation", "higher": "requested", "kind": "unrequested-refactor", "text": "Also renames the export service.", "claims": ["I1", "R1"]}
+    manifest = folders(tmp_path, ALL, [mismatch])
+    (tmp_path / "critic").mkdir()
+    (tmp_path / "critic" / "output.json").write_text(json.dumps({"challenges": [{"mismatch": [1], "falsified": True, "reason": "R1 asks for it."}]}))
+    (tmp_path / "verdict").mkdir()
+    (tmp_path / "verdict" / "output.json").write_text(json.dumps({"verdicts": [{"mismatch": [1], "falsified": True, "reason": "Agreed."}]}))
+
+    text = report(manifest)
+
+    assert "1. **Implementation vs Requested** (unrequested refactor): Also renames the export service. [I1, R1]" in text
