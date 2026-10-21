@@ -139,6 +139,24 @@ def test_a_panel_with_nowhere_to_open_a_terminal_says_why(side):
     assert side.settle().open_terminal("c") == "[Errno 2] No such file or directory: 'git'"
 
 
+def test_a_panel_asks_claude_a_question_and_answers_no_refusal(side):
+    assert side.settle().ask("Why this name?") is None
+
+
+def test_a_panel_with_nowhere_to_ask_claude_says_why(side):
+    side.has_nowhere_to_open("[Errno 2] No such file or directory: 'claude'")
+
+    assert side.settle().ask("Why this name?") == "[Errno 2] No such file or directory: 'claude'"
+
+
+def test_the_manager_asks_claude_in_the_prs_worktree(settings, tmp_path):
+    side = ManagerSide(settings, tmp_path)
+
+    assert side.settle().ask("Why this name?") is None
+
+    assert side.opened() == [(str(tmp_path), "claude 'Why this name?'")]
+
+
 def test_the_manager_opens_each_terminal_command_in_the_prs_worktree(
         settings, tmp_path, monkeypatch):
     monkeypatch.setenv("SHELL", "/bin/zsh")

@@ -78,13 +78,27 @@ export default class TerminalService extends Service {
   }
 
   open(keys: string, line: string): Promise<boolean> {
-    return waitForPromise(this.opened(keys, line));
+    return waitForPromise(
+      this.opened((pr) => this.store.openSession(pr, keys), line),
+    );
   }
 
-  private async opened(keys: string, line: string): Promise<boolean> {
+  ask(prompt: string): Promise<boolean> {
+    return waitForPromise(
+      this.opened(
+        (pr) => this.store.askTheAgent(pr, prompt),
+        'The question for the agent',
+      ),
+    );
+  }
+
+  private async opened(
+    start: (pr: Numbered) => Promise<void>,
+    line: string,
+  ): Promise<boolean> {
     const pr = this.here.pr;
     if (pr === null) return false;
-    const answer = await tried('terminal', this.store.openSession(pr, keys));
+    const answer = await tried('terminal', start(pr));
     if (!answer.done) {
       this.toasts.say(`${line} did not open: ${answer.why}`, 'failed');
       return false;

@@ -625,6 +625,26 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-comment-box]').doesNotExist();
     });
 
+    test('the comment box asks the agent what was typed about the selected lines, in a new terminal session', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+
+      assert.dom('[data-test-box-ask]').isDisabled('nothing typed yet');
+
+      await fillIn('[data-test-comment-box] textarea', 'why a comment here?');
+      await click('[data-test-box-ask]');
+
+      const [asked] = board().posted.filter((one) => one.verb === 'ask');
+      const { prompt } = asked!.body as { prompt: string };
+      assert.true(
+        prompt.includes('line 20 (new side) of src/widgets/changes.py'),
+        prompt,
+      );
+      assert.false(prompt.includes('drafted'), prompt);
+      assert.true(prompt.endsWith('why a comment here?'), prompt);
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    });
+
     test('a draft being edited has no Add to review in its box', async function (assert) {
       board().conversations = [
         thread({
@@ -1017,6 +1037,32 @@ module('Acceptance | pr diff', function (hooks) {
           ['discard', 'd1'],
         ],
       );
+    });
+
+    test('a draft’s card asks the agent a question about the draft in a new terminal session', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-card="d1"] [data-test-card-ask]');
+
+      assert.dom('[data-test-card="d1"] [data-test-ask] textarea').isFocused();
+      assert.dom('[data-test-card="d1"] [data-test-ask-send]').isDisabled();
+
+      await fillIn(
+        '[data-test-card="d1"] [data-test-ask] textarea',
+        'should this be a generator?',
+      );
+      await click('[data-test-card="d1"] [data-test-ask-send]');
+
+      const [asked] = board().posted.filter((one) => one.verb === 'ask');
+      const { prompt } = asked!.body as { prompt: string };
+      assert.true(prompt.includes('src/widgets/changes.py'), prompt);
+      assert.true(
+        prompt.includes('lines 19 (old side) to 20 (new side)'),
+        prompt,
+      );
+      assert.true(prompt.includes('> return the rows'), prompt);
+      assert.true(prompt.endsWith('should this be a generator?'), prompt);
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
     });
 
     test('once the board answers a discard, the draft’s card is gone and nothing is left in flight', async function (assert) {

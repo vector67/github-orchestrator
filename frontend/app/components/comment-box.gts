@@ -1,15 +1,19 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
+import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
 import {
   LINES_GONE,
   commentingOn,
+  linesOf,
+  questionAbout,
   type Selection,
 } from 'frontend/data/selection';
 import didChange from 'frontend/modifiers/did-change';
 import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
 import type BoardService from 'frontend/services/board';
 import type DraftsService from 'frontend/services/drafts';
+import type TerminalService from 'frontend/services/terminal';
 import emojiComplete from 'frontend/modifiers/emoji-complete';
 
 export interface CommentBoxSignature {
@@ -24,6 +28,8 @@ export interface CommentBoxSignature {
 export default class CommentBox extends Component<CommentBoxSignature> {
   @service declare drafts: DraftsService;
   @service declare board: BoardService;
+  @service declare terminal: TerminalService;
+  @service declare router: RouterService;
 
   get copy(): Copy {
     return this.drafts.copyOf(this.args.draft, this.args.saved);
@@ -71,6 +77,19 @@ export default class CommentBox extends Component<CommentBoxSignature> {
     await this.board.decide(made, 'enrol');
   };
 
+  get unaskable(): boolean {
+    return this.args.selection === null || this.copy.body.trim() === '';
+  }
+
+  ask = async () => {
+    const selection = this.args.selection;
+    if (selection === null) return;
+    const prompt = questionAbout(linesOf(selection), this.copy.body, null);
+    if (await this.terminal.ask(prompt)) {
+      void this.router.transitionTo('terminal');
+    }
+  };
+
   <template>
     <form class="comment-box" data-test-comment-box {{on "submit" this.save}}>
       <span class="commenting" data-test-commenting>{{this.commenting}}</span>
@@ -92,6 +111,13 @@ export default class CommentBox extends Component<CommentBoxSignature> {
           {{on "click" @close}}
         >Cancel</button>
         {{#if this.creating}}
+          <button
+            type="button"
+            class="box-draft"
+            data-test-box-ask
+            disabled={{this.unaskable}}
+            {{on "click" this.ask}}
+          >Ask the agent</button>
           <button
             type="submit"
             class="box-draft"

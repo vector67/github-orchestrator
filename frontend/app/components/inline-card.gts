@@ -4,14 +4,17 @@ import { tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
+import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import { modifier } from 'ember-modifier';
 import CommentBody from 'frontend/components/comment-body';
 import { collapse } from 'frontend/motion';
 import type { Inline } from 'frontend/data/inline';
+import { questionAbout } from 'frontend/data/selection';
 import { STANDING_LABELS } from 'frontend/data/thread';
 import type BoardService from 'frontend/services/board';
+import type TerminalService from 'frontend/services/terminal';
 
 export interface InlineCardSignature {
   Args: {
@@ -22,9 +25,13 @@ export interface InlineCardSignature {
 
 export default class InlineCard extends Component<InlineCardSignature> {
   @service declare board: BoardService;
+  @service declare terminal: TerminalService;
+  @service declare router: RouterService;
 
   @tracked opened: boolean;
   @tracked private resolutionSeen: boolean;
+  @tracked asking = false;
+  @tracked question = '';
 
   constructor(owner: Owner, args: InlineCardSignature['Args']) {
     super(owner, args);
@@ -123,6 +130,12 @@ export default class InlineCard extends Component<InlineCardSignature> {
               data-test-card-edit
               {{on "click" (fn this.edit @item)}}
             >Edit</button>
+            <button
+              type="button"
+              class="card-edit"
+              data-test-card-ask
+              {{on "click" this.startAsking}}
+            >Ask the agent</button>
           {{/if}}
           {{#if this.draftingLocally}}
             <button
@@ -155,6 +168,32 @@ export default class InlineCard extends Component<InlineCardSignature> {
               <CommentBody @body={{entry.body}} />
             </div>
           {{/each}}
+          {{#if this.asking}}
+            <form class="comment-box" data-test-ask {{on "submit" this.ask}}>
+              <textarea
+                aria-label="the question"
+                rows="3"
+                placeholder="Ask the agent about this comment"
+                value={{this.question}}
+                {{this.focuses}}
+                {{on "input" this.type}}
+              ></textarea>
+              <div class="box-foot">
+                <button
+                  type="button"
+                  class="box-cancel"
+                  data-test-ask-cancel
+                  {{on "click" this.stopAsking}}
+                >Cancel</button>
+                <button
+                  type="submit"
+                  class="reply-send"
+                  data-test-ask-send
+                  disabled={{this.unaskable}}
+                >Ask</button>
+              </div>
+            </form>
+          {{/if}}
         </div>
       {{/if}}
     </article>
@@ -175,6 +214,10 @@ export default class InlineCard extends Component<InlineCardSignature> {
     this.body = element;
   });
 
+  focuses = modifier((element: HTMLElement) => {
+    element.focus();
+  });
+
   enrol = () => {
     void this.board.decide(this.args.item.key, 'enrol');
   };
@@ -183,5 +226,32 @@ export default class InlineCard extends Component<InlineCardSignature> {
     void this.board.decide(this.args.item.key, 'discard', {}, () =>
       collapse(this.card),
     );
+  };
+
+  get unaskable(): boolean {
+    return this.question.trim() === '';
+  }
+
+  startAsking = () => {
+    this.asking = true;
+  };
+
+  stopAsking = () => {
+    this.asking = false;
+    this.question = '';
+  };
+
+  type = (event: Event) => {
+    this.question = (event.target as HTMLTextAreaElement).value;
+  };
+
+  ask = async (event: Event) => {
+    event.preventDefault();
+    const { lines, entries } = this.args.item;
+    const draft = entries.map((entry) => entry.body).join('\n\n');
+    if (await this.terminal.ask(questionAbout(lines, this.question, draft))) {
+      this.stopAsking();
+      void this.router.transitionTo('terminal');
+    }
   };
 }

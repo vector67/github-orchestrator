@@ -1608,6 +1608,13 @@ class TerminalRequest(BaseModel):
                     "palette's other commands run in the page.")
 
 
+class QuestionRequest(BaseModel):
+    prompt: str = Field(
+        min_length=1,
+        description="What to ask the agent, as its first message in a new session in the "
+                    "pull request's worktree.")
+
+
 class TerminalSession(BaseModel):
     """A pty in a worktree, living while a page is connected to it."""
 

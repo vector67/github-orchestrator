@@ -669,6 +669,10 @@ export interface PullRequest {
   deletions: number;
 }
 
+export interface QuestionRequest {
+  prompt: string;
+}
+
 export interface QueuedEvent {
   event: string | null;
   queued_at: string;

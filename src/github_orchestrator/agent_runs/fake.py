@@ -328,6 +328,9 @@ class FakeAgentRuns:
     def rebase_in_session(self, pr: Pr, worktree: str) -> str | None:
         return self.pr_processes.split(pr, worktree, ["claude", REBASE_ON_MAIN])
 
+    def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
+        return self.pr_processes.split(pr, worktree, ["claude", prompt])
+
     def _fix_thread(self, fix: ThreadFix, work: Work) -> FakeRun | str:
         return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", work)
 

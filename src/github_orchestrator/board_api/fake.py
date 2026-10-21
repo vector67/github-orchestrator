@@ -56,6 +56,7 @@ class FakeManagerPanel:
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
+    asked: list[str] = field(default_factory=list)
     terminal_refusal: str | None = None
     refusal: str | None = None
 
@@ -105,6 +106,11 @@ class FakeManagerPanel:
     def open_terminal(self, keys: str) -> str | None:
         if self.terminal_refusal is None:
             self.opened.append(keys)
+        return self.terminal_refusal
+
+    def ask(self, prompt: str) -> str | None:
+        if self.terminal_refusal is None:
+            self.asked.append(prompt)
         return self.terminal_refusal
 
 

@@ -1292,6 +1292,9 @@ export class FakeBoard {
     if (url.endsWith('/api/terminal/sessions')) {
       return this.openTerminal(url, init, headers);
     }
+    if (url.endsWith('/api/terminal/questions')) {
+      return this.askTheAgent(url, init, headers);
+    }
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
@@ -1528,6 +1531,23 @@ export class FakeBoard {
     if (!this.opensOutside) {
       this.startSession(['fake', body.keys], '/Users/me/repositories/o/r');
     }
+    return this.json(200, { sessions: this.terminalSessions });
+  }
+
+  private askTheAgent(
+    url: string,
+    init: RequestInit,
+    headers: Headers,
+  ): Response {
+    const body = JSON.parse(init.body as string) as { prompt: string };
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'ask',
+      ifMatch: headers.get('If-Match'),
+      body,
+    });
+    this.startSession(['fake', body.prompt], '/Users/me/repositories/o/r');
     return this.json(200, { sessions: this.terminalSessions });
   }
 

@@ -125,6 +125,8 @@ class PrWork(Protocol):
 
     def rebase_in_session(self, pr: Pr, worktree: str) -> str | None: ...
 
+    def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None: ...
+
 
 class Summaries(Protocol):
     def summarize_comment(self, key: str, path: str | None, line: int | None, body: str,

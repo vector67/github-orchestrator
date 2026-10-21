@@ -168,6 +168,17 @@ def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_every_launcher(
     assert argv[0] == "sh" and argv[-1] == "a"
 
 
+def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_a_question(tmp_path):
+    sessions = FakeTerminalSessions()
+    panel = preview.manager_panel(IDLE, sessions=sessions, worktree=str(tmp_path))
+
+    assert panel.ask("Why this name?") is None
+
+    [(worktree, argv)] = sessions.started()
+    assert worktree == str(tmp_path)
+    assert argv[0] == "sh" and argv[-1] == "Why this name?"
+
+
 def test_the_preview_serves_a_manager_panel_with_something_in_every_part(seeded):
     dashboard = seeded.get("/api/dashboard").json()
 

@@ -339,6 +339,8 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
 
 STAND_IN = 'echo "The preview opens a shell where the manager opens g $1."; exec "${SHELL:-/bin/sh}" -l'
 
+ASK_STAND_IN = 'printf "The preview opens a shell where the manager asks the agent:\\n\\n%s\\n\\n" "$1"; exec "${SHELL:-/bin/sh}" -l'
+
 
 @dataclasses.dataclass
 class PreviewPanel(FakeManagerPanel):
@@ -349,6 +351,12 @@ class PreviewPanel(FakeManagerPanel):
         if self.sessions is None:
             return super().open_terminal(keys)
         self.sessions.start(self.worktree, ["sh", "-c", STAND_IN, "sh", keys])
+        return None
+
+    def ask(self, prompt: str) -> str | None:
+        if self.sessions is None:
+            return super().ask(prompt)
+        self.sessions.start(self.worktree, ["sh", "-c", ASK_STAND_IN, "sh", prompt])
         return None
 
 

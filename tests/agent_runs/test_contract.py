@@ -362,6 +362,13 @@ def test_a_rebase_session_runs_claude_on_the_skill_in_the_worktree(world):
     assert (session.worktree, session.argv) == ("/tmp/wt", ["claude", "/rebase-on-main"])
 
 
+def test_a_question_session_runs_claude_on_the_prompt_in_the_worktree(world):
+    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?") is None
+
+    [session] = world.fake.pr_processes.sessions[THE_PR]
+    assert (session.worktree, session.argv) == ("/tmp/wt", ["claude", "Why this name?"])
+
+
 def test_a_gist_is_the_first_line_the_model_writes(world):
     world.fake.answer("\n  rename the helper  \nand more")
     written = []

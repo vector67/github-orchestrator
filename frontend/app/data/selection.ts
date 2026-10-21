@@ -92,6 +92,37 @@ export function linesOf(selection: Selection): Lines {
   };
 }
 
+function sided(line: number, side: DiffSide): string {
+  return `${line} (${side === 'LEFT' ? 'old' : 'new'} side)`;
+}
+
+export function questionAbout(
+  lines: Lines,
+  question: string,
+  draft: string | null,
+): string {
+  const last = sided(lines.line, lines.side);
+  const where =
+    lines.start_line === null
+      ? `line ${last}`
+      : `lines ${sided(lines.start_line, lines.start_side ?? lines.side)} to ${last}`;
+  const drafted =
+    draft === null
+      ? []
+      : [
+          'I have drafted this review comment there:\n\n' +
+            draft
+              .split('\n')
+              .map((line) => `> ${line}`)
+              .join('\n'),
+        ];
+  return [
+    `I am reviewing the pull request checked out here, at ${where} of ${lines.path} in its diff.`,
+    ...drafted,
+    `Answer my question without changing any files: ${question}`,
+  ].join('\n\n');
+}
+
 function lands(line: DiffLine, end: End): boolean {
   if (end.side === 'LEFT') {
     return line.kind !== 'added' && line.old_line === end.line;

@@ -112,6 +112,16 @@ class FilePanel(ManagerPanel):
         return open_in_terminal(command, argv_for(command, keys), pr, worktree,
                                 self._pr_processes, self._pr_work)
 
+    def ask(self, prompt: str) -> str | None:
+        worktree = self._worktree()
+        if not worktree:
+            return NO_WORKTREE
+        refused = self._refusal("a question for the agent")
+        if refused is not None:
+            return refused
+        log.info("%s: asking the agent in a terminal", self._pr)
+        return self._pr_work.ask_in_session(self._pr, worktree, prompt)
+
     def _refusal(self, what: str, command: Command | None = None) -> str | None:
         refused = refusal(self._status_files.conditions(self._pr), command,
                           agents_enabled=self._agents_enabled)

@@ -80,6 +80,35 @@ def test_a_command_the_manager_could_not_open_is_refused_with_its_reason(web, ma
     assert error["detail"] == "refused: the worktree holds another PR's branch"
 
 
+def test_asking_claude_hands_the_prompt_to_the_manager(web, manager, sessions):
+    sessions.start(WORKTREE, ["claude", "Why this name?"])
+
+    answer = web.post("/api/terminal/questions", json={"prompt": "Why this name?"})
+
+    assert answer.status_code == 200
+    assert manager.asked == ["Why this name?"]
+    assert [session["argv"] for session in answer.json()["sessions"]] == [
+        ["claude", "Why this name?"]]
+
+
+def test_an_empty_question_is_refused_before_the_manager_hears_it(web, manager):
+    answer = web.post("/api/terminal/questions", json={"prompt": ""})
+
+    assert answer.status_code == 400
+    assert manager.asked == []
+
+
+def test_a_question_the_manager_could_not_open_is_refused_with_its_reason(web, manager):
+    manager.terminal_refusal = "refused: the worktree holds another PR's branch"
+
+    answer = web.post("/api/terminal/questions", json={"prompt": "Why this name?"})
+
+    assert answer.status_code == 409
+    [error] = answer.json()["errors"]
+    assert error["code"] == "terminal-refused"
+    assert error["detail"] == "refused: the worktree holds another PR's branch"
+
+
 def test_a_page_connected_to_a_session_sees_what_it_prints(web, sessions):
     session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
     sessions.print(session, b"worktree $ ")

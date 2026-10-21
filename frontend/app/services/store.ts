@@ -828,6 +828,15 @@ export default class StoreService extends Service {
     this.takeSessions(pr, body);
   }
 
+  async askTheAgent(pr: Numbered, prompt: string): Promise<void> {
+    const { body } = await posted<TerminalSessionList>(
+      this.here.api('/api/terminal/questions'),
+      null,
+      { prompt },
+    );
+    this.takeSessions(pr, body);
+  }
+
   async decide(
     pr: Numbered,
     key: string,

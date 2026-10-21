@@ -1337,6 +1337,19 @@
     }
    }
   },
+  "/api/terminal/questions": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/TerminalSessionList"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/terminal/sessions": {
    "get": {
     "200": {
@@ -5457,6 +5470,18 @@
     "commits",
     "additions",
     "deletions"
+   ],
+   "type": "object"
+  },
+  "QuestionRequest": {
+   "properties": {
+    "prompt": {
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "prompt"
    ],
    "type": "object"
   },

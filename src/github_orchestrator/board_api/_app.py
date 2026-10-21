@@ -57,6 +57,7 @@ from github_orchestrator.board_api._contract import (
     ProposalList,
     PrSummary,
     PullRequest,
+    QuestionRequest,
     ReplyRequest,
     ResolveRequest,
     SendReviewRequest,
@@ -727,6 +728,20 @@ def open_terminal(board: Serving, asked: TerminalRequest) -> TerminalSessionList
     it opened, so a new one is the one not listed before.
     """
     refused = board.manager.open_terminal(asked.keys)
+    if refused is not None:
+        raise Refusal(409, ErrorCode.TERMINAL_REFUSED, refused)
+    return _sessions(board)
+
+
+@writes.post("/terminal/questions", response_model=TerminalSessionList, tags=["terminal"],
+             operation_id="askTheAgent", responses={409: TERMINAL_REFUSED},
+             summary="Ask the agent a question in a new terminal session.")
+def ask_the_agent(board: Serving, asked: QuestionRequest) -> TerminalSessionList:
+    """The PR manager opens the agent in its worktree with the prompt as the
+    first message. Answered with the sessions after it opened, so a new one
+    is the one not listed before.
+    """
+    refused = board.manager.ask(asked.prompt)
     if refused is not None:
         raise Refusal(409, ErrorCode.TERMINAL_REFUSED, refused)
     return _sessions(board)
