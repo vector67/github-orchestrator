@@ -52,37 +52,21 @@ class Gh:
 
     def token(self) -> str:
         if self._token is None:
-            self._token = self._token_of(self._account)
+            account = self._account
+            self._token = self._spawn(
+                ["gh", "auth", "token", "--user", account], env=None,
+                fix=(f" — run `gh auth login` as {account}, or set gh_account in "
+                     f"config.toml to an account `gh auth status` lists"),
+            ).stdout.strip()
         return self._token
 
-    def _token_of(self, account: str) -> str:
-        try:
-            result = self._run(
-                ["gh", "auth", "token", "--user", account],
-                capture_output=True, text=True, check=True,
-                timeout=GH_TIMEOUT, stdin=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError as exc:
-            stderr = (exc.stderr or "").strip()
-            raise GhError(
-                f"gh auth token --user {account} failed (exit {exc.returncode}): "
-                f"{stderr or '<no stderr>'} — run `gh auth login` as {account}, "
-                f"or set gh_account in config.toml to an account `gh auth status` "
-                f"lists"
-            ) from exc
-        except FileNotFoundError as exc:
-            raise GhError(f"gh is not on PATH, so nothing can reach GitHub as {account}") from exc
-        return result.stdout.strip()
-
-    def check_login(self, account: str) -> None:
-        self._token_of(account)
+    def check_login(self) -> None:
+        self.token()
 
     def active_account(self) -> str | None:
         try:
-            result = self._run(["gh", "api", "user", "--jq", ".login"],
-                               capture_output=True, text=True, check=True,
-                               timeout=GH_TIMEOUT, stdin=subprocess.DEVNULL)
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+            result = self._spawn(["gh", "api", "user", "--jq", ".login"], env=None)
+        except (GhError, subprocess.TimeoutExpired):
             return None
         return result.stdout.strip() or None
 
@@ -96,45 +80,33 @@ class Gh:
                 break
         return ()
 
-    def check_access(self, account: str, repo: Repo) -> None:
-        env = {**os.environ, "GH_TOKEN": self._token_of(account)}
+    def check_access(self, repo: Repo) -> None:
         try:
-            self._run(
-                ["gh", "repo", "view", str(repo), "--json", "nameWithOwner"],
-                env=env, capture_output=True, text=True, check=True,
-                timeout=GH_TIMEOUT, stdin=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError as exc:
-            stderr = (exc.stderr or "").strip()
-            raise GhError(
-                f"gh cannot see {repo} as {account} (exit {exc.returncode}): "
-                f"{stderr or '<no stderr>'}"
-            ) from exc
+            self._gh(["gh", "repo", "view", str(repo), "--json", "nameWithOwner"])
+        except GhError as refused:
+            raise GhError(f"gh cannot see {repo} as {self._account}: {refused}") from refused
 
     def clone(self, repo: Repo, into: Path) -> None:
-        try:
-            self._run(["gh", "repo", "clone", str(repo), str(into)],
-                      capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL)
-        except subprocess.CalledProcessError as exc:
-            stderr = " ".join((exc.stderr or "").split())
-            raise GhError(
-                f"gh repo clone {repo} failed (exit {exc.returncode}): "
-                f"{stderr or '<no stderr>'}"
-            ) from exc
+        self._gh(["gh", "repo", "clone", str(repo), str(into)], timeout=None)
 
-    def _gh(self, cmd: list[str], label: str | None = None,
-            stdin_text: str | None = None) -> subprocess.CompletedProcess[str]:
+    def _gh(self, cmd: list[str], label: str | None = None, stdin_text: str | None = None,
+            timeout: float | None = GH_TIMEOUT) -> subprocess.CompletedProcess[str]:
         try:
-            return self._gh_once(cmd, label, stdin_text)
+            return self._gh_once(cmd, label, stdin_text, timeout)
         except GhError as refused:
             if "HTTP 401" not in str(refused):
                 raise
             self._token = None
-            return self._gh_once(cmd, label, stdin_text)
+            return self._gh_once(cmd, label, stdin_text, timeout)
 
-    def _gh_once(self, cmd: list[str], label: str | None,
-                 stdin_text: str | None) -> subprocess.CompletedProcess[str]:
+    def _gh_once(self, cmd: list[str], label: str | None, stdin_text: str | None,
+                 timeout: float | None) -> subprocess.CompletedProcess[str]:
         env = {**os.environ, "GH_TOKEN": self.token()}
+        return self._spawn(cmd, env, label, stdin_text, timeout)
+
+    def _spawn(self, cmd: list[str], env: dict[str, str] | None, label: str | None = None,
+               stdin_text: str | None = None, timeout: float | None = GH_TIMEOUT,
+               fix: str = "") -> subprocess.CompletedProcess[str]:
         if label is None:
             label = " ".join(cmd)
         feed = ({"input": stdin_text} if stdin_text is not None
@@ -143,13 +115,15 @@ class Gh:
         try:
             result = self._run(
                 cmd, env=env, capture_output=True, text=True, check=True,
-                timeout=GH_TIMEOUT, **feed,
+                timeout=timeout, **feed,
             )
         except subprocess.CalledProcessError as exc:
             stderr = (exc.stderr or "").strip()
             raise GhError(
-                f"{label} failed (exit {exc.returncode}): {stderr or '<no stderr>'}"
+                f"{label} failed (exit {exc.returncode}): {stderr or '<no stderr>'}{fix}"
             ) from exc
+        except FileNotFoundError as exc:
+            raise GhError(f"gh is not on PATH, so nothing can reach GitHub as {self._account}") from exc
         elapsed_ms = (time.monotonic() - start) * 1000
         log.debug("%s → %d bytes, %.0fms", label, len(result.stdout), elapsed_ms)
         return result

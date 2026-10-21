@@ -157,8 +157,8 @@ class FakeGitHub:
         if refused is not None:
             return refused
         if repo not in self.repos:
-            return (f"gh cannot see {repo} as {account} (exit 1): "
-                    f"GraphQL: Could not resolve to a Repository")
+            return (f"gh cannot see {repo} as {account}: gh repo view {repo} --json "
+                    f"nameWithOwner failed (exit 1): GraphQL: Could not resolve to a Repository")
         return None
 
     def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]:
