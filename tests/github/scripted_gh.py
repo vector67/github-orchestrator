@@ -30,6 +30,7 @@ class Timeout:
 @dataclass
 class Raw:
     stdout: str
+    stderr: str = ""
 
 
 @dataclass
@@ -124,6 +125,7 @@ class ScriptedGh:
         self.calls: list[GhRequest] = []
         self.unscripted: list[GhRequest] = []
         self.token_requests: list[str] = []
+        self.environments: list[dict[str, str] | None] = []
         self.installed = True
 
     def answer(self, route: str, *answers: Any) -> "ScriptedGh":
@@ -146,6 +148,7 @@ class ScriptedGh:
                  timeout: float | None = None, **_: Any
                  ) -> subprocess.CompletedProcess[str]:
         assert cmd[0] == "gh", f"not a gh command: {cmd!r}"
+        self.environments.append(env)
         if not self.installed:
             raise FileNotFoundError(2, "No such file or directory", "gh")
         token = (env or {}).get("GH_TOKEN")
@@ -158,8 +161,9 @@ class ScriptedGh:
                                                     output="", stderr=outcome.stderr)
             return subprocess.CompletedProcess(cmd, outcome.returncode, "",
                                                outcome.stderr)
-        stdout = outcome.stdout if isinstance(outcome, Raw) else json.dumps(outcome)
-        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+        if isinstance(outcome, Raw):
+            return subprocess.CompletedProcess(cmd, 0, outcome.stdout, outcome.stderr)
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(outcome), "")
 
     def _outcome(self, argv: list[str], token: str | None, stdin: str | None) -> Any:
         if argv[1:3] == ["auth", "token"]:

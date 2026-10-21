@@ -92,6 +92,7 @@ from github_orchestrator.github import Access, PullRequests, Reviews, Threads
 from github_orchestrator.github._client import GhCliGitHub
 from github_orchestrator.github._gh_cli import Run
 from github_orchestrator.github._pages import pr_url
+from github_orchestrator.github._traffic import Traffic
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -348,6 +349,7 @@ class SwitchesProvider(Provider):
 class GitHubWiring(Wiring):
     account: str
     run: Run
+    requests_log: Path
 
 
 @wires(GitHubWiring)
@@ -356,8 +358,8 @@ class GitHubProvider(Provider):
     wiring = from_context(provides=GitHubWiring, scope=Scope.APP)
 
     @provide
-    def client(self, wiring: GitHubWiring) -> GhCliGitHub:
-        return GhCliGitHub(wiring.account, wiring.run)
+    def client(self, wiring: GitHubWiring, clock: UtcClock) -> GhCliGitHub:
+        return GhCliGitHub(wiring.account, wiring.run, Traffic(wiring.requests_log, clock))
 
     @provide
     def pull_requests(self, client: GhCliGitHub) -> PullRequests:
@@ -1499,15 +1501,16 @@ def make_container(env: Mapping[str, str], home: Path,
                    logs_dir: Path | None = None) -> dishka.Container:
     settings = load_settings(env, home)
     clamp = utility_clamp(sys.platform)
+    logs = logs_dir or settings.logs_dir
     managers = [] if managed is None else [
         PrManagerWiring(manager_config(settings, managed)),
     ]
     return wire(
         SYSTEM_CLOCKS,
         SettingsWiring(settings),
-        LogsWiring(logs_dir or settings.logs_dir, settings.config.log_level),
+        LogsWiring(logs, settings.config.log_level),
         switches_wiring(settings),
-        GitHubWiring(settings.config.gh_account, subprocess.run),
+        GitHubWiring(settings.config.gh_account, subprocess.run, logs / "gh_calls.csv"),
         DesktopWiring(subprocess.run, home / "Applications", platform=sys.platform),
         pr_event_queue_wiring(settings),
         notifications_wiring(settings),

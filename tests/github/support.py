@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import Any
 
 import dishka
@@ -5,6 +7,7 @@ import dishka
 from github_orchestrator.github import Access, PullRequests, Reviews, Threads
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.wiring import GitHubWiring, wire
+from tests.conftest import clocks_of
 from tests.github.scripted_gh import ScriptedGh
 
 ROLES = (PullRequests, Threads, Reviews, Access)
@@ -22,6 +25,7 @@ class WiredGitHub:
 
 
 def real_github(world: FakeGitHub | None = None, gh: ScriptedGh | None = None,
-                account: str = "octocat") -> Any:
+                account: str = "octocat", requests_log: Path | None = None) -> Any:
     run = gh if gh is not None else ScriptedGh(world)
-    return WiredGitHub(wire(GitHubWiring(account, run)))
+    log = requests_log or Path(os.environ["GITHUB_ORCHESTRATOR_DATA_DIR"]) / "gh_calls.csv"
+    return WiredGitHub(wire(clocks_of(), GitHubWiring(account, run, log)))

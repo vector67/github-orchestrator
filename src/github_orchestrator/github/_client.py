@@ -7,6 +7,7 @@ from typing import Any
 from github_orchestrator.domain import Location, Pr, Repo
 from github_orchestrator.github import _fetch_ahead, _pages, _pull_requests, _threads
 from github_orchestrator.github._gh_cli import Gh, Run
+from github_orchestrator.github._traffic import Traffic
 from github_orchestrator.github.interface import (
     CommentKind,
     GhError,
@@ -33,10 +34,11 @@ _LISTED = "user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,or
 
 
 class GhCliGitHub:
-    def __init__(self, account: str, run: Run) -> None:
+    def __init__(self, account: str, run: Run, traffic: Traffic) -> None:
         self._account = account
         self._run = run
-        self._gh = Gh(account, run)
+        self._traffic = traffic
+        self._gh = self._gh_as(account)
         self._states_ahead: dict[Pr, PullRequestState] = {}
         self._threads_ahead: dict[Pr, list[Thread]] = {}
 
@@ -48,6 +50,9 @@ class GhCliGitHub:
             log.warning("could not fetch %d PRs ahead, so each is read on its own: %s",
                         len(prs), refused)
             self._states_ahead, self._threads_ahead = {}, {}
+
+    def _gh_as(self, account: str) -> Gh:
+        return Gh(account, self._traffic.traced(self._run, account))
 
     def check_login(self, account: str) -> str | None:
         try:
@@ -61,12 +66,12 @@ class GhCliGitHub:
 
     def scopes(self, account: str) -> tuple[str, ...]:
         try:
-            return Gh(account, self._run).scopes()
+            return self._gh_as(account).scopes()
         except (GhError, subprocess.TimeoutExpired):
             return ()
 
     def repos_of(self, account: str) -> list[Listed] | str:
-        gh = Gh(account, self._run)
+        gh = self._gh_as(account)
         try:
             found = gh.api(_LISTED, paginate=True)
             mine = self._mine(gh, ())
@@ -75,7 +80,7 @@ class GhCliGitHub:
         return [_listed(one, mine) for one in found]
 
     def repo_of(self, account: str, repo: Repo) -> Listed | str:
-        gh = Gh(account, self._run)
+        gh = self._gh_as(account)
         try:
             found = gh.api(f"repos/{repo}")
             mine = self._mine(gh, (repo,))
