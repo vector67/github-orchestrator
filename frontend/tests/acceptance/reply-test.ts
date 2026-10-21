@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, fillIn, visit } from '@ember/test-helpers';
+import { click, fillIn, triggerKeyEvent, visit } from '@ember/test-helpers';
 import {
   comment,
   setupFakeBoard,
@@ -12,6 +12,10 @@ const OPEN = '[data-test-reply-open]';
 const CLOSE = '[data-test-reply-close]';
 
 const BOX = '[data-test-reply]';
+
+const SUGGESTIONS = '[data-test-emoji-suggestions]';
+
+const OPTION = '[data-test-emoji-option]';
 
 module('Acceptance | reply', function (hooks) {
   setupApplicationTest(hooks);
@@ -145,6 +149,75 @@ module('Acceptance | reply', function (hooks) {
     await visit('/pr/o/r/7/conversations/k1');
 
     assert.dom(BOX).doesNotExist();
+  });
+
+  test('a colon and a few letters offer the emoji they name', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'nice :thu');
+
+    assert
+      .dom(OPTION)
+      .hasText('👍 :thumbsup:')
+      .hasAttribute('aria-selected', 'true');
+    assert.dom(`${OPTION}:nth-child(2)`).hasText('👎 :thumbsdown:');
+    assert.dom(`${OPTION}:nth-child(4)`).hasText('🇱🇹 :lithuania:');
+  });
+
+  test('tab puts the offered emoji in place of the colon and its letters', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'nice :thu');
+
+    await triggerKeyEvent(BOX, 'keydown', 'Tab');
+
+    assert.dom(BOX).hasValue('nice 👍').isFocused();
+    assert.dom(SUGGESTIONS).doesNotExist();
+    await visit('/pr/o/r/7/conversations/k2');
+    await visit('/pr/o/r/7/conversations/k1');
+    assert.dom(BOX).hasValue('nice 👍');
+  });
+
+  test('the arrow keys pick another emoji and enter puts it in', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, ':thu');
+
+    await triggerKeyEvent(BOX, 'keydown', 'ArrowDown');
+    await triggerKeyEvent(BOX, 'keydown', 'Enter');
+
+    assert.dom(BOX).hasValue('👎');
+  });
+
+  test('clicking an emoji puts it in', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'shipped :tad');
+
+    await click(OPTION);
+
+    assert.dom(BOX).hasValue('shipped 🎉').isFocused();
+  });
+
+  test('escape puts the offer away and leaves the words', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, ':thu');
+
+    await triggerKeyEvent(BOX, 'keydown', 'Escape');
+
+    assert.dom(SUGGESTIONS).doesNotExist();
+    assert.dom(BOX).hasValue(':thu');
+  });
+
+  test('a colon inside a word offers nothing', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'see https:thu');
+
+    assert.dom(SUGGESTIONS).doesNotExist();
   });
 
   test('asking again for the composer already open keeps the words', async function (assert) {

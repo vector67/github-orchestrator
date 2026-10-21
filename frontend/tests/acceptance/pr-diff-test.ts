@@ -575,6 +575,19 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-comment-box]').doesNotExist();
     });
 
+    test('escape over the offered emoji puts them away and keeps the comment box', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'ship it :tad');
+
+      await triggerEvent('[data-test-comment-box] textarea', 'keydown', {
+        key: 'Escape',
+      });
+
+      assert.dom('[data-test-emoji-suggestions]').doesNotExist();
+      assert.dom('[data-test-comment-box] textarea').hasValue('ship it :tad');
+    });
+
     test('Add to review creates the draft on the selected lines and adds it to the review, as the board’s Add to review does', async function (assert) {
       board().created = 'draft_00000000000000bb';
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');

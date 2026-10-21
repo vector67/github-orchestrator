@@ -28,6 +28,7 @@ import {
 import type DraftsService from 'frontend/services/drafts';
 import type PullRequestDiffService from 'frontend/services/pull-request-diff';
 import type ReviewService from 'frontend/services/review';
+import emojiComplete from 'frontend/modifiers/emoji-complete';
 
 export interface DraftComposerSignature {
   Args: {
@@ -207,6 +208,7 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
           value={{this.copy.body}}
           disabled={{this.locked}}
           {{on "input" this.type}}
+          {{emojiComplete}}
         ></textarea>
         {{#if this.anchor}}
           <p class="draft-anchor" data-test-draft-anchor>{{this.anchor}}</p>
