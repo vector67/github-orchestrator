@@ -563,7 +563,7 @@ typed for the next new draft.
 selected lines instead. The agent starts on it in a new session in the
 Terminal tab, in the PR's worktree, and the page switches to that tab. Its
 prompt names the file and the lines and asks for an answer that changes no
-files.
+files. While agents are disabled the board refuses the question.
 
 Conversations sit under the last line they are on: posted threads with their
 comments, resolved ones folded behind **Show resolved**, fix proposals as their
