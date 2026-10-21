@@ -425,8 +425,7 @@ def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell(
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", MODEL, "--allowedTools",
-                          "Read,Grep,Glob"]
+    assert asked.argv == ["claude", "--print", "--model", MODEL, "--tools", "Read,Grep,Glob"]
     assert asked.cwd == str(tmp_path)
 
 
