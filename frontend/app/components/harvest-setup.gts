@@ -27,7 +27,7 @@ export default class HarvestSetup extends Component {
 
   <template>
     <div class="decide-dialog">
-      <div
+      <form
         class="harvest-setup"
         role="dialog"
         aria-modal="true"
@@ -77,7 +77,7 @@ export default class HarvestSetup extends Component {
               <kbd>Esc</kbd></button>
           </div>
         {{/if}}
-      </div>
+      </form>
     </div>
   </template>
 }
