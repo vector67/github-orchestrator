@@ -1,0 +1,9 @@
+from typing import Protocol
+
+
+class Timesheet(Protocol):
+    def running(self, project_id: int, task_id: int) -> bool | None: ...
+
+    def start(self, project_id: int, task_id: int) -> str | None: ...
+
+    def stop(self, project_id: int, task_id: int) -> str | None: ...

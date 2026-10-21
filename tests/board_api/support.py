@@ -26,6 +26,7 @@ from github_orchestrator.board_api.fake import (
     FakeHoldings,
     FakeManagerPanel,
     FakeSetupDesk,
+    FakeTimers,
     FakeTold,
     FakeTour,
 )
@@ -37,6 +38,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanels,
     ServerApp,
     SetupDesk,
+    Timers,
     Told,
     TourMarker,
 )
@@ -130,6 +132,7 @@ class Serving(TypedDict, total=False):
     port: int
     pr: Pr
     summaries: list[Part]
+    timers: Timers
 
 
 class NoHeads:
@@ -170,7 +173,7 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
               **serving: Unpack[Serving]) -> ASGIApp:
     server: ServerApp = wire(
         fake_provider(Told, holding(serving.get("pr", THE_PR))),
-        *_hub_parts(),
+        *_hub_parts(timers=serving.get("timers")),
         fake_provider(ConversationManagerFactory, conversation_managers),
         fake_provider(WorkingCopies, working_copies),
         fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
@@ -236,7 +239,7 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                pulse: WatcherHealth | None = None, config_file: Words = Words(None),
                setup: SetupDesk | None = None, releases: Any = None,
                tour: TourMarker | None = None, emojis: Emojis | None = None,
-               holdings: Holdings | None = None) -> list[Part]:
+               holdings: Holdings | None = None, timers: Timers | None = None) -> list[Part]:
     return [
         fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),
@@ -244,6 +247,7 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
         fake_provider(SetupDesk, setup or FakeSetupDesk()),
         fake_provider(TourMarker, tour or FakeTour()),
         fake_provider(Emojis, emojis or FakeEmojis()),
+        fake_provider(Timers, timers or FakeTimers()),
         fake_provider(History, ledger or FakeAgentRuns(FakePrProcesses())),
         fake_provider(WatcherHealth, pulse or Pulse(POLLED)),
         fake_provider(ConfigFile, config_file),

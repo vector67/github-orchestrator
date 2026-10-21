@@ -20,6 +20,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanels,
     ReleaseRecord,
     SetupDesk,
+    Timers,
     Told,
     TourMarker,
     WatcherPulse,
@@ -78,7 +79,8 @@ class OneServer:
                  ledger: Ledger, pulse: WatcherPulse, clock: UtcClock,
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, emojis: Emojis, told: Told, holdings: Holdings,
+                 tour: TourMarker, emojis: Emojis, timers: Timers, told: Told,
+                 holdings: Holdings,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
                  summaries: PrSummaries, lane: SummaryLane,
@@ -96,6 +98,7 @@ class OneServer:
         self._releases = releases
         self._tour = tour
         self._emojis = emojis
+        self._timers = timers
         self._told = told
         self._holdings = holdings
         self._conversation_managers = conversation_managers
@@ -129,6 +132,7 @@ class OneServer:
                 terminals=self._terminals.of(pr),
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
                 clock=self._clock, summaries=self._summaries, lane=self._lane,
+                timer=self._timers.of(pr.repo),
                 prefix=pr_page(pr)))
 
         return _Routed(hub_app(desk, port), _Boards(self._told, board))

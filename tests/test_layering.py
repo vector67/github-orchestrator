@@ -283,6 +283,11 @@ PACKAGES = {
         may_import=(),
         role="GitHub answers in its own types and the modules that use it adapt them, never the reverse",
     ),
+    "harvest": Package(
+        pinned=frozenset({"Timesheet"}),
+        may_import=(),
+        role="Harvest answers in its own types and the modules that use it adapt them, never the reverse",
+    ),
     "notifications": Package(
         pinned=frozenset({
             "BoardPages", "Courier", "FixProgress", "Polling", "PrStatus", "Runs", "Settling",

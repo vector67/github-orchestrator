@@ -15,11 +15,8 @@ from typing import Any
 from github_orchestrator.agent_runs import Agent
 from github_orchestrator.domain import Clone, HubState, Repo
 from github_orchestrator.settings._renamed_keys import RENAMED_KEYS, doubled, renamed
-from github_orchestrator.settings.interface import (
-    ConfigDescription,
-    ConfigRow,
-    HarvestProject,
-)
+from github_orchestrator.settings.interface import ConfigDescription, ConfigRow
+from github_orchestrator.settings.interface import HarvestProject as HarvestProject
 from github_orchestrator.settings.interface import RepoEntry as RepoEntry
 
 

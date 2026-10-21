@@ -44,6 +44,7 @@ from github_orchestrator.board_api._contract import (
     FileLines,
     GitRequest,
     GitRun,
+    HarvestTimer,
     Health,
     ManagerChanges,
     Operation,
@@ -109,7 +110,7 @@ from github_orchestrator.board_api._projection import (
 )
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
-from github_orchestrator.board_api.interface import ManagerPanel
+from github_orchestrator.board_api.interface import ManagerPanel, Timer
 from github_orchestrator.conversation import (
     ConversationManager,
     Denied,
@@ -158,6 +159,7 @@ class Board:
     clock: UtcClock
     summaries: PrSummaries
     lane: SummaryLane
+    timer: Timer | None
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
     prefix: str = ""
@@ -1328,6 +1330,59 @@ def summarise(board: Serving, if_match: SummaryIfMatch) -> Response:
 def summarise_with_github_api(board: Serving, if_match: SummaryIfMatch) -> Response:
     """The answer to a run that exited 3 because the clone could not be read."""
     return _summarised(board, if_match, use_github_api=True)
+
+
+HARVEST_REFUSED: dict[int | str, dict[str, Any]] = {
+    502: {"description": "Harvest did not answer, or turned the request down; the "
+                         "detail says why.",
+          "model": Errors}}
+
+
+def _timer(board: Board) -> Timer:
+    if board.timer is None:
+        raise Refusal(404, ErrorCode.NOT_FOUND,
+                      f"{board.pr.repo} names no Harvest project and task in config.toml")
+    return board.timer
+
+
+def _timed(refused: str | None) -> Response:
+    if refused is not None:
+        raise Refusal(502, ErrorCode.HARVEST_REFUSED, refused)
+    return Response(status_code=204)
+
+
+@reads.get("/harvest-timer", response_model=HarvestTimer, tags=["harvest"],
+           operation_id="readHarvestTimer", responses=HARVEST_REFUSED,
+           summary="Whether this pull request tracks time in Harvest, and whether its "
+                   "timer is running.")
+def read_harvest_timer(board: Serving) -> HarvestTimer:
+    """Asks Harvest each time, so a timer started or stopped in Harvest itself
+    shows here on the next read.
+    """
+    if board.timer is None:
+        return HarvestTimer(tracked=False, running=False)
+    running = board.timer.running()
+    if running is None:
+        raise Refusal(502, ErrorCode.HARVEST_REFUSED,
+                      "Harvest could not be asked whether the timer is running; the "
+                      "server's log says why")
+    return HarvestTimer(tracked=True, running=running)
+
+
+@writes.post("/harvest-timer:start", status_code=204, tags=["harvest"],
+             operation_id="startHarvestTimer", responses={404: NOT_FOUND, **HARVEST_REFUSED},
+             summary="Start a Harvest timer on this pull request's project and task.")
+def start_harvest_timer(board: Serving) -> Response:
+    """Harvest stops whatever timer of yours was running."""
+    return _timed(_timer(board).start())
+
+
+@writes.post("/harvest-timer:stop", status_code=204, tags=["harvest"],
+             operation_id="stopHarvestTimer", responses={404: NOT_FOUND, **HARVEST_REFUSED},
+             summary="Stop the Harvest timer running on this pull request's project and task.")
+def stop_harvest_timer(board: Serving) -> Response:
+    """Does nothing when no timer of yours runs on that project and task."""
+    return _timed(_timer(board).stop())
 
 
 def _dashboard(board: Board) -> Dashboard:

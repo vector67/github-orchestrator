@@ -46,6 +46,8 @@ from github_orchestrator.board_api.interface import (
     ManagerStanding,
     ServerApp,
     SetupDesk,
+    Timer,
+    Timers,
     Told,
     TourMarker,
 )
@@ -95,6 +97,10 @@ from github_orchestrator.github._client import GhCliGitHub
 from github_orchestrator.github._gh_cli import Run
 from github_orchestrator.github._pages import pr_url
 from github_orchestrator.github._traffic import Traffic
+from github_orchestrator.harvest import Timesheet
+from github_orchestrator.harvest._client import HarvestTimesheet, sent
+from github_orchestrator.harvest._client import Send as HarvestSend
+from github_orchestrator.harvest._keychain import keychain_token
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -144,6 +150,7 @@ from github_orchestrator.settings import (
     Process,
 )
 from github_orchestrator.settings._config import (
+    HarvestProject,
     RepoEntry,
     TomlConfigFile,
     Tracker,
@@ -382,6 +389,58 @@ class GitHubProvider(Provider):
     @provide
     def emojis(self, client: GhCliGitHub) -> Emojis:
         return FetchedEmojis(client.emojis)
+
+
+@dataclass(frozen=True)
+class HarvestWiring(Wiring):
+    account_id: int
+    projects: Mapping[Repo, HarvestProject]
+    token: Callable[[], str] = keychain_token
+    send: HarvestSend = sent
+
+
+@wires(HarvestWiring)
+class HarvestProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=HarvestWiring, scope=Scope.APP)
+
+    @provide
+    def timesheet(self, wiring: HarvestWiring, clock: LocalClock) -> Timesheet:
+        return HarvestTimesheet(wiring.account_id, wiring.token, wiring.send,
+                                lambda: clock().date())
+
+    @provide
+    def timers(self, wiring: HarvestWiring, timesheet: Timesheet) -> Timers:
+        return HarvestTimers(timesheet, wiring.projects)
+
+
+def harvest_wiring(settings: Settings) -> HarvestWiring:
+    return HarvestWiring(settings.config.harvest_account_id, settings.harvest_projects)
+
+
+class ProjectTimer:
+    def __init__(self, timesheet: Timesheet, project: HarvestProject) -> None:
+        self._timesheet = timesheet
+        self._project = project
+
+    def running(self) -> bool | None:
+        return self._timesheet.running(self._project.project_id, self._project.task_id)
+
+    def start(self) -> str | None:
+        return self._timesheet.start(self._project.project_id, self._project.task_id)
+
+    def stop(self) -> str | None:
+        return self._timesheet.stop(self._project.project_id, self._project.task_id)
+
+
+class HarvestTimers:
+    def __init__(self, timesheet: Timesheet, projects: Mapping[Repo, HarvestProject]) -> None:
+        self._timesheet = timesheet
+        self._projects = projects
+
+    def of(self, repo: Repo) -> Timer | None:
+        project = self._projects.get(repo)
+        return None if project is None else ProjectTimer(self._timesheet, project)
 
 
 @dataclass(frozen=True)
@@ -969,7 +1028,7 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   told: Told,
+                   timers: Timers, told: Told,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -979,7 +1038,7 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         emojis=emojis,
+                         emojis=emojis, timers=timers,
                          told=told, holdings=holdings,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1505,6 +1564,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                         watching=(repo,), version=installed_version(), check_presence=False,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        harvest_wiring(settings),
         hub,
     ), settings.config.gh_account
 
@@ -1574,6 +1634,7 @@ def make_container(env: Mapping[str, str], home: Path,
                         check_presence=check_presence,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        harvest_wiring(settings),
         ManagerPanelsWiring(subprocess.run),
         ServerWiring(server_config(settings), python=sys.executable,
                      environment=settings.child_environment(), spawn=detached),
