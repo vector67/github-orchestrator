@@ -1,5 +1,5 @@
-from github_orchestrator.harvest.interface import Timesheet
+from github_orchestrator.harvest.interface import BoardExtension
 
 __all__ = [
-    "Timesheet",
+    "BoardExtension",
 ]

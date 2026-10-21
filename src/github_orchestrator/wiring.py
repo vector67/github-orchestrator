@@ -41,13 +41,12 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     Dashboards,
     Emojis,
+    HarvestSetup,
     Holdings,
     ManagerPanels,
     ManagerStanding,
     ServerApp,
     SetupDesk,
-    Timer,
-    Timers,
     Told,
     TourMarker,
 )
@@ -97,10 +96,9 @@ from github_orchestrator.github._client import GhCliGitHub
 from github_orchestrator.github._gh_cli import Run
 from github_orchestrator.github._pages import pr_url
 from github_orchestrator.github._traffic import Traffic
-from github_orchestrator.harvest import Timesheet
-from github_orchestrator.harvest._client import HarvestTimesheet, sent
-from github_orchestrator.harvest._client import Send as HarvestSend
-from github_orchestrator.harvest._keychain import keychain_token
+from github_orchestrator.harvest import BoardExtension
+from github_orchestrator.harvest._chrome import Run as ChromeRun
+from github_orchestrator.harvest._extension import CopiedExtension
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -150,7 +148,6 @@ from github_orchestrator.settings import (
     Process,
 )
 from github_orchestrator.settings._config import (
-    HarvestProject,
     RepoEntry,
     TomlConfigFile,
     Tracker,
@@ -185,6 +182,7 @@ from github_orchestrator.watcher._health import HealthFiles
 from github_orchestrator.watcher._holdings import WatchedHoldings
 from github_orchestrator.watcher._placing import Placement, WindowPlacement
 from github_orchestrator.watcher._releases import (
+    API,
     Get,
     GitHubReleases,
     ReleasesApi,
@@ -393,10 +391,10 @@ class GitHubProvider(Provider):
 
 @dataclass(frozen=True)
 class HarvestWiring(Wiring):
-    account_id: int
-    projects: Mapping[Repo, HarvestProject]
-    token: Callable[[], str] = keychain_token
-    send: HarvestSend = sent
+    chrome_dir: Path
+    into: Path
+    hub_port: int
+    run: ChromeRun
 
 
 @wires(HarvestWiring)
@@ -405,42 +403,18 @@ class HarvestProvider(Provider):
     wiring = from_context(provides=HarvestWiring, scope=Scope.APP)
 
     @provide
-    def timesheet(self, wiring: HarvestWiring, clock: LocalClock) -> Timesheet:
-        return HarvestTimesheet(wiring.account_id, wiring.token, wiring.send,
-                                lambda: clock().date())
+    def board_extension(self, wiring: HarvestWiring) -> BoardExtension:
+        return CopiedExtension(wiring.chrome_dir, wiring.into, wiring.hub_port, wiring.run)
 
     @provide
-    def timers(self, wiring: HarvestWiring, timesheet: Timesheet) -> Timers:
-        return HarvestTimers(timesheet, wiring.projects)
+    def harvest_setup(self, extension: BoardExtension) -> HarvestSetup:
+        return extension
 
 
-def harvest_wiring(settings: Settings) -> HarvestWiring:
-    return HarvestWiring(settings.config.harvest_account_id, settings.harvest_projects)
-
-
-class ProjectTimer:
-    def __init__(self, timesheet: Timesheet, project: HarvestProject) -> None:
-        self._timesheet = timesheet
-        self._project = project
-
-    def running(self) -> bool | None:
-        return self._timesheet.running(self._project.project_id, self._project.task_id)
-
-    def start(self) -> str | None:
-        return self._timesheet.start(self._project.project_id, self._project.task_id)
-
-    def stop(self) -> str | None:
-        return self._timesheet.stop(self._project.project_id, self._project.task_id)
-
-
-class HarvestTimers:
-    def __init__(self, timesheet: Timesheet, projects: Mapping[Repo, HarvestProject]) -> None:
-        self._timesheet = timesheet
-        self._projects = projects
-
-    def of(self, repo: Repo) -> Timer | None:
-        project = self._projects.get(repo)
-        return None if project is None else ProjectTimer(self._timesheet, project)
+def harvest_wiring(settings: Settings, home: Path) -> HarvestWiring:
+    return HarvestWiring(home / "Library" / "Application Support" / "Google" / "Chrome",
+                         settings.data_dir / "harvest-extension", settings.config.hub_port,
+                         subprocess.run)
 
 
 @dataclass(frozen=True)
@@ -876,7 +850,8 @@ class WatcherProvider(Provider):
     @provide
     def releases(self, config: WatcherConfig, api: ReleasesApi, clock: UtcClock) -> Releases:
         return GitHubReleases(api.get, config.newest_release, clock,
-                              enabled=config.check_for_updates, token=config.github_token)
+                              enabled=config.check_for_updates, token=config.github_token,
+                              address=config.releases_address)
 
     @provide
     def archives(self, change_detection: ChangeDetection, queues: Queues, history: History,
@@ -1028,7 +1003,7 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   timers: Timers, told: Told,
+                   harvest: HarvestSetup, told: Told,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -1038,7 +1013,7 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         emojis=emojis, timers=timers,
+                         emojis=emojis, harvest=harvest,
                          told=told, holdings=holdings,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1306,7 +1281,8 @@ def board_font_dir(settings: Settings) -> str | None:
     return os.path.expanduser(settings.config.board_font_dir) or None
 
 
-def watcher_config(settings: Settings, home: Path, github_token: str | None) -> WatcherConfig:
+def watcher_config(settings: Settings, home: Path, github_token: str | None,
+                   releases_address: str) -> WatcherConfig:
     config = settings.config
     return WatcherConfig(
         repos=settings.repos,
@@ -1326,6 +1302,7 @@ def watcher_config(settings: Settings, home: Path, github_token: str | None) -> 
         tour_due=settings.tour_due,
         check_for_updates=config.check_for_updates,
         github_token=github_token,
+        releases_address=releases_address,
     )
 
 
@@ -1402,9 +1379,10 @@ def watcher_wiring(settings: Settings, home: Path, *,
                    requirements: Callable[[], Sequence[tuple[str, str | None]]] | None = None,
                    run_in: Callable[[Callable[[], None]], None] = in_a_thread,
                    releases_api: Get = http_get,
-                   github_token: str | None = None) -> WatcherWiring:
+                   github_token: str | None = None,
+                   releases_address: str | None = None) -> WatcherWiring:
     agent = command_program(settings.config.agent_command)
-    return WatcherWiring(watcher_config(settings, home, github_token), SetupSeams(
+    return WatcherWiring(watcher_config(settings, home, github_token, releases_address or API), SetupSeams(
         clone_problem=clone_problem_at or clone_problem(subprocess.run),
         requirements=requirements or (lambda: requirement_fixes(which, settings.config.agent, agent,
                                                                       sys.platform)),
@@ -1533,7 +1511,7 @@ class PreviewHubProvider(Provider):
     @provide
     def releases(self, settings: Settings, clock: UtcClock) -> Releases:
         return GitHubReleases(http_get, settings.newest_release, clock, enabled=False,
-                              token=None)
+                              token=None, address=API)
 
 
 def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
@@ -1564,7 +1542,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                         watching=(repo,), version=installed_version(), check_presence=False,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
-        harvest_wiring(settings),
+        harvest_wiring(settings, home),
         hub,
     ), settings.config.gh_account
 
@@ -1621,7 +1599,8 @@ def make_container(env: Mapping[str, str], home: Path,
             clamp=clamp,
         ),
         conversation_wiring(settings),
-        watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN")),
+        watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN"),
+                       releases_address=env.get("GITHUB_ORCHESTRATOR_RELEASES_API")),
         CliWiring(cli_config(settings, home, platform=sys.platform, uid=os.getuid(),
                              shell_path=env.get("PATH", ""), python=sys.executable,
                              tool_dir=uv_tool_dir(env, home),
@@ -1634,7 +1613,7 @@ def make_container(env: Mapping[str, str], home: Path,
                         check_presence=check_presence,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
-        harvest_wiring(settings),
+        harvest_wiring(settings, home),
         ManagerPanelsWiring(subprocess.run),
         ServerWiring(server_config(settings), python=sys.executable,
                      environment=settings.child_environment(), spawn=detached),

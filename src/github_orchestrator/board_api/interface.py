@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Protocol
 
 from starlette.types import ASGIApp
@@ -265,16 +266,8 @@ class Emojis(Protocol):
     def named(self) -> dict[str, str]: ...
 
 
-class Timer(Protocol):
-    def running(self) -> bool | None: ...
-
-    def start(self) -> str | None: ...
-
-    def stop(self) -> str | None: ...
-
-
-class Timers(Protocol):
-    def of(self, repo: Repo) -> Timer | None: ...
+class HarvestSetup(Protocol):
+    def prepare(self) -> Path | str: ...
 
 
 class ServerApp(Protocol):

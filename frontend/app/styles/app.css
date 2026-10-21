@@ -2740,7 +2740,7 @@ kbd {
   height: 16px;
 }
 
-.harvest-pick {
+.harvest-timer {
   display: inline-flex;
   flex: none;
   padding: 5px;
@@ -2750,18 +2750,29 @@ kbd {
   border: 1.5px solid transparent;
 }
 
-.harvest-pick:hover {
+.harvest-timer:hover {
   color: var(--text);
   border-color: var(--border-strong);
 }
 
-.harvest-pick.running {
+.harvest-timer.running {
   color: var(--green-text);
 }
 
 .stopwatch {
   width: 16px;
   height: 16px;
+}
+
+.harvest-setup .harvest-steps {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.harvest-setup .refused {
+  color: var(--red-text, var(--red));
 }
 
 .repo-pick:hover,

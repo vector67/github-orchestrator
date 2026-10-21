@@ -8,7 +8,7 @@ from github_orchestrator.settings._config import (
     child_environment,
 )
 from github_orchestrator.settings._logging import log_path
-from github_orchestrator.settings.interface import HarvestProject, Process
+from github_orchestrator.settings.interface import Process
 
 
 @dataclass(frozen=True)
@@ -119,11 +119,6 @@ class Settings:
                 default if entry.new_worktree_command is None else entry.new_worktree_command)
             for entry in self.config.repos
         }
-
-    @property
-    def harvest_projects(self) -> dict[Repo, HarvestProject]:
-        return {entry.repo: entry.harvest for entry in self.config.repos
-                if entry.harvest is not None}
 
     def log_path(self, process: Process) -> Path:
         return log_path(self.logs_dir, process)

@@ -18,7 +18,7 @@ import type {
   FileLines,
   FrozenWorktree,
   GitRun,
-  HarvestTimer,
+  HarvestExtensionFolder,
   Health,
   HeldPullRequests,
   ManagerChanges,
@@ -383,7 +383,6 @@ export default class StoreService extends Service {
   @tracked movedTo: string | null = null;
   @tracked tour: Tour | null = null;
   @tracked emojis: Emoji[] = [];
-  @tracked private harvestTimers: Record<string, HarvestTimer> = {};
   private restarting: Restarting | null = null;
 
   private joins = 0;
@@ -471,47 +470,6 @@ export default class StoreService extends Service {
       this.takePrSummary(pr, await fetched<PrSummary>(at));
       return SUMMARY_MOVED;
     }
-  }
-
-  harvestTimer(pr: Numbered): HarvestTimer | null {
-    return this.harvestTimers[keyOf(pr.repo, pr.number)] ?? null;
-  }
-
-  async readHarvestTimer(pr: Numbered): Promise<void> {
-    const at = `${this.here.prefixOf(pr)}/api/harvest-timer`;
-    try {
-      this.takeHarvestTimer(pr, await fetched<HarvestTimer>(at));
-    } catch (trouble) {
-      void reportError(`read ${at}`, trouble);
-    }
-  }
-
-  startHarvestTimer(pr: Numbered): Promise<string | null> {
-    return this.timed(pr, 'start');
-  }
-
-  stopHarvestTimer(pr: Numbered): Promise<string | null> {
-    return this.timed(pr, 'stop');
-  }
-
-  private async timed(pr: Numbered, verb: string): Promise<string | null> {
-    const at = `${this.here.prefixOf(pr)}/api/harvest-timer:${verb}`;
-    try {
-      await handed(at);
-      this.takeHarvestTimer(pr, { tracked: true, running: verb === 'start' });
-      return null;
-    } catch (trouble) {
-      if (trouble instanceof Refusal) return trouble.detail;
-      void reportError(`${verb} ${at}`, trouble);
-      return DOWN;
-    }
-  }
-
-  private takeHarvestTimer(pr: Numbered, timer: HarvestTimer): void {
-    this.harvestTimers = {
-      ...this.harvestTimers,
-      [keyOf(pr.repo, pr.number)]: timer,
-    };
   }
 
   get chosen(): string[] | null {
@@ -750,6 +708,17 @@ export default class StoreService extends Service {
       this.emojis = (await fetched<EmojiList>('/api/emojis')).emojis;
     } catch (trouble) {
       void reportError('emojis', trouble);
+    }
+  }
+
+  async prepareHarvestExtension(): Promise<HarvestExtensionFolder | string> {
+    const at = '/api/harvest-extension:prepare';
+    try {
+      return (await posted<HarvestExtensionFolder>(at, null, {})).body;
+    } catch (trouble) {
+      if (trouble instanceof Refusal) return trouble.detail;
+      void reportError(`prepare ${at}`, trouble);
+      return DOWN;
     }
   }
 

@@ -10,6 +10,7 @@ from github_orchestrator.watcher import Releases, Watcher
 from tests.watcher.scripted_releases import (
     LATEST,
     ScriptedReleasesApi,
+    release_body,
     tagged,
     wheel_asset,
 )
@@ -25,9 +26,9 @@ def api():
     return ScriptedReleasesApi()
 
 
-def _releases(settings, api, *, now=NOW, token=None) -> Releases:
+def _releases(settings, api, *, now=NOW, token=None, address=None) -> Releases:
     releases: Releases = watcher_container(settings, clock=lambda: now, releases_api=api,
-                                           github_token=token).get(Releases)
+                                           github_token=token, releases_address=address).get(Releases)
     return releases
 
 
@@ -129,6 +130,15 @@ def test_a_token_in_the_environment_goes_with_every_request(settings, api):
     _releases(settings, api, token="t0ken").look_up(None)
 
     assert api.asked[-1].token == "t0ken"
+
+
+def test_a_releases_address_in_the_environment_replaces_githubs(settings, api):
+    api.answers["http://127.0.0.1:8799/releases/latest"] = release_body("0.3.0")
+
+    found = _releases(settings, api, address="http://127.0.0.1:8799/releases").look_up(None)
+
+    assert found.version == "0.3.0"
+    assert api.asked[-1].url == "http://127.0.0.1:8799/releases/latest"
 
 
 def test_download_saves_the_wheel_under_its_own_name(settings, api, tmp_path):

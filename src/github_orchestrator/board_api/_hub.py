@@ -23,6 +23,7 @@ from github_orchestrator.board_api._contract import (
     EmojiList,
     ErrorCode,
     Errors,
+    HarvestExtensionFolder,
     Health,
     HeldPullRequests,
     NewestRelease,
@@ -41,6 +42,7 @@ from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
     Emojis,
+    HarvestSetup,
     Holdings,
     ReleaseRecord,
     SetupDesk,
@@ -90,6 +92,7 @@ class Desk:
     releases: ReleaseRecord
     tour: TourMarker
     emojis: Emojis
+    harvest: HarvestSetup
     pid: int
 
 
@@ -198,6 +201,23 @@ def read_emojis(request: Request, desk: Serving) -> Response:
              summary="Say the tour was seen, so it is not shown again.")
 def saw_tour(desk: Serving) -> None:
     desk.tour.seen()
+
+
+@writes.post("/harvest-extension:prepare", response_model=HarvestExtensionFolder,
+             operation_id="prepareHarvestExtension",
+             responses={409: {"description": "Chrome has no Harvest Time Tracker to copy.",
+                              "model": Errors}},
+             summary="Copy the Harvest extension for the board and open Chrome to load it.")
+def prepare_harvest_extension(desk: Serving) -> HarvestExtensionFolder:
+    """Copies the newest Harvest Time Tracker Chrome holds into the data folder,
+    with the board's profile and a content script for the hub's own address,
+    then opens chrome://extensions, shows the folder in Finder and puts its path
+    on the clipboard, for Load unpacked.
+    """
+    prepared = desk.harvest.prepare()
+    if isinstance(prepared, str):
+        raise Refusal(409, ErrorCode.HARVEST_EXTENSION_MISSING, prepared)
+    return HarvestExtensionFolder(folder=str(prepared))
 
 
 @reads.get("/openapi.json", include_in_schema=False)

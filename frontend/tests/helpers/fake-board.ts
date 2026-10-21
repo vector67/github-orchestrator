@@ -12,7 +12,6 @@ import type {
   FileLines,
   FinishedRun,
   GitRun,
-  HarvestTimer,
   HeldPullRequest,
   Dashboard,
   DashboardPr,
@@ -561,7 +560,6 @@ export function heldPr(over: HeldOver = {}): HeldPullRequest {
 }
 
 const MANAGER_VERB = /\/api\/manager:([a-z-]+)$/;
-const HARVEST_VERB = /\/api\/harvest-timer:(start|stop)$/;
 
 const SUMMARISE =
   /\/api\/summary\/operations:(summarise|summarise-with-github-api)$/;
@@ -689,7 +687,6 @@ export class FakeBoard {
   inFlight: Operation[] = [];
   reviews: Record<string, Operation> = {};
   summary: PrSummary = prSummary();
-  harvestTimer: HarvestTimer = { tracked: false, running: false };
   private managed: Dashboard = dashboard();
   private managerSet = false;
 
@@ -720,6 +717,7 @@ export class FakeBoard {
   tourDue = false;
   toursSeen = 0;
   emojis: Record<string, string> = {};
+  harvestExtensionFolder = '/data/harvest-extension';
   pid = 4242;
   setup = new FakeSetup();
   held: HeldPullRequest[] = [heldPr()];
@@ -1210,7 +1208,6 @@ export class FakeBoard {
     if (path === '/api/people') return this.people;
     if (path === '/api/operations') return this.inFlight;
     if (path === '/api/summary') return this.summary;
-    if (path === '/api/harvest-timer') return this.harvestTimer;
     const review = /^\/api\/operations\/([^/]+)$/.exec(path);
     if (review) return this.reviews[decodeURIComponent(review[1]!)];
     if (path === '/api/files') {
@@ -1287,6 +1284,9 @@ export class FakeBoard {
       this.tourDue = false;
       return respond(null, { status: 204 });
     }
+    if (side === 'hub' && url.endsWith('/api/harvest-extension:prepare')) {
+      return this.prepareHarvestExtension(url);
+    }
     if (side === 'hub') return this.hubWrite(url, headers);
     if (url.endsWith('/api/manager/git')) return this.git(url, init, headers);
     if (url.endsWith('/api/terminal/sessions')) {
@@ -1295,8 +1295,6 @@ export class FakeBoard {
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
-    const timed = HARVEST_VERB.exec(url);
-    if (timed) return this.time(url, timed[1]!);
     const summarised = SUMMARISE.exec(url);
     if (summarised) return this.summarise(url, summarised[1]!, headers);
     const found =
@@ -1372,17 +1370,6 @@ export class FakeBoard {
     });
   }
 
-  private time(url: string, verb: string): Response {
-    this.posted.push({ url, key: '', verb, ifMatch: null, body: null });
-    if (this.refusal) {
-      const refusal = this.refusal;
-      this.refusal = null;
-      return this.json(refusal.status, { errors: [refusal] });
-    }
-    this.harvestTimer = { ...this.harvestTimer, running: verb === 'start' };
-    return respond(null, { status: 204 });
-  }
-
   private summarise(url: string, verb: string, headers: Headers): Response {
     const ifMatch = headers.get('If-Match');
     this.posted.push({ url, key: '', verb, ifMatch, body: null });
@@ -1426,6 +1413,22 @@ export class FakeBoard {
     if (this.pushedSinceFetch) this.pullRequestDiff = this.pushedSinceFetch;
     this.pushedSinceFetch = null;
     return respond(null, { status: 204 });
+  }
+
+  private prepareHarvestExtension(url: string): Response {
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'prepare',
+      ifMatch: null,
+      body: null,
+    });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    return this.json(200, { folder: this.harvestExtensionFolder });
   }
 
   private hubWrite(url: string, headers: Headers): Response {

@@ -284,9 +284,9 @@ PACKAGES = {
         role="GitHub answers in its own types and the modules that use it adapt them, never the reverse",
     ),
     "harvest": Package(
-        pinned=frozenset({"Timesheet"}),
+        pinned=frozenset({"BoardExtension"}),
         may_import=(),
-        role="Harvest answers in its own types and the modules that use it adapt them, never the reverse",
+        role="the Harvest extension's board copy is made from the Chrome install it is handed, and knows nothing of the board that asks for it",
     ),
     "notifications": Package(
         pinned=frozenset({
