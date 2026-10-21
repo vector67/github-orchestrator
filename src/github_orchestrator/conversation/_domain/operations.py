@@ -69,6 +69,7 @@ from github_orchestrator.conversation._domain.events import (
     ReplyFailed,
     ReplyPosted,
     SessionRefused,
+    ShellRefused,
     ThreadResolved,
     ThreadResolveFailed,
     ThreadUnresolved,
@@ -420,6 +421,14 @@ def _sync_fix(operations: list[Operation], after: Conversation,
     operations[index] = synced
 
 
+def _refuse_the_shell(operations: list[Operation], reason: str, at: str | None) -> None:
+    for index in range(len(operations) - 1, -1, -1):
+        if operations[index].kind == OperationKind.OPEN_SHELL:
+            operations[index] = replace(operations[index], state=OperationState.REFUSED,
+                                        reason=reason, settled_at=at)
+            return
+
+
 def _requeue_the_approve(operations: list[Operation]) -> None:
     index = _outstanding(operations, (OperationKind.APPROVE,))
     if index is not None:
@@ -488,6 +497,8 @@ def accepted(before: Conversation, after: Conversation, command: Change,
     settling = _settling(command, effects)
     if settling is not None:
         _settle(operations, settling, at)
+    if isinstance(command, ShellRefused):
+        _refuse_the_shell(operations, command.reason, at)
     return _stored(before, after, operations)
 
 

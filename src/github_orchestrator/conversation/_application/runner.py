@@ -64,6 +64,7 @@ from github_orchestrator.conversation._domain.events import (
     ReplyFailed,
     ReplyPosted,
     SessionRefused,
+    ShellRefused,
     ThreadResolved,
     ThreadResolveFailed,
     ThreadUnresolved,
@@ -273,8 +274,8 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return (None if refused is None
                     else SessionRefused(reason=refused, back_to=effect.back_to))
         case OpenLoginShell():
-            ports.agents.open_shell(thread_workspace(ports, conversation).path)
-            return None
+            refused = ports.agents.open_shell(thread_workspace(ports, conversation).path)
+            return None if refused is None else ShellRefused(reason=refused)
         case Pick():
             return _pick_outcome(ports, conversation, effect)
         case Push():

@@ -44,6 +44,11 @@ class SessionRefused:
 
 
 @dataclass(frozen=True)
+class ShellRefused:
+    reason: str
+
+
+@dataclass(frozen=True)
 class RunStarted:
     at: str
 
@@ -246,6 +251,7 @@ Event = (
     | Reopen
     | RootGone
     | SessionRefused
+    | ShellRefused
     | RunStarted
     | RunExited
     | RunTimedOut

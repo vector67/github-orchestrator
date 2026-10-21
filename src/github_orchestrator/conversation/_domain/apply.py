@@ -146,6 +146,7 @@ from github_orchestrator.conversation._domain.events import (
     RunStarted,
     RunTimedOut,
     SessionRefused,
+    ShellRefused,
     ThreadResolved,
     ThreadResolveFailed,
     ThreadUnresolved,
@@ -1143,6 +1144,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _start_session(conversation, command)
         case OpenShell():
             return Accepted(conversation, (CutWorkspace(), OpenLoginShell()))
+        case ShellRefused():
+            return Accepted(conversation)
         case Retry():
             return _retry(conversation)
         case WriteFix():

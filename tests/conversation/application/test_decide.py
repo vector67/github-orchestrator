@@ -432,6 +432,17 @@ def test_a_shell_opens_in_the_threads_own_worktree_while_claude_is_disabled(
     assert s.taken(asked)
 
 
+def test_a_shell_that_will_not_open_settles_its_operation_refused_with_the_reason(settings):
+    s = scene(settings)
+    s.refuse_sessions()
+
+    asked = s.ask("open_shell")
+    drain(s.threads)
+
+    refused = s.operation(asked)
+    assert (refused.state, refused.reason) == (OperationState.REFUSED, REFUSAL)
+
+
 def test_no_session_starts_while_claude_is_disabled(settings):
     s = proposed(settings)
     asked = s.ask("start_session")
