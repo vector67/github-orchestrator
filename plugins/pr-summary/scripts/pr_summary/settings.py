@@ -1,7 +1,7 @@
 import re
 import tomllib
 from dataclasses import dataclass, fields, replace
-from pathlib import PurePosixPath
+from fnmatch import fnmatchcase
 from typing import Any, Literal
 
 Kind = Literal["ignored", "docs", "tests", "production"]
@@ -42,9 +42,18 @@ def ticket_key(settings: Settings, title: str, branch: str) -> str | None:
     return None
 
 
+def _matches(parts: list[str], pattern: list[str]) -> bool:
+    if not pattern:
+        return not parts
+    head, rest = pattern[0], pattern[1:]
+    if head == "**":
+        return any(_matches(parts[start:], rest) for start in range(len(parts) + 1))
+    return bool(parts) and fnmatchcase(parts[0], head) and _matches(parts[1:], rest)
+
+
 def kind_of(path: str, settings: Settings) -> Kind:
     def matches(globs: tuple[str, ...]) -> bool:
-        return any(PurePosixPath(path).full_match(glob) for glob in globs)
+        return any(_matches(path.split("/"), glob.split("/")) for glob in globs)
 
     if matches(settings.ignore):
         return "ignored"
