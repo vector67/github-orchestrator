@@ -48,14 +48,15 @@ LATE = timedelta(minutes=30)
 _counter = itertools.count()
 
 
-def _write(directory: Path, document: dict[str, Any]) -> None:
+def _write(directory: Path, document: dict[str, Any]) -> str:
     directory.mkdir(parents=True, exist_ok=True)
-    name = f"{time.time_ns()}-{os.getpid()}-{next(_counter)}.json"
+    key = f"{time.time_ns()}-{os.getpid()}-{next(_counter)}"
     with tempfile.NamedTemporaryFile("w", dir=directory, suffix=".tmp", delete=False) as tmp:
         json.dump(document, tmp)
         tmp.flush()
         os.fsync(tmp.fileno())
-    Path(tmp.name).replace(directory / name)
+    Path(tmp.name).replace(directory / f"{key}.json")
+    return key
 
 
 class DiskOutbox:
@@ -64,13 +65,18 @@ class DiskOutbox:
         self._clock = clock
 
     def post(self, posted: Posted) -> None:
-        _write(self._root, {**naming(posted.pr), "badge": posted.badge.value,
-                            "title": posted.title, "body": posted.body,
-                            "posted_at": self._clock().isoformat()})
+        key = _write(self._root, {**naming(posted.pr), "badge": posted.badge.value,
+                                  "title": posted.title, "body": posted.body,
+                                  "posted_at": self._clock().isoformat()})
+        log.info("notification %s posted: %s — %s", key, posted.title, posted.body,
+                 stack_info=True)
 
     def gather(self, item: Gathered) -> None:
-        _write(self._root / "batches" / group_of(item),
-               {**encoded(item), "posted_at": self._clock().isoformat()})
+        group = group_of(item)
+        key = _write(self._root / "batches" / group,
+                     {**encoded(item), "posted_at": self._clock().isoformat()})
+        log.info("notification %s gathered into %s: %s for %s", key, group,
+                 type(item).__name__, item.pr, stack_info=True)
 
 
 @dataclass
@@ -207,6 +213,8 @@ class DiskCourier:
         reason = self._desktop.announce(badge, title, body, key, link)
         if reason is not None:
             log.warning("notification %s kept to try again: %s", key, reason)
+        else:
+            log.info("notification %s shown: %s — %s", key, title, body)
         return reason is None
 
     @staticmethod
