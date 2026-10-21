@@ -667,6 +667,20 @@ module('Acceptance | dashboard', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
   });
 
+  test('Open the Board shows the key that opens the Board', async function (assert) {
+    onTheHub({ system: { last_run: EARLIER_RUN } });
+    board().conversations = [board().threadIn('proposed', { key: 'k1' })];
+    await visit('/pr/o/r/7/dashboard');
+
+    const shown = find('[data-test-control="board"] kbd')?.textContent ?? '';
+    await press(shown);
+
+    assert.true(
+      currentURL().startsWith('/pr/o/r/7/conversations'),
+      currentURL(),
+    );
+  });
+
   test('Open the Board only navigates, so it is secondary, and closing the pull request is destructive', async function (assert) {
     onTheHub({ system: { last_run: EARLIER_RUN } });
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];

@@ -325,7 +325,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   data-test-control="board"
                   {{on "click" this.toBoard}}
-                >Open the Board <kbd>1</kbd></button>
+                >Open the Board <kbd>2</kbd></button>
               {{/if}}
               {{#if this.reading.onHold}}
                 <button
