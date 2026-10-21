@@ -711,6 +711,16 @@
     }
    }
   },
+  "/api/harvest-extension:prepare": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/HarvestExtensionFolder"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/health": {
    "get": {
     "200": {
@@ -3299,6 +3309,7 @@
     "setup-refused",
     "not-broken",
     "summary-refused",
+    "harvest-extension-missing",
     "server-error"
    ],
    "type": "string"
@@ -3873,6 +3884,17 @@
     "lines",
     "seconds",
     "truncated"
+   ],
+   "type": "object"
+  },
+  "HarvestExtensionFolder": {
+   "properties": {
+    "folder": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "folder"
    ],
    "type": "object"
   },

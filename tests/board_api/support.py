@@ -23,6 +23,7 @@ from github_orchestrator.board_api import ManagerPanel
 from github_orchestrator.board_api.fake import (
     FakeDashboards,
     FakeEmojis,
+    FakeHarvestSetup,
     FakeHoldings,
     FakeManagerPanel,
     FakeSetupDesk,
@@ -32,6 +33,7 @@ from github_orchestrator.board_api.fake import (
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Emojis,
+    HarvestSetup,
     Held,
     Holdings,
     ManagerPanels,
@@ -236,7 +238,8 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                pulse: WatcherHealth | None = None, config_file: Words = Words(None),
                setup: SetupDesk | None = None, releases: Any = None,
                tour: TourMarker | None = None, emojis: Emojis | None = None,
-               holdings: Holdings | None = None) -> list[Part]:
+               holdings: Holdings | None = None,
+               harvest: HarvestSetup | None = None) -> list[Part]:
     return [
         fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),
@@ -244,6 +247,7 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
         fake_provider(SetupDesk, setup or FakeSetupDesk()),
         fake_provider(TourMarker, tour or FakeTour()),
         fake_provider(Emojis, emojis or FakeEmojis()),
+        fake_provider(HarvestSetup, harvest or FakeHarvestSetup()),
         fake_provider(History, ledger or FakeAgentRuns(FakePrProcesses())),
         fake_provider(WatcherHealth, pulse or Pulse(POLLED)),
         fake_provider(ConfigFile, config_file),

@@ -283,6 +283,11 @@ PACKAGES = {
         may_import=(),
         role="GitHub answers in its own types and the modules that use it adapt them, never the reverse",
     ),
+    "harvest": Package(
+        pinned=frozenset({"BoardExtension"}),
+        may_import=(),
+        role="the Harvest extension's board copy is made from the Chrome install it is handed, and knows nothing of the board that asks for it",
+    ),
     "notifications": Package(
         pinned=frozenset({
             "BoardPages", "Courier", "FixProgress", "Polling", "PrStatus", "Runs", "Settling",

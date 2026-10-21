@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Protocol
 
 from starlette.types import ASGIApp
@@ -263,6 +264,10 @@ class TourMarker(Protocol):
 
 class Emojis(Protocol):
     def named(self) -> dict[str, str]: ...
+
+
+class HarvestSetup(Protocol):
+    def prepare(self) -> Path | str: ...
 
 
 class ServerApp(Protocol):

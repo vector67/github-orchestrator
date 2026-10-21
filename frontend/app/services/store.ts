@@ -18,6 +18,7 @@ import type {
   FileLines,
   FrozenWorktree,
   GitRun,
+  HarvestExtensionFolder,
   Health,
   HeldPullRequests,
   ManagerChanges,
@@ -707,6 +708,17 @@ export default class StoreService extends Service {
       this.emojis = (await fetched<EmojiList>('/api/emojis')).emojis;
     } catch (trouble) {
       void reportError('emojis', trouble);
+    }
+  }
+
+  async prepareHarvestExtension(): Promise<HarvestExtensionFolder | string> {
+    const at = '/api/harvest-extension:prepare';
+    try {
+      return (await posted<HarvestExtensionFolder>(at, null, {})).body;
+    } catch (trouble) {
+      if (trouble instanceof Refusal) return trouble.detail;
+      void reportError(`prepare ${at}`, trouble);
+      return DOWN;
     }
   }
 

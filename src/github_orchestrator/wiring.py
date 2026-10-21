@@ -41,6 +41,7 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     Dashboards,
     Emojis,
+    HarvestSetup,
     Holdings,
     ManagerPanels,
     ManagerStanding,
@@ -95,6 +96,9 @@ from github_orchestrator.github._client import GhCliGitHub
 from github_orchestrator.github._gh_cli import Run
 from github_orchestrator.github._pages import pr_url
 from github_orchestrator.github._traffic import Traffic
+from github_orchestrator.harvest import BoardExtension
+from github_orchestrator.harvest._chrome import Run as ChromeRun
+from github_orchestrator.harvest._extension import CopiedExtension
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -382,6 +386,34 @@ class GitHubProvider(Provider):
     @provide
     def emojis(self, client: GhCliGitHub) -> Emojis:
         return FetchedEmojis(client.emojis)
+
+
+@dataclass(frozen=True)
+class HarvestWiring(Wiring):
+    chrome_dir: Path
+    into: Path
+    hub_port: int
+    run: ChromeRun
+
+
+@wires(HarvestWiring)
+class HarvestProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=HarvestWiring, scope=Scope.APP)
+
+    @provide
+    def board_extension(self, wiring: HarvestWiring) -> BoardExtension:
+        return CopiedExtension(wiring.chrome_dir, wiring.into, wiring.hub_port, wiring.run)
+
+    @provide
+    def harvest_setup(self, extension: BoardExtension) -> HarvestSetup:
+        return extension
+
+
+def harvest_wiring(settings: Settings, home: Path) -> HarvestWiring:
+    return HarvestWiring(home / "Library" / "Application Support" / "Google" / "Chrome",
+                         settings.data_dir / "harvest-extension", settings.config.hub_port,
+                         subprocess.run)
 
 
 @dataclass(frozen=True)
@@ -969,7 +1001,7 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   told: Told,
+                   harvest: HarvestSetup, told: Told,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -979,7 +1011,7 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         emojis=emojis,
+                         emojis=emojis, harvest=harvest,
                          told=told, holdings=holdings,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1505,6 +1537,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                         watching=(repo,), version=installed_version(), check_presence=False,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        harvest_wiring(settings, home),
         hub,
     ), settings.config.gh_account
 
@@ -1574,6 +1607,7 @@ def make_container(env: Mapping[str, str], home: Path,
                         check_presence=check_presence,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
+        harvest_wiring(settings, home),
         ManagerPanelsWiring(subprocess.run),
         ServerWiring(server_config(settings), python=sys.executable,
                      environment=settings.child_environment(), spawn=detached),

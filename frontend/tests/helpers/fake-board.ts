@@ -717,6 +717,7 @@ export class FakeBoard {
   tourDue = false;
   toursSeen = 0;
   emojis: Record<string, string> = {};
+  harvestExtensionFolder = '/data/harvest-extension';
   pid = 4242;
   setup = new FakeSetup();
   held: HeldPullRequest[] = [heldPr()];
@@ -1283,6 +1284,9 @@ export class FakeBoard {
       this.tourDue = false;
       return respond(null, { status: 204 });
     }
+    if (side === 'hub' && url.endsWith('/api/harvest-extension:prepare')) {
+      return this.prepareHarvestExtension(url);
+    }
     if (side === 'hub') return this.hubWrite(url, headers);
     if (url.endsWith('/api/manager/git')) return this.git(url, init, headers);
     if (url.endsWith('/api/terminal/sessions')) {
@@ -1409,6 +1413,22 @@ export class FakeBoard {
     if (this.pushedSinceFetch) this.pullRequestDiff = this.pushedSinceFetch;
     this.pushedSinceFetch = null;
     return respond(null, { status: 204 });
+  }
+
+  private prepareHarvestExtension(url: string): Response {
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'prepare',
+      ifMatch: null,
+      body: null,
+    });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    return this.json(200, { folder: this.harvestExtensionFolder });
   }
 
   private hubWrite(url: string, headers: Headers): Response {

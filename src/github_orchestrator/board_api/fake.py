@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 
 from github_orchestrator.board_api.interface import (
     NOTHING_HELD,
@@ -187,6 +188,16 @@ class FakeEmojis:
 
     def named(self) -> dict[str, str]:
         return self.listed
+
+
+@dataclass
+class FakeHarvestSetup:
+    answer: Path | str = Path("/nonexistent/harvest-extension")
+    prepared: int = 0
+
+    def prepare(self) -> Path | str:
+        self.prepared += 1
+        return self.answer
 
 
 @dataclass

@@ -7,6 +7,7 @@ import { LinkTo } from '@ember/routing';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import RebaseButton from 'frontend/components/rebase-button';
+import HarvestButton from 'frontend/components/harvest-button';
 import SettingsMenu from 'frontend/components/settings-menu';
 import Switcher from 'frontend/components/switcher';
 import {
@@ -18,6 +19,7 @@ import {
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import { failingOf, keyOf, pageOf, type Numbered } from 'frontend/data/wall';
+import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import { stepped, type Keymap } from 'frontend/services/keys';
@@ -37,6 +39,7 @@ export interface PrViewSignature {
 const SWITCHER_KEY = '\\';
 
 export default class PrView extends Component<PrViewSignature> {
+  @service declare harvestSwitch: HarvestSwitchService;
   @service declare hub: HubService;
   @service declare dashboard: DashboardService;
   @service declare threads: ThreadsService;
@@ -84,6 +87,10 @@ export default class PrView extends Component<PrViewSignature> {
       ? reading.title
       : (this.threads.pullRequest?.title ?? '');
     return `#${this.args.pr.number} ${title}`.trim();
+  }
+
+  get githubTitle(): string {
+    return this.shown?.title ?? this.threads.pullRequest?.title ?? '';
   }
 
   get url(): string | null {
@@ -273,6 +280,13 @@ export default class PrView extends Component<PrViewSignature> {
             title={{this.hub.fontProblem}}
             data-test-font-problem
           >Board font missing</span>
+        {{/if}}
+        {{#if this.harvestSwitch.on}}
+          <HarvestButton
+            @pr={{@pr}}
+            @title={{this.githubTitle}}
+            @url={{this.url}}
+          />
         {{/if}}
         <SettingsMenu />
       </header>
