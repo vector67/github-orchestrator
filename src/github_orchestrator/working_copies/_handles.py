@@ -61,7 +61,7 @@ class Git(Protocol):
 
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str] | None: ...
+    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
 
     def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
 
@@ -197,8 +197,8 @@ class BoundCheckout:
         read = None if path is None else self.git._named_commit(path, str(sha))
         if path is None or read is None:
             return None
-        full, parent = read
-        return NamedCommit(Sha(full), Sha(parent), path)
+        full, parent, shown = read
+        return NamedCommit(Sha(full), Sha(parent), path, shown)
 
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None:
         path = self._path()

@@ -117,7 +117,9 @@ def test_the_check_of_a_commit_against_a_thread(runs, claude, tmp_path):
     runs.check_commit(
         "PRRT_1",
         [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
-        path="src/foo.py", line=4, sha="abc1234def", worktree=str(tmp_path),
+        path="src/foo.py", line=4, sha="abc1234def",
+        shown="commit abc1234def\n\n    Rename the helper\n\n-def old_name():\n+def new_name():",
+        worktree=str(tmp_path),
         answers={"addressed": "the commit does what was asked",
                  "not-addressed": "it does not"},
         done=lambda word, reasoning: None)

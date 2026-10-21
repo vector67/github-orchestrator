@@ -486,6 +486,7 @@ def test_a_commit_named_by_a_short_hash_reads_as_its_hash_its_parent_and_where_i
 
     assert (named.sha, named.parent, named.worktree) == (Sha(sha), Sha(parent),
                                                          str(pr_worktree))
+    assert ("Rename the helper" in named.shown, "+renamed" in named.shown) == (True, True)
 
 
 def test_a_hash_the_checkout_does_not_hold_reads_as_no_commit(world, pr_checkout):

@@ -117,8 +117,8 @@ def test_a_commit_check_is_a_read_only_ephemeral_exec_in_the_checkout_on_the_mod
     world.answer("addressed || it renames the helper")
 
     runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
-                      sha="abc1234def", worktree=str(tmp_path), answers={"addressed": "yes"},
-                      done=lambda word, reasoning: None)
+                      sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
+                      answers={"addressed": "yes"}, done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)
 
     [asked] = codex.asked

@@ -516,15 +516,17 @@ class AgentRuns:
         self._summaries.later(judge)
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, worktree: str,
-                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
+                     path: str | None, line: int | None, sha: str, shown: str,
+                     worktree: str, answers: Mapping[str, str],
+                     done: Callable[[str, str], None]) -> None:
         def given(answer: str) -> None:
             checked = commit_check_in(answer, answers)
             if checked is not None:
                 done(*checked)
 
         self._checks.summarize(
-            commit_check_prompt(comments, path=path, line=line, sha=sha, answers=answers),
+            commit_check_prompt(comments, path=path, line=line, sha=sha, shown=shown,
+                                answers=answers),
             given, label=key, checkout=worktree)
 
     def drain_summaries(self, timeout: float) -> bool:

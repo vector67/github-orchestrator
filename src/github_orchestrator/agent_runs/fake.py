@@ -170,10 +170,11 @@ class CommitCheckAsked:
     path: str | None
     line: int | None
     sha: str
+    shown: str
     worktree: str
 
 
-Asked = (CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
+Asked =(CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
          | CommitCheckAsked)
 
 
@@ -431,9 +432,11 @@ class FakeAgentRuns:
             done(word)
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, worktree: str,
-                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
-        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, worktree))
+                     path: str | None, line: int | None, sha: str, shown: str,
+                     worktree: str, answers: Mapping[str, str],
+                     done: Callable[[str, str], None]) -> None:
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, shown,
+                                           worktree))
         answer = self._answered()
         checked = commit_check_in(answer, answers) if isinstance(answer, str) else None
         if checked is not None:
@@ -456,9 +459,11 @@ class HeldVerdicts(FakeAgentRuns):
         self.held.append((key, answers, done))
 
     def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
-                     path: str | None, line: int | None, sha: str, worktree: str,
-                     answers: Mapping[str, str], done: Callable[[str, str], None]) -> None:
-        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, worktree))
+                     path: str | None, line: int | None, sha: str, shown: str,
+                     worktree: str, answers: Mapping[str, str],
+                     done: Callable[[str, str], None]) -> None:
+        self.asked.append(CommitCheckAsked(key, tuple(comments), path, line, sha, shown,
+                                           worktree))
         self.held_checks.append((answers, done))
 
     def verdicts_asked(self) -> list[VerdictAsked]:

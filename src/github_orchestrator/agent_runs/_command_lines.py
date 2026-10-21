@@ -4,7 +4,7 @@ from typing import Protocol
 from github_orchestrator.agent_runs._agents import Agent
 from github_orchestrator.agent_runs._pr_prompts import REBASE_ON_MAIN
 
-READ_ONLY_TOOLS = "Read,Grep,Glob,Bash(git show:*),Bash(git log:*),Bash(git diff:*)"
+READ_ONLY_TOOLS = "Read,Grep,Glob"
 
 
 class CommandLines(Protocol):

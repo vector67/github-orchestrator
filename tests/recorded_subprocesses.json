@@ -308,6 +308,27 @@
      }
     }
    ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--end-of-options\", \"caf51806a83adcde9c74f86b2b68982755e7de69\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "show",
+      "--end-of-options",
+      "caf51806a83adcde9c74f86b2b68982755e7de69"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Y29tbWl0IGNhZjUxODA2YTgzYWRjZGU5Yzc0Zjg2YjJiNjg5ODI3NTVlN2RlNjkKQXV0aG9yOiBwcmV2aWV3IDxwcmV2aWV3QGV4YW1wbGUuY29tPgpEYXRlOiAgIFRodSBKYW4gMSAwMDowMDowMCAyMDI2ICswMDAwCgogICAgU3BlbGwgdGhlIHVuaXRzIG91dAoKZGlmZiAtLWdpdCBhL2JpbGxpbmcvdW5pdHMucHkgYi9iaWxsaW5nL3VuaXRzLnB5CmluZGV4IDkwODg4ZWUuLmM4ZjExZDggMTAwNjQ0Ci0tLSBhL2JpbGxpbmcvdW5pdHMucHkKKysrIGIvYmlsbGluZy91bml0cy5weQpAQCAtMjAsNyArMjAsNyBAQCBkZWYgc3RlcF8wMTgobGluZV9pdGVtcyk6CiAKIGRlZiBzdGVwXzAyMShsaW5lX2l0ZW1zKToKICAgICByZXR1cm4gc29ydGVkKGxpbmVfaXRlbXMpCi0KKyAgICByZXR1cm4gW2l0ZW0uaW5fdW5pdHMoKSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zXQogZGVmIHN0ZXBfMDI0KGxpbmVfaXRlbXMpOgogICAgIHJldHVybiBbaXRlbSBmb3IgaXRlbSBpbiBsaW5lX2l0ZW1zIGlmIGl0ZW0uaWQgIT0gMjRdCiAK"
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"--bare\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree-origin.git\"], null, null]": [
     {
      "argv": [
@@ -21672,6 +21693,27 @@
      },
      "stdout": {
       "b64": "ZDMxZDk1NGYzMWY0ZjVlNGVkMDk0MmQ1OGQ0NmQ1N2ZiYTk0ZDJhYiA5NzEzNDZkOTQyMzE4OTVmY2Y2MmJkNjZiYjliMTk4ZWRkZTNjZjY3Cg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"show\", \"--end-of-options\", \"d31d954f31f4f5e4ed0942d58d46d57fba94d2ab\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "show",
+      "--end-of-options",
+      "d31d954f31f4f5e4ed0942d58d46d57fba94d2ab"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Y29tbWl0IGQzMWQ5NTRmMzFmNGY1ZTRlZDA5NDJkNThkNDZkNTdmYmE5NGQyYWIKQXV0aG9yOiBUIDx0QGV4YW1wbGUuY29tPgpEYXRlOiAgIFRodSBKYW4gMSAwMDowMDowMCAyMDI2ICswMDAwCgogICAgUmVuYW1lIHRoZSBoZWxwZXIKCmRpZmYgLS1naXQgYS9oIGIvaApuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi5iMjk3YWI1Ci0tLSAvZGV2L251bGwKKysrIGIvaApAQCAtMCwwICsxIEBACityZW5hbWVkCg=="
      }
     }
    ],
