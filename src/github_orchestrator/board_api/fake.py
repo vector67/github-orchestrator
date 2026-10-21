@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 
 from github_orchestrator.board_api.interface import (
     NOTHING_HELD,
@@ -13,7 +14,6 @@ from github_orchestrator.board_api.interface import (
     SetupProgress,
     SetupRead,
     SetupWrite,
-    Timer,
 )
 from github_orchestrator.domain import CiCheck, HubState, Pr, Repo
 
@@ -191,31 +191,13 @@ class FakeEmojis:
 
 
 @dataclass
-class FakeTimer:
-    is_running: bool = False
-    refusal: str | None = None
+class FakeHarvestSetup:
+    answer: Path | str = Path("/nonexistent/harvest-extension")
+    prepared: int = 0
 
-    def running(self) -> bool | None:
-        return None if self.refusal is not None else self.is_running
-
-    def start(self) -> str | None:
-        return self._turned(True)
-
-    def stop(self) -> str | None:
-        return self._turned(False)
-
-    def _turned(self, running: bool) -> str | None:
-        if self.refusal is None:
-            self.is_running = running
-        return self.refusal
-
-
-@dataclass
-class FakeTimers:
-    tracked: dict[Repo, FakeTimer] = field(default_factory=dict)
-
-    def of(self, repo: Repo) -> Timer | None:
-        return self.tracked.get(repo)
+    def prepare(self) -> Path | str:
+        self.prepared += 1
+        return self.answer
 
 
 @dataclass

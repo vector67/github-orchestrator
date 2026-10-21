@@ -81,9 +81,8 @@ class ErrorCode(StrEnum):
     is running, agents are disabled, or the repository is not watched. The
     detail says which.
 
-    HARVEST_REFUSED is Harvest not answering the pull request's timer: no
-    token in the keychain, a token it turns down, or no answer at all. The
-    detail says which when Harvest was asked to start or stop.
+    HARVEST_EXTENSION_MISSING is the Harvest Time Tracker not installed in
+    Chrome, so there is nothing to copy for the board.
 
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
@@ -136,7 +135,7 @@ class ErrorCode(StrEnum):
     SETUP_REFUSED = "setup-refused"
     NOT_BROKEN = "not-broken"
     SUMMARY_REFUSED = "summary-refused"
-    HARVEST_REFUSED = "harvest-refused"
+    HARVEST_EXTENSION_MISSING = "harvest-extension-missing"
     SERVER_ERROR = "server-error"
 
 
@@ -1858,11 +1857,9 @@ class Emoji(BaseModel):
                                      "`/unicode/` for an emoji Unicode has.")
 
 
-class HarvestTimer(BaseModel):
-    tracked: bool = Field(description="Whether the pull request's repo names a Harvest "
-                                      "project and task in config.toml, so it has a timer.")
-    running: bool = Field(description="Whether your Harvest timer is running on that "
-                                      "project and task. False when nothing is tracked.")
+class HarvestExtensionFolder(BaseModel):
+    folder: str = Field(description="The folder holding the Harvest extension's copy "
+                                    "for the board, to load unpacked in Chrome.")
 
 
 class EmojiList(BaseModel):

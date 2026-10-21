@@ -7,7 +7,7 @@ import { LinkTo } from '@ember/routing';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import RebaseButton from 'frontend/components/rebase-button';
-import HarvestTimer from 'frontend/components/harvest-timer';
+import HarvestButton from 'frontend/components/harvest-button';
 import SettingsMenu from 'frontend/components/settings-menu';
 import Switcher from 'frontend/components/switcher';
 import {
@@ -87,6 +87,10 @@ export default class PrView extends Component<PrViewSignature> {
       ? reading.title
       : (this.threads.pullRequest?.title ?? '');
     return `#${this.args.pr.number} ${title}`.trim();
+  }
+
+  get githubTitle(): string {
+    return this.shown?.title ?? this.threads.pullRequest?.title ?? '';
   }
 
   get url(): string | null {
@@ -278,7 +282,11 @@ export default class PrView extends Component<PrViewSignature> {
           >Board font missing</span>
         {{/if}}
         {{#if this.harvestSwitch.on}}
-          <HarvestTimer @pr={{@pr}} />
+          <HarvestButton
+            @pr={{@pr}}
+            @title={{this.githubTitle}}
+            @url={{this.url}}
+          />
         {{/if}}
         <SettingsMenu />
       </header>

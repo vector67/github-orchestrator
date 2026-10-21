@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import HarvestSetup from 'frontend/components/harvest-setup';
 import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
@@ -115,6 +116,9 @@ export default class SettingsMenu extends Component {
                 >{{this.hub.pollStatus.when}}</span>{{/if}}</span>
           {{/if}}
         </div>
+      {{/if}}
+      {{#if this.harvestSwitch.settingUp}}
+        <HarvestSetup />
       {{/if}}
     </span>
   </template>

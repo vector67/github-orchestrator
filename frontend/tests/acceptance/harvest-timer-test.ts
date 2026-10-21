@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, visit } from '@ember/test-helpers';
+import { click, find, visit } from '@ember/test-helpers';
 import { setupFakeBoard } from 'frontend/tests/helpers/fake-board';
 
 const HARVEST_TIMER = 'harvest-timer';
@@ -9,13 +9,17 @@ module('Acceptance | harvest timer', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
 
-  hooks.beforeEach(function () {
-    board().harvestTimer = { tracked: true, running: false };
-  });
-
   hooks.afterEach(function () {
     localStorage.removeItem(HARVEST_TIMER);
+    document.getElementById('harvest-messaging')?.remove();
   });
+
+  function extensionRunning(): void {
+    const messaging = document.createElement('div');
+    messaging.id = 'harvest-messaging';
+    messaging.hidden = true;
+    document.body.appendChild(messaging);
+  }
 
   async function switchedOn(): Promise<void> {
     await visit('/pr/o/r/7/dashboard');
@@ -23,100 +27,87 @@ module('Acceptance | harvest timer', function (hooks) {
     await click('[data-test-harvest-toggle]');
   }
 
-  function timerVerbs(): string[] {
-    return board()
-      .posted.filter((one) => one.url.includes('/api/harvest-timer:'))
-      .map((one) => one.verb);
+  function json(name: string): unknown {
+    return JSON.parse(find('.harvest-timer')!.getAttribute(name)!);
   }
 
-  test('the timer is off until the settings menu turns it on', async function (assert) {
+  test('the extension finds no timer button until the settings menu turns it on', async function (assert) {
+    extensionRunning();
     await visit('/pr/o/r/7/dashboard');
 
-    assert.dom('[data-test-harvest-timer]').doesNotExist();
+    assert.dom('.harvest-timer').doesNotExist();
 
-    await click('[data-test-settings-open]');
-
-    assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: off');
-
-    await click('[data-test-harvest-toggle]');
+    await switchedOn();
 
     assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: on');
-    assert.dom('[data-test-harvest-timer]').exists();
     assert.strictEqual(localStorage.getItem(HARVEST_TIMER), 'on');
+    assert.dom('[data-test-harvest-setup]').doesNotExist();
   });
 
-  test('a pr whose repo tracks no harvest project shows no timer', async function (assert) {
-    board().harvestTimer = { tracked: false, running: false };
-
+  test('the timer button names the pull request as the extension does on github', async function (assert) {
+    extensionRunning();
     await switchedOn();
 
-    assert.dom('[data-test-harvest-timer]').doesNotExist();
+    assert.strictEqual(
+      JSON.stringify(json('data-item')),
+      JSON.stringify({ id: '7', name: '#7: Fix the widget' }),
+    );
+    assert.strictEqual(
+      JSON.stringify(json('data-group')),
+      JSON.stringify({ id: 'r', name: 'r' }),
+    );
+    assert.strictEqual(
+      JSON.stringify(json('data-account')),
+      JSON.stringify({ id: 'o' }),
+    );
+    assert
+      .dom('.harvest-timer')
+      .hasAttribute('data-permalink', 'https://github.com/o/r/pull/7')
+      .hasAttribute('data-skip-styling', 'true');
   });
 
-  test('clicking the timer starts it on the pr', async function (assert) {
+  test('turning it on without the extension on the board offers to set it up', async function (assert) {
     await switchedOn();
 
-    assert
-      .dom('[data-test-harvest-timer]')
-      .hasAttribute('aria-pressed', 'false');
+    assert.dom('[data-test-harvest-setup]').exists();
 
-    await click('[data-test-harvest-timer]');
+    await click('[data-test-harvest-prepare]');
 
-    assert.deepEqual(timerVerbs(), ['start']);
+    assert.deepEqual(
+      board()
+        .posted.filter((one) =>
+          one.url.endsWith('/api/harvest-extension:prepare'),
+        )
+        .map((one) => one.url),
+      ['/api/harvest-extension:prepare'],
+    );
     assert
-      .dom('[data-test-harvest-timer]')
-      .hasAttribute('aria-pressed', 'true');
+      .dom('[data-test-harvest-folder]')
+      .hasText(board().harvestExtensionFolder);
+    assert.dom('[data-test-harvest-steps] li').exists({ count: 3 });
   });
 
-  test('clicking a running timer asks before it stops it', async function (assert) {
-    board().harvestTimer = { tracked: true, running: true };
-    await switchedOn();
-
-    await click('[data-test-harvest-timer]');
-
-    assert
-      .dom('[data-test-harvest-stop-confirm]')
-      .includesText('Stop the timer?');
-    assert.deepEqual(timerVerbs(), []);
-
-    await click('[data-test-harvest-stop]');
-
-    assert.deepEqual(timerVerbs(), ['stop']);
-    assert.dom('[data-test-harvest-stop-confirm]').doesNotExist();
-    assert
-      .dom('[data-test-harvest-timer]')
-      .hasAttribute('aria-pressed', 'false');
-  });
-
-  test('cancelling the question leaves the timer running', async function (assert) {
-    board().harvestTimer = { tracked: true, running: true };
-    await switchedOn();
-
-    await click('[data-test-harvest-timer]');
-    await click('[data-test-harvest-stop-cancel]');
-
-    assert.deepEqual(timerVerbs(), []);
-    assert.dom('[data-test-harvest-stop-confirm]').doesNotExist();
-    assert
-      .dom('[data-test-harvest-timer]')
-      .hasAttribute('aria-pressed', 'true');
-  });
-
-  test('harvest refusing to start says why and leaves the timer stopped', async function (assert) {
+  test('a setup the server refuses says why', async function (assert) {
     await switchedOn();
     board().refusal = {
-      status: 502,
-      code: 'harvest-refused',
-      detail: 'Harvest refused POST /time_entries: HTTP Error 401',
+      status: 409,
+      code: 'harvest-extension-missing',
+      detail: 'Chrome has no Harvest Time Tracker installed',
     };
 
-    await click('[data-test-harvest-timer]');
+    await click('[data-test-harvest-prepare]');
 
     assert
-      .dom('[data-test-toast]')
-      .includesText('Harvest refused POST /time_entries: HTTP Error 401');
-    assert
-      .dom('[data-test-harvest-timer]')
-      .hasAttribute('aria-pressed', 'false');
+      .dom('[data-test-harvest-setup]')
+      .includesText('Chrome has no Harvest Time Tracker installed');
+  });
+
+  test('closing the setup leaves the switch on', async function (assert) {
+    await switchedOn();
+
+    await click('[data-test-harvest-setup-close]');
+
+    assert.dom('[data-test-harvest-setup]').doesNotExist();
+    assert.strictEqual(localStorage.getItem(HARVEST_TIMER), 'on');
   });
 });
