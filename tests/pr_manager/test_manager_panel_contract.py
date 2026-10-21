@@ -154,7 +154,7 @@ def test_the_manager_asks_claude_in_the_prs_worktree(settings, tmp_path):
 
     assert side.settle().ask("Why this name?") is None
 
-    assert side.opened() == [(str(tmp_path), "claude 'Why this name?'")]
+    assert side.opened() == [(str(tmp_path), "claude -- 'Why this name?'")]
 
 
 def test_the_manager_opens_each_terminal_command_in_the_prs_worktree(

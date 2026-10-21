@@ -396,7 +396,7 @@ class AgentRuns:
         return self._pr_processes.split(pr, worktree, [*self._command, *self._lines.rebase_session()])
 
     def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
-        return open_session_in(self._pr_processes, pr, worktree, self._command, prompt)
+        return open_session_in(self._pr_processes, pr, worktree, [*self._command, "--"], prompt)
 
     def _fix_thread(self, fix: ThreadFix, prompt: str) -> AgentRun | str:
         return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt)
