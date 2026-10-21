@@ -79,6 +79,8 @@ def test_a_reply_naming_a_commit_asks_about_that_commit_in_the_prs_checkout(sett
         KEY, sha, "helpers.py", 1, WORKTREE)
     assert asked.comments == (("you", ME, "rename old_name"),
                               ("PR author", AUTHOR, f"Fixed in {sha[:7]}"))
+    assert ("Rename the helper" in asked.shown, "def new_name():" in asked.shown) == (
+        True, True)
 
 
 def test_a_commit_link_is_checked_like_a_bare_hash(settings):

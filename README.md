@@ -12,8 +12,8 @@ browser.
   status, review threads, mergeability, review requests, pushes since your
   review.
 - Lists every PR on a wall in the browser by who has to move next, and opens
-  each on a page with its review board, its dashboard, a terminal in its
-  worktree and its diff.
+  each on a page with its pr-summary, its review board, its dashboard, a
+  terminal in its worktree and its diff.
 - Drafts review comments by selecting lines in the PR's diff, the way GitHub's
   Files changed does, and edits a draft in place while it sits in your review.
 - Spawns an agent run per event, in a worktree cut for that PR — a full
@@ -123,7 +123,7 @@ fonts, and the environment variables that move the config and data files.
 ```text
 everyday     open, status, logs, runs
 service      start, stop, restart, restart-all
-maintenance  update, doctor, config, uninstall, setup
+maintenance  update, doctor, config, uninstall, setup, skill
 learning     tutorial
 ```
 
@@ -149,7 +149,7 @@ Runtime state lives under the resolved data dir; see
 
 `http://127.0.0.1:8720` is the hub, and where you start. Its home is the wall,
 every PR grouped by who has to move next. Opening one gives that PR's page with
-**Board | Dashboard | Terminal | Diff** tabs, and **Runs** lists the week's Claude runs
+**Summary | Board | Dashboard | Terminal | Diff** tabs, and **Runs** lists the week's Claude runs
 under the watcher's health. [The hub](docs/how-to-use.md#the-hub) has the keys
 and the rest.
 

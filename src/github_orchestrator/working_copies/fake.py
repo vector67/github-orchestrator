@@ -519,12 +519,15 @@ class FakeWorkingCopies:
         resolved = self._resolve(str(sha))
         return None if resolved is None else self.commits[resolved].message
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str] | None:
+    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
         resolved = self._resolve(sha) if self._has_commit(worktree, sha) else None
         commit = None if resolved is None else self.commits[resolved]
         if commit is None or commit.parent is None:
             return None
-        return commit.sha, commit.parent
+        before = self.commits[commit.parent].tree
+        changed = "".join(f"+++ b/{path}\n" + "".join(f"+{line}\n" for line in text.splitlines())
+                          for path, text in commit.tree.items() if before.get(path) != text)
+        return commit.sha, commit.parent, f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}"
 
     def _diff_files(self, worktree: str, base: str,
                     head: str) -> tuple[FileDiff, ...] | None:

@@ -291,7 +291,10 @@ transcripts/      append-only Claude stream-json, per PR
 runs.jsonl        one line per finished run, every PR
 summaries/        each PR's latest pr-summary, <n>.json, beside <n>/, the working
                   folder its newest run left; lane.lock names the run in flight
-logs/             watcher.log, agent-manager.log, launchd.log
+pr_managers/      one <n>.json per running agent manager: its pid and worktree
+harvest-extension/ the board's copy of the Harvest extension, once you set it up
+logs/             watcher.log, agent-manager.log, server.log, launchd.log,
+                  gh_calls.csv, and pr_managers/, each manager's own output
 ```
 
 ## Finding out what went wrong
@@ -304,13 +307,18 @@ watcher's health in one line.
 - `watcher.log`: one `Polled N PRs…` line per cycle, every event queued, each
   failed cycle with its traceback, the line that says it recovered and from how
   many failures, and a config that stopped it starting.
-- `agent-manager.log`: every PR's agent manager and review board, one file for
-  all of them. Each line reads `[<pid> <owner/repo>#<pr>]`, so
-  `grep '#23]' agent-manager.log` is one PR's history. It holds what Claude
-  printed that was not JSON (its stderr, mostly), every git or GitHub call that
-  failed and what it said, each board action that failed with its traceback,
-  each board request refused (INFO) or failed (WARNING), and errors the board's
-  page hit in the browser, as `board page error in <where>`.
+- `agent-manager.log`: every PR's agent manager, one file for all of them. Each
+  line reads `[<pid> <owner/repo>#<pr>]`, so `grep '#23]' agent-manager.log` is
+  one PR's history. It holds what Claude printed that was not JSON (its stderr,
+  mostly) and every git or GitHub call that failed and what it said.
+- `server.log`: the server, which serves the hub and every PR's board. Each line
+  reads `[<pid>]`, the worker that wrote it. It holds each board action that
+  failed with its traceback, each request refused (INFO) or failed (WARNING),
+  and errors the board's page hit in the browser, as
+  `board page error in <where>`. `logs` does not tail it.
+- `gh_calls.csv`: one row per request `gh` made, with the time, the account,
+  the method, the URL, `gh`'s exit code, the HTTP status and the body's size,
+  and on a 403 the `retry-after` and `x-ratelimit-*` headers.
 - `launchd.log`: the LaunchAgent's stdout and stderr. That is where
   a watcher that died before it could log goes. The watcher trims it to
   `.1` when it starts past 10 MB. On Linux the unit's stdout and stderr go to
@@ -321,8 +329,9 @@ watcher's health in one line.
   stream of what each run did.
 
 Set `log_level = "DEBUG"` to add every board request and every `gh` call's
-timing. `curl 127.0.0.1:<port>/api/health` answers the pid of the manager
-serving a board, which is the pid on that board's lines.
+timing. `curl 127.0.0.1:8720/pr/<owner>/<name>/<number>/api/health` answers
+the pid of the server worker that served it, which is the pid on its lines in
+`server.log`.
 
 ## The hub
 
@@ -397,6 +406,10 @@ PR frozen on the wrong branch has a **Release** button on its row.
 | `o`       | open the PR on GitHub                                                   |
 | `y`       | copy the PR's link                                                      |
 
+On a draft, `d` also offers `r`, until it is ready for review: the PR stays off
+the wall whatever events arrive, and comes back once GitHub says it is no longer
+a draft.
+
 Hold `/` to show the key on every button and link, on every page; releasing it
 hides them again.
 
@@ -415,8 +428,9 @@ and the PR takes the whole screen. Its title bar has the three-line PRs
 button, the title, whose PR it is, the branch, the PR's number linking to it on
 GitHub, your move, the chips its wall row shows and the settings gear. The PRs
 button opens the switcher, whose first entry is **Wall**. The gear, on the
-wall's bar too, holds the theme and the watcher's last poll, with an alarm
-square when polls fail. **N mismatches** is the
+wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch and
+the watcher's last poll: a green dot, **Polled successfully** and how long ago,
+or a red dot and what went wrong when polls fail. **N mismatches** is the
 Alignment judge's count in the PR's latest summary, shown even once the summary
 is stale. A draft has a grey **Draft** pill before its title, and
 its move is outlined in grey, never yellow, since yellow means it needs you now.
@@ -433,14 +447,24 @@ its move is outlined in grey, never yellow, since yellow means it needs you now.
 | `Esc`     | back to the wall                          |
 | `o` / `y` | open the PR on GitHub / copy its link     |
 
-The Summary tab shows the pr-summary plugin's latest summary of the PR under a
-one-line strip. The strip says which state it is in: waiting for its turn (a PR
-you review) or a **Summarise** button (your own); running, with the head it
-reads, how long it has run and each witness ticked off as it finishes; ready,
-with the head it read and when; stale after a push, naming both heads and how
-many commits behind, with **Rerun**; needing the GitHub API, with the plugin's
-reason and a button that runs it over the API; or failed, with the exit status,
-the end of what it printed and **Rerun**. A refused run says why in the strip.
+The Summary tab is headed by the PR's title, how long ago it was opened, its
+commits, and the lines added and removed beside five squares, green and red
+for their shares and grey for the rest. Under that, the pr-summary plugin's latest summary of the PR
+sits below a one-line strip. The strip says which state it is in: waiting for
+its turn (a PR you review) or a **Summarise** button (your own); running, with
+the head it reads, how long it has run and each witness ticked off as it
+finishes; ready, with the head it read, when it finished and **Rerun**; stale
+after a push, naming both heads and how many commits behind, with **Rerun**;
+needing the GitHub API, with the plugin's reason and a button that runs it over
+the API; or failed, with the exit status, the end of what it printed and
+**Rerun**. While a rerun runs, the old summary stays, and the strip says when
+the rerun started and how many of its agents have finished. A refused run says
+why in the strip.
+
+The summary opens with **Before you review**, the primer: the concepts the diff
+cannot be judged without, each a folded section with the concepts it leans on
+folded inside it. Click a concept's name to open it. The tab draws the
+summary's Mermaid diagrams in place, in the page's theme.
 
 The switcher slides in from the left with every PR's verb, grouped as on the
 wall, and slides away once you pick one.
@@ -462,15 +486,15 @@ ones." A draft on its way to GitHub cannot change.
 
 **Dashboard** is the PR's state as its agent manager last saw it.
 The band at the top has your move and why, and the buttons: **Open the Board**
-(`1`) when threads wait for you, **Put on hold** or **Resume the agent**
+(`2`) when threads wait for you, **Put on hold** or **Resume the agent**
 (`h`), **Carry on** (`c`), **Start a review agent** (`a`) when your move is to
 review or re-review, which starts the review agent a review request would, for
 when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
 own draft, which first lists what is still outstanding (unsent drafts, Board
 threads waiting on you, failing CI, a needed rebase,
 unpushed commits and agent work) and then marks it ready on GitHub, **Git**
-(`g`), **Terminal** (`t`), **Dismiss #N** (`d`, then `u` or `f`), which takes the
-PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
+(`g`), **Terminal** (`t`), **Dismiss #N** (`d`, then `u`, `f`, or on a draft
+`r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
 GitHub. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
@@ -530,16 +554,36 @@ It can take in − and + lines together but stays in the hunk it started in,
 because GitHub refuses a comment whose lines span two hunks. Lines shown by
 expanding context cannot be selected. The comment box opens under the last
 selected line, saying which lines it is on ("Commenting on lines −19 to +20").
-**Save draft** makes the draft and leaves the tab where it was. `Esc` or
-**Cancel** closes the box and keeps what you typed for the next new draft.
+**Save as local draft** makes a draft that stays on the board, out of your
+review, and **Add to review** makes it and puts it in your review; either leaves
+the tab where it was. `Esc` or **Cancel** closes the box and keeps what you
+typed for the next new draft.
+
+**Ask the agent** in the box sends what you typed as a question about the
+selected lines instead. The agent starts on it in a new session in the
+Terminal tab, in the PR's worktree, and the page switches to that tab. Its
+prompt names the file and the lines and asks for an answer that changes no
+files. While agents are disabled the board refuses the question.
 
 Conversations sit under the last line they are on: posted threads with their
 comments, resolved ones folded behind **Show resolved**, fix proposals as their
 thread, and drafts as cards. Each card links to its conversation on the board.
 The one thing the tab changes is a draft: **Edit** on a draft card, open or in
 your review, turns the card into the comment box with its lines selected, and
-you can select others. Outdated threads are not drawn; the file header counts
+you can select others. A local draft's card also has **Add to review** and
+**Discard**. **Ask the agent** on a draft's card opens a question box in the
+card; **Ask** opens the agent in the Terminal tab as above, with the draft's
+text in its prompt. Outdated threads are not drawn; the file header counts
 them.
+
+Every box whose text goes to GitHub (a new or edited draft, a reply, a decision
+on the board and the review's summary) completes emoji as GitHub does. Type `:`
+and part of a name, and the box offers up to five of GitHub's emoji, those whose
+name starts with what you typed first. `↑` and `↓` move through them, `Tab`,
+`Enter` or a click puts the chosen one in place of what you typed, and `Esc`
+closes the list. An emoji with a Unicode character goes in as that character;
+one of GitHub's own, such as `:shipit:`, goes in as its name. The page draws a
+comment's `:name:` as the character, or as GitHub's picture for its own.
 
 ### The Runs page
 
@@ -555,13 +599,31 @@ A run on a PR the watcher no longer holds has no link.
 
 ### Notifications
 
-Clicking a desktop notification about one PR opens that PR on its Board, at
-`/pr/<owner>/<name>/<number>` on the hub. One about no PR, about a closed PR, or about Claude
+Clicking a desktop notification about one PR opens that PR at
+`/pr/<owner>/<name>/<number>` on the hub: on its Summary when you review it, on
+its Board when it is yours. One about no PR, about a closed PR, or about Claude
 skipping events on several PRs opens nothing.
 
 A notification from before PR pages named their repo opens `/pr/<number>`. That
 opens the one PR the hub holds with that number. When several repos hold one,
 it lists them to pick from; when none does, it says so.
+
+### Harvest timer
+
+**Harvest timer: off** in the gear turns it on, and the browser remembers the
+choice. With it on, each PR's title bar has a stopwatch button beside the gear,
+which the Harvest Time Tracker Chrome extension turns into its own timer: the
+entry is named `#<number>: <title>`, filed under the repo's name, and links to
+the PR on GitHub.
+
+The extension from the Chrome Web Store does not know the board, so turning the
+switch on where it is not loaded opens **Set up Harvest on the board**. **Set up
+the extension** copies the newest Harvest Time Tracker Chrome has installed to
+`harvest-extension/` under the data dir, tells that copy about the hub's port,
+opens `chrome://extensions`, shows the folder in Finder and puts its path on
+your clipboard. The setup is macOS only. Then, as the dialog lists: turn on Developer mode, **Load unpacked**
+the folder, turn off the Web Store's copy and reload the page. With no Harvest
+Time Tracker installed, the dialog says to add it from the Web Store first.
 
 ### Git palette
 
@@ -610,12 +672,9 @@ thread you opened, with the fix an agent proposed for it. Nothing on the board
 reaches the PR until you approve it, which lands the fix on the PR branch and
 replies on the thread.
 
-The board keeps its port for the life of the PR: the window it belongs to is
-given one when the watcher builds it, and `v` is recorded, so a manager that
-restarts brings the board back on the same URL without being asked. A tab left
-open on it says it lost contact while nothing is listening and picks the board up
-again the moment it is — at worst one watcher poll later. `V` stops the board and
-says it should stay down.
+The server serves every board, at `/pr/<owner>/<name>/<number>/` on the hub,
+so a board has no port of its own and nothing starts or stops it. A manager that
+restarts leaves its board's URL as it was.
 
 A thread is a reviewer's comment and every reply under it, which is how GitHub
 groups them and how you read them. A reply does not open a second row: it lands

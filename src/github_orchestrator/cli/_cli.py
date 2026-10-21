@@ -25,6 +25,7 @@ from github_orchestrator.cli._restart_all import (
     Instance,
     OtherInstances,
     restart_instances,
+    stop_managers_and_server,
 )
 from github_orchestrator.cli._runs import logs, runs
 from github_orchestrator.cli._service import Service, launchd_label
@@ -137,6 +138,8 @@ class OperatorCli:
         if config.platform != "darwin":
             for line in drop_cron_block(self._run, config.config_folder / "crontab.bak"):
                 print(line)
+        for instance in instances:
+            stop_managers_and_server(instance)
         for instance in instances:
             named = "the default instance" if instance.name is None else instance.name
             print(f"==> Starting the watcher for {named}", flush=True)

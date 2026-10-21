@@ -415,18 +415,17 @@ def test_a_verdict_is_asked_of_sonnet(runs, world, claude):
     assert asked.argv == ["claude", "--print", "--model", "sonnet"]
 
 
-def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_read_only_tools(
+def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell(
         runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")
 
     runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
-                      sha="abc1234def", worktree=str(tmp_path), answers={"addressed": "yes"},
-                      done=lambda word, reasoning: None)
+                      sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
+                      answers={"addressed": "yes"}, done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", MODEL, "--allowedTools",
-                          "Read,Grep,Glob,Bash(git show:*),Bash(git log:*),Bash(git diff:*)"]
+    assert asked.argv == ["claude", "--print", "--model", MODEL, "--tools", "Read,Grep,Glob"]
     assert asked.cwd == str(tmp_path)
 
 

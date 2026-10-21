@@ -85,7 +85,8 @@ def verdict_in(answer: str, answers: Mapping[str, str]) -> str | None:
 
 
 def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str | None,
-                        line: int | None, sha: str, answers: Mapping[str, str]) -> str:
+                        line: int | None, sha: str, shown: str,
+                        answers: Mapping[str, str]) -> str:
     thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
                           for label, login, body in comments)
     where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
@@ -93,16 +94,17 @@ def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str |
     return (
         "You check a pull request review for one person, the viewer, who is reviewing "
         "someone else's pull request. The viewer left a review comment; a later reply "
-        f"names commit {sha} as the answer to it. You are in a checkout of the pull "
-        f"request: read the commit with `git show {sha}`, and any file, log or diff you "
-        "need to judge it. Decide whether the commit does what the viewer asked. Each "
+        f"names commit {sha} as the answer to it. The commit is below, as `git show` "
+        "prints it. You are in a checkout of the pull request and can read any file in "
+        "it to judge the commit. Decide whether the commit does what the viewer asked. Each "
         "comment is labelled: `you` is the viewer, `PR author` wrote the pull request, "
         "`colleague` is anyone else, `bot` is a review bot.\n\n"
         f"Answer on a single line: one of these words, then {SEPARATOR}, then one or two "
         "sentences saying what the commit does about the viewer's comment and what, if "
         "anything, it leaves undone. Nothing else.\n"
         f"{offered}\n\n"
-        f"The thread on {where}, oldest comment first:\n\n{thread}"
+        f"The thread on {where}, oldest comment first:\n\n{thread}\n\n"
+        f"The commit:\n\n{shown}"
     )
 
 

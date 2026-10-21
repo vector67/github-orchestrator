@@ -330,6 +330,6 @@ class GitWorkingCopies:
     def _blob(self, worktree: str, sha: str, path: str) -> bytes | None:
         return _revisions.blob(worktree, sha, path)
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str] | None:
+    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
         return _revisions.named_commit(worktree, sha)
 
