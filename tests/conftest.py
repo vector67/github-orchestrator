@@ -3,6 +3,7 @@ import atexit
 import functools
 import gc
 import hashlib
+import importlib
 import itertools
 import os
 import shutil
@@ -90,6 +91,13 @@ async def _uvicorn_poll(delay: float, result: Any = None) -> Any:
 
 setattr(uvicorn.server, "asyncio", types.SimpleNamespace(**{**vars(asyncio), "sleep": _uvicorn_poll}))
 
+_IMPORTED_BEFORE_FORKING = (
+    "github_orchestrator.board_api._one_server",
+    "uvicorn.lifespan.off",
+    "uvicorn.loops.asyncio",
+    "uvicorn.protocols.http.h11_impl",
+    "uvicorn.protocols.websockets.websockets_sansio_impl",
+)
 _REAL_RUN = subprocess.run
 _REAL_POPEN = subprocess.Popen
 _TEMPLATES: dict[tuple[Callable[..., Any], tuple[Any, ...]], tuple[Path, Any]] = {}
@@ -143,6 +151,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_finish(session: pytest.Session) -> None:
+    if _forks(session.config) > 1:
+        for name in _IMPORTED_BEFORE_FORKING:
+            importlib.import_module(name)
     gc.collect()
     gc.freeze()
 
