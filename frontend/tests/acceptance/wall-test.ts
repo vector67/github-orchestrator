@@ -963,10 +963,10 @@ module('Acceptance | wall', function (hooks) {
 
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-state="unpushed"]')
-      .hasClass('tone-plain');
+      .doesNotHaveAttribute('data-test-warning');
     assert
       .dom('[data-test-wall-row="o/r#8"] [data-test-state="unpushed"]')
-      .hasClass('tone-warn');
+      .hasAttribute('data-test-warning');
   });
 
   test('an agent run fixing the fact in the way leaves that fact’s chip out', async function (assert) {

@@ -276,6 +276,38 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
+  test('a stale summary one commit behind says so in the singular', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'abc1234',
+      exit_status: 0,
+      finished: ago(30),
+      behind: 1,
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .containsText('head is c0ffee1, 1 commit behind finished');
+  });
+
+  test('a stale summary with no count of commits behind leaves the count out', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'abc1234',
+      exit_status: 0,
+      finished: ago(30),
+      behind: null,
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .containsText('head is c0ffee1 finished');
+  });
+
   test('a pull request you review with no summary yet waits for its turn, with nothing below', async function (assert) {
     asReviewer();
     board().summary = prSummary({ wanted: ago(2) });

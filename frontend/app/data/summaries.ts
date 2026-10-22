@@ -805,6 +805,15 @@ export function wallOf(
   return wall;
 }
 
+let lastHeld: { prs: Record<string, PrEntity>; held: number } | null = null;
+
+export function heldOf(prs: Record<string, PrEntity>): number {
+  if (lastHeld?.prs === prs) return lastHeld.held;
+  const held = Object.values(prs).filter((pr) => pr.place !== null).length;
+  lastHeld = { prs, held };
+  return held;
+}
+
 export interface Shown {
   sections: WallSection[];
   needYou: number;
@@ -859,7 +868,7 @@ export interface SummaryTab {
   state: SummaryState;
   sha: string | null;
   head: string | null;
-  behind: number | null;
+  behind: string | null;
   finished: string | null;
   since: string | null;
   witnesses: WitnessProgress[];
@@ -913,7 +922,12 @@ function reasonOf(state: SummaryState, stderr: string | null): string | null {
   return null;
 }
 
-export function summaryTabOf(
+function behindOf(count: number | null): string | null {
+  if (!count) return null;
+  return count === 1 ? '1 commit behind' : `${count} commits behind`;
+}
+
+function summaryTabBuilt(
   summary: PrSummaryEntity,
   head: string | null,
   role: Role | null,
@@ -924,7 +938,7 @@ export function summaryTabOf(
     state,
     sha: shortOf(summary.head_sha),
     head: shortOf(head),
-    behind: summary.behind,
+    behind: behindOf(summary.behind),
     finished: summary.finished,
     since: summary.since,
     witnesses: summary.witnesses,
@@ -935,4 +949,21 @@ export function summaryTabOf(
     calls: calls === undefined ? null : Number(calls),
     markdown: summary.markdown,
   };
+}
+
+const lastTabs = new WeakMap<
+  PrSummaryEntity,
+  { head: string | null; role: Role | null; tab: SummaryTab }
+>();
+
+export function summaryTabOf(
+  summary: PrSummaryEntity,
+  head: string | null,
+  role: Role | null,
+): SummaryTab {
+  const last = lastTabs.get(summary);
+  if (last?.head === head && last.role === role) return last.tab;
+  const tab = summaryTabBuilt(summary, head, role);
+  lastTabs.set(summary, { head, role, tab });
+  return tab;
 }

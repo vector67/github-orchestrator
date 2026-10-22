@@ -86,6 +86,11 @@ export function relativeOf(iso: string | null, now: number): string {
   return `${Math.floor(seconds / DAY)}d ago`;
 }
 
+export function elapsedOf(iso: string | null, now: number): string {
+  const since = Date.parse(iso ?? '');
+  return Number.isNaN(since) ? '' : lengthOf((now - since) / 1000);
+}
+
 function graceOf(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
   return whole >= MINUTE ? `${Math.floor(whole / MINUTE)}m` : `${whole}s`;

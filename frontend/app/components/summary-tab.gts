@@ -4,7 +4,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
 import { pulses } from 'frontend/motion';
-import { exitWordOf, lengthOf, relativeOf } from 'frontend/data/dashboard';
+import { elapsedOf, exitWordOf, relativeOf } from 'frontend/data/dashboard';
 import { summaryOf } from 'frontend/data/markdown';
 import diagrams from 'frontend/modifiers/diagrams';
 import drawn from 'frontend/modifiers/drawn';
@@ -16,10 +16,6 @@ import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
 
 function is(one: string, other: string): boolean {
   return one === other;
-}
-
-function commits(count: number | null): string {
-  return count === 1 ? '1 commit' : `${count} commits`;
 }
 
 export default class SummaryTab extends Component {
@@ -53,8 +49,7 @@ export default class SummaryTab extends Component {
   }
 
   get elapsed(): string {
-    const since = Date.parse(this.tab?.since ?? '');
-    return Number.isNaN(since) ? '' : lengthOf((this.hub.now - since) / 1000);
+    return elapsedOf(this.tab?.since ?? null, this.hub.now);
   }
 
   get githubApi(): string {
@@ -180,8 +175,7 @@ export default class SummaryTab extends Component {
             <span>Written for
               <code>{{this.tab.sha}}</code>, head is
               <code>{{this.tab.head}}</code>{{#if this.tab.behind}},
-                {{commits this.tab.behind}}
-                behind{{/if}}</span>
+                {{this.tab.behind}}{{/if}}</span>
             <span class="strip-end" data-test-summary-end>
               <span
                 title={{this.tab.finished}}
