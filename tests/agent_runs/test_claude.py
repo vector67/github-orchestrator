@@ -104,7 +104,7 @@ def test_a_gist_is_asked_of_the_configured_command(work_runs, world, claude):
     assert work_runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == [*WORK_ARGV, "--print", "--model", SUMMARY_MODEL, "--tools", ""]
+    assert asked.argv == [*WORK_ARGV, "--print", "--model", SUMMARY_MODEL, "--tools", "", "--strict-mcp-config"]
 
 
 CLAMP = ("taskpolicy", "-c", "utility")
@@ -130,7 +130,7 @@ def test_a_gist_is_asked_under_the_clamp(clamped_runs, world, claude):
     assert clamped_runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == [*CLAMP, "claude", "--print", "--model", SUMMARY_MODEL, "--tools", ""]
+    assert asked.argv == [*CLAMP, "claude", "--print", "--model", SUMMARY_MODEL, "--tools", "", "--strict-mcp-config"]
 
 
 def test_a_rebase_session_runs_the_configured_command(work_runs, world):
@@ -395,7 +395,7 @@ def test_a_gist_is_asked_of_the_summary_model_away_from_any_checkout_with_no_too
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", SUMMARY_MODEL, "--tools", ""]
+    assert asked.argv == ["claude", "--print", "--model", SUMMARY_MODEL, "--tools", "", "--strict-mcp-config"]
     assert "ANTHROPIC_API_KEY" not in asked.env
     assert asked.timeout == 300
     assert asked.cwd_existed
@@ -412,7 +412,7 @@ def test_a_verdict_is_asked_of_sonnet_with_no_tools(runs, world, claude):
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", "sonnet", "--tools", ""]
+    assert asked.argv == ["claude", "--print", "--model", "sonnet", "--tools", "", "--strict-mcp-config"]
 
 
 def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell(

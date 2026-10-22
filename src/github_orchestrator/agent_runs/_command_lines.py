@@ -30,7 +30,7 @@ class ClaudeCommandLines:
         return [*argv, "--continue"] if carrying_on else argv
 
     def gist(self, model: str) -> list[str]:
-        return ["--print", "--model", model, "--tools", ""]
+        return ["--print", "--model", model, "--tools", "", "--strict-mcp-config"]
 
     def read_only(self, model: str) -> list[str]:
         return ["--print", "--model", model, "--tools", READ_ONLY_TOOLS]
