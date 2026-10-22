@@ -1,11 +1,14 @@
 import type {
   Comment,
+  Commits,
   Conversation,
   ConversationState,
   Diff,
   ManagerFlags,
   Operation,
   PrFacts,
+  PullRequestCommits,
+  ReadMark,
   RecordState,
   WitnessProgress,
   WallGroup,
@@ -966,4 +969,76 @@ export function summaryTabOf(
   const tab = summaryTabBuilt(summary, head, role);
   lastTabs.set(summary, { head, role, tab });
   return tab;
+}
+
+export type PipState = 'read' | 'current' | 'unread';
+
+export interface Pip {
+  sha: string;
+  state: PipState;
+}
+
+export interface Stepper {
+  place: number;
+  count: number;
+  sha: string;
+  short: string;
+  subject: string;
+  author: string;
+  authoredAt: string;
+  read: boolean;
+  range: Commits;
+  previous: string | null;
+  next: string | null;
+  pips: Pip[];
+}
+
+function stepperBuilt(
+  history: PullRequestCommits,
+  marks: ReadMark[],
+  chosen: string | null,
+): Stepper | null {
+  const { commits } = history;
+  if (!commits.length) return null;
+  const read = new Set(marks.map((one) => one.sha));
+  const chosenAt = commits.findIndex((one) => one.sha === chosen);
+  const unreadAt = commits.findIndex((one) => !read.has(one.sha));
+  const at =
+    chosenAt >= 0 ? chosenAt : unreadAt >= 0 ? unreadAt : commits.length - 1;
+  const commit = commits[at]!;
+  return {
+    place: at + 1,
+    count: commits.length,
+    sha: commit.sha,
+    short: commit.sha.slice(0, SHORT_SHA),
+    subject: commit.subject,
+    author: commit.author,
+    authoredAt: commit.authored_at,
+    read: read.has(commit.sha),
+    range: { base: commit.parents[0] ?? history.fork, head: commit.sha },
+    previous: commits[at - 1]?.sha ?? null,
+    next: commits[at + 1]?.sha ?? null,
+    pips: commits.map((one, index) => ({
+      sha: one.sha,
+      state: index === at ? 'current' : read.has(one.sha) ? 'read' : 'unread',
+    })),
+  };
+}
+
+const lastSteppers = new WeakMap<
+  PullRequestCommits,
+  { marks: ReadMark[]; chosen: string | null; stepper: Stepper | null }
+>();
+
+export function stepperOf(
+  history: PullRequestCommits | undefined,
+  marks: ReadMark[] | null,
+  chosen: string | null,
+): Stepper | null | undefined {
+  if (!history || !marks) return undefined;
+  const last = lastSteppers.get(history);
+  if (last?.marks === marks && last.chosen === chosen) return last.stepper;
+  const stepper = stepperBuilt(history, marks, chosen);
+  lastSteppers.set(history, { marks, chosen, stepper });
+  return stepper;
 }

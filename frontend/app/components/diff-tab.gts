@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import type Owner from '@ember/owner';
 import CommentBox from 'frontend/components/comment-box';
+import CommitBar from 'frontend/components/commit-bar';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
@@ -54,6 +55,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
   }
 
   private takes(key: string): boolean {
+    if ((key === '[' || key === ']') && this.pullRequestDiff.stepper) {
+      this.pullRequestDiff.step(key === '[' ? -1 : 1);
+      return true;
+    }
     if (key !== 'Escape' || (!this.selection && !this.boxOpen)) return false;
     this.close();
     return true;
@@ -75,7 +80,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   };
 
   edit = (item: Inline) => {
-    const file = this.pullRequestDiff.diff?.files.find(
+    const file = this.pullRequestDiff.shown?.files.find(
       (one) => one.path === item.path,
     );
     this.editing = item;
@@ -94,11 +99,17 @@ export default class DiffTab extends Component<DiffTabSignature> {
       .length;
 
   get tree(): TreeRow[] {
-    return treeOf(this.pullRequestDiff.diff?.files ?? [], this.filter);
+    return treeOf(this.pullRequestDiff.shown?.files ?? [], this.filter);
   }
 
   get scrolling(): string {
-    return `${this.args.file ?? ''}|${this.args.line ?? ''}|${this.pullRequestDiff.diff ? 'drawn' : ''}`;
+    return `${this.args.file ?? ''}|${this.args.line ?? ''}|${this.pullRequestDiff.shown ? this.pullRequestDiff.drawing || 'drawn' : ''}`;
+  }
+
+  get waitingOn(): string {
+    return this.pullRequestDiff.stepper
+      ? '/api/diffs/'
+      : '/api/pull-request/diff';
   }
 
   filtering = (event: Event) => {
@@ -114,7 +125,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.pane = pane;
     if (scrolling === this.followed) return;
     this.followed = scrolling;
-    if (!this.args.file) return;
+    if (!this.args.file) {
+      pane.scrollTop = 0;
+      return;
+    }
     if (this.args.line) this.scrollToLine(this.args.file, this.args.line);
     else this.scrollTo(this.args.file);
   };
@@ -142,6 +156,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         this.pullRequestDiff.readDetails
         this.pullRequestDiff.anchored
       }}
+      {{didChange this.pullRequestDiff.draw this.pullRequestDiff.drawing}}
     >
       <aside class="diff-tree" data-test-tree>
         <span class="seg" role="group" aria-label="which head the diff runs to">
@@ -187,40 +202,53 @@ export default class DiffTab extends Component<DiffTabSignature> {
           @count={{this.countOf}}
         />
       </aside>
-      <div
-        class="diff-files"
-        data-test-diff-files
-        {{didChange this.follow this.scrolling}}
-      >
-        {{#if this.pullRequestDiff.diff}}
-          <PrDiff
-            @diff={{this.pullRequestDiff.diff}}
-            @selection={{this.selection}}
-            @select={{this.select}}
-            @boxOpen={{this.boxOpen}}
-            @inline={{this.pullRequestDiff.inline.shown}}
-            @outdated={{this.pullRequestDiff.inline.outdated}}
-            @editing={{this.editing.key}}
-            @edit={{this.edit}}
-          >
-            <:commenting as |selection|>
-              <CommentBox
-                @selection={{selection}}
-                @draft={{this.draftKey}}
-                @saved={{this.saved}}
-                @close={{this.close}}
-              />
-            </:commenting>
-          </PrDiff>
-        {{else if this.pullRequestDiff.failed}}
-          <p class="land-error" data-test-diff-failed>{{DIFF_FAILED}}</p>
-        {{else}}
-          <p
-            class="diff-placeholder"
-            data-test-loading="diff"
-          >{{DIFF_LOADING}}</p>
-          <Waiting @on="/api/pull-request/diff" />
+      <div class="diff-main">
+        {{#if this.pullRequestDiff.stepper}}
+          <CommitBar
+            @stepper={{this.pullRequestDiff.stepper}}
+            @step={{this.pullRequestDiff.step}}
+            @tick={{this.pullRequestDiff.tick}}
+          />
         {{/if}}
+        <div
+          class="diff-files"
+          data-test-diff-files
+          {{didChange this.follow this.scrolling}}
+        >
+          {{#if this.pullRequestDiff.shown}}
+            {{#if this.pullRequestDiff.commenting}}
+              <PrDiff
+                @diff={{this.pullRequestDiff.shown}}
+                @selection={{this.selection}}
+                @select={{this.select}}
+                @boxOpen={{this.boxOpen}}
+                @inline={{this.pullRequestDiff.inline.shown}}
+                @outdated={{this.pullRequestDiff.inline.outdated}}
+                @editing={{this.editing.key}}
+                @edit={{this.edit}}
+              >
+                <:commenting as |selection|>
+                  <CommentBox
+                    @selection={{selection}}
+                    @draft={{this.draftKey}}
+                    @saved={{this.saved}}
+                    @close={{this.close}}
+                  />
+                </:commenting>
+              </PrDiff>
+            {{else}}
+              <PrDiff @diff={{this.pullRequestDiff.shown}} />
+            {{/if}}
+          {{else if this.pullRequestDiff.shownFailed}}
+            <p class="land-error" data-test-diff-failed>{{DIFF_FAILED}}</p>
+          {{else}}
+            <p
+              class="diff-placeholder"
+              data-test-loading="diff"
+            >{{DIFF_LOADING}}</p>
+            <Waiting @on={{this.waitingOn}} />
+          {{/if}}
+        </div>
       </div>
     </div>
   </template>

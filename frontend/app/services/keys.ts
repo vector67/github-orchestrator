@@ -79,7 +79,9 @@ export default class KeysService extends Service {
       return;
     }
     const target = event.target as HTMLElement | null;
-    if (target && TYPING.has(target.tagName)) return;
+    const ticking =
+      target instanceof HTMLInputElement && target.type === 'checkbox';
+    if (target && TYPING.has(target.tagName) && !ticking) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key === '/') {
       event.preventDefault();

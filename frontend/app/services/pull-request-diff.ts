@@ -1,14 +1,15 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
-import type { Diff } from 'frontend/data/api';
+import type { Commits, Diff } from 'frontend/data/api';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
 import { reportError } from 'frontend/data/report';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
 import type ReviewService from 'frontend/services/review';
 import type StoreService from 'frontend/services/store';
-import type { DiffSource } from 'frontend/services/store';
+import { commitsOf } from 'frontend/services/store';
+import type { DiffSource, Stepper } from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export type { DiffSource } from 'frontend/services/store';
@@ -17,6 +18,9 @@ class PerPr {
   @tracked failed = false;
   @tracked fetching = false;
   @tracked source: DiffSource = 'origin';
+  @tracked chosen: string | null = null;
+  @tracked stepless = false;
+  @tracked unreadable: string | null = null;
   asked: string | null = null;
 
   constructor(readonly scope: PrScope) {}
@@ -55,12 +59,61 @@ export default class PullRequestDiffService extends Service {
     return commits && this.store.diff(commits);
   }
 
+  get stepper(): Stepper | null | undefined {
+    return this.store.stepper(this.here.at, this.source, this.pr.chosen);
+  }
+
+  get shown(): Diff | undefined {
+    const stepper = this.stepper;
+    if (stepper) return this.store.diff(stepper.range);
+    if (stepper === undefined && !this.pr.stepless) return undefined;
+    return this.diff;
+  }
+
+  get shownFailed(): boolean {
+    const stepper = this.stepper;
+    if (stepper) return this.pr.unreadable === commitsOf(stepper.range);
+    return this.failed;
+  }
+
+  get commenting(): boolean {
+    return !this.stepper?.next;
+  }
+
+  get drawing(): string {
+    const stepper = this.stepper;
+    return stepper ? commitsOf(stepper.range) : '';
+  }
+
   load = () => {
     const pr = this.pr;
     const asking = this.asking;
     if (pr.asked === asking) return;
     pr.asked = asking;
     void waitForPromise(this.fetched(pr, pr.source));
+    void waitForPromise(this.readHistory(pr, pr.source));
+  };
+
+  draw = () => {
+    const stepper = this.stepper;
+    if (stepper) void waitForPromise(this.drawn(this.pr, stepper.range));
+  };
+
+  step = (by: number) => {
+    const stepper = this.stepper;
+    const sha = by < 0 ? stepper?.previous : stepper?.next;
+    if (sha) this.pr.chosen = sha;
+  };
+
+  tick = (marked: boolean) => {
+    const stepper = this.stepper;
+    if (!stepper) return;
+    this.pr.chosen = stepper.sha;
+    void waitForPromise(
+      this.store
+        .markRead(this.here.at, stepper.sha, marked)
+        .catch((trouble) => reportError('mark a commit read', trouble)),
+    );
   };
 
   show = (source: DiffSource) => {
@@ -78,7 +131,11 @@ export default class PullRequestDiffService extends Service {
       if (pr.scope.left) return;
       await this.store.hand(this.here.api('/api/pull-request:fetch'));
       if (pr.scope.left) return;
-      if (pr.source === 'origin') await this.fetched(pr, 'origin');
+      if (pr.source !== 'origin') return;
+      await Promise.all([
+        this.fetched(pr, 'origin'),
+        this.readHistory(pr, 'origin'),
+      ]);
     } catch (trouble) {
       void reportError('fetch the pull request', trouble);
     } finally {
@@ -101,6 +158,22 @@ export default class PullRequestDiffService extends Service {
     pr.failed = outcome === 'failed' && !this.diff;
     if (outcome === 'failed') pr.asked = null;
   }
+
+  private async readHistory(pr: PerPr, source: DiffSource): Promise<void> {
+    const outcomes = await Promise.all([
+      this.store.readPrCommits(this.here.at, source),
+      this.store.readReadMarks(this.here.at),
+    ]);
+    if (pr.scope.left) return;
+    pr.stepless = outcomes.includes('failed') && this.stepper === undefined;
+  }
+
+  private async drawn(pr: PerPr, range: Commits): Promise<void> {
+    const outcome = await this.store.readDiff(range);
+    if (pr.scope.left) return;
+    pr.unreadable = outcome === 'failed' ? commitsOf(range) : null;
+  }
+
   get inline(): Inlined {
     const role = this.threads.role;
     if (!role) return { shown: [], outdated: {} };

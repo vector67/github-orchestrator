@@ -325,8 +325,11 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
     _git(root, "add", "-A")
     _git(root, "commit", "-qm", "the commit the PR branched from")
     _git(root, "checkout", "-q", "-b", PR_BRANCH)
-    _rewrite(root, anchors, "    return sorted(line_items)")
-    _git(root, "commit", "-qam", "what the PR changed")
+    for folder in sorted({path.split("/")[0] for path, _ in anchors}):
+        _rewrite(root, tuple(anchor for anchor in anchors
+                             if anchor[0].split("/")[0] == folder),
+                 "    return sorted(line_items)")
+        _git(root, "commit", "-qam", f"Sort the line items in {folder}")
     if reviewer:
         _rewrite(root, (NAMED_FIX,), "    return [item.in_units() for item in line_items]",
                  offset=1)

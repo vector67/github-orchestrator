@@ -27,6 +27,9 @@ import type {
   PrSummary,
   Proposal,
   PullRequest,
+  PullRequestCommit,
+  PullRequestCommits,
+  ReadMark,
   RecordState,
   RunLedger,
   RunsToday,
@@ -563,6 +566,8 @@ const MANAGER_VERB = /\/api\/manager:([a-z-]+)$/;
 
 const SUMMARISE =
   /\/api\/summary\/operations:(summarise|summarise-with-github-api)$/;
+const READ_MARK =
+  /\/api\/pull-request\/read-marks\/operations:(mark-read|mark-unread)$/;
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
 export const ONE_PR_READ =
   /^\/api\/(?!health$|pull-requests$|runs$|tour$|emojis$|client-errors$)/;
@@ -681,6 +686,9 @@ export class FakeBoard {
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
   pushedSinceFetch: Diff | null = null;
+  commits: PullRequestCommits = { fork: 'ba5e000', commits: [] };
+  localCommits: PullRequestCommits | null = null;
+  readMarks: ReadMark[] = [];
   fetches = 0;
   files: FileLines | null = null;
   sources: Record<string, string[]> = {};
@@ -1203,6 +1211,14 @@ export class FakeBoard {
         ? (this.localDiff ?? this.pullRequestDiff)
         : this.pullRequestDiff;
     }
+    if (path === '/api/pull-request/commits') {
+      return url.searchParams.get('source') === 'local'
+        ? (this.localCommits ?? this.commits)
+        : this.commits;
+    }
+    if (path === '/api/pull-request/read-marks') {
+      return { marks: this.readMarks };
+    }
     if (path === '/api/viewer') return this.viewer;
     if (path === '/api/people') return this.people;
     if (path === '/api/operations') return this.inFlight;
@@ -1295,6 +1311,8 @@ export class FakeBoard {
       return this.askTheAgent(url, init, headers);
     }
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
+    const marking = READ_MARK.exec(url);
+    if (marking) return this.mark(url, marking[1]!, init);
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
     const summarised = SUMMARISE.exec(url);
@@ -1403,6 +1421,19 @@ export class FakeBoard {
       status: 202,
       headers: { 'Content-Type': 'application/json', Location: '/api/summary' },
     });
+  }
+
+  private mark(url: string, verb: string, init: RequestInit): Response {
+    const body = JSON.parse(init.body as string) as { sha: string };
+    this.posted.push({ url, key: '', verb, ifMatch: null, body });
+    const others = this.readMarks.filter((one) => one.sha !== body.sha);
+    const subject =
+      [...this.commits.commits, ...(this.localCommits?.commits ?? [])].find(
+        (one) => one.sha === body.sha,
+      )?.subject ?? '';
+    this.readMarks =
+      verb === 'mark-read' ? [...others, { sha: body.sha, subject }] : others;
+    return this.json(200, { marks: this.readMarks });
   }
 
   private fetchBranch(): Response {
@@ -1715,6 +1746,20 @@ export function changed(
       },
     ],
     ...over,
+  };
+}
+
+export function prCommit(
+  sha: string,
+  parent: string,
+  subject: string,
+): PullRequestCommit {
+  return {
+    sha,
+    parents: [parent],
+    subject,
+    author: 'Anna Example',
+    authored_at: '2026-10-20T09:00:00Z',
   };
 }
 

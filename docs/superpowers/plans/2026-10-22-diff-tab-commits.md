@@ -50,6 +50,9 @@ is judged. Decision numbers (1–16) are the spec's. Issue #145.
 
 ### 2. The stepper (Full), with Read on the server
 
+**Done** (`b9d4ce47`, and the commit that marks this). `GET /pull-request/read-marks`
+and `operations:mark-read`/`mark-unread` keep the marks beside the thread records.
+
 Decisions 1, 2 and 3. The diff tab gets the commit bar and pips over the diff,
 `[` and `]`, and the diff and tree scoped to the current commit. Read marks are
 stored per PR on the server with each commit's subject, served with the PR's

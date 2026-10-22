@@ -4529,10 +4529,109 @@ button.tree-row[aria-current="true"] {
   color: var(--muted);
 }
 
+.diff-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
 .diff-files {
+  flex: 1;
   min-height: 0;
   padding: 16px;
   overflow: auto;
+}
+
+.commit-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.commit-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  font-size: var(--fs-m);
+  line-height: 1.5;
+}
+
+.commit-bar .btn {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.commit-bar .commit-next {
+  color: var(--yellow-text);
+  background: var(--yellow);
+  border-color: var(--yellow-text);
+}
+
+.commit-bar .commit-next:disabled {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--hairline);
+}
+
+.commit-what {
+  display: flex;
+  flex: 1 1 240px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.commit-sep,
+.commit-by,
+.commit-age {
+  color: var(--muted);
+}
+
+.commit-sha {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-s);
+}
+
+.commit-subject {
+  font-weight: var(--fw-strong);
+}
+
+.commit-read {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: var(--fs-s);
+  font-weight: var(--fw-strong);
+  cursor: pointer;
+}
+
+.commit-pips {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commit-pip {
+  flex: 0 1 24px;
+  height: 8px;
+  background: var(--hairline);
+  border: 1px solid transparent;
+}
+
+.commit-pip[data-state="read"] {
+  background: var(--green);
+}
+
+.commit-pip[data-state="current"] {
+  background: var(--yellow);
+  border-color: var(--text);
 }
 
 .pr-diff {

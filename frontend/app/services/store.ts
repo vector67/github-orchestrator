@@ -32,6 +32,9 @@ import type {
   PrSummary,
   Proposal,
   PullRequest,
+  PullRequestCommits,
+  ReadMark,
+  ReadMarks,
   RunLedger,
   Setup,
   SetupAccount,
@@ -90,6 +93,7 @@ import {
   prHeaderOf,
   readOf,
   shownOf,
+  stepperOf,
   summaryOf,
   summaryTabOf,
   wallOf,
@@ -98,6 +102,7 @@ import {
   type Place,
   type PrHeader,
   type Shown,
+  type Stepper,
   type Summaries,
   type SummaryTab,
   type WallSection,
@@ -115,6 +120,9 @@ export type {
   OutstandingItem,
   PrHeader,
   Summaries,
+  Pip,
+  PipState,
+  Stepper,
   SummaryState,
   SummaryTab,
   Tally,
@@ -159,6 +167,8 @@ export interface PrEntity {
   unreadable: string[];
   in_flight: string[];
   diffs: Partial<Record<DiffSource, Commits>>;
+  history: Partial<Record<DiffSource, PullRequestCommits>>;
+  read: ReadMark[] | null;
   mismatches: number | null;
 }
 
@@ -223,6 +233,8 @@ const SECTIONS_ENTERED = 'hub-sections-entered';
 const SUMMARY_MOVED =
   'The summary moved before your click reached the board. It has been read ' +
   'again; look at it before you press.';
+
+const READ_MARKS = '/api/pull-request/read-marks';
 
 const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
 
@@ -561,6 +573,15 @@ export default class StoreService extends Service {
     return this.diffs[commitsOf(commits)];
   }
 
+  stepper(
+    pr: Numbered,
+    source: DiffSource,
+    chosen: string | null,
+  ): Stepper | null | undefined {
+    const held = this.pr(pr.repo, pr.number);
+    return held && stepperOf(held.history[source], held.read, chosen);
+  }
+
   files(commits: Commits): FileStat[] | null {
     const diff = this.diff(commits);
     return diff ? filesOf(diff) : null;
@@ -801,6 +822,48 @@ export default class StoreService extends Service {
       } catch (trouble) {
         void reportError(`read ${path}`, trouble);
         return known ? 'unchanged' : 'failed';
+      }
+    });
+  }
+
+  readPrCommits(pr: Numbered, source: DiffSource): Promise<Read> {
+    const path = `${this.here.prefixOf(pr)}/api/pull-request/commits?source=${source}`;
+    return this.readTagged<PullRequestCommits>(path, (history) =>
+      this.changePr(pr.repo, pr.number, (held) => ({
+        ...held,
+        history: { ...held.history, [source]: history },
+      })),
+    );
+  }
+
+  readReadMarks(pr: Numbered): Promise<Read> {
+    const path = `${this.here.prefixOf(pr)}${READ_MARKS}`;
+    return this.readTagged<ReadMarks>(path, ({ marks }) =>
+      this.changePr(pr.repo, pr.number, (held) => ({ ...held, read: marks })),
+    );
+  }
+
+  async markRead(pr: Numbered, sha: string, marked: boolean): Promise<void> {
+    const verb = marked ? 'mark-read' : 'mark-unread';
+    const { marks } = await write<ReadMarks>(
+      `${this.here.prefixOf(pr)}${READ_MARKS}/operations:${verb}`,
+      null,
+      { sha },
+    );
+    this.changePr(pr.repo, pr.number, (held) => ({ ...held, read: marks }));
+  }
+
+  private readTagged<T>(path: string, take: (body: T) => void): Promise<Read> {
+    return this.once(path, async () => {
+      try {
+        const answer = await read<T>(path, this.tags[path]);
+        if (!answer.changed) return 'unchanged';
+        this.tags[path] = answer.tag;
+        take(answer.body);
+        return 'answered';
+      } catch (trouble) {
+        void reportError(`read ${path}`, trouble);
+        return 'failed';
       }
     });
   }
@@ -1345,6 +1408,8 @@ export default class StoreService extends Service {
       unreadable: [],
       in_flight: [],
       diffs: {},
+      history: {},
+      read: null,
       mismatches: null,
     };
     this.prs = { ...this.prs, [key]: changed(held) };

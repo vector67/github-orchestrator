@@ -115,6 +115,9 @@ export const SHORTCUTS: ShortcutGroup[] = [
   },
   {
     screen: 'Diff',
-    shortcuts: [{ keys: ['Esc'], does: 'Drop the selection' }],
+    shortcuts: [
+      { keys: ['[', ']'], does: 'Previous or next commit' },
+      { keys: ['Esc'], does: 'Drop the selection' },
+    ],
   },
 ];
