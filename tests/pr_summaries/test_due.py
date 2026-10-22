@@ -53,6 +53,40 @@ def test_a_re_request_after_a_review_makes_the_summary_due_again(tmp_path):
     assert summaries.due(set()) == [THE_PR]
 
 
+def test_an_unwanted_summary_is_no_longer_due_and_keeps_its_last_report(tmp_path):
+    summaries = summaries_in(tmp_path)
+    summaries.want(THE_PR)
+    stored = summaries.load(THE_PR)
+    assert stored is not None
+    summaries.save(THE_PR, replace(stored, markdown="# Earlier\n"))
+
+    assert summaries.unwant(THE_PR) is True
+
+    assert summaries.due(set()) == []
+    assert summaries.load(THE_PR) == Summary(markdown="# Earlier\n")
+
+
+def test_a_summary_that_cannot_be_rewritten_is_not_unwanted(tmp_path):
+    summaries = summaries_in(tmp_path)
+    summaries.want(THE_PR)
+    folder = tmp_path / "o" / "n"
+    folder.chmod(0o500)
+    try:
+        assert summaries.unwant(THE_PR) is False
+    finally:
+        folder.chmod(0o700)
+
+    assert summaries.due(set()) == [THE_PR]
+
+
+def test_unwanting_a_pr_with_no_summary_leaves_nothing_behind(tmp_path):
+    summaries = summaries_in(tmp_path)
+
+    assert summaries.unwant(THE_PR) is True
+
+    assert summaries.load(THE_PR) is None
+
+
 def test_a_summary_with_its_run_in_flight_is_not_due(tmp_path):
     summaries = summaries_in(tmp_path)
     summaries.want(THE_PR)

@@ -322,6 +322,28 @@ def test_a_pr_in_a_repository_no_longer_watched_is_not_summarised(tmp_path):
     assert lane.summaries.due(set()) == [elsewhere]
 
 
+def test_a_pr_the_watcher_no_longer_holds_is_not_summarised_and_the_next_held_one_is(tmp_path):
+    lane = Lane(tmp_path, "clean")
+    gone = a_pr(8, "acme/widgets")
+    lane.summaries.want(gone)
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert lane.summaries.load(THE_PR).exit_status == 0
+    assert lane.summaries.load(gone).started is None
+
+
+def test_a_pr_the_watcher_is_tearing_down_is_not_summarised(tmp_path):
+    lane = Lane(tmp_path, "clean", closing=(THE_PR,))
+    lane.summaries.want(THE_PR)
+
+    lane.lane.poll()
+
+    assert not lane.folder.exists()
+    assert lane.summaries.load(THE_PR).started is None
+
+
 def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
     held = Held()
     lane = Lane(tmp_path, "clean", run_in=held)

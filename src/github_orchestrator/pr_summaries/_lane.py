@@ -116,7 +116,8 @@ def _named(content: bytes) -> _Run | None:
 class LocalSummaryLane:
     def __init__(self, summaries_dir: Path, summaries: PrSummaries, clock: UtcClock, *,
                  plugin: Sequence[str], config_path: Path, clones: Mapping[Repo, Path],
-                 head_of: Callable[[Pr], str | None], url_of: Callable[[Pr], str],
+                 head_of: Callable[[Pr], str | None], holds: Callable[[Pr], bool],
+                 url_of: Callable[[Pr], str],
                  gh_account: str, mcp_config: str, agents_enabled: bool, timeout: float,
                  run_in: Callable[[Callable[[], None]], None], clamp: Sequence[str]) -> None:
         self._dir = summaries_dir
@@ -126,6 +127,7 @@ class LocalSummaryLane:
         self._config_path = config_path
         self._clones = clones
         self._head_of = head_of
+        self._holds = holds
         self._url_of = url_of
         self._gh_account = gh_account
         self._mcp_config = mcp_config
@@ -138,7 +140,7 @@ class LocalSummaryLane:
         if not self._agents_enabled:
             return
         self._store_an_orphaned_run()
-        due = [pr for pr in self._summaries.due(set()) if pr.repo in self._clones]
+        due = [pr for pr in self._summaries.due(set()) if pr.repo in self._clones and self._holds(pr)]
         if due:
             self.start(due[0], use_github_api=False)
 
