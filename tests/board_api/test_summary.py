@@ -58,6 +58,18 @@ def test_a_pr_never_summarised_serves_a_summary_with_nothing_stored_and_nothing_
         "since": None, "witnesses": [], "agents": None, "behind": None}
 
 
+def test_an_empty_summary_file_serves_a_summary_with_nothing_stored(tmp_path):
+    client = client_for(summaries=summary_parts(tmp_path))
+    folder(tmp_path).parent.mkdir(parents=True)
+    folder(tmp_path).with_suffix(".json").write_bytes(b"")
+
+    answer = client.get("/api/summary")
+
+    assert answer.status_code == 200
+    assert answer.json()["markdown"] is None
+    assert answer.json()["finished"] is None
+
+
 def test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head_has_moved_since(
         tmp_path, git_template):
     first, _, third = git_template(three_commits)

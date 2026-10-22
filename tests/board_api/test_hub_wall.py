@@ -72,6 +72,15 @@ def test_each_row_carries_the_mismatch_count_of_its_stored_summary(tmp_path):
     assert {row["number"]: row["mismatches"] for row in rows(web)} == {54: 3, 55: None}
 
 
+def test_a_corrupt_summary_file_leaves_its_row_without_a_mismatch_count(tmp_path):
+    stored(tmp_path, SECOND, Summary(head_sha="a" * 40, mismatches=3))
+    stored(tmp_path, THIRD, Summary(head_sha="b" * 40, mismatches=1))
+    (tmp_path / "acme" / "widgets" / "55.json").write_text("{not json")
+    web = served_hub(told=holding(SECOND, THIRD), summaries=summaries_in(tmp_path))
+
+    assert {row["number"]: row["mismatches"] for row in rows(web)} == {54: 3, 55: None}
+
+
 def test_every_row_links_to_its_pull_requests_page_on_the_hub():
     web = wall(FakeHoldings(), FakeDashboards(), SECOND, managers={SECOND: "no-window"})
 

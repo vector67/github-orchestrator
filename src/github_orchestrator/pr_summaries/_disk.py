@@ -46,6 +46,13 @@ def _encoded(summary: Summary) -> bytes:
                        "mismatches": summary.mismatches}, indent=2).encode()
 
 
+def _read(path: Path) -> Summary | None:
+    try:
+        return _decoded(path.read_bytes())
+    except ValueError:
+        return None
+
+
 def working_folder(summaries_dir: Path, pr: Pr) -> Path:
     return summaries_dir / pr.repo.owner / pr.repo.name / str(pr.number)
 
@@ -53,6 +60,8 @@ def working_folder(summaries_dir: Path, pr: Pr) -> Path:
 def _replaced(path: Path, content: bytes) -> None:
     with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".tmp", delete=False) as written:
         written.write(content)
+        written.flush()
+        os.fsync(written.fileno())
     Path(written.name).replace(path)
 
 
@@ -70,7 +79,7 @@ class DiskPrSummaries:
         path = self._file(pr)
         if not path.exists():
             return None
-        return _decoded(path.read_bytes())
+        return _read(path)
 
     def save(self, pr: Pr, summary: Summary) -> None:
         with self._locked(pr):
@@ -82,9 +91,8 @@ class DiskPrSummaries:
         for path in self._dir.glob("*/*/*.json"):
             if not path.stem.isdigit():
                 continue
-            try:
-                summary = _decoded(path.read_bytes())
-            except ValueError:
+            summary = _read(path)
+            if summary is None:
                 continue
             stored[Pr(Repo(path.parent.parent.name, path.parent.name), int(path.stem))] = summary
         return due(stored, in_flight)
