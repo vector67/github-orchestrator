@@ -25,7 +25,8 @@ export default class SettingsMenu extends Component {
 
   private readonly keymap: Keymap = {
     take: (key) => {
-      if (key === 'Escape') this.close();
+      if (key !== 'Escape') return false;
+      this.close();
       return true;
     },
   };

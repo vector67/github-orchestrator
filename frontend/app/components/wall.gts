@@ -215,7 +215,10 @@ export default class Wall extends Component<WallSignature> {
 
   private takes(key: string): boolean {
     const pr = this.chosen;
-    if (key === 'Enter' && document.activeElement?.closest('.row-controls'))
+    if (
+      key === 'Enter' &&
+      document.activeElement?.closest('a[href], button:not(.wall-lead)')
+    )
       return false;
     if (key === 'j' || key === 'k') {
       this.move(key === 'j' ? 1 : -1);
