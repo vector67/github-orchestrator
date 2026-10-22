@@ -2,9 +2,12 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
+
+from tests.waiting import until
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,6 +59,12 @@ def test_restart_all_syncs_and_builds_the_checkout_then_runs_the_cli_restart_all
         "python -m github_orchestrator.cli restart-all"]
 
 
+def _children(pid, matching="."):
+    listed = subprocess.Popen(["pgrep", "-P", str(pid), "-f", matching], stdout=subprocess.PIPE, text=True)
+    printed, _ = listed.communicate(timeout=10)
+    return [int(child) for child in printed.split()]
+
+
 def test_a_second_restart_all_waits_for_the_first_to_restart_before_it_builds(tmp_path):
     lock = tmp_path / "restart-all.lock"
     holder = subprocess.Popen(
@@ -78,11 +87,11 @@ def test_a_second_restart_all_waits_for_the_first_to_restart_before_it_builds(tm
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     (tmp_path / "frontend" / "dist").mkdir(parents=True)
     (tmp_path / "frontend" / "dist" / "index.html").write_text("built")
-    try:
-        second.wait(timeout=1)
-    except subprocess.TimeoutExpired:
-        pass
-    assert second.returncode is None
+    assert until(lambda: _children(second.pid, str(lock)) != [])
+    [lock_taker] = _children(second.pid, str(lock))
+    time.sleep(0.2)
+    assert second.poll() is None
+    assert _children(lock_taker) == []
     assert not (tmp_path / "stub.log").exists()
 
     holder.stdin.close()
