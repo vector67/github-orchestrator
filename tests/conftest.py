@@ -83,6 +83,22 @@ os.environ["GIT_CONFIG_VALUE_0"] = "false"
 os.environ["GIT_AUTHOR_DATE"] = os.environ["GIT_COMMITTER_DATE"] = "2026-01-01T00:00:00Z"
 os.environ["LANGUAGE"] = "C"
 
+
+def _local_zone_as_a_rule(zone_file: Path) -> str | None:
+    if "TZ" in os.environ or not zone_file.exists():
+        return None
+    held = zone_file.read_bytes()
+    if held[4:5] in (b"", b"\0") or not held.endswith(b"\n"):
+        return None
+    rule = held.split(b"\n")[-2].decode("ascii", errors="replace")
+    return rule or None
+
+
+_LOCAL_ZONE = _local_zone_as_a_rule(Path("/etc/localtime"))
+if _LOCAL_ZONE is not None:
+    os.environ["TZ"] = _LOCAL_ZONE
+    time.tzset()
+
 UVICORN_POLL_SECONDS = 0.01
 
 
@@ -438,6 +454,7 @@ def _this_repository() -> tuple[Path, ...]:
 
 
 _THIS_REPOSITORY = _this_repository()
+_INSIDE_THIS_REPOSITORY = tuple(f"{root}{os.sep}" for root in _THIS_REPOSITORY)
 _NEEDS_NO_REPOSITORY = ("init", "clone", "version")
 
 
@@ -461,10 +478,10 @@ def _git_directories(cmd: object, cwd: object) -> list[Path]:
     return [here, *named]
 
 
-def _reaches_this_repository(cmd: object, cwd: object) -> Path | None:
+def _reaches_this_repository(cmd: object, cwd: object) -> str | None:
     for directory in _git_directories(cmd, cwd):
-        resolved = directory.resolve()
-        if any(resolved.is_relative_to(root) for root in _THIS_REPOSITORY):
+        resolved = os.path.realpath(directory)
+        if f"{resolved}{os.sep}".startswith(_INSIDE_THIS_REPOSITORY):
             return resolved
     return None
 

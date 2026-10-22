@@ -14,6 +14,7 @@ from github_orchestrator.server._config import ServerConfig
 log = logging.getLogger(__name__)
 
 GRACE_SECONDS = 1
+WORKER_START_SECONDS = 60
 
 
 def _bound(port: int) -> socket.socket:
@@ -54,6 +55,7 @@ def serve(config: ServerConfig, worker: Callable[[], ASGIApp]) -> int:
             Multiprocess(uvicorn.Config(
                 worker, factory=True, workers=config.workers, log_config=None,
                 access_log=False, lifespan="off", proxy_headers=False,
-                timeout_graceful_shutdown=GRACE_SECONDS), [sock]).run()
+                timeout_graceful_shutdown=GRACE_SECONDS,
+                timeout_worker_healthcheck=WORKER_START_SECONDS), [sock]).run()
         log.info("server %d stopped", os.getpid())
         return 0

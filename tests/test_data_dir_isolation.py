@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -30,6 +31,29 @@ def test_the_suite_never_inherits_the_operators_config_file():
     assert settings.config_path.is_relative_to(TEMP_ROOT), settings.config_path
     assert settings.config.gh_account == "octocat"
     assert set(settings.repos) == {Repo("octocat", "hello-world")}
+
+
+CHECKOUT = Path(__file__).resolve().parents[1]
+
+
+@pytest.mark.parametrize("inside", [".", "src/github_orchestrator"])
+def test_the_suite_refuses_git_run_inside_its_own_checkout(inside):
+    with pytest.raises(pytest.fail.Exception, match="inside the orchestrator's own repository"):
+        subprocess.run(["git", "-C", str(CHECKOUT / inside), "status"])
+
+
+def test_the_suite_refuses_git_run_through_a_link_to_its_own_checkout(tmp_path):
+    (tmp_path / "link").symlink_to(CHECKOUT)
+
+    with pytest.raises(pytest.fail.Exception, match="inside the orchestrator's own repository"):
+        subprocess.run(["git", "status"], cwd=tmp_path / "link")
+
+
+def test_the_suite_lets_git_run_beside_its_own_checkout():
+    repository = next(path for path in (CHECKOUT, *CHECKOUT.parents) if (path / ".git").is_dir())
+
+    with pytest.raises(FileNotFoundError):
+        subprocess.Popen(["git", "status"], cwd=repository.parent / f"{repository.name}-other")
 
 
 def test_the_manager_entry_point_logs_inside_the_isolated_data_dir(monkeypatch):

@@ -112,7 +112,7 @@ def test_a_pr_dismissed_until_ready_for_review_is_hidden_while_it_is_a_draft(
 
 def test_proposed_fixes_are_counted_with_no_manager(settings, tmp_path):
     seed(settings, WAITING_ON_REVIEW)
-    fake = fake_conversation_managers()
+    fake = fake_conversation_managers(clock=at(DRAWN_AT))
     repo_at(fake.working_copies, tmp_path, pr=THE_PR)
     fake.watch(THE_PR, is_author=True)
     threads = fake.of(THE_PR)
@@ -144,7 +144,7 @@ def test_a_pr_with_no_manager_carries_the_facts_its_move_reads(settings, tmp_pat
 
 def test_a_pr_with_no_manager_carries_a_row_for_each_thread(settings, tmp_path):
     seed(settings, WAITING_ON_REVIEW)
-    fake = fake_conversation_managers()
+    fake = fake_conversation_managers(clock=at(DRAWN_AT))
     repo_at(fake.working_copies, tmp_path, pr=THE_PR)
     fake.watch(THE_PR, is_author=True)
     threads = fake.of(THE_PR)

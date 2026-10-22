@@ -13,6 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 STUBS = Path(__file__).parent / "stubs" / "restart-all"
+HOLDING_TARGET = "restart-all-holding-the-lock"
 
 pytestmark = [
     pytest.mark.replays_while_unchanged("Makefile", "tests/stubs/restart-all",
@@ -87,8 +88,8 @@ def test_a_second_restart_all_waits_for_the_first_to_restart_before_it_builds(tm
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     (tmp_path / "frontend" / "dist").mkdir(parents=True)
     (tmp_path / "frontend" / "dist" / "index.html").write_text("built")
-    assert until(lambda: _children(second.pid, str(lock)) != [])
-    [lock_taker] = _children(second.pid, str(lock))
+    assert until(lambda: _children(second.pid, HOLDING_TARGET) != [])
+    [lock_taker] = _children(second.pid, HOLDING_TARGET)
     time.sleep(0.2)
     assert second.poll() is None
     assert _children(lock_taker) == []

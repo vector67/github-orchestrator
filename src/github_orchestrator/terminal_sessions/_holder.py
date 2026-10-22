@@ -79,7 +79,7 @@ class _Held:
         with self._io:
             self._closed = True
             os.close(self._master)
-        for suffix in (RECORD, SOCKET):
+        for suffix in (SOCKET, RECORD):
             (self._directory / f"{self._session}{suffix}").unlink(missing_ok=True)
         with self._changed:
             self._exit_code = exit_code

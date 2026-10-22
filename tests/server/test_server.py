@@ -5,6 +5,7 @@ import signal
 import socket
 import subprocess
 import sys
+import types
 import urllib.error
 import urllib.request
 
@@ -109,6 +110,17 @@ def test_the_server_answers_from_its_workers_and_stops_them_when_it_stops(instan
     assert exit_code == 0
     assert _health(port) is None
     assert not any(_alive(pid) for pid in children)
+
+
+def test_a_worker_has_as_long_to_start_as_its_server_is_waited_for(instance, tmp_path, monkeypatch):
+    supervised = []
+    monkeypatch.setattr("github_orchestrator.server._supervisor.Multiprocess",
+                        lambda config, sockets: types.SimpleNamespace(run=lambda: supervised.append(config)))
+
+    assert main(["--port", str(_free_port()), "--files-in", str(tmp_path / "own")]) == 0
+
+    [uvicorn_config] = supervised
+    assert uvicorn_config.timeout_worker_healthcheck >= STARTED_WITHIN_SECONDS
 
 
 def _children(pid, matching="."):
