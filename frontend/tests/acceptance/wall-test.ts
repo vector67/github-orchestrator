@@ -1777,6 +1777,19 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-ready-confirm]').doesNotExist();
   });
 
+  test('a link to the ready question on the wall for a pull request that is not your draft opens nothing, and y marks nothing', async function (assert) {
+    for (const facts of [{ draft: false }, { draft: true, is_author: false }]) {
+      onTheHub(heldPr({ dashboard: { facts } }));
+      await visit('/?ready=o%2Fr%237');
+
+      assert.dom('[data-test-ready-confirm]').doesNotExist();
+
+      await press('y');
+
+      assert.deepEqual(board().posted, []);
+    }
+  });
+
   test('the open ready question on the wall is in the URL, and cancelling it takes it out', async function (assert) {
     onTheHub(heldPr({ dashboard: { facts: { draft: true } } }));
     await visit('/');

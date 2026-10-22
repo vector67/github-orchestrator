@@ -345,6 +345,7 @@ def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):
 
 
 def test_mark_ready_from_the_board_marks_the_draft_ready_on_github(settings, tmp_path):
+    seed_state(settings, draft=True)
     github = FakeGitHub()
     github.add_pr(THE_PR, PullRequestState(draft=True))
     board = ServerPanel()
@@ -353,7 +354,24 @@ def test_mark_ready_from_the_board_marks_the_draft_ready_on_github(settings, tmp
     assert github.pr_state(THE_PR).draft is False
 
 
+@pytest.mark.parametrize(("is_author", "draft"), [(False, True), (True, False)],
+                         ids=["someone else's draft", "your pr out of draft"])
+def test_mark_ready_is_refused_for_anything_but_your_own_draft(settings, tmp_path, is_author,
+                                                                draft):
+    seed_state(settings, is_author=is_author, draft=draft)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(draft=True))
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: board.panel.mark_ready(),
+                lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
+                is_author=is_author, board=board, github=github)
+    assert github.pr_state(THE_PR).draft is True
+    assert seen == ["mark ready is only for your own draft"]
+
+
 def test_a_mark_ready_github_refuses_says_why_in_the_notice(settings, tmp_path):
+    seed_state(settings, draft=True)
     board = ServerPanel()
     seen = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.mark_ready(),

@@ -138,7 +138,10 @@ export default class Wall extends Component<WallSignature> {
   isConfirming = (pr: WallRow): boolean =>
     pr.key === this.confirming?.key && pr.arrived === this.confirming.arrived;
 
-  isReadying = (pr: WallRow): boolean => keyOf(pr) === this.args.ready;
+  isReadying = (pr: WallRow): boolean =>
+    keyOf(pr) === this.args.ready &&
+    this.controls.offer(this.controls.ofRow(pr), 'mark-ready').state !==
+      'absent';
 
   outstandingOf = (pr: WallRow): Outstanding | null =>
     this.store.outstanding(pr.repo, pr.number);

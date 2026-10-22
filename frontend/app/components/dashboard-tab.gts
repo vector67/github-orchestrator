@@ -232,7 +232,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   };
 
   get readyAbout(): Numbered | null {
-    return this.args.ready ? this.here.pr : null;
+    return this.args.ready && this.offered('mark-ready') ? this.here.pr : null;
   }
 
   get outstanding(): Outstanding | null {
