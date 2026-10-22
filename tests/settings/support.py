@@ -17,7 +17,12 @@ from github_orchestrator.settings.fake import (
     Settings,
     fake_settings,
 )
-from github_orchestrator.wiring import make_container, switches_wiring, wire
+from github_orchestrator.wiring import (
+    load_settings,
+    make_container,
+    switches_wiring,
+    wire,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -57,15 +62,17 @@ def fake_switches() -> AllSwitches:
     return AllSwitches(FakeHolds(), FakeDismissals())
 
 
+def _environment(config_path: Path, data_dir: Path | None) -> dict[str, str]:
+    return {"GITHUB_ORCHESTRATOR_CONFIG": str(config_path),
+            "GITHUB_ORCHESTRATOR_DATA_DIR": str(data_dir or config_path.parent / "data")}
+
+
 def read_from(config_path: Path, data_dir: Path | None = None) -> dishka.Container:
-    env = {"GITHUB_ORCHESTRATOR_CONFIG": str(config_path),
-           "GITHUB_ORCHESTRATOR_DATA_DIR": str(data_dir or config_path.parent / "data")}
-    return make_container(env, config_path.parent)
+    return make_container(_environment(config_path, data_dir), config_path.parent)
 
 
 def settings_read_from(config_path: Path, data_dir: Path | None = None) -> Settings:
-    settings: Settings = read_from(config_path, data_dir).get(Settings)
-    return settings
+    return load_settings(_environment(config_path, data_dir), config_path.parent)
 
 
 class ConfigProblem(Exception):

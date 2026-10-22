@@ -13,17 +13,16 @@ EVENT_STREAM = "text/event-stream"
 RETRY_MS = 1000
 
 
-async def _events(event: str, read: Callable[[], BaseModel | None], last: str | None,
+async def _events(event: str, read: Callable[[], BaseModel], last: str | None,
                   heartbeat_seconds: float, check_seconds: float) -> AsyncIterator[str]:
     yield f"retry: {RETRY_MS}\n\n"
     quiet = 0.0
     while True:
         payload = await run_in_threadpool(read)
-        body = None if payload is None else payload.model_dump_json()
-        tag = None if payload is None else tag_of(payload).strip('"')
-        if tag is not None and tag != last:
+        tag = tag_of(payload).strip('"')
+        if tag != last:
             last, quiet = tag, 0.0
-            yield f"event: {event}\nid: {tag}\ndata: {body}\n\n"
+            yield f"event: {event}\nid: {tag}\ndata: {payload.model_dump_json()}\n\n"
         elif quiet >= heartbeat_seconds:
             quiet = 0.0
             yield ": heartbeat\n\n"
@@ -31,7 +30,7 @@ async def _events(event: str, read: Callable[[], BaseModel | None], last: str | 
         quiet += check_seconds
 
 
-def streamed(request: Request, event: str, read: Callable[[], BaseModel | None],
+def streamed(request: Request, event: str, read: Callable[[], BaseModel],
              heartbeat_seconds: float, check_seconds: float) -> StreamingResponse:
     return StreamingResponse(
         _events(event, read, request.headers.get("Last-Event-ID"), heartbeat_seconds,
