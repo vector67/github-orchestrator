@@ -33,6 +33,7 @@ from github_orchestrator.board_api.fake import (
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Held,
+    KeptReviews,
     ManagerStanding,
     ServerApp,
 )
@@ -56,7 +57,7 @@ from github_orchestrator.github import (
     Thread,
     ThreadComment,
 )
-from github_orchestrator.github.fake import FakeGitHub, Review
+from github_orchestrator.github.fake import FakeGitHub, PushEvent, Review
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
@@ -730,7 +731,9 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
                              pending_reviewers=(viewer,) if reviewer else (),
                              reviews=(Review(viewer, ReviewState.COMMENTED,
                                              "2026-09-11T10:00:00Z", reviewed_on or first),)
-                             if reviewer or reviewed_on else ())
+                             if reviewer or reviewed_on else (),
+                             push_events=(PushEvent("head_ref_force_pushed", "2026-09-12T09:00:00Z"),)
+                             if reviewed_on else ())
     outside.github.prs[PR].state = state
     outside.change_detection.advance(PR, Poll(state=state, polled_at=MOMENT), set())
 
@@ -773,25 +776,28 @@ def page_of(port: int) -> str:
 
 def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False, *,
           conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
-          panels: PreviewPanels, sessions: TerminalSessions, shape: str | None = None) -> None:
+          panels: PreviewPanels, sessions: TerminalSessions, reviews: KeptReviews,
+          shape: str | None = None) -> list[str]:
     repo = build_repo(worktree_in(directory), reviewer, shape)
-    seed(conversation_managers, outside, viewer, repo, reviewer,
-         repo.head if shape == "rebased" else None)
+    rebased = shape == "rebased"
+    seed(conversation_managers, outside, viewer, repo, reviewer, repo.head if rebased else None)
     panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
+    if not rebased:
+        return []
+    seen = _git(repo.worktree, "rev-list", "--reverse", f"{repo.base_branch}..HEAD").split()
+    reviews.keep(PR, repo.head, repo.base_branch)
+    rebase_onto_main(worktree_in(directory))
+    return seen
 
 
-def _rebase_once_seen(port: int, root: Path) -> None:
-    api = f"{page_of(port)}api/pull-request"
-    with urllib.request.urlopen(f"{api}/commits") as answer:
-        seen = json.load(answer)["commits"]
-    for commit in seen:
+def _mark_read_once_serving(port: int, shas: list[str]) -> None:
+    for sha in shas:
         marking = urllib.request.Request(
-            f"{api}/read-marks/operations:mark-read", data=json.dumps({"sha": commit["sha"]}).encode(),
-            headers={"Content-Type": "application/json"})
+            f"{page_of(port)}api/pull-request/read-marks/operations:mark-read",
+            data=json.dumps({"sha": sha}).encode(), headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(marking):
             pass
-    rebase_onto_main(root)
     print(page_of(port), flush=True)
 
 
@@ -838,18 +844,18 @@ def main(argv: list[str] | None = None) -> int:
     serving = container(False)[0] if args.agents_disabled else seeding
     github.account = viewer
     outside = Outside(github, agent_runs, pr_processes, seeding.get(ChangeDetection))
-    serve(directory, viewer, outside, reviewer=args.reviewer,
-          conversation_managers=seeding.get(ConversationManagerFactory),
-          dashboards=seeding.get(Dashboards), panels=panels,
-          sessions=serving.get(Terminals).of(PR), shape=args.shape)
+    seen = serve(directory, viewer, outside, reviewer=args.reviewer,
+                 conversation_managers=seeding.get(ConversationManagerFactory),
+                 dashboards=seeding.get(Dashboards), panels=panels,
+                 sessions=serving.get(Terminals).of(PR), reviews=seeding.get(KeptReviews),
+                 shape=args.shape)
     listening = socket.socket()
     listening.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listening.bind(("127.0.0.1", args.port))
     listening.listen()
     port = int(listening.getsockname()[1])
-    if args.shape == "rebased":
-        threading.Thread(target=_rebase_once_seen, args=(port, worktree_in(directory)),
-                         daemon=True).start()
+    if seen:
+        threading.Thread(target=_mark_read_once_serving, args=(port, seen), daemon=True).start()
     else:
         print(page_of(port), flush=True)
     app = serving.get(ServerApp).app(port, os.getpid())

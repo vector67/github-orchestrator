@@ -992,7 +992,6 @@ module(
             prCommit(OLD_ONE, OLD_FORK, 'Add the widget'),
             prCommit(OLD_TWO, OLD_ONE, 'Name the widget'),
           ],
-          rewritten_at: '2026-10-21T08:00:00Z',
         },
       };
     }
@@ -1004,6 +1003,7 @@ module(
           my_review: 'commented',
           my_review_at: '2026-10-20T12:00:00Z',
           my_review_sha: OLD_TWO,
+          force_pushed_at: '2026-10-21T08:00:00Z',
         },
       });
       board().readMarks = [
@@ -1137,6 +1137,25 @@ module(
       await click('[data-test-preset="since-review"]');
 
       assert.deepEqual(inRange(), [FIRST, SECOND, THIRD]);
+    });
+
+    test('without a force-push GitHub reported, the note names no day', async function (assert) {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: OLD_TWO,
+          force_pushed_at: null,
+        },
+      });
+      rebasedOnto('Add the widget', 'Name the widget', 'Test the widget');
+
+      await visit('/pr/o/r/7/diff');
+
+      assert
+        .dom('[data-test-commit-note]')
+        .includesText('Rebased since your review (force-pushed). 2 of');
     });
 
     test('a plain push since your review draws no ghost lane', async function (assert) {

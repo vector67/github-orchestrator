@@ -5,7 +5,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import IO, Protocol
 
-from github_orchestrator.change_detection import ChangeDetection, PrClosed, PrEvent
+from github_orchestrator.board_api.interface import KeptReviews
+from github_orchestrator.change_detection import (
+    ChangeDetection,
+    Facts,
+    PrClosed,
+    PrEvent,
+)
 from github_orchestrator.conversation import ConversationManagerFactory, ThreadActivity
 from github_orchestrator.domain import HubState, Pr, Sleep, UtcClock
 from github_orchestrator.github import PullRequests
@@ -44,6 +50,12 @@ def said_to_the_log(line: str) -> None:
     log.debug(line)
 
 
+def _review_to_keep(before: Facts | None, after: Facts) -> bool:
+    sha = after.my_review_sha
+    return sha is not None and (before is None or sha != before.my_review_sha
+                                or sha == after.head_sha)
+
+
 class PollingWatcher:
     def __init__(self, config: WatcherConfig, clock: UtcClock,
                  sleep: Sleep, *, pull_requests: PullRequests,
@@ -52,7 +64,7 @@ class PollingWatcher:
                  change_detection: ChangeDetection, dismissals: Dismissals, server: Server,
                  placement: Placement,
                  teardown: Teardown, saving: Saving, say: Say, setup_files: SetupFiles,
-                 releases: Releases, summary_lane: SummaryLane) -> None:
+                 releases: Releases, summary_lane: SummaryLane, reviews: KeptReviews) -> None:
         self._config = config
         self._clock = clock
         self._sleep = sleep
@@ -78,6 +90,7 @@ class PollingWatcher:
         self._left = False
         self._releases = releases
         self._summary_lane = summary_lane
+        self._reviews = reviews
 
     def run_cycle(self) -> None:
         try:
@@ -270,6 +283,7 @@ class PollingWatcher:
         self._pull_requests.prefetch(list(to_poll))
 
         moved_heads: set[Pr] = set()
+        reviewed: dict[Pr, Facts] = {}
         with ThreadPoolExecutor(max_workers=8) as pool:
             futures = {
                 pool.submit(self._fetch, pr, review_requested): pr
@@ -277,11 +291,15 @@ class PollingWatcher:
             }
             for future in as_completed(futures):
                 pr = futures[future]
+                before = self._change_detection.facts(pr)
                 try:
                     count, head_moved = self._advance(pr, future.result())
                 except Exception:
                     log.exception("Failed to poll %s", pr)
                     continue
+                after = self._change_detection.facts(pr)
+                if after is not None and _review_to_keep(before, after):
+                    reviewed[pr] = after
                 total_events += count
                 if head_moved:
                     moved_heads.add(pr)
@@ -291,6 +309,12 @@ class PollingWatcher:
                 self._placement.ensure(pr, fetch=pr in moved_heads)
             except Exception:
                 log.exception("Failed to ensure window for %s", pr)
+
+        for pr, facts in reviewed.items():
+            try:
+                self._reviews.keep(pr, facts.my_review_sha or "", facts.base_branch)
+            except Exception:
+                log.exception("Failed to keep what the review of %s saw", pr)
 
         return total_events
 

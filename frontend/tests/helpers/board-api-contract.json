@@ -4964,6 +4964,16 @@
     "ended": {
      "type": "boolean"
     },
+    "force_pushed_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "is_author": {
      "anyOf": [
       {
@@ -5077,6 +5087,7 @@
     "my_review",
     "my_review_at",
     "my_review_sha",
+    "force_pushed_at",
     "viewer_requested",
     "mentioned",
     "mentions",
@@ -6002,16 +6013,6 @@
      "pattern": "^[0-9a-f]{7,40}$",
      "type": "string"
     },
-    "rewritten_at": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ]
-    },
     "sha": {
      "pattern": "^[0-9a-f]{7,40}$",
      "type": "string"
@@ -6020,8 +6021,7 @@
    "required": [
     "sha",
     "fork",
-    "commits",
-    "rewritten_at"
+    "commits"
    ],
    "type": "object"
   },

@@ -39,6 +39,7 @@ EXPECTED = (
     '"since_anchor_comments": 0, "since_anchor_reviews": 0, "since_anchor_resolved": 0, '
     '"detailed_reviewer": "octocat", "is_detailed_reviewer": true, '
     '"my_review_at": "2026-08-31T00:00:00Z", "my_review_sha": "sha1", '
+    '"force_pushed_at": null, '
     '"mentions": [], "mentioned": false, '
     '"ci_failure_handled": {}}'
 )

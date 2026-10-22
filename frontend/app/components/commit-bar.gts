@@ -181,8 +181,8 @@ export default class CommitBar extends Component<CommitBarSignature> {
         <p class="commit-note" data-test-commit-note>
           {{#if @note.rebased}}
             <span><b>Rebased since your review</b>
-              (force-pushed
-              {{@note.rebased.pushedOn}}).
+              (force-pushed{{#if @note.rebased.pushedOn}}
+                {{@note.rebased.pushedOn}}{{/if}}).
               {{@note.rebased.matched}}
               of your read commits were rewritten onto newer
               {{@base}}

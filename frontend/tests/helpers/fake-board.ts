@@ -343,6 +343,7 @@ export function prFacts(over: Partial<PrFacts> = {}): PrFacts {
     my_review: null,
     my_review_at: null,
     my_review_sha: null,
+    force_pushed_at: null,
     viewer_requested: false,
     mentioned: false,
     mentions: [],

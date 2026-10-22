@@ -112,11 +112,12 @@ thresholds, and local commits drawn only on local.
 
 ### 6. Rebased since your review
 
-**Done** (`b0039d11`, and the commit that marks this). `/pull-request/commits` adds
-`reviewed`: what your review saw, kept per pull request beside the read marks the
-first time the read finds the review's commit among the commits, and served once
-it is gone. Read marks on gone commits match new ones by subject. The preview
-takes `--shape rebased`.
+**Done** (`b0039d11`, `3dfa4a74`, and the commit that marks this). The watcher keeps
+what your review saw per pull request beside the read marks when it first sees the
+review (`board_api/_reviewed.py`, through `KeptReviews`); `/pull-request/commits`
+only reads it, as `reviewed`, once the review's commit is gone. `force_pushed_at`
+in the facts is the last force-push after the review. Read marks on gone commits
+match new ones by subject. The preview takes `--shape rebased`.
 
 Decision 16. The server keeps what your review saw (shas, subjects, the old
 fork) so a later push can tell a rebase. The ghost lane, `≈ read` matching by

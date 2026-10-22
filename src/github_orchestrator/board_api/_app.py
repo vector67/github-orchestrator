@@ -118,6 +118,7 @@ from github_orchestrator.board_api._projection import (
     viewer_of,
     work_in_flight,
 )
+from github_orchestrator.board_api._reviewed import commit_of, kept
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
 from github_orchestrator.board_api.interface import ManagerPanel, Shelf
@@ -311,12 +312,9 @@ def read_pull_request_commits(request: Request, board: Serving,
     if len(sent) > 2 * BASE_COMMITS_AT_EACH_END:
         sent = sent[:BASE_COMMITS_AT_EACH_END] + sent[-BASE_COMMITS_AT_EACH_END:]
     stack = history.stack
-    commits, base_commits, stacked = ([PullRequestCommit(
-        sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
-        subject=commit.subject, author=commit.author,
-        authored_at=commit.authored_at.astimezone(UTC).strftime(AS_OF_FORMAT))
-        for commit in run] for run in (history.commits, sent,
-                                       () if stack is None else stack.commits))
+    commits, base_commits, stacked = ([commit_of(commit) for commit in run]
+                                      for run in (history.commits, sent,
+                                                  () if stack is None else stack.commits))
     return etag.answered(request, PullRequestCommits(
         fork=str(history.fork), commits=commits,
         base_tip=str(history.base_tip), base_commits=base_commits,
@@ -324,31 +322,14 @@ def read_pull_request_commits(request: Request, board: Serving,
         fork_at=history.fork_at.astimezone(UTC).strftime(AS_OF_FORMAT),
         stack=None if stack is None else Stack(
             branch=stack.branch, fork=str(stack.fork), commits=stacked),
-        reviewed=_reviewed(board, str(history.fork), commits)))
+        reviewed=_reviewed(board, commits)))
 
 
-REVIEWED = "reviewed"
-
-
-def _reviewed(board: Board, fork: str, commits: list[PullRequestCommit]) -> ReviewedCommits | None:
+def _reviewed(board: Board, commits: list[PullRequestCommit]) -> ReviewedCommits | None:
     sha = board.manager.dashboard().my_review_sha
-    if sha is None:
+    if sha is None or sha in {commit.sha for commit in commits}:
         return None
-    kept = board.shelf.list(REVIEWED).get(sha)
-    shas = [commit.sha for commit in commits]
-    if sha in shas:
-        if kept is None:
-            saw = ReviewedCommits(sha=sha, fork=fork, commits=commits[:shas.index(sha) + 1],
-                                  rewritten_at=None)
-            board.shelf.save(REVIEWED, sha, saw.model_dump_json().encode())
-        return None
-    if kept is None:
-        return None
-    saw = ReviewedCommits.model_validate_json(kept)
-    if saw.rewritten_at is None:
-        saw = saw.model_copy(update={"rewritten_at": board.clock().strftime(AS_OF_FORMAT)})
-        board.shelf.save(REVIEWED, sha, saw.model_dump_json().encode())
-    return saw
+    return kept(board.shelf, sha)
 
 
 @reads.get("/viewer", tags=["people"], operation_id="readViewer",

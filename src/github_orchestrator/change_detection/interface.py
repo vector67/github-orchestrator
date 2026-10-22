@@ -205,6 +205,7 @@ class Facts:
     mentioned: bool
     my_review_at: str | None
     my_review_sha: str | None
+    force_pushed_at: str | None
     polled_at: str | None
 
     @property

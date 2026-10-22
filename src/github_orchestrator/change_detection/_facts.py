@@ -103,6 +103,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         mentioned=snapshot.get("mentioned") is True,
         my_review_at=_text(snapshot, "my_review_at"),
         my_review_sha=_text(snapshot, "my_review_sha"),
+        force_pushed_at=_text(snapshot, "force_pushed_at"),
         polled_at=_text(snapshot, "last_poll_timestamp"),
     )
 

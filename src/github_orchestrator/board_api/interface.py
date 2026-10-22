@@ -94,6 +94,7 @@ class Dashboard:
     mentions: tuple[Mention, ...]
     my_review_at: str | None
     my_review_sha: str | None
+    force_pushed_at: str | None
     agents_enabled: bool
     agent_name: str
     working_on: str | None
@@ -267,6 +268,10 @@ class Shelf(Protocol):
 
 class Shelves(Protocol):
     def of(self, pr: Pr) -> Shelf: ...
+
+
+class KeptReviews(Protocol):
+    def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None: ...
 
 
 class TourMarker(Protocol):

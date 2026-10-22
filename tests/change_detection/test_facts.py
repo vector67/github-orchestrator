@@ -178,6 +178,20 @@ def test_the_facts_say_which_commit_the_review_that_stands_was_given_on(detectio
     assert detection.facts(THE_PR).my_review_sha == "sha1"
 
 
+def test_the_facts_say_when_the_author_last_force_pushed_after_the_review_that_stands(detection):
+    reviewed = (Review(ACCOUNT, ReviewState.COMMENTED, "2026-09-20T00:00:00Z", "sha1"),)
+    detection.advance(THE_PR, poll(pr_state(author="alice", reviews=reviewed, push_events=(
+        PushEvent("head_ref_force_pushed", "2026-09-19T00:00:00Z"),
+        PushEvent("head_ref_force_pushed", "2026-09-21T00:00:00Z"),
+        PushEvent("committed", "2026-09-22T00:00:00Z"),
+        PushEvent("head_ref_force_pushed", "2026-09-23T00:00:00Z")))), set())
+    before = detection.facts(THE_PR).force_pushed_at
+    detection.advance(THE_PR, poll(pr_state(author="alice", reviews=reviewed, push_events=(
+        PushEvent("head_ref_force_pushed", "2026-09-19T00:00:00Z"),))), set())
+
+    assert (before, detection.facts(THE_PR).force_pushed_at) == ("2026-09-23T00:00:00Z", None)
+
+
 def test_the_facts_say_when_the_watcher_polled_them(detection):
     detection.advance(THE_PR, poll(at="2026-10-08T09:00:00Z"), set())
     detection.advance(THE_PR, poll(at="2026-10-08T09:05:00Z"), set())

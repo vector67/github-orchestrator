@@ -998,14 +998,11 @@ class Stack(BaseModel):
 
 class ReviewedCommits(BaseModel):
     """What your review saw: the pull request's commits up to the one it was
-    given on, kept from when the board first saw that commit among them."""
+    given on, kept when the watcher first saw the review."""
 
     sha: Sha = Field(description="The commit the review was given on.")
     fork: Sha = Field(description="Where the branch left its base then.")
     commits: list[PullRequestCommit]
-    rewritten_at: str | None = Field(
-        description="When the board first found the review's commit gone from "
-                    "the pull request's commits.")
 
 
 class PullRequestCommits(BaseModel):
@@ -1480,6 +1477,8 @@ class PrFacts(BaseModel):
     my_review_at: str | None = Field(description="When you gave the review that stands.")
     my_review_sha: str | None = Field(
         description="The commit the review that stands was given on.")
+    force_pushed_at: str | None = Field(
+        description="When the branch was last force-pushed after the review that stands.")
     viewer_requested: bool = Field(
         description="You are on the requested list right now.")
     mentioned: bool = Field(description="The pull request has mentioned you.")

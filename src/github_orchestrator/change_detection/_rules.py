@@ -178,6 +178,9 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "is_detailed_reviewer": is_detailed_reviewer,
         "my_review_at": my_review_at,
         "my_review_sha": my_review_sha,
+        "force_pushed_at": max((event.at for event in state.push_events
+                                if event.is_force_push and my_review_at
+                                and event.at > my_review_at), default=None),
         "mentions": stored_mentions(mentions),
         "mentioned": poll.mentioned or bool(mentions) or bool((old or {}).get("mentioned")),
     }

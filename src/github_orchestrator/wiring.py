@@ -44,6 +44,7 @@ from github_orchestrator.board_api.interface import (
     Emojis,
     HarvestSetup,
     Holdings,
+    KeptReviews,
     ManagerPanels,
     ManagerStanding,
     ServerApp,
@@ -198,6 +199,7 @@ from github_orchestrator.watcher._told import ToldFiles
 from github_orchestrator.watcher._tour import TourFile
 from github_orchestrator.watcher._would import (
     WouldDeliver,
+    WouldKeepReviews,
     WouldKeepServer,
     WouldPlace,
     WouldSave,
@@ -863,6 +865,11 @@ class WatcherProvider(Provider):
                               address=config.releases_address)
 
     @provide
+    def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
+        from github_orchestrator.board_api._reviewed import ShelvedReviews
+        return ShelvedReviews(working_copies, shelves)
+
+    @provide
     def archives(self, change_detection: ChangeDetection, queues: Queues, history: History,
                  holds: Holds) -> Archives:
         return Archives(state=change_detection, queues=queues, transcripts=history,
@@ -948,6 +955,10 @@ class WouldWatchProvider(Provider):
     @provide
     def courier(self) -> Courier:
         return WouldDeliver()
+
+    @provide
+    def kept_reviews(self, wiring: WouldWatchWiring) -> KeptReviews:
+        return WouldKeepReviews(wiring.say)
 
     @provide
     def summary_lane(self, wiring: WouldWatchWiring, summaries: PrSummaries) -> SummaryLane:
@@ -1494,6 +1505,11 @@ class PolledInThePreview:
 class PreviewHubProvider(Provider):
     scope = Scope.APP
     hub = from_context(provides=PreviewHub, scope=Scope.APP)
+
+    @provide
+    def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
+        from github_orchestrator.board_api._reviewed import ShelvedReviews
+        return ShelvedReviews(working_copies, shelves)
 
     @provide
     def told(self, hub: PreviewHub) -> Told:

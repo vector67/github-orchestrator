@@ -107,3 +107,11 @@ class WouldSummarise:
 class WouldDeliver:
     def deliver(self, woke_at: datetime, polled_at: datetime | None) -> None:
         pass
+
+
+class WouldKeepReviews:
+    def __init__(self, say: Callable[[str], None]) -> None:
+        self._say = say
+
+    def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None:
+        self._say(f"would keep the commits the review of {pr} on {sha[:7]} saw")

@@ -1238,7 +1238,7 @@ export function stepperOf(
 }
 
 interface Rebased {
-  pushedOn: string;
+  pushedOn: string | null;
   matched: number;
 }
 
@@ -1263,7 +1263,7 @@ function commitNoteBuilt(
       reviewedOn: dayOf(facts.my_review_at),
       head: commits[commits.length - 1]!.sha,
       rebased: {
-        pushedOn: dayOf(reviewed.rewritten_at ?? facts.my_review_at),
+        pushedOn: facts.force_pushed_at && dayOf(facts.force_pushed_at),
         matched: matched.size,
       },
     };

@@ -606,6 +606,7 @@ export interface PrFacts {
   my_review: string | null;
   my_review_at: string | null;
   my_review_sha: string | null;
+  force_pushed_at: string | null;
   viewer_requested: boolean;
   mentioned: boolean;
   mentions: MentionFact[];
@@ -762,7 +763,6 @@ export interface ReviewedCommits {
   sha: string;
   fork: string;
   commits: PullRequestCommit[];
-  rewritten_at: string | null;
 }
 
 export interface RunLedger {
