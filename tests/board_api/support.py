@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, TypedDict, Unpack
 
 import anyio
+import anyio.from_thread
 import anyio.to_thread
 import httpx2
 import uvicorn
@@ -67,7 +68,7 @@ from github_orchestrator.wiring import (
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
-from tests.conftest import clocks_of, fake_provider
+from tests.conftest import CLOSED_AFTER_THE_TEST, clocks_of, fake_provider
 from tests.conversation.support import (
     Stage,
     at,
@@ -168,6 +169,16 @@ class OnePanel:
         return self.panel
 
 
+class OneLoopClient(TestClient):
+    @contextmanager
+    def _portal_factory(self) -> Iterator[anyio.from_thread.BlockingPortal]:
+        if self.portal is None:
+            self.portal = CLOSED_AFTER_THE_TEST.enter_context(
+                anyio.from_thread.start_blocking_portal(**self.async_backend))
+            CLOSED_AFTER_THE_TEST.callback(setattr, self, "portal", None)
+        yield self.portal
+
+
 def board_app(conversation_managers: ConversationManagerFactory, working_copies: WorkingCopies,
               **serving: Unpack[Serving]) -> ASGIApp:
     server: ServerApp = wire(
@@ -209,7 +220,7 @@ def on_loopback(app_at: Callable[[int], ASGIApp]) -> Iterator[int]:
 
 def served_board(conversation_managers: ConversationManagerFactory, working_copies: WorkingCopies,
                  **serving: Unpack[Serving]) -> TestClient:
-    return TestClient(board_app(conversation_managers, working_copies, **serving),
+    return OneLoopClient(board_app(conversation_managers, working_copies, **serving),
                       base_url=f"http://127.0.0.1:{serving.get('port', PORT)}"
                                f"{page_of(serving.get('pr', THE_PR))}")
 
@@ -271,7 +282,7 @@ def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(M
         ServerAppWiring(app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
                         check_presence=False, first_names_only=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
-    return TestClient(server.app(HUB_PORT, SERVER_PID), base_url=f"http://127.0.0.1:{HUB_PORT}")
+    return OneLoopClient(server.app(HUB_PORT, SERVER_PID), base_url=f"http://127.0.0.1:{HUB_PORT}")
 
 
 class NoReleaseYet:
@@ -495,7 +506,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
         ServerAppWiring(app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
                         version="0.1.0", check_presence=False, first_names_only=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
-    client = TestClient(server.app(port, SERVER_PID),
-                        base_url=f"http://{host or f'127.0.0.1:{port}'}")
+    client = OneLoopClient(server.app(port, SERVER_PID),
+                           base_url=f"http://{host or f'127.0.0.1:{port}'}")
     return OneServer(client=client, panels=panels, told=told, holdings=holdings,
                      terminals=terminals)

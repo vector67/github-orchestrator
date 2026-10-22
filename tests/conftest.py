@@ -1,5 +1,6 @@
 import asyncio
 import atexit
+import contextlib
 import functools
 import gc
 import hashlib
@@ -245,6 +246,13 @@ def _template_name(build: Callable[..., Any], args: tuple[Any, ...]) -> str:
 
 
 _TMP_PATHS = itertools.count()
+CLOSED_AFTER_THE_TEST = contextlib.ExitStack()
+
+
+@pytest.fixture(autouse=True)
+def _close_what_the_test_left_open() -> Iterator[None]:
+    yield
+    CLOSED_AFTER_THE_TEST.close()
 
 
 @pytest.fixture
