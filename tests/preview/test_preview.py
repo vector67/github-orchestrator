@@ -1,5 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
 
 from github_orchestrator import preview
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, HeldVerdicts
@@ -15,7 +14,7 @@ from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
 from github_orchestrator.wiring import dashboard_source_wiring, preview_container
 from github_orchestrator.working_copies import WorkingCopies
-from tests.board_api.support import served_board
+from tests.board_api.support import OneLoopClient, served_board
 from tests.conftest import (
     build_container,
     fake_agent_runs_roles,
@@ -148,7 +147,7 @@ def test_the_previews_own_container_serves_its_pr_on_the_server_app(tmp_path):
                                      agent_runs=FakeAgentRuns(pr_processes),
                                      pr_processes=pr_processes, agents_enabled=True,
                                      hub=preview.preview_hub(preview.PreviewPanels()))
-    web = TestClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
+    web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
 
     [row] = web.get("/api/pull-requests").json()["pull_requests"]
 
