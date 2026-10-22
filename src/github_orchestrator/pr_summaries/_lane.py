@@ -7,6 +7,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -264,12 +265,21 @@ class LocalSummaryLane:
                 [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
                 cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
                 start_new_session=True, pass_fds=(slot,))
-        try:
-            process.wait(timeout=self._timeout)
-        except subprocess.TimeoutExpired:
+        stopped = threading.Event()
+
+        def stop() -> None:
+            stopped.set()
             with contextlib.suppress(ProcessLookupError):
                 os.killpg(process.pid, signal.SIGKILL)
+
+        deadline = threading.Timer(self._timeout, stop)
+        deadline.start()
+        try:
             process.wait()
+        finally:
+            deadline.cancel()
+            deadline.join()
+        if stopped.is_set():
             with open(outputs / "stderr", "a") as stderr:
                 stderr.write(f"github-orchestrator stopped the run after "
                              f"{self._timeout / 60:g} minutes.\n")
