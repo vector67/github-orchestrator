@@ -4804,6 +4804,10 @@ button.tree-row[aria-current="true"] {
   stroke: var(--muted);
 }
 
+.timeline-lane[data-lane="stack"] {
+  stroke: var(--blue);
+}
+
 .timeline-lane[data-kind="merge"] {
   stroke: var(--muted);
   stroke-width: 1;
@@ -4838,6 +4842,12 @@ button.tree-row[aria-current="true"] {
   fill: var(--page);
 }
 
+.timeline-dot[data-style="stack"] {
+  cursor: default;
+  fill: var(--blue-fill);
+  stroke: var(--blue);
+}
+
 .timeline-dot[data-style="base"] {
   cursor: default;
   fill: var(--muted);
@@ -4869,6 +4879,15 @@ button.tree-row[aria-current="true"] {
 
 .timeline-label[data-kind="main"] {
   fill: var(--muted);
+}
+
+.timeline-label[data-kind="stack"] {
+  fill: var(--blue);
+}
+
+.timeline-label[data-opens] {
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .timeline-key {

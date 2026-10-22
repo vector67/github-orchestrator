@@ -1,10 +1,18 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, find, findAll, triggerEvent, visit } from '@ember/test-helpers';
+import {
+  click,
+  currentURL,
+  find,
+  findAll,
+  triggerEvent,
+  visit,
+} from '@ember/test-helpers';
 import {
   added,
   changed,
   dashboard,
+  heldPr,
   prHistory,
   prCommit,
   prDiff,
@@ -621,3 +629,91 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
     );
   });
 });
+
+const STACK_ONE = '5a5a5a5';
+const STACK_TWO = '6b6b6b6';
+const BASE_BRANCH = 'PROJ-6-the-base';
+
+module(
+  'Acceptance | commit timeline stacked on another pull request',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    hooks.beforeEach(function () {
+      board().pullRequest = {
+        ...board().pullRequest,
+        base_branch: BASE_BRANCH,
+      };
+      board().held = [
+        heldPr({ number: 6, dashboard: { pr: { branch: BASE_BRANCH } } }),
+        heldPr({ dashboard: { pr: { base_branch: BASE_BRANCH } } }),
+      ];
+      board().pullRequestDiff = {
+        ...prDiff(changed('src/widgets/all.py', [added(19, 'every commit')])),
+        base: STACK_TWO,
+        head: SECOND,
+      };
+      board().commits = {
+        ...prHistory(STACK_TWO, [
+          prCommit(FIRST, STACK_TWO, 'Add the widget'),
+          prCommit(SECOND, FIRST, 'Name the widget'),
+        ]),
+        stack: {
+          branch: 'main',
+          fork: FORK,
+          commits: [
+            prCommit(STACK_ONE, FORK, 'Lay the base'),
+            prCommit(STACK_TWO, STACK_ONE, 'Finish the base'),
+          ],
+        },
+      };
+    });
+
+    test("three lanes: main, the base pull request's commits, and this one's off it", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert
+        .dom('[data-test-timeline-header]')
+        .hasText(
+          `2 commits on PROJ-7-fix-the-widget · base is #6 ${BASE_BRANCH}, which is based on main`,
+        );
+      assert.deepEqual(
+        dots('base').map((one) => one.sha),
+        [FORK],
+      );
+      const stacked = dots('stack');
+      assert.deepEqual(
+        stacked.map((one) => [one.sha, one.style]),
+        [
+          [STACK_ONE, 'stack'],
+          [STACK_TWO, 'stack'],
+        ],
+      );
+      const branch = dots('pr');
+      assert.deepEqual(
+        branch.map((one) => one.sha),
+        [FIRST, SECOND],
+      );
+      assert.true(
+        dots('base')[0]!.y < stacked[0]!.y,
+        'main above the base pull request',
+      );
+      assert.true(stacked[0]!.y < branch[0]!.y, 'and this one under it');
+      assert.true(
+        branch[0]!.x > stacked[1]!.x,
+        'this branch forks off the base pull request',
+      );
+      assert.dom('[data-test-lane-label="main"]').hasText('main');
+      assert.dom('[data-test-lane-label="stack"]').hasText(`#6 ${BASE_BRANCH}`);
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
+      assert.dom(dot(STACK_ONE)).doesNotHaveAttribute('data-pickable');
+
+      await click('[data-test-lane-label="stack"]');
+
+      assert.strictEqual(currentURL(), '/pr/o/r/6/diff');
+    });
+  },
+);

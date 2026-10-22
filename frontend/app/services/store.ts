@@ -625,7 +625,20 @@ export default class StoreService extends Service {
     looking: Looking,
   ): Timeline | null | undefined {
     const held = this.pr(pr.repo, pr.number);
-    return held && timelineOf(held, held.history[source], looking);
+    if (!held) return undefined;
+    const based = Object.values(this.prs).find(
+      (one) =>
+        one.repo === held.repo &&
+        one.number !== held.number &&
+        one.branch !== null &&
+        one.branch === held.base_branch,
+    );
+    return timelineOf(
+      held,
+      held.history[source],
+      looking,
+      based?.number ?? null,
+    );
   }
 
   commitNote(pr: Numbered, source: DiffSource): CommitNote | null {

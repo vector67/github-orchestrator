@@ -1,6 +1,8 @@
 import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { service } from '@ember/service';
+import type RouterService from '@ember/routing/router-service';
 import type { Picked, Timeline } from 'frontend/data/timeline';
 import didChange from 'frontend/modifiers/did-change';
 
@@ -26,6 +28,7 @@ function svgX(svg: SVGSVGElement, event: PointerEvent): number | null {
 }
 
 export default class CommitTimeline extends Component<CommitTimelineSignature> {
+  @service declare router: RouterService;
   private dragging: End | null = null;
   private dragged: string | null = null;
 
@@ -52,9 +55,13 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
   };
 
   private clicked(event: MouseEvent): void {
-    const sha = (event.target as Element)
-      .closest('[data-pickable]')
-      ?.getAttribute('data-sha');
+    const target = event.target as Element;
+    const opens = target.closest('[data-opens]')?.getAttribute('data-opens');
+    if (opens) {
+      void this.router.transitionTo(opens);
+      return;
+    }
+    const sha = target.closest('[data-pickable]')?.getAttribute('data-sha');
     if (sha) this.args.pick(sha, event.shiftKey);
   }
 
@@ -95,7 +102,9 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{@timeline.header.branch}}
           ·
           {{@timeline.header.relation}}
-          <code class="timeline-fork">{{@timeline.header.fork}}</code>{{#if
+          {{#if @timeline.header.fork}}<code
+              class="timeline-fork"
+            >{{@timeline.header.fork}}</code>{{/if}}{{#if
             @timeline.header.behind
           }}
             <span
@@ -106,7 +115,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               {{@timeline.header.base}}</span>
             <span class="timeline-aside">{{@timeline.header.base}}'s new commits
               aren't in this diff</span>
-          {{else}}, {{@timeline.header.base}}'s tip{{/if}}
+          {{else if @timeline.header.tip}}, {{@timeline.header.tip}}{{/if}}
         </p>
         <span class="timeline-presets" role="group" aria-label="pick a range">
           {{#each @timeline.presets key="name" as |preset|}}
@@ -260,6 +269,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               dominant-baseline="middle"
               data-kind={{label.kind}}
               data-at={{label.at}}
+              data-opens={{label.opens}}
               data-test-lane-label={{label.kind}}
             >{{label.text}}</text>
           {{/each}}

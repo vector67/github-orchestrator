@@ -1261,6 +1261,7 @@ const lastTimelines = new WeakMap<
     current: string | null;
     picked: Picked | null;
     hidden: boolean;
+    basePr: number | null;
     timeline: Timeline | null;
   }
 >();
@@ -1269,6 +1270,7 @@ export function timelineOf(
   pr: PrEntity,
   history: PullRequestCommits | undefined,
   { current, picked, hidden }: Looking,
+  basePr: number | null,
 ): Timeline | null | undefined {
   if (!history || !pr.read) return undefined;
   const last = lastTimelines.get(history);
@@ -1276,7 +1278,8 @@ export function timelineOf(
     last?.pr === pr &&
     last.current === current &&
     last.picked === picked &&
-    last.hidden === hidden
+    last.hidden === hidden &&
+    last.basePr === basePr
   )
     return last.timeline;
   const timeline = timelineBuilt({
@@ -1289,7 +1292,16 @@ export function timelineOf(
     current,
     picked,
     hidden,
+    repo: pr.repo,
+    basePr,
   });
-  lastTimelines.set(history, { pr, current, picked, hidden, timeline });
+  lastTimelines.set(history, {
+    pr,
+    current,
+    picked,
+    hidden,
+    basePr,
+    timeline,
+  });
   return timeline;
 }

@@ -8,6 +8,7 @@ import {
 
 const SHORT = 7;
 const BASE_LANE = 'base';
+const STACK_LANE = 'stack';
 const PR_LANE = 'pr';
 const BAND_REACH = 12;
 const SHA_DROP = 20;
@@ -31,7 +32,7 @@ export interface Preset {
   picks: Picked | null;
 }
 
-export type DotStyle = 'base' | 'read' | 'unread';
+export type DotStyle = 'base' | 'stack' | 'read' | 'unread';
 
 export type DotShape = 'dot' | 'diamond';
 
@@ -51,8 +52,9 @@ export interface TimelineDot {
 }
 
 export interface TimelineLabel {
-  kind: 'main' | 'head';
+  kind: 'main' | 'stack' | 'head';
   text: string;
+  opens: string | null;
   at: string;
   x: number;
   y: number;
@@ -98,6 +100,7 @@ export interface TimelineHeader {
   base: string;
   relation: string;
   fork: string;
+  tip: string | null;
   behind: number;
 }
 
@@ -130,6 +133,8 @@ export interface TimelineInput {
   current: string | null;
   picked: Picked | null;
   hidden: boolean;
+  repo: string;
+  basePr: number | null;
 }
 
 export function dayOf(at: string): string {
@@ -186,29 +191,38 @@ function presetsOf(
 }
 
 function outsideOf(history: PullRequestCommits): string[] {
+  const under = history.stack?.commits ?? [];
   const own = new Set(
-    [...history.commits, ...history.base_commits].map((one) => one.sha),
+    [...under, ...history.commits, ...history.base_commits].map(
+      (one) => one.sha,
+    ),
   );
   return [
-    ...new Set([
-      ...history.commits
-        .flatMap((one) => one.parents)
-        .filter((parent) => !own.has(parent)),
-      history.fork,
-    ]),
+    ...new Set(
+      [
+        ...[...under, ...history.commits].flatMap((one) => one.parents),
+        history.fork,
+      ].filter((parent) => !own.has(parent)),
+    ),
   ];
 }
 
 function nodesOf(history: PullRequestCommits): GraphNode[] {
+  const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
     ...outsideOf(history).map((id) => ({
       id,
       lane: BASE_LANE,
       parents: [],
     })),
+    ...(history.stack?.commits ?? []).map((one) => ({
+      id: one.sha,
+      lane: STACK_LANE,
+      parents: one.parents,
+    })),
     ...history.base_commits.map((one) => ({
       id: one.sha,
-      lane: BASE_LANE,
+      lane: onBase,
       parents: one.parents,
     })),
     ...history.commits.map((one) => ({
@@ -274,14 +288,41 @@ function diamondAt(x: number, y: number): string {
 
 function styleOf(node: Placed, read: Set<string>): DotStyle {
   if (node.lane === BASE_LANE) return 'base';
+  if (node.lane === STACK_LANE) return 'stack';
   return read.has(node.id) ? 'read' : 'unread';
+}
+
+function lastOn(lane: string, placed: Map<string, Placed>): Placed | null {
+  return [...placed.values()]
+    .filter((one) => one.lane === lane)
+    .reduce<Placed | null>(
+      (last, one) => (last && last.x >= one.x ? last : one),
+      null,
+    );
+}
+
+function relationOf(
+  input: TimelineInput,
+  base: string,
+  merges: number,
+): string {
+  const { stack } = input.history;
+  if (stack) {
+    const named = input.basePr ? `#${input.basePr} ${base}` : base;
+    return `base is ${named}, which is based on ${stack.branch}`;
+  }
+  return merges ? `last synced with ${base} at` : `forked from ${base} at`;
 }
 
 export function timelineBuilt(input: TimelineInput): Timeline | null {
   const { history, read } = input;
   const order = history.commits.map((one) => one.sha);
   if (!order.length) return null;
-  const graph = layout([BASE_LANE, PR_LANE], nodesOf(history));
+  const stack = history.stack;
+  const graph = layout(
+    stack ? [BASE_LANE, STACK_LANE, PR_LANE] : [BASE_LANE, PR_LANE],
+    nodesOf(history),
+  );
   const base = input.base ?? 'main';
   const showing =
     input.picked ??
@@ -291,10 +332,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const from = order.indexOf(showing.from);
   const to = order.indexOf(showing.to);
   const subjects = new Map(
-    [...history.base_commits, ...history.commits].map((one) => [
-      one.sha,
-      one.subject,
-    ]),
+    [
+      ...(stack?.commits ?? []),
+      ...history.base_commits,
+      ...history.commits,
+    ].map((one) => [one.sha, one.subject]),
   );
   const merges = new Set(
     history.commits
@@ -321,9 +363,22 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       inRange: at >= from && at <= to && at >= 0,
     };
   });
-  const tip =
-    graph.nodes.get(history.base_tip) ?? graph.nodes.get(history.fork)!;
+  const main = lastOn(BASE_LANE, graph.nodes)!;
+  const under = lastOn(STACK_LANE, graph.nodes);
   const head = graph.nodes.get(order.at(-1)!)!;
+  const label = (
+    kind: TimelineLabel['kind'],
+    text: string,
+    at: Placed,
+    opens: string | null = null,
+  ): TimelineLabel => ({
+    kind,
+    text,
+    opens,
+    at: at.id,
+    x: at.x + LABEL_GAP,
+    y: at.y,
+  });
   const ringed = input.hidden
     ? undefined
     : graph.nodes.get(input.current ?? '');
@@ -342,14 +397,18 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       })),
     dots,
     labels: [
-      { kind: 'main', text: base, at: tip.id, x: tip.x + LABEL_GAP, y: tip.y },
-      {
-        kind: 'head',
-        text: 'head',
-        at: head.id,
-        x: head.x + LABEL_GAP,
-        y: head.y,
-      },
+      label('main', stack?.branch ?? base, main),
+      ...(under
+        ? [
+            label(
+              'stack',
+              input.basePr ? `#${input.basePr} ${base}` : base,
+              under,
+              input.basePr ? `/pr/${input.repo}/${input.basePr}/diff` : null,
+            ),
+          ]
+        : []),
+      label('head', 'head', head),
     ],
     current: ringed ? { sha: ringed.id, x: ringed.x, y: ringed.y } : null,
     band: bandOf(
@@ -364,10 +423,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
         : plural(order.length, 'commit'),
       branch: input.branch ?? 'this branch',
       base,
-      relation: merges.size
-        ? `last synced with ${base} at`
-        : `forked from ${base} at`,
-      fork: history.fork.slice(0, SHORT),
+      relation: relationOf(input, base, merges.size),
+      fork: stack ? '' : history.fork.slice(0, SHORT),
+      tip: stack || history.behind ? null : `${base}'s tip`,
       behind: history.behind,
     },
     presets: presetsOf(order, input, showing),
