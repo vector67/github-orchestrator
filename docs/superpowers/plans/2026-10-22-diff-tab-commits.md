@@ -80,6 +80,10 @@ showing the whole PR.
 
 ### 4. The timeline for simple shapes
 
+**Done** (`59ca0295`, and the commit that marks this). `/pull-request/commits` adds
+`base_tip` and `base_commits`; the behind count is how many base commits there are.
+`data/graph.ts` places lanes and commits, `data/timeline.ts` draws from it.
+
 Decisions 6 to 10. Add the base tip, the behind count and main's commits since
 the fork (subjects for hover; `PrCheckout.base_standing` has the count) to the
 API. The graph for "main hasn't moved" and "main moved on", one-commit and range

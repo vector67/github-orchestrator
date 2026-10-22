@@ -1,0 +1,275 @@
+import Component from '@glimmer/component';
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import type { Picked, Timeline } from 'frontend/data/timeline';
+import didChange from 'frontend/modifiers/did-change';
+
+type End = 'from' | 'to';
+
+export interface CommitTimelineSignature {
+  Args: {
+    timeline: Timeline;
+    pick: (sha: string, extend: boolean) => void;
+    stretch: (end: End, sha: string) => void;
+    choose: (picked: Picked | null) => void;
+  };
+}
+
+function svgX(svg: SVGSVGElement, event: PointerEvent): number | null {
+  const screen = svg.getScreenCTM();
+  if (!screen) return null;
+  return new DOMPoint(event.clientX, event.clientY).matrixTransform(
+    screen.inverse(),
+  ).x;
+}
+
+export default class CommitTimeline extends Component<CommitTimelineSignature> {
+  private dragging: End | null = null;
+  private dragged: string | null = null;
+
+  listen = (scroll: HTMLElement) => {
+    const svg = scroll.querySelector('svg')!;
+    const clicked = (event: MouseEvent) => this.clicked(event);
+    const grabbed = (event: PointerEvent) => this.grabbed(event);
+    const moved = (event: PointerEvent) => this.moved(svg, event);
+    const dropped = () => {
+      this.dragging = null;
+    };
+    svg.addEventListener('click', clicked);
+    svg.addEventListener('pointerdown', grabbed);
+    svg.addEventListener('pointermove', moved);
+    svg.addEventListener('pointerup', dropped);
+    svg.addEventListener('pointerleave', dropped);
+    return () => {
+      svg.removeEventListener('click', clicked);
+      svg.removeEventListener('pointerdown', grabbed);
+      svg.removeEventListener('pointermove', moved);
+      svg.removeEventListener('pointerup', dropped);
+      svg.removeEventListener('pointerleave', dropped);
+    };
+  };
+
+  private clicked(event: MouseEvent): void {
+    const sha = (event.target as Element)
+      .closest('[data-pickable]')
+      ?.getAttribute('data-sha');
+    if (sha) this.args.pick(sha, event.shiftKey);
+  }
+
+  private grabbed(event: PointerEvent): void {
+    const end = (event.target as Element)
+      .closest('[data-end]')
+      ?.getAttribute('data-end');
+    if (end !== 'from' && end !== 'to') return;
+    event.preventDefault();
+    this.dragging = end;
+    this.dragged = null;
+  }
+
+  private moved(svg: SVGSVGElement, event: PointerEvent): void {
+    const end = this.dragging;
+    const x = end && svgX(svg, event);
+    if (!end || x === null) return;
+    const nearest = this.args.timeline.dots
+      .filter((one) => one.pickable)
+      .reduce((best, one) =>
+        Math.abs(one.x - x) < Math.abs(best.x - x) ? one : best,
+      );
+    if (nearest.sha === this.dragged) return;
+    this.dragged = nearest.sha;
+    this.args.stretch(end, nearest.sha);
+  }
+
+  <template>
+    <section
+      class="commit-timeline"
+      aria-label="the branch's timeline"
+      data-test-timeline
+    >
+      <header class="timeline-head">
+        <p class="timeline-title" data-test-timeline-header>
+          <b>{{@timeline.header.count}}</b>
+          on
+          {{@timeline.header.branch}}
+          · forked from
+          {{@timeline.header.base}}
+          at
+          <code class="timeline-fork">{{@timeline.header.fork}}</code>{{#if
+            @timeline.header.behind
+          }}
+            <span
+              class="timeline-behind"
+              data-test-behind
+            >{{@timeline.header.behind}}
+              behind
+              {{@timeline.header.base}}</span>
+            <span class="timeline-aside">{{@timeline.header.base}}'s new commits
+              aren't in this diff</span>
+          {{else}}, {{@timeline.header.base}}'s tip{{/if}}
+        </p>
+        <span class="timeline-presets" role="group" aria-label="pick a range">
+          {{#each @timeline.presets key="name" as |preset|}}
+            <button
+              type="button"
+              class="btn"
+              aria-pressed={{if preset.active "true" "false"}}
+              disabled={{if preset.available false true}}
+              data-test-preset={{preset.name}}
+              {{on "click" (fn @choose preset.picks)}}
+            >{{preset.label}}</button>
+          {{/each}}
+        </span>
+      </header>
+      <div class="timeline-scroll" {{didChange this.listen}}>
+        <svg
+          class="timeline-graph"
+          width={{@timeline.width}}
+          height={{@timeline.height}}
+          viewBox="0 0 {{@timeline.width}} {{@timeline.height}}"
+          role="img"
+          aria-label="the base branch and this branch's commits"
+          data-test-timeline-graph
+        >
+          {{#if @timeline.since}}
+            <g data-test-since-fork>
+              <rect
+                class="timeline-since"
+                x={{@timeline.since.x}}
+                y={{@timeline.since.y}}
+                width={{@timeline.since.width}}
+                height={{@timeline.since.height}}
+                rx="6"
+              />
+              <text
+                class="timeline-note"
+                x={{@timeline.since.x}}
+                y={{@timeline.since.textY}}
+              >{{@timeline.since.text}}</text>
+            </g>
+          {{/if}}
+          {{#each @timeline.lanes key="lane" as |lane|}}
+            <line
+              class="timeline-lane"
+              data-lane={{lane.lane}}
+              x1={{lane.from}}
+              y1={{lane.y}}
+              x2={{lane.to}}
+              y2={{lane.y}}
+            />
+          {{/each}}
+          {{#each @timeline.curves key="path" as |curve|}}
+            <path
+              class="timeline-lane"
+              data-lane={{curve.lane}}
+              d={{curve.path}}
+              data-test-fork-curve
+            />
+          {{/each}}
+          <rect
+            class="timeline-band"
+            x={{@timeline.band.x}}
+            y={{@timeline.band.y}}
+            width={{@timeline.band.width}}
+            height={{@timeline.band.height}}
+            rx="12"
+            data-test-band
+          />
+          {{#if @timeline.flag}}
+            <g class="timeline-flag" data-test-review-flag>
+              <line
+                x1={{@timeline.flag.x}}
+                y1={{@timeline.flag.top}}
+                x2={{@timeline.flag.x}}
+                y2={{@timeline.flag.bottom}}
+              />
+              <text
+                class="timeline-note"
+                x={{@timeline.flag.x}}
+                y={{@timeline.flag.textY}}
+                text-anchor="middle"
+              >{{@timeline.flag.text}}</text>
+            </g>
+          {{/if}}
+          {{#if @timeline.current}}
+            <circle
+              class="timeline-current"
+              cx={{@timeline.current.x}}
+              cy={{@timeline.current.y}}
+              r="9"
+              data-at={{@timeline.current.sha}}
+              data-test-current
+            />
+          {{/if}}
+          {{#each @timeline.dots key="sha" as |dot|}}
+            <circle
+              class="timeline-dot"
+              cx={{dot.x}}
+              cy={{dot.y}}
+              r={{if dot.pickable "6" "4"}}
+              data-sha={{dot.sha}}
+              data-lane={{dot.lane}}
+              data-style={{dot.style}}
+              data-in-range={{if dot.inRange "true" "false"}}
+              data-pickable={{if dot.pickable "true"}}
+              data-test-dot
+            ><title>{{dot.title}}</title></circle>
+            {{#if dot.pickable}}
+              <text
+                class="timeline-sha"
+                x={{dot.x}}
+                y={{dot.shaY}}
+                text-anchor="middle"
+              >{{dot.short}}</text>
+            {{/if}}
+          {{/each}}
+          {{#each @timeline.labels key="kind" as |label|}}
+            <text
+              class="timeline-label"
+              x={{label.x}}
+              y={{label.y}}
+              dominant-baseline="middle"
+              data-kind={{label.kind}}
+              data-at={{label.at}}
+              data-test-lane-label={{label.kind}}
+            >{{label.text}}</text>
+          {{/each}}
+          <rect
+            class="timeline-handle"
+            x={{@timeline.band.fromX}}
+            y={{@timeline.band.y}}
+            width="8"
+            height={{@timeline.band.height}}
+            transform="translate(-4 0)"
+            rx="2"
+            data-end="from"
+            data-test-handle="from"
+          />
+          <rect
+            class="timeline-handle"
+            x={{@timeline.band.toX}}
+            y={{@timeline.band.y}}
+            width="8"
+            height={{@timeline.band.height}}
+            transform="translate(-4 0)"
+            rx="2"
+            data-end="to"
+            data-test-handle="to"
+          />
+        </svg>
+      </div>
+      <p class="timeline-key" data-test-timeline-key>
+        <span class="timeline-key-item"><i data-style="unread"></i>
+          unread</span>
+        <span class="timeline-key-item"><i data-style="read"></i> read</span>
+        <span class="timeline-key-item"><i data-style="current"></i>
+          this commit</span>
+        <span class="timeline-key-item"><i data-style="base"></i>
+          {{@timeline.header.base}}</span>
+        <span class="timeline-key-item"><i data-style="band"></i>
+          in the diff</span>
+        <span class="timeline-aside">click a dot for one commit · shift-click or
+          drag the handles for a range</span>
+      </p>
+    </section>
+  </template>
+}

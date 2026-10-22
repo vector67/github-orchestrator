@@ -311,6 +311,17 @@ def _origin(worktree: Path) -> Path:
     return worktree.with_name(f"{worktree.name}-origin.git")
 
 
+def _move_main_on(root: Path) -> None:
+    _git(root, "checkout", "-q", BASE_BRANCH)
+    for subject, line in (("Note the release in the changelog", "- the release\n"),
+                          ("Note the fix in the changelog", "- the fix\n")):
+        with (root / "CHANGELOG.md").open("a") as changelog:
+            changelog.write(line)
+        _git(root, "add", "CHANGELOG.md")
+        _git(root, "commit", "-qm", subject)
+    _git(root, "checkout", "-q", PR_BRANCH)
+
+
 def build_repo(root: Path, reviewer: bool = False) -> Repo:
     anchors = _anchors(reviewer)
     longest: dict[str, int] = {}
@@ -334,6 +345,8 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
         _rewrite(root, (NAMED_FIX,), "    return [item.in_units() for item in line_items]",
                  offset=1)
         _git(root, "commit", "-qam", "Spell the units out")
+    else:
+        _move_main_on(root)
     _git(root.parent, "init", "-q", "--bare", str(_origin(root)))
     _git(root, "remote", "add", "origin", str(_origin(root)))
     _git(root, "push", "-q", "-u", "origin", PR_BRANCH)

@@ -6,6 +6,7 @@ import { service } from '@ember/service';
 import type Owner from '@ember/owner';
 import CommentBox from 'frontend/components/comment-box';
 import CommitBar from 'frontend/components/commit-bar';
+import CommitTimeline from 'frontend/components/commit-timeline';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
@@ -15,6 +16,7 @@ import type { Inline } from 'frontend/data/inline';
 import { linesOf, selectionOf, type Selection } from 'frontend/data/selection';
 import { BLANK, NEW_DRAFT, type Saved } from 'frontend/services/drafts';
 import type DraftsService from 'frontend/services/drafts';
+import type CommitBoxService from 'frontend/services/commit-box';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import didChange from 'frontend/modifiers/did-change';
@@ -34,6 +36,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   @service declare keys: KeysService;
   @service declare drafts: DraftsService;
   @service declare pullRequestDiff: PullRequestDiffService;
+  @service declare commitBox: CommitBoxService;
 
   @tracked selection: Selection | null = null;
   @tracked editing: Inline | null = null;
@@ -59,9 +62,18 @@ export default class DiffTab extends Component<DiffTabSignature> {
       this.pullRequestDiff.step(key === '[' ? -1 : 1);
       return true;
     }
-    if (key !== 'Escape' || (!this.selection && !this.boxOpen)) return false;
+    if (key === 't' && this.pullRequestDiff.timeline) {
+      this.pullRequestDiff.toggleTimeline();
+      return true;
+    }
+    if (key !== 'Escape') return false;
+    if (!this.selection && !this.boxOpen) return this.pullRequestDiff.unpick();
     this.close();
     return true;
+  }
+
+  get hidden(): boolean {
+    return this.commitBox.sizing === 'hidden';
   }
 
   get draftKey(): string {
@@ -188,6 +200,22 @@ export default class DiffTab extends Component<DiffTabSignature> {
               {{on "click" (fn this.pullRequestDiff.show "local")}}
             >local</button>
           </span>
+          {{#if this.hidden}}
+            {{#if this.pullRequestDiff.timeline}}
+              <button
+                type="button"
+                class="btn"
+                title="the branch's timeline t"
+                aria-pressed={{if
+                  this.pullRequestDiff.timelineOpen
+                  "true"
+                  "false"
+                }}
+                data-test-timeline-toggle
+                {{on "click" this.pullRequestDiff.toggleTimeline}}
+              >Timeline <kbd>t</kbd></button>
+            {{/if}}
+          {{/if}}
         </div>
         {{#if this.pullRequestDiff.fetching}}
           <span class="fetching-chip" data-test-fetching>fetching…</span>
@@ -217,7 +245,22 @@ export default class DiffTab extends Component<DiffTabSignature> {
             @tick={{this.pullRequestDiff.tick}}
             @note={{this.pullRequestDiff.note}}
             @dismissNote={{this.pullRequestDiff.dismissNote}}
+            @picked={{this.pullRequestDiff.picked}}
+            @pickedFiles={{this.pullRequestDiff.pickedFiles}}
+            @unpick={{this.pullRequestDiff.unpick}}
+            @timelineOpen={{this.pullRequestDiff.timelineOpen}}
+            @toggleTimeline={{this.pullRequestDiff.toggleTimeline}}
           />
+        {{/if}}
+        {{#if this.pullRequestDiff.timelineOpen}}
+          {{#if this.pullRequestDiff.timeline}}
+            <CommitTimeline
+              @timeline={{this.pullRequestDiff.timeline}}
+              @pick={{this.pullRequestDiff.pick}}
+              @stretch={{this.pullRequestDiff.stretch}}
+              @choose={{this.pullRequestDiff.choose}}
+            />
+          {{/if}}
         {{/if}}
         <div
           class="diff-files"

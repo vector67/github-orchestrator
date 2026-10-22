@@ -95,6 +95,8 @@ import {
   shownOf,
   stepperOf,
   commitNoteOf,
+  pickedRangeOf,
+  timelineOf,
   summaryOf,
   summaryTabOf,
   wallOf,
@@ -105,10 +107,13 @@ import {
   type Shown,
   type Stepper,
   type CommitNote,
+  type Looking,
+  type PickedRange,
   type Summaries,
   type SummaryTab,
   type WallSection,
 } from 'frontend/data/summaries';
+import type { Picked, Timeline } from 'frontend/data/timeline';
 import type { Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import { DOWN } from 'frontend/services/reachability';
@@ -126,6 +131,8 @@ export type {
   PipState,
   Stepper,
   CommitNote,
+  Looking,
+  PickedRange,
   SummaryState,
   SummaryTab,
   Tally,
@@ -580,6 +587,7 @@ export default class StoreService extends Service {
     pr: Numbered,
     source: DiffSource,
     chosen: string | null,
+    picked: Picked | null,
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
     return (
@@ -589,8 +597,27 @@ export default class StoreService extends Service {
         held.read,
         chosen,
         held.facts?.my_review_sha ?? null,
+        picked,
       )
     );
+  }
+
+  pickedRange(
+    pr: Numbered,
+    source: DiffSource,
+    picked: Picked | null,
+  ): PickedRange | null {
+    const held = this.pr(pr.repo, pr.number);
+    return held ? pickedRangeOf(held.history[source], picked) : null;
+  }
+
+  timeline(
+    pr: Numbered,
+    source: DiffSource,
+    looking: Looking,
+  ): Timeline | null | undefined {
+    const held = this.pr(pr.repo, pr.number);
+    return held && timelineOf(held, held.history[source], looking);
   }
 
   commitNote(pr: Numbered, source: DiffSource): CommitNote | null {

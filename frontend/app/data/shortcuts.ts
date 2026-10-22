@@ -117,7 +117,8 @@ export const SHORTCUTS: ShortcutGroup[] = [
     screen: 'Diff',
     shortcuts: [
       { keys: ['[', ']'], does: 'Previous or next commit' },
-      { keys: ['Esc'], does: 'Drop the selection' },
+      { keys: ['t'], does: 'Open or close the timeline' },
+      { keys: ['Esc'], does: 'Drop the selection, or the range' },
     ],
   },
 ];

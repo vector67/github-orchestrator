@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type { Commits, Diff } from 'frontend/data/api';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
+import { ordered, type Picked, type Timeline } from 'frontend/data/timeline';
 import { reportError } from 'frontend/data/report';
 import { keyOf } from 'frontend/data/wall';
 import type CommitBoxService from 'frontend/services/commit-box';
@@ -11,7 +12,12 @@ import type { PrScope } from 'frontend/services/here';
 import type ReviewService from 'frontend/services/review';
 import type StoreService from 'frontend/services/store';
 import { commitsOf } from 'frontend/services/store';
-import type { CommitNote, DiffSource, Stepper } from 'frontend/services/store';
+import type {
+  CommitNote,
+  DiffSource,
+  PickedRange,
+  Stepper,
+} from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export type { DiffSource } from 'frontend/services/store';
@@ -21,6 +27,8 @@ class PerPr {
   @tracked fetching = false;
   @tracked source: DiffSource = 'origin';
   @tracked chosen: string | null = null;
+  @tracked picked: Picked | null = null;
+  @tracked timelineOpen = false;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
   asked: string | null = null;
@@ -62,10 +70,75 @@ export default class PullRequestDiffService extends Service {
     return commits && this.store.diff(commits);
   }
 
-  get stepper(): Stepper | null | undefined {
-    if (this.commitBox.sizing === 'hidden') return null;
-    return this.store.stepper(this.here.at, this.source, this.pr.chosen);
+  private get hidden(): boolean {
+    return this.commitBox.sizing === 'hidden';
   }
+
+  private get stepping(): Stepper | null | undefined {
+    return this.store.stepper(
+      this.here.at,
+      this.source,
+      this.pr.chosen,
+      this.pr.picked,
+    );
+  }
+
+  get stepper(): Stepper | null | undefined {
+    return this.hidden ? null : this.stepping;
+  }
+
+  get picked(): PickedRange | null {
+    return this.store.pickedRange(this.here.at, this.source, this.pr.picked);
+  }
+
+  get pickedFiles(): number | null {
+    const picked = this.picked;
+    return picked && (this.store.files(picked.range)?.length ?? null);
+  }
+
+  get timeline(): Timeline | null | undefined {
+    return this.store.timeline(this.here.at, this.source, {
+      current: this.stepping?.sha ?? null,
+      picked: this.pr.picked,
+      hidden: this.hidden,
+    });
+  }
+
+  get timelineOpen(): boolean {
+    return this.pr.timelineOpen && Boolean(this.timeline);
+  }
+
+  toggleTimeline = () => {
+    this.pr.timelineOpen = !this.pr.timelineOpen;
+  };
+
+  pick = (sha: string, extend: boolean) => {
+    const order = this.timeline?.order ?? [];
+    const anchor = this.stepper?.sha ?? this.pr.picked?.from ?? sha;
+    this.choose(extend ? ordered(order, anchor, sha) : { from: sha, to: sha });
+  };
+
+  stretch = (end: 'from' | 'to', sha: string) => {
+    const showing = this.timeline?.showing;
+    if (!showing) return;
+    const kept = end === 'from' ? showing.to : showing.from;
+    this.choose(ordered(this.timeline?.order ?? [], kept, sha));
+  };
+
+  choose = (picked: Picked | null) => {
+    if (picked && picked.from === picked.to && !this.hidden) {
+      this.pr.chosen = picked.from;
+      this.pr.picked = null;
+      return;
+    }
+    this.pr.picked = picked;
+  };
+
+  unpick = (): boolean => {
+    if (!this.pr.picked) return false;
+    this.pr.picked = null;
+    return true;
+  };
 
   get note(): CommitNote | null {
     if (this.commitBox.sizing !== 'full') return null;
@@ -80,26 +153,31 @@ export default class PullRequestDiffService extends Service {
     if (note) this.commitBox.dismissNote(keyOf(this.here.at), note.head);
   };
 
+  private get range(): Commits | null {
+    return this.picked?.range ?? this.stepper?.range ?? null;
+  }
+
   get shown(): Diff | undefined {
-    const stepper = this.stepper;
-    if (stepper) return this.store.diff(stepper.range);
-    if (stepper === undefined && !this.pr.stepless) return undefined;
+    const range = this.range;
+    if (range) return this.store.diff(range);
+    if (this.stepper === undefined && !this.pr.stepless) return undefined;
     return this.diff;
   }
 
   get shownFailed(): boolean {
-    const stepper = this.stepper;
-    if (stepper) return this.pr.unreadable === commitsOf(stepper.range);
+    const range = this.range;
+    if (range) return this.pr.unreadable === commitsOf(range);
     return this.failed;
   }
 
   get commenting(): boolean {
-    return !this.stepper?.next;
+    const picked = this.picked;
+    return picked ? picked.head : !this.stepper?.next;
   }
 
   get drawing(): string {
-    const stepper = this.stepper;
-    return stepper ? commitsOf(stepper.range) : '';
+    const range = this.range;
+    return range ? commitsOf(range) : '';
   }
 
   load = () => {
@@ -112,18 +190,21 @@ export default class PullRequestDiffService extends Service {
   };
 
   draw = () => {
-    const stepper = this.stepper;
-    if (stepper) void waitForPromise(this.drawn(this.pr, stepper.range));
+    const range = this.range;
+    if (range) void waitForPromise(this.drawn(this.pr, range));
   };
 
   step = (by: number) => {
     const stepper = this.stepper;
     const sha = by < 0 ? stepper?.previous : stepper?.next;
-    if (sha) this.pr.chosen = sha;
+    if (!sha) return;
+    this.pr.chosen = sha;
+    this.pr.picked = null;
   };
 
   go = (sha: string) => {
     this.pr.chosen = sha;
+    this.pr.picked = null;
   };
 
   tick = (marked: boolean) => {

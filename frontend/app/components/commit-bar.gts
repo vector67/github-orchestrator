@@ -5,7 +5,7 @@ import { service } from '@ember/service';
 import { relativeOf } from 'frontend/data/dashboard';
 import type CommitBoxService from 'frontend/services/commit-box';
 import type HubService from 'frontend/services/hub';
-import type { CommitNote, Stepper } from 'frontend/services/store';
+import type { CommitNote, PickedRange, Stepper } from 'frontend/services/store';
 
 export interface CommitBarSignature {
   Args: {
@@ -15,6 +15,11 @@ export interface CommitBarSignature {
     tick: (marked: boolean) => void;
     note: CommitNote | null;
     dismissNote: () => void;
+    picked: PickedRange | null;
+    pickedFiles: number | null;
+    unpick: () => void;
+    timelineOpen: boolean;
+    toggleTimeline: () => void;
   };
 }
 
@@ -35,6 +40,17 @@ export default class CommitBar extends Component<CommitBarSignature> {
     return `${count} ${count === 1 ? 'commit' : 'commits'}`;
   }
 
+  get rangeCommits(): string {
+    const count = this.args.picked?.count ?? 0;
+    return `${count} ${count === 1 ? 'commit' : 'commits'}`;
+  }
+
+  get rangeFiles(): string {
+    const count = this.args.pickedFiles;
+    if (count === null) return '… files';
+    return `${count} ${count === 1 ? 'file' : 'files'}`;
+  }
+
   ticked = (event: Event) => {
     this.args.tick((event.target as HTMLInputElement).checked);
   };
@@ -47,46 +63,84 @@ export default class CommitBar extends Component<CommitBarSignature> {
     >
       <div class="commit-box">
         {{#if this.full}}
-          <div class="commit-bar" data-test-commit-bar>
-            <button
-              type="button"
-              class="btn"
-              title="the previous commit ["
-              disabled={{if @stepper.previous false true}}
-              data-test-step="previous"
-              {{on "click" (fn @step -1)}}
-            >‹ Prev <kbd>[</kbd></button>
-            <span class="commit-what">
-              <b data-test-commit-place>Commit
-                {{@stepper.place}}
-                of
-                {{@stepper.count}}</b>
-              <span class="commit-sep">·</span>
-              <code class="commit-sha">{{@stepper.short}}</code>
-              <span class="commit-subject">{{@stepper.subject}}</span>
-              <span class="commit-sep">·</span>
-              <span class="commit-by">{{@stepper.author}}</span>
-              <span class="commit-sep">·</span>
-              <span class="commit-age">{{this.age}}</span>
-            </span>
-            <label class="commit-read">
-              <input
-                type="checkbox"
-                checked={{@stepper.read}}
-                data-test-read
-                {{on "change" this.ticked}}
-              />
-              Read
-            </label>
-            <button
-              type="button"
-              class="btn commit-next"
-              title="the next commit ]"
-              disabled={{if @stepper.next false true}}
-              data-test-step="next"
-              {{on "click" (fn @step 1)}}
-            >Next <kbd>]</kbd> ›</button>
-          </div>
+          {{#if @picked}}
+            <div class="commit-bar" data-test-commit-bar data-mode="range">
+              <span class="commit-pill" data-test-range-pill>range</span>
+              <span class="commit-what" data-test-range>
+                <code class="commit-sha">{{@picked.fromShort}}</code>
+                →
+                <code class="commit-sha">{{@picked.toShort}}</code>
+                <span class="commit-sep">·</span>
+                {{this.rangeCommits}}
+                <span class="commit-sep">·</span>
+                {{this.rangeFiles}}
+              </span>
+              <button
+                type="button"
+                class="btn"
+                title="back to the commit you were on Esc"
+                data-test-back-to-stepping
+                {{on "click" @unpick}}
+              >Back to stepping</button>
+              <button
+                type="button"
+                class="btn"
+                title="the branch's timeline t"
+                aria-pressed={{if @timelineOpen "true" "false"}}
+                data-test-timeline-toggle
+                {{on "click" @toggleTimeline}}
+              >Timeline <kbd>t</kbd></button>
+            </div>
+          {{else}}
+            <div class="commit-bar" data-test-commit-bar>
+              <button
+                type="button"
+                class="btn"
+                title="the previous commit ["
+                disabled={{if @stepper.previous false true}}
+                data-test-step="previous"
+                {{on "click" (fn @step -1)}}
+              >‹ Prev <kbd>[</kbd></button>
+              <span class="commit-what">
+                <b data-test-commit-place>Commit
+                  {{@stepper.place}}
+                  of
+                  {{@stepper.count}}</b>
+                <span class="commit-sep">·</span>
+                <code class="commit-sha">{{@stepper.short}}</code>
+                <span class="commit-subject">{{@stepper.subject}}</span>
+                <span class="commit-sep">·</span>
+                <span class="commit-by">{{@stepper.author}}</span>
+                <span class="commit-sep">·</span>
+                <span class="commit-age">{{this.age}}</span>
+              </span>
+              <label class="commit-read">
+                <input
+                  type="checkbox"
+                  checked={{@stepper.read}}
+                  data-test-read
+                  {{on "change" this.ticked}}
+                />
+                Read
+              </label>
+              <button
+                type="button"
+                class="btn"
+                title="the branch's timeline t"
+                aria-pressed={{if @timelineOpen "true" "false"}}
+                data-test-timeline-toggle
+                {{on "click" @toggleTimeline}}
+              >Timeline <kbd>t</kbd></button>
+              <button
+                type="button"
+                class="btn commit-next"
+                title="the next commit ]"
+                disabled={{if @stepper.next false true}}
+                data-test-step="next"
+                {{on "click" (fn @step 1)}}
+              >Next <kbd>]</kbd> ›</button>
+            </div>
+          {{/if}}
         {{/if}}
         <ol class="commit-pips" aria-label="the pull request's commits">
           {{#each @stepper.pips key="sha" as |pip|}}

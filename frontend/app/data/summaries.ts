@@ -20,6 +20,12 @@ import type { Details, FileStat } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
 import { levelOf, type Level } from 'frontend/data/wall';
 import {
+  dayOf,
+  timelineBuilt,
+  type Picked,
+  type Timeline,
+} from 'frontend/data/timeline';
+import {
   operationKey,
   type StoredOperation,
   type Thread,
@@ -971,7 +977,7 @@ export function summaryTabOf(
   return tab;
 }
 
-export type PipState = 'read' | 'current' | 'unread';
+export type PipState = 'read' | 'current' | 'unread' | 'range';
 
 export interface Pip {
   sha: string;
@@ -1011,6 +1017,7 @@ function stepperBuilt(
   marks: ReadMark[],
   chosen: string | null,
   reviewed: string | null,
+  picked: Picked | null,
 ): Stepper | null {
   const { commits } = history;
   if (!commits.length) return null;
@@ -1027,6 +1034,16 @@ function stepperBuilt(
           ? unreadAt
           : commits.length - 1;
   const commit = commits[at]!;
+  const from = commits.findIndex((one) => one.sha === picked?.from);
+  const to = commits.findIndex((one) => one.sha === picked?.to);
+  const stateOf = (sha: string, index: number): PipState =>
+    from >= 0 && index >= from && index <= to
+      ? 'range'
+      : index === at
+        ? 'current'
+        : read.has(sha)
+          ? 'read'
+          : 'unread';
   return {
     place: at + 1,
     count: commits.length,
@@ -1041,7 +1058,7 @@ function stepperBuilt(
     next: commits[at + 1]?.sha ?? null,
     pips: commits.map((one, index) => ({
       sha: one.sha,
-      state: index === at ? 'current' : read.has(one.sha) ? 'read' : 'unread',
+      state: stateOf(one.sha, index),
       label: `${index + 1} of ${commits.length} · ${one.sha.slice(0, SHORT_SHA)} ${one.subject}`,
     })),
   };
@@ -1053,6 +1070,7 @@ const lastSteppers = new WeakMap<
     marks: ReadMark[];
     chosen: string | null;
     reviewed: string | null;
+    picked: Picked | null;
     stepper: Stepper | null;
   }
 >();
@@ -1062,17 +1080,19 @@ export function stepperOf(
   marks: ReadMark[] | null,
   chosen: string | null,
   reviewed: string | null,
+  picked: Picked | null,
 ): Stepper | null | undefined {
   if (!history || !marks) return undefined;
   const last = lastSteppers.get(history);
   if (
     last?.marks === marks &&
     last.chosen === chosen &&
-    last.reviewed === reviewed
+    last.reviewed === reviewed &&
+    last.picked === picked
   )
     return last.stepper;
-  const stepper = stepperBuilt(history, marks, chosen, reviewed);
-  lastSteppers.set(history, { marks, chosen, reviewed, stepper });
+  const stepper = stepperBuilt(history, marks, chosen, reviewed, picked);
+  lastSteppers.set(history, { marks, chosen, reviewed, picked, stepper });
   return stepper;
 }
 
@@ -1097,11 +1117,7 @@ function commitNoteBuilt(
   const count = commits.length - reviewedAt - 1;
   return {
     count,
-    reviewedOn: new Date(facts.my_review_at).toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    }),
+    reviewedOn: dayOf(facts.my_review_at),
     head: commits[commits.length - 1]!.sha,
   };
 }
@@ -1122,4 +1138,93 @@ export function commitNoteOf(
   const note = commitNoteBuilt(history, facts, marks);
   lastNotes.set(history, { facts, marks, note });
   return note;
+}
+
+export interface PickedRange {
+  fromShort: string;
+  toShort: string;
+  count: number;
+  range: Commits;
+  head: boolean;
+}
+
+function pickedRangeBuilt(
+  history: PullRequestCommits,
+  picked: Picked,
+): PickedRange | null {
+  const { commits } = history;
+  const from = commits.findIndex((one) => one.sha === picked.from);
+  const to = commits.findIndex((one) => one.sha === picked.to);
+  if (from < 0 || to < from) return null;
+  const first = commits[from]!;
+  return {
+    fromShort: picked.from.slice(0, SHORT_SHA),
+    toShort: picked.to.slice(0, SHORT_SHA),
+    count: to - from + 1,
+    range: { base: first.parents[0] ?? history.fork, head: picked.to },
+    head: to === commits.length - 1,
+  };
+}
+
+const lastPicked = new WeakMap<
+  PullRequestCommits,
+  { picked: Picked; range: PickedRange | null }
+>();
+
+export function pickedRangeOf(
+  history: PullRequestCommits | undefined,
+  picked: Picked | null,
+): PickedRange | null {
+  if (!history || !picked) return null;
+  const last = lastPicked.get(history);
+  if (last?.picked === picked) return last.range;
+  const range = pickedRangeBuilt(history, picked);
+  lastPicked.set(history, { picked, range });
+  return range;
+}
+
+export interface Looking {
+  current: string | null;
+  picked: Picked | null;
+  hidden: boolean;
+}
+
+const lastTimelines = new WeakMap<
+  PullRequestCommits,
+  {
+    pr: PrEntity;
+    current: string | null;
+    picked: Picked | null;
+    hidden: boolean;
+    timeline: Timeline | null;
+  }
+>();
+
+export function timelineOf(
+  pr: PrEntity,
+  history: PullRequestCommits | undefined,
+  { current, picked, hidden }: Looking,
+): Timeline | null | undefined {
+  if (!history || !pr.read) return undefined;
+  const last = lastTimelines.get(history);
+  if (
+    last?.pr === pr &&
+    last.current === current &&
+    last.picked === picked &&
+    last.hidden === hidden
+  )
+    return last.timeline;
+  const timeline = timelineBuilt({
+    history,
+    read: new Set(pr.read.map((one) => one.sha)),
+    branch: pr.branch,
+    base: pr.base_branch,
+    reviewedSha: pr.facts?.my_review_sha ?? null,
+    reviewedAt: pr.facts?.my_review_at ?? null,
+    current,
+    picked,
+    hidden,
+  });
+  lastTimelines.set(history, { pr, current, picked, hidden, timeline });
+  return timeline;
 }
