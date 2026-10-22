@@ -227,21 +227,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             />
           {{/if}}
           {{#each @timeline.dots key="sha" as |dot|}}
-            {{#if (eq dot.shape "diamond")}}
-              <path
-                class="timeline-dot"
-                d={{dot.path}}
-                data-x={{dot.x}}
-                data-y={{dot.y}}
-                data-shape={{dot.shape}}
-                data-sha={{dot.sha}}
-                data-lane={{dot.lane}}
-                data-style={{dot.style}}
-                data-in-range={{if dot.inRange "true" "false"}}
-                data-pickable={{if dot.pickable "true"}}
-                data-test-dot
-              ><title>{{dot.title}}</title></path>
-            {{else}}
+            {{#if (eq dot.shape "dot")}}
               <circle
                 class="timeline-dot"
                 cx={{dot.x}}
@@ -257,13 +243,28 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-pickable={{if dot.pickable "true"}}
                 data-test-dot
               ><title>{{dot.title}}</title></circle>
+            {{else}}
+              <path
+                class="timeline-dot"
+                d={{dot.path}}
+                data-x={{dot.x}}
+                data-y={{dot.y}}
+                data-shape={{dot.shape}}
+                data-sha={{dot.sha}}
+                data-lane={{dot.lane}}
+                data-style={{dot.style}}
+                data-in-range={{if dot.inRange "true" "false"}}
+                data-pickable={{if dot.pickable "true"}}
+                data-test-dot
+              ><title>{{dot.title}}</title></path>
             {{/if}}
-            {{#if dot.pickable}}
+            {{#if dot.showSha}}
               <text
                 class="timeline-sha"
                 x={{dot.x}}
                 y={{dot.shaY}}
                 text-anchor="middle"
+                data-test-sha
               >{{dot.short}}</text>
             {{/if}}
             {{#if dot.date}}
@@ -275,6 +276,16 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-test-date
               >{{dot.date}}</text>
             {{/if}}
+          {{/each}}
+          {{#each @timeline.days key="x" as |day|}}
+            <g class="timeline-day" data-x={{day.x}} data-test-day>
+              <line x1={{day.x}} y1={{day.top}} x2={{day.x}} y2={{day.y}} />
+              <text
+                class="timeline-note"
+                x={{day.textX}}
+                y={{day.y}}
+              >{{day.text}}</text>
+            </g>
           {{/each}}
           {{#if @timeline.collapsed}}
             <g

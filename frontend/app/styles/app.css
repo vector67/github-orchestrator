@@ -4890,6 +4890,23 @@ button.tree-row[aria-current="true"] {
   text-decoration: underline;
 }
 
+.timeline-dot[data-shape="tick"] {
+  stroke-width: 3;
+}
+
+.timeline-day line {
+  stroke: var(--hairline);
+}
+
+.commit-pips[data-thin] {
+  gap: 0;
+}
+
+.commit-pips[data-thin] .commit-pip {
+  height: 4px;
+  border-right-color: var(--page);
+}
+
 .timeline-run {
   cursor: pointer;
 }

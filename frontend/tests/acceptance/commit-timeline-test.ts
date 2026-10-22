@@ -801,3 +801,81 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
     assert.strictEqual(dots('base').length, 21);
   });
 });
+
+module(
+  'Acceptance | commit timeline for a long pull request',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    const DAYS = ['2026-10-19', '2026-10-20', '2026-10-21'];
+
+    function long(count: number): string[] {
+      const shas = Array.from(
+        { length: count },
+        (_, index) => `${(index + 1).toString(16).padStart(2, '0')}c0000`,
+      );
+      board().commits = prHistory(
+        FORK,
+        shas.map((sha, index) => ({
+          ...prCommit(sha, shas[index - 1] ?? FORK, `step ${index}`),
+          authored_at: `${DAYS[Math.floor((index * DAYS.length) / count)]}T09:${String(index).padStart(2, '0')}:00Z`,
+        })),
+      );
+      return shas;
+    }
+
+    function shasShown(): string[] {
+      return findAll('[data-test-sha]').map((one) => one.textContent.trim());
+    }
+
+    test('past twenty commits the dots turn to ticks, shas show only where you are, and a day row marks each day', async function (assert) {
+      const shas = long(24);
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.true(
+        dots('pr').every(
+          (one) => dot(one.sha).getAttribute('data-shape') === 'tick',
+        ),
+      );
+      assert.deepEqual(shasShown(), [shas[0]]);
+      const days = findAll('[data-test-day]');
+      assert.deepEqual(
+        days.map((one) => one.textContent.trim()),
+        ['Mon 19 Oct', 'Tue 20 Oct', 'Wed 21 Oct'],
+      );
+      assert.deepEqual(
+        days.map((one) => Number(one.getAttribute('data-x'))),
+        [shas[0], shas[8], shas[16]].map((sha) =>
+          Number(dot(sha!).getAttribute('data-x')),
+        ),
+        'each day starts at its first commit',
+      );
+      assert
+        .dom('[data-test-commit-stepper] .commit-pips')
+        .hasAttribute('data-thin');
+      assert.strictEqual(findAll('[data-test-pip]').length, 24);
+
+      await click(dot(shas[3]!));
+      await click(dot(shas[10]!), { shiftKey: true });
+
+      assert.deepEqual(shasShown(), [shas[3], shas[10]]);
+    });
+
+    test('twenty commits keep their dots, their shas and their pips', async function (assert) {
+      long(20);
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.dom('[data-test-dot][data-shape="tick"]').doesNotExist();
+      assert.strictEqual(shasShown().length, 20);
+      assert.dom('[data-test-day]').doesNotExist();
+      assert
+        .dom('[data-test-commit-stepper] .commit-pips')
+        .doesNotHaveAttribute('data-thin');
+    });
+  },
+);

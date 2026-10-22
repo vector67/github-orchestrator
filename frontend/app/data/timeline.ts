@@ -4,6 +4,7 @@ import {
   SPACING,
   type GraphNode,
   type Placed,
+  type Spacing,
 } from 'frontend/data/graph';
 
 const SHORT = 7;
@@ -12,6 +13,12 @@ const STACK_LANE = 'stack';
 const PR_LANE = 'pr';
 const BAND_REACH = 12;
 const SHA_DROP = 20;
+const DAY_DROP = 36;
+const DAY_RISE = 14;
+const DAY_GAP = 4;
+const TICK = 7;
+export const LONG = 20;
+const TICKS: Spacing = { ...SPACING, column: 18 };
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
@@ -40,7 +47,7 @@ export interface Preset {
 
 export type DotStyle = 'base' | 'stack' | 'read' | 'unread';
 
-export type DotShape = 'dot' | 'diamond';
+export type DotShape = 'dot' | 'diamond' | 'tick';
 
 export interface TimelineDot {
   sha: string;
@@ -53,10 +60,19 @@ export interface TimelineDot {
   x: number;
   y: number;
   shaY: number;
+  showSha: boolean;
   date: string | null;
   dateY: number;
   pickable: boolean;
   inRange: boolean;
+}
+
+export interface TimelineDay {
+  x: number;
+  top: number;
+  y: number;
+  textX: number;
+  text: string;
 }
 
 export interface Listed {
@@ -142,6 +158,7 @@ export interface Timeline {
   flag: TimelineFlag | null;
   since: SinceFork | null;
   collapsed: CollapsedRun | null;
+  days: TimelineDay[];
   header: TimelineHeader;
   presets: Preset[];
   order: string[];
@@ -259,6 +276,7 @@ function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
 function collapsedOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
+  spacing: Spacing,
 ): CollapsedRun | null {
   const { run } = keptOf(history);
   const at = placed.get(RUN);
@@ -273,7 +291,10 @@ function collapsedOf(
       short: '',
       subject: `⋯ ${hidden} more`,
     });
-  const width = RUN_SPAN * SPACING.column - 2 * RUN_REACH;
+  const width = Math.max(
+    RUN_SPAN * spacing.column - 2 * RUN_REACH,
+    SPACING.column,
+  );
   return {
     x: at.x,
     y: at.y,
@@ -358,6 +379,31 @@ function sinceOf(
   };
 }
 
+function tickAt(x: number, y: number): string {
+  return `M ${x} ${y - TICK} L ${x} ${y + TICK}`;
+}
+
+function daysOf(
+  history: PullRequestCommits,
+  placed: Map<string, Placed>,
+): TimelineDay[] {
+  return history.commits.flatMap((one, index) => {
+    const text = dayOf(one.authored_at);
+    const before = history.commits[index - 1];
+    const at = placed.get(one.sha);
+    if (!at || (before && dayOf(before.authored_at) === text)) return [];
+    return [
+      {
+        x: at.x,
+        top: at.y + DAY_RISE,
+        y: at.y + DAY_DROP,
+        textX: at.x + DAY_GAP,
+        text,
+      },
+    ];
+  });
+}
+
 function diamondAt(x: number, y: number): string {
   return `M ${x} ${y - DIAMOND} L ${x + DIAMOND} ${y} L ${x} ${y + DIAMOND} L ${x - DIAMOND} ${y} Z`;
 }
@@ -395,9 +441,12 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const order = history.commits.map((one) => one.sha);
   if (!order.length) return null;
   const stack = history.stack;
+  const long = order.length > LONG;
+  const spacing = long ? TICKS : SPACING;
   const graph = layout(
     stack ? [BASE_LANE, STACK_LANE, PR_LANE] : [BASE_LANE, PR_LANE],
     nodesOf(history),
+    spacing,
   );
   const base = input.base ?? 'main';
   const showing =
@@ -434,7 +483,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     const date = dates.get(node.id);
     const short = node.id.slice(0, SHORT);
     const subject = subjects.get(node.id);
-    const shape: DotShape = merges.has(node.id) ? 'diamond' : 'dot';
+    const shape: DotShape = merges.has(node.id)
+      ? 'diamond'
+      : long && at >= 0
+        ? 'tick'
+        : 'dot';
     return {
       sha: node.id,
       short,
@@ -442,10 +495,18 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       lane: node.lane,
       style: styleOf(node, read),
       shape,
-      path: shape === 'diamond' ? diamondAt(node.x, node.y) : '',
+      path:
+        shape === 'diamond'
+          ? diamondAt(node.x, node.y)
+          : shape === 'tick'
+            ? tickAt(node.x, node.y)
+            : '',
       x: node.x,
       y: node.y,
       shaY: node.y + SHA_DROP,
+      showSha:
+        at >= 0 &&
+        (!long || [showing.from, showing.to, input.current].includes(node.id)),
       date: date ? dayOf(date) : null,
       dateY: node.y + DATE_DROP,
       pickable: at >= 0,
@@ -504,9 +565,10 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       graph.nodes.get(showing.from) ?? head,
       graph.nodes.get(showing.to) ?? head,
     ),
-    flag: flagOf(order, input, graph.nodes, SPACING.column),
+    flag: flagOf(order, input, graph.nodes, spacing.column),
     since: sinceOf(history, graph.nodes, base),
-    collapsed: collapsedOf(history, graph.nodes),
+    collapsed: collapsedOf(history, graph.nodes, spacing),
+    days: long ? daysOf(history, graph.nodes) : [],
     header: {
       count: merges.size
         ? `${plural(order.length - merges.size, 'commit')} and ${plural(merges.size, 'merge')}`

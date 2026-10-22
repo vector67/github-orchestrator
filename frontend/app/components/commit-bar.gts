@@ -145,7 +145,11 @@ export default class CommitBar extends Component<CommitBarSignature> {
             </div>
           {{/if}}
         {{/if}}
-        <ol class="commit-pips" aria-label="the pull request's commits">
+        <ol
+          class="commit-pips"
+          aria-label="the pull request's commits"
+          data-thin={{if @stepper.thin "true"}}
+        >
           {{#each @stepper.pips key="sha" as |pip|}}
             <li class="commit-pip-slot"><button
                 type="button"

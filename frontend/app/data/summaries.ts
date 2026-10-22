@@ -22,6 +22,7 @@ import { atWork } from 'frontend/data/thread';
 import { levelOf, type Level } from 'frontend/data/wall';
 import {
   dayOf,
+  LONG,
   timelineBuilt,
   type Picked,
   type Timeline,
@@ -1038,6 +1039,7 @@ export interface Stepper {
   previous: string | null;
   next: string | null;
   pips: Pip[];
+  thin: boolean;
 }
 
 function pickedUpAt(
@@ -1110,6 +1112,7 @@ function stepperBuilt(
       merge: isMerge(one),
       label: `${index + 1} of ${commits.length} · ${one.sha.slice(0, SHORT_SHA)} ${one.subject}`,
     })),
+    thin: commits.length > LONG,
   };
 }
 
