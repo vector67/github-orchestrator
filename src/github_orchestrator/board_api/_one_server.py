@@ -21,6 +21,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanels,
     ReleaseRecord,
     SetupDesk,
+    Shelves,
     Told,
     TourMarker,
     WatcherPulse,
@@ -83,7 +84,7 @@ class OneServer:
                  holdings: Holdings,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
-                 summaries: PrSummaries, lane: SummaryLane,
+                 summaries: PrSummaries, lane: SummaryLane, shelves: Shelves,
                  check_presence: bool, first_names_only: bool, heartbeat_seconds: float,
                  check_seconds: float) -> None:
         self._app_root = app_root
@@ -107,6 +108,7 @@ class OneServer:
         self._panels = panels
         self._summaries = summaries
         self._lane = lane
+        self._shelves = shelves
         self._check_presence = check_presence
         self._first_names_only = first_names_only
         self._heartbeat_seconds = heartbeat_seconds
@@ -133,6 +135,7 @@ class OneServer:
                 terminals=self._terminals.of(pr),
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
                 clock=self._clock, summaries=self._summaries, lane=self._lane,
+                shelf=self._shelves.of(pr),
                 prefix=pr_page(pr)))
 
         return _Routed(hub_app(desk, port), _Boards(self._told, board))

@@ -996,6 +996,23 @@ class PullRequestCommits(BaseModel):
     commits: list[PullRequestCommit]
 
 
+class ReadMark(BaseModel):
+    sha: Sha
+    subject: str = Field(
+        description="The commit's subject when it was marked, kept so a "
+                    "rewritten commit can still be matched by its message.")
+
+
+class ReadMarks(BaseModel):
+    """The pull request's commits the operator has marked read, by sha."""
+
+    marks: list[ReadMark]
+
+
+class ReadMarkRequest(BaseModel):
+    sha: Sha
+
+
 class Commits(BaseModel):
     """Two commits that address a diff: `/diffs/{base}..{head}`."""
 

@@ -1157,6 +1157,37 @@
     }
    }
   },
+  "/api/pull-request/read-marks": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ReadMarks"
+    },
+    "304": null
+   }
+  },
+  "/api/pull-request/read-marks/operations:mark-read": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/ReadMarks"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-request/read-marks/operations:mark-unread": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/ReadMarks"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request:fetch": {
    "post": {
     "204": null,
@@ -5569,6 +5600,48 @@
    "required": [
     "event",
     "queued_at"
+   ],
+   "type": "object"
+  },
+  "ReadMark": {
+   "properties": {
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "subject": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sha",
+    "subject"
+   ],
+   "type": "object"
+  },
+  "ReadMarkRequest": {
+   "properties": {
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "sha"
+   ],
+   "type": "object"
+  },
+  "ReadMarks": {
+   "properties": {
+    "marks": {
+     "items": {
+      "$ref": "#/components/schemas/ReadMark"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "marks"
    ],
    "type": "object"
   },

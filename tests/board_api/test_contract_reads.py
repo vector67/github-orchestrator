@@ -24,6 +24,7 @@ from tests.board_api.support import (
     WORKTREE,
     board_for,
     board_on,
+    branched_from_main,
     client_of,
     disk_board,
     fake_threads,
@@ -837,19 +838,6 @@ def test_a_diff_git_will_not_produce_says_git_failed():
 
     assert answer.status_code == 500
     assert answer.json()["errors"][0]["code"] == "git-failed"
-
-
-def branched_from_main(copies=None, branch="feature"):
-    copies = copies or FakeWorkingCopies()
-    base = copies.add_repo(Path("/nonexistent/repo"), {"src/foo.py": "def write():\n"}, "first")
-    head = copies.publish(branch, base, {"src/foo.py": "def write():\n    check()\n"},
-                          "check first")
-    copies.publish("main", base, {"src/elsewhere.py": "merged since\n"}, "someone else's")
-    copies.add_worktree(WORKTREE, None)
-    copies.check_out(WORKTREE, branch)
-    copies.place(THE_PR, WORKTREE)
-    copies.fetch_pr_branch(Path(WORKTREE), THE_PR, branch, "main")
-    return copies, base, head
 
 
 def pr_board(copies):

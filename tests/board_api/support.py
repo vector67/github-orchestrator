@@ -57,6 +57,8 @@ from github_orchestrator.terminal_sessions.fake import (
     FakeTerminals,
     FakeTerminalSessions,
 )
+from github_orchestrator.thread_records import ThreadRecords
+from github_orchestrator.thread_records.fake import FakeThreadRecords
 from github_orchestrator.watcher import Health, Releases, WatcherHealth
 from github_orchestrator.wiring import (
     Part,
@@ -133,6 +135,7 @@ class Serving(TypedDict, total=False):
     port: int
     pr: Pr
     summaries: list[Part]
+    records: ThreadRecords
 
 
 class NoHeads:
@@ -183,7 +186,7 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
               **serving: Unpack[Serving]) -> ASGIApp:
     server: ServerApp = wire(
         fake_provider(Told, holding(serving.get("pr", THE_PR))),
-        *_hub_parts(),
+        *_hub_parts(records=serving.get("records")),
         fake_provider(ConversationManagerFactory, conversation_managers),
         fake_provider(WorkingCopies, working_copies),
         fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
@@ -250,8 +253,10 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                setup: SetupDesk | None = None, releases: Any = None,
                tour: TourMarker | None = None, emojis: Emojis | None = None,
                holdings: Holdings | None = None,
-               harvest: HarvestSetup | None = None) -> list[Part]:
+               harvest: HarvestSetup | None = None,
+               records: ThreadRecords | None = None) -> list[Part]:
     return [
+        fake_provider(ThreadRecords, records or FakeThreadRecords()),
         fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),
         fake_provider(Dashboards, dashboards or FakeDashboards()),
@@ -355,6 +360,20 @@ def running(board: Served) -> None:
 def proposed(board: Served, key: str = KEY, files: dict[str, str] | None = None,
              **ready: Any) -> Conversation:
     return propose(board.stage, board.threads, key, files, pr=THE_PR, **ready)
+
+
+def branched_from_main(copies: FakeWorkingCopies | None = None,
+                       branch: str = "feature") -> tuple[FakeWorkingCopies, str, str]:
+    copies = copies or FakeWorkingCopies()
+    base = copies.add_repo(Path("/nonexistent/repo"), {"src/foo.py": "def write():\n"}, "first")
+    head = copies.publish(branch, base, {"src/foo.py": "def write():\n    check()\n"},
+                          "check first")
+    copies.publish("main", base, {"src/elsewhere.py": "merged since\n"}, "someone else's")
+    copies.add_worktree(WORKTREE, None)
+    copies.check_out(WORKTREE, branch)
+    copies.place(THE_PR, WORKTREE)
+    copies.fetch_pr_branch(Path(WORKTREE), THE_PR, branch, "main")
+    return copies, base, head
 
 
 def board_for(pr_title: str | None = TITLE, base_branch: str | None = "main",

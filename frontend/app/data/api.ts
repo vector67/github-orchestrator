@@ -691,6 +691,19 @@ export interface QueuedEvent {
   queued_at: string;
 }
 
+export interface ReadMark {
+  sha: string;
+  subject: string;
+}
+
+export interface ReadMarkRequest {
+  sha: string;
+}
+
+export interface ReadMarks {
+  marks: ReadMark[];
+}
+
 export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';
 
 export type RecordState = 'open' | 'waiting_on_reviewer' | 'assumed_done' | 'not_mine' | 'confirmed' | 'deferred' | 'rejected' | 'resolved' | 'removed' | 'draft' | 'enrolled' | 'discarded';

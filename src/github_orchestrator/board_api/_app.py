@@ -61,6 +61,9 @@ from github_orchestrator.board_api._contract import (
     PullRequestCommit,
     PullRequestCommits,
     QuestionRequest,
+    ReadMark,
+    ReadMarkRequest,
+    ReadMarks,
     ReplyRequest,
     ResolveRequest,
     SendReviewRequest,
@@ -80,6 +83,7 @@ from github_orchestrator.board_api._errors import (
     FETCH_FAILED,
     NO_SUCH_DIFF,
     NO_SUCH_FILE,
+    NO_SUCH_MARKED_COMMIT,
     NOT_FOUND,
     NOT_TEXT,
     OUTSTANDING,
@@ -114,7 +118,7 @@ from github_orchestrator.board_api._projection import (
 )
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
-from github_orchestrator.board_api.interface import ManagerPanel
+from github_orchestrator.board_api.interface import ManagerPanel, Shelf
 from github_orchestrator.conversation import (
     ConversationManager,
     Denied,
@@ -163,6 +167,7 @@ class Board:
     clock: UtcClock
     summaries: PrSummaries
     lane: SummaryLane
+    shelf: Shelf
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
     prefix: str = ""
@@ -707,6 +712,46 @@ def fetch_pull_request(board: Serving) -> Response:
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
     return Response(status_code=204)
+
+
+READ = "read"
+
+
+def _read_marks(board: Board) -> ReadMarks:
+    return ReadMarks(marks=[ReadMark(sha=sha, subject=subject.decode())
+                            for sha, subject in board.shelf.list(READ).items()
+                            if subject is not None])
+
+
+@reads.get("/pull-request/read-marks", response_model=ReadMarks, tags=["pull request"],
+           operation_id="readReadMarks",
+           summary="The pull request's commits the operator has marked read.",
+           responses=etag.TAGGED)
+def read_read_marks(request: Request, board: Serving) -> Response:
+    """Kept on the server, per pull request, so a reload or another browser
+    steps on from the same place.
+    """
+    return etag.answered(request, _read_marks(board))
+
+
+@writes.post("/pull-request/read-marks/operations:mark-read", response_model=ReadMarks,
+             tags=["pull request"], operation_id="markRead",
+             responses={404: NO_SUCH_MARKED_COMMIT},
+             summary="Mark one of the pull request's commits read.")
+def mark_read(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
+    """Its subject is kept beside its sha. Answered with every mark."""
+    message = board.git.commit_message(_commit(board, asked.sha)) or ""
+    board.shelf.save(READ, asked.sha, message.split("\n", 1)[0].encode())
+    return _read_marks(board)
+
+
+@writes.post("/pull-request/read-marks/operations:mark-unread", response_model=ReadMarks,
+             tags=["pull request"], operation_id="markUnread",
+             summary="Take the read mark off one of the pull request's commits.")
+def mark_unread(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
+    """Answered with every mark left."""
+    board.shelf.delete(READ, asked.sha)
+    return _read_marks(board)
 
 
 @writes.post("/manager/git", response_model=GitRun, tags=["manager"],

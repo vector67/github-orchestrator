@@ -44,6 +44,9 @@ PR_COMMITS_FAILED = {"description": "git could not list the commits, or find the
                                     "head it was asked to list them to.",
                      "model": Errors}
 
+NO_SUCH_MARKED_COMMIT = {"description": "The repository has no such commit.",
+                         "model": Errors}
+
 FETCH_FAILED = {"description": "git could not fetch the pull request's branch.",
                 "model": Errors}
 
