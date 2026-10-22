@@ -669,6 +669,19 @@ export interface PullRequest {
   deletions: number;
 }
 
+export interface PullRequestCommit {
+  sha: string;
+  parents: string[];
+  subject: string;
+  author: string;
+  authored_at: string;
+}
+
+export interface PullRequestCommits {
+  fork: string;
+  commits: PullRequestCommit[];
+}
+
 export interface QuestionRequest {
   prompt: string;
 }

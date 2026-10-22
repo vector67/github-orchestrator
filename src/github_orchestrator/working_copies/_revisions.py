@@ -1,8 +1,10 @@
 import logging
 import os
 import subprocess
+from datetime import datetime
 
 from github_orchestrator.domain import Sha
+from github_orchestrator.working_copies.interface import PrCommit
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +48,26 @@ def blob(worktree: str, sha: str, path: str) -> bytes | None:
                     worktree, exc)
         return None
     return shown.stdout if shown.returncode == 0 else None
+
+
+def commits_between(worktree: str, base: str, head: str) -> tuple[PrCommit, ...] | None:
+    if Sha.parse(base) is None or Sha.parse(head) is None or not os.path.isdir(worktree):
+        return None
+    try:
+        logged = _git(worktree, "log", "--reverse", "--format=%H%x1f%P%x1f%an%x1f%aI%x1f%s",
+                      "--end-of-options", f"{base}..{head}")
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        log.warning("git log %s..%s in %s failed to run: %s", base, head, worktree, exc)
+        return None
+    if logged.returncode != 0:
+        return None
+    return tuple(_commit(line) for line in logged.stdout.decode(errors="replace").splitlines())
+
+
+def _commit(line: str) -> PrCommit:
+    sha, parents, author, authored_at, subject = line.split("\x1f", 4)
+    return PrCommit(Sha(sha), tuple(Sha(parent) for parent in parents.split()), subject,
+                    author, datetime.fromisoformat(authored_at))
 
 
 def named_commit(worktree: str, sha: str) -> tuple[str, str, str] | None:

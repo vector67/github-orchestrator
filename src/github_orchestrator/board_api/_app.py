@@ -3,6 +3,7 @@ import logging
 import os
 import secrets
 from collections.abc import Callable
+from datetime import UTC
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -57,6 +58,8 @@ from github_orchestrator.board_api._contract import (
     ProposalList,
     PrSummary,
     PullRequest,
+    PullRequestCommit,
+    PullRequestCommits,
     QuestionRequest,
     ReplyRequest,
     ResolveRequest,
@@ -80,6 +83,7 @@ from github_orchestrator.board_api._errors import (
     NOT_FOUND,
     NOT_TEXT,
     OUTSTANDING,
+    PR_COMMITS_FAILED,
     PR_DIFF_FAILED,
     PRECONDITION_FAILED,
     TOO_LONG,
@@ -275,6 +279,32 @@ def read_pull_request_diff(request: Request, board: Serving,
     return etag.answered(request, diff_of(
         str(diff.base), str(diff.head), diff.files,
         lambda path: board.git.blob(diff.head, path)))
+
+
+@reads.get("/pull-request/commits", response_model=PullRequestCommits,
+           tags=["pull request"], operation_id="readPullRequestCommits",
+           summary="The pull request's own commits, from where it left its base to its head.",
+           responses={**etag.TAGGED, 500: PR_COMMITS_FAILED})
+def read_pull_request_commits(request: Request, board: Serving,
+                              source: DiffSource = DiffSource.ORIGIN) -> Response:
+    """The commits `/pull-request/diff` spans, with the same `source`:
+    `origin` lists what was last fetched, `local` adds what the worktree
+    has not pushed.
+    """
+    facts = board.conversations.facts()
+    head = board.git.origin_head() if source is DiffSource.ORIGIN else board.git.local_head()
+    history = None if head is None else board.git.pr_commits(facts.base_branch, head)
+    if history is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      board.git.no_worktree()
+                      or f"git could not list the pull request's {source} commits")
+    return etag.answered(request, PullRequestCommits(
+        fork=str(history.fork),
+        commits=[PullRequestCommit(
+            sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
+            subject=commit.subject, author=commit.author,
+            authored_at=commit.authored_at.astimezone(UTC).strftime(AS_OF_FORMAT))
+            for commit in history.commits]))
 
 
 @reads.get("/viewer", tags=["people"], operation_id="readViewer",

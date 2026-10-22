@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
@@ -76,6 +77,21 @@ class PrDiff:
 
 
 @dataclass(frozen=True)
+class PrCommit:
+    sha: Sha
+    parents: tuple[Sha, ...]
+    subject: str
+    author: str
+    authored_at: datetime
+
+
+@dataclass(frozen=True)
+class PrCommits:
+    fork: Sha
+    commits: tuple[PrCommit, ...]
+
+
+@dataclass(frozen=True)
 class NamedCommit:
     sha: Sha
     parent: Sha
@@ -145,6 +161,8 @@ class PrCheckout(Protocol):
     def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None: ...
 
     def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None: ...
+
+    def pr_commits(self, base_branch: str | None, head: Sha) -> PrCommits | None: ...
 
     def has_commit(self, sha: Sha) -> bool: ...
 

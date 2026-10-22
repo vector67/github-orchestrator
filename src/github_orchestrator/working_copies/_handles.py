@@ -10,6 +10,8 @@ from github_orchestrator.working_copies.interface import (
     FileDiff,
     NamedCommit,
     Picked,
+    PrCommit,
+    PrCommits,
     PrDiff,
     ThreadGitError,
 )
@@ -66,6 +68,9 @@ class Git(Protocol):
     def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
 
     def _pr_base(self, worktree: str, base_branch: str | None, head: str) -> str | None: ...
+
+    def _commits_between(self, worktree: str, base: str,
+                         head: str) -> tuple[PrCommit, ...] | None: ...
 
     def _has_commit(self, worktree: str, sha: str) -> bool: ...
 
@@ -213,6 +218,16 @@ class BoundCheckout:
             return None
         files = self.git._diff_files(path, str(base), str(head))
         return None if files is None else PrDiff(base, head, files)
+
+    def pr_commits(self, base_branch: str | None, head: Sha) -> PrCommits | None:
+        path = self._path()
+        if path is None:
+            return None
+        fork = Sha.parse(self.git._pr_base(path, base_branch, str(head)))
+        if fork is None:
+            return None
+        commits = self.git._commits_between(path, str(fork), str(head))
+        return None if commits is None else PrCommits(fork, commits)
 
     def has_commit(self, sha: Sha) -> bool:
         path = self._path()
