@@ -1129,6 +1129,20 @@
     "304": null
    }
   },
+  "/api/pull-request/commits": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/PullRequestCommits"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/diff": {
    "get": {
     "200": {
@@ -5470,6 +5484,57 @@
     "commits",
     "additions",
     "deletions"
+   ],
+   "type": "object"
+  },
+  "PullRequestCommit": {
+   "properties": {
+    "author": {
+     "type": "string"
+    },
+    "authored_at": {
+     "type": "string"
+    },
+    "parents": {
+     "items": {
+      "pattern": "^[0-9a-f]{7,40}$",
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "subject": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sha",
+    "parents",
+    "subject",
+    "author",
+    "authored_at"
+   ],
+   "type": "object"
+  },
+  "PullRequestCommits": {
+   "properties": {
+    "commits": {
+     "items": {
+      "$ref": "#/components/schemas/PullRequestCommit"
+     },
+     "type": "array"
+    },
+    "fork": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "fork",
+    "commits"
    ],
    "type": "object"
   },

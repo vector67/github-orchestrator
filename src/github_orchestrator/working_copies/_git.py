@@ -29,6 +29,7 @@ from github_orchestrator.working_copies.interface import (
     BaseStanding,
     FileDiff,
     Picked,
+    PrCommit,
     ThreadGitError,
     Verdict,
     WrongBranch,
@@ -323,6 +324,10 @@ class GitWorkingCopies:
     def _pr_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
         found, _ = resolve_pr_base(worktree, base_branch, head)
         return found
+
+    def _commits_between(self, worktree: str, base: str,
+                         head: str) -> tuple[PrCommit, ...] | None:
+        return _revisions.commits_between(worktree, base, head)
 
     def _has_commit(self, worktree: str, sha: str) -> bool:
         return _revisions.has_commit(worktree, sha)

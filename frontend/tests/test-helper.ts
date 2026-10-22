@@ -16,6 +16,7 @@ export async function start(
   options: EmberExamStartOptions & { availableModules: Modules },
 ) {
   document.documentElement.dataset['still'] = '';
+  keepTitleInThePage();
   setApplication(Application.create(config.APP));
 
   setup(QUnit.assert);
@@ -27,6 +28,17 @@ export async function start(
   await startEmberExam({
     ...options,
     availableModules: balanced(modules, Number(params.get('split') ?? 1)),
+  });
+}
+
+function keepTitleInThePage(): void {
+  let shown = document.title;
+  Object.defineProperty(document, 'title', {
+    configurable: true,
+    get: () => shown,
+    set: (title: string) => {
+      shown = String(title);
+    },
   });
 }
 

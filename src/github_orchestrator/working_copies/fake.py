@@ -4,6 +4,7 @@ import itertools
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from github_orchestrator.domain import Pr, Sha
@@ -35,6 +36,7 @@ from github_orchestrator.working_copies.interface import (
     BaseStanding,
     FileDiff,
     Picked,
+    PrCommit,
     ThreadGitError,
     Verdict,
     WrongBranch,
@@ -46,6 +48,9 @@ from github_orchestrator.working_copies.interface import (
     DiffLine as DiffLine,
 )
 
+AUTHOR = "T"
+FIRST_AUTHORED = datetime(2026, 1, 1, tzinfo=UTC)
+
 
 @dataclass(frozen=True)
 class FakeCommit:
@@ -53,6 +58,7 @@ class FakeCommit:
     parent: str | None
     message: str
     tree: dict[str, str]
+    authored_at: datetime
 
 
 @dataclass
@@ -552,6 +558,19 @@ class FakeWorkingCopies:
         reachable = set(self._ancestors(found))
         return next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
 
+    def _commits_between(self, worktree: str, base: str,
+                         head: str) -> tuple[PrCommit, ...] | None:
+        since, until = self._rev(worktree, base), self._rev(worktree, head)
+        if since is None or until is None:
+            return None
+        return tuple(self._pr_commit(self.commits[sha])
+                     for sha in reversed(self._range(since, until)))
+
+    def _pr_commit(self, commit: FakeCommit) -> PrCommit:
+        parents = () if commit.parent is None else (Sha(commit.parent),)
+        return PrCommit(Sha(commit.sha), parents, commit.message.split("\n", 1)[0], AUTHOR,
+                        commit.authored_at)
+
     def _has_commit(self, worktree: str, sha: str) -> bool:
         if self._read_error is not None:
             raise self._read_error
@@ -573,8 +592,10 @@ class FakeWorkingCopies:
         return self._store(parent, tree, message)
 
     def _store(self, parent: str | None, tree: dict[str, str], message: str) -> str:
-        sha = hashlib.sha1(f"commit {next(self._numbers)}".encode()).hexdigest()
-        self.commits[sha] = FakeCommit(sha=sha, parent=parent, message=message, tree=tree)
+        number = next(self._numbers)
+        sha = hashlib.sha1(f"commit {number}".encode()).hexdigest()
+        self.commits[sha] = FakeCommit(sha=sha, parent=parent, message=message, tree=tree,
+                                       authored_at=FIRST_AUTHORED + timedelta(minutes=number))
         return sha
 
     def _advance(self, checkout: FakeCheckout, sha: str) -> None:

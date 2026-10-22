@@ -10,9 +10,9 @@ if (typeof module !== 'undefined') {
       browsers > 1
         ? partitions.map(
             (partition) =>
-              `tests/index.html?hidepassed&split=${browsers}&partition=${partition}`,
+              `tests/index.html?hidepassed&nocontainer&split=${browsers}&partition=${partition}`,
           )
-        : `tests/index.html?hidepassed${weigh ? '&weigh' : ''}`,
+        : `tests/index.html?hidepassed&nocontainer${weigh ? '&weigh' : ''}`,
     cwd: 'dist-tests',
     disable_watching: true,
     parallel: -1,
@@ -28,6 +28,7 @@ if (typeof module !== 'undefined') {
           '--disable-dev-shm-usage',
           '--disable-software-rasterizer',
           '--mute-audio',
+          '--disable-gpu',
           '--remote-debugging-port=0',
           '--window-size=1440,900',
         ].filter(Boolean),

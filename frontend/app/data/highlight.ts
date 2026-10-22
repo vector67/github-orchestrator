@@ -110,11 +110,40 @@ function splitIntoLines(drawn: DocumentFragment): DocumentFragment[] {
   return lines;
 }
 
+const REMEMBERED = 256;
+
+export function remembered<T>(make: (key: string) => T): (key: string) => T {
+  const made = new Map<string, T>();
+  return (key) => {
+    if (made.has(key)) return made.get(key)!;
+    const fresh = make(key);
+    if (made.size >= REMEMBERED) made.delete(made.keys().next().value!);
+    made.set(key, fresh);
+    return fresh;
+  };
+}
+
+const LINES_DRAWN = new Map<
+  string | null,
+  (code: string) => DocumentFragment[]
+>();
+
+function linesDrawnIn(
+  language: string | null,
+): (code: string) => DocumentFragment[] {
+  let found = LINES_DRAWN.get(language);
+  if (!found) {
+    found = remembered((code) => splitIntoLines(highlighted(code, language)));
+    LINES_DRAWN.set(language, found);
+  }
+  return found;
+}
+
 export function highlightedLines(
   lines: string[],
   language: string | null,
 ): Highlighter[] {
-  return splitIntoLines(highlighted(lines.join('\n'), language)).map(
+  return linesDrawnIn(language)(lines.join('\n')).map(
     (drawn) => () => drawn.cloneNode(true) as DocumentFragment,
   );
 }

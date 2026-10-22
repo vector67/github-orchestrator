@@ -977,6 +977,25 @@ class Diff(BaseModel):
     files: list[FileChange]
 
 
+class PullRequestCommit(BaseModel):
+    sha: Sha
+    parents: list[Sha] = Field(
+        description="More than one on a merge commit.")
+    subject: str = Field(description="The first line of its message.")
+    author: str
+    authored_at: str
+
+
+class PullRequestCommits(BaseModel):
+    """The pull request's own commits, oldest first. Each one's diff is
+    `/diffs/{parent}..{sha}`, and any run of them is `/diffs/{first's parent}..{last}`."""
+
+    fork: Sha = Field(
+        description="Where the branch left its base: the merge base the "
+                    "pull request's diff runs from.")
+    commits: list[PullRequestCommit]
+
+
 class Commits(BaseModel):
     """Two commits that address a diff: `/diffs/{base}..{head}`."""
 
