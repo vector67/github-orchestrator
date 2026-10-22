@@ -55,7 +55,7 @@ FIRST_AUTHORED = datetime(2026, 1, 1, tzinfo=UTC)
 @dataclass(frozen=True)
 class FakeCommit:
     sha: str
-    parent: str | None
+    parents: tuple[str, ...]
     message: str
     tree: dict[str, str]
     authored_at: datetime
@@ -201,6 +201,16 @@ class FakeWorkingCopies:
             checkout.edits.pop(name, None)
         self._advance(checkout, sha)
         return sha
+
+    def merge(self, worktree: Path | str, sha: str, files: dict[str, str], message: str) -> str:
+        checkout = self.checkouts[_key(worktree)]
+        head = self._head(worktree)
+        if head is None:
+            raise RuntimeError(f"{worktree} has no commit to merge {sha} into")
+        tree = {**self._merged_tree(head, sha), **files}
+        merge = self._store((head, sha), tree, message)
+        self._advance(checkout, merge)
+        return merge
 
     def edit(self, worktree: Path | str, name: str, text: str) -> None:
         self.checkouts[_key(worktree)].edits[name] = text
@@ -416,7 +426,7 @@ class FakeWorkingCopies:
         picked = list(reversed(self._range(base, tip)))
         for sha in picked:
             commit = self.commits[sha]
-            before = self.commits[commit.parent].tree if commit.parent else {}
+            before = self.commits[commit.parents[0]].tree if commit.parents else {}
             for path in sorted(set(before) | set(commit.tree)):
                 old, new = before.get(path), commit.tree.get(path)
                 if old == new:
@@ -435,11 +445,11 @@ class FakeWorkingCopies:
                 return Picked(refusal=f"{SQUASH_EMPTY}; the PR branch is back at "
                                    f"{landed_base[:12]} and nothing landed")
             worded = message or self.commits[tip].message
-            landed = self._store(landed_base, tree, worded)
+            landed = self._store((landed_base,), tree, worded)
         else:
             landed = landed_base
             for sha in picked:
-                landed = self._store(landed, dict(tree), self.commits[sha].message)
+                landed = self._store((landed,), dict(tree), self.commits[sha].message)
         self._advance(checkout, landed)
         return Picked(landed_base=Sha.parse(landed_base), landed_sha=Sha.parse(landed))
 
@@ -528,21 +538,25 @@ class FakeWorkingCopies:
     def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
         resolved = self._resolve(sha) if self._has_commit(worktree, sha) else None
         commit = None if resolved is None else self.commits[resolved]
-        if commit is None or commit.parent is None:
+        if commit is None or not commit.parents:
             return None
-        before = self.commits[commit.parent].tree
+        parent = commit.parents[0]
+        before = self.commits[parent].tree
         changed = "".join(f"+++ b/{path}\n" + "".join(f"+{line}\n" for line in text.splitlines())
                           for path, text in commit.tree.items() if before.get(path) != text)
-        return commit.sha, commit.parent, f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}"
+        return commit.sha, parent, f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}"
 
-    def _diff_files(self, worktree: str, base: str,
-                    head: str) -> tuple[FileDiff, ...] | None:
+    def _diff_files(self, worktree: str, base: str, head: str,
+                    merged: str | None = None) -> tuple[FileDiff, ...] | None:
         if self._diff_shown:
             return self._shown_diff
         old = self._rev_tree(worktree, base)
         new = self._rev_tree(worktree, head)
-        if old is None or new is None:
+        into = None if merged is None else self._rev(worktree, merged)
+        if old is None or new is None or (merged is not None and into is None):
             return None
+        if into is not None:
+            old = self._merged_tree(str(self._rev(worktree, base)), into)
         printed = "".join(_unified(path, old.get(path), new.get(path))
                           for path in _changed_paths(old, new))
         return parse_diff(printed)
@@ -569,7 +583,7 @@ class FakeWorkingCopies:
                      for sha in reversed(self._range(since, until)))
 
     def _pr_commit(self, commit: FakeCommit) -> PrCommit:
-        parents = () if commit.parent is None else (Sha(commit.parent),)
+        parents = tuple(Sha(parent) for parent in commit.parents)
         return PrCommit(Sha(commit.sha), parents, commit.message.split("\n", 1)[0], AUTHOR,
                         commit.authored_at)
 
@@ -591,12 +605,22 @@ class FakeWorkingCopies:
     def _new_commit(self, parent: str | None, files: dict[str, str], message: str) -> str:
         tree = dict(self.commits[parent].tree) if parent else {}
         tree.update(files)
-        return self._store(parent, tree, message)
+        return self._store(() if parent is None else (parent,), tree, message)
 
-    def _store(self, parent: str | None, tree: dict[str, str], message: str) -> str:
+    def _merged_tree(self, ours: str, theirs: str) -> dict[str, str]:
+        fork = next(sha for sha in self._ancestors(ours) if sha in self._ancestors(theirs))
+        before, mine, other = (self.commits[sha].tree for sha in (fork, ours, theirs))
+        merged = {}
+        for name in set(before) | set(mine) | set(other):
+            kept = other.get(name) if mine.get(name) == before.get(name) else mine.get(name)
+            if kept is not None:
+                merged[name] = kept
+        return merged
+
+    def _store(self, parents: tuple[str, ...], tree: dict[str, str], message: str) -> str:
         number = next(self._numbers)
         sha = hashlib.sha1(f"commit {number}".encode()).hexdigest()
-        self.commits[sha] = FakeCommit(sha=sha, parent=parent, message=message, tree=tree,
+        self.commits[sha] = FakeCommit(sha=sha, parents=parents, message=message, tree=tree,
                                        authored_at=FIRST_AUTHORED + timedelta(minutes=number))
         return sha
 
@@ -645,12 +669,19 @@ class FakeWorkingCopies:
         return None if resolved is None else self.commits[resolved].tree
 
     def _ancestors(self, sha: str) -> list[str]:
-        found: list[str] = []
-        current: str | None = sha
-        while current is not None:
-            found.append(current)
-            current = self.commits[current].parent
-        return found
+        finished: list[str] = []
+        seen = {sha}
+        walking = [(sha, iter(self.commits[sha].parents))]
+        while walking:
+            current, parents = walking[-1]
+            parent = next((one for one in parents if one not in seen), None)
+            if parent is None:
+                walking.pop()
+                finished.append(current)
+                continue
+            seen.add(parent)
+            walking.append((parent, iter(self.commits[parent].parents)))
+        return finished[::-1]
 
     def _range(self, base: str, head: str) -> list[str]:
         excluded = set(self._ancestors(base))

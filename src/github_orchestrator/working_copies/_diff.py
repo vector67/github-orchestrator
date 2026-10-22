@@ -85,6 +85,23 @@ def raw_diff(source: DiffSource, unified: int) -> tuple[str | None, str]:
     return diff.stdout, ""
 
 
+def merged_tree(worktree: str, base: str, merged: str) -> str | None:
+    if not (_is_rev(base) and _is_rev(merged)):
+        log.warning("refusing to merge %r into %r in %s: not commits", merged, base, worktree)
+        return None
+    try:
+        tree = _run_git(worktree, "merge-tree", "--write-tree", "--no-messages",
+                        "--end-of-options", base, merged)
+    except _GitUnavailable:
+        return None
+    written = tree.stdout.split("\n", 1)[0].strip()
+    if tree.returncode not in (0, 1) or Sha.parse(written) is None:
+        log.warning("git merge-tree %s %s exited %d: %s", base, merged,
+                    tree.returncode, _last_stderr_line(tree))
+        return None
+    return written
+
+
 CODE_NOT_FOUND = "couldn't find the code that this comment references"
 
 

@@ -923,6 +923,23 @@ def test_the_local_commits_include_what_the_worktree_has_not_pushed():
     assert shas == {"origin": [pushed], "local": [pushed, local]}
 
 
+def test_a_diff_past_a_merged_commit_shows_only_what_the_merge_changed_on_its_own():
+    copies, _, head = branched_from_main()
+    main = copies.origin["main"]
+    merge = copies.merge(WORKTREE, main, {"src/foo.py": "def write():\n    mended()\n"},
+                         "Merge main")
+    client = pr_board(copies)
+
+    plain = client.get(f"/api/diffs/{head}..{merge}")
+    own = client.get(f"/api/diffs/{head}..{merge}", params={"merged": main})
+
+    assert [file["path"] for file in plain.json()["files"]] == [
+        "src/elsewhere.py", "src/foo.py"]
+    assert own.status_code == 200
+    assert (own.json()["base"], own.json()["head"]) == (head, merge)
+    assert [file["path"] for file in own.json()["files"]] == ["src/foo.py"]
+
+
 def test_commits_of_a_head_git_cannot_find_say_git_failed():
     copies, _, _ = branched_from_main()
     copies.check_out(WORKTREE, "never-pushed")

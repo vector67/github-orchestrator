@@ -1,7 +1,7 @@
 import logging
 import re
 
-from github_orchestrator.working_copies._diff import DiffSource, raw_diff
+from github_orchestrator.working_copies._diff import DiffSource, merged_tree, raw_diff
 from github_orchestrator.working_copies.interface import DiffHunk, DiffLine, FileDiff
 
 log = logging.getLogger(__name__)
@@ -136,10 +136,13 @@ def parse_diff(printed: str) -> tuple[FileDiff, ...]:
     return tuple(files)
 
 
-def diff_files(worktree: str, base: str,
-               head: str) -> tuple[FileDiff, ...] | None:
+def diff_files(worktree: str, base: str, head: str,
+               merged: str | None = None) -> tuple[FileDiff, ...] | None:
+    left = base if merged is None else merged_tree(worktree, base, merged)
+    if left is None:
+        return None
     printed, complaint = raw_diff(
-        DiffSource(worktree=worktree, left=base, right=head), UNIFIED)
+        DiffSource(worktree=worktree, left=left, right=head), UNIFIED)
     if printed is None:
         log.warning("diff %s..%s in %s: %s", base, head, worktree, complaint)
         return None

@@ -23047,6 +23047,367 @@
     }
    ]
   },
+  "tests/working_copies/test_contract.py::test_a_diff_past_a_merged_commit_leaves_out_what_the_merge_brought_in[git]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"diff\", \"--no-color\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"382336dce2f66cd03975eaa0b3d0aa6d6e9614ae\", \"17d3a991d00eaada08791fc1c7fe7034943c968b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "diff",
+      "--no-color",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "382336dce2f66cd03975eaa0b3d0aa6d6e9614ae",
+      "17d3a991d00eaada08791fc1c7fe7034943c968b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/g b/g\nindex 4cb29ea..3adb0cf 100644\n--- a/g\n+++ b/g\n@@ -1,3 +1,3 @@\n one\n-two\n+mended\n three\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"diff\", \"--no-color\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"17d3a991d00eaada08791fc1c7fe7034943c968b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "diff",
+      "--no-color",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "971346d94231895fcf62bd66bb9b198edde3cf67",
+      "17d3a991d00eaada08791fc1c7fe7034943c968b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/g b/g\nindex 4cb29ea..3adb0cf 100644\n--- a/g\n+++ b/g\n@@ -1,3 +1,3 @@\n one\n-two\n+mended\n three\ndiff --git a/m b/m\nnew file mode 100644\nindex 0000000..ef49dd8\n--- /dev/null\n+++ b/m\n@@ -0,0 +1 @@\n+more\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"merge-tree\", \"--write-tree\", \"--no-messages\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"1fdb7cd5ccaf78328a29874b252020964c01f106\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "merge-tree",
+      "--write-tree",
+      "--no-messages",
+      "--end-of-options",
+      "971346d94231895fcf62bd66bb9b198edde3cf67",
+      "1fdb7cd5ccaf78328a29874b252020964c01f106"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "382336dce2f66cd03975eaa0b3d0aa6d6e9614ae\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"commit\", \"-q\", \"-m\", \"Merge main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "commit",
+      "-q",
+      "-m",
+      "Merge main"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "17d3a991d00eaada08791fc1c7fe7034943c968b\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"fetch\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "fetch",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge\", \"-q\", \"--no-ff\", \"--no-commit\", \"origin/main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "merge",
+      "-q",
+      "--no-ff",
+      "--no-commit",
+      "origin/main"
+     ],
+     "fs": {
+      "feature/m": {
+       "text": "more\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Automatic merge went well; stopped before committing as requested\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "17d3a991d00eaada08791fc1c7fe7034943c968b\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 17d3a991d00eaada08791fc1c7fe7034943c968b\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "add",
+      "m"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"checkout\", \"-q\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "checkout",
+      "-q",
+      "feature"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "seed/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "seed/m": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"checkout\", \"-q\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "seed/g": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"commit\", \"-q\", \"-m\", \"more main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "commit",
+      "-q",
+      "-m",
+      "more main"
+     ],
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"push\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "push",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"rev-parse\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "rev-parse",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+    }
+   ]
+  },
   "tests/working_copies/test_contract.py::test_a_diff_stat_counts_lines_per_file[git]": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"diff\", \"--numstat\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"083270de5f08717353c36f6c04bbc0de3de436d4\"], null, null]": [
     {
@@ -30970,6 +31331,443 @@
      "returncode": 0,
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ]
+  },
+  "tests/working_copies/test_contract.py::test_after_merging_main_the_prs_commits_run_from_the_merged_main_commit[git]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"diff\", \"--no-color\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "diff",
+      "--no-color",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "7e39035e431d1b7d75cde4b06d0a4d7c922f104f",
+      "971346d94231895fcf62bd66bb9b198edde3cf67"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/g b/g\nnew file mode 100644\nindex 0000000..4cb29ea\n--- /dev/null\n+++ b/g\n@@ -0,0 +1,3 @@\n+one\n+two\n+three\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"log\", \"--reverse\", \"--format=%H%x1f%P%x1f%an%x1f%aI%x1f%s\", \"--end-of-options\", \"1fdb7cd5ccaf78328a29874b252020964c01f106..17d3a991d00eaada08791fc1c7fe7034943c968b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "--reverse",
+      "--format=%H%x1f%P%x1f%an%x1f%aI%x1f%s",
+      "--end-of-options",
+      "1fdb7cd5ccaf78328a29874b252020964c01f106..17d3a991d00eaada08791fc1c7fe7034943c968b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OTcxMzQ2ZDk0MjMxODk1ZmNmNjJiZDY2YmI5YjE5OGVkZGUzY2Y2Nx83ZTM5MDM1ZTQzMWQxYjdkNzVjZGU0YjA2ZDBhNGQ3YzkyMmYxMDRmH1QfMjAyNi0wMS0wMVQwMDowMDowMFofZmVhdHVyZSB3b3JrCjE3ZDNhOTkxZDAwZWFhZGEwODc5MWZjMWM3ZmU3MDM0OTQzYzk2OGIfOTcxMzQ2ZDk0MjMxODk1ZmNmNjJiZDY2YmI5YjE5OGVkZGUzY2Y2NyAxZmRiN2NkNWNjYWY3ODMyOGEyOTg3NGIyNTIwMjA5NjRjMDFmMTA2H1QfMjAyNi0wMS0wMVQwMDowMDowMFofTWVyZ2UgbWFpbgo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"log\", \"--reverse\", \"--format=%H%x1f%P%x1f%an%x1f%aI%x1f%s\", \"--end-of-options\", \"1fdb7cd5ccaf78328a29874b252020964c01f106..1fdb7cd5ccaf78328a29874b252020964c01f106\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "--reverse",
+      "--format=%H%x1f%P%x1f%an%x1f%aI%x1f%s",
+      "--end-of-options",
+      "1fdb7cd5ccaf78328a29874b252020964c01f106..1fdb7cd5ccaf78328a29874b252020964c01f106"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--end-of-options\", \"origin/main\", \"17d3a991d00eaada08791fc1c7fe7034943c968b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "merge-base",
+      "--end-of-options",
+      "origin/main",
+      "17d3a991d00eaada08791fc1c7fe7034943c968b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--end-of-options\", \"origin/main\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "merge-base",
+      "--end-of-options",
+      "origin/main",
+      "971346d94231895fcf62bd66bb9b198edde3cf67"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"origin/main^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "origin/main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "origin/main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"commit\", \"-q\", \"-m\", \"Merge main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "commit",
+      "-q",
+      "-m",
+      "Merge main"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "17d3a991d00eaada08791fc1c7fe7034943c968b\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"fetch\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "fetch",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge\", \"-q\", \"--no-ff\", \"--no-commit\", \"origin/main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "merge",
+      "-q",
+      "--no-ff",
+      "--no-commit",
+      "origin/main"
+     ],
+     "fs": {
+      "feature/m": {
+       "text": "more\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Automatic merge went well; stopped before committing as requested\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "17d3a991d00eaada08791fc1c7fe7034943c968b\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 17d3a991d00eaada08791fc1c7fe7034943c968b\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "add",
+      "m"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"checkout\", \"-q\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "checkout",
+      "-q",
+      "feature"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "seed/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "seed/m": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"checkout\", \"-q\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "seed/g": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"commit\", \"-q\", \"-m\", \"more main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "commit",
+      "-q",
+      "-m",
+      "more main"
+     ],
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"push\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "push",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/seed\", \"rev-parse\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/seed",
+      "rev-parse",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
     }
    ]
   },

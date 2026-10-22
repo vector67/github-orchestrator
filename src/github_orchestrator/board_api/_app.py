@@ -549,9 +549,16 @@ def _commit(board: Board, sha: str) -> CommitSha:
                        "Lines carry their text and their old and new numbers; "
                        "nothing is highlighted and nothing is HTML.",
            responses={**etag.TAGGED, 404: NO_SUCH_DIFF, 500: DIFF_FAILED})
-def read_diff(base: Sha, head: Sha, request: Request, board: Serving) -> Response:
+def read_diff(base: Sha, head: Sha, request: Request, board: Serving,
+              merged: Annotated[Sha | None, Query(
+                  description="A commit `head` merged in. The diff then runs from "
+                              "`base` with it merged, as git's `merge-tree` writes "
+                              "that, so it leaves out what the merge brought in: a "
+                              "merge's own changes are `/diffs/{first parent}..{merge}"
+                              "?merged={second parent}`.")] = None) -> Response:
     since, until = _commit(board, base), _commit(board, head)
-    files = board.git.diff_files(since, until)
+    files = board.git.diff_files(since, until,
+                                 None if merged is None else _commit(board, merged))
     if files is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree() or f"git could not diff {base}..{head}")

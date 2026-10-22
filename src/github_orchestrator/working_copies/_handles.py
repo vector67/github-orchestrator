@@ -65,7 +65,8 @@ class Git(Protocol):
 
     def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
 
-    def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
+    def _diff_files(self, worktree: str, base: str, head: str,
+                    merged: str | None = None) -> tuple[FileDiff, ...] | None: ...
 
     def _pr_base(self, worktree: str, base_branch: str | None,
                  head: str) -> tuple[str, str] | None: ...
@@ -206,9 +207,11 @@ class BoundCheckout:
         full, parent, shown = read
         return NamedCommit(Sha(full), Sha(parent), path, shown)
 
-    def diff_files(self, base: Sha, head: Sha) -> tuple[FileDiff, ...] | None:
+    def diff_files(self, base: Sha, head: Sha,
+                   merged: Sha | None = None) -> tuple[FileDiff, ...] | None:
         path = self._path()
-        return None if path is None else self.git._diff_files(path, str(base), str(head))
+        return None if path is None else self.git._diff_files(path, str(base), str(head),
+                                                              _text(merged))
 
     def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
         path = self._path()

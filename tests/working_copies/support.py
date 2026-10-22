@@ -166,6 +166,11 @@ class GitWorld:
         git(seed, "checkout", "-q", BRANCH)
         return git(seed, "rev-parse", "main")
 
+    def merge_main(self, worktree: Path | str, files: dict[str, str], message: str) -> str:
+        git(Path(worktree), "fetch", "-q", "origin", "main")
+        git(Path(worktree), "merge", "-q", "--no-ff", "--no-commit", "origin/main")
+        return self.commit(worktree, files, message)
+
 
 class FakeWorld:
     def __init__(self, root: Path) -> None:
@@ -211,3 +216,7 @@ class FakeWorld:
 
     def advance_main(self, files: dict[str, str], message: str) -> str:
         return self.fake.publish("main", self.fake.origin["main"], files, message)
+
+    def merge_main(self, worktree: Path | str, files: dict[str, str], message: str) -> str:
+        self.fake.fetched["main"] = self.fake.origin["main"]
+        return self.fake.merge(worktree, self.fake.origin["main"], files, message)

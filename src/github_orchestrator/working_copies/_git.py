@@ -317,9 +317,9 @@ class GitWorkingCopies:
             return None
         return shown.stdout.rstrip("\n") if shown.returncode == 0 else None
 
-    def _diff_files(self, worktree: str, base: str,
-                    head: str) -> tuple[FileDiff, ...] | None:
-        return _hunks.diff_files(worktree, base, head)
+    def _diff_files(self, worktree: str, base: str, head: str,
+                    merged: str | None = None) -> tuple[FileDiff, ...] | None:
+        return _hunks.diff_files(worktree, base, head, merged)
 
     def _pr_base(self, worktree: str, base_branch: str | None,
                  head: str) -> tuple[str, str] | None:

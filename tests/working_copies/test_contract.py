@@ -811,6 +811,34 @@ def test_a_prs_commits_on_a_main_that_has_not_moved_have_the_fork_as_mains_tip(
     assert (history.base_tip, history.base_commits) == (history.fork, ())
 
 
+def test_after_merging_main_the_prs_commits_run_from_the_merged_main_commit(
+        world, pr_worktree, pr_checkout):
+    first = Sha(world.head_of(pr_worktree))
+    main = Sha(world.advance_main({"m": "more\n"}, "more main"))
+    merge = Sha(world.merge_main(pr_worktree, {"g": "one\nmended\nthree\n"}, "Merge main"))
+
+    history = pr_checkout.pr_commits("main", merge)
+
+    assert history is not None
+    assert history.fork == main
+    assert [(commit.sha, commit.parents) for commit in history.commits] == [
+        (first, (pr_checkout.pr_diff("main", first).base,)), (merge, (first, main))]
+
+
+def test_a_diff_past_a_merged_commit_leaves_out_what_the_merge_brought_in(
+        world, pr_worktree, pr_checkout):
+    first = Sha(world.head_of(pr_worktree))
+    main = Sha(world.advance_main({"m": "more\n"}, "more main"))
+    merge = Sha(world.merge_main(pr_worktree, {"g": "one\nmended\nthree\n"}, "Merge main"))
+
+    plain = pr_checkout.diff_files(first, merge)
+    own = pr_checkout.diff_files(first, merge, merged=main)
+
+    assert plain is not None and own is not None
+    assert [file.path for file in plain] == ["g", "m"]
+    assert [(file.path, file.added, file.removed) for file in own] == [("g", 1, 1)]
+
+
 def test_a_prs_commits_with_no_worktree_are_unknown(world):
     assert world.copies.checkout(THE_PR).pr_commits("main", Sha("a" * 40)) is None
 
