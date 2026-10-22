@@ -1,4 +1,5 @@
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Protocol
 
 from github_orchestrator.domain import Pr, Sha
@@ -13,6 +14,7 @@ from github_orchestrator.working_copies.interface import (
     PrCommit,
     PrCommits,
     PrDiff,
+    Stack,
     ThreadGitError,
 )
 
@@ -69,7 +71,9 @@ class Git(Protocol):
                     merged: str | None = None) -> tuple[FileDiff, ...] | None: ...
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str] | None: ...
+                 head: str) -> tuple[str, str, str] | None: ...
+
+    def _authored_at(self, worktree: str, sha: str) -> datetime | None: ...
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None: ...
@@ -231,12 +235,22 @@ class BoundCheckout:
         found = self.git._pr_base(path, base_branch, str(head))
         if found is None:
             return None
-        fork, tip = found
+        fork, tip, _ = found
         commits = self.git._commits_between(path, fork, str(head))
         base_commits = self.git._commits_between(path, fork, tip)
-        if commits is None or base_commits is None:
+        fork_at = self.git._authored_at(path, fork)
+        if commits is None or base_commits is None or fork_at is None:
             return None
-        return PrCommits(Sha(fork), commits, Sha(tip), base_commits)
+        return PrCommits(Sha(fork), commits, Sha(tip), base_commits, fork_at,
+                         self._stack(path, base_branch, fork))
+
+    def _stack(self, path: str, base_branch: str | None, fork: str) -> Stack | None:
+        found = None if base_branch is None else self.git._pr_base(path, None, fork)
+        if found is None or found[2] == base_branch or found[0] == fork:
+            return None
+        under, _, branch = found
+        commits = self.git._commits_between(path, under, fork)
+        return None if commits is None else Stack(branch, Sha(under), commits)
 
     def has_commit(self, sha: Sha) -> bool:
         path = self._path()

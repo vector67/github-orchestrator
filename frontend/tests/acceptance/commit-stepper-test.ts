@@ -12,6 +12,7 @@ import {
   changed,
   dashboard,
   heldPr,
+  prHistory,
   prCommit,
   prDiff,
   setupFakeBoard,
@@ -44,16 +45,11 @@ module('Acceptance | commit stepper', function (hooks) {
       base: FORK,
       head: THIRD,
     };
-    board().commits = {
-      fork: FORK,
-      base_tip: FORK,
-      base_commits: [],
-      commits: [
-        prCommit(FIRST, FORK, 'Add the widget'),
-        prCommit(SECOND, FIRST, 'Name the widget'),
-        prCommit(THIRD, SECOND, 'Test the widget'),
-      ],
-    };
+    board().commits = prHistory(FORK, [
+      prCommit(FIRST, FORK, 'Add the widget'),
+      prCommit(SECOND, FIRST, 'Name the widget'),
+      prCommit(THIRD, SECOND, 'Test the widget'),
+    ]);
     board().diffs = {
       first: {
         base: FORK,

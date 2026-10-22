@@ -986,6 +986,16 @@ class PullRequestCommit(BaseModel):
     authored_at: str
 
 
+class Stack(BaseModel):
+    """The base branch's own commits, when it is not the default branch."""
+
+    branch: str = Field(description="The default branch the base branch left.")
+    fork: Sha = Field(description="Where the base branch left it.")
+    commits: list[PullRequestCommit] = Field(
+        description="The base branch's commits from there to where this pull "
+                    "request left it, oldest first.")
+
+
 class PullRequestCommits(BaseModel):
     """The pull request's own commits, oldest first. Each one's diff is
     `/diffs/{parent}..{sha}`, and any run of them is `/diffs/{first's parent}..{last}`."""
@@ -999,7 +1009,13 @@ class PullRequestCommits(BaseModel):
                     "base has not moved.")
     base_commits: list[PullRequestCommit] = Field(
         description="What the base gained since the fork, oldest first, none of "
-                    "it in the pull request's diff: as many as it is behind.")
+                    "it in the pull request's diff. Past `BASE_COMMITS_AT_EACH_END` "
+                    "twice over, only that many of the oldest and of the newest.")
+    behind: int = Field(description="How many commits the base gained since the fork.")
+    fork_at: str = Field(description="When the fork commit was written.")
+    stack: Stack | None = Field(
+        description="Where the base branch left the repository's default branch, "
+                    "when the base is another branch: another pull request's.")
 
 
 class ReadMark(BaseModel):

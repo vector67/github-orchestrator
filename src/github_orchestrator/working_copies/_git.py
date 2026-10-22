@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import threading
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 
 from github_orchestrator.domain import Clone, Pr, Repo, Sha
@@ -322,13 +323,16 @@ class GitWorkingCopies:
         return _hunks.diff_files(worktree, base, head, merged)
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str] | None:
+                 head: str) -> tuple[str, str, str] | None:
         found, _ = resolve_pr_base(worktree, base_branch, head)
         return found
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None:
         return _revisions.commits_between(worktree, base, head)
+
+    def _authored_at(self, worktree: str, sha: str) -> datetime | None:
+        return _revisions.authored_at(worktree, sha)
 
     def _has_commit(self, worktree: str, sha: str) -> bool:
         return _revisions.has_commit(worktree, sha)

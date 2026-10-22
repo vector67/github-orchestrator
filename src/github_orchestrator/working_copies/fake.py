@@ -562,17 +562,23 @@ class FakeWorkingCopies:
         return parse_diff(printed)
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str] | None:
+                 head: str) -> tuple[str, str, str] | None:
         if base_branch and not is_branch_name(base_branch):
             base_branch = None
         refs = (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
-        found = next((sha for sha in map(self._ref, refs) if sha is not None), None)
+        ref, found = next(((ref, sha) for ref in refs if (sha := self._ref(ref)) is not None),
+                          (None, None))
         head_sha = self._rev(worktree, head)
-        if found is None or head_sha is None:
+        if ref is None or found is None or head_sha is None:
             return None
         reachable = set(self._ancestors(found))
         fork = next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
-        return None if fork is None else (fork, found)
+        named = "main" if ref == "origin/HEAD" else ref.removeprefix("origin/")
+        return None if fork is None else (fork, found, named)
+
+    def _authored_at(self, worktree: str, sha: str) -> datetime | None:
+        resolved = self._rev(worktree, sha)
+        return None if resolved is None else self.commits[resolved].authored_at
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None:

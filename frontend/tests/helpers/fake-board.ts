@@ -687,12 +687,7 @@ export class FakeBoard {
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
   pushedSinceFetch: Diff | null = null;
-  commits: PullRequestCommits = {
-    fork: 'ba5e000',
-    commits: [],
-    base_tip: 'ba5e000',
-    base_commits: [],
-  };
+  commits: PullRequestCommits = prHistory('ba5e000', []);
   localCommits: PullRequestCommits | null = null;
   readMarks: ReadMark[] = [];
   fetches = 0;
@@ -1766,6 +1761,21 @@ export function prCommit(
     subject,
     author: 'Anna Example',
     authored_at: '2026-10-20T09:00:00Z',
+  };
+}
+
+export function prHistory(
+  fork: string,
+  commits: PullRequestCommit[],
+): PullRequestCommits {
+  return {
+    fork,
+    commits,
+    base_tip: fork,
+    base_commits: [],
+    behind: 0,
+    fork_at: '2026-10-19T09:00:00Z',
+    stack: null,
   };
 }
 

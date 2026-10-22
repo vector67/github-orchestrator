@@ -68,6 +68,7 @@ from github_orchestrator.board_api._contract import (
     ResolveRequest,
     SendReviewRequest,
     Sha,
+    Stack,
     StartSessionRequest,
     TerminalRequest,
     TerminalSession,
@@ -137,6 +138,8 @@ MAX_OUTPUT_LINES = 2000
 PREFIX = "/api"
 
 AS_OF_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+BASE_COMMITS_AT_EACH_END = 10
 
 SERVER_ERROR_DETAIL = ("the board failed unexpectedly; the traceback is in "
                        "the server's log")
@@ -303,14 +306,23 @@ def read_pull_request_commits(request: Request, board: Serving,
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
                       or f"git could not list the pull request's {source} commits")
-    commits, base_commits = ([PullRequestCommit(
+    sent = history.base_commits
+    if len(sent) > 2 * BASE_COMMITS_AT_EACH_END:
+        sent = sent[:BASE_COMMITS_AT_EACH_END] + sent[-BASE_COMMITS_AT_EACH_END:]
+    stack = history.stack
+    commits, base_commits, stacked = ([PullRequestCommit(
         sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
         subject=commit.subject, author=commit.author,
         authored_at=commit.authored_at.astimezone(UTC).strftime(AS_OF_FORMAT))
-        for commit in run] for run in (history.commits, history.base_commits))
+        for commit in run] for run in (history.commits, sent,
+                                       () if stack is None else stack.commits))
     return etag.answered(request, PullRequestCommits(
         fork=str(history.fork), commits=commits,
-        base_tip=str(history.base_tip), base_commits=base_commits))
+        base_tip=str(history.base_tip), base_commits=base_commits,
+        behind=len(history.base_commits),
+        fork_at=history.fork_at.astimezone(UTC).strftime(AS_OF_FORMAT),
+        stack=None if stack is None else Stack(
+            branch=stack.branch, fork=str(stack.fork), commits=stacked)))
 
 
 @reads.get("/viewer", tags=["people"], operation_id="readViewer",

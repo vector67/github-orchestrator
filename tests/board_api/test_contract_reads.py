@@ -909,8 +909,42 @@ def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base(
         "base_tip": main,
         "base_commits": [{"sha": main, "parents": [base], "subject": "someone else's",
                           "author": "T", "authored_at": "2026-01-01T00:03:00Z"}],
+        "behind": 1,
+        "fork_at": "2026-01-01T00:01:00Z",
+        "stack": None,
     }
     assert answer.headers["ETag"]
+
+
+def test_far_behind_main_only_the_oldest_and_newest_of_mains_new_commits_are_sent():
+    copies, _, _ = branched_from_main()
+    tip = copies.origin["main"]
+    for number in range(24):
+        tip = copies.publish("main", tip, {"src/elsewhere.py": f"{number}\n"}, f"main {number}")
+    copies.fetch_pr_branch(Path(WORKTREE), THE_PR, "feature", "main")
+
+    answer = pr_commits_of(copies).json()
+
+    subjects = [commit["subject"] for commit in answer["base_commits"]]
+    assert answer["behind"] == 25
+    assert subjects == ["someone else's", *(f"main {number}" for number in range(9)),
+                        *(f"main {number}" for number in range(14, 24))]
+    assert answer["base_tip"] == tip
+
+
+def test_a_pull_request_on_another_branch_is_served_with_that_branchs_own_commits():
+    copies, base, head = branched_from_main()
+    on_top = copies.commit(WORKTREE, {"src/foo.py": "on top\n"}, "on top")
+    client = client_of(board_on(fake_threads(working_copies=copies), base_branch="feature"))
+
+    answer = client.get("/api/pull-request/commits", params={"source": "local"}).json()
+
+    assert [commit["sha"] for commit in answer["commits"]] == [on_top]
+    assert answer["stack"] == {
+        "branch": "main", "fork": base,
+        "commits": [{"sha": head, "parents": [base], "subject": "check first",
+                     "author": "T", "authored_at": "2026-01-01T00:02:00Z"}],
+    }
 
 
 def test_the_local_commits_include_what_the_worktree_has_not_pushed():

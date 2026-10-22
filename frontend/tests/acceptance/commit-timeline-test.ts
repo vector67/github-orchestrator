@@ -5,6 +5,7 @@ import {
   added,
   changed,
   dashboard,
+  prHistory,
   prCommit,
   prDiff,
   setupFakeBoard,
@@ -92,16 +93,11 @@ module('Acceptance | commit timeline', function (hooks) {
       base: FORK,
       head: THIRD,
     };
-    board().commits = {
-      fork: FORK,
-      base_tip: FORK,
-      base_commits: [],
-      commits: [
-        prCommit(FIRST, FORK, 'Add the widget'),
-        prCommit(SECOND, FIRST, 'Name the widget'),
-        prCommit(THIRD, SECOND, 'Test the widget'),
-      ],
-    };
+    board().commits = prHistory(FORK, [
+      prCommit(FIRST, FORK, 'Add the widget'),
+      prCommit(SECOND, FIRST, 'Name the widget'),
+      prCommit(THIRD, SECOND, 'Test the widget'),
+    ]);
     board().diffs = {
       first: {
         base: FORK,
@@ -174,6 +170,7 @@ module('Acceptance | commit timeline', function (hooks) {
     board().commits = {
       ...board().commits,
       base_tip: MAIN_TWO,
+      behind: 2,
       base_commits: [
         prCommit(MAIN_ONE, FORK, 'Bump the parser'),
         prCommit(MAIN_TWO, MAIN_ONE, 'Speed up the build'),
@@ -227,6 +224,7 @@ module('Acceptance | commit timeline', function (hooks) {
     board().commits = {
       ...board().commits,
       base_tip: MAIN_TWO,
+      behind: 2,
       base_commits: [
         prCommit(MAIN_ONE, '0ddba11', 'Fix the parser on its own branch'),
         {

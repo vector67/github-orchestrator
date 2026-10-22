@@ -839,6 +839,31 @@ def test_a_diff_past_a_merged_commit_leaves_out_what_the_merge_brought_in(
     assert [(file.path, file.added, file.removed) for file in own] == [("g", 1, 1)]
 
 
+def test_a_pr_based_on_another_branch_carries_that_branchs_own_commits(
+        world, pr_worktree, pr_checkout):
+    based_on = Sha(world.head_of(pr_worktree))
+    head = Sha(world.commit(pr_worktree, {"h": "more\n"}, "on top"))
+
+    history = pr_checkout.pr_commits(BRANCH, head)
+
+    assert history is not None
+    assert history.fork == based_on
+    assert [commit.sha for commit in history.commits] == [head]
+    assert history.stack is not None
+    assert history.stack.branch == "main"
+    assert pr_checkout.commit_message(history.stack.fork) == "first"
+    assert [(commit.sha, commit.subject) for commit in history.stack.commits] == [
+        (based_on, "feature work")]
+    assert history.fork_at == history.stack.commits[-1].authored_at
+
+
+def test_a_pr_based_on_main_stacks_on_nothing(world, pr_worktree, pr_checkout):
+    history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
+
+    assert history is not None
+    assert history.stack is None
+
+
 def test_a_prs_commits_with_no_worktree_are_unknown(world):
     assert world.copies.checkout(THE_PR).pr_commits("main", Sha("a" * 40)) is None
 

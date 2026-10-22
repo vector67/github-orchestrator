@@ -64,6 +64,19 @@ def commits_between(worktree: str, base: str, head: str) -> tuple[PrCommit, ...]
     return tuple(_commit(line) for line in logged.stdout.decode(errors="replace").splitlines())
 
 
+def authored_at(worktree: str, sha: str) -> datetime | None:
+    if Sha.parse(sha) is None or not os.path.isdir(worktree):
+        return None
+    try:
+        logged = _git(worktree, "log", "-1", "--no-walk", "--format=%aI", "--end-of-options", sha)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        log.warning("git log %s in %s failed to run: %s", sha, worktree, exc)
+        return None
+    if logged.returncode != 0:
+        return None
+    return datetime.fromisoformat(logged.stdout.decode().strip())
+
+
 def _commit(line: str) -> PrCommit:
     sha, parents, author, authored_at, subject = line.split("\x1f", 4)
     return PrCommit(Sha(sha), tuple(Sha(parent) for parent in parents.split()), subject,

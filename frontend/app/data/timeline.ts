@@ -238,7 +238,7 @@ function sinceOf(
     width: last.x - first.x + 2 * BAND_REACH,
     height: 2 * BAND_REACH,
     textY: first.y - BOX_RISE,
-    text: `${plural(history.base_commits.length, 'commit')} on ${base} since the fork`,
+    text: `${plural(history.behind, 'commit')} on ${base} since the fork`,
   };
 }
 
@@ -321,7 +321,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       branch: input.branch ?? 'this branch',
       base,
       fork: history.fork.slice(0, SHORT),
-      behind: history.base_commits.length,
+      behind: history.behind,
     },
     presets: presetsOf(order, input, showing),
     order,

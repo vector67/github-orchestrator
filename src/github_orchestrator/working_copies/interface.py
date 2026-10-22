@@ -86,11 +86,20 @@ class PrCommit:
 
 
 @dataclass(frozen=True)
+class Stack:
+    branch: str
+    fork: Sha
+    commits: tuple[PrCommit, ...]
+
+
+@dataclass(frozen=True)
 class PrCommits:
     fork: Sha
     commits: tuple[PrCommit, ...]
     base_tip: Sha
     base_commits: tuple[PrCommit, ...]
+    fork_at: datetime
+    stack: Stack | None
 
 
 @dataclass(frozen=True)

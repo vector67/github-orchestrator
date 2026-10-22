@@ -105,9 +105,19 @@ def merged_tree(worktree: str, base: str, merged: str) -> str | None:
 CODE_NOT_FOUND = "couldn't find the code that this comment references"
 
 
+def _named_branch(worktree: str, ref: str) -> str:
+    if ref != "origin/HEAD":
+        return ref.removeprefix("origin/")
+    try:
+        named = _run_git(worktree, "rev-parse", "--abbrev-ref", ref)
+    except _GitUnavailable:
+        return ref
+    return named.stdout.strip().removeprefix("origin/") if named.returncode == 0 else ref
+
+
 def resolve_pr_base(
     worktree: str, base_branch: str | None, head: str
-) -> tuple[tuple[str, str] | None, str]:
+) -> tuple[tuple[str, str, str] | None, str]:
     if base_branch and not is_branch_name(base_branch):
         log.warning("refusing to look for the PR base %r: it is not a branch "
                     "name", base_branch)
@@ -142,4 +152,4 @@ def resolve_pr_base(
         log.warning("git merge-base %s %s exited %d: %s",
                     found, head, merge_base.returncode, detail)
         return None, CODE_NOT_FOUND
-    return (merge_base.stdout.strip(), tip), ""
+    return (merge_base.stdout.strip(), tip, _named_branch(worktree, found)), ""

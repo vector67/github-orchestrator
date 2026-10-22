@@ -683,6 +683,9 @@ export interface PullRequestCommits {
   commits: PullRequestCommit[];
   base_tip: string;
   base_commits: PullRequestCommit[];
+  behind: number;
+  fork_at: string;
+  stack: Stack | null;
 }
 
 export interface QuestionRequest {
@@ -882,6 +885,12 @@ export interface SinceYouActed {
   reviews: number;
   comments: number;
   threads_resolved: number;
+}
+
+export interface Stack {
+  branch: string;
+  fork: string;
+  commits: PullRequestCommit[];
 }
 
 export interface StartSessionRequest {
