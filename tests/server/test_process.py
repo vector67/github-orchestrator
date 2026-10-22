@@ -111,7 +111,8 @@ def _a_server_in(files):
         "import fcntl, os, sys, time\n"
         "lock = open(sys.argv[1], 'a')\n"
         "fcntl.flock(lock, fcntl.LOCK_EX)\n"
-        "open(sys.argv[2], 'w').write(f'{os.getpid()}\\n')\n"
+        "open(sys.argv[2] + '.writing', 'w').write(f'{os.getpid()}\\n')\n"
+        "os.replace(sys.argv[2] + '.writing', sys.argv[2])\n"
         "time.sleep(60)\n"), str(files / "server.lock"), str(files / "server.pid")])
     assert until(lambda: (files / "server.pid").exists())
     return holder
