@@ -1,4 +1,4 @@
-import type { PullRequestCommits } from 'frontend/data/api';
+import type { PullRequestCommit, PullRequestCommits } from 'frontend/data/api';
 import {
   layout,
   SPACING,
@@ -16,6 +16,12 @@ const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
 const DIAMOND = 8;
+const FAR = 20;
+const KEPT = 2;
+const RUN = 'run';
+const RUN_SPAN = 2;
+const RUN_REACH = 10;
+const DATE_DROP = 34;
 
 export interface Picked {
   from: string;
@@ -47,8 +53,26 @@ export interface TimelineDot {
   x: number;
   y: number;
   shaY: number;
+  date: string | null;
+  dateY: number;
   pickable: boolean;
   inRange: boolean;
+}
+
+export interface Listed {
+  short: string;
+  subject: string;
+}
+
+export interface CollapsedRun {
+  x: number;
+  y: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  text: string;
+  listed: Listed[];
 }
 
 export interface TimelineLabel {
@@ -117,6 +141,7 @@ export interface Timeline {
   band: TimelineBand;
   flag: TimelineFlag | null;
   since: SinceFork | null;
+  collapsed: CollapsedRun | null;
   header: TimelineHeader;
   presets: Preset[];
   order: string[];
@@ -207,6 +232,60 @@ function outsideOf(history: PullRequestCommits): string[] {
   ];
 }
 
+function keptOf(history: PullRequestCommits): {
+  kept: PullRequestCommit[];
+  run: PullRequestCommit[];
+} {
+  const sent = history.base_commits;
+  if (history.behind <= FAR || sent.length <= KEPT)
+    return { kept: sent, run: [] };
+  return { kept: sent.slice(-KEPT), run: sent.slice(0, -KEPT) };
+}
+
+function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
+  const { kept, run } = keptOf(history);
+  const nodes = kept.map((one) => ({
+    id: one.sha,
+    lane,
+    parents: one.parents,
+  }));
+  if (!run.length) return nodes;
+  return [
+    { id: RUN, lane, parents: [history.fork], span: RUN_SPAN },
+    ...nodes.map((one, index) => (index ? one : { ...one, parents: [RUN] })),
+  ];
+}
+
+function collapsedOf(
+  history: PullRequestCommits,
+  placed: Map<string, Placed>,
+): CollapsedRun | null {
+  const { run } = keptOf(history);
+  const at = placed.get(RUN);
+  if (!at || !run.length) return null;
+  const hidden = history.behind - KEPT - run.length;
+  const listed = run.map((one) => ({
+    short: one.sha.slice(0, SHORT),
+    subject: one.subject,
+  }));
+  if (hidden > 0)
+    listed.splice(history.base_commits.length / 2, 0, {
+      short: '',
+      subject: `⋯ ${hidden} more`,
+    });
+  const width = RUN_SPAN * SPACING.column - 2 * RUN_REACH;
+  return {
+    x: at.x,
+    y: at.y,
+    left: at.x - width / 2,
+    top: at.y - RUN_REACH,
+    width,
+    height: 2 * RUN_REACH,
+    text: `⋯ ${plural(history.behind - KEPT, 'commit')}`,
+    listed,
+  };
+}
+
 function nodesOf(history: PullRequestCommits): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
@@ -220,11 +299,7 @@ function nodesOf(history: PullRequestCommits): GraphNode[] {
       lane: STACK_LANE,
       parents: one.parents,
     })),
-    ...history.base_commits.map((one) => ({
-      id: one.sha,
-      lane: onBase,
-      parents: one.parents,
-    })),
+    ...baseNodesOf(history, onBase),
     ...history.commits.map((one) => ({
       id: one.sha,
       lane: PR_LANE,
@@ -269,7 +344,8 @@ function sinceOf(
   placed: Map<string, Placed>,
   base: string,
 ): SinceFork | null {
-  const first = placed.get(history.base_commits[0]?.sha ?? '');
+  const first =
+    placed.get(RUN) ?? placed.get(history.base_commits[0]?.sha ?? '');
   const last = placed.get(history.base_commits.at(-1)?.sha ?? '');
   if (!first || !last) return null;
   return {
@@ -343,8 +419,19 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       .filter((one) => one.parents.length > 1)
       .map((one) => one.sha),
   );
-  const dots = [...graph.nodes.values()].map((node) => {
+  const folded = keptOf(history).run.length > 0;
+  const dates = new Map(
+    folded
+      ? [
+          [history.fork, history.fork_at],
+          [history.base_tip, history.base_commits.at(-1)!.authored_at],
+        ]
+      : [],
+  );
+  const placed = [...graph.nodes.values()].filter((node) => node.id !== RUN);
+  const dots = placed.map((node) => {
     const at = order.indexOf(node.id);
+    const date = dates.get(node.id);
     const short = node.id.slice(0, SHORT);
     const subject = subjects.get(node.id);
     const shape: DotShape = merges.has(node.id) ? 'diamond' : 'dot';
@@ -359,6 +446,8 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       x: node.x,
       y: node.y,
       shaY: node.y + SHA_DROP,
+      date: date ? dayOf(date) : null,
+      dateY: node.y + DATE_DROP,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
     };
@@ -417,6 +506,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     ),
     flag: flagOf(order, input, graph.nodes, SPACING.column),
     since: sinceOf(history, graph.nodes, base),
+    collapsed: collapsedOf(history, graph.nodes),
     header: {
       count: merges.size
         ? `${plural(order.length - merges.size, 'commit')} and ${plural(merges.size, 'merge')}`

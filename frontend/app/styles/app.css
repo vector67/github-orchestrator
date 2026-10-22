@@ -4890,6 +4890,41 @@ button.tree-row[aria-current="true"] {
   text-decoration: underline;
 }
 
+.timeline-run {
+  cursor: pointer;
+}
+
+.timeline-run rect {
+  fill: var(--page);
+  stroke: var(--muted);
+}
+
+.timeline-run text {
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+.timeline-run[aria-expanded="true"] rect {
+  stroke: var(--text);
+}
+
+.timeline-run-list {
+  max-height: 240px;
+  margin: 0;
+  padding: 8px 12px;
+  overflow-y: auto;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  color: var(--muted);
+  list-style: none;
+  border: 1px solid var(--hairline);
+}
+
+.timeline-run-sha {
+  margin-right: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 .timeline-key {
   display: flex;
   flex-wrap: wrap;

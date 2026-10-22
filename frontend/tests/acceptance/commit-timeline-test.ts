@@ -717,3 +717,87 @@ module(
     });
   },
 );
+
+function mainRun(count: number): string[] {
+  return Array.from(
+    { length: count },
+    (_, index) => `${(index + 1).toString(16).padStart(2, '0')}e0000`,
+  );
+}
+
+module('Acceptance | commit timeline far behind main', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  function behind(count: number, sent: number[]) {
+    const run = mainRun(count);
+    board().commits = {
+      ...prHistory(FORK, [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+      ]),
+      fork_at: '2026-10-01T09:00:00Z',
+      behind: count,
+      base_tip: run.at(-1)!,
+      base_commits: sent.map((index) =>
+        prCommit(run[index]!, run[index - 1] ?? FORK, `main ${index}`),
+      ),
+    };
+    return run;
+  }
+
+  function range(from: number, to: number): number[] {
+    return Array.from({ length: to - from }, (_, index) => from + index);
+  }
+
+  test("past twenty commits behind, main's run up to its last two folds into a pill that lists them", async function (assert) {
+    const run = behind(25, [...range(0, 10), ...range(15, 25)]);
+    await visit('/pr/o/r/7/diff');
+
+    await click('[data-test-timeline-toggle]');
+
+    assert.deepEqual(
+      dots('base').map((one) => one.sha),
+      [FORK, run[23], run[24]],
+    );
+    assert.dom('[data-test-collapsed]').hasText('⋯ 23 commits');
+    const pill = Number(find('[data-test-collapsed]')!.getAttribute('data-x'));
+    const [fork, beforeTip] = dots('base');
+    assert.true(pill > fork!.x, 'after the fork');
+    assert.true(pill < beforeTip!.x, "and before main's last two");
+    assert.deepEqual(
+      findAll('[data-test-date]').map((one) => one.textContent?.trim()),
+      ['Thu 1 Oct', 'Tue 20 Oct'],
+    );
+    assert
+      .dom('[data-test-since-fork]')
+      .hasText('25 commits on main since the fork');
+    assert.dom('[data-test-behind]').hasText('25 behind main');
+    assert.dom('[data-test-collapsed-list]').doesNotExist();
+
+    await click('[data-test-collapsed]');
+
+    const listed = findAll('[data-test-collapsed-list] li').map((one) =>
+      one.textContent?.replace(/\s+/g, ' ').trim(),
+    );
+    assert.strictEqual(listed.length, 19);
+    assert.strictEqual(listed[0], `${run[0]} main 0`);
+    assert.strictEqual(listed[10], '⋯ 5 more');
+    assert.strictEqual(listed.at(-1), `${run[22]} main 22`);
+    assert.dom('[data-test-collapsed-list] [data-pickable]').doesNotExist();
+
+    await click('[data-test-collapsed]');
+
+    assert.dom('[data-test-collapsed-list]').doesNotExist();
+  });
+
+  test('twenty behind, every one of them is a dot of its own', async function (assert) {
+    behind(20, range(0, 20));
+    await visit('/pr/o/r/7/diff');
+
+    await click('[data-test-timeline-toggle]');
+
+    assert.dom('[data-test-collapsed]').doesNotExist();
+    assert.strictEqual(dots('base').length, 21);
+  });
+});
