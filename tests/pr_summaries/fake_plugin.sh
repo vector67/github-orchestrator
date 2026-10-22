@@ -28,8 +28,7 @@ case "$behaviour" in
     clean) folders="$witnesses primer alignment" ;;
     malformed-alignment) folders="$witnesses alignment" ;;
     needs-api | crash) folders= ;;
-    hang) folders=claimed ;;
-    partway | partway-then-a-witness-fails) folders="claimed implementation" ;;
+    hang | partway | partway-then-a-witness-fails) folders=claimed ;;
     *) folders=$witnesses ;;
 esac
 cwd=$(pwd -P)
@@ -59,6 +58,7 @@ case "$behaviour" in
         sleep 60 ;;
     partway | partway-then-a-witness-fails)
         finish claimed '{"claims": []}'
+        mkdir "$out/implementation"
         until [ -e "$out/go-on" ]; do
             if [ -e "$out/die" ]; then
                 kill -KILL 0
