@@ -8,6 +8,7 @@ import time
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass, replace
 from datetime import datetime, timedelta, timezone
+from functools import cache
 from importlib import metadata
 from pathlib import Path
 from threading import Lock, Thread
@@ -155,9 +156,9 @@ from github_orchestrator.settings._config import (
 from github_orchestrator.settings._load import (
     INSTANCES_FOLDER,
     instance_name,
-    load_settings,
 )
 from github_orchestrator.settings._load import instance_refused as instance_refused
+from github_orchestrator.settings._load import load_settings as load_settings
 from github_orchestrator.settings._load import other_instances as other_instances
 from github_orchestrator.settings._load import with_instance as with_instance
 from github_orchestrator.settings._logging import (
@@ -1287,6 +1288,7 @@ def dashboard_source_wiring(settings: Settings) -> DashboardSourceWiring:
         settings.data_dir)
 
 
+@cache
 def installed_version() -> str | None:
     try:
         return metadata.version("github-orchestrator")

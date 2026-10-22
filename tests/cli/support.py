@@ -27,7 +27,7 @@ from github_orchestrator.wiring import (
     OtherInstancesWiring,
     ServerWiring,
     cli_config,
-    make_container,
+    load_settings,
     notifications_wiring,
     server_config,
     watcher_wiring,
@@ -208,8 +208,7 @@ class Machine:
         return {"GITHUB_ORCHESTRATOR_DATA_DIR": str(self.data_dir), **pinned}
 
     def settings(self) -> Settings:
-        settings: Settings = make_container(self.environment, self.home).get(Settings)
-        return settings
+        return load_settings(self.environment, self.home)
 
     def processes(self) -> FakePrProcesses:
         if self.pr_processes is None:
