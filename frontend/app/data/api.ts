@@ -686,6 +686,7 @@ export interface PullRequestCommits {
   behind: number;
   fork_at: string;
   stack: Stack | null;
+  reviewed: ReviewedCommits | null;
 }
 
 export interface QuestionRequest {
@@ -756,6 +757,13 @@ export interface ReviewOperation {
 export type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED' | 'DISMISSED' | 'PENDING';
 
 export type ReviewVerdict = 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
+
+export interface ReviewedCommits {
+  sha: string;
+  fork: string;
+  commits: PullRequestCommit[];
+  rewritten_at: string | null;
+}
 
 export interface RunLedger {
   watcher: WatcherHealth;

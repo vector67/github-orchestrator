@@ -996,6 +996,18 @@ class Stack(BaseModel):
                     "request left it, oldest first.")
 
 
+class ReviewedCommits(BaseModel):
+    """What your review saw: the pull request's commits up to the one it was
+    given on, kept from when the board first saw that commit among them."""
+
+    sha: Sha = Field(description="The commit the review was given on.")
+    fork: Sha = Field(description="Where the branch left its base then.")
+    commits: list[PullRequestCommit]
+    rewritten_at: str | None = Field(
+        description="When the board first found the review's commit gone from "
+                    "the pull request's commits.")
+
+
 class PullRequestCommits(BaseModel):
     """The pull request's own commits, oldest first. Each one's diff is
     `/diffs/{parent}..{sha}`, and any run of them is `/diffs/{first's parent}..{last}`."""
@@ -1016,6 +1028,9 @@ class PullRequestCommits(BaseModel):
     stack: Stack | None = Field(
         description="Where the base branch left the repository's default branch, "
                     "when the base is another branch: another pull request's.")
+    reviewed: ReviewedCommits | None = Field(
+        description="What your review saw, when its commit is no longer among "
+                    "these: the branch was rewritten since.")
 
 
 class ReadMark(BaseModel):

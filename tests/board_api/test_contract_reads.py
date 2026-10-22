@@ -912,6 +912,7 @@ def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base(
         "behind": 1,
         "fork_at": "2026-01-01T00:01:00Z",
         "stack": None,
+        "reviewed": None,
     }
     assert answer.headers["ETag"]
 

@@ -66,6 +66,7 @@ from github_orchestrator.board_api._contract import (
     ReadMarks,
     ReplyRequest,
     ResolveRequest,
+    ReviewedCommits,
     SendReviewRequest,
     Sha,
     Stack,
@@ -322,7 +323,32 @@ def read_pull_request_commits(request: Request, board: Serving,
         behind=len(history.base_commits),
         fork_at=history.fork_at.astimezone(UTC).strftime(AS_OF_FORMAT),
         stack=None if stack is None else Stack(
-            branch=stack.branch, fork=str(stack.fork), commits=stacked)))
+            branch=stack.branch, fork=str(stack.fork), commits=stacked),
+        reviewed=_reviewed(board, str(history.fork), commits)))
+
+
+REVIEWED = "reviewed"
+
+
+def _reviewed(board: Board, fork: str, commits: list[PullRequestCommit]) -> ReviewedCommits | None:
+    sha = board.manager.dashboard().my_review_sha
+    if sha is None:
+        return None
+    kept = board.shelf.list(REVIEWED).get(sha)
+    shas = [commit.sha for commit in commits]
+    if sha in shas:
+        if kept is None:
+            saw = ReviewedCommits(sha=sha, fork=fork, commits=commits[:shas.index(sha) + 1],
+                                  rewritten_at=None)
+            board.shelf.save(REVIEWED, sha, saw.model_dump_json().encode())
+        return None
+    if kept is None:
+        return None
+    saw = ReviewedCommits.model_validate_json(kept)
+    if saw.rewritten_at is None:
+        saw = saw.model_copy(update={"rewritten_at": board.clock().strftime(AS_OF_FORMAT)})
+        board.shelf.save(REVIEWED, sha, saw.model_dump_json().encode())
+    return saw
 
 
 @reads.get("/viewer", tags=["people"], operation_id="readViewer",

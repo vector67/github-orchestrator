@@ -5589,6 +5589,16 @@
     "fork_at": {
      "type": "string"
     },
+    "reviewed": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReviewedCommits"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "stack": {
      "anyOf": [
       {
@@ -5607,7 +5617,8 @@
     "base_commits",
     "behind",
     "fork_at",
-    "stack"
+    "stack",
+    "reviewed"
    ],
    "type": "object"
   },
@@ -5978,6 +5989,41 @@
     "COMMENT"
    ],
    "type": "string"
+  },
+  "ReviewedCommits": {
+   "properties": {
+    "commits": {
+     "items": {
+      "$ref": "#/components/schemas/PullRequestCommit"
+     },
+     "type": "array"
+    },
+    "fork": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
+    "rewritten_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "sha": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "sha",
+    "fork",
+    "commits",
+    "rewritten_at"
+   ],
+   "type": "object"
   },
   "RunLedger": {
    "properties": {

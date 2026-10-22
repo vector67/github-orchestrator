@@ -1781,6 +1781,7 @@ export function prHistory(
     behind: 0,
     fork_at: '2026-10-19T09:00:00Z',
     stack: null,
+    reviewed: null,
   };
 }
 
