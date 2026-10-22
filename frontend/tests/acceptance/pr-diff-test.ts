@@ -645,6 +645,21 @@ module('Acceptance | pr diff', function (hooks) {
       assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
     });
 
+    test('the comment box’s Ask the agent is disabled while its question is in flight', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'why a comment here?');
+      const release = board().hold(/\/api\/terminal\/questions$/);
+
+      const asking = click('[data-test-box-ask]');
+      await waitFor('[data-test-box-ask][disabled]');
+
+      assert.dom('[data-test-box-ask]').isDisabled();
+
+      release();
+      await asking;
+    });
+
     test('a draft being edited has no Add to review in its box', async function (assert) {
       board().conversations = [
         thread({
@@ -1063,6 +1078,24 @@ module('Acceptance | pr diff', function (hooks) {
       assert.true(prompt.includes('> return the rows'), prompt);
       assert.true(prompt.endsWith('should this be a generator?'), prompt);
       assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    });
+
+    test('a draft’s card’s Ask is disabled while its question is in flight', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-ask]');
+      await fillIn(
+        '[data-test-card="d1"] [data-test-ask] textarea',
+        'should this be a generator?',
+      );
+      const release = board().hold(/\/api\/terminal\/questions$/);
+
+      const asking = click('[data-test-card="d1"] [data-test-ask-send]');
+      await waitFor('[data-test-card="d1"] [data-test-ask-send][disabled]');
+
+      assert.dom('[data-test-card="d1"] [data-test-ask-send]').isDisabled();
+
+      release();
+      await asking;
     });
 
     test('once the board answers a discard, the draft’s card is gone and nothing is left in flight', async function (assert) {

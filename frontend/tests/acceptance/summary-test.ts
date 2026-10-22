@@ -6,6 +6,7 @@ import {
   findAll,
   triggerEvent,
   visit,
+  waitFor,
 } from '@ember/test-helpers';
 import {
   heldPr,
@@ -203,6 +204,48 @@ module('Acceptance | summary tab', function (hooks) {
         'c0ffee1 · finished 19m ago rerun started 0s ago, finished 0/9 agents',
       );
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
+  });
+
+  test('Rerun is disabled while its request is in flight, so a second click starts no second run', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: ago(19),
+      markdown: '# What it asks',
+    });
+    await visit('/pr/o/r/7/summary');
+    const release = board().hold(/operations:summarise$/);
+
+    const running = click('[data-test-summary-run]');
+    await waitFor('[data-test-summary-run][disabled]');
+
+    assert.dom('[data-test-summary-run]').isDisabled();
+
+    release();
+    await running;
+  });
+
+  test('Use the GitHub API is disabled while its request is in flight', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'abc1234',
+      exit_status: 3,
+      markdown: '# Before',
+      stderr:
+        'Cannot read o/r locally: no clone.\n' +
+        'Run this from a clone of o/r, or confirm reading its 6 changed files over the GitHub API (about 37 API calls) by adding --use-github-api.\n',
+    });
+    await visit('/pr/o/r/7/summary');
+    const release = board().hold(/operations:summarise-with-github-api$/);
+
+    const running = click('[data-test-summary-github-api]');
+    await waitFor('[data-test-summary-github-api][disabled]');
+
+    assert.dom('[data-test-summary-github-api]').isDisabled();
+
+    release();
+    await running;
   });
 
   test('a rerun over a summary counts its agents as the polls come in', async function (assert) {

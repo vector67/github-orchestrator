@@ -1,4 +1,5 @@
 import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
@@ -30,6 +31,8 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   @service declare board: BoardService;
   @service declare terminal: TerminalService;
   @service declare router: RouterService;
+
+  @tracked private sending = false;
 
   get copy(): Copy {
     return this.drafts.copyOf(this.args.draft, this.args.saved);
@@ -78,15 +81,24 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   };
 
   get unaskable(): boolean {
-    return this.args.selection === null || this.copy.body.trim() === '';
+    return (
+      this.sending ||
+      this.args.selection === null ||
+      this.copy.body.trim() === ''
+    );
   }
 
   ask = async () => {
     const selection = this.args.selection;
     if (selection === null) return;
     const prompt = questionAbout(linesOf(selection), this.copy.body, null);
-    if (await this.terminal.ask(prompt)) {
-      void this.router.transitionTo('terminal');
+    this.sending = true;
+    try {
+      if (await this.terminal.ask(prompt)) {
+        void this.router.transitionTo('terminal');
+      }
+    } finally {
+      this.sending = false;
     }
   };
 
