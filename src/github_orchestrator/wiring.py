@@ -627,9 +627,12 @@ class SummaryLaneProvider(Provider):
             facts = change_detection.facts(pr)
             return None if facts is None else facts.head_sha
 
+        def holds(pr: Pr) -> bool:
+            return change_detection.facts(pr) is not None and not change_detection.closing(pr)
+
         return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
                                 plugin=wiring.plugin, config_path=wiring.config_path,
-                                clones=wiring.clones, head_of=head_of, url_of=pr_url,
+                                clones=wiring.clones, head_of=head_of, holds=holds, url_of=pr_url,
                                 gh_account=wiring.gh_account, mcp_config=wiring.mcp_config,
                                 agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
                                 run_in=wiring.run_in, clamp=wiring.clamp)

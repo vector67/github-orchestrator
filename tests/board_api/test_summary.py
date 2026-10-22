@@ -26,7 +26,7 @@ def summary_parts(tmp_path: Path, behaviour: str = "clean", *, read: str | None 
             SummaryLaneWiring(tmp_path / "config.toml", {THE_PR.repo: clone}, agents_enabled, "octocat",
                               plugin=(sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
                               run_in=run_in),
-            fake_provider(ChangeDetection, HeadsAt(read))]
+            fake_provider(ChangeDetection, HeadsAt(read, (THE_PR,), ()))]
 
 
 def wanted_on(tmp_path: Path) -> None:

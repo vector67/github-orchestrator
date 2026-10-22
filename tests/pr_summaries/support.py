@@ -1,7 +1,7 @@
 import json
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,11 +14,16 @@ from tests.conftest import clocks_of, fake_provider, ticking_clock
 
 
 class HeadsAt:
-    def __init__(self, head: str | None) -> None:
+    def __init__(self, head: str | None, held: Collection[Pr], closing: Collection[Pr]) -> None:
         self._head = head
+        self._held = held
+        self._closing = closing
 
-    def facts(self, pr: Pr) -> SimpleNamespace:
-        return SimpleNamespace(head_sha=self._head)
+    def facts(self, pr: Pr) -> SimpleNamespace | None:
+        return SimpleNamespace(head_sha=self._head) if pr in self._held else None
+
+    def closing(self, pr: Pr) -> bool:
+        return pr in self._closing
 
 
 def run_now(work: Callable[[], None]) -> None:
@@ -46,7 +51,8 @@ class Lane:
     def __init__(self, tmp_path: Path, behaviour: str, *, run_in: Callable[[Callable[[], None]], None] = run_now,
                  agents_enabled: bool = True, timeout: float = 60, head: str | None = HEAD,
                  plugin: tuple[str, ...] | None = None, clone: Path | None = None, mcp_config: str = "",
-                 clamp: tuple[str, ...] = ()) -> None:
+                 clamp: tuple[str, ...] = (), held: Collection[Pr] = (THE_PR,),
+                 closing: Collection[Pr] = ()) -> None:
         self.clone = clone or tmp_path / "clone"
         self.clone.mkdir(exist_ok=True)
         self.config = tmp_path / "config.toml"
@@ -58,7 +64,7 @@ class Lane:
                               agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in,
                               clamp=clamp),
             clocks_of(ticking_clock()),
-            fake_provider(ChangeDetection, HeadsAt(head)),
+            fake_provider(ChangeDetection, HeadsAt(head, held, closing)),
         )
         self.summaries: PrSummaries = container.get(PrSummaries)
         self.lane: SummaryLane = container.get(SummaryLane)

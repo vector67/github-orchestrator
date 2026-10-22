@@ -4,10 +4,13 @@ import pytest
 
 from github_orchestrator.domain import Repo
 from github_orchestrator.pr_processes.fake import FakePrProcesses
+from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
+from github_orchestrator.wiring import PrSummariesWiring, wire
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
+from tests.conftest import clocks_of
 from tests.conversation.support import (
     conversation_managers_over,
     hear,
@@ -48,6 +51,11 @@ def _closing(settings):
 
 def _tracked(settings):
     return THE_PR in disk_change_detection(settings.state_dir).tracked()
+
+
+def _summaries(settings) -> PrSummaries:
+    summaries: PrSummaries = wire(PrSummariesWiring(settings.summaries_dir), clocks_of()).get(PrSummaries)
+    return summaries
 
 
 def _world(settings):
@@ -128,10 +136,12 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
     for flag in left_over:
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.write_text("")
+    _summaries(settings).want(THE_PR)
 
     _cycle(settings, world, copies)
 
     assert "1 torn down" in capsys.readouterr().out
+    assert _summaries(settings).due(set()) == []
     assert world.managers == {}
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert copies.branch_at(worktree) is None

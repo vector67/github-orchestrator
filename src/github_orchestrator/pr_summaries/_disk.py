@@ -66,6 +66,17 @@ class DiskPrSummaries:
             stored = self.load(pr) or Summary()
             _replaced(self._file(pr), _encoded(replace(stored, wanted=self._clock())))
 
+    def unwant(self, pr: Pr) -> bool:
+        if not self._file(pr).exists():
+            return True
+        try:
+            with self._locked(pr):
+                stored = self.load(pr) or Summary()
+                _replaced(self._file(pr), _encoded(replace(stored, wanted=None)))
+        except OSError:
+            return False
+        return True
+
     def load(self, pr: Pr) -> Summary | None:
         path = self._file(pr)
         if not path.exists():
