@@ -40,6 +40,10 @@ PR_DIFF_FAILED = {"description": "git could not produce the diff, or find the "
                                  "head it was asked to diff.",
                   "model": Errors}
 
+PR_COMMITS_FAILED = {"description": "git could not list the commits, or find the "
+                                    "head it was asked to list them to.",
+                     "model": Errors}
+
 FETCH_FAILED = {"description": "git could not fetch the pull request's branch.",
                 "model": Errors}
 

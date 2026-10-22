@@ -773,6 +773,26 @@ def test_the_prs_diff_runs_from_where_the_branch_left_main_to_its_head(
     assert pr_checkout.pr_diff("--nope", cut.base_sha) == diff
 
 
+def test_the_prs_commits_run_oldest_first_from_where_the_branch_left_main(
+        world, pr_worktree, pr_checkout):
+    first = Sha(world.head_of(pr_worktree))
+    second = Sha(world.commit(pr_worktree, {"h": "more\n"}, "second change\n\nwhy it changed"))
+
+    history = pr_checkout.pr_commits("main", second)
+
+    assert history is not None
+    assert pr_checkout.commit_message(history.fork) == "first"
+    assert [(commit.sha, commit.parents, commit.subject, commit.author)
+            for commit in history.commits] == [
+        (first, (history.fork,), "feature work", "T"),
+        (second, (first,), "second change", "T"),
+    ]
+
+
+def test_a_prs_commits_with_no_worktree_are_unknown(world):
+    assert world.copies.checkout(THE_PR).pr_commits("main", Sha("a" * 40)) is None
+
+
 def test_commits_and_files_are_found_only_where_they_are(cut, pr_checkout):
     assert pr_checkout.has_commit(cut.base_sha) is True
     assert pr_checkout.has_commit(Sha("0" * 40)) is False

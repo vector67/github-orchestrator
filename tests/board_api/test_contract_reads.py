@@ -903,6 +903,44 @@ def test_the_local_diff_runs_to_the_worktrees_own_commit():
     assert answer.json()["files"][0]["hunks"][0]["lines"][-1]["text"] == "not pushed"
 
 
+def pr_commits_of(copies, **params):
+    return pr_board(copies).get("/api/pull-request/commits", params=params)
+
+
+def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base():
+    copies, base, head = branched_from_main()
+
+    answer = pr_commits_of(copies)
+
+    assert answer.status_code == 200
+    assert answer.json() == {
+        "fork": base,
+        "commits": [{"sha": head, "parents": [base], "subject": "check first",
+                     "author": "T", "authored_at": "2026-01-01T00:02:00Z"}],
+    }
+    assert answer.headers["ETag"]
+
+
+def test_the_local_commits_include_what_the_worktree_has_not_pushed():
+    copies, _, pushed = branched_from_main()
+    local = copies.commit(WORKTREE, {"src/foo.py": "not pushed\n"}, "local only")
+
+    shas = {source: [commit["sha"] for commit in pr_commits_of(copies, source=source).json()["commits"]]
+            for source in ("origin", "local")}
+
+    assert shas == {"origin": [pushed], "local": [pushed, local]}
+
+
+def test_commits_of_a_head_git_cannot_find_say_git_failed():
+    copies, _, _ = branched_from_main()
+    copies.check_out(WORKTREE, "never-pushed")
+
+    answer = pr_commits_of(copies)
+
+    assert answer.status_code == 500
+    assert answer.json()["errors"][0]["code"] == "git-failed"
+
+
 def test_fetching_brings_what_was_pushed_since_into_the_origin_diff():
     copies, _, pushed = branched_from_main()
     newer = copies.publish("feature", pushed, {"src/foo.py": "pushed since\n"}, "elsewhere")
