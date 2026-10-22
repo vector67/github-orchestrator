@@ -95,6 +95,7 @@ import {
   shownOf,
   stepperOf,
   commitNoteOf,
+  mergeNoteOf,
   pickedRangeOf,
   timelineOf,
   summaryOf,
@@ -107,7 +108,9 @@ import {
   type Shown,
   type Stepper,
   type CommitNote,
+  type DiffRange,
   type Looking,
+  type MergeNote,
   type PickedRange,
   type Summaries,
   type SummaryTab,
@@ -131,7 +134,9 @@ export type {
   PipState,
   Stepper,
   CommitNote,
+  DiffRange,
   Looking,
+  MergeNote,
   PickedRange,
   SummaryState,
   SummaryTab,
@@ -270,8 +275,9 @@ function keyOf(repo: string, number: number): string {
   return `${repo}#${number}`;
 }
 
-export function commitsOf(commits: Commits): string {
-  return `${commits.base}..${commits.head}`;
+export function commitsOf(commits: DiffRange): string {
+  const range = `${commits.base}..${commits.head}`;
+  return commits.merged ? `${range}?merged=${commits.merged}` : range;
 }
 
 function markOf(operations: Operation[]): string {
@@ -579,7 +585,7 @@ export default class StoreService extends Service {
     );
   }
 
-  diff(commits: Commits): Diff | undefined {
+  diff(commits: DiffRange): Diff | undefined {
     return this.diffs[commitsOf(commits)];
   }
 
@@ -588,6 +594,7 @@ export default class StoreService extends Service {
     source: DiffSource,
     chosen: string | null,
     picked: Picked | null,
+    skipMerges: boolean,
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
     return (
@@ -598,6 +605,7 @@ export default class StoreService extends Service {
         chosen,
         held.facts?.my_review_sha ?? null,
         picked,
+        skipMerges,
       )
     );
   }
@@ -627,7 +635,12 @@ export default class StoreService extends Service {
       : null;
   }
 
-  files(commits: Commits): FileStat[] | null {
+  mergeNote(merge: DiffRange): MergeNote | null {
+    const { base, head } = merge;
+    return mergeNoteOf(this.files(merge), this.files({ base, head }));
+  }
+
+  files(commits: DiffRange): FileStat[] | null {
     const diff = this.diff(commits);
     return diff ? filesOf(diff) : null;
   }
@@ -829,13 +842,13 @@ export default class StoreService extends Service {
     this.takeDetails(repo, number, key, version, comments, operations);
   }
 
-  readDiff(commits: Commits): Promise<Drawing> {
+  readDiff(commits: DiffRange): Promise<Drawing> {
     if (this.diff(commits)) return Promise.resolve('answered');
     const key = commitsOf(commits);
     return this.once(`diff ${key}`, async () => {
       const path = this.here.api(`/api/diffs/${key}`);
       try {
-        this.takeDiff(await fetched<Diff>(path));
+        this.takeDiff(await fetched<Diff>(path), key);
         return 'answered';
       } catch (trouble) {
         void reportError(`read ${path}`, trouble);
@@ -1310,8 +1323,8 @@ export default class StoreService extends Service {
     };
   }
 
-  private takeDiff(diff: Diff): void {
-    this.diffs = { ...this.diffs, [commitsOf(diff)]: diff };
+  private takeDiff(diff: Diff, key = commitsOf(diff)): void {
+    this.diffs = { ...this.diffs, [key]: diff };
   }
 
   private drawnInto({ repo, number }: Numbered, dashboard: Dashboard): void {

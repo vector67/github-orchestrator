@@ -14,6 +14,7 @@ const SHA_DROP = 20;
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
+const DIAMOND = 8;
 
 export interface Picked {
   from: string;
@@ -32,12 +33,16 @@ export interface Preset {
 
 export type DotStyle = 'base' | 'read' | 'unread';
 
+export type DotShape = 'dot' | 'diamond';
+
 export interface TimelineDot {
   sha: string;
   short: string;
   title: string;
   lane: string;
   style: DotStyle;
+  shape: DotShape;
+  path: string;
   x: number;
   y: number;
   shaY: number;
@@ -91,15 +96,18 @@ export interface TimelineHeader {
   count: string;
   branch: string;
   base: string;
+  relation: string;
   fork: string;
   behind: number;
 }
+
+export type CurveKind = 'fork' | 'merge';
 
 export interface Timeline {
   width: number;
   height: number;
   lanes: TimelineLane[];
-  curves: { path: string; lane: string }[];
+  curves: { path: string; lane: string; kind: CurveKind }[];
   dots: TimelineDot[];
   labels: TimelineLabel[];
   current: { sha: string; x: number; y: number } | null;
@@ -177,9 +185,27 @@ function presetsOf(
   ];
 }
 
+function outsideOf(history: PullRequestCommits): string[] {
+  const own = new Set(
+    [...history.commits, ...history.base_commits].map((one) => one.sha),
+  );
+  return [
+    ...new Set([
+      ...history.commits
+        .flatMap((one) => one.parents)
+        .filter((parent) => !own.has(parent)),
+      history.fork,
+    ]),
+  ];
+}
+
 function nodesOf(history: PullRequestCommits): GraphNode[] {
   return [
-    { id: history.fork, lane: BASE_LANE, parents: [] },
+    ...outsideOf(history).map((id) => ({
+      id,
+      lane: BASE_LANE,
+      parents: [],
+    })),
     ...history.base_commits.map((one) => ({
       id: one.sha,
       lane: BASE_LANE,
@@ -242,6 +268,10 @@ function sinceOf(
   };
 }
 
+function diamondAt(x: number, y: number): string {
+  return `M ${x} ${y - DIAMOND} L ${x + DIAMOND} ${y} L ${x} ${y + DIAMOND} L ${x - DIAMOND} ${y} Z`;
+}
+
 function styleOf(node: Placed, read: Set<string>): DotStyle {
   if (node.lane === BASE_LANE) return 'base';
   return read.has(node.id) ? 'read' : 'unread';
@@ -266,16 +296,24 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       one.subject,
     ]),
   );
+  const merges = new Set(
+    history.commits
+      .filter((one) => one.parents.length > 1)
+      .map((one) => one.sha),
+  );
   const dots = [...graph.nodes.values()].map((node) => {
     const at = order.indexOf(node.id);
     const short = node.id.slice(0, SHORT);
     const subject = subjects.get(node.id);
+    const shape: DotShape = merges.has(node.id) ? 'diamond' : 'dot';
     return {
       sha: node.id,
       short,
       title: subject ? `${short} ${subject}` : short,
       lane: node.lane,
       style: styleOf(node, read),
+      shape,
+      path: shape === 'diamond' ? diamondAt(node.x, node.y) : '',
       x: node.x,
       y: node.y,
       shaY: node.y + SHA_DROP,
@@ -297,7 +335,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     ),
     curves: graph.edges
       .filter((one) => one.crossing)
-      .map((one) => ({ path: one.path, lane: one.lane })),
+      .map((one) => ({
+        path: one.path,
+        lane: one.lane,
+        kind: one.parent > 0 ? ('merge' as const) : ('fork' as const),
+      })),
     dots,
     labels: [
       { kind: 'main', text: base, at: tip.id, x: tip.x + LABEL_GAP, y: tip.y },
@@ -317,9 +359,14 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     flag: flagOf(order, input, graph.nodes, SPACING.column),
     since: sinceOf(history, graph.nodes, base),
     header: {
-      count: plural(order.length, 'commit'),
+      count: merges.size
+        ? `${plural(order.length - merges.size, 'commit')} and ${plural(merges.size, 'merge')}`
+        : plural(order.length, 'commit'),
       branch: input.branch ?? 'this branch',
       base,
+      relation: merges.size
+        ? `last synced with ${base} at`
+        : `forked from ${base} at`,
       fork: history.fork.slice(0, SHORT),
       behind: history.behind,
     },

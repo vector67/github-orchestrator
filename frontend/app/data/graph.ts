@@ -2,6 +2,7 @@ export interface GraphNode {
   id: string;
   lane: string;
   parents: string[];
+  span?: number;
 }
 
 export interface Placed extends GraphNode {
@@ -15,6 +16,7 @@ export interface GraphEdge {
   from: string;
   to: string;
   lane: string;
+  parent: number;
   crossing: boolean;
   path: string;
 }
@@ -54,15 +56,18 @@ export const SPACING: Spacing = {
 
 function columnsOf(nodes: GraphNode[]): Map<string, number> {
   const columns = new Map<string, number>();
+  const ends = new Map<string, number>();
   const lastInLane = new Map<string, number>();
   for (const node of nodes) {
     const after = [
-      ...node.parents.map((parent) => columns.get(parent)),
+      ...node.parents.map((parent) => ends.get(parent)),
       lastInLane.get(node.lane),
     ].filter((one): one is number => one !== undefined);
     const column = after.length ? Math.max(...after) + 1 : 0;
-    columns.set(node.id, column);
-    lastInLane.set(node.lane, column);
+    const end = column + (node.span ?? 1) - 1;
+    columns.set(node.id, (column + end) / 2);
+    ends.set(node.id, end);
+    lastInLane.set(node.lane, end);
   }
   return columns;
 }
@@ -92,16 +97,20 @@ export function layout(
     });
   }
   const edges = [...placed.values()].flatMap((to) =>
-    to.parents
-      .map((parent) => placed.get(parent))
-      .filter((from): from is Placed => from !== undefined)
-      .map((from) => ({
-        from: from.id,
-        to: to.id,
-        lane: to.lane,
-        crossing: from.row !== to.row,
-        path: edgePath(from, to),
-      })),
+    to.parents.flatMap((parent, index) => {
+      const from = placed.get(parent);
+      if (!from) return [];
+      return [
+        {
+          from: from.id,
+          to: to.id,
+          lane: to.lane,
+          parent: index,
+          crossing: from.row !== to.row,
+          path: edgePath(from, to),
+        },
+      ];
+    }),
   );
   const lines = lanes.flatMap((lane) => {
     const xs = [...placed.values()]

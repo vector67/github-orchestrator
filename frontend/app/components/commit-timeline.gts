@@ -6,6 +6,8 @@ import didChange from 'frontend/modifiers/did-change';
 
 type End = 'from' | 'to';
 
+const eq = (one: unknown, other: unknown): boolean => one === other;
+
 export interface CommitTimelineSignature {
   Args: {
     timeline: Timeline;
@@ -91,9 +93,8 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           <b>{{@timeline.header.count}}</b>
           on
           {{@timeline.header.branch}}
-          · forked from
-          {{@timeline.header.base}}
-          at
+          ·
+          {{@timeline.header.relation}}
           <code class="timeline-fork">{{@timeline.header.fork}}</code>{{#if
             @timeline.header.behind
           }}
@@ -158,12 +159,22 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             />
           {{/each}}
           {{#each @timeline.curves key="path" as |curve|}}
-            <path
-              class="timeline-lane"
-              data-lane={{curve.lane}}
-              d={{curve.path}}
-              data-test-fork-curve
-            />
+            {{#if (eq curve.kind "merge")}}
+              <path
+                class="timeline-lane"
+                data-lane={{curve.lane}}
+                data-kind="merge"
+                d={{curve.path}}
+                data-test-merge-curve
+              />
+            {{else}}
+              <path
+                class="timeline-lane"
+                data-lane={{curve.lane}}
+                d={{curve.path}}
+                data-test-fork-curve
+              />
+            {{/if}}
           {{/each}}
           <rect
             class="timeline-band"
@@ -201,18 +212,37 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             />
           {{/if}}
           {{#each @timeline.dots key="sha" as |dot|}}
-            <circle
-              class="timeline-dot"
-              cx={{dot.x}}
-              cy={{dot.y}}
-              r={{if dot.pickable "6" "4"}}
-              data-sha={{dot.sha}}
-              data-lane={{dot.lane}}
-              data-style={{dot.style}}
-              data-in-range={{if dot.inRange "true" "false"}}
-              data-pickable={{if dot.pickable "true"}}
-              data-test-dot
-            ><title>{{dot.title}}</title></circle>
+            {{#if (eq dot.shape "diamond")}}
+              <path
+                class="timeline-dot"
+                d={{dot.path}}
+                data-x={{dot.x}}
+                data-y={{dot.y}}
+                data-shape={{dot.shape}}
+                data-sha={{dot.sha}}
+                data-lane={{dot.lane}}
+                data-style={{dot.style}}
+                data-in-range={{if dot.inRange "true" "false"}}
+                data-pickable={{if dot.pickable "true"}}
+                data-test-dot
+              ><title>{{dot.title}}</title></path>
+            {{else}}
+              <circle
+                class="timeline-dot"
+                cx={{dot.x}}
+                cy={{dot.y}}
+                r={{if dot.pickable "6" "4"}}
+                data-x={{dot.x}}
+                data-y={{dot.y}}
+                data-shape={{dot.shape}}
+                data-sha={{dot.sha}}
+                data-lane={{dot.lane}}
+                data-style={{dot.style}}
+                data-in-range={{if dot.inRange "true" "false"}}
+                data-pickable={{if dot.pickable "true"}}
+                data-test-dot
+              ><title>{{dot.title}}</title></circle>
+            {{/if}}
             {{#if dot.pickable}}
               <text
                 class="timeline-sha"

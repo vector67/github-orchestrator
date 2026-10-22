@@ -7,6 +7,7 @@ export const COMMIT_SIZINGS: CommitSizing[] = ['full', 'minimal', 'hidden'];
 
 const SIZING = 'commit-box-sizing';
 const DISMISSED = 'commit-notes-dismissed';
+const SKIP_MERGES = 'commit-skip-merges';
 
 function recalled(): CommitSizing {
   try {
@@ -14,6 +15,14 @@ function recalled(): CommitSizing {
     return COMMIT_SIZINGS.find((one) => one === kept) ?? 'full';
   } catch {
     return 'full';
+  }
+}
+
+function skipping(): boolean {
+  try {
+    return localStorage.getItem(SKIP_MERGES) !== 'false';
+  } catch {
+    return true;
   }
 }
 
@@ -31,6 +40,16 @@ function dismissals(): Record<string, string> {
 export default class CommitBoxService extends Service {
   @tracked sizing: CommitSizing = recalled();
   @tracked private dismissed: Record<string, string> = dismissals();
+  @tracked skipMerges: boolean = skipping();
+
+  chooseSkipMerges(skip: boolean): void {
+    this.skipMerges = skip;
+    try {
+      localStorage.setItem(SKIP_MERGES, String(skip));
+    } catch {
+      return;
+    }
+  }
 
   choose(sizing: CommitSizing): void {
     this.sizing = sizing;

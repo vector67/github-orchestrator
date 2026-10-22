@@ -14,7 +14,9 @@ import type StoreService from 'frontend/services/store';
 import { commitsOf } from 'frontend/services/store';
 import type {
   CommitNote,
+  DiffRange,
   DiffSource,
+  MergeNote,
   PickedRange,
   Stepper,
 } from 'frontend/services/store';
@@ -80,6 +82,7 @@ export default class PullRequestDiffService extends Service {
       this.source,
       this.pr.chosen,
       this.pr.picked,
+      this.commitBox.skipMerges,
     );
   }
 
@@ -153,9 +156,29 @@ export default class PullRequestDiffService extends Service {
     if (note) this.commitBox.dismissNote(keyOf(this.here.at), note.head);
   };
 
-  private get range(): Commits | null {
+  private get range(): DiffRange | null {
     return this.picked?.range ?? this.stepper?.range ?? null;
   }
+
+  private get merging(): Commits | null {
+    const stepper = this.stepper;
+    if (this.picked || !stepper?.merge) return null;
+    return { base: stepper.range.base, head: stepper.range.head };
+  }
+
+  get mergeNote(): MergeNote | null {
+    const stepper = this.stepper;
+    if (this.picked || !stepper?.merge) return null;
+    return this.store.mergeNote(stepper.range);
+  }
+
+  get baseName(): string {
+    return this.threads.pullRequest?.base_branch ?? 'main';
+  }
+
+  skipMerges = (skip: boolean) => {
+    this.commitBox.chooseSkipMerges(skip);
+  };
 
   get shown(): Diff | undefined {
     const range = this.range;
@@ -192,6 +215,8 @@ export default class PullRequestDiffService extends Service {
   draw = () => {
     const range = this.range;
     if (range) void waitForPromise(this.drawn(this.pr, range));
+    const merging = this.merging;
+    if (merging) void waitForPromise(this.readMerged(merging));
   };
 
   step = (by: number) => {
@@ -270,7 +295,11 @@ export default class PullRequestDiffService extends Service {
     pr.stepless = outcomes.includes('failed') && this.stepper === undefined;
   }
 
-  private async drawn(pr: PerPr, range: Commits): Promise<void> {
+  private async readMerged(range: Commits): Promise<void> {
+    await this.store.readDiff(range);
+  }
+
+  private async drawn(pr: PerPr, range: DiffRange): Promise<void> {
     const outcome = await this.store.readDiff(range);
     if (pr.scope.left) return;
     pr.unreadable = outcome === 'failed' ? commitsOf(range) : null;

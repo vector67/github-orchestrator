@@ -683,7 +683,7 @@ export class FakeBoard {
   comments: Record<string, Comment[]> = {};
   operations: Record<string, Operation[]> = {};
   proposals: Record<string, Proposal[]> = {};
-  diffs: Record<string, Diff> = {};
+  diffs: Record<string, Diff & { merged?: string }> = {};
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
   pushedSinceFetch: Diff | null = null;
@@ -1231,8 +1231,13 @@ export class FakeBoard {
     }
     const diff = /^\/api\/diffs\/([0-9a-f]+)\.\.([0-9a-f]+)$/.exec(path);
     if (diff) {
-      return Object.values(this.diffs).find(
-        (one) => one.base === diff[1] && one.head === diff[2],
+      const merged = url.searchParams.get('merged') ?? undefined;
+      const found = Object.values(this.diffs).find(
+        (one) =>
+          one.base === diff[1] && one.head === diff[2] && one.merged === merged,
+      );
+      return (
+        found && { base: found.base, head: found.head, files: found.files }
       );
     }
     if (path === '/api/conversations') {

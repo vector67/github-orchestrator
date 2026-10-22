@@ -106,6 +106,9 @@ export default class CommitBar extends Component<CommitBarSignature> {
                   {{@stepper.place}}
                   of
                   {{@stepper.count}}</b>
+                {{#if @stepper.merge}}
+                  <span class="commit-pill" data-test-merge-pill>merge</span>
+                {{/if}}
                 <span class="commit-sep">·</span>
                 <code class="commit-sha">{{@stepper.short}}</code>
                 <span class="commit-subject">{{@stepper.subject}}</span>
@@ -150,6 +153,7 @@ export default class CommitBar extends Component<CommitBarSignature> {
                 title={{pip.label}}
                 aria-label={{pip.label}}
                 data-state={{pip.state}}
+                data-merge={{if pip.merge "true"}}
                 data-test-pip
                 {{on "click" (fn @go pip.sha)}}
               ></button></li>

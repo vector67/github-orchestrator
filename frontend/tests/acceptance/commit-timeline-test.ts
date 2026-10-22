@@ -29,8 +29,8 @@ function dots(lane: string): Dot[] {
     sha: one.getAttribute('data-sha') ?? '',
     lane,
     style: one.getAttribute('data-style') ?? '',
-    x: Number(one.getAttribute('cx')),
-    y: Number(one.getAttribute('cy')),
+    x: Number(one.getAttribute('data-x')),
+    y: Number(one.getAttribute('data-y')),
   }));
 }
 
@@ -449,5 +449,175 @@ module('Acceptance | commit timeline', function (hooks) {
 
     assert.deepEqual(inRange(), [FIRST, SECOND, THIRD]);
     assert.dom('[data-test-pr-diff]').containsText('every commit');
+  });
+});
+
+const MERGE = 'f6f6f6f';
+const SKIP_MERGES = 'commit-skip-merges';
+
+module('Acceptance | commit timeline with main merged in', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  function press(key: string) {
+    return triggerEvent(document, 'keydown', { key });
+  }
+
+  hooks.beforeEach(function () {
+    board().pullRequestDiff = {
+      ...prDiff(changed('src/widgets/all.py', [added(19, 'every commit')])),
+      base: MAIN_ONE,
+      head: THIRD,
+    };
+    board().commits = prHistory(MAIN_ONE, [
+      prCommit(FIRST, FORK, 'Add the widget'),
+      prCommit(SECOND, FIRST, 'Name the widget'),
+      {
+        ...prCommit(MERGE, SECOND, "Merge branch 'main'"),
+        parents: [SECOND, MAIN_ONE],
+      },
+      prCommit(THIRD, MERGE, 'Test the widget'),
+    ]);
+    board().diffs = {
+      second: {
+        base: FIRST,
+        head: SECOND,
+        files: [changed('src/widgets/second.py', [added(19, 'second change')])],
+      },
+      merge: {
+        base: SECOND,
+        head: MERGE,
+        files: [
+          changed('src/parser.py', [added(19, 'from main')]),
+          changed('src/widgets/mended.py', [added(19, 'came from main')]),
+        ],
+      },
+      mergeOwn: {
+        base: SECOND,
+        head: MERGE,
+        merged: MAIN_ONE,
+        files: [changed('src/widgets/mended.py', [added(19, 'the fix')])],
+      },
+      third: {
+        base: MERGE,
+        head: THIRD,
+        files: [changed('src/widgets/third.py', [added(19, 'third change')])],
+      },
+      firstToThird: {
+        base: FORK,
+        head: THIRD,
+        merged: MAIN_ONE,
+        files: [changed('src/widgets/third.py', [added(19, 'all but main')])],
+      },
+    };
+    board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+  });
+
+  test('a merge is a diamond on the branch with a curve down from the main commit it pulled in', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+
+    await press('t');
+
+    assert
+      .dom('[data-test-timeline-header]')
+      .hasText(
+        `3 commits and 1 merge on PROJ-7-fix-the-widget · last synced with main at ${MAIN_ONE}, main's tip`,
+      );
+    assert.deepEqual(
+      dots('base').map((one) => one.sha),
+      [FORK, MAIN_ONE],
+    );
+    assert.deepEqual(
+      dots('pr').map((one) => one.sha),
+      [FIRST, SECOND, MERGE, THIRD],
+    );
+    assert.dom(dot(MERGE)).hasAttribute('data-shape', 'diamond');
+    assert.dom(dot(SECOND)).hasAttribute('data-shape', 'dot');
+    assert.dom('[data-test-merge-curve]').exists({ count: 1 });
+    assert.dom('[data-test-fork-curve]').exists({ count: 1 });
+    assert.true(
+      Number(dot(MAIN_ONE).getAttribute('data-x')) <
+        Number(dot(MERGE).getAttribute('data-x')),
+      'the main commit it pulled in comes before the merge',
+    );
+  });
+
+  test('stepping skips merges while the box is ticked, and its pip is striped', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+
+    assert.deepEqual(
+      findAll('[data-test-pip]').map((one) => one.hasAttribute('data-merge')),
+      [false, false, true, false],
+    );
+    assert.dom('[data-test-commit-place]').hasText('Commit 2 of 4');
+
+    await press(']');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 4 of 4');
+    assert.dom('[data-test-pr-diff]').containsText('third change');
+
+    await press('[');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 2 of 4');
+  });
+
+  test('unticked, stepping stops on a merge and shows only what it changed on its own', async function (assert) {
+    localStorage.setItem(SKIP_MERGES, 'false');
+    await visit('/pr/o/r/7/diff');
+
+    await press(']');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
+    assert.dom('[data-test-merge-pill]').hasText('merge');
+    assert.dom('[data-test-pr-diff]').containsText('the fix');
+    assert.dom('[data-test-pr-diff]').doesNotContainText('from main');
+    assert.strictEqual(
+      board().askedFor(
+        new RegExp(`/api/diffs/${SECOND}\\.\\.${MERGE}\\?merged=${MAIN_ONE}$`),
+      ).length,
+      1,
+      "the diff asked for is the merge's own",
+    );
+    assert
+      .dom('[data-test-merge-note]')
+      .hasText(
+        '1 file came in from main and is hidden. This merge changed 1 file on its own: src/widgets/mended.py Skip merges when stepping',
+      );
+    assert.dom('[data-test-skip-merges]').isNotChecked();
+
+    await click('[data-test-skip-merges]');
+
+    assert.strictEqual(localStorage.getItem(SKIP_MERGES), 'true');
+    await press('[');
+    await press(']');
+    assert.dom('[data-test-commit-place]').hasText('Commit 4 of 4');
+  });
+
+  test('picked in the timeline a merge is shown even while merges are skipped', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    await click(dot(MERGE));
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
+    assert.dom('[data-test-merge-pill]').exists();
+    assert.dom('[data-test-skip-merges]').isChecked();
+    assert.dom('[data-test-pr-diff]').containsText('the fix');
+  });
+
+  test('a range across a merge leaves out what came in from main', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    await click(dot(FIRST));
+    await click(dot(THIRD), { shiftKey: true });
+
+    assert.dom('[data-test-pr-diff]').containsText('all but main');
+    assert.strictEqual(
+      board().askedFor(
+        new RegExp(`/api/diffs/${FORK}\\.\\.${THIRD}\\?merged=${MAIN_ONE}$`),
+      ).length,
+      1,
+    );
   });
 });

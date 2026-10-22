@@ -7,6 +7,7 @@ import type Owner from '@ember/owner';
 import CommentBox from 'frontend/components/comment-box';
 import CommitBar from 'frontend/components/commit-bar';
 import CommitTimeline from 'frontend/components/commit-timeline';
+import MergeNote from 'frontend/components/merge-note';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
@@ -250,6 +251,14 @@ export default class DiffTab extends Component<DiffTabSignature> {
             @unpick={{this.pullRequestDiff.unpick}}
             @timelineOpen={{this.pullRequestDiff.timelineOpen}}
             @toggleTimeline={{this.pullRequestDiff.toggleTimeline}}
+          />
+        {{/if}}
+        {{#if this.pullRequestDiff.mergeNote}}
+          <MergeNote
+            @note={{this.pullRequestDiff.mergeNote}}
+            @base={{this.pullRequestDiff.baseName}}
+            @skipping={{this.commitBox.skipMerges}}
+            @skip={{this.pullRequestDiff.skipMerges}}
           />
         {{/if}}
         {{#if this.pullRequestDiff.timelineOpen}}

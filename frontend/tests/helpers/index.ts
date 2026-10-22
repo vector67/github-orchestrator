@@ -12,6 +12,7 @@ const PARKED_FOLDED = 'wall-parked-folded';
 const HARVEST_TIMER = 'harvest-timer';
 const COMMIT_SIZING = 'commit-box-sizing';
 const COMMIT_NOTES = 'commit-notes-dismissed';
+const SKIP_MERGES = 'commit-skip-merges';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
@@ -23,6 +24,7 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(HARVEST_TIMER);
     localStorage.removeItem(COMMIT_SIZING);
     localStorage.removeItem(COMMIT_NOTES);
+    localStorage.removeItem(SKIP_MERGES);
   });
 }
 

@@ -7,6 +7,7 @@ import type {
   ManagerFlags,
   Operation,
   PrFacts,
+  PullRequestCommit,
   PullRequestCommits,
   ReadMark,
   RecordState,
@@ -982,7 +983,45 @@ export type PipState = 'read' | 'current' | 'unread' | 'range';
 export interface Pip {
   sha: string;
   state: PipState;
+  merge: boolean;
   label: string;
+}
+
+export interface DiffRange extends Commits {
+  merged?: string;
+}
+
+export function isMerge(commit: PullRequestCommit): boolean {
+  return commit.parents.length > 1;
+}
+
+function rangeOf(
+  history: PullRequestCommits,
+  from: number,
+  to: number,
+): DiffRange {
+  const { commits } = history;
+  const base = commits[from]!.parents[0] ?? history.fork;
+  const head = commits[to]!.sha;
+  const merge = commits.slice(from, to + 1).findLast(isMerge);
+  return merge ? { base, head, merged: merge.parents.at(-1)! } : { base, head };
+}
+
+export interface MergeNote {
+  came: number | null;
+  own: string[];
+}
+
+export function mergeNoteOf(
+  own: FileStat[] | null,
+  merged: FileStat[] | null,
+): MergeNote | null {
+  if (!own) return null;
+  const changed = new Set(own.map((one) => one.path));
+  return {
+    came: merged && merged.filter((one) => !changed.has(one.path)).length,
+    own: [...changed],
+  };
 }
 
 export interface Stepper {
@@ -994,7 +1033,8 @@ export interface Stepper {
   author: string;
   authoredAt: string;
   read: boolean;
-  range: Commits;
+  merge: boolean;
+  range: DiffRange;
   previous: string | null;
   next: string | null;
   pips: Pip[];
@@ -1004,11 +1044,13 @@ function pickedUpAt(
   history: PullRequestCommits,
   read: Set<string>,
   reviewed: string | null,
+  skipMerges = false,
 ): number {
   const reviewedAt = history.commits.findIndex((one) => one.sha === reviewed);
   if (reviewedAt < 0) return -1;
   return history.commits.findIndex(
-    (one, index) => index > reviewedAt && !read.has(one.sha),
+    (one, index) =>
+      index > reviewedAt && !read.has(one.sha) && !(skipMerges && isMerge(one)),
   );
 }
 
@@ -1018,13 +1060,16 @@ function stepperBuilt(
   chosen: string | null,
   reviewed: string | null,
   picked: Picked | null,
+  skipMerges: boolean,
 ): Stepper | null {
   const { commits } = history;
   if (!commits.length) return null;
   const read = new Set(marks.map((one) => one.sha));
+  const stops = (one: PullRequestCommit) => !(skipMerges && isMerge(one));
   const chosenAt = commits.findIndex((one) => one.sha === chosen);
-  const pickedUp = pickedUpAt(history, read, reviewed);
-  const unreadAt = commits.findIndex((one) => !read.has(one.sha));
+  const pickedUp = pickedUpAt(history, read, reviewed, skipMerges);
+  const unreadAt = commits.findIndex((one) => !read.has(one.sha) && stops(one));
+  const lastAt = commits.findLastIndex(stops);
   const at =
     chosenAt >= 0
       ? chosenAt
@@ -1032,7 +1077,9 @@ function stepperBuilt(
         ? pickedUp
         : unreadAt >= 0
           ? unreadAt
-          : commits.length - 1;
+          : lastAt >= 0
+            ? lastAt
+            : commits.length - 1;
   const commit = commits[at]!;
   const from = commits.findIndex((one) => one.sha === picked?.from);
   const to = commits.findIndex((one) => one.sha === picked?.to);
@@ -1053,12 +1100,14 @@ function stepperBuilt(
     author: commit.author,
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
-    range: { base: commit.parents[0] ?? history.fork, head: commit.sha },
-    previous: commits[at - 1]?.sha ?? null,
-    next: commits[at + 1]?.sha ?? null,
+    merge: isMerge(commit),
+    range: rangeOf(history, at, at),
+    previous: commits.slice(0, at).findLast(stops)?.sha ?? null,
+    next: commits.slice(at + 1).find(stops)?.sha ?? null,
     pips: commits.map((one, index) => ({
       sha: one.sha,
       state: stateOf(one.sha, index),
+      merge: isMerge(one),
       label: `${index + 1} of ${commits.length} · ${one.sha.slice(0, SHORT_SHA)} ${one.subject}`,
     })),
   };
@@ -1071,6 +1120,7 @@ const lastSteppers = new WeakMap<
     chosen: string | null;
     reviewed: string | null;
     picked: Picked | null;
+    skipMerges: boolean;
     stepper: Stepper | null;
   }
 >();
@@ -1081,6 +1131,7 @@ export function stepperOf(
   chosen: string | null,
   reviewed: string | null,
   picked: Picked | null,
+  skipMerges: boolean,
 ): Stepper | null | undefined {
   if (!history || !marks) return undefined;
   const last = lastSteppers.get(history);
@@ -1088,11 +1139,26 @@ export function stepperOf(
     last?.marks === marks &&
     last.chosen === chosen &&
     last.reviewed === reviewed &&
-    last.picked === picked
+    last.picked === picked &&
+    last.skipMerges === skipMerges
   )
     return last.stepper;
-  const stepper = stepperBuilt(history, marks, chosen, reviewed, picked);
-  lastSteppers.set(history, { marks, chosen, reviewed, picked, stepper });
+  const stepper = stepperBuilt(
+    history,
+    marks,
+    chosen,
+    reviewed,
+    picked,
+    skipMerges,
+  );
+  lastSteppers.set(history, {
+    marks,
+    chosen,
+    reviewed,
+    picked,
+    skipMerges,
+    stepper,
+  });
   return stepper;
 }
 
@@ -1144,7 +1210,7 @@ export interface PickedRange {
   fromShort: string;
   toShort: string;
   count: number;
-  range: Commits;
+  range: DiffRange;
   head: boolean;
 }
 
@@ -1156,12 +1222,11 @@ function pickedRangeBuilt(
   const from = commits.findIndex((one) => one.sha === picked.from);
   const to = commits.findIndex((one) => one.sha === picked.to);
   if (from < 0 || to < from) return null;
-  const first = commits[from]!;
   return {
     fromShort: picked.from.slice(0, SHORT_SHA),
     toShort: picked.to.slice(0, SHORT_SHA),
     count: to - from + 1,
-    range: { base: first.parents[0] ?? history.fork, head: picked.to },
+    range: rangeOf(history, from, to),
     head: to === commits.length - 1,
   };
 }
