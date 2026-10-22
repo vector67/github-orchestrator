@@ -210,6 +210,7 @@ export default class PullRequestDiffService extends Service {
     pr.asked = asking;
     void waitForPromise(this.fetched(pr, pr.source));
     void waitForPromise(this.readHistory(pr, pr.source));
+    if (pr.source === 'local') void waitForPromise(this.readPushed());
   };
 
   draw = () => {
@@ -297,6 +298,10 @@ export default class PullRequestDiffService extends Service {
 
   private async readMerged(range: Commits): Promise<void> {
     await this.store.readDiff(range);
+  }
+
+  private async readPushed(): Promise<void> {
+    await this.store.readPrCommits(this.here.at, 'origin');
   }
 
   private async drawn(pr: PerPr, range: DiffRange): Promise<void> {

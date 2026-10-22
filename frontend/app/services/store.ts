@@ -606,6 +606,7 @@ export default class StoreService extends Service {
         held.facts?.my_review_sha ?? null,
         picked,
         skipMerges,
+        source === 'local' ? held.history.origin : undefined,
       )
     );
   }
@@ -638,6 +639,7 @@ export default class StoreService extends Service {
       held.history[source],
       looking,
       based?.number ?? null,
+      source === 'local' ? held.history.origin : undefined,
     );
   }
 

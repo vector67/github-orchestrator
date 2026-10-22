@@ -106,6 +106,13 @@ export default class CommitBar extends Component<CommitBarSignature> {
                   {{@stepper.place}}
                   of
                   {{@stepper.count}}</b>
+                {{#if @stepper.unpushed}}
+                  <span
+                    class="commit-pill"
+                    data-pill="not-pushed"
+                    data-test-not-pushed
+                  >not pushed</span>
+                {{/if}}
                 {{#if @stepper.merge}}
                   <span class="commit-pill" data-test-merge-pill>merge</span>
                 {{/if}}

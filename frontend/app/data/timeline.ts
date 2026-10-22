@@ -22,6 +22,7 @@ const TICKS: Spacing = { ...SPACING, column: 18 };
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
+const FLAG_RISE = 16;
 const DIAMOND = 8;
 const FAR = 20;
 const KEPT = 2;
@@ -60,6 +61,7 @@ export interface TimelineDot {
   x: number;
   y: number;
   shaY: number;
+  pushed: boolean | null;
   showSha: boolean;
   date: string | null;
   dateY: number;
@@ -92,7 +94,7 @@ export interface CollapsedRun {
 }
 
 export interface TimelineLabel {
-  kind: 'main' | 'stack' | 'head';
+  kind: 'main' | 'stack' | 'head' | 'origin' | 'local';
   text: string;
   opens: string | null;
   at: string;
@@ -105,6 +107,7 @@ export interface TimelineLane {
   y: number;
   from: number;
   to: number;
+  dashed: boolean;
 }
 
 export interface TimelineBand {
@@ -177,6 +180,7 @@ export interface TimelineInput {
   hidden: boolean;
   repo: string;
   basePr: number | null;
+  unpushed: Set<string>;
 }
 
 export function dayOf(at: string): string {
@@ -509,10 +513,17 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
         (!long || [showing.from, showing.to, input.current].includes(node.id)),
       date: date ? dayOf(date) : null,
       dateY: node.y + DATE_DROP,
+      pushed: node.lane === PR_LANE ? !input.unpushed.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
     };
   });
+  const lastPushed = graph.nodes.get(
+    order.findLast((sha) => !input.unpushed.has(sha)) ?? '',
+  );
+  const firstUnpushed = graph.nodes.get(
+    order.find((sha) => input.unpushed.has(sha)) ?? '',
+  );
   const main = lastOn(BASE_LANE, graph.nodes)!;
   const under = lastOn(STACK_LANE, graph.nodes);
   const head = graph.nodes.get(order.at(-1)!)!;
@@ -535,9 +546,16 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   return {
     width: graph.width,
     height: graph.height,
-    lanes: graph.lanes.map((one) =>
-      one.lane === BASE_LANE ? { ...one, from: 0 } : one,
-    ),
+    lanes: graph.lanes.flatMap((one) => {
+      if (one.lane === BASE_LANE) return [{ ...one, from: 0, dashed: false }];
+      if (one.lane !== PR_LANE || !firstUnpushed)
+        return [{ ...one, dashed: false }];
+      const split = lastPushed?.x ?? one.from;
+      return [
+        ...(lastPushed ? [{ ...one, to: split, dashed: false }] : []),
+        { ...one, from: split, dashed: true },
+      ];
+    }),
     curves: graph.edges
       .filter((one) => one.crossing)
       .map((one) => ({
@@ -558,7 +576,18 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
             ),
           ]
         : []),
-      label('head', 'head', head),
+      ...(firstUnpushed
+        ? [
+            {
+              ...label('origin', 'origin', lastPushed ?? firstUnpushed),
+              x: lastPushed
+                ? (lastPushed.x + firstUnpushed.x) / 2
+                : firstUnpushed.x,
+              y: firstUnpushed.y - FLAG_RISE,
+            },
+            label('local', 'local', head),
+          ]
+        : [label('head', 'head', head)]),
     ],
     current: ringed ? { sha: ringed.id, x: ringed.x, y: ringed.y } : null,
     band: bandOf(

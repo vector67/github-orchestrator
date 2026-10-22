@@ -879,3 +879,85 @@ module(
     });
   },
 );
+
+const FOURTH = 'd4e4f4a';
+
+module(
+  'Acceptance | commit timeline with commits not pushed',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    hooks.beforeEach(function () {
+      const pushed = [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+      ];
+      board().commits = prHistory(FORK, pushed);
+      board().localCommits = prHistory(FORK, [
+        ...pushed,
+        prCommit(THIRD, SECOND, 'Test the widget'),
+        prCommit(FOURTH, THIRD, 'Document the widget'),
+      ]);
+      board().readMarks = [
+        { sha: FIRST, subject: 'Add the widget' },
+        { sha: SECOND, subject: 'Name the widget' },
+      ];
+    });
+
+    test('on local the commits not pushed run on past an origin flag, dashed, to a local label', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.deepEqual(
+        dots('pr').map((one) => [
+          one.sha,
+          dot(one.sha).getAttribute('data-pushed'),
+        ]),
+        [
+          [FIRST, 'true'],
+          [SECOND, 'true'],
+          [THIRD, 'false'],
+          [FOURTH, 'false'],
+        ],
+      );
+      assert
+        .dom('[data-test-lane-label="origin"]')
+        .hasAttribute('data-at', SECOND);
+      assert
+        .dom('[data-test-lane-label="local"]')
+        .hasAttribute('data-at', FOURTH);
+      assert.dom('[data-test-lane-label="head"]').doesNotExist();
+      assert.dom('[data-test-unpushed-lane]').exists({ count: 1 });
+      assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
+      assert.dom('[data-test-not-pushed]').hasText('not pushed');
+
+      await press('[');
+
+      assert.dom('[data-test-not-pushed]').doesNotExist();
+    });
+
+    test('on origin they are not drawn', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        [FIRST, SECOND],
+      );
+      assert.dom('[data-pushed="false"]').doesNotExist();
+      assert.dom('[data-test-lane-label="origin"]').doesNotExist();
+      assert
+        .dom('[data-test-lane-label="head"]')
+        .hasAttribute('data-at', SECOND);
+      assert.dom('[data-test-not-pushed]').doesNotExist();
+    });
+
+    function press(key: string) {
+      return triggerEvent(document, 'keydown', { key });
+    }
+  },
+);

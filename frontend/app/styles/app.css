@@ -4714,6 +4714,12 @@ button.tree-row[aria-current="true"] {
   border-radius: 999px;
 }
 
+.commit-pill[data-pill="not-pushed"] {
+  color: var(--yellow-text);
+  background: var(--yellow);
+  border-color: var(--yellow-text);
+}
+
 .diff-sources {
   display: flex;
   flex-wrap: wrap;
@@ -4808,6 +4814,10 @@ button.tree-row[aria-current="true"] {
   stroke: var(--blue);
 }
 
+.timeline-lane[data-dashed] {
+  stroke-dasharray: 4 3;
+}
+
 .timeline-lane[data-kind="merge"] {
   stroke: var(--muted);
   stroke-width: 1;
@@ -4840,6 +4850,11 @@ button.tree-row[aria-current="true"] {
 
 .timeline-dot[data-style="read"] {
   fill: var(--page);
+}
+
+.timeline-dot[data-pushed="false"] {
+  fill: var(--page);
+  stroke-dasharray: 2 2;
 }
 
 .timeline-dot[data-style="stack"] {
@@ -4878,6 +4893,12 @@ button.tree-row[aria-current="true"] {
 }
 
 .timeline-label[data-kind="main"] {
+  fill: var(--muted);
+}
+
+.timeline-label[data-kind="origin"],
+.timeline-label[data-kind="local"] {
+  font-weight: normal;
   fill: var(--muted);
 }
 

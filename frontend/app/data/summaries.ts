@@ -1035,6 +1035,7 @@ export interface Stepper {
   authoredAt: string;
   read: boolean;
   merge: boolean;
+  unpushed: boolean;
   range: DiffRange;
   previous: string | null;
   next: string | null;
@@ -1056,6 +1057,29 @@ function pickedUpAt(
   );
 }
 
+const lastUnpushed = new WeakMap<
+  PullRequestCommits,
+  { pushed: PullRequestCommits | undefined; unpushed: Set<string> }
+>();
+
+export function unpushedOf(
+  history: PullRequestCommits,
+  pushed: PullRequestCommits | undefined,
+): Set<string> {
+  const last = lastUnpushed.get(history);
+  if (last && last.pushed === pushed) return last.unpushed;
+  const known = new Set(pushed?.commits.map((one) => one.sha));
+  const unpushed = new Set(
+    pushed
+      ? history.commits
+          .filter((one) => !known.has(one.sha))
+          .map((one) => one.sha)
+      : [],
+  );
+  lastUnpushed.set(history, { pushed, unpushed });
+  return unpushed;
+}
+
 function stepperBuilt(
   history: PullRequestCommits,
   marks: ReadMark[],
@@ -1063,6 +1087,7 @@ function stepperBuilt(
   reviewed: string | null,
   picked: Picked | null,
   skipMerges: boolean,
+  pushed: PullRequestCommits | undefined,
 ): Stepper | null {
   const { commits } = history;
   if (!commits.length) return null;
@@ -1103,6 +1128,7 @@ function stepperBuilt(
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
     merge: isMerge(commit),
+    unpushed: unpushedOf(history, pushed).has(commit.sha),
     range: rangeOf(history, at, at),
     previous: commits.slice(0, at).findLast(stops)?.sha ?? null,
     next: commits.slice(at + 1).find(stops)?.sha ?? null,
@@ -1124,6 +1150,7 @@ const lastSteppers = new WeakMap<
     reviewed: string | null;
     picked: Picked | null;
     skipMerges: boolean;
+    pushed: PullRequestCommits | undefined;
     stepper: Stepper | null;
   }
 >();
@@ -1135,6 +1162,7 @@ export function stepperOf(
   reviewed: string | null,
   picked: Picked | null,
   skipMerges: boolean,
+  pushed: PullRequestCommits | undefined,
 ): Stepper | null | undefined {
   if (!history || !marks) return undefined;
   const last = lastSteppers.get(history);
@@ -1143,7 +1171,8 @@ export function stepperOf(
     last.chosen === chosen &&
     last.reviewed === reviewed &&
     last.picked === picked &&
-    last.skipMerges === skipMerges
+    last.skipMerges === skipMerges &&
+    last.pushed === pushed
   )
     return last.stepper;
   const stepper = stepperBuilt(
@@ -1153,6 +1182,7 @@ export function stepperOf(
     reviewed,
     picked,
     skipMerges,
+    pushed,
   );
   lastSteppers.set(history, {
     marks,
@@ -1160,6 +1190,7 @@ export function stepperOf(
     reviewed,
     picked,
     skipMerges,
+    pushed,
     stepper,
   });
   return stepper;
@@ -1265,6 +1296,7 @@ const lastTimelines = new WeakMap<
     picked: Picked | null;
     hidden: boolean;
     basePr: number | null;
+    pushed: PullRequestCommits | undefined;
     timeline: Timeline | null;
   }
 >();
@@ -1274,6 +1306,7 @@ export function timelineOf(
   history: PullRequestCommits | undefined,
   { current, picked, hidden }: Looking,
   basePr: number | null,
+  pushed: PullRequestCommits | undefined,
 ): Timeline | null | undefined {
   if (!history || !pr.read) return undefined;
   const last = lastTimelines.get(history);
@@ -1282,7 +1315,8 @@ export function timelineOf(
     last.current === current &&
     last.picked === picked &&
     last.hidden === hidden &&
-    last.basePr === basePr
+    last.basePr === basePr &&
+    last.pushed === pushed
   )
     return last.timeline;
   const timeline = timelineBuilt({
@@ -1297,6 +1331,7 @@ export function timelineOf(
     hidden,
     repo: pr.repo,
     basePr,
+    unpushed: unpushedOf(history, pushed),
   });
   lastTimelines.set(history, {
     pr,
@@ -1304,6 +1339,7 @@ export function timelineOf(
     picked,
     hidden,
     basePr,
+    pushed,
     timeline,
   });
   return timeline;

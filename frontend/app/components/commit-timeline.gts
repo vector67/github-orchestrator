@@ -11,6 +11,9 @@ type End = 'from' | 'to';
 
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
+const pushedOf = (pushed: boolean | null): string | null =>
+  pushed === null ? null : String(pushed);
+
 export interface CommitTimelineSignature {
   Args: {
     timeline: Timeline;
@@ -163,10 +166,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               >{{@timeline.since.text}}</text>
             </g>
           {{/if}}
-          {{#each @timeline.lanes key="lane" as |lane|}}
+          {{#each @timeline.lanes key="@index" as |lane|}}
             <line
               class="timeline-lane"
               data-lane={{lane.lane}}
+              data-dashed={{if lane.dashed "true"}}
+              data-test-unpushed-lane={{if lane.dashed "true"}}
               x1={{lane.from}}
               y1={{lane.y}}
               x2={{lane.to}}
@@ -236,6 +241,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-x={{dot.x}}
                 data-y={{dot.y}}
                 data-shape={{dot.shape}}
+                data-pushed={{pushedOf dot.pushed}}
                 data-sha={{dot.sha}}
                 data-lane={{dot.lane}}
                 data-style={{dot.style}}
@@ -250,6 +256,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-x={{dot.x}}
                 data-y={{dot.y}}
                 data-shape={{dot.shape}}
+                data-pushed={{pushedOf dot.pushed}}
                 data-sha={{dot.sha}}
                 data-lane={{dot.lane}}
                 data-style={{dot.style}}
