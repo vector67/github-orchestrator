@@ -18,7 +18,14 @@ from github_orchestrator.settings.fake import Dismissal
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.pr_manager.scripted_terminal import ScriptEnded
-from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager, seed_state
+from tests.pr_manager.support import (
+    PR,
+    REPO,
+    ServerPanel,
+    managed_in,
+    run_manager,
+    seed_state,
+)
 from tests.settings.support import disk_dismissals, disk_holds
 
 THE_PR = a_pr(PR, REPO)
@@ -187,7 +194,7 @@ def test_a_command_from_the_boards_thread_waits_for_the_loop_to_carry_it_out(set
     assert seen == [False, True]
 
 
-def test_a_hold_given_while_the_manager_is_down_is_carried_out_when_it_next_runs(
+def test_a_hold_given_just_before_the_manager_stops_is_carried_out_when_it_next_runs(
         settings, tmp_path):
     board = ServerPanel()
 
@@ -368,6 +375,59 @@ def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_br
                 worktree=tmp_path, is_author=True, board=board, working_copies=working_copies)
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is False
     assert answers == ["refused: the worktree holds another PR's branch"]
+
+
+MANAGER_DOWN = "the manager is down, your actions can't be recorded"
+
+PRESSES = {
+    "hold": lambda panel: panel.set_on_hold(True),
+    "resume": lambda panel: panel.set_on_hold(False),
+    "carry on": lambda panel: panel.carry_on(),
+    "start review": lambda panel: panel.start_review(),
+    "dismiss": lambda panel: panel.dismiss(DismissUntil.FOREVER),
+    "close": lambda panel: panel.close(),
+    "mark ready": lambda panel: panel.mark_ready(),
+}
+
+
+@pytest.mark.parametrize("press", PRESSES.values(), ids=PRESSES.keys())
+def test_a_press_once_the_managers_status_is_stale_is_refused_and_queues_nothing(
+        settings, tmp_path, press):
+    manager = run_manager(settings, None, worktree=tmp_path, is_author=True)
+    manager.clock.advance(10)
+
+    assert press(manager.board.panel) == MANAGER_DOWN
+    assert list((settings.data_dir / "commands").rglob("*.json")) == []
+
+
+def _frozen_and_managed(settings, tmp_path):
+    seed_state(settings, branch="expected-branch")
+    working_copies = FakeWorkingCopies()
+    working_copies.add_worktree(tmp_path, "other-branch")
+    return run_manager(settings, None, worktree=tmp_path, is_author=True,
+                       working_copies=working_copies, pr_processes=managed_in(tmp_path))
+
+
+ASKS = {
+    "a question": lambda panel: panel.ask("Why this name?"),
+    "a terminal": lambda panel: panel.open_terminal("a"),
+}
+
+
+@pytest.mark.parametrize("asking", ASKS.values(), ids=ASKS.keys())
+def test_a_frozen_status_refuses_while_it_is_fresh(settings, tmp_path, asking):
+    manager = _frozen_and_managed(settings, tmp_path)
+
+    assert asking(manager.board.panel) == "refused: the worktree holds another PR's branch"
+
+
+@pytest.mark.parametrize("asking", ASKS.values(), ids=ASKS.keys())
+def test_a_frozen_status_left_by_a_manager_that_stopped_writing_refuses_nothing(
+        settings, tmp_path, asking):
+    manager = _frozen_and_managed(settings, tmp_path)
+    manager.clock.advance(10)
+
+    assert asking(manager.board.panel) is None
 
 
 def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):

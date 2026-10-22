@@ -192,7 +192,7 @@ from github_orchestrator.watcher._saving import CycleSaving, Saving
 from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
 from github_orchestrator.watcher._setup_files import SetupFiles
-from github_orchestrator.watcher._teardown import PrTeardown, Teardown
+from github_orchestrator.watcher._teardown import ManagerLeftovers, PrTeardown, Teardown
 from github_orchestrator.watcher._told import ToldFiles
 from github_orchestrator.watcher._tour import TourFile
 from github_orchestrator.watcher._would import (
@@ -848,6 +848,11 @@ class WatcherProvider(Provider):
         return SetupFiles(config.data_dir, write_whole)
 
     @provide
+    def manager_leftovers(self, config: WatcherConfig, clock: UtcClock) -> ManagerLeftovers:
+        return CommandsAndStatus(CommandFiles(config.data_dir),
+                                 StatusFiles(config.data_dir, clock))
+
+    @provide
     def releases(self, config: WatcherConfig, api: ReleasesApi, clock: UtcClock) -> Releases:
         return GitHubReleases(api.get, config.newest_release, clock,
                               enabled=config.check_for_updates, token=config.github_token,
@@ -1109,6 +1114,15 @@ class DashboardSourceProvider(Provider):
     @provide
     def command_files(self, wiring: DashboardSourceWiring) -> CommandFiles:
         return CommandFiles(wiring.data_dir)
+
+
+class CommandsAndStatus:
+    def __init__(self, commands: CommandFiles, status: StatusFiles) -> None:
+        self._commands = commands
+        self._status = status
+
+    def forget(self, pr: Pr) -> bool:
+        return all([self._commands.forget(pr), self._status.forget(pr)])
 
 
 class FetchedEmojis:

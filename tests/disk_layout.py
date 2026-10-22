@@ -58,3 +58,11 @@ def on_hold_file(on_hold_dir: Path, pr: Pr) -> Path:
 
 def dismissed_file(dismissed_dir: Path, pr: Pr) -> Path:
     return _repo_dir(dismissed_dir, pr) / f"{pr.number}.flag"
+
+
+def status_file(data_dir: Path, pr: Pr) -> Path:
+    return _repo_dir(Path(data_dir) / "status", pr) / f"{pr.number}.json"
+
+
+def command_file(data_dir: Path, pr: Pr, name: str) -> Path:
+    return _repo_dir(Path(data_dir) / "commands", pr) / str(pr.number) / f"{name}.json"

@@ -57,6 +57,13 @@ def test_git_for_a_pr_whose_manager_never_started_is_refused_and_runs_nothing(
     assert "no worktree" in lines[0]
 
 
+def test_a_press_for_a_pr_whose_manager_never_started_is_refused_and_queues_nothing(settings):
+    refused = panels_over(settings, FakePrProcesses()).of(THE_PR).set_on_hold(True)
+
+    assert (refused, list((settings.data_dir / "commands").rglob("*.json"))) == (
+        "the manager is down, your actions can't be recorded", [])
+
+
 def test_a_terminal_for_a_pr_whose_manager_never_started_is_refused_and_opens_nothing(settings):
     windows = FakePrProcesses()
 

@@ -8,7 +8,7 @@ from typing import Any
 from github_orchestrator.board_api.interface import Dashboard, ManagerStanding
 from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_manager._files import write_whole
-from github_orchestrator.pr_manager._refusals import NOTHING_KNOWN, Conditions
+from github_orchestrator.pr_manager._refusals import DOWN, Conditions
 from github_orchestrator.pr_processes import ManagerPane
 
 log = logging.getLogger(__name__)
@@ -26,11 +26,7 @@ class StatusFiles:
         self._clock = clock
 
     def begin(self, pr: Pr) -> None:
-        path = self._path(pr)
-        try:
-            path.unlink(missing_ok=True)
-        except OSError as error:
-            log.warning("could not clear the status file %s: %s", path, error)
+        self.forget(pr)
 
     def write(self, dashboard: Dashboard) -> None:
         now = self._clock()
@@ -77,13 +73,24 @@ class StatusFiles:
         path = self._path(pr)
         try:
             status = json.loads(path.read_bytes())
+            if _seconds_since(self._clock(), status["written_at"]) >= STATUS_STALE_SECONDS:
+                return DOWN
             return Conditions(frozen=status["frozen_on"] is not None,
-                              running=status["active_run"] is not None)
+                              running=status["active_run"] is not None, answering=True)
         except FileNotFoundError:
-            return NOTHING_KNOWN
+            return DOWN
         except (OSError, ValueError, KeyError, TypeError) as error:
             log.warning("could not read the status file %s: %s", path, error)
-            return NOTHING_KNOWN
+            return DOWN
+
+    def forget(self, pr: Pr) -> bool:
+        path = self._path(pr)
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as error:
+            log.warning("could not clear the status file %s: %s", path, error)
+            return False
+        return True
 
     def _path(self, pr: Pr) -> Path:
         return self._dir / pr.repo.owner / pr.repo.name / f"{pr.number}.json"

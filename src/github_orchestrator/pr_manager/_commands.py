@@ -48,7 +48,8 @@ class ManagerCommands:
             return
         log.info("%s: %s", pr, command)
         run = self.active_run
-        refused = refusal(Conditions(frozen=frozen, running=run is not None and run.is_alive()),
+        refused = refusal(Conditions(frozen=frozen, running=run is not None and run.is_alive(),
+                                     answering=True),
                           command, agents_enabled=self._config.agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", pr, command, refused)

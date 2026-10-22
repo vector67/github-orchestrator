@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import threading
 import time
 from dataclasses import dataclass
@@ -70,6 +71,16 @@ class CommandFiles:
 
     def delete(self, pending: Pending) -> None:
         self._discard(pending.path)
+
+    def forget(self, pr: Pr) -> bool:
+        try:
+            shutil.rmtree(self._of(pr))
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            log.warning("could not clear the commands for %s: %s", pr, error)
+            return False
+        return True
 
     def _discard(self, path: Path) -> None:
         try:
