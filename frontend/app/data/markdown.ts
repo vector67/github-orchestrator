@@ -8,6 +8,7 @@ import {
   keepingClasses,
   knownLanguage,
   MOST_HIGHLIGHTED,
+  remembered,
 } from 'frontend/data/highlight';
 
 const SAFE_HREF = /^https?:\/\//i;
@@ -121,6 +122,13 @@ SANITISER.addHook('afterSanitizeAttributes', (node) => {
   node.setAttribute('rel', 'noopener noreferrer');
 });
 
+function copied(
+  draw: (text: string) => DocumentFragment,
+): (text: string) => DocumentFragment {
+  const drawn = remembered(draw);
+  return (text) => drawn(text).cloneNode(true) as DocumentFragment;
+}
+
 const DRAWN_WITH = new WeakMap<Emoji[], (text: string) => DocumentFragment>();
 
 export function markdownWith(
@@ -131,19 +139,26 @@ export function markdownWith(
     const named = {
       emojis: new Map(emojis.map((emoji) => [emoji.name, emoji])),
     };
-    drawing = (text) =>
-      sanitised(COMMENTS.render(text, named), EMOJI_TAGS, EMOJI_ATTRIBUTES);
+    drawing = copied((text) =>
+      sanitised(COMMENTS.render(text, named), EMOJI_TAGS, EMOJI_ATTRIBUTES),
+    );
     DRAWN_WITH.set(emojis, drawing);
   }
   return drawing;
 }
 
+const NOTES_DRAWN = copied((text) => sanitised(NOTES.render(text)));
+
 export function notesOf(text: string): DocumentFragment {
-  return sanitised(NOTES.render(text));
+  return NOTES_DRAWN(text);
 }
 
+const SUMMARIES_DRAWN = copied((text) =>
+  sanitised(SUMMARIES.render(text), SUMMARY_TAGS),
+);
+
 export function summaryOf(text: string): DocumentFragment {
-  return sanitised(SUMMARIES.render(text), SUMMARY_TAGS);
+  return SUMMARIES_DRAWN(text);
 }
 
 function sanitised(
