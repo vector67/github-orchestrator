@@ -1104,18 +1104,13 @@ function matchingOf(history: PullRequestCommits, marks: ReadMark[]): Matching {
       .filter((one) => !marked.has(one.sha) && goneSubjects.has(one.subject))
       .map((one) => one.sha),
   );
-  const ghosts = history.reviewed?.commits.filter(
-    (one) => !present.has(one.sha),
-  );
-  const ghostSubjects = new Set(ghosts?.map((one) => one.subject));
+  const read = new Set([...marked, ...matched]);
   const matching = {
-    read: new Set([...marked, ...matched]),
+    read,
     matched,
-    fresh: ghosts
-      ? history.commits
-          .filter((one) => !ghostSubjects.has(one.subject))
-          .map((one) => one.sha)
-      : [],
+    fresh: history.commits
+      .filter((one) => !read.has(one.sha))
+      .map((one) => one.sha),
   };
   lastMatching.set(history, { marks, matching });
   return matching;
@@ -1240,6 +1235,7 @@ export function stepperOf(
 interface Rebased {
   pushedOn: string | null;
   matched: number;
+  unchanged: number;
 }
 
 export interface CommitNote {
@@ -1265,6 +1261,7 @@ function commitNoteBuilt(
       rebased: {
         pushedOn: facts.force_pushed_at && dayOf(facts.force_pushed_at),
         matched: matched.size,
+        unchanged: commits.length - matched.size - fresh.length,
       },
     };
   if (pickedUpAt(history, read, facts.my_review_sha) < 0) return null;

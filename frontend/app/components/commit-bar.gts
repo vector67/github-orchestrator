@@ -46,6 +46,13 @@ export default class CommitBar extends Component<CommitBarSignature> {
     return `${count} ${count === 1 ? 'is' : 'are'} new`;
   }
 
+  get unchanged(): string {
+    const count = this.args.note?.rebased?.unchanged ?? 0;
+    return count === 1
+      ? '1 is read as it was'
+      : `${count} are read as they were`;
+  }
+
   get rangeCommits(): string {
     const count = this.args.picked?.count ?? 0;
     return `${count} ${count === 1 ? 'commit' : 'commits'}`;
@@ -187,7 +194,8 @@ export default class CommitBar extends Component<CommitBarSignature> {
               of your read commits were rewritten onto newer
               {{@base}}
               and matched by message;
-              <b>{{this.fresh}}</b>.</span>
+              <b>{{this.fresh}}</b>{{#if @note.rebased.unchanged}};
+                {{this.unchanged}}{{/if}}.</span>
           {{else}}
             <span>Picked up at the first new commit:
               <b>{{this.pushed}}</b>

@@ -785,7 +785,8 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
                                  worktree=repo.worktree)
     if not rebased:
         return []
-    seen = _git(repo.worktree, "rev-list", "--reverse", f"{repo.base_branch}..HEAD").split()
+    seen = _git(repo.worktree, "rev-list", "--reverse",
+                f"{repo.base_branch}..{repo.head}").split()
     reviews.keep(PR, repo.head, repo.base_branch)
     rebase_onto_main(worktree_in(directory))
     return seen

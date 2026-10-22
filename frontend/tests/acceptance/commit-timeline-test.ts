@@ -1139,6 +1139,45 @@ module(
       assert.deepEqual(inRange(), [FIRST, SECOND, THIRD]);
     });
 
+    test("the note's counts are the graph's: matched dots, unmatched dots and the ones still read as they were", async function (assert) {
+      board().commits = {
+        ...prHistory(NEW_FORK, [
+          prCommit(FIRST, NEW_FORK, 'Add the widget'),
+          prCommit(SECOND, FIRST, 'Name the widget'),
+          prCommit(THIRD, SECOND, 'Test the widget'),
+        ]),
+        reviewed: {
+          sha: OLD_TWO,
+          fork: OLD_FORK,
+          commits: [
+            prCommit(FIRST, NEW_FORK, 'Add the widget'),
+            prCommit(OLD_TWO, FIRST, 'Name the widget'),
+          ],
+        },
+      };
+      board().readMarks = [
+        { sha: FIRST, subject: 'Add the widget' },
+        { sha: OLD_TWO, subject: 'Name the widget' },
+        { sha: OLD_ONE, subject: 'Polish the widget' },
+      ];
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      const matched = findAll('[data-test-matched]').map((one) =>
+        one.getAttribute('data-at'),
+      );
+      const unmatched = dots('pr')
+        .filter((one) => one.style === 'unread')
+        .map((one) => one.sha);
+      assert.deepEqual([matched, unmatched], [[SECOND], [THIRD]]);
+      assert
+        .dom('[data-test-commit-note]')
+        .hasText(
+          'Rebased since your review (force-pushed Wed 21 Oct). 1 of your read commits were rewritten onto newer main and matched by message; 1 is new; 1 is read as it was. ×',
+        );
+    });
+
     test('without a force-push GitHub reported, the note names no day', async function (assert) {
       board().manager = dashboard({
         facts: {
