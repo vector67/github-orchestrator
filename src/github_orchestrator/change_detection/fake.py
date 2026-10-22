@@ -37,6 +37,7 @@ class FakeChangeDetection:
         self._poll_interval = poll_interval
         self._clock = clock
         self._held: dict[Pr, str] = {}
+        self._facts: dict[Pr, tuple[str, Facts]] = {}
 
     def advance(self, pr: Pr, poll: Poll, pending_ci_checks: set[str]) -> list[PrEvent]:
         step = advance(pr, self._last(pr), poll, pending_ci_checks,
@@ -49,8 +50,13 @@ class FakeChangeDetection:
         return ended(still_open=still_open, merged=merged)
 
     def facts(self, pr: Pr) -> Facts | None:
-        snapshot = self._last(pr)
-        return None if snapshot is None else facts_of(snapshot, self._account)
+        held = self._held.get(pr)
+        if held is None:
+            return None
+        known = self._facts.get(pr)
+        if known is None or known[0] != held:
+            known = self._facts[pr] = (held, facts_of(json.loads(held), self._account))
+        return known[1]
 
     def _last(self, pr: Pr) -> dict[str, Any] | None:
         held = self._held.get(pr)
