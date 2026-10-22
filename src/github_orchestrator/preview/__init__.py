@@ -322,7 +322,45 @@ def _move_main_on(root: Path) -> None:
     _git(root, "checkout", "-q", PR_BRANCH)
 
 
-def build_repo(root: Path, reviewer: bool = False) -> Repo:
+STACK_BRANCH = "split-out-the-header-writer"
+
+SHAPES = ("merge", "stacked", "far-behind", "long", "local")
+
+
+def _note(root: Path, line: str, subject: str, *, when: str | None = None) -> None:
+    with (root / "CHANGELOG.md").open("a") as changelog:
+        changelog.write(line)
+    _git(root, "add", "CHANGELOG.md")
+    _git(root, "commit", "-qm", subject, *(() if when is None else (f"--date={when}",)))
+
+
+def _merge_main_in(root: Path) -> None:
+    _git(root, "merge", "-q", "--no-ff", "--no-commit", BASE_BRANCH)
+    _note(root, "- merged main\n", "Merge branch 'main' into " + PR_BRANCH)
+    _note(root, "- after the merge\n", "Note the merge in the changelog")
+
+
+def _fall_behind(root: Path) -> None:
+    _git(root, "checkout", "-q", BASE_BRANCH)
+    for number in range(30):
+        _note(root, f"- release {number}\n", f"Note release {number} in the changelog")
+    _git(root, "checkout", "-q", PR_BRANCH)
+
+
+def _go_on_for_days(root: Path) -> None:
+    for number in range(24):
+        _note(root, f"- step {number}\n", f"Take step {number} of the rework",
+              when=f"2026-09-{8 + number // 8:02d}T{9 + number % 8:02d}:00:00")
+
+
+def _stack_on_a_base(root: Path) -> None:
+    _git(root, "checkout", "-q", "-b", STACK_BRANCH, BASE_BRANCH)
+    _note(root, "- the header writer\n", "Split out the header writer")
+    _note(root, "- its tests\n", "Test the header writer")
+    _git(root, "checkout", "-q", "-B", PR_BRANCH, STACK_BRANCH)
+
+
+def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> Repo:
     anchors = _anchors(reviewer)
     longest: dict[str, int] = {}
     for path, line in anchors:
@@ -336,6 +374,8 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
     _git(root, "add", "-A")
     _git(root, "commit", "-qm", "the commit the PR branched from")
     _git(root, "checkout", "-q", "-b", PR_BRANCH)
+    if shape == "stacked":
+        _stack_on_a_base(root)
     for folder in sorted({path.split("/")[0] for path, _ in anchors}):
         _rewrite(root, tuple(anchor for anchor in anchors
                              if anchor[0].split("/")[0] == folder),
@@ -347,10 +387,22 @@ def build_repo(root: Path, reviewer: bool = False) -> Repo:
         _git(root, "commit", "-qam", "Spell the units out")
     else:
         _move_main_on(root)
+    if shape == "merge":
+        _merge_main_in(root)
+    if shape == "far-behind":
+        _fall_behind(root)
+    if shape == "long":
+        _go_on_for_days(root)
     _git(root.parent, "init", "-q", "--bare", str(_origin(root)))
     _git(root, "remote", "add", "origin", str(_origin(root)))
     _git(root, "push", "-q", "-u", "origin", PR_BRANCH)
-    return Repo(str(root), BASE_BRANCH, _git(root, "rev-parse", "HEAD").strip())
+    if shape == "stacked":
+        _git(root, "push", "-q", "origin", STACK_BRANCH)
+    if shape == "local":
+        _note(root, "- not pushed yet\n", "Note the rework in the changelog")
+        _note(root, "- nor this\n", "Thank the reviewers in the changelog")
+    base = STACK_BRANCH if shape == "stacked" else BASE_BRANCH
+    return Repo(str(root), base, _git(root, "rev-parse", "HEAD").strip())
 
 
 STAND_IN = 'echo "The preview opens a shell where the manager opens g $1."; exec "${SHELL:-/bin/sh}" -l'
@@ -711,8 +763,8 @@ def page_of(port: int) -> str:
 
 def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False, *,
           conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
-          panels: PreviewPanels, sessions: TerminalSessions) -> None:
-    repo = build_repo(worktree_in(directory), reviewer)
+          panels: PreviewPanels, sessions: TerminalSessions, shape: str | None = None) -> None:
+    repo = build_repo(worktree_in(directory), reviewer, shape)
     seed(conversation_managers, outside, viewer, repo, reviewer)
     panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
@@ -739,6 +791,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--agents-disabled", action="store_true")
     parser.add_argument("--reviewer", action="store_true")
+    parser.add_argument("--shape", choices=SHAPES,
+                        help="give the author preview's branch this shape on the diff tab's timeline")
     args = parser.parse_args(argv)
     directory = Path(tempfile.mkdtemp(prefix="review-board-preview-"))
     pr_processes = FakePrProcesses()
@@ -762,7 +816,7 @@ def main(argv: list[str] | None = None) -> int:
     serve(directory, viewer, outside, reviewer=args.reviewer,
           conversation_managers=seeding.get(ConversationManagerFactory),
           dashboards=seeding.get(Dashboards), panels=panels,
-          sessions=serving.get(Terminals).of(PR))
+          sessions=serving.get(Terminals).of(PR), shape=args.shape)
     listening = socket.socket()
     listening.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listening.bind(("127.0.0.1", args.port))

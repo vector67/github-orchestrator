@@ -279,7 +279,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 class="timeline-note"
                 x={{dot.x}}
                 y={{dot.dateY}}
-                text-anchor="middle"
+                text-anchor={{dot.dateAnchor}}
                 data-test-date
               >{{dot.date}}</text>
             {{/if}}
@@ -374,7 +374,11 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         <span class="timeline-key-item"><i data-style="current"></i>
           this commit</span>
         <span class="timeline-key-item"><i data-style="base"></i>
-          {{@timeline.header.base}}</span>
+          {{@timeline.header.main}}</span>
+        {{#if (eq @timeline.header.main @timeline.header.base)}}{{else}}
+          <span class="timeline-key-item"><i data-style="stack"></i>
+            {{@timeline.header.base}}</span>
+        {{/if}}
         <span class="timeline-key-item"><i data-style="band"></i>
           in the diff</span>
         <span class="timeline-aside">click a dot for one commit · shift-click or

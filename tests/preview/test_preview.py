@@ -224,3 +224,22 @@ def test_the_reviewer_preview_seeds_a_mention_in_a_comment_and_in_the_descriptio
 
     assert sorted(thread["kind"] for thread in threads if thread["mention"]) == [
         "issue", "pr-body"]
+
+
+def _count(repo, *revisions):
+    return int(preview._git(repo.worktree, "rev-list", "--count", *revisions).strip())
+
+
+@pytest.mark.parametrize("shape, holds", [
+    ("merge", lambda repo: _count(repo, "--merges", "main..HEAD") == 1),
+    ("stacked", lambda repo: repo.base_branch != "main"
+     and _count(repo, f"main..{repo.base_branch}") == 2),
+    ("far-behind", lambda repo: _count(repo, "HEAD..main") > 20),
+    ("long", lambda repo: _count(repo, "main..HEAD") > 20 and len(set(preview._git(
+        repo.worktree, "log", "--format=%ad", "--date=short", "main..HEAD").split())) >= 3),
+    ("local", lambda repo: _count(repo, f"origin/{preview.PR_BRANCH}..HEAD") == 2),
+])
+def test_each_preview_shape_builds_the_branch_it_is_named_for(tmp_path, shape, holds):
+    repo = preview.build_repo(preview.worktree_in(tmp_path), shape=shape)
+
+    assert holds(repo)

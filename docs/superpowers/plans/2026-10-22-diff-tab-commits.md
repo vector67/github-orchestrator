@@ -95,6 +95,13 @@ commit you were on.
 
 ### 5. The timeline for merges, stacks, long main, long PRs and local commits
 
+**Done** (`fa49a55a`, `d4b7df8a`, `409bd05d`, `5d3cb772`, `4e7b9739`, `a45025af`,
+`33937d94`, and the commit that marks this). `/diffs/{base}..{head}?merged=<sha>`
+diffs from `base` with `sha` merged in (`git merge-tree`), which is a merge's own
+diff and a range across one. `/pull-request/commits` adds `behind`, `fork_at` and
+`stack`, and sends at most `BASE_COMMITS_AT_EACH_END` (10) of main's oldest and
+newest. The preview takes `--shape merge|stacked|far-behind|long|local`.
+
 Decisions 11 to 15. The working-copies fake's `FakeCommit` takes more than one
 parent. A merge's own diff (its conflict fixes) is a new read or a mode of the
 diff read. Stacking needs the base PR's number and commits.

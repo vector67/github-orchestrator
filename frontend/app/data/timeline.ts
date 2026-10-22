@@ -29,7 +29,8 @@ const KEPT = 2;
 const RUN = 'run';
 const RUN_SPAN = 2;
 const RUN_REACH = 10;
-const DATE_DROP = 34;
+const DATE_DROP = 28;
+const DATE_RISE = 12;
 
 export interface Picked {
   from: string;
@@ -65,6 +66,7 @@ export interface TimelineDot {
   showSha: boolean;
   date: string | null;
   dateY: number;
+  dateAnchor: 'start' | 'middle';
   pickable: boolean;
   inRange: boolean;
 }
@@ -144,6 +146,7 @@ export interface TimelineHeader {
   relation: string;
   fork: string;
   tip: string | null;
+  main: string;
   behind: number;
 }
 
@@ -512,7 +515,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
         at >= 0 &&
         (!long || [showing.from, showing.to, input.current].includes(node.id)),
       date: date ? dayOf(date) : null,
-      dateY: node.y + DATE_DROP,
+      dateY: node.id === history.fork ? node.y - DATE_RISE : node.y + DATE_DROP,
+      dateAnchor:
+        node.id === history.fork ? ('start' as const) : ('middle' as const),
       pushed: node.lane === PR_LANE ? !input.unpushed.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
@@ -607,6 +612,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       relation: relationOf(input, base, merges.size),
       fork: stack ? '' : history.fork.slice(0, SHORT),
       tip: stack || history.behind ? null : `${base}'s tip`,
+      main: stack?.branch ?? base,
       behind: history.behind,
     },
     presets: presetsOf(order, input, showing),

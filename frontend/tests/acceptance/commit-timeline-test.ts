@@ -710,6 +710,9 @@ module(
       assert.dom('[data-test-lane-label="stack"]').hasText(`#6 ${BASE_BRANCH}`);
       assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
       assert.dom(dot(STACK_ONE)).doesNotHaveAttribute('data-pickable');
+      assert
+        .dom('[data-test-timeline-key]')
+        .includesText(`main ${BASE_BRANCH}`);
 
       await click('[data-test-lane-label="stack"]');
 

@@ -5004,6 +5004,11 @@ button.tree-row[aria-current="true"] {
   border: 0;
 }
 
+.timeline-key-item i[data-style="stack"] {
+  background: var(--blue-fill);
+  border-color: var(--blue);
+}
+
 .timeline-key-item i[data-style="band"] {
   width: 16px;
   background: var(--yellow);
