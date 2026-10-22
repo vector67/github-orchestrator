@@ -32,6 +32,7 @@ export default class InlineCard extends Component<InlineCardSignature> {
   @tracked private resolutionSeen: boolean;
   @tracked asking = false;
   @tracked question = '';
+  @tracked private sending = false;
 
   constructor(owner: Owner, args: InlineCardSignature['Args']) {
     super(owner, args);
@@ -229,7 +230,7 @@ export default class InlineCard extends Component<InlineCardSignature> {
   };
 
   get unaskable(): boolean {
-    return this.question.trim() === '';
+    return this.sending || this.question.trim() === '';
   }
 
   startAsking = () => {
@@ -249,9 +250,14 @@ export default class InlineCard extends Component<InlineCardSignature> {
     event.preventDefault();
     const { lines, entries } = this.args.item;
     const draft = entries.map((entry) => entry.body).join('\n\n');
-    if (await this.terminal.ask(questionAbout(lines, this.question, draft))) {
-      this.stopAsking();
-      void this.router.transitionTo('terminal');
+    this.sending = true;
+    try {
+      if (await this.terminal.ask(questionAbout(lines, this.question, draft))) {
+        this.stopAsking();
+        void this.router.transitionTo('terminal');
+      }
+    } finally {
+      this.sending = false;
     }
   };
 }

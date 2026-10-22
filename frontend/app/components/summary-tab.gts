@@ -25,6 +25,7 @@ export default class SummaryTab extends Component {
   @service declare theme: ThemeService;
 
   @tracked said: string | null = null;
+  @tracked summarising = false;
 
   get tab(): Tab | null {
     const { repo, number } = this.here.at;
@@ -72,7 +73,12 @@ export default class SummaryTab extends Component {
   };
 
   private async ask(asking: Promise<string | null>): Promise<void> {
-    this.said = await asking;
+    this.summarising = true;
+    try {
+      this.said = await asking;
+    } finally {
+      this.summarising = false;
+    }
   }
 
   <template>
@@ -128,6 +134,7 @@ export default class SummaryTab extends Component {
               type="button"
               class="btn"
               data-test-summary-run
+              disabled={{this.summarising}}
               {{on "click" this.run}}
             >Summarise</button>
           {{else if (is this.tab.state "running")}}
@@ -157,6 +164,7 @@ export default class SummaryTab extends Component {
               type="button"
               class="btn"
               data-test-summary-github-api
+              disabled={{this.summarising}}
               {{on "click" this.runWithGithubApi}}
             >{{this.githubApi}}</button>
           {{else if (is this.tab.state "failed")}}
@@ -168,6 +176,7 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
+                disabled={{this.summarising}}
                 {{on "click" this.run}}
               >Rerun</button>
             </span>
@@ -185,6 +194,7 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
+                disabled={{this.summarising}}
                 {{on "click" this.run}}
               >Rerun</button>
             </span>
@@ -199,6 +209,7 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
+                disabled={{this.summarising}}
                 {{on "click" this.run}}
               >Rerun</button>
             </span>
