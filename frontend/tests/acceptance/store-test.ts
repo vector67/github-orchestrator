@@ -322,7 +322,6 @@ module('Acceptance | one store', function (hooks) {
     const release = board().hold(/^\/api\/pull-requests$/);
     void visit('/pr/o/r/7/conversations');
     await waitUntil(() => board().askedFor(/\/api\/operations$/).length > 0);
-    await new Promise((done) => setTimeout(done, 50));
 
     release();
     await settled();
