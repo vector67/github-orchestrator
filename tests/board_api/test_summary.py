@@ -1,5 +1,4 @@
 import json
-import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -11,9 +10,14 @@ from github_orchestrator.wiring import Part, PrSummariesWiring, SummaryLaneWirin
 from tests.board_api.support import THE_PR, client_for, followed
 from tests.conftest import clocks_of, fake_provider
 from tests.conversation.support import at
-from tests.pr_summaries.support import HeadsAt, Held, run_now, three_commits
+from tests.pr_summaries.support import (
+    FAKE_PLUGIN,
+    HeadsAt,
+    Held,
+    run_now,
+    three_commits,
+)
 
-FAKE_PLUGIN = Path(__file__).parents[1] / "pr_summaries" / "fake_plugin.py"
 STARTED = "2026-08-28T10:00:00+00:00"
 
 
@@ -24,7 +28,7 @@ def summary_parts(tmp_path: Path, behaviour: str = "clean", *, read: str | None 
     clone.mkdir(exist_ok=True)
     return [PrSummariesWiring(tmp_path / "summaries"),
             SummaryLaneWiring(tmp_path / "config.toml", {THE_PR.repo: clone}, agents_enabled, "octocat",
-                              plugin=(sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
+                              plugin=("/bin/sh", str(FAKE_PLUGIN), "--behaviour", behaviour),
                               run_in=run_in),
             fake_provider(ChangeDetection, HeadsAt(read, (THE_PR,), ()))]
 

@@ -1,6 +1,5 @@
 import json
 import subprocess
-import sys
 from collections.abc import Callable, Collection
 from pathlib import Path
 from types import SimpleNamespace
@@ -43,7 +42,7 @@ class Held:
 
 
 THE_PR = a_pr(7, "acme/widgets")
-FAKE_PLUGIN = Path(__file__).with_name("fake_plugin.py")
+FAKE_PLUGIN = Path(__file__).with_name("fake_plugin.sh")
 HEAD = "abc123"
 
 
@@ -59,7 +58,7 @@ class Lane:
         self.summaries_dir = tmp_path / "summaries"
         container = wire(
             PrSummariesWiring(self.summaries_dir),
-            SummaryLaneWiring(plugin=plugin or (sys.executable, str(FAKE_PLUGIN), "--behaviour", behaviour),
+            SummaryLaneWiring(plugin=plugin or ("/bin/sh", str(FAKE_PLUGIN), "--behaviour", behaviour),
                               config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
                               agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in,
                               clamp=clamp),

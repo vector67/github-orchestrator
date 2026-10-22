@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from github_orchestrator.pr_summaries import Summary
 from tests.builders import a_pr
 from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
 
@@ -62,12 +63,12 @@ def test_a_pr_whose_last_run_kept_a_primer_is_due_again_once_wanted(tmp_path):
     assert lane.summaries.due(set()) == [THE_PR]
 
 
-RECORDING_CLAMP = "import os, sys; open(sys.argv[1], 'w').write(sys.argv[2]); os.execv(sys.argv[2], sys.argv[2:])"
+RECORDING_CLAMP = 'printf %s "$2" > "$1"; shift; exec "$@"'
 
 
 def test_a_run_starts_the_plugin_under_the_clamp(tmp_path):
     clamped = tmp_path / "clamped"
-    lane = Lane(tmp_path, "clean", clamp=(sys.executable, "-c", RECORDING_CLAMP, str(clamped)))
+    lane = Lane(tmp_path, "clean", clamp=("/bin/sh", "-c", RECORDING_CLAMP, "clamp", str(clamped)))
     lane.summaries.want(THE_PR)
 
     lane.lane.poll()
@@ -463,8 +464,8 @@ def test_a_run_that_died_with_no_server_waiting_is_stored_as_lost_and_left_due(t
 
 def test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_head_now(tmp_path, git_template):
     first, _, third = git_template(three_commits)
-    lane = Lane(tmp_path, "clean", head=first, clone=tmp_path / "repo")
-    lane.lane.start(THE_PR, use_github_api=False)
+    lane = Lane(tmp_path, "clean", clone=tmp_path / "repo")
+    lane.summaries.save(THE_PR, Summary(head_sha=first))
 
     assert lane.lane.behind(THE_PR, third) == 2
     assert lane.lane.behind(THE_PR, first) == 0
@@ -472,10 +473,10 @@ def test_a_summary_is_behind_by_the_commits_between_the_head_it_read_and_the_hea
 
 def test_a_summary_has_no_count_behind_without_both_heads_or_a_commit_the_clone_holds(tmp_path, git_template):
     first, _, third = git_template(three_commits)
-    lane = Lane(tmp_path, "clean", head=first, clone=tmp_path / "repo")
+    lane = Lane(tmp_path, "clean", clone=tmp_path / "repo")
 
     never_run = lane.lane.behind(THE_PR, third)
-    lane.lane.start(THE_PR, use_github_api=False)
+    lane.summaries.save(THE_PR, Summary(head_sha=first))
 
     assert never_run is None
     assert lane.lane.behind(THE_PR, None) is None

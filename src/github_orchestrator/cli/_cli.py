@@ -20,7 +20,7 @@ from github_orchestrator.cli._migrate import (
     move_old_config,
     old_config,
 )
-from github_orchestrator.cli._parser import Commands
+from github_orchestrator.cli._parser import commands_of
 from github_orchestrator.cli._restart_all import (
     Instance,
     OtherInstances,
@@ -168,7 +168,7 @@ class OperatorCli:
 
     def _dispatch(self, argv: list[str]) -> None:
         config = self._config
-        parsers = Commands(config.version)
+        parsers = commands_of(config.version)
         args = parsers.parser.parse_args(argv or ["help"])
         if args.command not in ("help", "config", "setup", "open", "tutorial", "doctor",
                                 "status", "start", "restart", "restart-all", "uninstall",
