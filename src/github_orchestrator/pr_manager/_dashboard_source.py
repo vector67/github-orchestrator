@@ -30,6 +30,11 @@ Flags = tuple[str | None, bool, str | None, bool, int]
 _STAMP = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
+def _unpushed_commit(line: str) -> UnpushedCommit:
+    sha, _, subject = line.partition(" ")
+    return UnpushedCommit(sha, subject)
+
+
 class DashboardSource:
     def __init__(self, config_of: ConfigOf,
                  clock: UtcClock, *, change_detection: ChangeDetection,
@@ -84,7 +89,7 @@ class DashboardSource:
         commits = self._working_copies.commits_since(worktree, None if facts is None else facts.head_sha)
         if commits is None:
             return None
-        return tuple(UnpushedCommit(*line.split(" ", 1)) for line in commits)
+        return tuple(_unpushed_commit(line) for line in commits)
 
     def _base(self, pr: Pr) -> BaseStanding | None:
         facts = self._change_detection.facts(pr)

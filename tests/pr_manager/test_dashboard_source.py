@@ -3,7 +3,11 @@ from datetime import datetime, timezone
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.interface import Dashboards, ManagerStanding
+from github_orchestrator.board_api.interface import (
+    Dashboards,
+    ManagerStanding,
+    UnpushedCommit,
+)
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.domain import AuthorKind
 from github_orchestrator.pr_processes import PrProcesses
@@ -258,6 +262,26 @@ def test_a_pr_with_no_worktree_says_git_cannot_count_its_commits(settings, tmp_p
 
     assert (unmanaged.worktree, unmanaged.unpushed_commits) == ("", None)
     assert "" not in copies.asked
+
+
+class _ListedCopies(FakeWorkingCopies):
+    def __init__(self, *listed):
+        super().__init__()
+        self.listed = listed
+
+    def commits_since(self, worktree, sha):
+        return self.listed
+
+
+def test_an_unpushed_commit_with_an_empty_subject_is_read_with_an_empty_subject(
+        settings, tmp_path):
+    seed(settings, POLLED)
+    copies = _ListedCopies("c0ffee1 Second change", "badf00d")
+
+    _, unmanaged = _both(settings, tmp_path, working_copies=copies)
+
+    assert unmanaged.unpushed_commits == (
+        UnpushedCommit("c0ffee1", "Second change"), UnpushedCommit("badf00d", ""))
 
 
 def test_a_frozen_pr_dismissed_until_its_next_event_carries_both(
