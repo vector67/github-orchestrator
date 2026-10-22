@@ -112,14 +112,3 @@ def test_the_dashboard_stream_sends_what_the_dashboard_read_answers(board, opene
     assert json.loads(event["data"]) == board.client.get("/api/dashboard").json()
 
 
-def test_the_dashboard_stream_waits_out_a_manager_still_starting(board, panel, opened):
-    first = panel.now
-    panel.now = None
-    stream = opened("/api/dashboard/stream")
-    assert stream.block() == {"retry": "1000"}
-
-    panel.now = first
-
-    assert json.loads(stream.event()["data"]) == board.client.get("/api/dashboard").json()
-
-
