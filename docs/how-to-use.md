@@ -491,7 +491,8 @@ The band at the top has your move and why, and the buttons: **Open the Board**
 review or re-review, which starts the review agent a review request would, for
 when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
 own draft, which first lists what is still outstanding (unsent drafts, Board
-threads waiting on you, failing CI, a needed rebase,
+threads waiting on you, threads unresolved on GitHub that the Board has not
+resolved or does not track, failing CI, a needed rebase,
 unpushed commits and agent work) and then marks it ready on GitHub, **Git**
 (`g`), **Terminal** (`t`), **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on

@@ -14,6 +14,8 @@ log = logging.getLogger(__name__)
 
 NOTICE_SECONDS = 4.0
 
+NOT_YOUR_DRAFT = "mark ready is only for your own draft"
+
 
 class ManagerCommands:
     def __init__(self, config: ManagerConfig, monotonic: Monotonic, *, holds: Holds, dismissals: Dismissals,
@@ -141,6 +143,11 @@ class ManagerCommands:
 
     def _mark_ready(self) -> None:
         pr = self._config.pr
+        facts = self._change_detection.facts(pr)
+        if facts is None or not (facts.is_author and facts.draft):
+            log.info("mark ready %s: refused — not your draft", pr)
+            self.notify(NOT_YOUR_DRAFT)
+            return
         refused = self._pull_requests.mark_ready(pr)
         if refused is not None:
             log.warning("mark ready %s: GitHub refused — %s", pr, refused)

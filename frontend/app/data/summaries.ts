@@ -453,7 +453,7 @@ export function summaryOf(
 }
 
 export type OutstandingKind =
-  'drafts' | 'board' | 'ci' | 'rebase' | 'unpushed' | 'agent';
+  'drafts' | 'board' | 'unresolved' | 'ci' | 'rebase' | 'unpushed' | 'agent';
 
 export interface OutstandingItem {
   key: string;
@@ -477,6 +477,7 @@ export interface Outstanding {
 const OUTSTANDING_LABELS: Record<OutstandingKind, string> = {
   drafts: 'Unsent draft comments',
   board: 'Board threads waiting on you',
+  unresolved: 'Unresolved on GitHub',
   ci: 'Failing CI',
   rebase: 'Needs a rebase',
   unpushed: 'Unpushed commits',
@@ -491,6 +492,33 @@ function whereOf(one: Thread): string {
 
 function threadItem(one: Thread, what: string): OutstandingItem {
   return { key: one.key, where: whereOf(one), what, thread: one.key };
+}
+
+function unresolvedOf(
+  all: Thread[],
+  listed: OutstandingItem[],
+  facts: PrFacts | null,
+): { items: OutstandingItem[]; count: number } {
+  const open = all.filter(
+    (one) => one.kind === 'review' && one.github_resolved === false,
+  );
+  const shown = new Set(listed.map((one) => one.key));
+  const items = open
+    .filter((one) => one.state !== 'done' && !shown.has(one.key))
+    .map((one) => threadItem(one, one.gist ?? 'unresolved on GitHub'));
+  const untracked = (facts?.unresolved_threads ?? 0) - open.length;
+  if (untracked <= 0) return { items, count: items.length };
+  return {
+    items: [
+      ...items,
+      {
+        key: 'untracked',
+        where: 'GitHub',
+        what: `${untracked} more the board does not track`,
+      },
+    ],
+    count: items.length + untracked,
+  };
 }
 
 function rebaseOf(pr: PrEntity): OutstandingItem[] {
@@ -542,21 +570,24 @@ function outstandingFrom(
 ): Outstanding {
   const all = Object.values(threads ?? {});
   const facts = pr.facts;
+  const board =
+    roleOf(facts) === 'author'
+      ? all
+          .filter(
+            (one) =>
+              one.state === 'ready' &&
+              one.author_kind !== 'mine' &&
+              !LEFT_OUT.includes(one.record_state),
+          )
+          .map((one) => threadItem(one, one.gist ?? 'waiting on you'))
+      : [];
+  const unresolved = unresolvedOf(all, board, facts);
   const items: Record<OutstandingKind, OutstandingItem[]> = {
     drafts: all
       .filter((one) => one.state === 'draft')
       .map((one) => threadItem(one, one.gist ?? 'unsent comment')),
-    board:
-      roleOf(facts) === 'author'
-        ? all
-            .filter(
-              (one) =>
-                one.state === 'ready' &&
-                one.author_kind !== 'mine' &&
-                !LEFT_OUT.includes(one.record_state),
-            )
-            .map((one) => threadItem(one, one.gist ?? 'waiting on you'))
-        : [],
+    board,
+    unresolved: unresolved.items,
     ci: (facts?.checks ?? [])
       .filter((one) => one.failed)
       .map((one) => ({
@@ -577,7 +608,7 @@ function outstandingFrom(
     .map((kind) => ({
       kind,
       label: OUTSTANDING_LABELS[kind],
-      count: items[kind].length,
+      count: kind === 'unresolved' ? unresolved.count : items[kind].length,
       items: items[kind],
     }));
   return {

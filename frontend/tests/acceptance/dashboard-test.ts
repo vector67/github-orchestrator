@@ -1188,6 +1188,50 @@ module('Acceptance | dashboard', function (hooks) {
     }
   });
 
+  test('a link to the ready question on a pull request that is not your draft opens nothing, and y marks nothing', async function (assert) {
+    for (const facts of [{ draft: false }, { draft: true, is_author: false }]) {
+      onTheHub({ facts });
+      await visit('/pr/o/r/7/dashboard?ready=true');
+
+      assert.dom('[data-test-ready-confirm]').doesNotExist();
+
+      await press('y');
+
+      assert.deepEqual(verbs(), []);
+    }
+  });
+
+  test('the ready question lists the threads unresolved on GitHub that the board has not resolved, and counts the ones it does not track', async function (assert) {
+    board().conversations = [
+      thread({ key: 'PRRT_w', state: 'waiting', gist: 'asked about naming' }),
+      thread({ key: 'PRRT_d', state: 'done' }),
+      thread({ key: 'PRRT_g', state: 'waiting', github_resolved: true }),
+      thread({ key: 'PRRT_r', state: 'ready' }),
+    ];
+    onTheHub({ facts: { draft: true, unresolved_threads: 6 } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert.deepEqual(texts('[data-test-outstanding] summary'), [
+      '1 Board threads waiting on you',
+      '4 Unresolved on GitHub',
+    ]);
+    assert.deepEqual(
+      findAll(
+        '[data-test-outstanding="unresolved"] [data-test-outstanding-item]',
+      ).map((one) => one.getAttribute('data-test-outstanding-item')),
+      ['PRRT_w', 'untracked'],
+    );
+    assert.dom('[data-test-outstanding-item="PRRT_w"] a').exists({ count: 1 });
+    assert
+      .dom('[data-test-outstanding-item="PRRT_w"] .outstanding-what')
+      .hasText('asked about naming');
+    assert
+      .dom('[data-test-outstanding-item="untracked"]')
+      .hasText('GitHub 3 more the board does not track');
+  });
+
   test('Close is the last of the controls', async function (assert) {
     onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');
