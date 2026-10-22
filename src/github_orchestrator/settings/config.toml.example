@@ -12,6 +12,11 @@
 #
 # Every top-level key comes before the first [[repos]]: TOML puts each key
 # after a table header into that table.
+#
+# The watcher, the server and each agent manager read this file once, when
+# they start. The server builds each PR's board from what it read and keeps
+# that board until it stops. So a change does nothing until
+# `github-orchestrator restart`, which restarts all three.
 
 # Your GitHub username — auth is `gh auth token --user <account>`, so this
 # account must be logged in with `gh auth login`.

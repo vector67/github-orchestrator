@@ -37,6 +37,13 @@ Full documentation is in [docs/how-to-use.md](docs/how-to-use.md).
 curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh
 ```
 
+The installer's options go after `sh -s --`, which hands them to the script
+rather than to `sh`:
+
+```bash
+curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh -s -- --agent codex
+```
+
 It runs on macOS and Linux. The installer checks the machine and offers to
 install what is missing:
 
@@ -61,7 +68,7 @@ go through `notify-send` when it is on `PATH`.
 
 The installer then installs the newest release with `uv tool install`, starts
 the watcher as a service (a LaunchAgent on macOS, a systemd user unit on Linux)
-and opens the board. `install.sh --help` lists its options, such as `-y` to
+and opens the board. `sh -s -- --help` in place of `sh` lists its options, such as `-y` to
 answer yes to everything and `--version X` for an older release. An install
 from an older checkout is found and replaced, with its config and data moved
 over.
@@ -80,7 +87,7 @@ nothing.
 ## Configuration
 
 The board's setup screen (`/setup` on the hub; `github-orchestrator setup` opens
-it, and so does the top bar's repo menu) asks for your account and the repos to
+it, and so does the top bar's **Setup** link) asks for your account and the repos to
 watch, checks `gh` can see each as that account, and writes them into
 `~/.config/github-orchestrator/config.toml`. Repos are added and removed there
 too: a removed repo's state, queues and holds are archived, its managers stopped,
