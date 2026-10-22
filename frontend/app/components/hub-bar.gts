@@ -26,7 +26,8 @@ export default class HubBar extends Component<HubBarSignature> {
 
   private readonly keymap: Keymap = {
     take: (key) => {
-      if (key === 'Escape') this.closePicker();
+      if (key !== 'Escape') return false;
+      this.closePicker();
       return true;
     },
   };

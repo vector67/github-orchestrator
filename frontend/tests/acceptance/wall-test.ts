@@ -1574,6 +1574,98 @@ module('Acceptance | wall', function (hooks) {
     assert.strictEqual(currentURL(), '/');
   });
 
+  test('Enter on the Parked fold, the gear or the Runs link is theirs, not an open of the selected row', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9));
+    await visit('/');
+    await press('j');
+
+    for (const control of [
+      '[data-test-wall-group="parked"] [data-test-fold]',
+      '[data-test-settings-open]',
+      '[data-test-nav="runs"]',
+    ]) {
+      await focus(control);
+      await press('Enter');
+
+      assert.strictEqual(currentURL(), '/', control);
+    }
+  });
+
+  test('a held c carries on once, however often the key repeats', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          system: {
+            last_run: {
+              event: 'ci-failed',
+              exit_code: 0,
+              ended_at: new Date(clock().now - 60_000).toISOString(),
+            },
+          },
+        },
+      }),
+    );
+    await visit('/');
+    await press('j');
+
+    await press('c');
+    await triggerEvent(document, 'keydown', { key: 'c', repeat: true });
+    await triggerEvent(document, 'keydown', { key: 'c', repeat: true });
+
+    assert.deepEqual(
+      board().posted.map((one) => one.url),
+      ['/pr/o/r/7/api/manager:carry-on'],
+    );
+  });
+
+  test('a held h holds once rather than holding, resuming and holding again', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/');
+    await press('j');
+
+    await press('h');
+    await triggerEvent(document, 'keydown', { key: 'h', repeat: true });
+    await triggerEvent(document, 'keydown', { key: 'h', repeat: true });
+
+    assert.deepEqual(
+      board().posted.map((one) => `${one.key} ${one.verb}`),
+      ['o/r#7 hold'],
+    );
+  });
+
+  test('a held j keeps walking down the rows', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+
+    await press('j');
+    await triggerEvent(document, 'keydown', { key: 'j', repeat: true });
+
+    assert.deepEqual(selected(), ['o/r#8']);
+  });
+
+  function leftToTheBrowser(key: string): boolean {
+    return document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+  }
+
+  test('Tab, Enter and Space still move and press inside the open settings menu and repo filter', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/');
+
+    for (const opener of [
+      '[data-test-settings-open]',
+      '[data-test-repo-filter]',
+    ]) {
+      await click(opener);
+
+      for (const key of ['Tab', 'Enter', ' '])
+        assert.true(leftToTheBrowser(key), `${opener} ${key}`);
+
+      await press('Escape');
+    }
+  });
+
   test('each row has a hold and a dismiss button that do what h and d do', async function (assert) {
     onTheHub(
       heldPr(),

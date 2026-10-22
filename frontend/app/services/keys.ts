@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 const STAY_IN_HELP = new Set(['Tab', 'Shift']);
-const ONCE_PER_PRESS = new Set(['Enter', 'o']);
+const REPEATS = new Set(['j', 'k', 'n', 'p', '[', ']', 'Backspace']);
 
 type Layer = 'dialog' | 'screen' | 'tab' | 'board';
 
@@ -81,12 +81,12 @@ export default class KeysService extends Service {
     const target = event.target as HTMLElement | null;
     if (target && TYPING.has(target.tagName)) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
-    if (event.repeat && ONCE_PER_PRESS.has(event.key)) return;
     if (event.key === '/') {
       event.preventDefault();
       document.documentElement.dataset['shortcuts'] = '';
       return;
     }
+    if (event.repeat && !REPEATS.has(event.key)) return;
     if (this.helping) {
       if (STAY_IN_HELP.has(event.key)) return;
       event.preventDefault();
