@@ -70,6 +70,20 @@ def test_an_instance_name_that_is_not_a_plain_name_is_refused(entry, capsys):
     assert "letters, digits" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize("command", ["status", "doctor"])
+def test_an_instance_with_no_config_is_refused_rather_than_reported_on(machine, run_cli, command):
+    machine.serving()
+    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.instance = "nope"
+
+    ran = run_cli(command)
+
+    assert ran.code == 2
+    assert ran.out == ""
+    assert ran.err == (f"There is no instance nope: {machine.config_path} does not exist. "
+                       "Leave --instance out for the default instance.\n")
+
+
 def test_every_command_s_help_lists_instance(run_cli):
     for command in ("status", "start", "logs", "doctor", "queue"):
         assert "--instance NAME" in run_cli(command, "--help").out
