@@ -994,18 +994,38 @@ export interface Stepper {
   pips: Pip[];
 }
 
+function pickedUpAt(
+  history: PullRequestCommits,
+  read: Set<string>,
+  reviewed: string | null,
+): number {
+  const reviewedAt = history.commits.findIndex((one) => one.sha === reviewed);
+  if (reviewedAt < 0) return -1;
+  return history.commits.findIndex(
+    (one, index) => index > reviewedAt && !read.has(one.sha),
+  );
+}
+
 function stepperBuilt(
   history: PullRequestCommits,
   marks: ReadMark[],
   chosen: string | null,
+  reviewed: string | null,
 ): Stepper | null {
   const { commits } = history;
   if (!commits.length) return null;
   const read = new Set(marks.map((one) => one.sha));
   const chosenAt = commits.findIndex((one) => one.sha === chosen);
+  const pickedUp = pickedUpAt(history, read, reviewed);
   const unreadAt = commits.findIndex((one) => !read.has(one.sha));
   const at =
-    chosenAt >= 0 ? chosenAt : unreadAt >= 0 ? unreadAt : commits.length - 1;
+    chosenAt >= 0
+      ? chosenAt
+      : pickedUp >= 0
+        ? pickedUp
+        : unreadAt >= 0
+          ? unreadAt
+          : commits.length - 1;
   const commit = commits[at]!;
   return {
     place: at + 1,
@@ -1029,19 +1049,30 @@ function stepperBuilt(
 
 const lastSteppers = new WeakMap<
   PullRequestCommits,
-  { marks: ReadMark[]; chosen: string | null; stepper: Stepper | null }
+  {
+    marks: ReadMark[];
+    chosen: string | null;
+    reviewed: string | null;
+    stepper: Stepper | null;
+  }
 >();
 
 export function stepperOf(
   history: PullRequestCommits | undefined,
   marks: ReadMark[] | null,
   chosen: string | null,
+  reviewed: string | null,
 ): Stepper | null | undefined {
   if (!history || !marks) return undefined;
   const last = lastSteppers.get(history);
-  if (last?.marks === marks && last.chosen === chosen) return last.stepper;
-  const stepper = stepperBuilt(history, marks, chosen);
-  lastSteppers.set(history, { marks, chosen, stepper });
+  if (
+    last?.marks === marks &&
+    last.chosen === chosen &&
+    last.reviewed === reviewed
+  )
+    return last.stepper;
+  const stepper = stepperBuilt(history, marks, chosen, reviewed);
+  lastSteppers.set(history, { marks, chosen, reviewed, stepper });
   return stepper;
 }
 
@@ -1054,13 +1085,16 @@ export interface CommitNote {
 function commitNoteBuilt(
   history: PullRequestCommits,
   facts: PrFacts,
+  marks: ReadMark[],
 ): CommitNote | null {
   const { commits } = history;
+  const read = new Set(marks.map((one) => one.sha));
+  if (pickedUpAt(history, read, facts.my_review_sha) < 0) return null;
+  if (!facts.my_review_at) return null;
   const reviewedAt = commits.findIndex(
     (one) => one.sha === facts.my_review_sha,
   );
   const count = commits.length - reviewedAt - 1;
-  if (reviewedAt < 0 || !count || !facts.my_review_at) return null;
   return {
     count,
     reviewedOn: new Date(facts.my_review_at).toLocaleDateString('en-GB', {
@@ -1074,17 +1108,18 @@ function commitNoteBuilt(
 
 const lastNotes = new WeakMap<
   PullRequestCommits,
-  { facts: PrFacts; note: CommitNote | null }
+  { facts: PrFacts; marks: ReadMark[]; note: CommitNote | null }
 >();
 
 export function commitNoteOf(
   history: PullRequestCommits | undefined,
   facts: PrFacts | null,
+  marks: ReadMark[] | null,
 ): CommitNote | null {
-  if (!history || !facts) return null;
+  if (!history || !facts || !marks) return null;
   const last = lastNotes.get(history);
-  if (last?.facts === facts) return last.note;
-  const note = commitNoteBuilt(history, facts);
-  lastNotes.set(history, { facts, note });
+  if (last?.facts === facts && last.marks === marks) return last.note;
+  const note = commitNoteBuilt(history, facts, marks);
+  lastNotes.set(history, { facts, marks, note });
   return note;
 }

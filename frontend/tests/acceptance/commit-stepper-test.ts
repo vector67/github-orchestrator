@@ -331,6 +331,29 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-commit-note]').doesNotExist();
   });
 
+  test('after your review, it opens on the first commit you have not read after the one you reviewed', async function (assert) {
+    reviewedOn(FIRST);
+
+    await visit('/pr/o/r/7/diff');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 2 of 3');
+    assert.deepEqual(pips(), ['unread', 'current', 'unread']);
+    assert.dom('[data-test-commit-note]').includesText('2 commits pushed');
+  });
+
+  test('when everything after your review is read, it opens on the first commit you have not read, with no note', async function (assert) {
+    reviewedOn(FIRST);
+    board().readMarks = [
+      { sha: SECOND, subject: 'Name the widget' },
+      { sha: THIRD, subject: 'Test the widget' },
+    ];
+
+    await visit('/pr/o/r/7/diff');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
+    assert.dom('[data-test-commit-note]').doesNotExist();
+  });
+
   test('× hides the note until the pull request has a new head', async function (assert) {
     reviewedOn(FIRST);
     await visit('/pr/o/r/7/diff');

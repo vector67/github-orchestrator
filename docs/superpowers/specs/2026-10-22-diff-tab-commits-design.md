@@ -25,8 +25,11 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     black outline for the current commit, grey otherwise. `[` and `]` move to the
     previous and next commit. The diff and the file tree show only the current
     commit: `/diffs/{parent}..{sha}`.
-02. **It opens on the first commit you haven't read**, or on the last commit when
-    all are read.
+02. **It opens after your review**: on the first commit you haven't read that
+    comes after the commit your review was given on. With no review, a review
+    whose commit is not among the PR's commits, or nothing unread after it, it
+    opens on the first commit you haven't read, or on the last commit when all
+    are read. The note (decision 4) shows only when it opened after your review.
 03. **Read state is kept on the server**, per PR, keyed by sha, with each read
     commit's subject kept beside it so decision 16 can match rewritten commits.
     Ticking or unticking the Read box writes it through the board API's operation

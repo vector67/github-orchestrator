@@ -582,12 +582,22 @@ export default class StoreService extends Service {
     chosen: string | null,
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
-    return held && stepperOf(held.history[source], held.read, chosen);
+    return (
+      held &&
+      stepperOf(
+        held.history[source],
+        held.read,
+        chosen,
+        held.facts?.my_review_sha ?? null,
+      )
+    );
   }
 
   commitNote(pr: Numbered, source: DiffSource): CommitNote | null {
     const held = this.pr(pr.repo, pr.number);
-    return held ? commitNoteOf(held.history[source], held.facts) : null;
+    return held
+      ? commitNoteOf(held.history[source], held.facts, held.read)
+      : null;
   }
 
   files(commits: Commits): FileStat[] | null {
