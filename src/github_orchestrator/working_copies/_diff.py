@@ -90,13 +90,13 @@ CODE_NOT_FOUND = "couldn't find the code that this comment references"
 
 def resolve_pr_base(
     worktree: str, base_branch: str | None, head: str
-) -> tuple[str | None, str]:
+) -> tuple[tuple[str, str] | None, str]:
     if base_branch and not is_branch_name(base_branch):
         log.warning("refusing to look for the PR base %r: it is not a branch "
                     "name", base_branch)
         base_branch = None
     refs = (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
-    found = None
+    found = tip = None
     for ref in refs:
         try:
             rev = _run_git(worktree, "rev-parse", "--verify", "--quiet",
@@ -104,9 +104,9 @@ def resolve_pr_base(
         except _GitUnavailable as exc:
             return None, str(exc)
         if rev.returncode == 0 and rev.stdout.strip():
-            found = ref
+            found, tip = ref, rev.stdout.strip()
             break
-    if found is None:
+    if found is None or tip is None:
         log.warning("could not resolve the PR base branch in %s (tried %s)",
                     worktree, ", ".join(refs))
         return None, CODE_NOT_FOUND
@@ -125,4 +125,4 @@ def resolve_pr_base(
         log.warning("git merge-base %s %s exited %d: %s",
                     found, head, merge_base.returncode, detail)
         return None, CODE_NOT_FOUND
-    return merge_base.stdout.strip(), ""
+    return (merge_base.stdout.strip(), tip), ""

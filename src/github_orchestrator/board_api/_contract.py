@@ -994,6 +994,12 @@ class PullRequestCommits(BaseModel):
         description="Where the branch left its base: the merge base the "
                     "pull request's diff runs from.")
     commits: list[PullRequestCommit]
+    base_tip: Sha = Field(
+        description="The base branch's last fetched commit: the fork while the "
+                    "base has not moved.")
+    base_commits: list[PullRequestCommit] = Field(
+        description="What the base gained since the fork, oldest first, none of "
+                    "it in the pull request's diff: as many as it is behind.")
 
 
 class ReadMark(BaseModel):

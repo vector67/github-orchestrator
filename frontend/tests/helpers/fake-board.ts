@@ -687,7 +687,12 @@ export class FakeBoard {
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
   pushedSinceFetch: Diff | null = null;
-  commits: PullRequestCommits = { fork: 'ba5e000', commits: [] };
+  commits: PullRequestCommits = {
+    fork: 'ba5e000',
+    commits: [],
+    base_tip: 'ba5e000',
+    base_commits: [],
+  };
   localCommits: PullRequestCommits | null = null;
   readMarks: ReadMark[] = [];
   fetches = 0;

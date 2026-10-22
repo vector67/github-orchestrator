@@ -303,13 +303,14 @@ def read_pull_request_commits(request: Request, board: Serving,
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
                       or f"git could not list the pull request's {source} commits")
+    commits, base_commits = ([PullRequestCommit(
+        sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
+        subject=commit.subject, author=commit.author,
+        authored_at=commit.authored_at.astimezone(UTC).strftime(AS_OF_FORMAT))
+        for commit in run] for run in (history.commits, history.base_commits))
     return etag.answered(request, PullRequestCommits(
-        fork=str(history.fork),
-        commits=[PullRequestCommit(
-            sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
-            subject=commit.subject, author=commit.author,
-            authored_at=commit.authored_at.astimezone(UTC).strftime(AS_OF_FORMAT))
-            for commit in history.commits]))
+        fork=str(history.fork), commits=commits,
+        base_tip=str(history.base_tip), base_commits=base_commits))
 
 
 @reads.get("/viewer", tags=["people"], operation_id="readViewer",

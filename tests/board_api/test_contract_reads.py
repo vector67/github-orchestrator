@@ -897,6 +897,7 @@ def pr_commits_of(copies, **params):
 
 def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base():
     copies, base, head = branched_from_main()
+    main = copies.origin["main"]
 
     answer = pr_commits_of(copies)
 
@@ -905,6 +906,9 @@ def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base(
         "fork": base,
         "commits": [{"sha": head, "parents": [base], "subject": "check first",
                      "author": "T", "authored_at": "2026-01-01T00:02:00Z"}],
+        "base_tip": main,
+        "base_commits": [{"sha": main, "parents": [base], "subject": "someone else's",
+                          "author": "T", "authored_at": "2026-01-01T00:03:00Z"}],
     }
     assert answer.headers["ETag"]
 

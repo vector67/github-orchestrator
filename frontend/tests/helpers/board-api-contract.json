@@ -5563,6 +5563,16 @@
   },
   "PullRequestCommits": {
    "properties": {
+    "base_commits": {
+     "items": {
+      "$ref": "#/components/schemas/PullRequestCommit"
+     },
+     "type": "array"
+    },
+    "base_tip": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    },
     "commits": {
      "items": {
       "$ref": "#/components/schemas/PullRequestCommit"
@@ -5576,7 +5586,9 @@
    },
    "required": [
     "fork",
-    "commits"
+    "commits",
+    "base_tip",
+    "base_commits"
    ],
    "type": "object"
   },

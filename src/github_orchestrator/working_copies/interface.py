@@ -89,6 +89,8 @@ class PrCommit:
 class PrCommits:
     fork: Sha
     commits: tuple[PrCommit, ...]
+    base_tip: Sha
+    base_commits: tuple[PrCommit, ...]
 
 
 @dataclass(frozen=True)

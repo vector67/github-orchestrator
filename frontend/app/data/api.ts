@@ -681,6 +681,8 @@ export interface PullRequestCommit {
 export interface PullRequestCommits {
   fork: string;
   commits: PullRequestCommit[];
+  base_tip: string;
+  base_commits: PullRequestCommit[];
 }
 
 export interface QuestionRequest {

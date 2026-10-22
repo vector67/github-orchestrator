@@ -789,6 +789,28 @@ def test_the_prs_commits_run_oldest_first_from_where_the_branch_left_main(
     ]
 
 
+def test_the_prs_commits_carry_what_main_gained_since_the_fork(world, pr_worktree, pr_checkout):
+    head = Sha(world.head_of(pr_worktree))
+    first = Sha(world.advance_main({"m": "more\n"}, "more main"))
+    tip = Sha(world.advance_main({"n": "still more\n"}, "still more main"))
+    assert pr_checkout.fetch("main") is None
+
+    history = pr_checkout.pr_commits("main", head)
+
+    assert history is not None
+    assert history.base_tip == tip
+    assert [(commit.sha, commit.subject) for commit in history.base_commits] == [
+        (first, "more main"), (tip, "still more main")]
+
+
+def test_a_prs_commits_on_a_main_that_has_not_moved_have_the_fork_as_mains_tip(
+        pr_worktree, pr_checkout, world):
+    history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
+
+    assert history is not None
+    assert (history.base_tip, history.base_commits) == (history.fork, ())
+
+
 def test_a_prs_commits_with_no_worktree_are_unknown(world):
     assert world.copies.checkout(THE_PR).pr_commits("main", Sha("a" * 40)) is None
 

@@ -321,7 +321,8 @@ class GitWorkingCopies:
                     head: str) -> tuple[FileDiff, ...] | None:
         return _hunks.diff_files(worktree, base, head)
 
-    def _pr_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
+    def _pr_base(self, worktree: str, base_branch: str | None,
+                 head: str) -> tuple[str, str] | None:
         found, _ = resolve_pr_base(worktree, base_branch, head)
         return found
 

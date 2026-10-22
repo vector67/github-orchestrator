@@ -67,7 +67,8 @@ class Git(Protocol):
 
     def _diff_files(self, worktree: str, base: str, head: str) -> tuple[FileDiff, ...] | None: ...
 
-    def _pr_base(self, worktree: str, base_branch: str | None, head: str) -> str | None: ...
+    def _pr_base(self, worktree: str, base_branch: str | None,
+                 head: str) -> tuple[str, str] | None: ...
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None: ...
@@ -213,7 +214,8 @@ class BoundCheckout:
         path = self._path()
         if path is None:
             return None
-        base = Sha.parse(self.git._pr_base(path, base_branch, str(head)))
+        found = self.git._pr_base(path, base_branch, str(head))
+        base = None if found is None else Sha.parse(found[0])
         if base is None:
             return None
         files = self.git._diff_files(path, str(base), str(head))
@@ -223,11 +225,15 @@ class BoundCheckout:
         path = self._path()
         if path is None:
             return None
-        fork = Sha.parse(self.git._pr_base(path, base_branch, str(head)))
-        if fork is None:
+        found = self.git._pr_base(path, base_branch, str(head))
+        if found is None:
             return None
-        commits = self.git._commits_between(path, str(fork), str(head))
-        return None if commits is None else PrCommits(fork, commits)
+        fork, tip = found
+        commits = self.git._commits_between(path, fork, str(head))
+        base_commits = self.git._commits_between(path, fork, tip)
+        if commits is None or base_commits is None:
+            return None
+        return PrCommits(Sha(fork), commits, Sha(tip), base_commits)
 
     def has_commit(self, sha: Sha) -> bool:
         path = self._path()

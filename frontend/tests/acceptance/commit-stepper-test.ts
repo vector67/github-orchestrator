@@ -46,6 +46,8 @@ module('Acceptance | commit stepper', function (hooks) {
     };
     board().commits = {
       fork: FORK,
+      base_tip: FORK,
+      base_commits: [],
       commits: [
         prCommit(FIRST, FORK, 'Add the widget'),
         prCommit(SECOND, FIRST, 'Name the widget'),
@@ -183,7 +185,7 @@ module('Acceptance | commit stepper', function (hooks) {
   });
 
   test('a pull request with no commits of its own shows its whole diff and no bar', async function (assert) {
-    board().commits = { fork: FORK, commits: [] };
+    board().commits = { ...board().commits, commits: [] };
 
     await visit('/pr/o/r/7/diff');
 

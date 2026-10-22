@@ -547,7 +547,8 @@ class FakeWorkingCopies:
                           for path in _changed_paths(old, new))
         return parse_diff(printed)
 
-    def _pr_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
+    def _pr_base(self, worktree: str, base_branch: str | None,
+                 head: str) -> tuple[str, str] | None:
         if base_branch and not is_branch_name(base_branch):
             base_branch = None
         refs = (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
@@ -556,7 +557,8 @@ class FakeWorkingCopies:
         if found is None or head_sha is None:
             return None
         reachable = set(self._ancestors(found))
-        return next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
+        fork = next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
+        return None if fork is None else (fork, found)
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None:
