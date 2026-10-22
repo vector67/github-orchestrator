@@ -454,6 +454,7 @@ def _this_repository() -> tuple[Path, ...]:
 
 
 _THIS_REPOSITORY = _this_repository()
+_INSIDE_THIS_REPOSITORY = tuple(f"{root}{os.sep}" for root in _THIS_REPOSITORY)
 _NEEDS_NO_REPOSITORY = ("init", "clone", "version")
 
 
@@ -477,10 +478,10 @@ def _git_directories(cmd: object, cwd: object) -> list[Path]:
     return [here, *named]
 
 
-def _reaches_this_repository(cmd: object, cwd: object) -> Path | None:
+def _reaches_this_repository(cmd: object, cwd: object) -> str | None:
     for directory in _git_directories(cmd, cwd):
-        resolved = directory.resolve()
-        if any(resolved.is_relative_to(root) for root in _THIS_REPOSITORY):
+        resolved = os.path.realpath(directory)
+        if f"{resolved}{os.sep}".startswith(_INSIDE_THIS_REPOSITORY):
             return resolved
     return None
 
