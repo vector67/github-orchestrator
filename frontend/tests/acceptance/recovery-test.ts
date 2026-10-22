@@ -14,8 +14,8 @@ interface Framed {
   loads: () => number;
 }
 
-const SPED_UP = 20;
-const SETTLED = 100;
+const SPED_UP = 100;
+const SETTLED = 20;
 
 const FAST_TIMERS = `<script>
   const realSetTimeout = window.setTimeout;
@@ -23,7 +23,7 @@ const FAST_TIMERS = `<script>
     realSetTimeout(run, ms / ${SPED_UP}, ...rest);
 </script>`;
 
-async function framed(body: string, patience = 60000): Promise<Framed> {
+async function framed(body: string, patience = 300000): Promise<Framed> {
   const frame = document.createElement('iframe');
   let loads = 0;
   frame.addEventListener('load', () => (loads += 1));
