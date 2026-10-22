@@ -62,8 +62,9 @@ class ErrorCode(StrEnum):
     worktree is frozen on another branch, or the command could not start.
 
     MANAGER_REFUSED is a command for the PR manager that its last status
-    already rules out: the worktree is frozen on another branch, agents are
-    disabled, or an agent is already running. The detail says which.
+    already rules out: the manager is down, the worktree is frozen on another
+    branch, agents are disabled, or an agent is already running. The detail
+    says which.
 
     NO_GH_TOKEN is gh holding no token for the login the setup screen asked
     about; the detail says to run `gh auth login`.

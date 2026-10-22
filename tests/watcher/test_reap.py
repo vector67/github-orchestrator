@@ -16,8 +16,10 @@ from tests.conversation.support import (
     said,
 )
 from tests.disk_layout import (
+    command_file,
     dismissed_file,
     on_hold_file,
+    status_file,
     thread_dir,
 )
 from tests.pr_event_queue.support import closed, disk_event_queue
@@ -119,8 +121,11 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
     _closing(settings)
     _window(world)
     _torn_down(settings)
-    for flag in (on_hold_file(settings.on_hold_dir, THE_PR),
-                 dismissed_file(settings.dismissed_dir, THE_PR)):
+    left_over = (on_hold_file(settings.on_hold_dir, THE_PR),
+                 dismissed_file(settings.dismissed_dir, THE_PR),
+                 status_file(settings.data_dir, THE_PR),
+                 command_file(settings.data_dir, THE_PR, "00000000000000000001-1"))
+    for flag in left_over:
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.write_text("")
 
@@ -131,8 +136,8 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert copies.branch_at(worktree) is None
     assert not _tracked(settings)
-    assert not on_hold_file(settings.on_hold_dir, THE_PR).exists()
-    assert not dismissed_file(settings.dismissed_dir, THE_PR).exists()
+    assert [flag for flag in left_over if flag.exists()] == []
+    assert not command_file(settings.data_dir, THE_PR, "any").parent.exists()
 
 
 def test_a_closing_pr_without_a_window_is_reaped(settings, capsys):

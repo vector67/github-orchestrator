@@ -150,7 +150,10 @@ reports the outcome in `notice`. This replaces `_crossing`.
 
 The server refuses what the status file already rules out, using the same rules
 as `_refusal` and `_agent_refusal`. The manager checks again when it drains,
-because the file can be a tick old.
+because the file can be a tick old. While the manager is not answering (no
+status file, or one older than `status_stale_seconds`) the server refuses every
+command instead of queueing it, and a stale file's frozen and running fields
+refuse nothing. Reaping a pull request deletes its commands and its status file.
 
 `run_git` takes a flock on `<worktree>.git-palette.lock` instead of
 `_git_lock`. Its frozen check, and `open_terminal`'s, read the status file.

@@ -23,11 +23,15 @@ class Teardown(Protocol):
     def reap(self, pr: Pr, reason: Reason) -> bool: ...
 
 
+class ManagerLeftovers(Protocol):
+    def forget(self, pr: Pr) -> bool: ...
+
+
 class PrTeardown:
     def __init__(self, config: WatcherConfig, *, worklist: Worklist, pr_processes: PrProcesses,
                  working_copies: WorkingCopies, thread_records: ThreadRecords,
                  change_detection: ChangeDetection, holds: Holds,
-                 dismissals: Dismissals) -> None:
+                 dismissals: Dismissals, manager_leftovers: ManagerLeftovers) -> None:
         self._repos = config.repos
         self._worklist = worklist
         self._pr_processes = pr_processes
@@ -36,6 +40,7 @@ class PrTeardown:
         self._change_detection = change_detection
         self._holds = holds
         self._dismissals = dismissals
+        self._manager_leftovers = manager_leftovers
 
     def reap(self, pr: Pr, reason: Reason) -> bool:
         if self._manager_still_running(pr, reason):
@@ -51,7 +56,7 @@ class PrTeardown:
             ok = False
         if not self._worklist.forget(pr):
             ok = False
-        forgotten = [self._holds.forget(pr)]
+        forgotten = [self._holds.forget(pr), self._manager_leftovers.forget(pr)]
         if reason is Reason.CLOSED:
             forgotten.append(self._dismissals.forget(pr))
         if not all(forgotten):
