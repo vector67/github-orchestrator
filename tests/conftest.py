@@ -83,6 +83,22 @@ os.environ["GIT_CONFIG_VALUE_0"] = "false"
 os.environ["GIT_AUTHOR_DATE"] = os.environ["GIT_COMMITTER_DATE"] = "2026-01-01T00:00:00Z"
 os.environ["LANGUAGE"] = "C"
 
+
+def _local_zone_as_a_rule(zone_file: Path) -> str | None:
+    if "TZ" in os.environ or not zone_file.exists():
+        return None
+    held = zone_file.read_bytes()
+    if held[4:5] in (b"", b"\0") or not held.endswith(b"\n"):
+        return None
+    rule = held.split(b"\n")[-2].decode("ascii", errors="replace")
+    return rule or None
+
+
+_LOCAL_ZONE = _local_zone_as_a_rule(Path("/etc/localtime"))
+if _LOCAL_ZONE is not None:
+    os.environ["TZ"] = _LOCAL_ZONE
+    time.tzset()
+
 UVICORN_POLL_SECONDS = 0.01
 
 
