@@ -1,4 +1,5 @@
 import argparse
+import functools
 
 from github_orchestrator.cli._threads import add_thread_parsers, parse_repo
 
@@ -182,3 +183,8 @@ class Commands:
             for title, names in groups
         ]
         return "\n\n".join([_ABOUT, *sections])
+
+
+@functools.cache
+def commands_of(version: str | None) -> Commands:
+    return Commands(version)
