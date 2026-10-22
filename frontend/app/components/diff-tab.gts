@@ -245,6 +245,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
             @go={{this.pullRequestDiff.go}}
             @tick={{this.pullRequestDiff.tick}}
             @note={{this.pullRequestDiff.note}}
+            @base={{this.pullRequestDiff.baseName}}
             @dismissNote={{this.pullRequestDiff.dismissNote}}
             @picked={{this.pullRequestDiff.picked}}
             @pickedFiles={{this.pullRequestDiff.pickedFiles}}

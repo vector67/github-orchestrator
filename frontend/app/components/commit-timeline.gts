@@ -114,6 +114,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{#if @timeline.header.fork}}<code
               class="timeline-fork"
             >{{@timeline.header.fork}}</code>{{/if}}{{#if
+            @timeline.header.was
+          }}, was
+            <code
+              class="timeline-fork"
+              data-test-was-fork
+            >{{@timeline.header.was}}</code>{{/if}}{{#if
             @timeline.header.behind
           }}
             <span
@@ -171,7 +177,8 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               class="timeline-lane"
               data-lane={{lane.lane}}
               data-dashed={{if lane.dashed "true"}}
-              data-test-unpushed-lane={{if lane.dashed "true"}}
+              data-test-unpushed-lane={{if lane.unpushed "true"}}
+              data-test-ghost-lane={{if (eq lane.lane "ghost") "true"}}
               x1={{lane.from}}
               y1={{lane.y}}
               x2={{lane.to}}
@@ -186,6 +193,14 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-kind="merge"
                 d={{curve.path}}
                 data-test-merge-curve
+              />
+            {{else if (eq curve.kind "ghost")}}
+              <path
+                class="timeline-lane"
+                data-lane={{curve.lane}}
+                data-kind="ghost"
+                d={{curve.path}}
+                data-test-ghost-curve
               />
             {{else}}
               <path
@@ -237,7 +252,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 class="timeline-dot"
                 cx={{dot.x}}
                 cy={{dot.y}}
-                r={{if dot.pickable "6" "4"}}
+                r={{dot.radius}}
                 data-x={{dot.x}}
                 data-y={{dot.y}}
                 data-shape={{dot.shape}}
@@ -273,6 +288,16 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 text-anchor="middle"
                 data-test-sha
               >{{dot.short}}</text>
+            {{/if}}
+            {{#if dot.matched}}
+              <text
+                class="timeline-note"
+                x={{dot.x}}
+                y={{dot.matchedY}}
+                text-anchor="middle"
+                data-at={{dot.sha}}
+                data-test-matched
+              >≈ read</text>
             {{/if}}
             {{#if dot.date}}
               <text
@@ -367,6 +392,9 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           </ol>
         {{/if}}
       {{/if}}
+      {{#if @timeline.ghosts}}
+        <p class="timeline-ghosts" data-test-ghost-shas>{{@timeline.ghosts}}</p>
+      {{/if}}
       <p class="timeline-key" data-test-timeline-key>
         <span class="timeline-key-item"><i data-style="unread"></i>
           unread</span>
@@ -378,6 +406,10 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         {{#if (eq @timeline.header.main @timeline.header.base)}}{{else}}
           <span class="timeline-key-item"><i data-style="stack"></i>
             {{@timeline.header.base}}</span>
+        {{/if}}
+        {{#if @timeline.ghosts}}
+          <span class="timeline-key-item"><i data-style="ghost"></i>
+            what your review saw</span>
         {{/if}}
         <span class="timeline-key-item"><i data-style="band"></i>
           in the diff</span>

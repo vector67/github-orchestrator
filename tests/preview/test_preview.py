@@ -243,3 +243,17 @@ def test_each_preview_shape_builds_the_branch_it_is_named_for(tmp_path, shape, h
     repo = preview.build_repo(preview.worktree_in(tmp_path), shape=shape)
 
     assert holds(repo)
+
+
+def test_the_rebased_preview_rewrites_the_pushed_branch_onto_main_and_adds_a_commit(tmp_path):
+    repo = preview.build_repo(preview.worktree_in(tmp_path), shape="rebased")
+    before = preview._git(repo.worktree, "log", "--format=%s", "main..HEAD").split("\n")
+
+    preview.rebase_onto_main(preview.worktree_in(tmp_path))
+
+    origin = f"origin/{preview.PR_BRANCH}"
+    after = preview._git(repo.worktree, "log", "--format=%s", f"main..{origin}").split("\n")
+    assert _count(repo, f"{origin}..{repo.head}") == len([one for one in before if one])
+    assert _count(repo, f"{origin}..main") == 0
+    assert after[1:] == before
+    assert after[0] == "Note the rework in the changelog"

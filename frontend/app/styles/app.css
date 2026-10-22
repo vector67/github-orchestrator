@@ -4823,6 +4823,11 @@ button.tree-row[aria-current="true"] {
   stroke-width: 1;
 }
 
+.timeline-lane[data-lane="ghost"] {
+  stroke: var(--muted);
+  stroke-dasharray: 4 3;
+}
+
 .timeline-since {
   fill: none;
   stroke: var(--muted);
@@ -4869,6 +4874,13 @@ button.tree-row[aria-current="true"] {
   stroke: none;
 }
 
+.timeline-dot[data-style="ghost"] {
+  cursor: default;
+  fill: var(--page);
+  stroke: var(--muted);
+  stroke-dasharray: 2 2;
+}
+
 .timeline-current {
   fill: var(--yellow);
   stroke: var(--text);
@@ -4898,6 +4910,13 @@ button.tree-row[aria-current="true"] {
 
 .timeline-label[data-kind="origin"],
 .timeline-label[data-kind="local"] {
+  font-weight: normal;
+  fill: var(--muted);
+}
+
+.timeline-label[data-kind="fork"],
+.timeline-label[data-kind="old-fork"] {
+  font-size: 10px;
   font-weight: normal;
   fill: var(--muted);
 }
@@ -5007,6 +5026,18 @@ button.tree-row[aria-current="true"] {
 .timeline-key-item i[data-style="stack"] {
   background: var(--blue-fill);
   border-color: var(--blue);
+}
+
+.timeline-key-item i[data-style="ghost"] {
+  background: var(--page);
+  border: 2px dashed var(--muted);
+}
+
+.timeline-ghosts {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .timeline-key-item i[data-style="band"] {

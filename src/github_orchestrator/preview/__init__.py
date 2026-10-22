@@ -1,10 +1,13 @@
 import argparse
 import dataclasses
+import json
 import os
 import socket
 import subprocess
 import tempfile
+import threading
 import time
+import urllib.request
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -324,7 +327,7 @@ def _move_main_on(root: Path) -> None:
 
 STACK_BRANCH = "split-out-the-header-writer"
 
-SHAPES = ("merge", "stacked", "far-behind", "long", "local")
+SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased")
 
 
 def _note(root: Path, line: str, subject: str, *, when: str | None = None) -> None:
@@ -358,6 +361,12 @@ def _stack_on_a_base(root: Path) -> None:
     _note(root, "- the header writer\n", "Split out the header writer")
     _note(root, "- its tests\n", "Test the header writer")
     _git(root, "checkout", "-q", "-B", PR_BRANCH, STACK_BRANCH)
+
+
+def rebase_onto_main(root: Path) -> None:
+    _git(root, "rebase", "-q", BASE_BRANCH)
+    _note(root, "- the rework\n", "Note the rework in the changelog")
+    _git(root, "push", "-q", "-f", "origin", PR_BRANCH)
 
 
 def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> Repo:
@@ -708,7 +717,8 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
               "2026-09-12T11:45:00Z"),)))
 
 
-def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool) -> None:
+def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
+                   reviewed_on: str | None) -> None:
     head = _git(repo.worktree, "rev-parse", "HEAD").strip()
     first = _git(repo.worktree, "rev-list", "--reverse", f"{repo.base_branch}..HEAD").split()[0]
     state = PullRequestState(title=PR_TITLE, url=f"https://github.com/{PR.repo}/pull/{PR.number}",
@@ -719,16 +729,16 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool) ->
                                    "side is yours." if reviewer else ""),
                              pending_reviewers=(viewer,) if reviewer else (),
                              reviews=(Review(viewer, ReviewState.COMMENTED,
-                                             "2026-09-11T10:00:00Z", first),)
-                             if reviewer else ())
+                                             "2026-09-11T10:00:00Z", reviewed_on or first),)
+                             if reviewer or reviewed_on else ())
     outside.github.prs[PR].state = state
     outside.change_detection.advance(PR, Poll(state=state, polled_at=MOMENT), set())
 
 
 def seed(conversation_managers: ConversationManagerFactory, outside: Outside, viewer: str, repo: Repo,
-         reviewer: bool = False) -> None:
+         reviewer: bool = False, reviewed_on: str | None = None) -> None:
     outside.github.add_pr(PR)
-    _record_the_pr(outside, repo, viewer, reviewer)
+    _record_the_pr(outside, repo, viewer, reviewer, reviewed_on)
     outside.pr_processes.open(PR, Path(repo.worktree))
     outside.agent_runs.ran(PR, "ci-failed", 48.0, LAST_RUN_ENDED)
     seeding = _Seeding(conversation_managers, outside, repo)
@@ -736,7 +746,7 @@ def seed(conversation_managers: ConversationManagerFactory, outside: Outside, vi
         _reviewer_board(seeding, viewer)
     else:
         _author_board(seeding)
-    _record_the_pr(outside, repo, viewer, reviewer)
+    _record_the_pr(outside, repo, viewer, reviewer, reviewed_on)
 
 
 def worktree_in(directory: Path) -> Path:
@@ -765,9 +775,24 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
           conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
           panels: PreviewPanels, sessions: TerminalSessions, shape: str | None = None) -> None:
     repo = build_repo(worktree_in(directory), reviewer, shape)
-    seed(conversation_managers, outside, viewer, repo, reviewer)
+    seed(conversation_managers, outside, viewer, repo, reviewer,
+         repo.head if shape == "rebased" else None)
     panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
+
+
+def _rebase_once_seen(port: int, root: Path) -> None:
+    api = f"{page_of(port)}api/pull-request"
+    with urllib.request.urlopen(f"{api}/commits") as answer:
+        seen = json.load(answer)["commits"]
+    for commit in seen:
+        marking = urllib.request.Request(
+            f"{api}/read-marks/operations:mark-read", data=json.dumps({"sha": commit["sha"]}).encode(),
+            headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(marking):
+            pass
+    rebase_onto_main(root)
+    print(page_of(port), flush=True)
 
 
 def running(dashboard: Dashboard) -> Dashboard:
@@ -822,7 +847,11 @@ def main(argv: list[str] | None = None) -> int:
     listening.bind(("127.0.0.1", args.port))
     listening.listen()
     port = int(listening.getsockname()[1])
-    print(page_of(port), flush=True)
+    if args.shape == "rebased":
+        threading.Thread(target=_rebase_once_seen, args=(port, worktree_in(directory)),
+                         daemon=True).start()
+    else:
+        print(page_of(port), flush=True)
     app = serving.get(ServerApp).app(port, os.getpid())
     uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, lifespan="off",
                                   timeout_graceful_shutdown=1)).run(sockets=[listening])

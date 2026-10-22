@@ -11,6 +11,9 @@ const SHORT = 7;
 const BASE_LANE = 'base';
 const STACK_LANE = 'stack';
 const PR_LANE = 'pr';
+const GHOST_LANE = 'ghost';
+const MATCHED_RISE = 14;
+const OLD_FORK_SPAN = 2;
 const BAND_REACH = 12;
 const SHA_DROP = 20;
 const DAY_DROP = 36;
@@ -47,7 +50,7 @@ export interface Preset {
   picks: Picked | null;
 }
 
-export type DotStyle = 'base' | 'stack' | 'read' | 'unread';
+export type DotStyle = 'base' | 'stack' | 'read' | 'unread' | 'ghost';
 
 export type DotShape = 'dot' | 'diamond' | 'tick';
 
@@ -69,6 +72,9 @@ export interface TimelineDot {
   dateAnchor: 'start' | 'middle';
   pickable: boolean;
   inRange: boolean;
+  radius: number;
+  matched: boolean;
+  matchedY: number;
 }
 
 export interface TimelineDay {
@@ -96,7 +102,7 @@ export interface CollapsedRun {
 }
 
 export interface TimelineLabel {
-  kind: 'main' | 'stack' | 'head' | 'origin' | 'local';
+  kind: 'main' | 'stack' | 'head' | 'origin' | 'local' | 'fork' | 'old-fork';
   text: string;
   opens: string | null;
   at: string;
@@ -110,6 +116,7 @@ export interface TimelineLane {
   from: number;
   to: number;
   dashed: boolean;
+  unpushed: boolean;
 }
 
 export interface TimelineBand {
@@ -145,12 +152,13 @@ export interface TimelineHeader {
   base: string;
   relation: string;
   fork: string;
+  was: string | null;
   tip: string | null;
   main: string;
   behind: number;
 }
 
-export type CurveKind = 'fork' | 'merge';
+export type CurveKind = 'fork' | 'merge' | 'ghost';
 
 export interface Timeline {
   width: number;
@@ -165,6 +173,7 @@ export interface Timeline {
   since: SinceFork | null;
   collapsed: CollapsedRun | null;
   days: TimelineDay[];
+  ghosts: string | null;
   header: TimelineHeader;
   presets: Preset[];
   order: string[];
@@ -174,6 +183,8 @@ export interface Timeline {
 export interface TimelineInput {
   history: PullRequestCommits;
   read: Set<string>;
+  matched: Set<string>;
+  fresh: string[];
   branch: string | null;
   base: string | null;
   reviewedSha: string | null;
@@ -209,8 +220,12 @@ function presetsOf(
 ): Preset[] {
   const all = { from: order[0]!, to: order.at(-1)! };
   const reviewedAt = order.indexOf(input.reviewedSha ?? '');
-  const sinceReview =
-    reviewedAt >= 0 && reviewedAt < order.length - 1
+  const firstFresh = input.fresh[0];
+  const sinceReview = input.history.reviewed
+    ? firstFresh
+      ? { from: firstFresh, to: all.to }
+      : null
+    : reviewedAt >= 0 && reviewedAt < order.length - 1
       ? { from: order[reviewedAt + 1]!, to: all.to }
       : null;
   const { current, hidden } = input;
@@ -314,9 +329,28 @@ function collapsedOf(
   };
 }
 
+function ghostsOf(history: PullRequestCommits): PullRequestCommit[] {
+  const present = new Set(history.commits.map((one) => one.sha));
+  return (history.reviewed?.commits ?? []).filter(
+    (one) => !present.has(one.sha),
+  );
+}
+
+function oldForkOf(history: PullRequestCommits): GraphNode[] {
+  const fork = history.reviewed?.fork;
+  if (!fork || !ghostsOf(history).length) return [];
+  const known = [
+    ...outsideOf(history),
+    ...history.base_commits.map((one) => one.sha),
+  ];
+  if (known.includes(fork)) return [];
+  return [{ id: fork, lane: BASE_LANE, parents: [], span: OLD_FORK_SPAN }];
+}
+
 function nodesOf(history: PullRequestCommits): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
+    ...oldForkOf(history),
     ...outsideOf(history).map((id) => ({
       id,
       lane: BASE_LANE,
@@ -331,6 +365,11 @@ function nodesOf(history: PullRequestCommits): GraphNode[] {
     ...history.commits.map((one) => ({
       id: one.sha,
       lane: PR_LANE,
+      parents: one.parents,
+    })),
+    ...ghostsOf(history).map((one) => ({
+      id: one.sha,
+      lane: GHOST_LANE,
       parents: one.parents,
     })),
   ];
@@ -355,8 +394,15 @@ function flagOf(
   column: number,
 ): TimelineFlag | null {
   const reviewed = placed.get(input.reviewedSha ?? '');
-  if (!reviewed || !input.reviewedAt || reviewed.lane !== PR_LANE) return null;
-  const next = placed.get(order[order.indexOf(reviewed.id) + 1] ?? '');
+  if (!reviewed || !input.reviewedAt) return null;
+  const sequence =
+    reviewed.lane === PR_LANE
+      ? order
+      : reviewed.lane === GHOST_LANE
+        ? ghostsOf(input.history).map((one) => one.sha)
+        : [];
+  if (!sequence.length) return null;
+  const next = placed.get(sequence[sequence.indexOf(reviewed.id) + 1] ?? '');
   const x = next ? (reviewed.x + next.x) / 2 : reviewed.x + column / 2;
   return {
     x,
@@ -418,6 +464,7 @@ function diamondAt(x: number, y: number): string {
 function styleOf(node: Placed, read: Set<string>): DotStyle {
   if (node.lane === BASE_LANE) return 'base';
   if (node.lane === STACK_LANE) return 'stack';
+  if (node.lane === GHOST_LANE) return 'ghost';
   return read.has(node.id) ? 'read' : 'unread';
 }
 
@@ -440,7 +487,10 @@ function relationOf(
     const named = input.basePr ? `#${input.basePr} ${base}` : base;
     return `base is ${named}, which is based on ${stack.branch}`;
   }
-  return merges ? `last synced with ${base} at` : `forked from ${base} at`;
+  if (merges) return `last synced with ${base} at`;
+  return input.history.reviewed
+    ? `now forked from ${base} at`
+    : `forked from ${base} at`;
 }
 
 export function timelineBuilt(input: TimelineInput): Timeline | null {
@@ -450,8 +500,15 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const stack = history.stack;
   const long = order.length > LONG;
   const spacing = long ? TICKS : SPACING;
+  const ghosts = ghostsOf(history);
+  const oldFork = oldForkOf(history)[0];
   const graph = layout(
-    stack ? [BASE_LANE, STACK_LANE, PR_LANE] : [BASE_LANE, PR_LANE],
+    [
+      BASE_LANE,
+      ...(stack ? [STACK_LANE] : []),
+      PR_LANE,
+      ...(ghosts.length ? [GHOST_LANE] : []),
+    ],
     nodesOf(history),
     spacing,
   );
@@ -468,6 +525,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       ...(stack?.commits ?? []),
       ...history.base_commits,
       ...history.commits,
+      ...ghosts,
     ].map((one) => [one.sha, one.subject]),
   );
   const merges = new Set(
@@ -521,6 +579,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       pushed: node.lane === PR_LANE ? !input.unpushed.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
+      radius: at >= 0 || node.lane === GHOST_LANE ? 6 : 4,
+      matched: input.matched.has(node.id),
+      matchedY: node.y - MATCHED_RISE,
     };
   });
   const lastPushed = graph.nodes.get(
@@ -552,13 +613,14 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     width: graph.width,
     height: graph.height,
     lanes: graph.lanes.flatMap((one) => {
-      if (one.lane === BASE_LANE) return [{ ...one, from: 0, dashed: false }];
-      if (one.lane !== PR_LANE || !firstUnpushed)
-        return [{ ...one, dashed: false }];
+      const plain = { ...one, dashed: false, unpushed: false };
+      if (one.lane === BASE_LANE) return [{ ...plain, from: 0 }];
+      if (one.lane === GHOST_LANE) return [{ ...plain, dashed: true }];
+      if (one.lane !== PR_LANE || !firstUnpushed) return [plain];
       const split = lastPushed?.x ?? one.from;
       return [
-        ...(lastPushed ? [{ ...one, to: split, dashed: false }] : []),
-        { ...one, from: split, dashed: true },
+        ...(lastPushed ? [{ ...plain, to: split }] : []),
+        { ...plain, from: split, dashed: true, unpushed: true },
       ];
     }),
     curves: graph.edges
@@ -566,7 +628,12 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       .map((one) => ({
         path: one.path,
         lane: one.lane,
-        kind: one.parent > 0 ? ('merge' as const) : ('fork' as const),
+        kind:
+          one.lane === GHOST_LANE
+            ? ('ghost' as const)
+            : one.parent > 0
+              ? ('merge' as const)
+              : ('fork' as const),
       })),
     dots,
     labels: [
@@ -593,6 +660,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
             label('local', 'local', head),
           ]
         : [label('head', 'head', head)]),
+      ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
     ],
     current: ringed ? { sha: ringed.id, x: ringed.x, y: ringed.y } : null,
     band: bandOf(
@@ -603,6 +671,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     since: sinceOf(history, graph.nodes, base),
     collapsed: collapsedOf(history, graph.nodes, spacing),
     days: long ? daysOf(history, graph.nodes) : [],
+    ghosts: ghosts.length
+      ? `your review saw ${ghosts.map((one) => one.sha.slice(0, SHORT)).join(' ')}, rewritten since`
+      : null,
     header: {
       count: merges.size
         ? `${plural(order.length - merges.size, 'commit')} and ${plural(merges.size, 'merge')}`
@@ -611,6 +682,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       base,
       relation: relationOf(input, base, merges.size),
       fork: stack ? '' : history.fork.slice(0, SHORT),
+      was: oldFork && !stack ? oldFork.id.slice(0, SHORT) : null,
       tip: stack || history.behind ? null : `${base}'s tip`,
       main: stack?.branch ?? base,
       behind: history.behind,
@@ -619,6 +691,32 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     order,
     showing,
   };
+}
+
+function forkLabelsOf(
+  placed: Map<string, Placed>,
+  oldFork: string | undefined,
+  fork: string,
+): TimelineLabel[] {
+  const was = placed.get(oldFork ?? '');
+  const now = placed.get(fork);
+  if (!was || !now) return [];
+  const above = (
+    kind: TimelineLabel['kind'],
+    text: string,
+    at: Placed,
+  ): TimelineLabel => ({
+    kind,
+    text,
+    opens: null,
+    at: at.id,
+    x: at.x,
+    y: at.y - FLAG_RISE,
+  });
+  return [
+    above('old-fork', 'was forked', was),
+    above('fork', 'now forked', now),
+  ];
 }
 
 export function ordered(order: string[], one: string, other: string): Picked {

@@ -14,6 +14,7 @@ export interface CommitBarSignature {
     go: (sha: string) => void;
     tick: (marked: boolean) => void;
     note: CommitNote | null;
+    base: string;
     dismissNote: () => void;
     picked: PickedRange | null;
     pickedFiles: number | null;
@@ -38,6 +39,11 @@ export default class CommitBar extends Component<CommitBarSignature> {
   get pushed(): string {
     const count = this.args.note?.count ?? 0;
     return `${count} ${count === 1 ? 'commit' : 'commits'}`;
+  }
+
+  get fresh(): string {
+    const count = this.args.note?.count ?? 0;
+    return `${count} ${count === 1 ? 'is' : 'are'} new`;
   }
 
   get rangeCommits(): string {
@@ -173,10 +179,21 @@ export default class CommitBar extends Component<CommitBarSignature> {
       </div>
       {{#if @note}}
         <p class="commit-note" data-test-commit-note>
-          <span>Picked up at the first new commit:
-            <b>{{this.pushed}}</b>
-            pushed since your review on
-            {{@note.reviewedOn}}.</span>
+          {{#if @note.rebased}}
+            <span><b>Rebased since your review</b>
+              (force-pushed
+              {{@note.rebased.pushedOn}}).
+              {{@note.rebased.matched}}
+              of your read commits were rewritten onto newer
+              {{@base}}
+              and matched by message;
+              <b>{{this.fresh}}</b>.</span>
+          {{else}}
+            <span>Picked up at the first new commit:
+              <b>{{this.pushed}}</b>
+              pushed since your review on
+              {{@note.reviewedOn}}.</span>
+          {{/if}}
           <button
             type="button"
             class="commit-note-close"

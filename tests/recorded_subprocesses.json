@@ -25918,6 +25918,704 @@
     }
    ]
   },
+  "tests/preview/test_preview.py::test_the_rebased_preview_rewrites_the_pushed_branch_onto_main_and_adds_a_commit": {
+   "[[\"git\", \"-C\", \"<TMP>\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"--bare\", \"<TMP>/worktree-origin.git\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "init",
+      "-q",
+      "--bare",
+      "<TMP>/worktree-origin.git"
+     ],
+     "fs": {
+      "worktree-origin.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"add\", \"-A\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "-A"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"add\", \"CHANGELOG.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "CHANGELOG.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "CHANGELOG.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "CHANGELOG.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"checkout\", \"-q\", \"-b\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "checkout",
+      "-q",
+      "-b",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/rework-the-invoice-writer\n"
+      },
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "6e42603ea1113313b39306be1a7aeef5f572d333\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"checkout\", \"-q\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "worktree/adapters/store.py": {
+       "text": "\"\"\"adapters/store.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/billing/api.py": {
+       "text": "\"\"\"billing/api.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\n"
+      },
+      "worktree/billing/cache.py": {
+       "text": "\"\"\"billing/cache.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/errors.py": {
+       "text": "\"\"\"billing/errors.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n"
+      },
+      "worktree/billing/guard.py": {
+       "text": "\"\"\"billing/guard.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/header.py": {
+       "text": "\"\"\"billing/header.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n"
+      },
+      "worktree/billing/invoice_writer.py": {
+       "text": "\"\"\"billing/invoice_writer.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return [item for item in line_items if item.id != 60]\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n\ndef step_069(line_items):\n    return [item for item in line_items if item.id != 69]\n\ndef step_072(line_items):\n    return [item for item in line_items if item.id != 72]\n\ndef step_075(line_items):\n    return [item for item in line_items if item.id != 75]\n\ndef step_078(line_items):\n    return [item for item in line_items if item.id != 78]\n\ndef step_081(line_items):\n    return [item for item in line_items if item.id != 81]\n\ndef step_084(line_items):\n    return [item for item in line_items if item.id != 84]\n\ndef step_087(line_items):\n    return [item for item in line_items if item.id != 87]\n\ndef step_090(line_items):\n    return [item for item in line_items if item.id != 90]\n\ndef step_093(line_items):\n    return [item for item in line_items if item.id != 93]\n\ndef step_096(line_items):\n    return [item for item in line_items if item.id != 96]\n\ndef step_099(line_items):\n    return [item for item in line_items if item.id != 99]\n\ndef step_102(line_items):\n    return [item for item in line_items if item.id != 102]\n\ndef step_105(line_items):\n    return [item for item in line_items if item.id != 105]\n\ndef step_108(line_items):\n    return [item for item in line_items if item.id != 108]\n\ndef step_111(line_items):\n    return [item for item in line_items if item.id != 111]\n\ndef step_114(line_items):\n    return [item for item in line_items if item.id != 114]\n\ndef step_117(line_items):\n    return [item for item in line_items if item.id != 117]\n\ndef step_120(line_items):\n    return [item for item in line_items if item.id != 120]\n\ndef step_123(line_items):\n    return [item for item in line_items if item.id != 123]\n\ndef step_126(line_items):\n    return [item for item in line_items if item.id != 126]\n\ndef step_129(line_items):\n    return [item for item in line_items if item.id != 129]\n\ndef step_132(line_items):\n    return [item for item in line_items if item.id != 132]\n\ndef step_135(line_items):\n    return [item for item in line_items if item.id != 135]\n\ndef step_138(line_items):\n    return [item for item in line_items if item.id != 138]\n\ndef step_141(line_items):\n    return [item for item in line_items if item.id != 141]\n\ndef step_144(line_items):\n    return [item for item in line_items if item.id != 144]\n\ndef step_147(line_items):\n    return [item for item in line_items if item.id != 147]\n\ndef step_150(line_items):\n    return [item for item in line_items if item.id != 150]\n\ndef step_153(line_items):\n    return [item for item in line_items if item.id != 153]\n\ndef step_156(line_items):\n    return [item for item in line_items if item.id != 156]\n\ndef step_159(line_items):\n    return [item for item in line_items if item.id != 159]\n\ndef step_162(line_items):\n    return [item for item in line_items if item.id != 162]\n\ndef step_165(line_items):\n    return [item for item in line_items if item.id != 165]\n\ndef step_168(line_items):\n    return [item for item in line_items if item.id != 168]\n\ndef step_171(line_items):\n    return [item for item in line_items if item.id != 171]\n\ndef step_174(line_items):\n    return [item for item in line_items if item.id != 174]\n\ndef step_177(line_items):\n    return [item for item in line_items if item.id != 177]\n\ndef step_180(line_items):\n    return [item for item in line_items if item.id != 180]\n\ndef step_183(line_items):\n    return [item for item in line_items if item.id != 183]\n\ndef step_186(line_items):\n    return [item for item in line_items if item.id != 186]\n\ndef step_189(line_items):\n    return [item for item in line_items if item.id != 189]\n\ndef step_192(line_items):\n    return [item for item in line_items if item.id != 192]\n\ndef step_195(line_items):\n    return [item for item in line_items if item.id != 195]\n\ndef step_198(line_items):\n    return [item for item in line_items if item.id != 198]\n\ndef step_201(line_items):\n    return [item for item in line_items if item.id != 201]\n\ndef step_204(line_items):\n    return [item for item in line_items if item.id != 204]\n\ndef step_207(line_items):\n    return [item for item in line_items if item.id != 207]\n\ndef step_210(line_items):\n    return [item for item in line_items if item.id != 210]\n\ndef step_213(line_items):\n    return [item for item in line_items if item.id != 213]\n\ndef step_216(line_items):\n    return [item for item in line_items if item.id != 216]\n\ndef step_219(line_items):\n    return [item for item in line_items if item.id != 219]\n\ndef step_222(line_items):\n    return [item for item in line_items if item.id != 222]\n\ndef step_225(line_items):\n    return [item for item in line_items if item.id != 225]\n\ndef step_228(line_items):\n    return [item for item in line_items if item.id != 228]\n\ndef step_231(line_items):\n    return [item for item in line_items if item.id != 231]\n\ndef step_234(line_items):\n    return [item for item in line_items if item.id != 234]\n\ndef step_237(line_items):\n    return [item for item in line_items if item.id != 237]\n\ndef step_240(line_items):\n    return [item for item in line_items if item.id != 240]\n\ndef step_243(line_items):\n    return [item for item in line_items if item.id != 243]\n\ndef step_246(line_items):\n    return [item for item in line_items if item.id != 246]\n\ndef step_249(line_items):\n    return [item for item in line_items if item.id != 249]\n\ndef step_252(line_items):\n    return [item for item in line_items if item.id != 252]\n\ndef step_255(line_items):\n    return [item for item in line_items if item.id != 255]\n\ndef step_258(line_items):\n    return [item for item in line_items if item.id != 258]\n\ndef step_261(line_items):\n    return [item for item in line_items if item.id != 261]\n\ndef step_264(line_items):\n    return [item for item in line_items if item.id != 264]\n\ndef step_267(line_items):\n    return [item for item in line_items if item.id != 267]\n\ndef step_270(line_items):\n    return [item for item in line_items if item.id != 270]\n\ndef step_273(line_items):\n    return [item for item in line_items if item.id != 273]\n\ndef step_276(line_items):\n    return [item for item in line_items if item.id != 276]\n\ndef step_279(line_items):\n    return [item for item in line_items if item.id != 279]\n\ndef step_282(line_items):\n    return [item for item in line_items if item.id != 282]\n\ndef step_285(line_items):\n    return [item for item in line_items if item.id != 285]\n\ndef step_288(line_items):\n    return [item for item in line_items if item.id != 288]\n\ndef step_291(line_items):\n    return [item for item in line_items if item.id != 291]\n\ndef step_294(line_items):\n    return [item for item in line_items if item.id != 294]\n\ndef step_297(line_items):\n    return [item for item in line_items if item.id != 297]\n\ndef step_300(line_items):\n    return [item for item in line_items if item.id != 300]\n\ndef step_303(line_items):\n    return [item for item in line_items if item.id != 303]\n\ndef step_306(line_items):\n"
+      },
+      "worktree/billing/parser.py": {
+       "text": "\"\"\"billing/parser.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n"
+      },
+      "worktree/billing/reader.py": {
+       "text": "\"\"\"billing/reader.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return [item for item in line_items if item.id != 60]\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n"
+      },
+      "worktree/billing/units.py": {
+       "text": "\"\"\"billing/units.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/cli/billing.py": {
+       "text": "\"\"\"cli/billing.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\n"
+      },
+      "worktree/migrations/0042_add_column.py": {
+       "text": "\"\"\"migrations/0042_add_column.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"checkout\", \"-q\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "checkout",
+      "-q",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/rework-the-invoice-writer\n"
+      },
+      "worktree/CHANGELOG.md": null,
+      "worktree/adapters/store.py": {
+       "text": "\"\"\"adapters/store.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/billing/api.py": {
+       "text": "\"\"\"billing/api.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n    return sorted(line_items)\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\n"
+      },
+      "worktree/billing/cache.py": {
+       "text": "\"\"\"billing/cache.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/errors.py": {
+       "text": "\"\"\"billing/errors.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n"
+      },
+      "worktree/billing/guard.py": {
+       "text": "\"\"\"billing/guard.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n    return sorted(line_items)\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/header.py": {
+       "text": "\"\"\"billing/header.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return sorted(line_items)\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n    return sorted(line_items)\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return sorted(line_items)\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return sorted(line_items)\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n"
+      },
+      "worktree/billing/invoice_writer.py": {
+       "text": "    return sorted(line_items)\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return [item for item in line_items if item.id != 60]\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n\ndef step_069(line_items):\n    return [item for item in line_items if item.id != 69]\n\ndef step_072(line_items):\n    return [item for item in line_items if item.id != 72]\n\ndef step_075(line_items):\n    return [item for item in line_items if item.id != 75]\n\ndef step_078(line_items):\n    return [item for item in line_items if item.id != 78]\n\ndef step_081(line_items):\n    return [item for item in line_items if item.id != 81]\n\ndef step_084(line_items):\n    return [item for item in line_items if item.id != 84]\n\ndef step_087(line_items):\n    return sorted(line_items)\n\ndef step_090(line_items):\n    return [item for item in line_items if item.id != 90]\n\ndef step_093(line_items):\n    return [item for item in line_items if item.id != 93]\n\ndef step_096(line_items):\n    return [item for item in line_items if item.id != 96]\n\ndef step_099(line_items):\n    return [item for item in line_items if item.id != 99]\n\ndef step_102(line_items):\n    return [item for item in line_items if item.id != 102]\n\ndef step_105(line_items):\n    return [item for item in line_items if item.id != 105]\n\ndef step_108(line_items):\n    return [item for item in line_items if item.id != 108]\n\ndef step_111(line_items):\n    return [item for item in line_items if item.id != 111]\n\ndef step_114(line_items):\n    return [item for item in line_items if item.id != 114]\n\ndef step_117(line_items):\n    return [item for item in line_items if item.id != 117]\n\ndef step_120(line_items):\n    return [item for item in line_items if item.id != 120]\n\ndef step_123(line_items):\n    return [item for item in line_items if item.id != 123]\n\ndef step_126(line_items):\n    return [item for item in line_items if item.id != 126]\n\ndef step_129(line_items):\n    return [item for item in line_items if item.id != 129]\n\ndef step_132(line_items):\n    return [item for item in line_items if item.id != 132]\n\ndef step_135(line_items):\n    return [item for item in line_items if item.id != 135]\n\ndef step_138(line_items):\n    return [item for item in line_items if item.id != 138]\n\ndef step_141(line_items):\n    return sorted(line_items)\n\ndef step_144(line_items):\n    return [item for item in line_items if item.id != 144]\n\ndef step_147(line_items):\n    return [item for item in line_items if item.id != 147]\n\ndef step_150(line_items):\n    return [item for item in line_items if item.id != 150]\n\ndef step_153(line_items):\n    return [item for item in line_items if item.id != 153]\n\ndef step_156(line_items):\n    return [item for item in line_items if item.id != 156]\n\ndef step_159(line_items):\n    return [item for item in line_items if item.id != 159]\n\ndef step_162(line_items):\n    return [item for item in line_items if item.id != 162]\n\ndef step_165(line_items):\n    return [item for item in line_items if item.id != 165]\n\ndef step_168(line_items):\n    return [item for item in line_items if item.id != 168]\n\ndef step_171(line_items):\n    return [item for item in line_items if item.id != 171]\n\ndef step_174(line_items):\n    return [item for item in line_items if item.id != 174]\n\ndef step_177(line_items):\n    return [item for item in line_items if item.id != 177]\n\ndef step_180(line_items):\n    return [item for item in line_items if item.id != 180]\n\ndef step_183(line_items):\n    return [item for item in line_items if item.id != 183]\n\ndef step_186(line_items):\n    return [item for item in line_items if item.id != 186]\n\ndef step_189(line_items):\n    return [item for item in line_items if item.id != 189]\n\ndef step_192(line_items):\n    return [item for item in line_items if item.id != 192]\n\ndef step_195(line_items):\n    return [item for item in line_items if item.id != 195]\n\ndef step_198(line_items):\n    return [item for item in line_items if item.id != 198]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 201]\n\ndef step_204(line_items):\n    return [item for item in line_items if item.id != 204]\n\ndef step_207(line_items):\n    return [item for item in line_items if item.id != 207]\n\ndef step_210(line_items):\n    return [item for item in line_items if item.id != 210]\n\ndef step_213(line_items):\n    return [item for item in line_items if item.id != 213]\n\ndef step_216(line_items):\n    return [item for item in line_items if item.id != 216]\n\ndef step_219(line_items):\n    return [item for item in line_items if item.id != 219]\n\ndef step_222(line_items):\n    return [item for item in line_items if item.id != 222]\n\ndef step_225(line_items):\n    return [item for item in line_items if item.id != 225]\n\ndef step_228(line_items):\n    return [item for item in line_items if item.id != 228]\n\ndef step_231(line_items):\n    return [item for item in line_items if item.id != 231]\n\ndef step_234(line_items):\n    return [item for item in line_items if item.id != 234]\n\ndef step_237(line_items):\n    return [item for item in line_items if item.id != 237]\n\ndef step_240(line_items):\n    return [item for item in line_items if item.id != 240]\n\ndef step_243(line_items):\n    return [item for item in line_items if item.id != 243]\n\ndef step_246(line_items):\n    return [item for item in line_items if item.id != 246]\n\ndef step_249(line_items):\n    return [item for item in line_items if item.id != 249]\n\ndef step_252(line_items):\n    return [item for item in line_items if item.id != 252]\n\ndef step_255(line_items):\n    return [item for item in line_items if item.id != 255]\n\ndef step_258(line_items):\n    return [item for item in line_items if item.id != 258]\n\ndef step_261(line_items):\n    return [item for item in line_items if item.id != 261]\n\ndef step_264(line_items):\n    return [item for item in line_items if item.id != 264]\n\ndef step_267(line_items):\n    return [item for item in line_items if item.id != 267]\n\ndef step_270(line_items):\n    return [item for item in line_items if item.id != 270]\n\ndef step_273(line_items):\n    return [item for item in line_items if item.id != 273]\n\ndef step_276(line_items):\n    return [item for item in line_items if item.id != 276]\n\ndef step_279(line_items):\n    return [item for item in line_items if item.id != 279]\n\ndef step_282(line_items):\n    return [item for item in line_items if item.id != 282]\n\ndef step_285(line_items):\n    return [item for item in line_items if item.id != 285]\n\ndef step_288(line_items):\n    return [item for item in line_items if item.id != 288]\n\ndef step_291(line_items):\n    return [item for item in line_items if item.id != 291]\n\ndef step_294(line_items):\n    return [item for item in line_items if item.id != 294]\n\ndef step_297(line_items):\n    return [item for item in line_items if item.id != 297]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 300]\n\ndef step_303(line_items):\n    return [item for item in line_items if item.id != 303]\n\ndef step_306(line_items):\n"
+      },
+      "worktree/billing/parser.py": {
+       "text": "\"\"\"billing/parser.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n"
+      },
+      "worktree/billing/reader.py": {
+       "text": "    return sorted(line_items)\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return sorted(line_items)\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return sorted(line_items)\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n"
+      },
+      "worktree/billing/units.py": {
+       "text": "\"\"\"billing/units.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/cli/billing.py": {
+       "text": "\"\"\"cli/billing.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n    return sorted(line_items)\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\n"
+      },
+      "worktree/migrations/0042_add_column.py": {
+       "text": "\"\"\"migrations/0042_add_column.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n    return sorted(line_items)\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Sort the line items in adapters\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Sort the line items in adapters"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "5e7c21e9544d15ebdc3cc5a58a4d0aca27f94586\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Sort the line items in billing\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Sort the line items in billing"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "7487a9923792b22e52eb68dd8cfa1cd8170fcc46\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Sort the line items in cli\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Sort the line items in cli"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "02134efe0bcfca413ab6d23501011f4c1a0268ba\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Sort the line items in migrations\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Sort the line items in migrations"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "23fc9c248c4822e5ea7f486a98c19f1196929ec5\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"Note the fix in the changelog\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "Note the fix in the changelog"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/main": {
+       "text": "db3daff9058f519c535c3c8c59cea3f912ed7fe1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"Note the release in the changelog\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "Note the release in the changelog"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/main": {
+       "text": "a36f87b5b9cc87d837ee7f00389ba616b8fd4eec\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"Note the rework in the changelog\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "Note the rework in the changelog"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "d21dfc8994635a6552e9fb5d3e07e6edfcd04634\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"the commit the PR branched from\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "the commit the PR branched from"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/main": {
+       "text": "6e42603ea1113313b39306be1a7aeef5f572d333\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"-b\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "init",
+      "-q",
+      "-b",
+      "main"
+     ],
+     "fs": {
+      "worktree/.git": {
+       "dir": true
+      },
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"log\", \"--format=%s\", \"main..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "log",
+      "--format=%s",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "Sort the line items in migrations\nSort the line items in cli\nSort the line items in billing\nSort the line items in adapters\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"log\", \"--format=%s\", \"main..origin/rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "log",
+      "--format=%s",
+      "main..origin/rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "Note the rework in the changelog\nSort the line items in migrations\nSort the line items in cli\nSort the line items in billing\nSort the line items in adapters\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"push\", \"-q\", \"-f\", \"origin\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "push",
+      "-q",
+      "-f",
+      "origin",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"push\", \"-q\", \"-u\", \"origin\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "push",
+      "-q",
+      "-u",
+      "origin",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rebase\", \"-q\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rebase",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/rework-the-invoice-writer\n"
+      },
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "81e1e932489840496a0be5f574d941c04dda67df\n"
+      },
+      "worktree/CHANGELOG.md": {
+       "text": "- the release\n- the fix\n"
+      },
+      "worktree/adapters/store.py": {
+       "text": "\"\"\"adapters/store.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/billing/api.py": {
+       "text": "\"\"\"billing/api.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n    return sorted(line_items)\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\n"
+      },
+      "worktree/billing/cache.py": {
+       "text": "\"\"\"billing/cache.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/errors.py": {
+       "text": "\"\"\"billing/errors.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n"
+      },
+      "worktree/billing/guard.py": {
+       "text": "\"\"\"billing/guard.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n    return sorted(line_items)\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n"
+      },
+      "worktree/billing/header.py": {
+       "text": "\"\"\"billing/header.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return sorted(line_items)\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n    return sorted(line_items)\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return sorted(line_items)\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return sorted(line_items)\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n"
+      },
+      "worktree/billing/invoice_writer.py": {
+       "text": "    return sorted(line_items)\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return [item for item in line_items if item.id != 39]\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return [item for item in line_items if item.id != 60]\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n\ndef step_069(line_items):\n    return [item for item in line_items if item.id != 69]\n\ndef step_072(line_items):\n    return [item for item in line_items if item.id != 72]\n\ndef step_075(line_items):\n    return [item for item in line_items if item.id != 75]\n\ndef step_078(line_items):\n    return [item for item in line_items if item.id != 78]\n\ndef step_081(line_items):\n    return [item for item in line_items if item.id != 81]\n\ndef step_084(line_items):\n    return [item for item in line_items if item.id != 84]\n\ndef step_087(line_items):\n    return sorted(line_items)\n\ndef step_090(line_items):\n    return [item for item in line_items if item.id != 90]\n\ndef step_093(line_items):\n    return [item for item in line_items if item.id != 93]\n\ndef step_096(line_items):\n    return [item for item in line_items if item.id != 96]\n\ndef step_099(line_items):\n    return [item for item in line_items if item.id != 99]\n\ndef step_102(line_items):\n    return [item for item in line_items if item.id != 102]\n\ndef step_105(line_items):\n    return [item for item in line_items if item.id != 105]\n\ndef step_108(line_items):\n    return [item for item in line_items if item.id != 108]\n\ndef step_111(line_items):\n    return [item for item in line_items if item.id != 111]\n\ndef step_114(line_items):\n    return [item for item in line_items if item.id != 114]\n\ndef step_117(line_items):\n    return [item for item in line_items if item.id != 117]\n\ndef step_120(line_items):\n    return [item for item in line_items if item.id != 120]\n\ndef step_123(line_items):\n    return [item for item in line_items if item.id != 123]\n\ndef step_126(line_items):\n    return [item for item in line_items if item.id != 126]\n\ndef step_129(line_items):\n    return [item for item in line_items if item.id != 129]\n\ndef step_132(line_items):\n    return [item for item in line_items if item.id != 132]\n\ndef step_135(line_items):\n    return [item for item in line_items if item.id != 135]\n\ndef step_138(line_items):\n    return [item for item in line_items if item.id != 138]\n\ndef step_141(line_items):\n    return sorted(line_items)\n\ndef step_144(line_items):\n    return [item for item in line_items if item.id != 144]\n\ndef step_147(line_items):\n    return [item for item in line_items if item.id != 147]\n\ndef step_150(line_items):\n    return [item for item in line_items if item.id != 150]\n\ndef step_153(line_items):\n    return [item for item in line_items if item.id != 153]\n\ndef step_156(line_items):\n    return [item for item in line_items if item.id != 156]\n\ndef step_159(line_items):\n    return [item for item in line_items if item.id != 159]\n\ndef step_162(line_items):\n    return [item for item in line_items if item.id != 162]\n\ndef step_165(line_items):\n    return [item for item in line_items if item.id != 165]\n\ndef step_168(line_items):\n    return [item for item in line_items if item.id != 168]\n\ndef step_171(line_items):\n    return [item for item in line_items if item.id != 171]\n\ndef step_174(line_items):\n    return [item for item in line_items if item.id != 174]\n\ndef step_177(line_items):\n    return [item for item in line_items if item.id != 177]\n\ndef step_180(line_items):\n    return [item for item in line_items if item.id != 180]\n\ndef step_183(line_items):\n    return [item for item in line_items if item.id != 183]\n\ndef step_186(line_items):\n    return [item for item in line_items if item.id != 186]\n\ndef step_189(line_items):\n    return [item for item in line_items if item.id != 189]\n\ndef step_192(line_items):\n    return [item for item in line_items if item.id != 192]\n\ndef step_195(line_items):\n    return [item for item in line_items if item.id != 195]\n\ndef step_198(line_items):\n    return [item for item in line_items if item.id != 198]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 201]\n\ndef step_204(line_items):\n    return [item for item in line_items if item.id != 204]\n\ndef step_207(line_items):\n    return [item for item in line_items if item.id != 207]\n\ndef step_210(line_items):\n    return [item for item in line_items if item.id != 210]\n\ndef step_213(line_items):\n    return [item for item in line_items if item.id != 213]\n\ndef step_216(line_items):\n    return [item for item in line_items if item.id != 216]\n\ndef step_219(line_items):\n    return [item for item in line_items if item.id != 219]\n\ndef step_222(line_items):\n    return [item for item in line_items if item.id != 222]\n\ndef step_225(line_items):\n    return [item for item in line_items if item.id != 225]\n\ndef step_228(line_items):\n    return [item for item in line_items if item.id != 228]\n\ndef step_231(line_items):\n    return [item for item in line_items if item.id != 231]\n\ndef step_234(line_items):\n    return [item for item in line_items if item.id != 234]\n\ndef step_237(line_items):\n    return [item for item in line_items if item.id != 237]\n\ndef step_240(line_items):\n    return [item for item in line_items if item.id != 240]\n\ndef step_243(line_items):\n    return [item for item in line_items if item.id != 243]\n\ndef step_246(line_items):\n    return [item for item in line_items if item.id != 246]\n\ndef step_249(line_items):\n    return [item for item in line_items if item.id != 249]\n\ndef step_252(line_items):\n    return [item for item in line_items if item.id != 252]\n\ndef step_255(line_items):\n    return [item for item in line_items if item.id != 255]\n\ndef step_258(line_items):\n    return [item for item in line_items if item.id != 258]\n\ndef step_261(line_items):\n    return [item for item in line_items if item.id != 261]\n\ndef step_264(line_items):\n    return [item for item in line_items if item.id != 264]\n\ndef step_267(line_items):\n    return [item for item in line_items if item.id != 267]\n\ndef step_270(line_items):\n    return [item for item in line_items if item.id != 270]\n\ndef step_273(line_items):\n    return [item for item in line_items if item.id != 273]\n\ndef step_276(line_items):\n    return [item for item in line_items if item.id != 276]\n\ndef step_279(line_items):\n    return [item for item in line_items if item.id != 279]\n\ndef step_282(line_items):\n    return [item for item in line_items if item.id != 282]\n\ndef step_285(line_items):\n    return [item for item in line_items if item.id != 285]\n\ndef step_288(line_items):\n    return [item for item in line_items if item.id != 288]\n\ndef step_291(line_items):\n    return [item for item in line_items if item.id != 291]\n\ndef step_294(line_items):\n    return [item for item in line_items if item.id != 294]\n\ndef step_297(line_items):\n    return [item for item in line_items if item.id != 297]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 300]\n\ndef step_303(line_items):\n    return [item for item in line_items if item.id != 303]\n\ndef step_306(line_items):\n"
+      },
+      "worktree/billing/parser.py": {
+       "text": "\"\"\"billing/parser.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n"
+      },
+      "worktree/billing/reader.py": {
+       "text": "    return sorted(line_items)\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n    return [item for item in line_items if item.id != 18]\n\ndef step_021(line_items):\n    return [item for item in line_items if item.id != 21]\n\ndef step_024(line_items):\n    return [item for item in line_items if item.id != 24]\n\ndef step_027(line_items):\n    return [item for item in line_items if item.id != 27]\n\ndef step_030(line_items):\n    return [item for item in line_items if item.id != 30]\n\ndef step_033(line_items):\n    return [item for item in line_items if item.id != 33]\n\ndef step_036(line_items):\n    return [item for item in line_items if item.id != 36]\n\ndef step_039(line_items):\n    return sorted(line_items)\n\ndef step_042(line_items):\n    return [item for item in line_items if item.id != 42]\n\ndef step_045(line_items):\n    return [item for item in line_items if item.id != 45]\n\ndef step_048(line_items):\n    return [item for item in line_items if item.id != 48]\n\ndef step_051(line_items):\n    return [item for item in line_items if item.id != 51]\n\ndef step_054(line_items):\n    return [item for item in line_items if item.id != 54]\n\ndef step_057(line_items):\n    return [item for item in line_items if item.id != 57]\n\ndef step_060(line_items):\n    return sorted(line_items)\n\ndef step_063(line_items):\n    return [item for item in line_items if item.id != 63]\n\ndef step_066(line_items):\n    return [item for item in line_items if item.id != 66]\n"
+      },
+      "worktree/billing/units.py": {
+       "text": "\"\"\"billing/units.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n    return sorted(line_items)\n    return [item for item in line_items if item.id != 12]\n\ndef step_015(line_items):\n    return [item for item in line_items if item.id != 15]\n\ndef step_018(line_items):\n"
+      },
+      "worktree/cli/billing.py": {
+       "text": "\"\"\"cli/billing.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n    return sorted(line_items)\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\ndef step_012(line_items):\n    return [item for item in line_items if item.id != 12]\n\n"
+      },
+      "worktree/migrations/0042_add_column.py": {
+       "text": "\"\"\"migrations/0042_add_column.py\"\"\"\n\ndef step_003(line_items):\n    return [item for item in line_items if item.id != 3]\n    return sorted(line_items)\ndef step_006(line_items):\n    return [item for item in line_items if item.id != 6]\n\ndef step_009(line_items):\n    return [item for item in line_items if item.id != 9]\n\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"remote\", \"add\", \"origin\", \"<TMP>/worktree-origin.git\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "remote",
+      "add",
+      "origin",
+      "<TMP>/worktree-origin.git"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-list\", \"--count\", \"origin/rework-the-invoice-writer..23fc9c248c4822e5ea7f486a98c19f1196929ec5\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--count",
+      "origin/rework-the-invoice-writer..23fc9c248c4822e5ea7f486a98c19f1196929ec5"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-list\", \"--count\", \"origin/rework-the-invoice-writer..main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--count",
+      "origin/rework-the-invoice-writer..main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "0\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "23fc9c248c4822e5ea7f486a98c19f1196929ec5\n"
+    }
+   ]
+  },
   "tests/preview/test_preview.py::test_the_reviewer_preview_checks_the_commit_its_assumed_done_thread_names": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"00919756e4ad586dcbd2e0ba7ccffac1e5526346^{commit}\", \"--end-of-options\"], null, null]": [
     {

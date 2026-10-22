@@ -964,3 +964,219 @@ module(
     }
   },
 );
+
+const OLD_FORK = '0f0f0f0';
+const OLD_ONE = '1e1e1e1';
+const OLD_TWO = '2d2d2d2';
+const NEW_FORK = 'e5e5e5e';
+
+module(
+  'Acceptance | commit timeline rebased since your review',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    function rebasedOnto(...subjects: string[]) {
+      const shas = [FIRST, SECOND, THIRD];
+      board().commits = {
+        ...prHistory(
+          NEW_FORK,
+          subjects.map((subject, index) =>
+            prCommit(shas[index]!, shas[index - 1] ?? NEW_FORK, subject),
+          ),
+        ),
+        reviewed: {
+          sha: OLD_TWO,
+          fork: OLD_FORK,
+          commits: [
+            prCommit(OLD_ONE, OLD_FORK, 'Add the widget'),
+            prCommit(OLD_TWO, OLD_ONE, 'Name the widget'),
+          ],
+          rewritten_at: '2026-10-21T08:00:00Z',
+        },
+      };
+    }
+
+    hooks.beforeEach(function () {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: OLD_TWO,
+        },
+      });
+      board().readMarks = [
+        { sha: OLD_ONE, subject: 'Add the widget' },
+        { sha: OLD_TWO, subject: 'Name the widget' },
+      ];
+      board().diffs = {
+        first: {
+          base: NEW_FORK,
+          head: FIRST,
+          files: [changed('src/widgets/first.py', [added(19, 'first change')])],
+        },
+        third: {
+          base: SECOND,
+          head: THIRD,
+          files: [changed('src/widgets/third.py', [added(19, 'third change')])],
+        },
+      };
+    });
+
+    test('what your review saw hangs off the old fork as a ghost lane under the branch, and cannot be picked', async function (assert) {
+      rebasedOnto('Add the widget', 'Name the widget', 'Test the widget');
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      const ghosts = dots('ghost');
+      const branch = dots('pr');
+      assert.deepEqual(
+        ghosts.map((one) => [one.sha, one.style]),
+        [
+          [OLD_ONE, 'ghost'],
+          [OLD_TWO, 'ghost'],
+        ],
+      );
+      assert.true(
+        ghosts.every((one) => one.y > branch[0]!.y),
+        'the ghost lane runs under the branch',
+      );
+      assert.true(
+        dots('base').find((one) => one.sha === OLD_FORK)!.x <
+          dots('base').find((one) => one.sha === NEW_FORK)!.x,
+        'the old fork comes before the new one on main',
+      );
+      assert.dom('[data-test-ghost-lane]').exists({ count: 1 });
+      assert
+        .dom('[data-test-lane-label="old-fork"]')
+        .hasAttribute('data-at', OLD_FORK);
+      assert
+        .dom('[data-test-lane-label="fork"]')
+        .hasAttribute('data-at', NEW_FORK);
+      assert
+        .dom('[data-test-timeline-header]')
+        .hasText(
+          `3 commits on PROJ-7-fix-the-widget · now forked from main at ${NEW_FORK}, was ${OLD_FORK}, main's tip`,
+        );
+      assert
+        .dom('[data-test-ghost-shas]')
+        .hasText(`your review saw ${OLD_ONE} ${OLD_TWO}, rewritten since`);
+      assert.dom('[data-test-review-flag]').hasText('you reviewed Tue 20 Oct');
+      const flag = Number(
+        find('[data-test-review-flag] line')!.getAttribute('x1'),
+      );
+      assert.true(
+        flag > ghosts[1]!.x,
+        'the flag stands after the reviewed ghost',
+      );
+      assert
+        .dom(`[data-test-dot][data-sha="${OLD_ONE}"]`)
+        .doesNotHaveAttribute('data-pickable');
+
+      await click(`[data-test-dot][data-sha="${OLD_ONE}"]`);
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 3 of 3');
+      assert.dom('[data-test-range]').doesNotExist();
+    });
+
+    test('new commits matching a read one by subject count as read, and Since my review picks only the rest', async function (assert) {
+      rebasedOnto('Add the widget', 'Name the widget', 'Test the widget');
+      await visit('/pr/o/r/7/diff');
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 3 of 3');
+      assert.deepEqual(pips(), ['read', 'read', 'current']);
+      assert
+        .dom('[data-test-commit-note]')
+        .hasText(
+          'Rebased since your review (force-pushed Wed 21 Oct). 2 of your read commits were rewritten onto newer main and matched by message; 1 is new. ×',
+        );
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.deepEqual(
+        dots('pr').map((one) => [one.sha, one.style]),
+        [
+          [FIRST, 'read'],
+          [SECOND, 'read'],
+          [THIRD, 'unread'],
+        ],
+      );
+      assert.deepEqual(
+        findAll('[data-test-matched]').map((one) =>
+          one.getAttribute('data-at'),
+        ),
+        [FIRST, SECOND],
+      );
+      assert.dom('[data-test-matched]').hasText('≈ read');
+
+      await click('[data-test-preset="since-review"]');
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 3 of 3');
+      assert.deepEqual(inRange(), [THIRD]);
+    });
+
+    test('when nothing matches, every commit is new and it opens on the first', async function (assert) {
+      rebasedOnto('Build the widget', 'Rename the widget', 'Test the widget');
+      await visit('/pr/o/r/7/diff');
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
+      assert
+        .dom('[data-test-commit-note]')
+        .hasText(
+          'Rebased since your review (force-pushed Wed 21 Oct). 0 of your read commits were rewritten onto newer main and matched by message; 3 are new. ×',
+        );
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.dom('[data-test-matched]').doesNotExist();
+      assert.strictEqual(dots('ghost').length, 2);
+      assert.dom('[data-test-preset="since-review"]').isNotDisabled();
+
+      await click('[data-test-preset="since-review"]');
+
+      assert.deepEqual(inRange(), [FIRST, SECOND, THIRD]);
+    });
+
+    test('a plain push since your review draws no ghost lane', async function (assert) {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: FIRST,
+        },
+      });
+      board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+      board().commits = prHistory(NEW_FORK, [
+        prCommit(FIRST, NEW_FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+      ]);
+      board().diffs = {
+        second: {
+          base: FIRST,
+          head: SECOND,
+          files: [
+            changed('src/widgets/second.py', [added(19, 'second change')]),
+          ],
+        },
+      };
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.strictEqual(dots('ghost').length, 0);
+      assert.dom('[data-test-ghost-lane]').doesNotExist();
+      assert.dom('[data-test-ghost-shas]').doesNotExist();
+      assert.dom('[data-test-lane-label="old-fork"]').doesNotExist();
+      assert.dom('[data-test-matched]').doesNotExist();
+      assert
+        .dom('[data-test-timeline-header]')
+        .hasText(
+          `2 commits on PROJ-7-fix-the-widget · forked from main at ${NEW_FORK}, main's tip`,
+        );
+      assert.dom('[data-test-commit-note]').includesText('Picked up');
+    });
+  },
+);

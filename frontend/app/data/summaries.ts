@@ -1080,6 +1080,47 @@ export function unpushedOf(
   return unpushed;
 }
 
+interface Matching {
+  read: Set<string>;
+  matched: Set<string>;
+  fresh: string[];
+}
+
+const lastMatching = new WeakMap<
+  PullRequestCommits,
+  { marks: ReadMark[]; matching: Matching }
+>();
+
+function matchingOf(history: PullRequestCommits, marks: ReadMark[]): Matching {
+  const last = lastMatching.get(history);
+  if (last?.marks === marks) return last.matching;
+  const present = new Set(history.commits.map((one) => one.sha));
+  const marked = new Set(marks.map((one) => one.sha));
+  const goneSubjects = new Set(
+    marks.filter((one) => !present.has(one.sha)).map((one) => one.subject),
+  );
+  const matched = new Set(
+    history.commits
+      .filter((one) => !marked.has(one.sha) && goneSubjects.has(one.subject))
+      .map((one) => one.sha),
+  );
+  const ghosts = history.reviewed?.commits.filter(
+    (one) => !present.has(one.sha),
+  );
+  const ghostSubjects = new Set(ghosts?.map((one) => one.subject));
+  const matching = {
+    read: new Set([...marked, ...matched]),
+    matched,
+    fresh: ghosts
+      ? history.commits
+          .filter((one) => !ghostSubjects.has(one.subject))
+          .map((one) => one.sha)
+      : [],
+  };
+  lastMatching.set(history, { marks, matching });
+  return matching;
+}
+
 function stepperBuilt(
   history: PullRequestCommits,
   marks: ReadMark[],
@@ -1091,7 +1132,7 @@ function stepperBuilt(
 ): Stepper | null {
   const { commits } = history;
   if (!commits.length) return null;
-  const read = new Set(marks.map((one) => one.sha));
+  const { read } = matchingOf(history, marks);
   const stops = (one: PullRequestCommit) => !(skipMerges && isMerge(one));
   const chosenAt = commits.findIndex((one) => one.sha === chosen);
   const pickedUp = pickedUpAt(history, read, reviewed, skipMerges);
@@ -1196,10 +1237,16 @@ export function stepperOf(
   return stepper;
 }
 
+interface Rebased {
+  pushedOn: string;
+  matched: number;
+}
+
 export interface CommitNote {
   count: number;
   reviewedOn: string;
   head: string;
+  rebased: Rebased | null;
 }
 
 function commitNoteBuilt(
@@ -1207,10 +1254,20 @@ function commitNoteBuilt(
   facts: PrFacts,
   marks: ReadMark[],
 ): CommitNote | null {
-  const { commits } = history;
-  const read = new Set(marks.map((one) => one.sha));
-  if (pickedUpAt(history, read, facts.my_review_sha) < 0) return null;
+  const { commits, reviewed } = history;
   if (!facts.my_review_at) return null;
+  const { read, matched, fresh } = matchingOf(history, marks);
+  if (reviewed && commits.length)
+    return {
+      count: fresh.length,
+      reviewedOn: dayOf(facts.my_review_at),
+      head: commits[commits.length - 1]!.sha,
+      rebased: {
+        pushedOn: dayOf(reviewed.rewritten_at ?? facts.my_review_at),
+        matched: matched.size,
+      },
+    };
+  if (pickedUpAt(history, read, facts.my_review_sha) < 0) return null;
   const reviewedAt = commits.findIndex(
     (one) => one.sha === facts.my_review_sha,
   );
@@ -1219,6 +1276,7 @@ function commitNoteBuilt(
     count,
     reviewedOn: dayOf(facts.my_review_at),
     head: commits[commits.length - 1]!.sha,
+    rebased: null,
   };
 }
 
@@ -1319,9 +1377,12 @@ export function timelineOf(
     last.pushed === pushed
   )
     return last.timeline;
+  const { read, matched, fresh } = matchingOf(history, pr.read);
   const timeline = timelineBuilt({
     history,
-    read: new Set(pr.read.map((one) => one.sha)),
+    read,
+    matched,
+    fresh,
     branch: pr.branch,
     base: pr.base_branch,
     reviewedSha: pr.facts?.my_review_sha ?? null,
