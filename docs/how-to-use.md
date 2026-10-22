@@ -235,7 +235,7 @@ Two environment variables move the files themselves:
 ### Watching more than one repo
 
 One config watches any number of repos, one `[[repos]]` table each, and the
-board shows them all; the top bar's repo menu narrows the wall to some of them.
+board shows them all; the top bar's repo filter narrows the wall to some of them.
 Add and remove repos on the setup screen.
 
 A separate instance is a separate watcher, hub and data dir: a config file
@@ -413,10 +413,14 @@ a draft.
 Hold `/` to show the key on every button and link, on every page; releasing it
 hides them again.
 
-The bar at the top has **Wall | Runs**, the repository this instance watches,
-and the watcher's health: `polled <time>, next in <n>` while polls keep time,
-`polling now` once the next is due, and in red `no poll since <time>`,
-`polls failing: <error>` or `watcher not running`. Beside it are today's runs,
+The bar at the top has **Wall**, **Runs** and **Setup**, the repo filter, and
+the watcher's health. That reads `polled 14:02:11, 40s ago` while polls keep
+time and `no poll yet` before the first. In red it reads
+`no poll since <time>, <age> ago`, `polls failing: <error>`,
+`in setup, polling nothing` or `config broken, polling nothing`. When the hub
+stops answering it reads `the board server is not answering`, or
+`the system is under heavy load` while the health check still answers. Beside
+it are today's runs,
 since local midnight, and what they cost. The wall reads the hub every five
 seconds.
 
@@ -493,8 +497,7 @@ when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
 own draft, which first lists what is still outstanding (unsent drafts, Board
 threads waiting on you, threads unresolved on GitHub that the Board has not
 resolved or does not track, failing CI, a needed rebase,
-unpushed commits and agent work) and then marks it ready on GitHub, **Git**
-(`g`), **Terminal** (`t`), **Dismiss #N** (`d`, then `u`, `f`, or on a draft
+unpushed commits and agent work) and then marks it ready on GitHub, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
 GitHub. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
@@ -508,7 +511,8 @@ dismiss and git wait for the board to come back. On a PR frozen on the wrong
 branch only `w`, **Release now**, does anything; see
 [A PR on the wrong branch](#a-pr-on-the-wrong-branch).
 
-`g` opens the [git palette](#git-palette) in the page. Push, force-push, pull
+Two keys have no button. `t` opens the Terminal tab, and `g` opens the
+[git palette](#git-palette) in the page. Push, force-push, pull
 and status run in the worktree and show their output; force-push asks for a
 second `Enter`. `l` and `d` show the log and the diff, read-only. `a`, `c`,
 `i<N>` and `r` open in the Terminal tab.
