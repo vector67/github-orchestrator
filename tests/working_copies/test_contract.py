@@ -400,7 +400,6 @@ def test_a_fetched_base_ahead_of_the_branch_says_how_far_behind_it_is(
     assert (standing.behind_by, standing.conflicts) == (2, ())
 
 
-@pytest.mark.no_replay
 def test_a_base_standing_says_when_git_last_fetched(tmp_path, settings):
     build_origin(tmp_path)
     world = GitWorld(tmp_path, settings)

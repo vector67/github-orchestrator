@@ -97,8 +97,8 @@ def _digest(value: str | bytes | None, norm: Rewrite) -> str | None:
     return hashlib.sha1(value).hexdigest()
 
 
-HEAD_FILES = ("HEAD", "commondir", "packed-refs", "refs/heads/**/*", "worktrees/*/HEAD",
-              "worktrees/*/commondir")
+HEAD_FILES = ("HEAD", "FETCH_HEAD", "commondir", "packed-refs", "refs/heads/**/*",
+              "worktrees/*/HEAD", "worktrees/*/FETCH_HEAD", "worktrees/*/commondir")
 
 
 def _stat(path: str) -> Stat:
