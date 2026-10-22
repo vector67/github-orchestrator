@@ -928,9 +928,8 @@ export class FakeBoard {
           'the fake board answered with a response respond() did not build',
         );
       }
-      const body: unknown = text ? JSON.parse(text) : null;
       this.drift.push(
-        ...driftOf(init?.method ?? 'GET', url, response.status, body),
+        ...knownDriftOf(init?.method ?? 'GET', url, response.status, text),
       );
       return response;
     });
@@ -1582,6 +1581,23 @@ export class FakeBoard {
 }
 
 const BODIES = new WeakMap<Response, string | null>();
+
+const DRIFT = new Map<string, string[]>();
+
+function knownDriftOf(
+  method: string,
+  url: string,
+  status: number,
+  text: string | null,
+): string[] {
+  const key = `${method} ${url} ${status} ${text}`;
+  let found = DRIFT.get(key);
+  if (!found) {
+    found = driftOf(method, url, status, text ? JSON.parse(text) : null);
+    DRIFT.set(key, found);
+  }
+  return found;
+}
 
 function respond(body: string | null, init: ResponseInit): Response {
   const response = new Response(body, init);
