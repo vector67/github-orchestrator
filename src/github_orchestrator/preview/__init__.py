@@ -53,7 +53,7 @@ from github_orchestrator.github import (
     Thread,
     ThreadComment,
 )
-from github_orchestrator.github.fake import FakeGitHub
+from github_orchestrator.github.fake import FakeGitHub, Review
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
@@ -645,13 +645,17 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
 
 def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool) -> None:
     head = _git(repo.worktree, "rev-parse", "HEAD").strip()
+    first = _git(repo.worktree, "rev-list", "--reverse", f"{repo.base_branch}..HEAD").split()[0]
     state = PullRequestState(title=PR_TITLE, url=f"https://github.com/{PR.repo}/pull/{PR.number}",
                              branch=PR_BRANCH, base_branch=repo.base_branch,
                              head_sha=head, created_at="2026-09-10T09:00:00Z", commits=4, additions=501, deletions=214,
                              author=PR_AUTHOR if reviewer else viewer,
                              body=(f"Splits the invoice writer in two.\n\ncc @{viewer}, the export "
                                    "side is yours." if reviewer else ""),
-                             pending_reviewers=(viewer,) if reviewer else ())
+                             pending_reviewers=(viewer,) if reviewer else (),
+                             reviews=(Review(viewer, ReviewState.COMMENTED,
+                                             "2026-09-11T10:00:00Z", first),)
+                             if reviewer else ())
     outside.github.prs[PR].state = state
     outside.change_detection.advance(PR, Poll(state=state, polled_at=MOMENT), set())
 

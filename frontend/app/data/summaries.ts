@@ -976,6 +976,7 @@ export type PipState = 'read' | 'current' | 'unread';
 export interface Pip {
   sha: string;
   state: PipState;
+  label: string;
 }
 
 export interface Stepper {
@@ -1021,6 +1022,7 @@ function stepperBuilt(
     pips: commits.map((one, index) => ({
       sha: one.sha,
       state: index === at ? 'current' : read.has(one.sha) ? 'read' : 'unread',
+      label: `${index + 1} of ${commits.length} · ${one.sha.slice(0, SHORT_SHA)} ${one.subject}`,
     })),
   };
 }
@@ -1041,4 +1043,48 @@ export function stepperOf(
   const stepper = stepperBuilt(history, marks, chosen);
   lastSteppers.set(history, { marks, chosen, stepper });
   return stepper;
+}
+
+export interface CommitNote {
+  count: number;
+  reviewedOn: string;
+  head: string;
+}
+
+function commitNoteBuilt(
+  history: PullRequestCommits,
+  facts: PrFacts,
+): CommitNote | null {
+  const { commits } = history;
+  const reviewedAt = commits.findIndex(
+    (one) => one.sha === facts.my_review_sha,
+  );
+  const count = commits.length - reviewedAt - 1;
+  if (reviewedAt < 0 || !count || !facts.my_review_at) return null;
+  return {
+    count,
+    reviewedOn: new Date(facts.my_review_at).toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }),
+    head: commits[commits.length - 1]!.sha,
+  };
+}
+
+const lastNotes = new WeakMap<
+  PullRequestCommits,
+  { facts: PrFacts; note: CommitNote | null }
+>();
+
+export function commitNoteOf(
+  history: PullRequestCommits | undefined,
+  facts: PrFacts | null,
+): CommitNote | null {
+  if (!history || !facts) return null;
+  const last = lastNotes.get(history);
+  if (last?.facts === facts) return last.note;
+  const note = commitNoteBuilt(history, facts);
+  lastNotes.set(history, { facts, note });
+  return note;
 }

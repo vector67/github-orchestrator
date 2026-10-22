@@ -14,7 +14,6 @@ from github_orchestrator.github.interface import (
     PostedComment,
     PullRequestState,
     Relevance,
-    Review,
     ReviewComment,
     ReviewState,
     SentReview,
@@ -27,6 +26,9 @@ from github_orchestrator.github.interface import (
 )
 from github_orchestrator.github.interface import (
     PushEvent as PushEvent,
+)
+from github_orchestrator.github.interface import (
+    Review as Review,
 )
 from github_orchestrator.github.interface import (
     ThreadAnchor as ThreadAnchor,

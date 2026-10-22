@@ -66,6 +66,10 @@ range.
 
 ### 3. Commit box sizing and the note
 
+**Done** (`48cda600`, and the commit that marks this). The review's commit is
+`my_review_sha` in the pull request's facts; sizing and dismissed notes are
+localStorage in `services/commit-box.ts`.
+
 Decisions 4 and 5. The setting in the gear menu, Minimal and Hidden, and the
 "picked up" note with its ×. The note needs your review's commit and time; serve
 them with the commits if the board does not already hold them.

@@ -94,6 +94,7 @@ import {
   readOf,
   shownOf,
   stepperOf,
+  commitNoteOf,
   summaryOf,
   summaryTabOf,
   wallOf,
@@ -103,6 +104,7 @@ import {
   type PrHeader,
   type Shown,
   type Stepper,
+  type CommitNote,
   type Summaries,
   type SummaryTab,
   type WallSection,
@@ -123,6 +125,7 @@ export type {
   Pip,
   PipState,
   Stepper,
+  CommitNote,
   SummaryState,
   SummaryTab,
   Tally,
@@ -580,6 +583,11 @@ export default class StoreService extends Service {
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
     return held && stepperOf(held.history[source], held.read, chosen);
+  }
+
+  commitNote(pr: Numbered, source: DiffSource): CommitNote | null {
+    const held = this.pr(pr.repo, pr.number);
+    return held ? commitNoteOf(held.history[source], held.facts) : null;
   }
 
   files(commits: Commits): FileStat[] | null {

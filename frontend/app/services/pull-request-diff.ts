@@ -4,12 +4,14 @@ import { waitForPromise } from '@ember/test-waiters';
 import type { Commits, Diff } from 'frontend/data/api';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
 import { reportError } from 'frontend/data/report';
+import { keyOf } from 'frontend/data/wall';
+import type CommitBoxService from 'frontend/services/commit-box';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
 import type ReviewService from 'frontend/services/review';
 import type StoreService from 'frontend/services/store';
 import { commitsOf } from 'frontend/services/store';
-import type { DiffSource, Stepper } from 'frontend/services/store';
+import type { CommitNote, DiffSource, Stepper } from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export type { DiffSource } from 'frontend/services/store';
@@ -33,6 +35,7 @@ export default class PullRequestDiffService extends Service {
   @service declare store: StoreService;
   @service declare threads: ThreadsService;
   @service declare review: ReviewService;
+  @service declare commitBox: CommitBoxService;
 
   private get pr(): PerPr {
     return this.here.scope.of(fresh);
@@ -60,8 +63,22 @@ export default class PullRequestDiffService extends Service {
   }
 
   get stepper(): Stepper | null | undefined {
+    if (this.commitBox.sizing === 'hidden') return null;
     return this.store.stepper(this.here.at, this.source, this.pr.chosen);
   }
+
+  get note(): CommitNote | null {
+    if (this.commitBox.sizing !== 'full') return null;
+    const note = this.store.commitNote(this.here.at, this.source);
+    if (!note || this.commitBox.noteDismissed(keyOf(this.here.at), note.head))
+      return null;
+    return note;
+  }
+
+  dismissNote = () => {
+    const note = this.note;
+    if (note) this.commitBox.dismissNote(keyOf(this.here.at), note.head);
+  };
 
   get shown(): Diff | undefined {
     const stepper = this.stepper;
@@ -103,6 +120,10 @@ export default class PullRequestDiffService extends Service {
     const stepper = this.stepper;
     const sha = by < 0 ? stepper?.previous : stepper?.next;
     if (sha) this.pr.chosen = sha;
+  };
+
+  go = (sha: string) => {
+    this.pr.chosen = sha;
   };
 
   tick = (marked: boolean) => {

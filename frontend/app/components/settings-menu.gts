@@ -2,7 +2,13 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
 import HarvestSetup from 'frontend/components/harvest-setup';
+import {
+  COMMIT_SIZINGS,
+  type CommitSizing,
+} from 'frontend/services/commit-box';
+import type CommitBoxService from 'frontend/services/commit-box';
 import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
@@ -13,13 +19,28 @@ const TOOTH_RADIUS = 5.75;
 const TEETH = 8;
 const TOOTH = (Math.PI * TOOTH_RADIUS) / TEETH;
 
+const SIZING_NAMES: Record<CommitSizing, string> = {
+  full: 'Full',
+  minimal: 'Minimal',
+  hidden: 'Hidden',
+};
+
+const SIZINGS = COMMIT_SIZINGS.map((size) => ({
+  size,
+  name: SIZING_NAMES[size],
+}));
+
+const eq = (one: unknown, other: unknown): boolean => one === other;
+
 export default class SettingsMenu extends Component {
   @service declare harvestSwitch: HarvestSwitchService;
   @service declare hub: HubService;
   @service declare keys: KeysService;
   @service declare theme: ThemeService;
+  @service declare commitBox: CommitBoxService;
 
   @tracked showing = false;
+  @tracked sizing = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
 
@@ -43,12 +64,19 @@ export default class SettingsMenu extends Component {
 
   close = () => {
     this.showing = false;
+    this.sizing = false;
     this.keys.drop(this.keymap);
   };
 
   flip = () => this.theme.toggle();
 
   flipHarvest = () => this.harvestSwitch.toggle();
+
+  openSizing = () => {
+    this.sizing = !this.sizing;
+  };
+
+  size = (sizing: CommitSizing) => this.commitBox.choose(sizing);
 
   get harvestLabel(): string {
     return `Harvest timer: ${this.harvestSwitch.on ? 'on' : 'off'}`;
@@ -102,6 +130,32 @@ export default class SettingsMenu extends Component {
             data-test-harvest-toggle
             {{on "click" this.flipHarvest}}
           >{{this.harvestLabel}}</button>
+          <button
+            type="button"
+            class="setting"
+            aria-expanded={{if this.sizing "true" "false"}}
+            data-test-setting
+            data-test-commit-sizing-open
+            {{on "click" this.openSizing}}
+          >Commit box sizing</button>
+          {{#if this.sizing}}
+            <fieldset class="setting-choices" data-test-commit-sizings>
+              <legend class="visually-hidden">Commit box sizing</legend>
+              {{#each SIZINGS key="size" as |choice|}}
+                <label class="setting-choice">
+                  <input
+                    type="radio"
+                    name="commit-box-sizing"
+                    value={{choice.size}}
+                    checked={{eq this.commitBox.sizing choice.size}}
+                    data-test-commit-sizing={{choice.size}}
+                    {{on "change" (fn this.size choice.size)}}
+                  />
+                  {{choice.name}}
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/if}}
           {{#if this.hub.pollStatus}}
             <span
               class="settings-health tone-{{this.hub.pollStatus.tone}}"

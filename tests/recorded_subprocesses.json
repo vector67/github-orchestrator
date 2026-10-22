@@ -544,6 +544,44 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-list\", \"--reverse\", \"main..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "00919756e4ad586dcbd2e0ba7ccffac1e5526346\n462fc216f30d355b3a3fbc125187e54edbd496d6\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "00919756e4ad586dcbd2e0ba7ccffac1e5526346\n462fc216f30d355b3a3fbc125187e54edbd496d6\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"--short=7\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -1913,6 +1951,44 @@
      "returncode": 0,
      "stderr": "",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-list\", \"--reverse\", \"main..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5e7c21e9544d15ebdc3cc5a58a4d0aca27f94586\n7487a9923792b22e52eb68dd8cfa1cd8170fcc46\n02134efe0bcfca413ab6d23501011f4c1a0268ba\n23fc9c248c4822e5ea7f486a98c19f1196929ec5\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "5e7c21e9544d15ebdc3cc5a58a4d0aca27f94586\n7487a9923792b22e52eb68dd8cfa1cd8170fcc46\n02134efe0bcfca413ab6d23501011f4c1a0268ba\n23fc9c248c4822e5ea7f486a98c19f1196929ec5\n16c24a97e5b1bed469b74da637d6987e09e8ace5\n957f94bd6578b9d5656133d177d907ac0bc86ea6\n257635c0d8b95933fd201958bad0424d42a83bbc\n8040b066c265cac25e1fbc976c0ca9644bc39a93\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"HEAD\"], null, null]": [

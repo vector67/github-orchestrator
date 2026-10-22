@@ -159,30 +159,36 @@ export default class DiffTab extends Component<DiffTabSignature> {
       {{didChange this.pullRequestDiff.draw this.pullRequestDiff.drawing}}
     >
       <aside class="diff-tree" data-test-tree>
-        <span class="seg" role="group" aria-label="which head the diff runs to">
-          <button
-            type="button"
-            aria-pressed={{if
-              (eq this.pullRequestDiff.source "origin")
-              "true"
-              "false"
-            }}
-            title="origin: the PR branch on GitHub, as last fetched"
-            data-test-source="origin"
-            {{on "click" (fn this.pullRequestDiff.show "origin")}}
-          >origin</button>
-          <button
-            type="button"
-            aria-pressed={{if
-              (eq this.pullRequestDiff.source "local")
-              "true"
-              "false"
-            }}
-            title="local: the commit the PR's worktree has checked out, with any commits not pushed yet"
-            data-test-source="local"
-            {{on "click" (fn this.pullRequestDiff.show "local")}}
-          >local</button>
-        </span>
+        <div class="diff-sources" data-test-diff-sources>
+          <span
+            class="seg"
+            role="group"
+            aria-label="which head the diff runs to"
+          >
+            <button
+              type="button"
+              aria-pressed={{if
+                (eq this.pullRequestDiff.source "origin")
+                "true"
+                "false"
+              }}
+              title="origin: the PR branch on GitHub, as last fetched"
+              data-test-source="origin"
+              {{on "click" (fn this.pullRequestDiff.show "origin")}}
+            >origin</button>
+            <button
+              type="button"
+              aria-pressed={{if
+                (eq this.pullRequestDiff.source "local")
+                "true"
+                "false"
+              }}
+              title="local: the commit the PR's worktree has checked out, with any commits not pushed yet"
+              data-test-source="local"
+              {{on "click" (fn this.pullRequestDiff.show "local")}}
+            >local</button>
+          </span>
+        </div>
         {{#if this.pullRequestDiff.fetching}}
           <span class="fetching-chip" data-test-fetching>fetching…</span>
         {{/if}}
@@ -207,7 +213,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
           <CommitBar
             @stepper={{this.pullRequestDiff.stepper}}
             @step={{this.pullRequestDiff.step}}
+            @go={{this.pullRequestDiff.go}}
             @tick={{this.pullRequestDiff.tick}}
+            @note={{this.pullRequestDiff.note}}
+            @dismissNote={{this.pullRequestDiff.dismissNote}}
           />
         {{/if}}
         <div

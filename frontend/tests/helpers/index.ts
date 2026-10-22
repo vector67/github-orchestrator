@@ -10,6 +10,8 @@ const CHOSEN_REPOS = 'hub-repos';
 const SECTIONS_ENTERED = 'hub-sections-entered';
 const PARKED_FOLDED = 'wall-parked-folded';
 const HARVEST_TIMER = 'harvest-timer';
+const COMMIT_SIZING = 'commit-box-sizing';
+const COMMIT_NOTES = 'commit-notes-dismissed';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
@@ -19,6 +21,8 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(SECTIONS_ENTERED);
     localStorage.removeItem(PARKED_FOLDED);
     localStorage.removeItem(HARVEST_TIMER);
+    localStorage.removeItem(COMMIT_SIZING);
+    localStorage.removeItem(COMMIT_NOTES);
   });
 }
 
