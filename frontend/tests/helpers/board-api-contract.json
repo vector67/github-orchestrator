@@ -5013,6 +5013,16 @@
       }
      ]
     },
+    "my_review_sha": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "pending_reviewers": {
      "items": {
       "type": "string"
@@ -5066,6 +5076,7 @@
     "review_decision",
     "my_review",
     "my_review_at",
+    "my_review_sha",
     "viewer_requested",
     "mentioned",
     "mentions",

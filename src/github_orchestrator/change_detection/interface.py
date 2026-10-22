@@ -204,6 +204,7 @@ class Facts:
     mentions: tuple[Mention, ...]
     mentioned: bool
     my_review_at: str | None
+    my_review_sha: str | None
     polled_at: str | None
 
     @property

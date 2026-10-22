@@ -1441,6 +1441,8 @@ class PrFacts(BaseModel):
                     "`changes-requested`, `commented` or `dismissed`. Null "
                     "where you have not reviewed.")
     my_review_at: str | None = Field(description="When you gave the review that stands.")
+    my_review_sha: str | None = Field(
+        description="The commit the review that stands was given on.")
     viewer_requested: bool = Field(
         description="You are on the requested list right now.")
     mentioned: bool = Field(description="The pull request has mentioned you.")

@@ -169,6 +169,15 @@ def test_the_facts_say_when_i_gave_the_review_that_stands(detection):
     assert (facts.my_review, facts.my_review_at) == (ReviewerStatus.APPROVED, "2026-09-20T00:00:00Z")
 
 
+def test_the_facts_say_which_commit_the_review_that_stands_was_given_on(detection):
+    detection.advance(THE_PR, poll(pr_state(author="alice", reviews=(
+        Review(ACCOUNT, ReviewState.APPROVED, "2026-09-20T00:00:00Z", "sha1"),
+        Review(ACCOUNT, ReviewState.COMMENTED, "2026-09-21T00:00:00Z", "sha2"),
+        Review("bob", ReviewState.APPROVED, "2026-09-22T00:00:00Z", "sha3")))), set())
+
+    assert detection.facts(THE_PR).my_review_sha == "sha1"
+
+
 def test_the_facts_say_when_the_watcher_polled_them(detection):
     detection.advance(THE_PR, poll(at="2026-10-08T09:00:00Z"), set())
     detection.advance(THE_PR, poll(at="2026-10-08T09:05:00Z"), set())

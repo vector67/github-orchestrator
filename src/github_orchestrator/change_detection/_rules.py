@@ -98,6 +98,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
     latest_reviewer = None
     reviewer_status: dict[str, ReviewerStatus] = {}
     my_review_at = None
+    my_review_sha = None
     for review in state.reviews:
         login = review.author
         if not (login and review.state):
@@ -108,6 +109,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         reviewer_status[login] = status
         if login == account:
             my_review_at = review.submitted_at
+            my_review_sha = review.commit_id
     actionable = [r for r in state.reviews
                   if r.state is None or _STATUS_OF[r.state] is not ReviewerStatus.COMMENTED]
     if actionable:
@@ -175,6 +177,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "detailed_reviewer": detailed_reviewer,
         "is_detailed_reviewer": is_detailed_reviewer,
         "my_review_at": my_review_at,
+        "my_review_sha": my_review_sha,
         "mentions": stored_mentions(mentions),
         "mentioned": poll.mentioned or bool(mentions) or bool((old or {}).get("mentioned")),
     }

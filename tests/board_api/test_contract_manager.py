@@ -69,6 +69,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                               "url": "https://ci/tests", "summary": "tests passed"}],
                   "merge_state": "clean", "draft": False,
                   "review_decision": None, "my_review": None, "my_review_at": None,
+                  "my_review_sha": None,
                   "viewer_requested": False, "mentioned": False, "mentions": [],
                   "unresolved_threads": 0},
         "manager": {"frozen_on": None, "on_hold": True, "working_on": "new-comments",
@@ -85,7 +86,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
     drawn = replace(
         WORKING, polled_at="2026-10-08T09:00:00Z", ended=False, draft=True,
         merge_state="behind", viewer_requested=True, mentioned=True, mentions=(asked,),
-        my_review="approved", my_review_at="2026-10-07T12:00:00Z",
+        my_review="approved", my_review_at="2026-10-07T12:00:00Z", my_review_sha="c0ffee1",
         changes_requested_by=("bob",), review_decision="changes-requested", hidden=True,
         flags_changed_at="2026-10-08T09:01:00Z",
         unreadable_threads=(), threads_listed_at="2026-10-08T08:59:00Z",
@@ -101,6 +102,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
                     "url": "https://ci/tests", "summary": "tests passed"}],
         "merge_state": "behind", "draft": True, "review_decision": "changes-requested",
         "my_review": "approved", "my_review_at": "2026-10-07T12:00:00Z",
+        "my_review_sha": "c0ffee1",
         "viewer_requested": True, "mentioned": True,
         "mentions": [{"author": "anna", "at": "2026-10-08T08:00:00Z", "answered": False}],
         "unresolved_threads": 0}

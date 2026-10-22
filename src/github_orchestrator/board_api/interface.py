@@ -93,6 +93,7 @@ class Dashboard:
     mentioned: bool
     mentions: tuple[Mention, ...]
     my_review_at: str | None
+    my_review_sha: str | None
     agents_enabled: bool
     agent_name: str
     working_on: str | None

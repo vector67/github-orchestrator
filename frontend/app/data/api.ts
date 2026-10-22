@@ -605,6 +605,7 @@ export interface PrFacts {
   review_decision: string | null;
   my_review: string | null;
   my_review_at: string | null;
+  my_review_sha: string | null;
   viewer_requested: boolean;
   mentioned: boolean;
   mentions: MentionFact[];

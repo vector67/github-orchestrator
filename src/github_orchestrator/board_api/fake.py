@@ -30,6 +30,7 @@ IDLE = Dashboard(
     changes_requested_by=(), pending_reviewers=("carol",), unresolved_threads=0,
     polled_at="2026-06-10T10:30:00Z", ended=False, draft=False, merge_state="clean",
     viewer_requested=False, mentioned=False, mentions=(), my_review_at=None,
+    my_review_sha=None,
     agents_enabled=True,
     agent_name="Agent",
     working_on=None,

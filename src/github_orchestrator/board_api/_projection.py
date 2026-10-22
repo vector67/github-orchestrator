@@ -546,6 +546,7 @@ def _facts_of(dashboard: Dashboard) -> contract.PrFacts:
         else contract.MergeState(dashboard.merge_state),
         draft=dashboard.draft, review_decision=dashboard.review_decision,
         my_review=dashboard.my_review, my_review_at=dashboard.my_review_at,
+        my_review_sha=dashboard.my_review_sha,
         viewer_requested=dashboard.viewer_requested, mentioned=dashboard.mentioned,
         mentions=[contract.MentionFact(author=mention.author, at=mention.at,
                                        answered=mention.answered)
