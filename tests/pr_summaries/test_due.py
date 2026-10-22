@@ -1,3 +1,4 @@
+import os
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime, timezone
@@ -133,7 +134,20 @@ def test_a_corrupt_summary_file_leaves_the_other_summaries_due(tmp_path):
     assert summaries.due(set()) == [THE_PR]
 
 
-STARTED = datetime(2026, 10, 15, 9, 0, tzinfo=timezone.utc)
+def test_a_save_reaches_the_disk_before_it_replaces_the_stored_summary(tmp_path, monkeypatch):
+    summaries = summaries_in(tmp_path)
+    summaries.want(THE_PR)
+    stored_file = tmp_path / "o" / "n" / "1.json"
+    before = stored_file.read_bytes()
+    synced = []
+    monkeypatch.setattr(os, "fsync", lambda fd: synced.append((os.pread(fd, 1 << 20, 0), stored_file.read_bytes())))
+
+    summaries.save(THE_PR, Summary(head_sha="abc1234"))
+
+    assert synced == [(stored_file.read_bytes(), before)]
+
+
+STARTED =datetime(2026, 10, 15, 9, 0, tzinfo=timezone.utc)
 FINISHED = datetime(2026, 10, 15, 9, 7, tzinfo=timezone.utc)
 
 

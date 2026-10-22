@@ -177,6 +177,12 @@ class OperatorCli:
             if problem is not None:
                 print(problem, file=sys.stderr)
                 sys.exit(2)
+        location = self._config_file.location()
+        if (args.command in ("status", "doctor") and config.instance is not None
+                and not Path(location).exists()):
+            print(f"There is no instance {config.instance}: {location} does not exist. "
+                  "Leave --instance out for the default instance.", file=sys.stderr)
+            sys.exit(2)
         if args.command == "thread" and args.thread_command is None:
             parsers.thread_parser.print_help()
             sys.exit(1)
