@@ -94,6 +94,7 @@ def create_worktree(repo_dir: Path, branch: str, base_branch: str | None,
                     new_worktree_command: str) -> Path:
     fetch_branch(repo_dir, branch)
     fetch_base(repo_dir, base_branch)
+    _git("-C", str(repo_dir), "worktree", "prune")
 
     last_error = ""
     for candidate in _candidate_paths(repo_dir, branch, pr):
