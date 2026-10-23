@@ -4550,13 +4550,12 @@ button.tree-row[aria-current="true"] {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow: auto;
 }
 
 .diff-files {
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
   padding: 16px;
-  overflow: auto;
 }
 
 .commit-stepper {
@@ -5132,7 +5131,7 @@ button.tree-row[aria-current="true"] {
 
 .pr-diff .file-head {
   position: sticky;
-  top: -16px;
+  top: 0;
   z-index: 2;
   display: flex;
   gap: 10px;

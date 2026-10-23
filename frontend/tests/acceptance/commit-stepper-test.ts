@@ -3,6 +3,7 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   currentURL,
+  find,
   findAll,
   triggerEvent,
   visit,
@@ -89,6 +90,45 @@ module('Acceptance | commit stepper', function (hooks) {
         .length,
       1,
       "the diff asked for is the commit's own range",
+    );
+  });
+
+  test('the bar and the timeline scroll away with the diff', async function (assert) {
+    board().diffs = {
+      ...board().diffs,
+      first: {
+        base: FORK,
+        head: FIRST,
+        files: [
+          changed(
+            'src/widgets/first.py',
+            Array.from({ length: 200 }, (_, at) => added(at + 1, 'a line')),
+          ),
+        ],
+      },
+    };
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    const bar = find('[data-test-commit-stepper]')!;
+    const timeline = find('[data-test-timeline]')!;
+    let scroller = find('[data-test-pr-diff]')!.parentElement!;
+    while (!['auto', 'scroll'].includes(getComputedStyle(scroller).overflowY))
+      scroller = scroller.parentElement!;
+    assert.true(scroller.contains(bar), 'the bar scrolls with the diff');
+    assert.true(scroller.contains(timeline), 'and so does the timeline');
+    assert.deepEqual(
+      [getComputedStyle(bar).position, getComputedStyle(timeline).position],
+      ['static', 'static'],
+      'neither stays pinned in place',
+    );
+
+    scroller.scrollTop = scroller.scrollHeight;
+
+    assert.true(
+      timeline.getBoundingClientRect().bottom <=
+        scroller.getBoundingClientRect().top,
+      'scrolled down, the timeline is out of sight',
     );
   });
 

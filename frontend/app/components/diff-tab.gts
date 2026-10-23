@@ -251,7 +251,11 @@ export default class DiffTab extends Component<DiffTabSignature> {
           @count={{this.countOf}}
         />
       </aside>
-      <div class="diff-main">
+      <div
+        class="diff-main"
+        data-test-diff-pane
+        {{didChange this.follow this.scrolling}}
+      >
         {{#if this.pullRequestDiff.stepper}}
           <CommitBar
             @stepper={{this.pullRequestDiff.stepper}}
@@ -287,11 +291,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
             />
           {{/if}}
         {{/if}}
-        <div
-          class="diff-files"
-          data-test-diff-files
-          {{didChange this.follow this.scrolling}}
-        >
+        <div class="diff-files" data-test-diff-files>
           {{#if this.pullRequestDiff.shown}}
             {{#if this.pullRequestDiff.commenting}}
               <PrDiff

@@ -44,7 +44,7 @@ function texts(selector: string): string[] {
 }
 
 function scrolledTo(path: string): boolean {
-  const pane = find('[data-test-diff-files]');
+  const pane = find('[data-test-diff-pane]');
   const file = find(`[data-test-file="${path}"]`);
   if (!pane || !file) return false;
   const offset =
@@ -396,7 +396,7 @@ module('Acceptance | pr diff', function (hooks) {
         (_, at) => `line ${at + 1}`,
       );
       await visit('/pr/o/r/7/diff?file=README.md');
-      const pane = find('[data-test-diff-files]')!;
+      const pane = find('[data-test-diff-pane]')!;
       pane.scrollTop = pane.scrollHeight;
       const scrolled = pane.scrollTop;
 
@@ -1289,7 +1289,7 @@ module('Acceptance | pr diff', function (hooks) {
     test('an address naming a line opens with that line in the middle of the pane', async function (assert) {
       await visit('/pr/o/r/7/diff?file=README.md&line=80');
 
-      const pane = find('[data-test-diff-files]')!.getBoundingClientRect();
+      const pane = find('[data-test-diff-pane]')!.getBoundingClientRect();
       const row = find(
         '[data-test-file="README.md"] [data-line="80"]',
       )!.getBoundingClientRect();
