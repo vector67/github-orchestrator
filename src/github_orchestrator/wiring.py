@@ -209,6 +209,7 @@ from github_orchestrator.watcher._would import (
     WouldKeepServer,
     WouldPlace,
     WouldSave,
+    WouldSearchMentions,
     WouldSummarise,
     WouldTearDown,
 )
@@ -988,6 +989,10 @@ class WouldWatchProvider(Provider):
     @provide
     def summary_lane(self, wiring: WouldWatchWiring, summaries: PrSummaries) -> SummaryLane:
         return WouldSummarise(summaries, wiring.say)
+
+    @provide
+    def mentions_inbox(self, wiring: WouldWatchWiring) -> MentionsInbox:
+        return WouldSearchMentions(wiring.say)
 
 
 def dry_run_parts(settings: Settings) -> list[Part]:
