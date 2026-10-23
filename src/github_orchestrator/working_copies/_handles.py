@@ -182,19 +182,25 @@ class BoundCheckout:
             return "the PR worktree has changes of its own"
         return self.git._reset(located.path, str(landed_base))
 
-    def fetch(self, base_branch: str | None, *, reset_branch: str | None = None) -> str | None:
+    def fetch(self, base_branch: str | None) -> str | None:
+        located = self.git._pr_worktree(self.pr)
+        if located.path is None:
+            return located.missing
+        return self.git._fetch(located.path, base_branch)
+
+    def reset_to_origin(self, branch: str, base_branch: str | None) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
         unclean = "the worktree has uncommitted changes, so it was left as it is"
-        if reset_branch is not None and not self.git._is_clean(located.path):
+        if not self.git._is_clean(located.path):
             return unclean
         failed = self.git._fetch(located.path, base_branch)
-        if failed is not None or reset_branch is None:
+        if failed is not None:
             return failed
         here = self.git._branch_at(located.path)
-        if here != reset_branch:
-            return (f"the worktree holds {here or 'no branch'}, not {reset_branch}, "
+        if here != branch:
+            return (f"the worktree holds {here or 'no branch'}, not {branch}, "
                     "so it was left as it is")
         if not self.git._is_clean(located.path):
             return unclean

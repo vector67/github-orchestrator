@@ -45,7 +45,7 @@ class QueuedReset:
             log.info("%s: the queued reset to origin was cancelled while origin was fetched", pr)
             return
         ResetToOrigin(ran_at=self._now()).keep(shelf)
-        refused = checkout.fetch(facts.base_branch, reset_branch=facts.branch)
+        refused = checkout.reset_to_origin(facts.branch, facts.base_branch)
         if refused is not None:
             self._did_not_run(pr, shelf, refused)
             return
