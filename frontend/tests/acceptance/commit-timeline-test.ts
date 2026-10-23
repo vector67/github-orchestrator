@@ -62,6 +62,15 @@ function inRange(): string[] {
   );
 }
 
+function inside(inner: DOMRect, outer: DOMRect): boolean {
+  return (
+    outer.left <= inner.left &&
+    inner.right <= outer.right &&
+    outer.top <= inner.top &&
+    inner.bottom <= outer.bottom
+  );
+}
+
 function increasing(values: number[]): boolean {
   return values.every((one, index) => index === 0 || one > values[index - 1]!);
 }
@@ -763,7 +772,27 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
       dots('base').map((one) => one.sha),
       [FORK, run[23], run[24]],
     );
-    assert.dom('[data-test-collapsed]').hasText('⋯ 23 commits');
+    assert.dom('[data-test-collapsed]').hasText('⋯ 23 more');
+    const box = (selector: string) => find(selector)!.getBoundingClientRect();
+    const apart = (one: DOMRect, other: DOMRect) =>
+      one.bottom <= other.top ||
+      other.bottom <= one.top ||
+      one.right <= other.left ||
+      other.right <= one.left;
+    const caption = box('[data-test-since-fork] text');
+    const pillBox = box('[data-test-collapsed] rect');
+    const since = box('[data-test-since-fork] rect');
+    assert.true(apart(caption, pillBox), 'the caption stays clear of the pill');
+    assert.true(
+      findAll('[data-test-date]').every((one) =>
+        apart(caption, one.getBoundingClientRect()),
+      ),
+      'and of the dates',
+    );
+    assert.true(
+      inside(pillBox, since),
+      "the pill sits inside the box of main's commits since the fork",
+    );
     const pill = Number(find('[data-test-collapsed]')!.getAttribute('data-x'));
     const [fork, beforeTip] = dots('base');
     assert.true(pill > fork!.x, 'after the fork');
@@ -962,6 +991,64 @@ module(
     function press(key: string) {
       return triggerEvent(document, 'keydown', { key });
     }
+  },
+);
+
+const STALE_ONE = '5a5a5a5';
+const STALE_TWO = '6b6b6b6';
+
+module(
+  'Acceptance | commit timeline with a worktree diverged from origin',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    hooks.beforeEach(function () {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: STALE_TWO,
+        },
+      });
+      board().commits = prHistory(FORK, [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+        prCommit(THIRD, SECOND, 'Test the widget'),
+      ]);
+      board().localCommits = prHistory('01d0000', [
+        prCommit(STALE_ONE, '01d0000', 'Add the widget'),
+        prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
+      ]);
+    });
+
+    test('on local a review given on a commit origin no longer has draws no flag', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.deepEqual(
+        dots('pr').map((one) => [
+          one.sha,
+          dot(one.sha).getAttribute('data-pushed'),
+        ]),
+        [
+          [STALE_ONE, 'false'],
+          [STALE_TWO, 'false'],
+        ],
+      );
+      assert.dom('[data-test-review-flag]').doesNotExist();
+    });
+
+    test("on origin, where the review's commit is not in the list and nothing was kept, there is no flag either", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.dom('[data-test-review-flag]').doesNotExist();
+    });
   },
 );
 

@@ -857,6 +857,21 @@ def test_a_pr_based_on_another_branch_carries_that_branchs_own_commits(
     assert history.fork_at == history.stack.commits[-1].authored_at
 
 
+def test_a_worktree_left_behind_by_a_rewritten_origin_keeps_its_own_fork_and_commits(
+        world, pr_worktree, pr_checkout):
+    stale = Sha(world.head_of(pr_worktree))
+    main, rewritten = world.advance_base()
+    assert pr_checkout.fetch("main") is None
+
+    local = pr_checkout.pr_commits("main", pr_checkout.local_head())
+    origin = pr_checkout.pr_commits("main", pr_checkout.origin_head())
+
+    assert local is not None and origin is not None
+    assert pr_checkout.commit_message(local.fork) == "first"
+    assert (local.base_tip, [commit.sha for commit in local.commits]) == (Sha(main), [stale])
+    assert (origin.fork, [commit.sha for commit in origin.commits]) == (Sha(main), [Sha(rewritten)])
+
+
 def test_a_pr_based_on_main_stacks_on_nothing(world, pr_worktree, pr_checkout):
     history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
 
