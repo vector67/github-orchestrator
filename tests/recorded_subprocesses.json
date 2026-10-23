@@ -619,7 +619,9 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "462fc216f30d355b3a3fbc125187e54edbd496d6\n"
-    },
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"origin/rework-the-invoice-writer\"], null, null]": [
     {
      "argv": [
       "git",
@@ -630,7 +632,7 @@
       "-c",
       "user.email=preview@example.com",
       "rev-parse",
-      "HEAD"
+      "origin/rework-the-invoice-writer"
      ],
      "fs": {},
      "returncode": 0,
@@ -647,7 +649,7 @@
       "-c",
       "user.email=preview@example.com",
       "rev-parse",
-      "HEAD"
+      "origin/rework-the-invoice-writer"
      ],
      "fs": {},
      "returncode": 0,
@@ -2213,7 +2215,9 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "23fc9c248c4822e5ea7f486a98c19f1196929ec5\n"
-    },
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"origin/rework-the-invoice-writer\"], null, null]": [
     {
      "argv": [
       "git",
@@ -2224,7 +2228,7 @@
       "-c",
       "user.email=preview@example.com",
       "rev-parse",
-      "HEAD"
+      "origin/rework-the-invoice-writer"
      ],
      "fs": {},
      "returncode": 0,
@@ -2241,12 +2245,12 @@
       "-c",
       "user.email=preview@example.com",
       "rev-parse",
-      "HEAD"
+      "origin/rework-the-invoice-writer"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "8040b066c265cac25e1fbc976c0ca9644bc39a93\n"
+     "stdout": "957f94bd6578b9d5656133d177d907ac0bc86ea6\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_assumed_done\"], null, null]": [
@@ -2895,7 +2899,7 @@
      "stdout": "1\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-list\", \"--oneline\", \"8040b066c265cac25e1fbc976c0ca9644bc39a93..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-list\", \"--oneline\", \"957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
@@ -2903,7 +2907,23 @@
       "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
       "rev-list",
       "--oneline",
-      "8040b066c265cac25e1fbc976c0ca9644bc39a93..HEAD"
+      "957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "8040b06 what the agent proposes for PRRT_push_rejected\n257635c a change the fix now conflicts with\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-list\", \"--oneline\", \"HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
+      "rev-list",
+      "--oneline",
+      "HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6"
      ],
      "fs": {},
      "returncode": 0,
@@ -25789,23 +25809,6 @@
    ]
   },
   "tests/preview/test_preview.py::test_every_seeded_thread_answers_every_read_its_card_makes[reviewed]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_queued\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -25841,6 +25844,23 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "0\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined\", \"rev-list\", \"--count\", \"--end-of-options\", \"23fc9c248c4822e5ea7f486a98c19f1196929ec5..HEAD\"], null, null]": [

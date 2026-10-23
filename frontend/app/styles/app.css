@@ -4796,6 +4796,7 @@ button.tree-row[aria-current="true"] {
 
 .timeline-reset-queued {
   margin-left: 8px;
+  white-space: nowrap;
   font-size: var(--fs-s);
   color: var(--muted);
 }
@@ -4810,7 +4811,6 @@ button.tree-row[aria-current="true"] {
   margin: 0;
   font-size: var(--fs-s);
   line-height: 1.5;
-  color: var(--yellow-text);
 }
 
 .timeline-aside {
