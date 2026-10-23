@@ -2797,6 +2797,87 @@ kbd {
   border-color: var(--border-strong);
 }
 
+.mentions {
+  position: relative;
+  flex: none;
+}
+
+.mentions-count {
+  min-width: 26px;
+  padding: 3px 8px;
+  font: inherit;
+  font-size: var(--fs-s);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  color: var(--muted);
+  background: none;
+  border: 1.5px solid transparent;
+}
+
+.mentions-count.outstanding {
+  font-weight: var(--fw-strong);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.mentions-count:hover,
+.mentions-count[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.mentions-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 0;
+  background: var(--card);
+  border: 2px solid var(--border-strong);
+}
+
+.mention {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  font-size: var(--fs-s);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.mention:last-child {
+  border-bottom: 0;
+}
+
+.mention-head {
+  font-weight: var(--fw-strong);
+}
+
+.mention-body {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--muted);
+}
+
+.mention-off {
+  color: var(--muted);
+}
+
+.mention-none {
+  padding: 8px 12px;
+  font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.mentions-scrim,
 .repo-scrim,
 .settings-scrim {
   position: fixed;

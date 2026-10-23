@@ -25,6 +25,7 @@ import type {
   ManagerChanges,
   ManagerFlags,
   ManagerStanding,
+  Mentions,
   Operation,
   Outcome,
   MovedAside,
@@ -204,6 +205,7 @@ export interface Manager {
 export type Feed =
   | { kind: 'wall' }
   | { kind: 'runs' }
+  | { kind: 'mentions' }
   | { kind: 'dashboard'; pr: Numbered }
   | { kind: 'pull-request'; pr: Numbered }
   | { kind: 'viewer'; pr: Numbered }
@@ -260,6 +262,7 @@ const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
 const FEED_PATHS: Record<Feed['kind'], string> = {
   wall: '/api/pull-requests',
   runs: '/api/runs',
+  mentions: '/api/mentions',
   dashboard: '/api/dashboard',
   'pull-request': '/api/pull-request',
   viewer: '/api/viewer',
@@ -405,6 +408,7 @@ export default class StoreService extends Service {
   @tracked private groups: WallGroupName[] | null = null;
   @tracked watching: string[] = [];
   @tracked ledger: Omit<RunLedger, 'watcher'> | null = null;
+  @tracked mentions: Mentions | null = null;
   @tracked health: Omit<Health, 'watcher'> | null = null;
   @tracked watcher: WatcherHealth | null = null;
   @tracked unheld: Unheld | null = null;
@@ -1151,6 +1155,9 @@ export default class StoreService extends Service {
         return true;
       case 'runs':
         this.takeLedger(body as RunLedger);
+        return true;
+      case 'mentions':
+        this.mentions = body as Mentions;
         return true;
       case 'dashboard':
         this.drawnInto(feed.pr, body as Dashboard);

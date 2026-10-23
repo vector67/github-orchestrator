@@ -91,6 +91,7 @@ export default class PollService extends Service {
 
   readonly wall: Polled;
   readonly runs: Polled;
+  readonly mentions: Polled;
 
   private located: Promise<void> | null = null;
   private walling: Promise<void> | null = null;
@@ -114,6 +115,9 @@ export default class PollService extends Service {
     );
     this.runs = this.reachability.polled('runs', (tag) =>
       this.store.ask({ kind: 'runs' }, tag),
+    );
+    this.mentions = this.reachability.polled('mentions', (tag) =>
+      this.store.ask({ kind: 'mentions' }, tag),
     );
   }
 
@@ -291,7 +295,11 @@ export default class PollService extends Service {
   }
 
   async refreshHub(due = false): Promise<void> {
-    await Promise.allSettled([this.wall.poll(due), this.runs.poll(due)]);
+    await Promise.allSettled([
+      this.wall.poll(due),
+      this.runs.poll(due),
+      this.mentions.poll(due),
+    ]);
     this.hubAt = Date.now();
   }
 

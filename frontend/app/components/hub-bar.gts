@@ -4,6 +4,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
+import MentionsCounter from 'frontend/components/mentions-counter';
 import SettingsMenu from 'frontend/components/settings-menu';
 import { TODAY_HINT, todayOf, type Said } from 'frontend/data/runs';
 import type HubService from 'frontend/services/hub';
@@ -183,6 +184,7 @@ export default class HubBar extends Component<HubBarSignature> {
           data-test-update-available
         >Update available</span>
       {{/if}}
+      <MentionsCounter />
       <SettingsMenu />
     </header>
   </template>

@@ -39,7 +39,9 @@ import type {
   WallGroupName,
   WatcherHealth,
   HubState,
+  Mentions,
   NewestRelease,
+  OutstandingMention,
   QueuedEvent,
   UnpushedCommit,
 } from 'frontend/data/api';
@@ -524,6 +526,24 @@ export function finishedRun(over: Partial<FinishedRun> = {}): FinishedRun {
   };
 }
 
+export function outstandingMention(
+  over: Partial<OutstandingMention> = {},
+): OutstandingMention {
+  return {
+    repo: 'o/r',
+    number: 7,
+    thread: 'k1',
+    comment_id: 1,
+    kind: 'issue',
+    author: 'anna',
+    at: '2026-06-10T10:00:00Z',
+    body: '@octocat what do you think?',
+    url: 'https://github.com/o/r/pull/7#issuecomment-1',
+    on_board: true,
+    ...over,
+  };
+}
+
 export function runLedger(
   over: {
     watcher?: Partial<WatcherHealth>;
@@ -576,7 +596,7 @@ const READ_MARK =
   /\/api\/pull-request\/read-marks\/operations:(mark-read|mark-unread)$/;
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
 export const ONE_PR_READ =
-  /^\/api\/(?!health$|pull-requests$|runs$|tour$|emojis$|client-errors$)/;
+  /^\/api\/(?!health$|pull-requests$|runs$|mentions$|tour$|emojis$|client-errors$)/;
 const THROUGH_THE_HUB = /^\/pr\/([^/]+\/[^/]+)\/(\d+)(\/api\/.*)$/;
 
 type Side = 'board' | 'hub';
@@ -737,6 +757,7 @@ export class FakeBoard {
   setup = new FakeSetup();
   held: HeldPullRequest[] = [heldPr()];
   ledger: RunLedger = runLedger();
+  mentions: Mentions = { searched_at: null, mentions: [] };
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
   opensOutside = false;
@@ -1181,6 +1202,7 @@ export class FakeBoard {
     }
     if (side === 'hub') {
       if (path === '/api/runs') return this.ledger;
+      if (path === '/api/mentions') return this.mentions;
       if (path === '/api/tour') return { due: this.tourDue };
       if (path === '/api/emojis')
         return {

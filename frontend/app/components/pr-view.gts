@@ -8,6 +8,7 @@ import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import RebaseButton from 'frontend/components/rebase-button';
 import HarvestButton from 'frontend/components/harvest-button';
+import MentionsCounter from 'frontend/components/mentions-counter';
 import SettingsMenu from 'frontend/components/settings-menu';
 import Switcher from 'frontend/components/switcher';
 import {
@@ -288,6 +289,7 @@ export default class PrView extends Component<PrViewSignature> {
             @url={{this.url}}
           />
         {{/if}}
+        <MentionsCounter />
         <SettingsMenu />
       </header>
       {{#if this.notHeld}}
