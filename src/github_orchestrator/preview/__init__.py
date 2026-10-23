@@ -426,10 +426,14 @@ STAND_IN = 'echo "The preview opens a shell where the manager opens g $1."; exec
 ASK_STAND_IN = 'printf "The preview opens a shell where the manager asks the agent:\\n\\n%s\\n\\n" "$1"; exec "${SHELL:-/bin/sh}" -l'
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class PreviewPanel(FakeManagerPanel):
+    drawn: Callable[[], Dashboard]
     sessions: TerminalSessions | None = None
     worktree: str = ""
+
+    def dashboard(self) -> Dashboard:
+        return self.drawn()
 
     def open_terminal(self, keys: str) -> str | None:
         if self.sessions is None:
@@ -788,7 +792,7 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
     rebased = shape == "rebased"
     seed(conversation_managers, outside, viewer, repo, reviewer,
          repo.head if rebased or shape == "diverged" else None)
-    panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
+    panels.panel = manager_panel(lambda: running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
     if not rebased:
         return []
@@ -814,10 +818,10 @@ def running(dashboard: Dashboard) -> Dashboard:
                                silent_seconds=6.0, standing=ManagerStanding.ANSWERING)
 
 
-def manager_panel(dashboard: Dashboard, *, sessions: TerminalSessions | None = None,
+def manager_panel(drawn: Callable[[], Dashboard], *, sessions: TerminalSessions | None = None,
                   worktree: str = "") -> PreviewPanel:
     return PreviewPanel(
-        sessions=sessions, worktree=worktree, now=dashboard,
+        sessions=sessions, worktree=worktree, drawn=drawn,
         changes_text=("# What changed\n\n- Renamed `write_invoice` to `write_invoice_file`.\n"
                       "- Split the header writer out of the body writer.\n"),
         output=[("Reading src/writer.py", False), ("Running the tests", False),
