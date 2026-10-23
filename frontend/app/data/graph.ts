@@ -23,7 +23,7 @@ export interface GraphEdge {
 
 export interface LaneLine {
   lane: string;
-  y: number;
+  at: number;
   from: number;
   to: number;
 }
@@ -34,6 +34,7 @@ export interface GraphLayout {
   lanes: LaneLine[];
   column: number;
   widest: number;
+  vertical: boolean;
   width: number;
   height: number;
 }
@@ -76,10 +77,33 @@ function columnsOf(nodes: GraphNode[]): Map<string, number> {
   return columns;
 }
 
-function edgePath(from: Placed, to: Placed): string {
-  if (from.y === to.y) return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+function edgePath(from: Placed, to: Placed, vertical: boolean): string {
+  if (vertical ? from.x === to.x : from.y === to.y)
+    return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+  if (vertical) {
+    const bend = (from.y + to.y) / 2;
+    return `M ${from.x} ${from.y} C ${from.x} ${bend}, ${to.x} ${bend}, ${to.x} ${to.y}`;
+  }
   const bend = (from.x + to.x) / 2;
   return `M ${from.x} ${from.y} C ${bend} ${from.y}, ${bend} ${to.y}, ${to.x} ${to.y}`;
+}
+
+function ranksOf(
+  lanes: string[],
+  nodes: GraphNode[],
+  columns: Map<string, number>,
+): Map<string, number> {
+  const start = (node: GraphNode) =>
+    columns.get(node.id)! - ((node.span ?? 1) - 1) / 2;
+  return new Map(
+    [...nodes]
+      .sort(
+        (one, other) =>
+          start(one) - start(other) ||
+          lanes.indexOf(one.lane) - lanes.indexOf(other.lane),
+      )
+      .map((node, rank) => [node.id, rank]),
+  );
 }
 
 export function layout(
@@ -87,13 +111,22 @@ export function layout(
   nodes: GraphNode[],
   spacing: Spacing = SPACING,
   across = 0,
+  vertical = false,
 ): GraphLayout {
-  const columns = columnsOf(nodes);
+  const columns = vertical
+    ? ranksOf(lanes, nodes, columnsOf(nodes))
+    : columnsOf(nodes);
   const widest = Math.max(0, ...columns.values());
   const fitted = widest
     ? (across - spacing.left - spacing.right) / widest
     : spacing.column;
-  const column = Math.min(Math.max(fitted, spacing.column), spacing.most);
+  const column = vertical
+    ? spacing.column
+    : Math.min(Math.max(fitted, spacing.column), spacing.most);
+  const along = (at: number) =>
+    (vertical ? spacing.top : spacing.left) + at * column;
+  const beside = (row: number) =>
+    (vertical ? spacing.left : spacing.top) + row * spacing.row;
   const placed = new Map<string, Placed>();
   for (const node of nodes) {
     const at = columns.get(node.id)!;
@@ -102,8 +135,8 @@ export function layout(
       ...node,
       column: at,
       row,
-      x: spacing.left + at * column,
-      y: spacing.top + row * spacing.row,
+      x: vertical ? beside(row) : along(at),
+      y: vertical ? along(at) : beside(row),
     });
   }
   const edges = [...placed.values()].flatMap((to) =>
@@ -117,35 +150,41 @@ export function layout(
           lane: to.lane,
           parent: index,
           crossing: from.row !== to.row,
-          path: edgePath(from, to),
+          path: edgePath(from, to, vertical),
         },
       ];
     }),
   );
   const lines = lanes.flatMap((lane) => {
-    const xs = [...placed.values()]
+    const ats = [...placed.values()]
       .filter((one) => one.lane === lane)
-      .map((one) => one.x);
-    if (!xs.length) return [];
+      .map((one) => (vertical ? one.y : one.x));
+    if (!ats.length) return [];
     return [
       {
         lane,
-        y: spacing.top + lanes.indexOf(lane) * spacing.row,
-        from: Math.min(...xs),
-        to: Math.max(...xs),
+        at: beside(lanes.indexOf(lane)),
+        from: Math.min(...ats),
+        to: Math.max(...ats),
       },
     ];
   });
+  const lengthwise =
+    along(widest) + (vertical ? spacing.bottom : spacing.right);
+  const crosswise =
+    beside(lanes.length - 1) + (vertical ? spacing.right : spacing.bottom);
   return {
     nodes: placed,
     edges,
     lanes: lines,
     column,
     widest,
-    width:
-      column === fitted
+    vertical,
+    width: vertical
+      ? Math.max(across, crosswise)
+      : column === fitted
         ? across
-        : spacing.left + widest * column + spacing.right,
-    height: spacing.top + (lanes.length - 1) * spacing.row + spacing.bottom,
+        : lengthwise,
+    height: vertical ? lengthwise : crosswise,
   };
 }

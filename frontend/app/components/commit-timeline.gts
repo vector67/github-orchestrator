@@ -22,17 +22,16 @@ export interface CommitTimelineSignature {
     stretch: (end: End, sha: string) => void;
     choose: (picked: Picked | null) => void;
     fit: (across: number) => void;
-    unfold: () => void;
     reset: ResetControls;
   };
 }
 
-function svgX(svg: SVGSVGElement, event: PointerEvent): number | null {
+function svgPoint(svg: SVGSVGElement, event: PointerEvent): DOMPoint | null {
   const screen = svg.getScreenCTM();
   if (!screen) return null;
   return new DOMPoint(event.clientX, event.clientY).matrixTransform(
     screen.inverse(),
-  ).x;
+  );
 }
 
 export default class CommitTimeline extends Component<CommitTimelineSignature> {
@@ -64,11 +63,16 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
   };
 
   measure = (scroll: HTMLElement) => {
-    const watching = new ResizeObserver(() =>
-      this.args.fit(scroll.clientWidth),
-    );
+    let frame = 0;
+    const watching = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => this.args.fit(scroll.clientWidth));
+    });
     watching.observe(scroll);
-    return () => watching.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      watching.disconnect();
+    };
   };
 
   private get counted(): string {
@@ -91,10 +95,6 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     const opens = target.closest('[data-opens]')?.getAttribute('data-opens');
     if (opens) {
       void this.router.transitionTo(opens);
-      return;
-    }
-    if (target.closest('[data-earlier]')) {
-      this.args.unfold();
       return;
     }
     const pill = target
@@ -120,12 +120,18 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
 
   private moved(svg: SVGSVGElement, event: PointerEvent): void {
     const end = this.dragging;
-    const x = end && svgX(svg, event);
-    if (!end || x === null) return;
+    const point = end && svgPoint(svg, event);
+    if (!end || !point) return;
+    const along = this.args.timeline.vertical
+      ? (at: { y: number }) => at.y
+      : (at: { x: number }) => at.x;
     const nearest = this.args.timeline.dots
       .filter((one) => one.pickable)
       .reduce((best, one) =>
-        Math.abs(one.x - x) < Math.abs(best.x - x) ? one : best,
+        Math.abs(along(one) - along(point)) <
+        Math.abs(along(best) - along(point))
+          ? one
+          : best,
       );
     if (nearest.sha === this.dragged) return;
     this.dragged = nearest.sha;
@@ -136,6 +142,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     <section
       class="commit-timeline"
       aria-label="the branch's timeline"
+      data-vertical={{if @timeline.vertical "true"}}
       data-test-timeline
     >
       <header class="timeline-head">
@@ -300,11 +307,43 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               />
               <text
                 class="timeline-note"
-                x={{@timeline.since.x}}
-                y={{@timeline.since.textY}}
+                x={{@timeline.since.textAt.x}}
+                y={{@timeline.since.textAt.y}}
+                text-anchor={{@timeline.since.textAt.anchor}}
               >{{@timeline.since.text}}</text>
             </g>
           {{/if}}
+          {{#each @timeline.rows key="sha" as |row|}}
+            <g
+              class="timeline-row"
+              data-sha={{row.sha}}
+              data-lane={{row.lane}}
+              data-y={{row.y}}
+              data-pickable={{if row.pickable "true"}}
+              data-test-timeline-row
+            >
+              <title>{{row.title}}</title>
+              <rect
+                class="timeline-row-hit"
+                x="0"
+                y={{row.top}}
+                width={{@timeline.width}}
+                height={{row.height}}
+              />
+              <text
+                class="timeline-row-sha"
+                x={{row.shaX}}
+                y={{row.y}}
+                dominant-baseline="middle"
+              >{{row.short}}</text>
+              <text
+                class="timeline-row-subject"
+                x={{row.subjectX}}
+                y={{row.y}}
+                dominant-baseline="middle"
+              >{{row.subject}}</text>
+            </g>
+          {{/each}}
           {{#each @timeline.lanes key="@index" as |lane|}}
             <line
               class="timeline-lane"
@@ -312,10 +351,10 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               data-dashed={{if lane.dashed "true"}}
               data-test-unpushed-lane={{if lane.unpushed "true"}}
               data-test-ghost-lane={{if (eq lane.lane "ghost") "true"}}
-              x1={{lane.from}}
-              y1={{lane.y}}
-              x2={{lane.to}}
-              y2={{lane.y}}
+              x1={{lane.x1}}
+              y1={{lane.y1}}
+              x2={{lane.x2}}
+              y2={{lane.y2}}
             />
           {{/each}}
           {{#each @timeline.curves key="path" as |curve|}}
@@ -356,16 +395,16 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{#if @timeline.flag}}
             <g class="timeline-flag" data-test-review-flag>
               <line
-                x1={{@timeline.flag.x}}
-                y1={{@timeline.flag.top}}
-                x2={{@timeline.flag.x}}
-                y2={{@timeline.flag.bottom}}
+                x1={{@timeline.flag.x1}}
+                y1={{@timeline.flag.y1}}
+                x2={{@timeline.flag.x2}}
+                y2={{@timeline.flag.y2}}
               />
               <text
                 class="timeline-note"
-                x={{@timeline.flag.x}}
-                y={{@timeline.flag.textY}}
-                text-anchor="middle"
+                x={{@timeline.flag.textAt.x}}
+                y={{@timeline.flag.textAt.y}}
+                text-anchor={{@timeline.flag.textAt.anchor}}
               >{{@timeline.flag.text}}</text>
             </g>
           {{/if}}
@@ -425,9 +464,9 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             {{#if dot.matched}}
               <text
                 class="timeline-note"
-                x={{dot.x}}
-                y={{dot.matchedY}}
-                text-anchor="middle"
+                x={{dot.matchedAt.x}}
+                y={{dot.matchedAt.y}}
+                text-anchor={{dot.matchedAt.anchor}}
                 data-at={{dot.sha}}
                 data-test-matched
               >≈ read</text>
@@ -435,9 +474,9 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             {{#if dot.date}}
               <text
                 class="timeline-note"
-                x={{dot.x}}
-                y={{dot.dateY}}
-                text-anchor={{dot.dateAnchor}}
+                x={{dot.dateAt.x}}
+                y={{dot.dateAt.y}}
+                text-anchor={{dot.dateAt.anchor}}
                 data-test-date
               >{{dot.date}}</text>
             {{/if}}
@@ -452,11 +491,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               >{{day.text}}</text>
             </g>
           {{/each}}
-          {{#each @timeline.collapsed key="x" as |run index|}}
+          {{#each @timeline.collapsed key="@index" as |run index|}}
             <g
               class="timeline-run"
               data-collapsed={{index}}
               data-x={{run.x}}
+              data-y={{run.y}}
               aria-expanded={{if (eq this.listing index) "true" "false"}}
               data-test-collapsed
             >
@@ -475,28 +515,6 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               >{{run.text}}</text>
             </g>
           {{/each}}
-          {{#if @timeline.earlier}}
-            <g
-              class="timeline-run"
-              data-earlier
-              data-x={{@timeline.earlier.x}}
-              data-test-earlier
-            >
-              <rect
-                x={{@timeline.earlier.left}}
-                y={{@timeline.earlier.top}}
-                width={{@timeline.earlier.width}}
-                height={{@timeline.earlier.height}}
-                rx="10"
-              />
-              <text
-                x={{@timeline.earlier.x}}
-                y={{@timeline.earlier.y}}
-                text-anchor="middle"
-                dominant-baseline="middle"
-              >{{@timeline.earlier.text}}</text>
-            </g>
-          {{/if}}
           {{#each @timeline.labels key="kind" as |label|}}
             {{#if label.box}}
               <rect
@@ -520,31 +538,21 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               data-test-lane-label={{label.kind}}
             >{{label.text}}</text>
           {{/each}}
-          <rect
-            class="timeline-handle"
-            x={{@timeline.band.fromX}}
-            y={{@timeline.band.y}}
-            width="8"
-            height={{@timeline.band.height}}
-            transform="translate(-4 0)"
-            rx="2"
-            data-end="from"
-            data-test-handle="from"
-          />
-          <rect
-            class="timeline-handle"
-            x={{@timeline.band.toX}}
-            y={{@timeline.band.y}}
-            width="8"
-            height={{@timeline.band.height}}
-            transform="translate(-4 0)"
-            rx="2"
-            data-end="to"
-            data-test-handle="to"
-          />
+          {{#each @timeline.band.handles key="end" as |handle|}}
+            <rect
+              class="timeline-handle"
+              x={{handle.x}}
+              y={{handle.y}}
+              width={{handle.width}}
+              height={{handle.height}}
+              rx="2"
+              data-end={{handle.end}}
+              data-test-handle={{handle.end}}
+            />
+          {{/each}}
         </svg>
       </div>
-      {{#each @timeline.collapsed key="x" as |run index|}}
+      {{#each @timeline.collapsed key="@index" as |run index|}}
         {{#if (eq this.listing index)}}
           <ol
             class="timeline-run-list"

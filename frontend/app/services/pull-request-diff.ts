@@ -55,7 +55,6 @@ class PerPr {
   @tracked timelineOpen = false;
   @tracked across = 0;
   @tracked pipsAcross = 0;
-  @tracked unfolded = false;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
   @tracked confirmingReset: ResetWhen | null = null;
@@ -134,7 +133,6 @@ export default class PullRequestDiffService extends Service {
       picked: this.pr.picked,
       hidden: this.hidden,
       across: this.pr.across,
-      unfolded: this.pr.unfolded,
     });
   }
 
@@ -144,10 +142,6 @@ export default class PullRequestDiffService extends Service {
 
   fitPips = (across: number) => {
     this.pr.pipsAcross = across;
-  };
-
-  unfold = () => {
-    this.pr.unfolded = true;
   };
 
   get timelineOpen(): boolean {

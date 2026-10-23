@@ -1404,7 +1404,6 @@ export interface Looking {
   picked: Picked | null;
   hidden: boolean;
   across: number;
-  unfolded: boolean;
 }
 
 const lastTimelines = new WeakMap<
@@ -1417,7 +1416,6 @@ const lastTimelines = new WeakMap<
     basePr: number | null;
     pushed: PullRequestCommits | undefined;
     across: number;
-    unfolded: boolean;
     timeline: Timeline | null;
   }
 >();
@@ -1425,7 +1423,7 @@ const lastTimelines = new WeakMap<
 export function timelineOf(
   pr: PrEntity,
   history: PullRequestCommits | undefined,
-  { current, picked, hidden, across, unfolded }: Looking,
+  { current, picked, hidden, across }: Looking,
   basePr: number | null,
   pushed: PullRequestCommits | undefined,
 ): Timeline | null | undefined {
@@ -1438,8 +1436,7 @@ export function timelineOf(
     last.hidden === hidden &&
     last.basePr === basePr &&
     last.pushed === pushed &&
-    last.across === across &&
-    last.unfolded === unfolded
+    last.across === across
   )
     return last.timeline;
   const { read, matched, fresh } = matchingOf(history, pr.read);
@@ -1459,7 +1456,6 @@ export function timelineOf(
     basePr,
     standing: standingOf(history, pushed),
     across,
-    unfolded,
   });
   lastTimelines.set(history, {
     pr,
@@ -1469,7 +1465,6 @@ export function timelineOf(
     basePr,
     pushed,
     across,
-    unfolded,
     timeline,
   });
   return timeline;

@@ -100,18 +100,27 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     `⋯ <k>` before it and `⋯ <k> more` for the last. That lane leaves from that
     dot. The server sends each such commit with its place among main's commits
     since the fork (`base_forks`), beside the capped `base_commits` (#146,
-    decided 2026-10-23).
+    decided 2026-10-23). In the vertical timeline (decision 14) each pill and
+    each such commit is a row of its own, so the lane still leaves from its own
+    dot (#174, decided 2026-10-23).
 14. **A long PR, by width** (#146, decided 2026-10-23). The graph counts the
     columns it needs: the longest lane's commits plus main's drawn dots and
     pills. When each gets at least 40px of the pane it draws dots, spread to fill
     the width up to 112px apart. Otherwise, when each gets at least 10px, the
     branch's dots shrink to small ticks spread to fill the width, shas show only
     at the band's ends and the stepper's commit, and a day row under the lane
-    marks where each day starts. Narrower still, the branch's oldest commits fold
-    into a pill `⋯ <k> earlier` until the rest fit as ticks; the fold never takes
-    the stepper's commit or either end of the range in the diff, so when those
-    stop it short the rest scroll sideways. Clicking the pill unfolds every
-    commit into a sideways scroll. All of this is worked out again whenever the
+    marks where each day starts. Narrower still, under 10px a column, the
+    timeline turns vertical instead (#174, decided 2026-10-23): oldest on top,
+    in the stepper's order, the lanes become columns (main on the left in grey,
+    then origin's lane, the PR's and the ghost lane), and each commit is a row
+    with its short sha and subject beside it. Main's folded runs are rows with
+    their pills, the review flag is a dashed rule between rows, the current
+    commit is ringed and the range in the diff is a yellow band down the lane;
+    clicking a row picks its commit, shift-clicking a range. It is the same
+    layout as the horizontal graph, turned, drawn at full height, and the page
+    scrolls. While it scrolls past, the commit bar stays stuck at the top of
+    the diff pane; once the diff starts the bar scrolls away with it. All of
+    this is worked out again whenever the
     pane changes width. The pips follow the same rule against the width of their
     own row: under 40px a pip, they become a thin bar, one segment per commit.
 15. **Unpushed local commits.** With the diff on **local**, commits the worktree

@@ -85,6 +85,23 @@ function increasing(values: number[]): boolean {
   return values.every((one, index) => index === 0 || one > values[index - 1]!);
 }
 
+async function paneOf(width: number) {
+  (find('.timeline-scroll') as HTMLElement).style.width = `${width}px`;
+  await new Promise((done) =>
+    requestAnimationFrame(() => requestAnimationFrame(done)),
+  );
+  await settled();
+}
+
+function rowsOn(lane: string): string[] {
+  return findAll(`[data-test-timeline-row][data-lane="${lane}"]`).map((one) =>
+    [...one.querySelectorAll('text')]
+      .map((text) => text.textContent.trim())
+      .filter(Boolean)
+      .join(' '),
+  );
+}
+
 module('Acceptance | commit timeline', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
@@ -925,6 +942,57 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
     ]);
   });
 
+  test('vertical, a lane that leaves main inside the fold leaves from a row of its own between the pills', async function (assert) {
+    const run = mainRun(40);
+    const onMain = (index: number) =>
+      prCommit(run[index]!, run[index - 1] ?? FORK, `main ${index}`);
+    board().localCommits = {
+      ...prHistory(FORK, [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+      ]),
+      fork_at: '2026-10-01T09:00:00Z',
+      behind: 40,
+      base_tip: run[39]!,
+      base_commits: [...range(0, 10), ...range(30, 40)].map(onMain),
+      base_forks: [{ commit: onMain(17), at: 17 }],
+    };
+    board().commits = {
+      ...prHistory(run[17]!, [
+        prCommit(THIRD, run[17]!, 'Add the widget onto newer main'),
+      ]),
+      behind: 22,
+      base_tip: run[39]!,
+      base_commits: [...range(18, 28), ...range(30, 40)].map(onMain),
+    };
+    await visit('/pr/o/r/7/diff');
+    await click('[data-test-source="local"]');
+    await click('[data-test-timeline-toggle]');
+
+    await paneOf(120);
+
+    assert.deepEqual(rowsOn('base'), [
+      FORK,
+      `${run[17]} main 17`,
+      `${run[38]} main 38`,
+      `${run[39]} main 39`,
+    ]);
+    const leaving = dots('base')[1]!;
+    const [first, second] = findAll('[data-test-collapsed]').map((one) =>
+      Number(one.getAttribute('data-y')),
+    );
+    assert.true(
+      increasing([dots('base')[0]!.y, first!, leaving.y, second!]),
+      'its row sits between the two pills',
+    );
+    assert.true(
+      find('[data-test-fork-curve][data-lane="origin"]')!
+        .getAttribute('d')!
+        .startsWith(`M ${leaving.x} ${leaving.y} `),
+      "origin's lane leaves from its dot",
+    );
+  });
+
   test('twenty behind, every one of them is a dot of its own', async function (assert) {
     behind(20, range(0, 20));
     await visit('/pr/o/r/7/diff');
@@ -969,26 +1037,12 @@ module(
         .map((sha, index) => ({ sha, subject: `step ${index}` }));
     }
 
-    async function paneOf(width: number) {
-      (find('.timeline-scroll') as HTMLElement).style.width = `${width}px`;
-      await new Promise((done) =>
-        requestAnimationFrame(() => requestAnimationFrame(done)),
-      );
-      await settled();
-    }
-
     function shapes(): string[] {
       return [
         ...new Set(
           dots('pr').map((one) => dot(one.sha).getAttribute('data-shape')!),
         ),
       ];
-    }
-
-    function earlier(): number | null {
-      const text = find('[data-test-earlier]')?.textContent.trim() ?? '';
-      const folded = /^⋯ (\d+) earlier$/.exec(text);
-      return folded ? Number(folded[1]) : null;
     }
 
     function graphWidth(): number {
@@ -1052,7 +1106,15 @@ module(
       );
     });
 
-    test('the same pull request is dots in a wide pane, ticks in a narrower one, and ticks after a fold of its oldest in a narrow one', async function (assert) {
+    function vertical(lane: string): boolean {
+      const drawn = dots(lane);
+      return (
+        drawn.every((one) => one.x === drawn[0]!.x) &&
+        increasing(drawn.map((one) => one.y))
+      );
+    }
+
+    test('the same pull request is dots in a wide pane, ticks in a narrower one, and vertical in a narrow one', async function (assert) {
       const shas = long(40);
       readUpTo(shas, 30);
       await visit('/pr/o/r/7/diff');
@@ -1062,66 +1124,95 @@ module(
 
       assert.deepEqual(shapes(), ['dot']);
       assert.strictEqual(shasShown().length, 40);
-      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.dom('[data-test-timeline-row]').doesNotExist();
       assert.strictEqual(graphWidth(), 1800, 'spread to fill the pane');
 
       await paneOf(800);
 
       assert.deepEqual(shapes(), ['tick']);
       assert.deepEqual(shasShown(), [shas[30]]);
-      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.dom('[data-test-timeline-row]').doesNotExist();
       assert.strictEqual(graphWidth(), 800, 'spread to fill the pane');
 
       await paneOf(400);
 
-      const folded = earlier() ?? 0;
-      assert.true(folded > 0, 'the oldest fold into a pill');
-      assert.deepEqual(shapes(), ['tick']);
-      assert.strictEqual(dots('pr')[0]!.sha, shas[folded]);
-      assert.strictEqual(dots('pr').length, 40 - folded);
-      assert.strictEqual(graphWidth(), 400, 'and the rest fit the pane');
+      assert.true(vertical('pr'), 'the lane runs down the pane');
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        shas,
+        'every commit is drawn',
+      );
+      assert.true(
+        dots('base')[0]!.x < dots('pr')[0]!.x,
+        'main is the column on the left',
+      );
       assert.dom('[data-test-current]').hasAttribute('data-at', shas[30]!);
 
       await paneOf(1800);
 
       assert.deepEqual(shapes(), ['dot']);
-      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.dom('[data-test-timeline-row]').doesNotExist();
     });
 
-    test('a fold never hides the commit you are on or an end of the range in the diff', async function (assert) {
+    test('vertical, one row per commit runs oldest first with its short sha and subject', async function (assert) {
       const shas = long(40);
-      readUpTo(shas, 18);
       await visit('/pr/o/r/7/diff');
       await click('[data-test-timeline-toggle]');
 
-      await paneOf(300);
+      await paneOf(400);
 
-      assert.strictEqual(earlier(), 18);
-      assert.strictEqual(dots('pr')[0]!.sha, shas[18]);
+      assert.deepEqual(
+        rowsOn('pr'),
+        shas.map((sha, index) => `${sha} step ${index}`),
+      );
+      const rows = findAll('[data-test-timeline-row][data-lane="pr"]');
+      assert.true(
+        increasing(rows.map((one) => Number(one.getAttribute('data-y')))),
+        'top to bottom',
+      );
+    });
+
+    test('vertical, clicking a row picks its commit and shift-clicking another picks the range', async function (assert) {
+      const shas = long(40);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      await paneOf(400);
+
+      await click(`[data-test-timeline-row][data-sha="${shas[3]}"]`);
+
+      assert.dom('[data-test-current]').hasAttribute('data-at', shas[3]!);
+      assert.deepEqual(inRange(), [shas[3]]);
+
+      await click(`[data-test-timeline-row][data-sha="${shas[10]}"]`, {
+        shiftKey: true,
+      });
+
+      assert.deepEqual(inRange(), shas.slice(3, 11));
+    });
+
+    test('vertical, the commit bar sticks to the top of the pane while the timeline scrolls past, and not otherwise', async function (assert) {
+      long(40);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      const bar = () =>
+        getComputedStyle(find('[data-test-commit-stepper]')!).position;
 
       await paneOf(1800);
-      await click(dot(shas[16]!), { shiftKey: true });
-      await paneOf(300);
 
-      assert.deepEqual(inRange(), shas.slice(16, 19));
-      assert.strictEqual(earlier(), 16);
-      assert.strictEqual(dots('pr')[0]!.sha, shas[16]);
-    });
+      assert.notStrictEqual(bar(), 'sticky');
 
-    test('clicking the fold unfolds every commit into a sideways scroll', async function (assert) {
-      const shas = long(40);
-      readUpTo(shas, 30);
-      await visit('/pr/o/r/7/diff');
-      await click('[data-test-timeline-toggle]');
       await paneOf(400);
 
-      await click('[data-test-earlier]');
-      await paneOf(400);
-
-      assert.dom('[data-test-earlier]').doesNotExist();
-      assert.strictEqual(dots('pr').length, 40);
-      assert.deepEqual(shapes(), ['tick']);
-      assert.true(graphWidth() > 400, 'wider than the pane, which scrolls');
+      assert.strictEqual(bar(), 'sticky');
+      const holder = find('[data-test-commit-stepper]')!.parentElement!;
+      assert.true(
+        holder.contains(find('[data-test-timeline]')),
+        'it sticks inside what holds the timeline',
+      );
+      assert.false(
+        holder.contains(find('[data-test-diff-files]')),
+        'and lets go once the diff starts',
+      );
     });
 
     test('the pips become a thin bar when each gets under 40px, and turn back when the bar widens', async function (assert) {

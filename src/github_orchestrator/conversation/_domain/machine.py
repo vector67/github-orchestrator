@@ -174,6 +174,11 @@ def _fix_code(conversation: Conversation) -> ErrorCode:
     return _CODE_OF_FIX.get(conversation.fix.state, ErrorCode.NO_PROPOSAL)
 
 
+def _a(word: object) -> str:
+    named = f"{word}"
+    return f"an {named}" if named[:1] in "aeiou" else f"a {named}"
+
+
 def _refuse_decision(conversation: Conversation, code: ErrorCode,
                      reason: str) -> Refused:
     return Refused(with_fix(conversation, decision_error=reason), code,
@@ -194,10 +199,10 @@ def _planning(states: tuple[str, ...], refusing: str) -> Rule:
     def planning(conversation: Conversation, change: Any) -> Refused | None:
         if conversation.state != OPEN:
             return Refused(conversation, _state_code(conversation),
-                           f"a {conversation.state} conversation {refusing}")
+                           f"{_a(conversation.state)} conversation {refusing}")
         if conversation.fix.state not in states:
             return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
-                           f"nobody is working on a {conversation.fix.state} fix")
+                           f"nobody is working on {_a(conversation.fix.state)} fix")
         return None
     return planning
 
@@ -217,10 +222,10 @@ def _reported_on(states: tuple[str, ...], nobody: str) -> Rule:
         fix = conversation.fix
         if conversation.state != OPEN:
             return Refused(conversation, _state_code(conversation),
-                           f"a {conversation.state} conversation takes no report")
+                           f"{_a(conversation.state)} conversation takes no report")
         if fix.state not in states:
             return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
-                           f"{nobody} a {fix.state} fix")
+                           f"{nobody} {_a(fix.state)} fix")
         return None
     return reported_on
 
@@ -270,7 +275,7 @@ def _queued_for_a_run(conversation: Conversation, event: RunStarted) -> Refused 
     fix = conversation.fix
     if conversation.state != OPEN:
         return Refused(conversation, _state_code(conversation),
-                       f"a {conversation.state} conversation wants no agent")
+                       f"{_a(conversation.state)} conversation wants no agent")
     if fix.state != QUEUED:
         return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
                        f"the fix is {fix.state}, not queued")
@@ -281,24 +286,24 @@ def _a_session_opening(conversation: Conversation,
                        event: SessionRefused) -> Refused | None:
     if conversation.fix.state != IN_SESSION:
         return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
-                       f"no session is opening on a {conversation.fix.state} fix")
+                       f"no session is opening on {_a(conversation.fix.state)} fix")
     return None
 
 
 def _a_filing_run(conversation: Conversation, command: ReportFiled) -> Refused | None:
     if conversation.fix.run.kind != OperationKind.FILE:
         return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
-                       f"a {conversation.fix.run.kind} run files no ticket")
+                       f"{_a(conversation.fix.run.kind)} run files no ticket")
     return None
 
 
 def _running_only(conversation: Conversation, change: Any) -> Refused | None:
     if conversation.state != OPEN:
         return Refused(conversation, _state_code(conversation),
-                       f"a {conversation.state} conversation has no run")
+                       f"{_a(conversation.state)} conversation has no run")
     if conversation.fix.state != RUNNING:
         return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
-                       f"no run is under way on a {conversation.fix.state} fix")
+                       f"no run is under way on {_a(conversation.fix.state)} fix")
     return None
 
 
@@ -337,7 +342,7 @@ def _unready(conversation: Conversation, command: Approve) -> Deferred | None:
 def _not_parked_to_land(conversation: Conversation, command: Approve) -> Refused | None:
     if conversation.state in PARKED:
         return Refused(conversation, _state_code(conversation),
-                       f"a {conversation.state} conversation cannot be landed")
+                       f"{_a(conversation.state)} conversation cannot be landed")
     return None
 
 
@@ -401,7 +406,7 @@ def _a_fix_to_land(conversation: Conversation, command: Approve) -> Refused | No
     fix = conversation.fix
     if fix.state != LANDING and not _may_land(conversation):
         return Refused(conversation, _fix_code(conversation),
-                       f"a {fix.state} fix cannot be landed")
+                       f"{_a(fix.state)} fix cannot be landed")
     return None
 
 
@@ -467,7 +472,7 @@ def _landing(conversation: Conversation, step: Land) -> Refused | None:
     fix = conversation.fix
     if fix.state != LANDING:
         return Refused(conversation, _fix_code(conversation),
-                       f"a {fix.state} fix is not landing")
+                       f"{_a(fix.state)} fix is not landing")
     return None
 
 
@@ -483,10 +488,10 @@ def _wanting_a_first_run(conversation: Conversation, step: First) -> Refused | N
     fix = conversation.fix
     if conversation.state not in (OPEN, REMOVED):
         return Refused(conversation, _state_code(conversation),
-                       f"a {conversation.state} conversation wants no run")
+                       f"{_a(conversation.state)} conversation wants no run")
     if fix.state in IN_FLIGHT:
         return Refused(conversation, _fix_code(conversation),
-                       f"a {fix.state} fix wants no second run")
+                       f"{_a(fix.state)} fix wants no second run")
     return None
 
 
@@ -494,14 +499,14 @@ def _waiting_to_be_caught_up(conversation: Conversation, event: Rebase) -> Refus
     fix = conversation.fix
     if conversation.state in PARKED:
         return Refused(conversation, _state_code(conversation),
-                       f"a {conversation.state} conversation rebases nothing")
+                       f"{_a(conversation.state)} conversation rebases nothing")
     if fix.state in (QUEUED, RUNNING, IN_SESSION, LANDED) or (
             fix.state == LANDING and PICK in fix.steps):
         return Refused(conversation, _fix_code(conversation),
-                       f"a {fix.state} fix is not waiting to be caught up")
+                       f"{_a(fix.state)} fix is not waiting to be caught up")
     if fix.state not in (PROPOSED, LANDING):
         return Refused(conversation, ErrorCode.NO_PROPOSAL,
-                       f"a {fix.state} fix left nothing to rebase")
+                       f"{_a(fix.state)} fix left nothing to rebase")
     return None
 
 
@@ -530,7 +535,7 @@ def _open_to(refusing: str) -> Rule:
         if conversation.state != OPEN:
             return _refuse_decision(
                 conversation, _state_code(conversation),
-                f"a {conversation.state} conversation {refusing}")
+                f"{_a(conversation.state)} conversation {refusing}")
         return None
     return open_to
 
@@ -541,7 +546,7 @@ def _a_fix_in(states: tuple[str, ...], refusing: str) -> Rule:
         if fix.state not in states:
             return _refuse_decision(
                 conversation, _fix_code(conversation),
-                f"a {fix.state} fix {refusing}")
+                f"{_a(fix.state)} fix {refusing}")
         return None
     return a_fix_in
 
@@ -560,7 +565,7 @@ def _open_to_a_fix(conversation: Conversation, command: WriteFix) -> Refused | N
     if conversation.state not in (OPEN, WAITING_ON_REVIEWER):
         return _refuse_decision(
             conversation, _state_code(conversation),
-            f"a {conversation.state} conversation wants no fix written")
+            f"{_a(conversation.state)} conversation wants no fix written")
     return None
 
 
@@ -582,7 +587,7 @@ def _in_flight_to_stop(conversation: Conversation, command: Stop) -> Refused | N
             "the run has finished and left a proposal; reject turns it down")
     return _refuse_decision(
         conversation, ErrorCode.NOTHING_IN_FLIGHT,
-        f"a {fix.state} fix has nothing in flight to stop")
+        f"{_a(fix.state)} fix has nothing in flight to stop")
 
 
 def _not_pushed_to_stop(conversation: Conversation, command: Stop) -> Refused | None:
@@ -604,7 +609,7 @@ def _still_open_to_resolve(conversation: Conversation, command: Resolve) -> Refu
                                   ASSUMED_DONE, NOT_MINE):
         return _refuse_decision(
             conversation, _state_code(conversation),
-            f"a {conversation.state} conversation is already closed")
+            f"{_a(conversation.state)} conversation is already closed")
     return None
 
 
@@ -616,7 +621,7 @@ def _the_operators_to_resolve(conversation: Conversation,
             and fix.state in (QUEUED, IN_SESSION)):
         return _refuse_decision(
             conversation, _fix_code(conversation),
-            f"a {fix.state} fix is not the operator's to close")
+            f"{_a(fix.state)} fix is not the operator's to close")
     return None
 
 
@@ -643,7 +648,7 @@ def _still_open_to_reject(conversation: Conversation, command: Reject) -> Refuse
     if conversation.state not in (OPEN, REMOVED):
         return _refuse_decision(
             conversation, _state_code(conversation),
-            f"a {conversation.state} conversation is already closed")
+            f"{_a(conversation.state)} conversation is already closed")
     return None
 
 
@@ -656,11 +661,11 @@ def _a_fix_to_turn_down(conversation: Conversation, command: Reject) -> Refused 
     if fix.state in IN_FLIGHT:
         return _refuse_decision(
             conversation, ErrorCode.WORK_IN_FLIGHT,
-            f"a {fix.state} fix is still in flight; stop it first")
+            f"{_a(fix.state)} fix is still in flight; stop it first")
     if fix.state not in IDLE_FIX:
         return _refuse_decision(
             conversation, ErrorCode.NO_PROPOSAL,
-            f"a {fix.state} fix left nothing to turn down")
+            f"{_a(fix.state)} fix left nothing to turn down")
     return None
 
 
@@ -678,7 +683,7 @@ def _open_to_park(conversation: Conversation, command: Defer) -> Refused | None:
                                   NOT_MINE):
         return _refuse_decision(
             conversation, _state_code(conversation),
-            f"a {conversation.state} conversation is not open to park")
+            f"{_a(conversation.state)} conversation is not open to park")
     return None
 
 
@@ -687,14 +692,14 @@ def _the_operators_to_park(conversation: Conversation, command: Defer) -> Refuse
     if fix.state in (LANDING, LANDED):
         return _refuse_decision(
             conversation, _fix_code(conversation),
-            f"a {fix.state} fix is not the operator's to park")
+            f"{_a(fix.state)} fix is not the operator's to park")
     return None
 
 
 def _deferred_to_wake(conversation: Conversation, event: Wake) -> Refused | None:
     if conversation.state != DEFERRED:
         return Refused(conversation, ErrorCode.NOT_PARKED,
-                       f"a {conversation.state} conversation is not deferred")
+                       f"{_a(conversation.state)} conversation is not deferred")
     return None
 
 
@@ -703,7 +708,7 @@ def _parked_to_unpark(conversation: Conversation, command: Unpark) -> Refused | 
     if conversation.state not in PARKED and not landed:
         return _refuse_decision(
             conversation, ErrorCode.NOT_PARKED,
-            f"a {conversation.state} conversation is not parked")
+            f"{_a(conversation.state)} conversation is not parked")
     return None
 
 
@@ -712,7 +717,7 @@ def _assumed_done_to_confirm(conversation: Conversation,
     if conversation.state != ASSUMED_DONE:
         return _refuse_decision(
             conversation, ErrorCode.NOT_PARKED,
-            f"a {conversation.state} conversation is not assumed done")
+            f"{_a(conversation.state)} conversation is not assumed done")
     return None
 
 
@@ -728,7 +733,7 @@ def _placed_by_an_agent(conversation: Conversation, command: Place) -> Refused |
     if conversation.state not in PLACED_BY_HAND_FROM[conversation.role]:
         return _refuse_decision(
             conversation, ErrorCode.NOT_PARKED,
-            f"a {conversation.state} conversation was not placed by an agent")
+            f"{_a(conversation.state)} conversation was not placed by an agent")
     return None
 
 
@@ -804,7 +809,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     StartSession: (_agents_enabled_for_a_session, _open_to("opens no session"),
                    _a_fix_in((PROPOSED, DECLINED, FAILED), "is not waiting for anyone")),
     OpenShell: (_open_to("opens no shell"),),
-    Retry: (_open_to("retries nothing"), _a_fix_in((DECLINED, FAILED), "is not failed")),
+    Retry: (_open_to("retries nothing"), _a_fix_in((ABSENT, DECLINED, FAILED), "is not failed")),
     WriteFix: (_open_to_a_fix, _a_fix_in((ABSENT,), "has a fix already")),
     Stop: (_not_closed_to_stop, _in_flight_to_stop, _not_pushed_to_stop),
     Resolve: (_still_open_to_resolve, _the_operators_to_resolve,
@@ -853,7 +858,7 @@ def _thread_verb_on_a_draft(conversation: Conversation, change: Change) -> Refus
     if code is None:
         return None
     return Refused(conversation, code,
-                   f"a {conversation.state} comment is not on GitHub yet")
+                   f"{_a(conversation.state)} comment is not on GitHub yet")
 
 
 def _outstanding(conversation: Conversation, change: Change,

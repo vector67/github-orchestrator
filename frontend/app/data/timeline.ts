@@ -26,7 +26,20 @@ const DOT_ROOM = 40;
 const TICK_ROOM = 10;
 const DOTS: Spacing = { ...SPACING, column: DOT_ROOM, most: SPACING.most };
 const TICKS: Spacing = { ...SPACING, column: TICK_ROOM, most: DOT_ROOM };
-const EARLIER = 'earlier';
+const ROW = 32;
+const DOWN: Spacing = {
+  left: 24,
+  top: 24,
+  column: ROW,
+  most: ROW,
+  row: 24,
+  right: 16,
+  bottom: 24,
+};
+const HANDLE = 8;
+const TEXT_ROOM = 200;
+const NOTE_ROOM = 70;
+const NOTE_LIFT = 4;
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
@@ -65,12 +78,18 @@ export type DotStyle =
 
 export type DotShape = 'dot' | 'diamond' | 'tick';
 
-export type Drawn = 'dot' | 'tick' | 'fold';
+export type Drawn = 'dot' | 'tick' | 'vertical';
 
 export function drawnAs(columns: number, room: number): Drawn {
   if (!room || !columns) return 'dot';
   const each = room / columns;
-  return each >= DOT_ROOM ? 'dot' : each >= TICK_ROOM ? 'tick' : 'fold';
+  return each >= DOT_ROOM ? 'dot' : each >= TICK_ROOM ? 'tick' : 'vertical';
+}
+
+interface Note {
+  x: number;
+  y: number;
+  anchor: 'start' | 'middle' | 'end';
 }
 
 export interface TimelineDot {
@@ -87,13 +106,26 @@ export interface TimelineDot {
   pushed: boolean | null;
   showSha: boolean;
   date: string | null;
-  dateY: number;
-  dateAnchor: 'start' | 'middle';
+  dateAt: Note;
   pickable: boolean;
   inRange: boolean;
   radius: number;
   matched: boolean;
-  matchedY: number;
+  matchedAt: Note;
+}
+
+interface TimelineRow {
+  sha: string;
+  lane: string;
+  short: string;
+  subject: string;
+  title: string;
+  y: number;
+  top: number;
+  height: number;
+  shaX: number;
+  subjectX: number;
+  pickable: boolean;
 }
 
 export interface TimelineDay {
@@ -154,37 +186,40 @@ function boxed(label: TimelineLabel): TimelineLabel {
 
 export interface TimelineLane {
   lane: string;
-  y: number;
-  from: number;
-  to: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   dashed: boolean;
   unpushed: boolean;
 }
 
-export interface TimelineBand {
+interface Box {
   x: number;
   y: number;
   width: number;
   height: number;
-  middle: number;
-  fromX: number;
-  toX: number;
+}
+
+interface Handle extends Box {
+  end: 'from' | 'to';
+}
+
+export interface TimelineBand extends Box {
+  handles: Handle[];
 }
 
 export interface TimelineFlag {
-  x: number;
-  top: number;
-  bottom: number;
-  textY: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  textAt: Note;
   text: string;
 }
 
-export interface SinceFork {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  textY: number;
+export interface SinceFork extends Box {
+  textAt: Note;
   text: string;
 }
 
@@ -218,18 +253,19 @@ export interface TimelineKey {
 }
 
 export interface Timeline {
+  vertical: boolean;
   width: number;
   height: number;
   lanes: TimelineLane[];
   curves: { path: string; lane: string; kind: CurveKind }[];
   dots: TimelineDot[];
+  rows: TimelineRow[];
   labels: TimelineLabel[];
   current: { sha: string; x: number; y: number } | null;
   band: TimelineBand;
   flag: TimelineFlag | null;
   since: SinceFork | null;
   collapsed: CollapsedRun[];
-  earlier: Pill | null;
   days: TimelineDay[];
   ghosts: string | null;
   header: TimelineHeader;
@@ -255,7 +291,6 @@ export interface TimelineInput {
   basePr: number | null;
   standing: Standing;
   across: number;
-  unfolded: boolean;
 }
 
 export interface Standing {
@@ -431,8 +466,17 @@ function pillAt(at: Placed, column: number, text: string): Pill {
   };
 }
 
-function earlierText(count: number): string {
-  return `⋯ ${count} earlier`;
+function pillBeside(at: Placed, left: number, text: string): Pill {
+  const width = text.length * LABEL_CHAR + 2 * LABEL_PAD;
+  return {
+    x: left + width / 2,
+    y: at.y,
+    left,
+    top: at.y - RUN_REACH,
+    width,
+    height: 2 * RUN_REACH,
+    text,
+  };
 }
 
 function baseNodesOf(
@@ -466,12 +510,12 @@ function baseNodesOf(
 function collapsedOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
-  column: number,
+  pill: (at: Placed, text: string) => Pill,
 ): CollapsedRun[] {
   return foldsOf(history).flatMap((fold) => {
     const at = placed.get(fold.id);
     if (!at) return [];
-    return [{ ...pillAt(at, column, fold.text), listed: fold.listed }];
+    return [{ ...pill(at, fold.text), listed: fold.listed }];
   });
 }
 
@@ -521,16 +565,8 @@ function nodesOf(
   history: PullRequestCommits,
   there: PullRequestCommit[],
   column: number,
-  earlier: number,
 ): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
-  const hidden = new Set(
-    history.commits.slice(0, earlier).map((one) => one.sha),
-  );
-  const via = (parents: string[]) => [
-    ...new Set(parents.map((one) => (hidden.has(one) ? EARLIER : one))),
-  ];
-  const first = history.commits[0];
   return [
     ...oldForkOf(history),
     ...outsideOf(history).map((id) => ({
@@ -545,91 +581,82 @@ function nodesOf(
       parents: one.parents,
     })),
     ...baseNodesOf(history, onBase, column),
-    ...(earlier && first
-      ? [
-          {
-            id: EARLIER,
-            lane: PR_LANE,
-            parents: first.parents,
-            span: spanOf(earlierText(earlier), column),
-          },
-        ]
-      : []),
-    ...history.commits.slice(earlier).map((one) => ({
+    ...history.commits.map((one) => ({
       id: one.sha,
       lane: PR_LANE,
-      parents: via(one.parents),
+      parents: one.parents,
     })),
     ...ghostsOf(history).map((one) => ({
       id: one.sha,
       lane: GHOST_LANE,
-      parents: via(one.parents),
+      parents: one.parents,
     })),
     ...there.map((one) => ({
       id: one.sha,
       lane: ORIGIN_LANE,
-      parents: via(one.parents),
+      parents: one.parents,
     })),
   ];
-}
-
-interface Drawing {
-  graph: GraphLayout;
-  ticked: boolean;
-  earlier: number;
 }
 
 function drawingOf(
   input: TimelineInput,
   lanes: string[],
   there: PullRequestCommit[],
-  keep: number,
-): Drawing {
+): { graph: GraphLayout; drawn: Drawn } {
   const { history, across } = input;
   const top = foldsOf(history).length ? DATE_ROW : 0;
   const room = across && across - SPACING.left - SPACING.right;
-  const drawn = (spacing: Spacing, earlier: number): Drawing => ({
-    graph: layout(
+  const drawn = (spacing: Spacing) =>
+    layout(
       lanes,
-      nodesOf(history, there, spacing.column, earlier),
+      nodesOf(history, there, spacing.column),
       { ...spacing, top: spacing.top + top },
       across,
+    );
+  const dots = drawn(DOTS);
+  if (drawnAs(dots.widest, room) === 'dot')
+    return { graph: dots, drawn: 'dot' };
+  const ticks = drawn(TICKS);
+  if (drawnAs(ticks.widest, room) === 'tick')
+    return { graph: ticks, drawn: 'tick' };
+  return {
+    graph: layout(
+      lanes,
+      nodesOf(history, there, DOWN.column),
+      DOWN,
+      across,
+      true,
     ),
-    ticked: spacing === TICKS,
-    earlier,
-  });
-  const dots = drawn(DOTS, 0);
-  if (drawnAs(dots.graph.widest, room) === 'dot') return dots;
-  const ticks = drawn(TICKS, 0);
-  if (input.unfolded || drawnAs(ticks.graph.widest, room) === 'tick')
-    return ticks;
-  let best = ticks;
-  for (let earlier = 1; earlier <= keep; earlier += 1) {
-    const folded = drawn(TICKS, earlier);
-    if (folded.graph.widest < best.graph.widest) best = folded;
-    if (drawnAs(folded.graph.widest, room) === 'tick') return folded;
-  }
-  return best;
+    drawn: 'vertical',
+  };
 }
 
-function bandOf(from: Placed, to: Placed): TimelineBand {
-  return {
-    x: from.x - BAND_REACH,
-    y: from.y - BAND_REACH,
-    width: to.x - from.x + 2 * BAND_REACH,
-    height: 2 * BAND_REACH,
-    middle: from.y,
-    fromX: from.x - BAND_REACH,
-    toX: to.x + BAND_REACH,
-  };
+function bandOf(from: Placed, to: Placed, vertical: boolean): TimelineBand {
+  const x = from.x - BAND_REACH;
+  const y = from.y - BAND_REACH;
+  const width = to.x - from.x + 2 * BAND_REACH;
+  const height = to.y - from.y + 2 * BAND_REACH;
+  const handles: Handle[] = vertical
+    ? [
+        { end: 'from', x, y: y - HANDLE / 2, width, height: HANDLE },
+        { end: 'to', x, y: y + height - HANDLE / 2, width, height: HANDLE },
+      ]
+    : [
+        { end: 'from', x: x - HANDLE / 2, y, width: HANDLE, height },
+        { end: 'to', x: x + width - HANDLE / 2, y, width: HANDLE, height },
+      ];
+  return { x, y, width, height, handles };
 }
 
 function flagOf(
   order: string[],
   input: TimelineInput,
-  placed: Map<string, Placed>,
-  column: number,
+  graph: GraphLayout,
+  right: number,
 ): TimelineFlag | null {
+  const placed = graph.nodes;
+  const column = graph.column;
   const reviewed = placed.get(input.reviewedSha ?? '');
   if (
     !reviewed ||
@@ -645,22 +672,37 @@ function flagOf(
         : [];
   if (!sequence.length) return null;
   const next = placed.get(sequence[sequence.indexOf(reviewed.id) + 1] ?? '');
+  const text = `you reviewed ${dayOf(input.reviewedAt)}`;
+  if (graph.vertical) {
+    const y = next ? (reviewed.y + next.y) / 2 : reviewed.y + column / 2;
+    return {
+      x1: 0,
+      y1: y,
+      x2: right,
+      y2: y,
+      textAt: { x: right, y: y + NOTE_LIFT, anchor: 'end' },
+      text,
+    };
+  }
   const x = next ? (reviewed.x + next.x) / 2 : reviewed.x + column / 2;
   return {
-    x,
-    top: reviewed.y - BAND_REACH,
-    bottom: reviewed.y + FLAG_DROP - BAND_REACH,
-    textY: reviewed.y + FLAG_DROP,
-    text: `you reviewed ${dayOf(input.reviewedAt)}`,
+    x1: x,
+    y1: reviewed.y - BAND_REACH,
+    x2: x,
+    y2: reviewed.y + FLAG_DROP - BAND_REACH,
+    textAt: { x, y: reviewed.y + FLAG_DROP, anchor: 'middle' },
+    text,
   };
 }
 
 function sinceOf(
   history: PullRequestCommits,
-  placed: Map<string, Placed>,
+  graph: GraphLayout,
   base: string,
   collapsed: CollapsedRun[],
+  textX: number,
 ): SinceFork | null {
+  const placed = graph.nodes;
   const opening = stretchesOf(history)[0];
   const first = placed.get(
     opening && 'fold' in opening
@@ -669,6 +711,20 @@ function sinceOf(
   );
   const last = placed.get(history.base_commits.at(-1)?.sha ?? '');
   if (!first || !last) return null;
+  const text = `${plural(history.behind, 'commit')} on ${base} since the fork`;
+  if (graph.vertical)
+    return {
+      x: first.x - BAND_REACH,
+      y: first.y - BAND_REACH,
+      width: 2 * BAND_REACH,
+      height: last.y - first.y + 2 * BAND_REACH,
+      textAt: {
+        x: textX,
+        y: first.y - graph.column / 2 + NOTE_LIFT,
+        anchor: 'start',
+      },
+      text,
+    };
   const pill = collapsed.find((one) => one.x === first.x);
   const x = pill ? pill.left - RUN_GAP : first.x - BAND_REACH;
   return {
@@ -676,8 +732,12 @@ function sinceOf(
     y: first.y - BAND_REACH,
     width: last.x + BAND_REACH - x,
     height: 2 * BAND_REACH,
-    textY: first.y - BOX_RISE - (collapsed.length ? DATE_ROW : 0),
-    text: `${plural(history.behind, 'commit')} on ${base} since the fork`,
+    textAt: {
+      x,
+      y: first.y - BOX_RISE - (collapsed.length ? DATE_ROW : 0),
+      anchor: 'start',
+    },
+    text,
   };
 }
 
@@ -722,7 +782,7 @@ function lastOn(lane: string, placed: Map<string, Placed>): Placed | null {
   return [...placed.values()]
     .filter((one) => one.lane === lane)
     .reduce<Placed | null>(
-      (last, one) => (last && last.x >= one.x ? last : one),
+      (last, one) => (last && last.column >= one.column ? last : one),
       null,
     );
 }
@@ -741,6 +801,65 @@ function relationOf(
   return input.history.reviewed
     ? `now forked from ${base} at`
     : `forked from ${base} at`;
+}
+
+function labelsBeside(
+  labels: TimelineLabel[],
+  placed: Map<string, Placed>,
+  left: number,
+): { labels: TimelineLabel[]; ends: Map<string, number> } {
+  const ends = new Map<string, number>();
+  const moved = labels.map((one) => {
+    const start = ends.get(one.at) ?? left;
+    ends.set(one.at, start + one.text.length * LABEL_CHAR + 3 * LABEL_PAD);
+    const label = {
+      ...one,
+      x: start + LABEL_PAD,
+      y: placed.get(one.at)!.y,
+      box: null,
+    };
+    return one.box ? boxed(label) : label;
+  });
+  return { labels: moved, ends };
+}
+
+function fitted(text: string, room: number): string {
+  if (text.length <= room) return text;
+  return room > 1 ? `${text.slice(0, room - 1)}…` : '';
+}
+
+interface RowText {
+  subjects: Map<string, string>;
+  order: string[];
+  noted: Set<string>;
+  textX: number;
+  after: Map<string, number>;
+  right: number;
+  step: number;
+}
+
+function rowsOf(placed: Placed[], text: RowText): TimelineRow[] {
+  return placed.map((node) => {
+    const subjectX =
+      text.after.get(node.id) ?? text.textX + (SHORT + 1) * LABEL_CHAR;
+    const short = node.id.slice(0, SHORT);
+    const subject = text.subjects.get(node.id) ?? '';
+    const room =
+      text.right - subjectX - (text.noted.has(node.id) ? NOTE_ROOM : 0);
+    return {
+      sha: node.id,
+      lane: node.lane,
+      short,
+      subject: fitted(subject, Math.floor(room / LABEL_CHAR)),
+      title: subject ? `${short} ${subject}` : short,
+      y: node.y,
+      top: node.y - text.step / 2,
+      height: text.step,
+      shaX: text.textX,
+      subjectX,
+      pickable: text.order.includes(node.id),
+    };
+  });
 }
 
 export function timelineBuilt(input: TimelineInput): Timeline | null {
@@ -762,12 +881,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       : { from: input.current, to: input.current });
   const from = order.indexOf(showing.from);
   const to = order.indexOf(showing.to);
-  const kept = [
-    from,
-    to,
-    input.hidden ? -1 : order.indexOf(input.current ?? ''),
-  ].filter((one) => one >= 0);
-  const drawing = drawingOf(
+  const { graph, drawn } = drawingOf(
     input,
     [
       BASE_LANE,
@@ -777,10 +891,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       ...(ghosts.length ? [GHOST_LANE] : []),
     ],
     there,
-    Math.min(order.length - 1, ...kept),
   );
-  const { graph, ticked } = drawing;
-  const shelved = graph.nodes.get(EARLIER);
+  const { vertical } = graph;
+  const ticked = drawn === 'tick';
   const subjects = new Map(
     [
       ...(stack?.commits ?? []),
@@ -806,8 +919,73 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   );
   const leaving = new Set(forkCommitsOf(history).map((one) => one.sha));
   const placed = [...graph.nodes.values()].filter(
-    (node) => !node.id.startsWith(RUN) && node.id !== EARLIER,
+    (node) => !node.id.startsWith(RUN),
   );
+  const lastPushed = graph.nodes.get(
+    order.findLast((sha) => !offOrigin.has(sha)) ?? '',
+  );
+  const firstUnpushed = graph.nodes.get(
+    order.find((sha) => offOrigin.has(sha)) ?? '',
+  );
+  const main = lastOn(BASE_LANE, graph.nodes)!;
+  const under = lastOn(STACK_LANE, graph.nodes);
+  const head = graph.nodes.get(order.at(-1)!)!;
+  const originHead = graph.nodes.get(there.at(-1)?.sha ?? '');
+  const label = (
+    kind: TimelineLabel['kind'],
+    text: string,
+    at: Placed,
+    opens: string | null = null,
+  ): TimelineLabel => ({
+    kind,
+    text,
+    opens,
+    at: at.id,
+    x: at.x + LABEL_GAP,
+    y: at.y,
+    box: null,
+  });
+  const labelled = [
+    label('main', stack?.branch ?? base, main),
+    ...(under
+      ? [
+          label(
+            'stack',
+            input.basePr ? `#${input.basePr} ${base}` : base,
+            under,
+            input.basePr ? `/pr/${input.repo}/${input.basePr}/diff` : null,
+          ),
+        ]
+      : []),
+    ...(firstUnpushed
+      ? [
+          {
+            ...label('origin', 'origin', lastPushed ?? firstUnpushed),
+            x: lastPushed
+              ? (lastPushed.x + firstUnpushed.x) / 2
+              : firstUnpushed.x,
+            y: firstUnpushed.y - FLAG_RISE,
+          },
+        ]
+      : []),
+    ...(originHead ? [boxed(label('origin', 'origin', originHead))] : []),
+    firstUnpushed || originHead
+      ? boxed(label('local', 'local', head))
+      : label('head', 'head', head),
+    ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
+  ];
+  const textX = Math.max(...placed.map((one) => one.x)) + LABEL_GAP;
+  const subjectX = textX + (SHORT + 1) * LABEL_CHAR;
+  const beside = labelsBeside(labelled, graph.nodes, subjectX);
+  const width = vertical
+    ? Math.max(
+        graph.width,
+        Math.max(subjectX, ...beside.ends.values()) + TEXT_ROOM,
+      )
+    : graph.width;
+  const right = width - DOWN.right;
+  const noteAt = (node: Placed, above: Note): Note =>
+    vertical ? { x: right, y: node.y + NOTE_LIFT, anchor: 'end' } : above;
   const dots = placed.map((node) => {
     const at = order.indexOf(node.id);
     const date = dates.get(node.id);
@@ -836,14 +1014,18 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       y: node.y,
       shaY: node.y + SHA_DROP,
       showSha:
-        (folded && leaving.has(node.id)) ||
-        (at >= 0 &&
-          (!ticked ||
-            [showing.from, showing.to, input.current].includes(node.id))),
+        !vertical &&
+        ((folded && leaving.has(node.id)) ||
+          (at >= 0 &&
+            (!ticked ||
+              [showing.from, showing.to, input.current].includes(node.id)))),
       date: date ? dayOf(date) : null,
-      dateY: node.id === history.fork ? node.y - DATE_RISE : node.y + DATE_DROP,
-      dateAnchor:
-        node.id === history.fork ? ('start' as const) : ('middle' as const),
+      dateAt: noteAt(
+        node,
+        node.id === history.fork
+          ? { x: node.x, y: node.y - DATE_RISE, anchor: 'start' }
+          : { x: node.x, y: node.y + DATE_DROP, anchor: 'middle' },
+      ),
       pushed: node.lane === PR_LANE ? !offOrigin.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
@@ -852,49 +1034,47 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
           ? 6
           : 4,
       matched: input.matched.has(node.id),
-      matchedY: node.y - MATCHED_RISE,
+      matchedAt: noteAt(node, {
+        x: node.x,
+        y: node.y - MATCHED_RISE,
+        anchor: 'middle',
+      }),
     };
   });
-  const lastPushed = graph.nodes.get(
-    order.findLast((sha) => !offOrigin.has(sha)) ?? '',
+  const collapsed = collapsedOf(history, graph.nodes, (at, text) =>
+    vertical ? pillBeside(at, textX, text) : pillAt(at, graph.column, text),
   );
-  const firstUnpushed = graph.nodes.get(
-    order.find((sha) => offOrigin.has(sha)) ?? '',
-  );
-  const main = lastOn(BASE_LANE, graph.nodes)!;
-  const under = lastOn(STACK_LANE, graph.nodes);
-  const head = graph.nodes.get(order.at(-1)!)!;
-  const originHead = graph.nodes.get(there.at(-1)?.sha ?? '');
-  const label = (
-    kind: TimelineLabel['kind'],
-    text: string,
-    at: Placed,
-    opens: string | null = null,
-  ): TimelineLabel => ({
-    kind,
-    text,
-    opens,
-    at: at.id,
-    x: at.x + LABEL_GAP,
-    y: at.y,
-    box: null,
-  });
-  const collapsed = collapsedOf(history, graph.nodes, graph.column);
   const ringed = input.hidden
     ? undefined
     : graph.nodes.get(input.current ?? '');
+  const along = (one: Placed) => (vertical ? one.y : one.x);
+  const segment = (at: number, start: number, end: number) =>
+    vertical
+      ? { x1: at, y1: start, x2: at, y2: end }
+      : { x1: start, y1: at, x2: end, y2: at };
   return {
-    width: graph.width,
+    vertical,
+    width,
     height: graph.height,
     lanes: graph.lanes.flatMap((one) => {
-      const plain = { ...one, dashed: false, unpushed: false };
-      if (one.lane === BASE_LANE) return [{ ...plain, from: 0 }];
-      if (one.lane === GHOST_LANE) return [{ ...plain, dashed: true }];
-      if (one.lane !== PR_LANE || !firstUnpushed) return [plain];
-      const split = lastPushed?.x ?? one.from;
+      const plain = {
+        lane: one.lane,
+        dashed: false,
+        unpushed: false,
+      };
+      const drawn = (start: number, end: number) => ({
+        ...plain,
+        ...segment(one.at, start, end),
+      });
+      if (one.lane === BASE_LANE) return [drawn(0, one.to)];
+      if (one.lane === GHOST_LANE)
+        return [{ ...drawn(one.from, one.to), dashed: true }];
+      if (one.lane !== PR_LANE || !firstUnpushed)
+        return [drawn(one.from, one.to)];
+      const split = lastPushed ? along(lastPushed) : one.from;
       return [
-        ...(lastPushed ? [{ ...plain, to: split }] : []),
-        { ...plain, from: split, dashed: true, unpushed: true },
+        ...(lastPushed ? [drawn(one.from, split)] : []),
+        { ...drawn(split, one.to), dashed: true, unpushed: true },
       ];
     }),
     curves: graph.edges
@@ -910,46 +1090,27 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
               : ('fork' as const),
       })),
     dots,
-    labels: [
-      label('main', stack?.branch ?? base, main),
-      ...(under
-        ? [
-            label(
-              'stack',
-              input.basePr ? `#${input.basePr} ${base}` : base,
-              under,
-              input.basePr ? `/pr/${input.repo}/${input.basePr}/diff` : null,
-            ),
-          ]
-        : []),
-      ...(firstUnpushed
-        ? [
-            {
-              ...label('origin', 'origin', lastPushed ?? firstUnpushed),
-              x: lastPushed
-                ? (lastPushed.x + firstUnpushed.x) / 2
-                : firstUnpushed.x,
-              y: firstUnpushed.y - FLAG_RISE,
-            },
-          ]
-        : []),
-      ...(originHead ? [boxed(label('origin', 'origin', originHead))] : []),
-      firstUnpushed || originHead
-        ? boxed(label('local', 'local', head))
-        : label('head', 'head', head),
-      ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
-    ],
+    rows: vertical
+      ? rowsOf(placed, {
+          subjects,
+          order,
+          noted: new Set([...dates.keys(), ...input.matched]),
+          textX,
+          after: beside.ends,
+          right,
+          step: graph.column,
+        })
+      : [],
+    labels: vertical ? beside.labels : labelled,
     current: ringed ? { sha: ringed.id, x: ringed.x, y: ringed.y } : null,
     band: bandOf(
       graph.nodes.get(showing.from) ?? head,
       graph.nodes.get(showing.to) ?? head,
+      vertical,
     ),
-    flag: flagOf(order, input, graph.nodes, graph.column),
-    since: sinceOf(history, graph.nodes, base, collapsed),
+    flag: flagOf(order, input, graph, right),
+    since: sinceOf(history, graph, base, collapsed, textX),
     collapsed,
-    earlier: shelved
-      ? pillAt(shelved, graph.column, earlierText(drawing.earlier))
-      : null,
     days: ticked ? daysOf(history, graph.nodes) : [],
     ghosts: ghosts.length
       ? `your review saw ${ghosts.map((one) => one.sha.slice(0, SHORT)).join(' ')}, rewritten since`
