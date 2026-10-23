@@ -1198,6 +1198,9 @@
   "/api/pull-request/operations:reset-to-origin": {
    "post": {
     "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
     "409": {
      "$ref": "#/components/schemas/Errors"
     },
@@ -6095,6 +6098,18 @@
    },
    "required": [
     "body"
+   ],
+   "type": "object"
+  },
+  "ResetRequest": {
+   "properties": {
+    "head": {
+     "pattern": "^[0-9a-f]{7,40}$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "head"
    ],
    "type": "object"
   },

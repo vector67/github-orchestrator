@@ -378,6 +378,10 @@ class Fix:
         return PUSH in self.steps
 
     @property
+    def awaits_push(self) -> bool:
+        return self.state == LANDING and self.kind == ProposalKind.COMMIT and not self.pushed
+
+    @property
     def answered(self) -> bool:
         return ANSWER in self.steps
 

@@ -4,11 +4,20 @@ from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.interface import Dashboards, ResetToOrigin, Shelves
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
+from tests.conversation.support import (
+    drain,
+    fake_conversation_managers,
+    hear,
+    on_github,
+    propose,
+    said,
+)
 from tests.pr_event_queue.support import ci_failed, in_flight_of
 from tests.pr_manager.polls import BRANCH, POLLED, seed
 from tests.pr_manager.support import THE_PR, ServerPanel, manager_over
 
 QUEUED_AT = "2026-10-23T09:00:00Z"
+KEY = "PRRT_kwDOqueued"
 
 
 def _diverged(worktree):
@@ -22,13 +31,14 @@ def _diverged(worktree):
     return copies, rewritten
 
 
-def _manager(settings, worktree, copies, *script):
+def _manager(settings, worktree, copies, *script, conversation_managers=None):
     board = ServerPanel()
     runs = FakeAgentRuns(FakePrProcesses()).script(Outcome(finishes=False))
     steps = [lambda: board.panel.carry_on(), None, *script,
              lambda: runs.pr_runs[THE_PR].terminate(), None]
     return manager_over(settings, *steps, board=board, is_author=True, worktree=worktree,
-                        agent_runs=runs, working_copies=copies)
+                        agent_runs=runs, working_copies=copies,
+                        conversation_managers=conversation_managers)
 
 
 def _queue(manager):
@@ -150,3 +160,83 @@ def test_a_queued_reset_whose_record_cannot_be_written_does_not_run_and_the_run_
     assert len(runs.started) == 1
     assert copies.head_of(tmp_path) == before
     assert in_flight_of(manager.event_queue, THE_PR) == []
+
+
+def test_a_queued_reset_keeps_work_that_is_only_unpushed_when_the_run_ends(settings, tmp_path):
+    seed(settings, POLLED)
+    copies, rewritten = _diverged(tmp_path)
+    merged = []
+    manager = _manager(
+        settings, tmp_path, copies, lambda: _queue(manager),
+        lambda: merged.append(copies.merge(tmp_path, rewritten, {"g": "the agent's fix\n"},
+                                           "merge origin and fix")))
+
+    manager.run()
+
+    assert copies.head_of(tmp_path) == merged[0]
+    kept = _kept(manager)
+    assert kept is not None and kept.refused is not None and "only unpushed" in kept.refused
+
+
+def test_a_queued_reset_cancelled_while_it_resets_says_it_ran(settings, tmp_path):
+    seed(settings, POLLED)
+    copies, rewritten = _diverged(tmp_path)
+    manager = _manager(settings, tmp_path, copies, lambda: _queue(manager))
+    resetting = copies._reset
+
+    def cancelled_meanwhile(worktree, sha):
+        ResetToOrigin.forget(manager.container.get(Shelves).of(THE_PR))
+        return resetting(worktree, sha)
+
+    copies._reset = cancelled_meanwhile
+
+    manager.run()
+
+    assert copies.head_of(tmp_path) == rewritten
+    kept = _kept(manager)
+    assert kept is not None and kept.ran_at is not None and kept.refused is None
+
+
+def test_a_queued_reset_that_dies_while_it_resets_does_not_read_as_having_run_cleanly(
+        settings, tmp_path):
+    seed(settings, POLLED)
+    copies, _ = _diverged(tmp_path)
+    before = copies.head_of(tmp_path)
+    manager = _manager(settings, tmp_path, copies, lambda: _queue(manager))
+
+    def killed(worktree, sha):
+        raise RuntimeError("the manager was killed mid-reset")
+
+    copies._reset = killed
+
+    manager.run()
+
+    assert copies.head_of(tmp_path) == before
+    kept = _kept(manager)
+    assert kept is not None and kept.refused is not None
+
+
+def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(settings, tmp_path):
+    seed(settings, POLLED)
+    copies, _ = _diverged(tmp_path)
+    threads = fake_conversation_managers(working_copies=copies)
+    copies.place(THE_PR, tmp_path)
+    threads.watch(THE_PR, is_author=True)
+    conversations = threads.of(THE_PR)
+    on_github(threads.github, KEY, said(1, "rename this"), pr=THE_PR)
+    hear(conversations)
+    propose(threads, conversations, KEY, pr=THE_PR)
+    copies.refuse_pushes("rejected: non-fast-forward")
+    with conversations.editing(KEY) as editable:
+        editable.approve()
+    drain(conversations)
+    landed = conversations.get(KEY).fix
+    assert landed.picked and landed.push_error
+    manager = _manager(settings, tmp_path, copies, lambda: _queue(manager),
+                       conversation_managers=threads)
+
+    manager.run()
+
+    assert copies.head_of(tmp_path) == str(landed.landed_sha)
+    kept = _kept(manager)
+    assert kept is not None and kept.refused is not None and "not pushed" in kept.refused

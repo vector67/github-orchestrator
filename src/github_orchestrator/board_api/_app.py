@@ -68,6 +68,7 @@ from github_orchestrator.board_api._contract import (
     ReadMarkRequest,
     ReadMarks,
     ReplyRequest,
+    ResetRequest,
     ResolveRequest,
     ReviewedCommits,
     SendReviewRequest,
@@ -814,13 +815,14 @@ def _refuse_unless_diverged(dashboard: ManagerDashboard) -> None:
              tags=["pull request"], operation_id="resetToOrigin",
              responses={409: RESET_REFUSED, 500: FETCH_FAILED},
              summary="Fetch origin and reset the worktree to origin's head of the branch.")
-def reset_to_origin(board: Serving) -> Response:
+def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
     """For a worktree that has diverged from origin. The worktree's commits
     that origin lacks are dropped, with no backup. Refused, changing nothing,
     while its manager is not answering or is frozen, an agent works in the
-    worktree, it has not diverged, it holds another branch, or it holds
-    changes nobody committed, untracked files origin would overwrite among
-    them.
+    worktree, it has not diverged, it holds another branch, it holds
+    changes nobody committed, untracked or ignored files origin would
+    overwrite among them, a fix is picked onto it and not pushed yet, or its
+    HEAD is no longer the one the page showed.
     """
     dashboard = board.manager.dashboard()
     if dashboard.standing is not ManagerStanding.ANSWERING:
@@ -843,9 +845,17 @@ def reset_to_origin(board: Serving) -> Response:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       "GitHub has not named the pull request's branch, so the worktree "
                       "was left as it is")
-    failed = board.git.fetch(facts.base_branch, reset_branch=facts.branch)
+    seen = _commit(board, asked.head)
+    if any(conversation.fix.awaits_push for conversation in board.conversations.all()):
+        raise Refusal(409, ErrorCode.OPERATION_OUTSTANDING,
+                      "a fix was picked onto the branch and is not pushed yet, so the "
+                      "worktree was left as it is")
+    failed = board.git.fetch(facts.base_branch)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
+    refused = board.git.reset_to_origin(facts.branch, seen)
+    if refused is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, refused)
     ResetToOrigin.forget(board.shelf)
     return Response(status_code=204)
 

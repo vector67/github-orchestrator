@@ -13,6 +13,7 @@ from tests.working_copies.support import (
     FakeWorld,
     GitWorld,
     build_origin,
+    fetch_and_reset,
     settle_progress,
 )
 
@@ -891,7 +892,7 @@ def test_a_fetch_that_resets_drops_the_worktrees_own_commits_for_origins_current
     world.commit(pr_worktree, {"h": "x\n"}, "local work")
     _, rewritten = world.advance_base()
 
-    assert pr_checkout.fetch("main", reset_branch=BRANCH) is None
+    assert fetch_and_reset(pr_checkout) is None
 
     assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (
         Sha(rewritten), Sha(rewritten))
@@ -901,14 +902,13 @@ def test_a_fetch_that_resets_drops_the_worktrees_own_commits_for_origins_current
 def test_a_fetch_that_resets_a_worktree_with_changes_says_so_and_changes_nothing(
         world, pr_worktree, pr_checkout):
     stale = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
-    origin = pr_checkout.origin_head()
     world.advance_base()
     world.edit(pr_worktree, "f", "half done\n")
 
-    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+    refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "uncommitted changes" in refused
-    assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (stale, origin)
+    assert pr_checkout.local_head() == stale
     assert pr_checkout.is_clean() is False
 
 
@@ -918,7 +918,7 @@ def test_a_fetch_that_resets_onto_a_file_the_worktree_holds_untracked_leaves_it_
     world.advance_base()
     world.edit(pr_worktree, "m", "my own notes\n")
 
-    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+    refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None
     assert pr_checkout.local_head() == stale
@@ -930,7 +930,7 @@ def test_a_fetch_that_resets_a_worktree_edited_while_it_fetches_says_so_and_keep
     world.advance_base()
     world.edit_while_fetching(pr_worktree, "g", "saved mid-fetch\n")
 
-    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+    refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "uncommitted changes" in refused
     assert pr_checkout.local_head() == stale
@@ -944,7 +944,7 @@ def test_a_fetch_that_resets_a_worktree_switched_to_another_branch_leaves_that_b
     world.start_branch(pr_worktree, "hotfix")
     unpushed = world.commit(pr_worktree, {"h": "my hotfix\n"}, "unpushed hotfix")
 
-    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+    refused = fetch_and_reset(pr_checkout, Sha(unpushed))
 
     assert refused is not None
     assert world.head_of(pr_worktree) == unpushed

@@ -776,16 +776,14 @@ module('Acceptance | panel', function (hooks) {
     );
   });
 
-  test('a comment body is drawn as markdown, and its html as the words it is', async function (assert) {
+  test('a comment body is drawn as markdown, and its html without what would fetch or run', async function (assert) {
     board().comments[KEY] = [
       comment({ body: '<img src=x onerror=alert(1)> **bold**' }),
     ];
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert
-      .dom('[data-test-entry-body]')
-      .hasText('<img src=x onerror=alert(1)> bold');
+    assert.dom('[data-test-entry-body]').hasText('bold');
     assert.dom('[data-test-entry-body] strong').hasText('bold');
     assert.dom('[data-test-entry-body] img').doesNotExist();
   });

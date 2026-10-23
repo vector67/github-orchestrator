@@ -560,7 +560,7 @@ WORKING_COPIES_MEMBERS = frozenset({
     "checkout",
 })
 PR_CHECKOUT_MEMBERS = frozenset({
-    "workspace", "is_clean", "push", "unpick", "fetch", "base_standing", "origin_head", "local_head", "commit_message",
+    "workspace", "is_clean", "push", "unpick", "fetch", "reset_to_origin", "base_standing", "origin_head", "local_head", "commit_message",
     "diff_files", "named_commit", "pr_diff", "pr_commits", "has_commit", "blob", "no_worktree",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({

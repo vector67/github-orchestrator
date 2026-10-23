@@ -130,6 +130,25 @@ const HOSTILE: [string, string][] = [
     '<form id="forms" name="forms"><input name="action"></form>',
   ],
   ['a protocol-relative link', '[x](//evil.example/x)'],
+  [
+    'a raw image that would be fetched',
+    '<img src="https://evil.example/t.png">',
+  ],
+  [
+    'a raw image named like an emoji',
+    '<img src="https://evil.example/t.png" alt=":shipit:">',
+  ],
+  [
+    'a picture whose source would be fetched',
+    '<picture><source srcset="https://evil.example/t.png"><img src="https://evil.example/t.png" alt="x"></picture>',
+  ],
+  ['a raw javascript link', '<a href="javascript:window.__pwned=1">x</a>'],
+  ['a fragment link', '[x](#top)'],
+  ['a fragment reference link', '[x][r]\n\n[r]: #top'],
+  [
+    'a raw element borrowing a class of the board',
+    '<span class="decide approve">x</span>',
+  ],
   ['a protocol-relative raw link', '<a href="//evil.example/x">x</a>'],
   ['a scheme with no slashes', '[x](http:evil.example)'],
   [
@@ -354,6 +373,35 @@ module('Acceptance | comment markdown', function (hooks) {
       .dom('[data-test-entry-body] a')
       .hasAttribute('href', 'https://example.com/chart.png')
       .hasText('the chart');
+  });
+
+  test('a reference line a bot keeps its state in is hidden, as GitHub hides it', async function (assert) {
+    await shown(
+      board(),
+      '[vc]: #c3RhdGU+/=:eyJzdGF0ZSI6MX0=\nThe latest updates on your projects.',
+    );
+
+    assert.dom(body()).hasText('The latest updates on your projects.');
+  });
+
+  test('html in a comment is drawn, its pictures as their words so nothing is fetched', async function (assert) {
+    await shown(
+      board(),
+      '| Project | Updated |\n| :--- | :--- |\n' +
+        '| <a href="https://deploys.example/acme"><sup><img src="https://deploys.example/avatar.png" width="16" alt="" /></sup></a> [widgets](https://deploys.example/acme/widgets) ' +
+        '| <relative-time datetime="2026-10-23T14:43:18Z">Oct 23, 2026 2:43pm UTC</relative-time> |\n\n' +
+        '<a href="https://deploys.example/review"><picture><source srcset="https://deploys.example/dark.svg"><img src="https://deploys.example/light.svg" alt="Request Review"></picture></a>',
+    );
+
+    assert.dom('[data-test-entry-body] img').doesNotExist();
+    assert.dom('[data-test-entry-body] td').exists({ count: 2 });
+    assert.dom('[data-test-entry-body] td:first-child').hasText('widgets');
+    assert
+      .dom('[data-test-entry-body] td:last-child')
+      .hasText('Oct 23, 2026 2:43pm UTC');
+    assert
+      .dom('[data-test-entry-body] a[href="https://deploys.example/review"]')
+      .hasText('Request Review');
   });
 
   test('no hostile body or line of code draws anything but allowed tags, attributes and links, or runs anything once it is on the page', async function (assert) {

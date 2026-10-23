@@ -1353,7 +1353,7 @@ export class FakeBoard {
     }
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
     if (url.endsWith('/api/pull-request/operations:reset-to-origin')) {
-      return this.resetToOrigin(url);
+      return this.resetToOrigin(url, init);
     }
     const queueing =
       /\/api\/pull-request\/operations:((?:queue|cancel)-reset-to-origin)$/.exec(
@@ -1512,13 +1512,13 @@ export class FakeBoard {
     return respond(null, { status: 204 });
   }
 
-  private resetToOrigin(url: string): Response {
+  private resetToOrigin(url: string, init: RequestInit): Response {
     this.posted.push({
       url,
       key: '',
       verb: 'reset-to-origin',
       ifMatch: null,
-      body: null,
+      body: init.body ? (JSON.parse(init.body as string) as unknown) : null,
     });
     if (this.refusal) {
       const refusal = this.refusal;

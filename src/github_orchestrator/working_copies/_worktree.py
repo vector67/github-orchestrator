@@ -65,7 +65,8 @@ def run_new_worktree_command(worktree: Path, source_repo: Path, command: str,
 
 
 def fetch_branch(worktree: Path, branch: str) -> None:
-    fetched = _git("-C", str(worktree), "fetch", "origin", branch)
+    fetched = _git("-C", str(worktree), "fetch", "origin",
+                   f"+refs/heads/{branch}:refs/remotes/origin/{branch}")
     if fetched is None:
         raise RuntimeError(
             f"git fetch origin {branch} in {worktree} timed out after {GIT_TIMEOUT}s"

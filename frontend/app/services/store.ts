@@ -37,6 +37,7 @@ import type {
   PullRequestCommits,
   ReadMark,
   ReadMarks,
+  ResetRequest,
   RunLedger,
   Setup,
   SetupAccount,
@@ -962,10 +963,12 @@ export default class StoreService extends Service {
     pr: Numbered,
     verb:
       'reset-to-origin' | 'queue-reset-to-origin' | 'cancel-reset-to-origin',
+    asked?: ResetRequest,
   ): Promise<Refusal | null> {
     try {
       await handed(
         `${this.here.prefixOf(pr)}/api/pull-request/operations:${verb}`,
+        asked,
       );
       const drawn = await this.ask({ kind: 'dashboard', pr }, null);
       if (drawn.changed) drawn.take();

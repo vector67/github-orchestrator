@@ -1,6 +1,6 @@
 [project]
 name = "github-orchestrator"
-version = "0.2.0"
+version = "0.2.1"
 description = "Local GitHub event polling and dispatch system"
 license = "MIT"
 license-files = ["LICENSE"]
