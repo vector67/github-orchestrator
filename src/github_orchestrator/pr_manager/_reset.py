@@ -44,8 +44,13 @@ class QueuedReset:
         if ResetToOrigin.kept(shelf) != queued:
             log.info("%s: the queued reset to origin was cancelled while origin was fetched", pr)
             return
+        seen = checkout.local_head()
+        if seen is None:
+            self._did_not_run(pr, shelf, "the worktree's HEAD will not read, so it was left "
+                                         "as it is")
+            return
         ResetToOrigin(ran_at=self._now()).keep(shelf)
-        refused = checkout.reset_to_origin(facts.branch, facts.base_branch, None)
+        refused = checkout.reset_to_origin(facts.branch, seen)
         if refused is not None:
             self._did_not_run(pr, shelf, refused)
             return

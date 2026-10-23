@@ -10,6 +10,7 @@ from tests.working_copies.support import (
     FakeWorld,
     GitWorld,
     build_origin,
+    fetch_and_reset,
     git,
 )
 
@@ -53,7 +54,7 @@ def test_a_reset_refuses_when_a_commit_lands_while_it_fetches_and_keeps_that_com
     landed = _meanwhile(monkeypatch, world, "_fetch", lambda: world.commit(
         pr_worktree, {"i": "made mid-fetch\n"}, "a commit nobody saw"))
 
-    refused = pr_checkout.reset_to_origin(BRANCH, "main", seen)
+    refused = fetch_and_reset(pr_checkout, seen)
 
     assert refused is not None and "moved" in refused
     assert world.head_of(pr_worktree) == landed[0]
@@ -70,7 +71,7 @@ def test_a_reset_refuses_when_the_worktree_switches_branch_while_origin_is_read(
 
     hotfix = _meanwhile(monkeypatch, world, "_origin_head", switch_to_a_hotfix)
 
-    refused = pr_checkout.reset_to_origin(BRANCH, "main", seen)
+    refused = fetch_and_reset(pr_checkout, seen)
 
     assert refused is not None
     assert world.head_of(pr_worktree) == hotfix[0]
@@ -80,7 +81,7 @@ def test_a_reset_refuses_a_worktree_whose_commits_are_only_unpushed(
         world, pr_worktree, pr_checkout):
     unpushed = Sha(world.commit(pr_worktree, {"h": "a day of work\n"}, "unpushed"))
 
-    refused = pr_checkout.reset_to_origin(BRANCH, "main", None)
+    refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "only unpushed" in refused
     assert pr_checkout.local_head() == unpushed
@@ -109,7 +110,7 @@ def test_a_reset_in_a_clone_that_fetches_only_main_lands_on_origins_current_head
     git_world.commit(git_worktree, {"h": "x\n"}, "local work")
     _, rewritten = git_world.advance_base()
 
-    assert git_checkout.reset_to_origin(BRANCH, "main", None) is None
+    assert fetch_and_reset(git_checkout) is None
 
     assert git_checkout.local_head() == Sha(rewritten)
 
@@ -128,7 +129,7 @@ def test_a_reset_leaves_an_ignored_file_that_origin_now_tracks_as_it_is(
     (git_worktree / "secret.env").write_text("the only copy of the key\n")
     _origin_tracks(git_world, "secret.env", "placeholder\n")
 
-    refused = git_checkout.reset_to_origin(BRANCH, "main", None)
+    refused = fetch_and_reset(git_checkout)
 
     assert refused is not None and "secret.env" in refused
     assert (git_worktree / "secret.env").read_text() == "the only copy of the key\n"
@@ -143,7 +144,7 @@ def test_a_reset_leaves_a_file_excluded_in_info_exclude_that_origin_now_tracks_a
     (git_worktree / "notes.md").write_text("hours of notes\n")
     _origin_tracks(git_world, "notes.md", "origin's notes\n")
 
-    refused = git_checkout.reset_to_origin(BRANCH, "main", None)
+    refused = fetch_and_reset(git_checkout)
 
     assert refused is not None and "notes.md" in refused
     assert (git_worktree / "notes.md").read_text() == "hours of notes\n"
@@ -186,7 +187,7 @@ def test_a_reset_waits_for_a_pick_or_push_under_way_and_then_refuses_the_head_it
         (lambda: cut.pick(tip)) if step == "_pick" else pr_checkout.push)
     assert inside.wait(timeout=10)
 
-    resetting, reset = _in_a_thread(lambda: pr_checkout.reset_to_origin(BRANCH, "main", seen))
+    resetting, reset = _in_a_thread(lambda: fetch_and_reset(pr_checkout, seen))
     resetting.join(timeout=0.2)
     waited = resetting.is_alive()
     go_on.set()

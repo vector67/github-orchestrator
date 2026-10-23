@@ -42037,23 +42037,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -42561,22 +42560,6 @@
      "stdout": "78125d2688c2aeea4c4ccd8c2a188619a7cbae0a\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
     {
      "argv": [
@@ -42880,6 +42863,46 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n + 971346d...b4678ad feature    -> origin/feature  (forced update)\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"fetch\", \"origin\", \"+refs/heads/main:refs/remotes/origin/main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "fetch",
+      "origin",
+      "+refs/heads/main:refs/remotes/origin/main"
+     ],
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -42910,25 +42933,23 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
-    },
+     "stdout": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
       "rev-parse",
-      "--verify",
-      "--quiet",
-      "refs/remotes/origin/feature^{commit}"
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+     "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+    },
     {
      "argv": [
       "git",
@@ -43509,24 +43530,23 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+     "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -43996,23 +44016,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -63812,24 +63831,23 @@
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+     "stdout": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -64318,23 +64336,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "427a677ac10bcf816ad8402693879c793106f477\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "427a677ac10bcf816ad8402693879c793106f477\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -64671,23 +64688,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "e8639ca865a1e21d9cf8bea6768e91a78f828689\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "e8639ca865a1e21d9cf8bea6768e91a78f828689\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -65016,23 +65032,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "a172063492f74016644b2739bec66b23c11946ef\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
+      "rev-parse",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
      "stderr": "",
-     "stdout": ""
-    },
+     "stdout": "a172063492f74016644b2739bec66b23c11946ef\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
@@ -65354,20 +65369,6 @@
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    },
     {
      "argv": [
       "git",
@@ -65889,22 +65890,6 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "2019466e1c189e9b2f82528ff248685e84412d77\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -66468,20 +66453,6 @@
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    },
     {
      "argv": [
       "git",
@@ -67165,20 +67136,6 @@
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    },
     {
      "argv": [
       "git",

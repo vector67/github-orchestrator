@@ -843,9 +843,13 @@ def reset_to_origin(board: Serving) -> Response:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       "GitHub has not named the pull request's branch, so the worktree "
                       "was left as it is")
-    failed = board.git.reset_to_origin(facts.branch, facts.base_branch, None)
-    if failed is not None:
-        raise Refusal(500, ErrorCode.GIT_FAILED, failed)
+    seen = board.git.local_head()
+    failed = board.git.fetch(facts.base_branch)
+    if seen is None or failed is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, failed or "the worktree's HEAD will not read")
+    refused = board.git.reset_to_origin(facts.branch, seen)
+    if refused is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, refused)
     ResetToOrigin.forget(board.shelf)
     return Response(status_code=204)
 

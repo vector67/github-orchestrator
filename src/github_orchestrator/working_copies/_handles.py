@@ -90,9 +90,6 @@ class Git(Protocol):
     def _blob(self, worktree: str, sha: str, path: str) -> bytes | None: ...
 
 
-_UNCLEAN = "the worktree has uncommitted changes, so it was left as it is"
-
-
 def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
 
@@ -199,20 +196,14 @@ class BoundCheckout:
             return located.missing
         return self.git._fetch(located.path, base_branch)
 
-    def reset_to_origin(self, branch: str, base_branch: str | None,
-                        seen: Sha | None) -> str | None:
+    def reset_to_origin(self, branch: str, seen: Sha) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        if not self.git._is_clean(located.path):
-            return _UNCLEAN
-        failed = self.git._fetch(located.path, base_branch)
-        if failed is not None:
-            return failed
         with self.git._serialized(self.pr):
-            return self._reset_fetched(located.path, branch, seen)
+            return self._reset(located.path, branch, seen)
 
-    def _reset_fetched(self, path: str, branch: str, seen: Sha | None) -> str | None:
+    def _reset(self, path: str, branch: str, seen: Sha) -> str | None:
         origin = self.git._origin_head(path)
         if origin is None:
             return "origin holds no branch for the worktree to reset to"
@@ -221,14 +212,14 @@ class BoundCheckout:
             return (f"the worktree holds {here or 'no branch'}, not {branch}, "
                     "so it was left as it is")
         if not self.git._is_clean(path):
-            return _UNCLEAN
+            return "the worktree has uncommitted changes, so it was left as it is"
         head = self.git._head_sha(path)
         if head is None:
             return "the worktree's HEAD will not read, so it was left as it is"
         return self._holds_back(path, seen, head, origin) or self.git._reset(path, origin)
 
-    def _holds_back(self, path: str, seen: Sha | None, head: str, origin: str) -> str | None:
-        if seen is not None and head != str(seen):
+    def _holds_back(self, path: str, seen: Sha, head: str, origin: str) -> str | None:
+        if head != str(seen):
             return (f"the worktree moved to {head[:12]} since {str(seen)[:12]} was shown, "
                     "so it was left as it is")
         if self.git._descends(path, origin, head):

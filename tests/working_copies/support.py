@@ -3,7 +3,7 @@ import threading
 from collections.abc import Mapping
 from pathlib import Path
 
-from github_orchestrator.domain import Clone, Pr, Repo
+from github_orchestrator.domain import Clone, Pr, Repo, Sha
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications.fake import FakeNotifications
@@ -65,6 +65,12 @@ def branch_at(worktree: Path | str) -> str | None:
                            capture_output=True, text=True)
     branch = shown.stdout.strip()
     return None if shown.returncode != 0 or branch in ("", "HEAD") else branch
+
+
+def fetch_and_reset(checkout: PrCheckout, seen: Sha | None = None) -> str | None:
+    shown = seen or checkout.local_head()
+    assert shown is not None
+    return checkout.fetch("main") or checkout.reset_to_origin(BRANCH, shown)
 
 
 def settle_progress() -> None:
