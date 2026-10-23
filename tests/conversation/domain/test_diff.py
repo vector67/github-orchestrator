@@ -302,6 +302,29 @@ def test_a_snapshot_written_before_the_flag_says_nothing_about_resolution(settin
     )
 
 
+def test_a_thread_whose_line_github_moved_is_stale(settings):
+    diffing = Diffing(settings)
+
+    result = diffing.changes([_thread()], [replace(_thread(), line=5)])
+
+    assert result.stale == [KEY]
+    assert result.active == [], "a push moved the code and nobody spoke: a refresh, never a reopen"
+
+
+def test_a_snapshot_written_before_the_line_refreshes_each_thread_once(settings):
+    diffing = Diffing(settings)
+    diffing.poll(_thread())
+    current = json.loads(diffing.here.thread_records.of(THE_PR).load("cursor", "poll"))
+    diffing.cursor_written_before({KEY: {key: value for key, value in current[KEY].items()
+                                         if key != "line"}})
+
+    first = diffing.poll(_thread())
+    second = diffing.poll(_thread())
+
+    assert first.stale == [KEY], "a record written before the line was followed may hold an old one"
+    assert second.stale == []
+
+
 def test_a_resolved_thread_is_still_diffed(settings):
     diffing = Diffing(settings)
     before = _thread(resolved=True, comments=[_comment(), _comment(2, body="typo")])

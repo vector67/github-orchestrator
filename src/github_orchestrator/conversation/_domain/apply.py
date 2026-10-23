@@ -347,6 +347,7 @@ def _with_transcript(conversation: Conversation, comment: Comment | None,
 def _anchor_of(conversation: Conversation) -> Anchor:
     return Anchor(
         is_outdated=conversation.is_outdated,
+        line=conversation.line,
         start_line=conversation.start_line,
         start_side=conversation.start_side,
         original_line=conversation.original_line,
@@ -374,6 +375,7 @@ def _in_step(conversation: Conversation, command: Refresh | Reopen) -> Conversat
         reviewer_name=root.author_name or conversation.reviewer_name,
         review_state=root.review_state or conversation.review_state,
         is_outdated=anchor.is_outdated,
+        line=anchor.line,
         start_line=anchor.start_line,
         start_side=anchor.start_side,
         original_line=anchor.original_line,

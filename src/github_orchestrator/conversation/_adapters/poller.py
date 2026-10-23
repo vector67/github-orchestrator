@@ -36,6 +36,7 @@ def thread_snapshot(
             "comments": [[c.id, fingerprint(c)] for c in t.comments
                          if within_cutoff(c, cutoff_iso)],
             "is_resolved": bool(t.is_resolved),
+            "line": t.line,
         }
         for t in threads
     }

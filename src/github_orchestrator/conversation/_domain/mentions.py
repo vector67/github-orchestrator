@@ -42,6 +42,8 @@ def _in_thread(threads: Sequence[FetchedThread], account: str,
                names: re.Pattern[str]) -> list[Mention]:
     found = []
     for thread in threads:
+        if thread.kind == KIND_REVIEW and thread.comments and _mine(thread.comments[0], account):
+            continue
         for index, comment in enumerate(thread.comments):
             if _mine(comment, account) or not _names_me(names, comment.body):
                 continue
