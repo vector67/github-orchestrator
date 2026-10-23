@@ -190,6 +190,18 @@ def test_a_mention_i_answered_on_github_is_no_longer_marked(settings):
     assert manager.get("IC_1").mention is False
 
 
+def test_a_reply_naming_me_on_a_review_thread_i_started_is_no_mention(settings):
+    here, state = _watching(
+        settings,
+        _review_thread("PRRT_mine",
+                       _said(1, ME, "rename this", "2026-09-01T10:00:00Z"),
+                       _said(2, "anna", "Thanks @octocat, done", "2026-09-01T11:00:00Z")))
+
+    manager = _heard(here, state)
+
+    assert manager.get("PRRT_mine").mention is False
+
+
 def _replied_and_resolved(here, state, key, reply):
     manager = here.conversation_managers.of(THE_PR)
     with manager.editing(key) as editable:
