@@ -57,6 +57,13 @@ def _resolution_moved(entry: dict[str, Any] | list[Any] | None,
     return was is not None and was != bool(thread.is_resolved)
 
 
+def _line_moved(entry: dict[str, Any] | list[Any] | None,
+                thread: FetchedThread) -> bool:
+    if not isinstance(entry, dict) or "is_resolved" not in entry:
+        return False
+    return "line" not in entry or entry["line"] != thread.line
+
+
 def _drifted(seen: dict[int | None, str | None],
              comments: tuple[Comment, ...]) -> bool:
     now = {c.id: fingerprint(c) for c in comments}
@@ -107,7 +114,8 @@ def diff_threads(
         if fresh:
             active.append(ActiveThread(thread=thread, new_comments=fresh))
         elif thread.key in old and (_drifted(seen, comments)
-                                       or _resolution_moved(entry, thread)):
+                                       or _resolution_moved(entry, thread)
+                                       or _line_moved(entry, thread)):
             stale.append(thread)
 
     return {
