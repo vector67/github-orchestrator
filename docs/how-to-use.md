@@ -432,7 +432,8 @@ and the PR takes the whole screen. Its title bar has the three-line PRs
 button, the title, whose PR it is, the branch, the PR's number linking to it on
 GitHub, your move, the chips its wall row shows and the settings gear. The PRs
 button opens the switcher, whose first entry is **Wall**. The gear, on the
-wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch and
+wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch,
+**Commit box sizing** for the Diff tab (Full, Minimal or Hidden) and
 the watcher's last poll: a green dot, **Polled successfully** and how long ago,
 or a red dot and what went wrong when polls fail. **N mismatches** is the
 Alignment judge's count in the PR's latest summary, shown even once the summary
@@ -450,6 +451,11 @@ its move is outlined in grey, never yellow, since yellow means it needs you now.
 | `[` / `]` | previous / next PR, in the wall's order   |
 | `Esc`     | back to the wall                          |
 | `o` / `y` | open the PR on GitHub / copy its link     |
+
+On the Diff tab, `[` and `]` step to the previous and next commit instead while
+the commit stepper shows, and `t` opens and closes the timeline. `Esc` there
+first closes the comment box, then drops a picked range, and only then goes
+back to the wall.
 
 The Summary tab is headed by the PR's title, how long ago it was opened, its
 commits, and the lines added and removed beside five squares, green and red
@@ -541,8 +547,36 @@ PRs keeps it; reloading or closing the browser tab ends it. One started from
 the palette or the board waits 30 seconds for the page to connect. Each
 connection is sent the session's last megabyte of output first.
 
-**Diff** is the pull request's diff from its merge base to its head, which is
-what GitHub's Files changed shows. The **origin | local** toggle above the tree
+**Diff** steps through the pull request one commit at a time. A bar over the
+files reads **Commit N of M** with the commit's sha, subject, author and age,
+and a **merge** or **not pushed** pill when one applies. **‹ Prev** and
+**Next ›** step, the **Read** checkbox marks the commit read, and a row of pips
+under the bar, one per commit, shows which are read and jumps to the one you
+click. The tab opens on the first unread commit after your review, or on the
+first unread one when you have not reviewed, or the last when all are read.
+After a review a note says **Picked up at
+the first new commit** and how many were pushed since your review, or, after a
+force-push, **Rebased since your review**, how many of your read commits were
+matched by message onto the newer base branch and how many are new. Its `×` hides it
+until the PR has a new head.
+
+On a merge commit the diff shows only what the merge changed on its own; a note
+says how many files came in from the base branch and are hidden, and its **Skip merges
+when stepping** checkbox, on unless you clear it, steps past merges.
+
+**Timeline** opens a graph of the branch over the diff: its commits against the
+base branch, how far behind it is, the commits not pushed yet, and what your
+review saw once the branch was rewritten. Click a dot for one commit;
+shift-click another, or drag the band's handles, to pick a range, which the bar
+then shows as `from → to` with its commit and file counts and
+**Back to stepping**. **All**, **Since my review** and **This commit** pick
+the common ranges.
+
+**Commit box sizing** in the settings gear sets how much of this shows. Full is
+all of it; Minimal keeps only the pips; Hidden drops the stepper and shows the
+whole diff from the merge base to the head, which is what GitHub's Files
+changed shows, with a **Timeline** button beside the toggle. The
+**origin | local** toggle above the tree
 picks the head: origin is the PR branch on GitHub as last fetched, local is the
 commit the PR's worktree has checked out, with any commits not pushed yet. The tree on the left has a filter box, each
 file's status and how many conversations sit on it, and clicking a file scrolls
@@ -553,7 +587,9 @@ and removed, starts folded; click its header to open it. Context expands up,
 down or all, as in a proposed fix's diff. The tab reads the diff again when the
 PR's head moves.
 
-Hovering a line in a hunk shows a `+` in its gutter. Click the `+` or a line
+You can comment only on the last commit, on a range that ends at the head, or
+on the whole diff; an earlier commit is read-only. There, hovering a line in a
+hunk shows a `+` in its gutter. Click the `+` or a line
 number to select that line, then drag or shift-click to stretch the selection.
 It can take in − and + lines together but stays in the hunk it started in,
 because GitHub refuses a comment whose lines span two hunks. Lines shown by
