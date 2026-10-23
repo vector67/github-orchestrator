@@ -36,6 +36,9 @@ use.
 | 2026-10-09 | 79a83a65 | 4,077        | 930         | 12.1 s (11.8-12.6)  | 13.7 s (13.0-15.9)  | 2.1-14.7         | 45-92 °C        |
 | 2026-10-09 | bd632429 | 4,105        | 930         | 13.2 s (12.4-16.4)  | 12.8 s (12.4-14.9)  | 5.8-15.0         | 47-91 °C        |
 | 2026-10-15 | db18876b | 4,315        | 961         | 11.5 s (11.1-11.9)  | 11.7 s (11.0-11.9)  | 2.6-13.2         | 46-91 °C        |
+| 2026-10-23 | 817b7d6a | 4,598        | 1,157       | 9.5 s (9.4-9.8)     | 10.0 s (9.3-10.1)   | 1.9-8.1          | 51-90 °C        |
+
+The 2026-10-23 row closes the speed rounds #140-#144 and brings the cold median under 10 s with 283 more python and 196 more Ember tests than the row above. Alone, the python half takes about 5.1 s and the Ember half about 6.9 s; together they compete for the 4 performance cores, so the next cut has to come from the Ember half, which now finishes last. Fork counts of 4, 6 and 8 made no clear difference, so `PYTEST_WORKERS` stays 8.
 
 The 2026-10-09 row, after the last step of the front-end store plan, matches the cold median above it (13.5 s against 13.4 s) and brings the warm median back to the cold one. Other sessions held the load at 9-16 during the runs.
 
