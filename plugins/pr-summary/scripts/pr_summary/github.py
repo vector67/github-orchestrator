@@ -16,6 +16,7 @@ Gh = Callable[[list[str]], bytes]
 History = Callable[[str], list[str]]
 HISTORY_DEPTH = 5
 PR_URL = re.compile(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)")
+CUT_OFF = b"unexpected end of JSON input"
 
 AUTHOR = "author { login __typename }"
 REMARK_NODES = f"nodes {{ {AUTHOR} body url }}"
@@ -71,6 +72,8 @@ class GhFailed(Exception):
 
 def gh_cli(args: list[str], env: dict[str, str] | None = None) -> bytes:
     result = subprocess.run(["gh", *args], capture_output=True, env=env)
+    if result.returncode != 0 and CUT_OFF in result.stderr:
+        result = subprocess.run(["gh", *args], capture_output=True, env=env)
     if result.returncode != 0:
         raise GhFailed(result.stderr.decode(errors="replace").strip())
     return result.stdout

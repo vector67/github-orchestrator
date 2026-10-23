@@ -7,6 +7,7 @@ import {
   findAll,
   triggerEvent,
   visit,
+  waitUntil,
 } from '@ember/test-helpers';
 import {
   added,
@@ -61,6 +62,23 @@ function inRange(): string[] {
     (one) => one.getAttribute('data-sha') ?? '',
   );
 }
+
+function inside(inner: DOMRect, outer: DOMRect): boolean {
+  return (
+    outer.left <= inner.left &&
+    inner.right <= outer.right &&
+    outer.top <= inner.top &&
+    inner.bottom <= outer.bottom
+  );
+}
+
+function keyed(): string[] {
+  return findAll('[data-test-key]').map(
+    (one) => one.getAttribute('data-test-key') ?? '',
+  );
+}
+
+const PLAIN_KEY = ['unread', 'read', 'current', 'base', 'band'];
 
 function increasing(values: number[]): boolean {
   return values.every((one, index) => index === 0 || one > values[index - 1]!);
@@ -172,6 +190,12 @@ module('Acceptance | commit timeline', function (hooks) {
     assert.dom('[data-test-lane-label="head"]').hasAttribute('data-at', THIRD);
     assert.dom('[data-test-current]').hasAttribute('data-at', SECOND);
     assert.dom('[data-test-fork-curve]').exists({ count: 1 });
+    assert.deepEqual(keyed(), PLAIN_KEY, 'the key names only what is drawn');
+    assert.true(
+      Number(find('[data-test-timeline-graph]')!.getAttribute('width')) <
+        (find('.timeline-scroll') as HTMLElement).clientWidth,
+      'a short branch is not stretched across the whole pane',
+    );
   });
 
   test('with main moved on, main runs past the fork to its tip and the header says how far behind the branch is', async function (assert) {
@@ -548,6 +572,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
         Number(dot(MERGE).getAttribute('data-x')),
       'the main commit it pulled in comes before the merge',
     );
+    assert.deepEqual(keyed(), [...PLAIN_KEY, 'merge', 'merge-pip']);
   });
 
   test('stepping skips merges while the box is ticked, and its pip is striped', async function (assert) {
@@ -763,7 +788,27 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
       dots('base').map((one) => one.sha),
       [FORK, run[23], run[24]],
     );
-    assert.dom('[data-test-collapsed]').hasText('⋯ 23 commits');
+    assert.dom('[data-test-collapsed]').hasText('⋯ 23 more');
+    const box = (selector: string) => find(selector)!.getBoundingClientRect();
+    const apart = (one: DOMRect, other: DOMRect) =>
+      one.bottom <= other.top ||
+      other.bottom <= one.top ||
+      one.right <= other.left ||
+      other.right <= one.left;
+    const caption = box('[data-test-since-fork] text');
+    const pillBox = box('[data-test-collapsed] rect');
+    const since = box('[data-test-since-fork] rect');
+    assert.true(apart(caption, pillBox), 'the caption stays clear of the pill');
+    assert.true(
+      findAll('[data-test-date]').every((one) =>
+        apart(caption, one.getBoundingClientRect()),
+      ),
+      'and of the dates',
+    );
+    assert.true(
+      inside(pillBox, since),
+      "the pill sits inside the box of main's commits since the fork",
+    );
     const pill = Number(find('[data-test-collapsed]')!.getAttribute('data-x'));
     const [fork, beforeTip] = dots('base');
     assert.true(pill > fork!.x, 'after the fork');
@@ -844,6 +889,7 @@ module(
         ),
       );
       assert.deepEqual(shasShown(), [shas[0]]);
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'tick']);
       const days = findAll('[data-test-day]');
       assert.deepEqual(
         days.map((one) => one.textContent.trim()),
@@ -865,6 +911,30 @@ module(
       await click(dot(shas[10]!), { shiftKey: true });
 
       assert.deepEqual(shasShown(), [shas[3], shas[10]]);
+    });
+
+    test('the graph spreads its columns across the pane, and again when the pane changes width', async function (assert) {
+      long(24);
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      const pane = find('.timeline-scroll') as HTMLElement;
+      const drawn = () =>
+        Number(find('[data-test-timeline-graph]')!.getAttribute('width'));
+      await waitUntil(() => drawn() === pane.clientWidth);
+
+      assert.strictEqual(drawn(), pane.clientWidth, 'it fills the pane');
+
+      const before = pane.clientWidth;
+      pane.style.width = `${before - 80}px`;
+      await waitUntil(() => drawn() === pane.clientWidth);
+
+      assert.strictEqual(
+        drawn(),
+        before - 80,
+        'and fills it again once narrower',
+      );
     });
 
     test('twenty commits keep their dots, their shas and their pips', async function (assert) {
@@ -933,6 +1003,18 @@ module(
         .dom('[data-test-lane-label="local"]')
         .hasAttribute('data-at', FOURTH);
       assert.dom('[data-test-lane-label="head"]').doesNotExist();
+      const word = find(
+        '[data-test-lane-label="local"]',
+      )!.getBoundingClientRect();
+      const frame = find(
+        '[data-test-label-box="local"]',
+      )!.getBoundingClientRect();
+      assert.true(
+        inside(word, frame),
+        'the local label sits in a box of its own',
+      );
+      assert.dom('[data-test-label-box]').exists({ count: 1 });
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'not-pushed']);
       assert.dom('[data-test-unpushed-lane]').exists({ count: 1 });
       assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
       assert.dom('[data-test-not-pushed]').hasText('not pushed');
@@ -962,6 +1044,64 @@ module(
     function press(key: string) {
       return triggerEvent(document, 'keydown', { key });
     }
+  },
+);
+
+const STALE_ONE = '5a5a5a5';
+const STALE_TWO = '6b6b6b6';
+
+module(
+  'Acceptance | commit timeline with a worktree diverged from origin',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    hooks.beforeEach(function () {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: STALE_TWO,
+        },
+      });
+      board().commits = prHistory(FORK, [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+        prCommit(THIRD, SECOND, 'Test the widget'),
+      ]);
+      board().localCommits = prHistory('01d0000', [
+        prCommit(STALE_ONE, '01d0000', 'Add the widget'),
+        prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
+      ]);
+    });
+
+    test('on local a review given on a commit origin no longer has draws no flag', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.deepEqual(
+        dots('pr').map((one) => [
+          one.sha,
+          dot(one.sha).getAttribute('data-pushed'),
+        ]),
+        [
+          [STALE_ONE, 'false'],
+          [STALE_TWO, 'false'],
+        ],
+      );
+      assert.dom('[data-test-review-flag]').doesNotExist();
+    });
+
+    test("on origin, where the review's commit is not in the list and nothing was kept, there is no flag either", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert.dom('[data-test-review-flag]').doesNotExist();
+    });
   },
 );
 
@@ -1058,7 +1198,7 @@ module(
       assert
         .dom('[data-test-timeline-header]')
         .hasText(
-          `3 commits on PROJ-7-fix-the-widget · now forked from main at ${NEW_FORK}, was ${OLD_FORK}, main's tip`,
+          `3 commits on PROJ-7-fix-the-widget · now forked from main at ${NEW_FORK}, was ${OLD_FORK}`,
         );
       assert
         .dom('[data-test-ghost-shas]')
@@ -1174,7 +1314,7 @@ module(
       assert
         .dom('[data-test-commit-note]')
         .hasText(
-          'Rebased since your review (force-pushed Wed 21 Oct). 1 of your read commits were rewritten onto newer main and matched by message; 1 is new; 1 is read as it was. ×',
+          'Rebased since your review (force-pushed Wed 21 Oct). 1 of your read commits was rewritten onto newer main and matched by message; 1 is new; 1 is read as it was. ×',
         );
     });
 

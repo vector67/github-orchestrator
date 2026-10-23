@@ -24,6 +24,7 @@ from starlette.concurrency import run_in_threadpool
 from github_orchestrator import conversation as domain
 from github_orchestrator.board_api import _etag as etag
 from github_orchestrator.board_api import _routes as routes
+from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
     ApproveRequest,
@@ -37,6 +38,7 @@ from github_orchestrator.board_api._contract import (
     Dashboard,
     DeferRequest,
     Diff,
+    DiffAnchors,
     DiffSource,
     DismissRequest,
     DraftBody,
@@ -131,7 +133,7 @@ from github_orchestrator.domain import Location, Pr, UtcClock
 from github_orchestrator.domain import Sha as CommitSha
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.terminal_sessions import TerminalSessions
-from github_orchestrator.working_copies import PrCheckout
+from github_orchestrator.working_copies import FileDiff, PrCheckout
 
 log = logging.getLogger(__name__)
 
@@ -583,6 +585,38 @@ def read_diff(base: Sha, head: Sha, request: Request, board: Serving,
                       board.git.no_worktree() or f"git could not diff {base}..{head}")
     return etag.answered(request, diff_of(
         base, head, files, lambda path: board.git.blob(until, path)))
+
+
+def _diffed(board: Board, since: CommitSha, until: CommitSha,
+            merged: CommitSha | None = None) -> tuple[FileDiff, ...]:
+    files = board.git.diff_files(since, until, merged)
+    if files is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      board.git.no_worktree() or f"git could not diff {since}..{until}")
+    return files
+
+
+@reads.get("/diffs/{base}..{head}/anchors/{onto_base}..{onto_head}",
+           response_model=DiffAnchors, tags=["revisions"],
+           operation_id="readDiffAnchors",
+           summary="Where each line of a diff sits in the pull request's diff.",
+           description="`onto_base..onto_head` is the pull request's diff, as "
+                       "`/pull-request/diff` names it. A comment on a line of "
+                       "`base..head` is posted at its `onto`; a line with none "
+                       "has no place there. Addressed by commits, so it never "
+                       "changes.",
+           responses={**etag.TAGGED, 404: NO_SUCH_DIFF, 500: DIFF_FAILED})
+def read_diff_anchors(base: Sha, head: Sha, onto_base: Sha, onto_head: Sha,
+                      request: Request, board: Serving,
+                      merged: Annotated[Sha | None, Query(
+                          description="As on `/diffs/{base}..{head}`.")] = None,
+                      ) -> Response:
+    since, until, start, end = (_commit(board, sha)
+                                for sha in (base, head, onto_base, onto_head))
+    into = None if merged is None else _commit(board, merged)
+    return etag.answered(request, DiffAnchors(files=anchors_of(
+        _diffed(board, since, until, into), _diffed(board, until, end),
+        _diffed(board, since, start, into), _diffed(board, start, end))))
 
 
 @reads.get("/files", response_model=FileLines, tags=["revisions"],

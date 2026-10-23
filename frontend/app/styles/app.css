@@ -4550,13 +4550,12 @@ button.tree-row[aria-current="true"] {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow: auto;
 }
 
 .diff-files {
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
   padding: 16px;
-  overflow: auto;
 }
 
 .commit-stepper {
@@ -4914,6 +4913,12 @@ button.tree-row[aria-current="true"] {
   fill: var(--muted);
 }
 
+.timeline-label-box {
+  fill: none;
+  stroke: var(--muted);
+  stroke-dasharray: 4 3;
+}
+
 .timeline-label[data-kind="fork"],
 .timeline-label[data-kind="old-fork"] {
   font-size: 10px;
@@ -5040,6 +5045,38 @@ button.tree-row[aria-current="true"] {
   color: var(--muted);
 }
 
+.timeline-key-item i[data-style="merge"] {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+.timeline-key-item i[data-style="tick"] {
+  width: 3px;
+  height: 14px;
+  border: 0;
+  border-radius: 0;
+}
+
+.timeline-key-item i[data-style="not-pushed"] {
+  background: var(--page);
+  border-style: dashed;
+}
+
+.timeline-key-item i[data-style="merge-pip"] {
+  width: 16px;
+  height: 6px;
+  background-color: var(--muted);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    var(--page) 3px 5px
+  );
+  border: 0;
+  border-radius: 0;
+}
+
 .timeline-key-item i[data-style="band"] {
   width: 16px;
   background: var(--yellow);
@@ -5094,7 +5131,7 @@ button.tree-row[aria-current="true"] {
 
 .pr-diff .file-head {
   position: sticky;
-  top: -16px;
+  top: 0;
   z-index: 2;
   display: flex;
   gap: 10px;
@@ -5225,7 +5262,8 @@ button.tree-row[aria-current="true"] {
 }
 
 .inline-card,
-.comment-box {
+.comment-box,
+.comment-unplaced {
   font-family: var(--body-stack, system-ui, sans-serif);
   font-size: var(--fs-l);
   line-height: 1.5;
@@ -5391,6 +5429,25 @@ button.tree-row[aria-current="true"] {
 
 .comment-box .commenting {
   font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.comment-unplaced {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+}
+
+.threads-elsewhere {
+  margin: 0;
+  padding: 8px 16px 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
   color: var(--muted);
 }
 

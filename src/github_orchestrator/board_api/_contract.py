@@ -1054,6 +1054,39 @@ class Commits(BaseModel):
     head: Sha
 
 
+class PullRequestLine(BaseModel):
+    """A line as a comment on the pull request names it: its side and its
+    number in the pull request's diff."""
+
+    side: DiffSide
+    line: int
+
+
+class LineAnchor(BaseModel):
+    side: DiffSide = Field(
+        description="`RIGHT` for a line of the diff's head, `LEFT` for a line "
+                    "of its base. A context line is listed once on each side.")
+    line: int
+    onto: PullRequestLine = Field(
+        description="Where a comment on this line is posted.")
+
+
+class FileAnchors(BaseModel):
+    path: str
+    lines: list[LineAnchor] = Field(
+        description="Only the lines that have a place in the pull request's "
+                    "diff. A line changed or deleted on the way to its head, "
+                    "or in a file deleted or renamed by then, is left out.")
+
+
+class DiffAnchors(BaseModel):
+    """Where each line of one diff sits in the pull request's diff, so a
+    comment made on an earlier commit is posted on the head's line, and a
+    thread on the head is drawn on the earlier commit's."""
+
+    files: list[FileAnchors]
+
+
 class Ticket(BaseModel):
     """A ticket as the agent proposed it, or as the viewer left it in the
     accept dialog."""

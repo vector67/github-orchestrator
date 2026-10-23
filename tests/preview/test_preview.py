@@ -238,6 +238,8 @@ def _count(repo, *revisions):
     ("long", lambda repo: _count(repo, "main..HEAD") > 20 and len(set(preview._git(
         repo.worktree, "log", "--format=%ad", "--date=short", "main..HEAD").split())) >= 3),
     ("local", lambda repo: _count(repo, f"origin/{preview.PR_BRANCH}..HEAD") == 2),
+    ("diverged", lambda repo: _count(repo, f"origin/{preview.PR_BRANCH}..HEAD") > 0
+     and _count(repo, f"HEAD..origin/{preview.PR_BRANCH}") > 0),
 ])
 def test_each_preview_shape_builds_the_branch_it_is_named_for(tmp_path, shape, holds):
     repo = preview.build_repo(preview.worktree_in(tmp_path), shape=shape)

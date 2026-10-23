@@ -257,6 +257,10 @@ export interface Diff {
   files: FileChange[];
 }
 
+export interface DiffAnchors {
+  files: FileAnchors[];
+}
+
 export type DiffFileStatus = 'added' | 'modified' | 'removed' | 'renamed' | 'copied';
 
 export interface DiffHunk {
@@ -340,6 +344,11 @@ export interface FieldError {
 
 export interface FieldErrors {
   errors: FieldError[];
+}
+
+export interface FileAnchors {
+  path: string;
+  lines: LineAnchor[];
 }
 
 export interface FileChange {
@@ -475,6 +484,12 @@ export interface LastRun {
   event: string;
   exit_code: number | null;
   ended_at: string;
+}
+
+export interface LineAnchor {
+  side: DiffSide;
+  line: number;
+  onto: PullRequestLine;
 }
 
 export interface ManagerChanges {
@@ -688,6 +703,11 @@ export interface PullRequestCommits {
   fork_at: string;
   stack: Stack | null;
   reviewed: ReviewedCommits | null;
+}
+
+export interface PullRequestLine {
+  side: DiffSide;
+  line: number;
 }
 
 export interface QuestionRequest {

@@ -189,7 +189,8 @@ class FakeWorkingCopies:
         self.branches.setdefault(branch, self.origin.get(branch, ""))
         self.checkouts[_key(worktree)].branch = branch
 
-    def publish(self, branch: str, onto: str, files: dict[str, str], message: str) -> str:
+    def publish(self, branch: str, onto: str, files: Mapping[str, str | None],
+                message: str) -> str:
         sha = self._new_commit(onto, files, message)
         self.origin[branch] = sha
         return sha
@@ -608,9 +609,10 @@ class FakeWorkingCopies:
             return b"\x89PNG\r\n\x1a\n\xff\xfe"
         return None if found is None else found.encode()
 
-    def _new_commit(self, parent: str | None, files: dict[str, str], message: str) -> str:
-        tree = dict(self.commits[parent].tree) if parent else {}
-        tree.update(files)
+    def _new_commit(self, parent: str | None, files: Mapping[str, str | None],
+                    message: str) -> str:
+        held = dict(self.commits[parent].tree) if parent else {}
+        tree = {name: text for name, text in {**held, **files}.items() if text is not None}
         return self._store(() if parent is None else (parent,), tree, message)
 
     def _merged_tree(self, ours: str, theirs: str) -> dict[str, str]:

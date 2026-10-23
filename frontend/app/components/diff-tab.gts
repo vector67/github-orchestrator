@@ -11,10 +11,16 @@ import MergeNote from 'frontend/components/merge-note';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
+import { NOT_AT_HEAD } from 'frontend/data/anchors';
 import { DIFF_FAILED, DIFF_LOADING } from 'frontend/data/diff-rows';
 import { treeOf, type TreeRow } from 'frontend/data/file-tree';
 import type { Inline } from 'frontend/data/inline';
-import { linesOf, selectionOf, type Selection } from 'frontend/data/selection';
+import {
+  linesOf,
+  selectionOf,
+  type Lines,
+  type Selection,
+} from 'frontend/data/selection';
 import { BLANK, NEW_DRAFT, type Saved } from 'frontend/services/drafts';
 import type DraftsService from 'frontend/services/drafts';
 import type CommitBoxService from 'frontend/services/commit-box';
@@ -90,8 +96,18 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.selection = selection;
     if (opening) this.boxOpen = true;
     if (!this.boxOpen) return;
-    this.drafts.place(this.draftKey, this.saved, linesOf(selection));
+    const lines = this.pullRequestDiff.headLines(linesOf(selection));
+    if (lines) this.drafts.place(this.draftKey, this.saved, lines);
   };
+
+  get posted(): Lines | null {
+    const selection = this.selection;
+    return selection && this.pullRequestDiff.headLines(linesOf(selection));
+  }
+
+  get unplaced(): boolean {
+    return this.selection !== null && this.posted === null;
+  }
 
   edit = (item: Inline) => {
     const file = this.pullRequestDiff.shown?.files.find(
@@ -182,7 +198,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         this.pullRequestDiff.readDetails
         this.pullRequestDiff.anchored
       }}
-      {{didChange this.pullRequestDiff.draw this.pullRequestDiff.drawing}}
+      {{didChange this.pullRequestDiff.draw this.pullRequestDiff.anchoring}}
       {{didChange this.showLinked this.linked}}
     >
       <aside class="diff-tree" data-test-tree>
@@ -251,7 +267,11 @@ export default class DiffTab extends Component<DiffTabSignature> {
           @count={{this.countOf}}
         />
       </aside>
-      <div class="diff-main">
+      <div
+        class="diff-main"
+        data-test-diff-pane
+        {{didChange this.follow this.scrolling}}
+      >
         {{#if this.pullRequestDiff.stepper}}
           <CommitBar
             @stepper={{this.pullRequestDiff.stepper}}
@@ -283,14 +303,16 @@ export default class DiffTab extends Component<DiffTabSignature> {
               @pick={{this.pullRequestDiff.pick}}
               @stretch={{this.pullRequestDiff.stretch}}
               @choose={{this.pullRequestDiff.choose}}
+              @fit={{this.pullRequestDiff.fit}}
             />
           {{/if}}
         {{/if}}
-        <div
-          class="diff-files"
-          data-test-diff-files
-          {{didChange this.follow this.scrolling}}
-        >
+        {{#if this.pullRequestDiff.elsewhere}}
+          <p class="threads-elsewhere" data-test-threads-elsewhere>
+            {{this.pullRequestDiff.elsewhere}}
+          </p>
+        {{/if}}
+        <div class="diff-files" data-test-diff-files>
           {{#if this.pullRequestDiff.shown}}
             {{#if this.pullRequestDiff.commenting}}
               <PrDiff
@@ -304,12 +326,20 @@ export default class DiffTab extends Component<DiffTabSignature> {
                 @edit={{this.edit}}
               >
                 <:commenting as |selection|>
-                  <CommentBox
-                    @selection={{selection}}
-                    @draft={{this.draftKey}}
-                    @saved={{this.saved}}
-                    @close={{this.close}}
-                  />
+                  {{#if this.unplaced}}
+                    <p class="comment-unplaced" data-test-unplaced>
+                      {{NOT_AT_HEAD}}
+                    </p>
+                  {{else}}
+                    <CommentBox
+                      @selection={{selection}}
+                      @posted={{this.posted}}
+                      @from={{this.pullRequestDiff.askedFrom}}
+                      @draft={{this.draftKey}}
+                      @saved={{this.saved}}
+                      @close={{this.close}}
+                    />
+                  {{/if}}
                 </:commenting>
               </PrDiff>
             {{else}}

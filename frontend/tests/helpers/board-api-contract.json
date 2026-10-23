@@ -686,6 +686,23 @@
     }
    }
   },
+  "/api/diffs/{base}..{head}/anchors/{onto_base}..{onto_head}": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/DiffAnchors"
+    },
+    "304": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/emojis": {
    "get": {
     "200": {
@@ -2997,6 +3014,20 @@
    ],
    "type": "object"
   },
+  "DiffAnchors": {
+   "properties": {
+    "files": {
+     "items": {
+      "$ref": "#/components/schemas/FileAnchors"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "files"
+   ],
+   "type": "object"
+  },
   "DiffFileStatus": {
    "enum": [
     "added",
@@ -3441,6 +3472,24 @@
    },
    "required": [
     "errors"
+   ],
+   "type": "object"
+  },
+  "FileAnchors": {
+   "properties": {
+    "lines": {
+     "items": {
+      "$ref": "#/components/schemas/LineAnchor"
+     },
+     "type": "array"
+    },
+    "path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "path",
+    "lines"
    ],
    "type": "object"
   },
@@ -4159,6 +4208,25 @@
     "event",
     "exit_code",
     "ended_at"
+   ],
+   "type": "object"
+  },
+  "LineAnchor": {
+   "properties": {
+    "line": {
+     "type": "integer"
+    },
+    "onto": {
+     "$ref": "#/components/schemas/PullRequestLine"
+    },
+    "side": {
+     "$ref": "#/components/schemas/DiffSide"
+    }
+   },
+   "required": [
+    "side",
+    "line",
+    "onto"
    ],
    "type": "object"
   },
@@ -5630,6 +5698,21 @@
     "fork_at",
     "stack",
     "reviewed"
+   ],
+   "type": "object"
+  },
+  "PullRequestLine": {
+   "properties": {
+    "line": {
+     "type": "integer"
+    },
+    "side": {
+     "$ref": "#/components/schemas/DiffSide"
+    }
+   },
+   "required": [
+    "side",
+    "line"
    ],
    "type": "object"
   },

@@ -100,6 +100,7 @@ export function questionAbout(
   lines: Lines,
   question: string,
   draft: string | null,
+  from: string | null = null,
 ): string {
   const last = sided(lines.line, lines.side);
   const where =
@@ -116,8 +117,15 @@ export function questionAbout(
               .map((line) => `> ${line}`)
               .join('\n'),
         ];
+  const asked =
+    from === null
+      ? []
+      : [
+          `I asked this from the diff of ${from}; those line numbers are where its lines are at the head.`,
+        ];
   return [
     `I am reviewing the pull request checked out here, at ${where} of ${lines.path} in its diff.`,
+    ...asked,
     ...drafted,
     `Answer my question without changing any files: ${question}`,
   ].join('\n\n');
