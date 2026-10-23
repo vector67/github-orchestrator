@@ -304,6 +304,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
               @stretch={{this.pullRequestDiff.stretch}}
               @choose={{this.pullRequestDiff.choose}}
               @fit={{this.pullRequestDiff.fit}}
+              @reset={{this.pullRequestDiff.reset}}
             />
           {{/if}}
         {{/if}}

@@ -943,6 +943,18 @@ export default class StoreService extends Service {
     );
   }
 
+  async resetToOrigin(pr: Numbered): Promise<Refusal | null> {
+    try {
+      await handed(
+        `${this.here.prefixOf(pr)}/api/pull-request/operations:reset-to-origin`,
+      );
+      return null;
+    } catch (trouble) {
+      if (trouble instanceof Refusal) return trouble;
+      throw trouble;
+    }
+  }
+
   async markRead(pr: Numbered, sha: string, marked: boolean): Promise<void> {
     const verb = marked ? 'mark-read' : 'mark-unread';
     const { marks } = await write<ReadMarks>(

@@ -94,6 +94,7 @@ from github_orchestrator.board_api._errors import (
     PR_COMMITS_FAILED,
     PR_DIFF_FAILED,
     PRECONDITION_FAILED,
+    RESET_REFUSED,
     TOO_LONG,
     UNREADABLE_RECORD,
     Refusal,
@@ -770,6 +771,27 @@ def fetch_pull_request(board: Serving) -> Response:
     again, so it shows what was pushed since the last fetch.
     """
     failed = board.git.fetch(board.conversations.facts().base_branch)
+    if failed is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, failed)
+    return Response(status_code=204)
+
+
+@writes.post("/pull-request/operations:reset-to-origin", status_code=204,
+             tags=["pull request"], operation_id="resetToOrigin",
+             responses={409: RESET_REFUSED, 500: FETCH_FAILED},
+             summary="Fetch origin and reset the worktree hard to origin's head of the branch.")
+def reset_to_origin(board: Serving) -> Response:
+    """For a worktree that has diverged from origin. The worktree's commits
+    that origin lacks are dropped, with no backup. Refused, changing nothing,
+    while an agent works in the worktree or it holds uncommitted changes.
+    """
+    if board.manager.dashboard().working_on is not None:
+        raise Refusal(409, ErrorCode.AGENT_WORKING,
+                      "an agent is working in the worktree, so it was left as it is")
+    if not board.git.is_clean():
+        raise Refusal(409, ErrorCode.UNCOMMITTED_CHANGES,
+                      "the worktree has uncommitted changes, so it was left as it is")
+    failed = board.git.fetch(board.conversations.facts().base_branch, reset=True)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
     return Response(status_code=204)

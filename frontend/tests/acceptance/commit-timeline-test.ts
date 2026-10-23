@@ -1137,7 +1137,7 @@ module(
       assert
         .dom('[data-test-timeline-header]')
         .hasText(
-          `2 commits in the worktree · forked from main at ${STALE_FORK} · origin has 3 other commits from ${FORK} diverged from origin · 2 here, 3 on origin`,
+          `2 commits in the worktree · forked from main at ${STALE_FORK} · origin has 3 other commits from ${FORK} diverged from origin · 2 here, 3 on origin Reset to origin`,
         );
       assert
         .dom('[data-test-diverged]')
@@ -1155,6 +1155,75 @@ module(
 
       assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
       assert.dom(dot(FIRST)).hasAttribute('data-in-range', 'false');
+    });
+
+    async function openLocal() {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+    }
+
+    function resets(): number {
+      return board().posted.filter((one) => one.verb === 'reset-to-origin')
+        .length;
+    }
+
+    test('Reset to origin asks on the page first, then puts the worktree on origin', async function (assert) {
+      await openLocal();
+
+      await click('[data-test-reset-to-origin]');
+
+      assert
+        .dom('[data-test-reset-confirm]')
+        .hasText(
+          "Reset the worktree to origin? Its 2 commits that aren't on origin will be dropped. Reset Cancel",
+        );
+      assert.strictEqual(resets(), 0, 'nothing is sent before Reset');
+
+      await click('[data-test-reset-yes]');
+
+      assert.strictEqual(resets(), 1);
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        [FIRST, SECOND, THIRD],
+      );
+      assert.dom('[data-test-dot][data-lane="origin"]').doesNotExist();
+      assert.dom('[data-test-diverged]').doesNotExist();
+    });
+
+    test('Cancel leaves the worktree as it is', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+
+      await click('[data-test-reset-no]');
+
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.strictEqual(resets(), 0);
+      assert.dom('[data-test-diverged]').exists();
+    });
+
+    test('a refused reset says why and leaves the drawing as it was', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'uncommitted-changes',
+        detail: 'the worktree has uncommitted changes, so it was left as it is',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the worktree has uncommitted changes, so it was left as it is',
+        );
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        [STALE_ONE, STALE_TWO],
+      );
+      assert.dom('[data-test-diverged]').exists();
     });
 
     test('on origin there is no second lane and nothing about the worktree', async function (assert) {

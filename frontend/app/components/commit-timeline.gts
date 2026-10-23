@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
 import type { Picked, Timeline } from 'frontend/data/timeline';
+import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
 
 type End = 'from' | 'to';
@@ -21,6 +22,7 @@ export interface CommitTimelineSignature {
     stretch: (end: End, sha: string) => void;
     choose: (picked: Picked | null) => void;
     fit: (across: number) => void;
+    reset: ResetControls;
   };
 }
 
@@ -67,6 +69,13 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     watching.observe(scroll);
     return () => watching.disconnect();
   };
+
+  get dropped(): string {
+    const here = this.args.timeline.header.diverged?.here ?? 0;
+    return here === 1
+      ? "Its 1 commit that isn't on origin will be dropped."
+      : `Its ${here} commits that aren't on origin will be dropped.`;
+  }
 
   private clicked(event: MouseEvent): void {
     const target = event.target as Element;
@@ -155,6 +164,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               class="timeline-behind"
               data-test-diverged
             >{{@timeline.header.diverged.chip}}</span>
+            <button
+              type="button"
+              class="btn timeline-reset"
+              data-test-reset-to-origin
+              {{on "click" @reset.ask}}
+            >Reset to origin</button>
           {{/if}}
         </p>
         <span class="timeline-presets" role="group" aria-label="pick a range">
@@ -170,6 +185,38 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{/each}}
         </span>
       </header>
+      {{#if @timeline.header.diverged}}
+        {{#if @reset.confirming}}
+          <div
+            class="timeline-reset-confirm"
+            role="alertdialog"
+            aria-label="reset the worktree to origin"
+            data-test-reset-confirm
+          >
+            <p class="timeline-reset-question">Reset the worktree to origin?
+              {{this.dropped}}</p>
+            <button
+              type="button"
+              class="btn"
+              data-test-reset-yes
+              {{on "click" @reset.confirm}}
+            >Reset</button>
+            <button
+              type="button"
+              class="btn"
+              data-test-reset-no
+              {{on "click" @reset.cancel}}
+            >Cancel</button>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if @reset.refused}}
+        <p
+          class="timeline-reset-refused"
+          role="status"
+          data-test-reset-refused
+        >{{@reset.refused}}</p>
+      {{/if}}
       <div
         class="timeline-scroll"
         {{didChange this.listen}}

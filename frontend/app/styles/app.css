@@ -4768,6 +4768,39 @@ button.tree-row[aria-current="true"] {
   border-radius: 999px;
 }
 
+.timeline-reset {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.timeline-reset-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--text);
+  box-shadow: inset 4px 0 0 var(--yellow);
+}
+
+.timeline-reset-question {
+  margin: 0 8px 0 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
+.timeline-reset-confirm .btn {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.timeline-reset-refused {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  color: var(--yellow-text);
+}
+
 .timeline-aside {
   font-size: var(--fs-s);
   color: var(--muted);

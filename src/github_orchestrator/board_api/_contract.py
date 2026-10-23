@@ -85,6 +85,12 @@ class ErrorCode(StrEnum):
     HARVEST_EXTENSION_MISSING is the Harvest Time Tracker not installed in
     Chrome, so there is nothing to copy for the board.
 
+    AGENT_WORKING is a reset of the worktree asked for while an agent run is
+    going in it; queueing the reset for when the run ends is the way on.
+
+    UNCOMMITTED_CHANGES is a reset of the worktree asked for while it holds
+    changes nobody committed, which a reset would throw away.
+
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
     """
@@ -137,6 +143,8 @@ class ErrorCode(StrEnum):
     NOT_BROKEN = "not-broken"
     SUMMARY_REFUSED = "summary-refused"
     HARVEST_EXTENSION_MISSING = "harvest-extension-missing"
+    AGENT_WORKING = "agent-working"
+    UNCOMMITTED_CHANGES = "uncommitted-changes"
     SERVER_ERROR = "server-error"
 
 

@@ -1174,6 +1174,17 @@
     }
    }
   },
+  "/api/pull-request/operations:reset-to-origin": {
+   "post": {
+    "204": null,
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/read-marks": {
    "get": {
     "200": {
@@ -3403,6 +3414,8 @@
     "not-broken",
     "summary-refused",
     "harvest-extension-missing",
+    "agent-working",
+    "uncommitted-changes",
     "server-error"
    ],
    "type": "string"

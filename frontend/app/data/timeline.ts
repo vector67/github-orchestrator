@@ -187,6 +187,7 @@ export interface TimelineHeader {
 }
 
 export interface DivergedHeader {
+  here: number;
   other: string;
   from: string;
   chip: string;
@@ -784,6 +785,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       behind: diverged ? 0 : history.behind,
       diverged: diverged
         ? {
+            here: diverged.here,
             other: `${plural(there.length, 'other commit')}`,
             from: there[0]?.parents[0]?.slice(0, SHORT) ?? '',
             chip: `diverged from origin · ${diverged.here} here, ${there.length} on origin`,

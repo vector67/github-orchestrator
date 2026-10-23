@@ -180,11 +180,19 @@ class BoundCheckout:
             return "the PR worktree has changes of its own"
         return self.git._reset(located.path, str(landed_base))
 
-    def fetch(self, base_branch: str | None) -> str | None:
+    def fetch(self, base_branch: str | None, *, reset: bool = False) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        return self.git._fetch(located.path, base_branch)
+        if reset and not self.git._is_clean(located.path):
+            return "the worktree has uncommitted changes, so it was left as it is"
+        failed = self.git._fetch(located.path, base_branch)
+        if failed is not None or not reset:
+            return failed
+        origin = self.git._origin_head(located.path)
+        if origin is None:
+            return "origin holds no branch for the worktree to reset to"
+        return self.git._reset(located.path, origin)
 
     def base_standing(self, base_branch: str | None) -> BaseStanding | None:
         path = self._path()

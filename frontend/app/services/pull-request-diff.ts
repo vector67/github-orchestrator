@@ -31,6 +31,14 @@ import type ThreadsService from 'frontend/services/threads';
 
 export type { DiffSource } from 'frontend/services/store';
 
+export interface ResetControls {
+  confirming: boolean;
+  refused: string | null;
+  ask: () => void;
+  confirm: () => void;
+  cancel: () => void;
+}
+
 class PerPr {
   @tracked failed = false;
   @tracked fetching = false;
@@ -41,6 +49,8 @@ class PerPr {
   @tracked across = 0;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
+  @tracked confirmingReset = false;
+  @tracked resetRefused: string | null = null;
   asked: string | null = null;
 
   constructor(readonly scope: PrScope) {}
@@ -149,6 +159,47 @@ export default class PullRequestDiffService extends Service {
     }
     this.pr.picked = picked;
   };
+
+  get reset(): ResetControls {
+    const pr = this.pr;
+    return {
+      confirming: pr.confirmingReset,
+      refused: pr.resetRefused,
+      ask: this.askReset,
+      confirm: this.confirmReset,
+      cancel: this.cancelReset,
+    };
+  }
+
+  askReset = () => {
+    this.pr.confirmingReset = true;
+    this.pr.resetRefused = null;
+  };
+
+  cancelReset = () => {
+    this.pr.confirmingReset = false;
+  };
+
+  confirmReset = () => {
+    void waitForPromise(this.resetting(this.pr));
+  };
+
+  private async resetting(pr: PerPr): Promise<void> {
+    pr.confirmingReset = false;
+    try {
+      const refused = await this.store.resetToOrigin(this.here.at);
+      if (pr.scope.left) return;
+      pr.resetRefused = refused ? `Not reset: ${refused.detail}` : null;
+      if (refused) return;
+      await Promise.all([
+        this.read('local'),
+        this.store.readPrCommits(this.here.at, 'local'),
+        this.store.readPrCommits(this.here.at, 'origin'),
+      ]);
+    } catch (trouble) {
+      void reportError('reset the worktree to origin', trouble);
+    }
+  }
 
   get whole(): Picked | null {
     const { repo, number } = this.here.at;

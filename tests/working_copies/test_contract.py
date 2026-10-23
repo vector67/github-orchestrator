@@ -886,6 +886,32 @@ def test_a_worktree_left_behind_by_a_rewritten_origin_keeps_its_own_fork_and_com
     assert (origin.fork, [commit.sha for commit in origin.commits]) == (Sha(main), [Sha(rewritten)])
 
 
+def test_a_fetch_that_resets_drops_the_worktrees_own_commits_for_origins_current_head(
+        world, pr_worktree, pr_checkout):
+    world.commit(pr_worktree, {"h": "x\n"}, "local work")
+    _, rewritten = world.advance_base()
+
+    assert pr_checkout.fetch("main", reset=True) is None
+
+    assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (
+        Sha(rewritten), Sha(rewritten))
+    assert world.copies.commits_since(pr_worktree, rewritten) == ()
+
+
+def test_a_fetch_that_resets_a_worktree_with_changes_says_so_and_changes_nothing(
+        world, pr_worktree, pr_checkout):
+    stale = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
+    origin = pr_checkout.origin_head()
+    world.advance_base()
+    world.edit(pr_worktree, "f", "half done\n")
+
+    refused = pr_checkout.fetch("main", reset=True)
+
+    assert refused is not None and "uncommitted changes" in refused
+    assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (stale, origin)
+    assert pr_checkout.is_clean() is False
+
+
 def test_a_pr_based_on_main_stacks_on_nothing(world, pr_worktree, pr_checkout):
     history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
 

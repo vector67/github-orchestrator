@@ -1326,6 +1326,9 @@ export class FakeBoard {
       return this.askTheAgent(url, init, headers);
     }
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
+    if (url.endsWith('/api/pull-request/operations:reset-to-origin')) {
+      return this.resetToOrigin(url);
+    }
     const marking = READ_MARK.exec(url);
     if (marking) return this.mark(url, marking[1]!, init);
     const told = MANAGER_VERB.exec(url);
@@ -1449,6 +1452,23 @@ export class FakeBoard {
     this.readMarks =
       verb === 'mark-read' ? [...others, { sha: body.sha, subject }] : others;
     return this.json(200, { marks: this.readMarks });
+  }
+
+  private resetToOrigin(url: string): Response {
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'reset-to-origin',
+      ifMatch: null,
+      body: null,
+    });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.localCommits = null;
+    return respond(null, { status: 204 });
   }
 
   private fetchBranch(): Response {
