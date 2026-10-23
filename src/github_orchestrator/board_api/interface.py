@@ -210,6 +210,32 @@ class Told(Protocol):
     def state(self) -> HubState | None: ...
 
 
+@dataclass(frozen=True)
+class ListedMention:
+    pr: Pr
+    thread: str | None
+    comment_id: int | None
+    kind: str
+    author: str
+    at: str | None
+    body: str
+    url: str
+    card: bool
+
+
+@dataclass(frozen=True)
+class MentionsListing:
+    searched_at: str | None
+    mentions: tuple[ListedMention, ...]
+
+
+NO_MENTIONS_LISTED = MentionsListing(searched_at=None, mentions=())
+
+
+class MentionsList(Protocol):
+    def listed(self) -> MentionsListing: ...
+
+
 class Holdings(Protocol):
     def hold(self, pr: Pr) -> None: ...
 

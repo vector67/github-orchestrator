@@ -850,6 +850,14 @@
     }
    }
   },
+  "/api/mentions": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Mentions"
+    },
+    "304": null
+   }
+  },
   "/api/operations": {
    "get": {
     "200": {
@@ -4392,6 +4400,31 @@
    ],
    "type": "object"
   },
+  "Mentions": {
+   "properties": {
+    "mentions": {
+     "items": {
+      "$ref": "#/components/schemas/OutstandingMention"
+     },
+     "type": "array"
+    },
+    "searched_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "searched_at",
+    "mentions"
+   ],
+   "type": "object"
+  },
   "MergeState": {
    "enum": [
     "clean",
@@ -4779,6 +4812,74 @@
    "required": [
     "text",
     "run_boundary"
+   ],
+   "type": "object"
+  },
+  "OutstandingMention": {
+   "properties": {
+    "at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "author": {
+     "type": "string"
+    },
+    "body": {
+     "type": "string"
+    },
+    "comment_id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "kind": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "on_board": {
+     "type": "boolean"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "thread": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "url": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "thread",
+    "comment_id",
+    "kind",
+    "author",
+    "at",
+    "body",
+    "url",
+    "on_board"
    ],
    "type": "object"
   },

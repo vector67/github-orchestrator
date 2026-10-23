@@ -27,6 +27,7 @@ from github_orchestrator.board_api.fake import (
     FakeHarvestSetup,
     FakeHoldings,
     FakeManagerPanel,
+    FakeMentionsList,
     FakeSetupDesk,
     FakeTold,
     FakeTour,
@@ -38,6 +39,7 @@ from github_orchestrator.board_api.interface import (
     Held,
     Holdings,
     ManagerPanels,
+    MentionsList,
     ServerApp,
     SetupDesk,
     Told,
@@ -254,8 +256,10 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                tour: TourMarker | None = None, emojis: Emojis | None = None,
                holdings: Holdings | None = None,
                harvest: HarvestSetup | None = None,
-               records: ThreadRecords | None = None) -> list[Part]:
+               records: ThreadRecords | None = None,
+               mentions: MentionsList | None = None) -> list[Part]:
     return [
+        fake_provider(MentionsList, mentions or FakeMentionsList()),
         fake_provider(ThreadRecords, records or FakeThreadRecords()),
         fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),

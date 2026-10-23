@@ -26,7 +26,9 @@ from github_orchestrator.board_api._contract import (
     HarvestExtensionFolder,
     Health,
     HeldPullRequests,
+    Mentions,
     NewestRelease,
+    OutstandingMention,
     RunLedger,
     Tour,
 )
@@ -44,6 +46,7 @@ from github_orchestrator.board_api.interface import (
     Emojis,
     HarvestSetup,
     Holdings,
+    MentionsList,
     ReleaseRecord,
     SetupDesk,
     Told,
@@ -93,6 +96,7 @@ class Desk:
     tour: TourMarker
     emojis: Emojis
     harvest: HarvestSetup
+    mentions: MentionsList
     pid: int
 
 
@@ -178,6 +182,25 @@ def _newest(desk: Desk) -> NewestRelease | None:
         return None
     return NewestRelease(version=seen.version, checked_at=seen.checked_at.isoformat(),
                          newer=seen.newer_than(desk.version))
+
+
+@reads.get("/mentions", response_model=Mentions, tags=["hub"], operation_id="listMentions",
+           summary="Every mention of you the board has not closed, from the last search.",
+           responses=etag.TAGGED)
+def list_mentions(request: Request, desk: Serving) -> Response:
+    """The top bar's counter: what the watcher's own GitHub search, run about
+    every half hour over every pull request of the watched repositories, open
+    or not, found naming you since the mentions start.
+    """
+    listing = desk.mentions.listed()
+    held = desk.told.held().managers
+    return etag.answered(request, Mentions(searched_at=listing.searched_at, mentions=[
+        OutstandingMention(repo=str(mention.pr.repo), number=mention.pr.number,
+                           thread=mention.thread, comment_id=mention.comment_id,
+                           kind=mention.kind, author=mention.author, at=mention.at,
+                           body=mention.body, url=mention.url,
+                           on_board=mention.card and mention.pr in held)
+        for mention in listing.mentions]))
 
 
 @reads.get("/tour", response_model=Tour, tags=["hub"], operation_id="readTour",

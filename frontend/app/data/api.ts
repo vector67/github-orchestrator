@@ -520,6 +520,11 @@ export interface MentionFact {
   answered: boolean;
 }
 
+export interface Mentions {
+  searched_at: string | null;
+  mentions: OutstandingMention[];
+}
+
 export type MergeState = 'clean' | 'conflicts' | 'behind' | 'blocked' | 'checks-failing' | 'unknown' | 'other';
 
 export interface MovedAside {
@@ -564,6 +569,19 @@ export interface Outcome {
 export interface OutputLine {
   text: string;
   run_boundary: boolean;
+}
+
+export interface OutstandingMention {
+  repo: string;
+  number: number;
+  thread: string | null;
+  comment_id: number | null;
+  kind: string;
+  author: string;
+  at: string | null;
+  body: string;
+  url: string;
+  on_board: boolean;
 }
 
 export interface Person {

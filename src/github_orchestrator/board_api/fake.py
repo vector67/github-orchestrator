@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from github_orchestrator.board_api.interface import (
+    NO_MENTIONS_LISTED,
     NOTHING_HELD,
     CloneSpot,
     Dashboard,
@@ -9,6 +10,7 @@ from github_orchestrator.board_api.interface import (
     FieldRefusal,
     Held,
     ManagerStanding,
+    MentionsListing,
     RepoChoice,
     SetupOptions,
     SetupProgress,
@@ -133,6 +135,14 @@ class FakeTold:
 
     def state(self) -> HubState | None:
         return self.hub_state
+
+
+@dataclass
+class FakeMentionsList:
+    now: MentionsListing = NO_MENTIONS_LISTED
+
+    def listed(self) -> MentionsListing:
+        return self.now
 
 
 @dataclass

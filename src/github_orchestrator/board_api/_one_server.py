@@ -19,6 +19,7 @@ from github_orchestrator.board_api.interface import (
     HarvestSetup,
     Holdings,
     ManagerPanels,
+    MentionsList,
     ReleaseRecord,
     SetupDesk,
     Shelves,
@@ -81,7 +82,7 @@ class OneServer:
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
                  tour: TourMarker, emojis: Emojis, harvest: HarvestSetup, told: Told,
-                 holdings: Holdings,
+                 holdings: Holdings, mentions: MentionsList,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
                  summaries: PrSummaries, lane: SummaryLane, shelves: Shelves,
@@ -102,6 +103,7 @@ class OneServer:
         self._harvest = harvest
         self._told = told
         self._holdings = holdings
+        self._mentions = mentions
         self._conversation_managers = conversation_managers
         self._working_copies = working_copies
         self._terminals = terminals
@@ -121,7 +123,7 @@ class OneServer:
                     app_root=self._app_root, fonts=self._fonts,
                     version=self._version, problem=self._problem, setup=self._setup,
                     releases=self._releases, tour=self._tour, emojis=self._emojis,
-                    harvest=self._harvest,
+                    harvest=self._harvest, mentions=self._mentions,
                     pid=pid)
 
         def board(pr: Pr) -> ASGIApp:

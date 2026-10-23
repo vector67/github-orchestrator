@@ -2,6 +2,11 @@ import json
 import tomllib
 from datetime import UTC, datetime, timedelta
 
+from github_orchestrator.board_api.interface import (
+    ListedMention,
+    MentionsList,
+    MentionsListing,
+)
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import ConversationState
 from github_orchestrator.domain import Repo
@@ -202,8 +207,36 @@ def test_an_unanswered_mention_on_a_merged_pr_is_listed(tmp_path):
     here.github.add_thread(THE_PR, _issue("IC_1", 1, "anna", "@octocat ping",
                                           "2026-10-22T10:00:00Z"))
 
-    listed = _searched(here)
+    here.container.get(MentionsInbox).search_if_due()
 
-    assert listed["mentions"] == [{"repo": REPO, "number": THE_PR.number, "thread": "IC_1",
-                                   "comment_id": 1, "kind": "issue", "author": "anna",
-                                   "at": "2026-10-22T10:00:00Z", "body": "@octocat ping"}]
+    assert here.container.get(MentionsList).listed() == MentionsListing(
+        searched_at="2026-10-23T09:00:00+00:00",
+        mentions=(ListedMention(pr=THE_PR, thread="IC_1", comment_id=1, kind="issue",
+                                author="anna", at="2026-10-22T10:00:00Z", body="@octocat ping",
+                                url="https://github.com/acme/widgets/pull/7#issuecomment-1",
+                                card=False),))
+
+
+def test_a_listed_mention_says_its_card_is_on_the_board(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    here.container.get(MentionsInbox).search_if_due()
+
+    assert [mention.card for mention in here.container.get(MentionsList).listed().mentions] == [
+        True]
+
+
+def test_a_pr_body_mention_links_to_the_pr(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, body="cc @octocat", created_at="2026-10-22T08:00:00Z")
+
+    here.container.get(MentionsInbox).search_if_due()
+
+    assert [mention.url for mention in here.container.get(MentionsList).listed().mentions] == [
+        "https://github.com/acme/widgets/pull/7"]
+
+
+def test_the_board_reads_no_mentions_before_the_first_search(tmp_path):
+    assert _here(tmp_path).container.get(MentionsList).listed() == MentionsListing(
+        searched_at=None, mentions=())

@@ -47,6 +47,7 @@ from github_orchestrator.board_api.interface import (
     KeptReviews,
     ManagerPanels,
     ManagerStanding,
+    MentionsList,
     ServerApp,
     SetupDesk,
     Shelves,
@@ -104,6 +105,7 @@ from github_orchestrator.harvest._chrome import Run as ChromeRun
 from github_orchestrator.harvest._extension import CopiedExtension
 from github_orchestrator.mentions import MentionsInbox
 from github_orchestrator.mentions._inbox import GitHubMentionsInbox
+from github_orchestrator.mentions._listing import ListingFile
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -729,15 +731,23 @@ class AgentChangesProvider(Provider):
         return DiskAgentChanges()
 
 
+MENTIONS_FILE = "mentions.json"
+
+
 class MentionsProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def mentions_inbox(self, settings: Settings, pull_requests: PullRequests,
+    def mentions_inbox(self, settings: Settings, pull_requests: PullRequests, threads: Threads,
                        conversation_managers: ConversationManagerFactory,
                        config_file: ConfigFile, clock: UtcClock) -> MentionsInbox:
-        return GitHubMentionsInbox(tuple(settings.repos), pull_requests, conversation_managers,
-                                   config_file, clock, settings.data_dir / "mentions.json")
+        return GitHubMentionsInbox(tuple(settings.repos), pull_requests, threads,
+                                   conversation_managers, config_file, clock,
+                                   settings.data_dir / MENTIONS_FILE)
+
+    @provide
+    def mentions_list(self, settings: Settings) -> MentionsList:
+        return ListingFile(settings.data_dir / MENTIONS_FILE)
 
 
 @dataclass(frozen=True)
@@ -1038,7 +1048,7 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   harvest: HarvestSetup, told: Told,
+                   harvest: HarvestSetup, told: Told, mentions: MentionsList,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -1049,7 +1059,7 @@ class ServerAppProvider(Provider):
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
                          emojis=emojis, harvest=harvest,
-                         told=told, holdings=holdings,
+                         told=told, holdings=holdings, mentions=mentions,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
                          summaries=summaries, lane=lane, shelves=shelves,
@@ -1592,6 +1602,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         pr_summaries_wiring(settings),
         replace(summary_lane_wiring(settings, ()), agents_enabled=False),
         conversation_wiring(settings),
+        MentionsProvider,
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
         ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),

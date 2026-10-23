@@ -236,7 +236,7 @@ PACKAGES = {
         may_import=("conversation", "working_copies", "terminal_sessions", "pr_summaries", ROOT,
                     LIBRARIES),
         role="the board serves one PR's review threads, its terminal sessions and its summary, and reaches the rest of the program only through them",
-        imported_by=("wiring", "pr_manager", "watcher", "preview", "server"),
+        imported_by=("wiring", "pr_manager", "watcher", "preview", "server", "mentions"),
         entries=frozenset({"interface", "fake"}),
     ),
     "change_detection": Package(
@@ -290,8 +290,8 @@ PACKAGES = {
     ),
     "mentions": Package(
         pinned=frozenset({"MentionsInbox"}),
-        may_import=("github", "conversation"),
-        role="the mentions inbox searches GitHub and reads review threads to list what mentions the user, and knows nothing of the watcher that runs it or the board that shows it",
+        may_import=("github", "conversation", "board_api"),
+        role="the mentions inbox searches GitHub and reads review threads to list what mentions the user, hands the board that list only through the board API's types, and knows nothing of the watcher that runs it",
         imported_by=("wiring", "watcher"),
     ),
     "notifications": Package(

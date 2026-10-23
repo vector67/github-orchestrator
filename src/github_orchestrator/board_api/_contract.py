@@ -2039,6 +2039,35 @@ class EmojiList(BaseModel):
                                             "be asked.")
 
 
+class OutstandingMention(BaseModel):
+    """A comment naming you that the board has not closed since it was written."""
+
+    repo: str = Field(description="The pull request's repository, as owner/name.")
+    number: int
+    thread: str | None = Field(description="The board's key for the thread the mention is "
+                                           "in, `pr-body` for the pull request's "
+                                           "description.")
+    comment_id: int | None = Field(description="GitHub's id of the comment naming you; "
+                                               "null for the pull request's description.")
+    kind: str = Field(description="`review`, `issue`, `review-summary` or `pr-body`.")
+    author: str
+    at: str | None = Field(description="When the comment named you: its last edit, or for "
+                                       "the description when the pull request was opened.")
+    body: str
+    url: str = Field(description="The comment on GitHub.")
+    on_board: bool = Field(description="Whether the watcher holds the pull request and "
+                                       "its board has a card for the thread, so the "
+                                       "mention opens there.")
+
+
+class Mentions(BaseModel):
+    searched_at: str | None = Field(description="When the watcher last searched GitHub for "
+                                                "mentions; null before its first search.")
+    mentions: list[OutstandingMention] = Field(description="Every mention found by that "
+                                                           "search that its card was not "
+                                                           "closed on the board after.")
+
+
 class Tour(BaseModel):
     due: bool = Field(description="Whether the board's first-run tour is still to be shown: "
                                   "true from the first setup that leaves setup state until the "
