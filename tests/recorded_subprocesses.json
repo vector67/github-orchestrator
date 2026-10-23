@@ -6472,7 +6472,14 @@
       "-b",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "seed/.git/refs/heads/feature-x": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6493,7 +6500,14 @@
       "-b",
       "feature-y"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature-y\n"
+      },
+      "seed/.git/refs/heads/feature-y": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6513,7 +6527,11 @@
       "-q",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6534,7 +6552,11 @@
       "-m",
       "first"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6657,7 +6679,11 @@
       "feature-x",
       "origin/feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/refs/heads/feature-x": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6677,7 +6703,11 @@
       "feature-y",
       "origin/feature-y"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/refs/heads/feature-y": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -6742,6 +6772,9 @@
       },
       "seed/.git": {
        "dir": true
+      },
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -6764,6 +6797,15 @@
       },
       "work/.git": {
        "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/feature-x\n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/feature-y\n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/main\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
       },
       "work/f": {
        "text": "1"
@@ -38717,7 +38759,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -38733,7 +38779,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n",
      "stdout": ""
@@ -38816,7 +38866,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -38875,6 +38929,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -39206,6 +39275,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"f\"], null, null]": [
     {
      "argv": [
@@ -39460,7 +39544,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -39476,7 +39564,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "2120319ed1ad5abab71c78aa45b824d7fba5a3c8\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n   7e39035..2120319  main       -> origin/main\n",
      "stdout": ""
@@ -39559,7 +39651,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -39618,6 +39714,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"g\", \"m\"], null, null]": [
@@ -39768,7 +39879,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n + 971346d...b4678ad feature    -> origin/feature  (forced update)\n",
      "stdout": ""
@@ -39784,7 +39899,11 @@
       "origin",
       "gone"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref gone\n",
      "stdout": ""
@@ -39800,7 +39919,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -39829,6 +39952,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -39866,6 +39998,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -39892,6 +40039,9 @@
       "feature"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -39913,6 +40063,9 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
       "seed/g": null
      },
      "returncode": 0,
@@ -39931,7 +40084,11 @@
       "-m",
       "more main"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -39983,6 +40140,12 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "seed/.git/refs/heads/feature": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -40073,7 +40236,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -40089,7 +40256,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -40118,6 +40289,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -40140,6 +40320,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_branch_that_will_not_fetch_says_so[git]": {
@@ -40153,7 +40348,11 @@
       "origin",
       "local-only"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/local/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref local-only\n",
      "stdout": ""
@@ -40181,6 +40380,15 @@
       },
       "local/f": {
        "text": "1\n"
+      },
+      "repo/.git/refs/heads/local-only": {
+       "text": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\n"
+      },
+      "repo/.git/worktrees/local/HEAD": {
+       "text": "ref: refs/heads/local-only\n"
+      },
+      "repo/.git/worktrees/local/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -40324,7 +40532,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -40384,6 +40596,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD d31d954f31f4f5e4ed0942d58d46d57fba94d2ab\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_commit_not_pushed_moves_only_the_local_head[git]": {
@@ -40413,7 +40640,11 @@
       "-m",
       "local work"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "6a7c386af39134dfaf613876b1b098509a02b723\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -40503,7 +40734,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -40532,6 +40767,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -40553,6 +40797,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -40624,6 +40883,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -40664,7 +40932,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -40693,6 +40965,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -40714,6 +40995,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\", \"h\"], null, null]": [
@@ -40743,7 +41039,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "81b624faf5a118173175ee5ffb7ed3e66252b1d0\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -41010,6 +41310,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 17d3a991d00eaada08791fc1c7fe7034943c968b\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -41443,7 +41758,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -41502,6 +41821,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
@@ -41777,6 +42111,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -42254,6 +42603,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -42441,7 +42805,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -42457,7 +42825,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "a3689c636498f2389f52477d0636014029c4a9a3\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n   7e39035..a3689c6  main       -> origin/main\n",
      "stdout": ""
@@ -42540,7 +42912,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -42599,6 +42975,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -42904,6 +43295,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -42944,7 +43344,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -42973,6 +43377,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -42994,6 +43407,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -43037,7 +43465,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -43054,7 +43486,11 @@
       "-m",
       "later"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "22bfdd49ade55633a06ab884805bac6d327f4f0f\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -43135,6 +43571,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -43175,7 +43620,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -43204,6 +43653,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -43225,6 +43683,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -43253,7 +43726,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -43341,6 +43818,9 @@
      "fs": {
       "feature/g": {
        "text": "one\n2\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "f0132b51e707408968b9d8dcd59806ebf0af8115\n"
       }
      },
      "returncode": 0,
@@ -43359,7 +43839,11 @@
       "-m",
       "Fix the middle line"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "972d2e93bf1e93f256f48e7af72d7c9af0ffacaa\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 972d2e9] Fix the middle line\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
@@ -43394,7 +43878,11 @@
       "--end-of-options",
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -43489,6 +43977,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -43529,7 +44026,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -43558,6 +44059,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -43579,6 +44089,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -43607,7 +44132,11 @@
       "-m",
       "wip"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "f0132b51e707408968b9d8dcd59806ebf0af8115\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -43630,25 +44159,6 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_fix_of_several_commits_lands_as_one[git]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"diff\", \"--numstat\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"0a58032a43f298adfcb238e5b0938b18691d6311\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<TMP>/feature",
-      "diff",
-      "--numstat",
-      "--end-of-options",
-      "971346d94231895fcf62bd66bb9b198edde3cf67",
-      "0a58032a43f298adfcb238e5b0938b18691d6311"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "1\t1\tg\n1\t0\th\n"
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
@@ -43922,7 +44432,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -43981,6 +44495,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -44166,7 +44695,11 @@
       "-m",
       "meanwhile"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "be6573aaefaa2c46f9b5305e663466db1182c2c6\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -44320,6 +44853,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -44360,7 +44902,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -44389,6 +44935,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -44410,6 +44965,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -44438,7 +45008,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -44532,6 +45106,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -44572,7 +45155,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -44601,6 +45188,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -44622,6 +45218,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -44770,7 +45381,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -44829,6 +45444,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
@@ -44958,7 +45588,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -45017,6 +45651,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -45276,7 +45925,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -45290,7 +45943,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -45430,6 +46087,34 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 75c86c543ca1885fefa292032eefefc1f3700856\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 75c86c543ca1885fefa292032eefefc1f3700856\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
@@ -45620,7 +46305,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n + 971346d...b4678ad feature    -> origin/feature  (forced update)\n",
      "stdout": ""
@@ -45636,7 +46325,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n   7e39035..1fdb7cd  main       -> origin/main\n",
      "stdout": ""
@@ -45668,6 +46361,15 @@
       },
       "feature/m": {
        "text": "more\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -45705,6 +46407,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD b4678ad7950d79b9ccab0c7cd42a5551825e25a6\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -45731,6 +46448,9 @@
       "feature"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -45752,6 +46472,9 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
       "seed/g": null
      },
      "returncode": 0,
@@ -45770,7 +46493,11 @@
       "-m",
       "more main"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -45822,6 +46549,12 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "seed/.git/refs/heads/feature": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -45916,6 +46649,9 @@
      "fs": {
       "feature/g": {
        "text": "one\n2\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "1f4016b6f035b763d4469580e82440c890af2ea4\n"
       }
      },
      "returncode": 0,
@@ -46060,6 +46796,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -46100,7 +46845,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -46129,6 +46878,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -46150,6 +46908,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -46178,7 +46951,11 @@
       "-m",
       "fix the middle"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "1f4016b6f035b763d4469580e82440c890af2ea4\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -46541,6 +47318,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD ed26887295acf0b1e24f9d8bf038d9763e141870\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_pr_based_on_main_stacks_on_nothing[git]": {
@@ -46794,6 +47586,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_pr_branch_already_checked_out_gets_no_second_worktree[git]": {
@@ -46807,7 +47614,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -46821,7 +47632,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -46850,6 +47665,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -47228,6 +48052,34 @@
      "stderr": "Preparing worktree (checking out 'feature')\nfatal: 'feature' is already used by worktree at '<TMP>/feature'\n",
      "stdout": ""
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_pr_branch_moved_past_the_pick_is_left_where_it_is[git]": {
@@ -47500,7 +48352,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -47559,6 +48415,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -47624,7 +48495,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -47653,6 +48528,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -47675,6 +48559,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_pr_whose_worktree_cannot_be_cut_gets_none[git]": {
@@ -47688,7 +48587,11 @@
       "origin",
       "not-on-origin"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref not-on-origin\n",
      "stdout": ""
@@ -47722,7 +48625,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -47751,6 +48658,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -47772,6 +48688,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -48026,7 +48957,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -48085,6 +49020,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -48183,7 +49133,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -48212,6 +49166,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -48233,6 +49196,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -48247,7 +49225,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -48276,6 +49258,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -48297,6 +49288,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -48667,6 +49673,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_prs_commits_with_no_worktree_are_unknown[git]": {
@@ -48714,7 +49735,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -48758,6 +49783,21 @@
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_reused_worktree_whose_branch_will_not_fetch_says_so[git]": {
@@ -48771,7 +49811,11 @@
       "origin",
       "local-only"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/local/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref local-only\n",
      "stdout": ""
@@ -48799,6 +49843,15 @@
       },
       "local/f": {
        "text": "1\n"
+      },
+      "repo/.git/refs/heads/local-only": {
+       "text": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\n"
+      },
+      "repo/.git/worktrees/local/HEAD": {
+       "text": "ref: refs/heads/local-only\n"
+      },
+      "repo/.git/worktrees/local/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -48973,7 +50026,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49079,6 +50136,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
@@ -49190,6 +50262,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -49230,7 +50311,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49259,6 +50344,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49280,6 +50374,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
@@ -49360,6 +50469,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/MDI0%2FUmV2%3D": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/MDI0%2FUmV2%3D/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/MDI0%2FUmV2%3D\n"
+      },
+      "repo/.git/worktrees/MDI0%2FUmV2%3D/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -49400,7 +50518,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49429,6 +50551,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49450,6 +50581,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/MDI0%2FUmV2%3D\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
@@ -49495,7 +50641,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49524,6 +50674,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49545,6 +50704,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -49574,7 +50748,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49603,6 +50781,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49624,6 +50811,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -49653,7 +50855,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49682,6 +50888,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49704,6 +50919,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_a_thread_nobody_adopted_names_no_worktree_or_branch[git]": {
@@ -49717,7 +50947,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49746,11 +50980,35 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -49800,6 +51058,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -49840,7 +51107,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -49869,6 +51140,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -49890,6 +51170,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"h\"], null, null]": [
@@ -49918,7 +51213,11 @@
       "-m",
       "half done"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "9b1037e096aca5a940d8a8ee79b7cade3c673492\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -49972,23 +51271,6 @@
      "stdout": "0\n"
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_kwDOabc\"], null, null]": [
     {
      "argv": [
@@ -50034,6 +51316,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -50074,7 +51365,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -50103,6 +51398,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -50124,6 +51428,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -50638,6 +51957,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -50977,7 +52311,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -51036,6 +52374,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\"], null, null]": [
@@ -51172,71 +52525,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
-     "stdout": ""
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/repo",
-      "worktree",
-      "add",
-      "<TMP>/feature",
-      "feature"
-     ],
      "fs": {
-      "feature": {
-       "dir": true
-      },
-      "feature/.git": {
-       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
-      },
-      "feature/f": {
-       "text": "1\n"
-      },
-      "feature/g": {
-       "text": "one\ntwo\nthree\n"
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
       }
      },
-     "returncode": 0,
-     "stderr": "Preparing worktree (new branch 'feature')\n",
-     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
-    }
-   ]
-  },
-  "tests/working_copies/test_contract.py::test_a_wrong_branch_holds_for_the_whole_grace_from_when_it_was_first_seen[git]": {
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "rev-parse",
-      "--abbrev-ref",
-      "HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"feature\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/repo",
-      "fetch",
-      "origin",
-      "feature"
-     ],
-     "fs": {},
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -51279,6 +52572,113 @@
      "returncode": 0,
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_contract.py::test_a_wrong_branch_holds_for_the_whole_grace_from_when_it_was_first_seen[git]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--abbrev-ref",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "feature\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -51683,6 +53083,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 17d3a991d00eaada08791fc1c7fe7034943c968b\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -52072,7 +53487,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -52131,6 +53550,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -52317,6 +53751,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -52357,7 +53800,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -52386,6 +53833,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -52407,6 +53863,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -52588,7 +54059,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n + 971346d...b4678ad feature    -> origin/feature  (forced update)\n",
      "stdout": ""
@@ -52604,7 +54079,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n   7e39035..1fdb7cd  main       -> origin/main\n",
      "stdout": ""
@@ -52696,7 +54175,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -52755,6 +54238,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -52976,7 +54474,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -53053,6 +54555,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
@@ -53090,7 +54607,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -53135,11 +54656,35 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -53345,7 +54890,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -53465,6 +55014,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\nworktree <TMP>/thread-worktrees/owner/name/70/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/70/PRRT_kwDOabc\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
@@ -53678,7 +55242,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -53803,6 +55371,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
@@ -53984,7 +55567,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -54127,6 +55714,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\nworktree <TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"remove\", \"--force\", \"--force\", \"<TMP>/feature\"], null, null]": [
     {
      "argv": [
@@ -54258,6 +55860,12 @@
       "feature"
      ],
      "fs": {
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
       "repo/g": {
        "text": "one\ntwo\nthree\n"
       }
@@ -54327,6 +55935,25 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ]
+  },
+  "tests/working_copies/test_contract.py::test_progress_counts_commits_and_changed_files[fake]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/test-115/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/test-115/thread-worktrees/owner/name/7/PRRT_kwDOabc",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -54411,6 +56038,15 @@
       "971346d94231895fcf62bd66bb9b198edde3cf67"
      ],
      "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc/commondir": {
+       "text": "../..\n"
+      },
       "thread-worktrees": {
        "dir": true
       },
@@ -54451,7 +56087,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -54480,6 +56120,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -54501,6 +56150,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc\", \"add\", \"g\"], null, null]": [
@@ -54529,7 +56193,11 @@
       "-m",
       "fix"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -54621,7 +56289,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n + 971346d...b4678ad feature    -> origin/feature  (forced update)\n",
      "stdout": ""
@@ -54637,7 +56309,11 @@
       "origin",
       "main"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/worktrees/feature/FETCH_HEAD": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            main       -> FETCH_HEAD\n   7e39035..1fdb7cd  main       -> origin/main\n",
      "stdout": ""
@@ -54653,7 +56329,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -54682,6 +56362,15 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -54719,6 +56408,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -54745,6 +56449,9 @@
       "feature"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -54766,6 +56473,9 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
       "seed/g": null
      },
      "returncode": 0,
@@ -54784,7 +56494,11 @@
       "-m",
       "more main"
      ],
-     "fs": {},
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
+      }
+     },
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -54836,6 +56550,12 @@
       "main"
      ],
      "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "seed/.git/refs/heads/feature": {
+       "text": "b4678ad7950d79b9ccab0c7cd42a5551825e25a6\n"
+      },
       "seed/g": {
        "text": "one\ntwo\nthree\n"
       },
@@ -55092,6 +56812,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -55404,7 +57139,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -55448,6 +57187,21 @@
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_the_main_checkout_on_the_prs_branch_goes_back_to_main_for_a_fresh_cut[git]": {
@@ -55478,6 +57232,12 @@
       "feature"
      ],
      "fs": {
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
       "repo/g": {
        "text": "one\ntwo\nthree\n"
       }
@@ -55497,6 +57257,9 @@
       "main"
      ],
      "fs": {
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
       "repo/g": null
      },
      "returncode": 0,
@@ -55514,7 +57277,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -55559,6 +57326,12 @@
       },
       "feature/g": {
        "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
@@ -55580,6 +57353,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -55889,6 +57677,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -56432,6 +58235,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD ec385b99ede7b4b4a7cc944382fbf3f63271e232\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_the_prs_diff_runs_from_where_the_branch_left_main_to_its_head[git]": {
@@ -56812,6 +58630,21 @@
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_contract.py::test_the_right_branch_again_forgets_the_trouble_and_its_release[git]": {
@@ -56841,7 +58674,11 @@
       "origin",
       "feature"
      ],
-     "fs": {},
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature    -> FETCH_HEAD\n",
      "stdout": ""
@@ -56885,6 +58722,21 @@
      "stderr": "Preparing worktree (new branch 'feature')\n",
      "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_create_worktree.py::test_a_branch_the_remote_does_not_have_fails_with_gits_reason": {
@@ -56898,7 +58750,11 @@
       "origin",
       "no-such-branch"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref no-such-branch\n",
      "stdout": ""
@@ -56916,7 +58772,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -56942,11 +58802,32 @@
       },
       "feature-x/f": {
        "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"sh\", \"-c\", \"echo boom >&2; exit 3\"], \"<TMP>/feature-x\", null]": [
@@ -56993,7 +58874,11 @@
       "-q",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -57029,7 +58914,11 @@
       "-m",
       "g"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/refs/heads/feature-x": {
+       "text": "5488b53b1441de920813682491bf3db478579351\n"
+      }
+     },
      "returncode": 0,
      "stderr": {
       "b64": ""
@@ -57083,7 +58972,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57138,6 +59031,21 @@
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_create_worktree.py::test_a_timed_out_new_worktree_command_still_reports_what_it_printed": {
@@ -57151,7 +59059,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57177,11 +59089,167 @@
       },
       "feature-x/f": {
        "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_create_worktree.py::test_a_worktree_deleted_without_git_is_cut_again": {
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"fetch\", \"origin\", \"feature-x\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "feature-x"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "feature-x"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"add\", \"<TMP>/feature-x\", \"feature-x\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "add",
+      "<TMP>/feature-x",
+      "feature-x"
+     ],
+     "fs": {
+      "feature-x": {
+       "dir": true
+      },
+      "feature-x/.git": {
+       "text": "gitdir: <TMP>/work/.git/worktrees/feature-x\n"
+      },
+      "feature-x/f": {
+       "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (checking out 'feature-x')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "add",
+      "<TMP>/feature-x",
+      "feature-x"
+     ],
+     "fs": {
+      "feature-x": {
+       "dir": true
+      },
+      "feature-x/.git": {
+       "text": "gitdir: <TMP>/work/.git/worktrees/feature-x\n"
+      },
+      "feature-x/f": {
+       "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (checking out 'feature-x')\n",
+     "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {
+      "work/.git/worktrees/feature-x/HEAD": null,
+      "work/.git/worktrees/feature-x/commondir": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -57196,7 +59264,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57219,11 +59291,32 @@
       },
       "feature-x/f": {
        "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -57238,7 +59331,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57252,7 +59349,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57662,6 +59763,34 @@
      "stderr": "Preparing worktree (checking out 'feature-x')\nfatal: 'feature-x' is already used by worktree at '<TMP>/feature-x'\n",
      "stdout": ""
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_create_worktree.py::test_falls_back_again_when_the_first_number_is_also_taken": {
@@ -57675,7 +59804,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57764,6 +59897,21 @@
      "stderr": "Preparing worktree (checking out 'feature-x')\nfatal: '<TMP>/feature-x-pr83' already exists\n",
      "stdout": ""
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_create_worktree.py::test_falls_back_to_a_number_when_the_pr_suffix_is_also_taken": {
@@ -57777,7 +59925,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57849,6 +60001,21 @@
      "stderr": "Preparing worktree (checking out 'feature-x')\nfatal: '<TMP>/feature-x-pr83' already exists\n",
      "stdout": ""
     }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
    ]
   },
   "tests/working_copies/test_create_worktree.py::test_nothing_is_run_when_no_new_worktree_command_is_configured": {
@@ -57862,7 +60029,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57888,11 +60059,32 @@
       },
       "feature-x/f": {
        "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -57907,7 +60099,11 @@
       "origin",
       "no-such-branch"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref no-such-branch\n",
      "stdout": ""
@@ -57925,7 +60121,11 @@
       "origin",
       "feature-x"
      ],
-     "fs": {},
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\t\tbranch 'feature-x' of <TMP>/origin\n"
+      }
+     },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n * branch            feature-x  -> FETCH_HEAD\n",
      "stdout": ""
@@ -57951,11 +60151,32 @@
       },
       "feature-x/f": {
        "text": "1"
+      },
+      "work/.git/worktrees/feature-x/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "work/.git/worktrees/feature-x/commondir": {
+       "text": "../..\n"
       }
      },
      "returncode": 0,
      "stderr": "Preparing worktree (checking out 'feature-x')\n",
      "stdout": "HEAD is now at 856ffec first\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"sh\", \"-c\", \"printf %s \\\"$GITHUB_ORCHESTRATOR_SOURCE_REPO\\\" > initialised\"], \"<TMP>/feature-x\", null]": [

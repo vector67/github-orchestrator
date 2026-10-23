@@ -329,6 +329,22 @@ def test_a_dead_manager_of_a_repo_no_longer_watched_is_not_revived(settings, tmp
     assert windows.manager(dropped) is ManagerPane.EXITED
 
 
+def test_an_exited_manager_whose_worktree_was_deleted_starts_in_a_fresh_one(settings, tmp_path):
+    copies = FakeWorkingCopies()
+    fresh = checked_out(copies, tmp_path / "PROJ-1-thing", "PROJ-1-thing")
+    windows = FakePrProcesses()
+    windows.open(a_pr(61, REPO), tmp_path / "deleted")
+    windows.stop_managers()
+    github = watching(settings)
+    _theirs(github, 61, branch="PROJ-1-thing")
+
+    watcher_over(settings, github=github, working_copies=copies,
+                 pr_processes=windows).run_cycle()
+
+    assert windows.manager(a_pr(61, REPO)) is ManagerPane.RUNNING
+    assert windows.manager_path(a_pr(61, REPO)) == str(fresh)
+
+
 def test_dry_run_names_each_prs_own_clone_and_new_worktree_command(capsys, tmp_path):
     settings = _two_repos(tmp_path)
     github = watching(settings)

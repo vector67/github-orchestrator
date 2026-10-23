@@ -200,6 +200,7 @@ class CommitChecked:
 @dataclass(frozen=True)
 class ThreadResolved:
     at: str
+    viewer: str
 
 
 @dataclass(frozen=True)

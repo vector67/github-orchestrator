@@ -52,6 +52,13 @@ def copies(notifications):
                              run_idle_seconds=RUN_IDLE)
 
 
+@pytest.fixture
+def archiving(tmp_path):
+    path = tmp_path / "archiving"
+    path.mkdir()
+    return str(path)
+
+
 def _at_now():
     return datetime.fromtimestamp(NOW, timezone.utc)
 
@@ -79,9 +86,9 @@ def _window(world, copies, *, running=True, path="/wt/archiving", branch=EXPECTE
     return manager
 
 
-def _flag(copies, *, since, run_output_at=None):
-    copies.add_worktree("/wt/archiving", WANDERED)
-    copies.report_branch(THE_PR, "/wt/archiving", EXPECTED, now=since,
+def _flag(copies, *, since, run_output_at=None, path="/wt/archiving"):
+    copies.add_worktree(path, WANDERED)
+    copies.report_branch(THE_PR, path, EXPECTED, now=since,
                          run_output_at=run_output_at)
 
 
@@ -160,8 +167,8 @@ def test_a_pr_dismissed_until_ready_for_review_opens_again_once_it_is_not_a_draf
     assert world.manager(THE_PR) is ManagerPane.RUNNING
 
 
-def test_a_dead_manager_is_started_again_in_its_window(settings, world, copies, notifications):
-    manager = _window(world, copies, running=False)
+def test_a_dead_manager_is_started_again_in_its_window(settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, running=False, path=archiving)
 
     _cycle(settings, world, copies, notifications)
 
@@ -169,8 +176,8 @@ def test_a_dead_manager_is_started_again_in_its_window(settings, world, copies, 
 
 
 def test_a_dead_manager_with_events_waiting_is_revived_once_its_role_is_known(
-        settings, world, copies, notifications):
-    manager = _window(world, copies, running=False)
+        settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, running=False, path=archiving)
     polled_on_disk(settings.state_dir, THE_PR, seen(settings.config.gh_account, is_author=False))
     disk_event_queue(settings.queues_dir).add(THE_PR, closed(merged=False))
 
@@ -187,8 +194,9 @@ def test_a_dead_manager_with_nothing_waiting_stays_down(settings, world, copies,
     assert not manager.running
 
 
-def test_an_event_a_dead_manager_had_in_hand_is_put_back_in_line(settings, world, copies, notifications):
-    manager = _window(world, copies, running=False)
+def test_an_event_a_dead_manager_had_in_hand_is_put_back_in_line(settings, world, copies, notifications,
+                                                                 archiving):
+    manager = _window(world, copies, running=False, path=archiving)
     polled_on_disk(settings.state_dir, THE_PR, seen(settings.config.gh_account))
     disk_event_queue(settings.queues_dir).add(THE_PR, ci_failed())
     disk_event_queue(settings.queues_dir).next(THE_PR, is_author=True, agents_enabled=True)
@@ -263,11 +271,11 @@ def test_a_pane_directory_with_a_colon_is_read_whole(settings, world, copies, no
     "just-flagged", "grace-spent", "dead-manager-with-a-stale-run",
 ])
 def test_the_grace_period_decides_when_a_wandered_window_is_detached(
-        settings, world, notifications, since, grace, running, run_output_at, detached):
+        settings, world, notifications, archiving, since, grace, running, run_output_at, detached):
     copies = FakeWorkingCopies(notifications=notifications, grace_seconds=grace,
                                run_idle_seconds=RUN_IDLE)
-    _window(world, copies, running=running)
-    _flag(copies, since=since, run_output_at=run_output_at)
+    _window(world, copies, running=running, path=archiving)
+    _flag(copies, since=since, run_output_at=run_output_at, path=archiving)
 
     _cycle(settings, world, copies, notifications)
 
@@ -297,8 +305,9 @@ def test_a_detached_window_loses_its_manager_and_says_so(settings, world, copies
          "Window kept as hello-world/#83-defunct; building a fresh worktree")]
 
 
-def test_a_dead_manager_in_a_foreign_directory_is_revived_not_detached(settings, world, copies, notifications):
-    manager = _window(world, copies, running=False, branch="somewhere-else")
+def test_a_dead_manager_in_a_foreign_directory_is_revived_not_detached(settings, world, copies, notifications,
+                                                                       archiving):
+    manager = _window(world, copies, running=False, path=archiving, branch="somewhere-else")
 
     _cycle(settings, world, copies, notifications)
 
