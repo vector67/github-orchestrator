@@ -106,6 +106,18 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     exist, they stay on the graph as a dashed grey ghost lane hanging off the old
     fork, below the PR lane, with the review flag on them and a line naming their
     old shas. The PR lane forks from the new point; both forks are labelled.
+17. **Diverged from origin** (#146, decided 2026-10-23). When the worktree's head
+    and origin's are each missing from the other's commits (origin rewritten, the
+    worktree holding the older branch), the local view draws two lanes under main.
+    Origin's commits that the worktree lacks sit on a lane of their own, forking
+    from where they leave main or the shared commits, drawn hollow and grey,
+    never pickable, ending in a dashed `origin` box. The worktree's commits keep
+    the black PR lane below, forking from their own older fork; it is the lane the
+    stepper walks, solid rather than dashed, ending in the dashed `local` box, with
+    no origin flag. The header reads `<b>N commits</b> in the worktree · forked from main at <sha> · origin has M other commits from <sha>` and a yellow chip
+    `diverged from origin · N here, M on origin`, without the behind chip. The
+    stepper's pill on those commits reads `not on origin`. The key adds the hollow
+    grey dot only when origin's lane is drawn. Origin's view is unchanged.
     A new commit whose subject matches a read ghost's counts as read and carries
     `≈ read` above it. Ghosts cannot be picked. **Since my review** picks only
     the commits with no match. The header reads `now forked from <new>, was <old>`, and the note (decision 4) says `<b>Rebased since your review</b> (force-pushed <day date>). K of your read commits were rewritten onto newer main and matched by message; <b>M are new</b>.`

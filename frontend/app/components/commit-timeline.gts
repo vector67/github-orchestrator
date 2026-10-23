@@ -116,8 +116,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       <header class="timeline-head">
         <p class="timeline-title" data-test-timeline-header>
           <b>{{@timeline.header.count}}</b>
-          on
-          {{@timeline.header.branch}}
+          {{#if @timeline.header.diverged}}
+            in the worktree
+          {{else}}
+            on
+            {{@timeline.header.branch}}
+          {{/if}}
           ·
           {{@timeline.header.relation}}
           {{#if @timeline.header.fork}}<code
@@ -140,6 +144,18 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             <span class="timeline-aside">{{@timeline.header.base}}'s new commits
               aren't in this diff</span>
           {{else if @timeline.header.tip}}, {{@timeline.header.tip}}{{/if}}
+          {{#if @timeline.header.diverged}}
+            · origin has
+            {{@timeline.header.diverged.other}}
+            from
+            <code
+              class="timeline-fork"
+            >{{@timeline.header.diverged.from}}</code>
+            <span
+              class="timeline-behind"
+              data-test-diverged
+            >{{@timeline.header.diverged.chip}}</span>
+          {{/if}}
         </p>
         <span class="timeline-presets" role="group" aria-label="pick a range">
           {{#each @timeline.presets key="name" as |preset|}}
@@ -470,6 +486,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               data-style="not-pushed"
             ></i>
             not pushed</span>
+        {{/if}}
+        {{#if @timeline.key.origin}}
+          <span class="timeline-key-item" data-test-key="origin"><i
+              data-style="origin"
+            ></i>
+            on origin, not here</span>
         {{/if}}
         {{#if @timeline.key.merge}}
           <span class="timeline-key-item" data-test-key="merge-pip"><i

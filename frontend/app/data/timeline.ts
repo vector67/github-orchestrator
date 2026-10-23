@@ -12,6 +12,7 @@ const BASE_LANE = 'base';
 const STACK_LANE = 'stack';
 const PR_LANE = 'pr';
 const GHOST_LANE = 'ghost';
+const ORIGIN_LANE = 'origin';
 const MATCHED_RISE = 14;
 const OLD_FORK_SPAN = 2;
 const BAND_REACH = 12;
@@ -55,7 +56,8 @@ export interface Preset {
   picks: Picked | null;
 }
 
-export type DotStyle = 'base' | 'stack' | 'read' | 'unread' | 'ghost';
+export type DotStyle =
+  'base' | 'stack' | 'read' | 'unread' | 'ghost' | 'origin';
 
 export type DotShape = 'dot' | 'diamond' | 'tick';
 
@@ -181,6 +183,13 @@ export interface TimelineHeader {
   tip: string | null;
   main: string;
   behind: number;
+  diverged: DivergedHeader | null;
+}
+
+export interface DivergedHeader {
+  other: string;
+  from: string;
+  chip: string;
 }
 
 export type CurveKind = 'fork' | 'merge' | 'ghost';
@@ -189,6 +198,7 @@ export interface TimelineKey {
   merge: boolean;
   tick: boolean;
   unpushed: boolean;
+  origin: boolean;
 }
 
 export interface Timeline {
@@ -232,7 +242,7 @@ export interface TimelineInput {
 
 export interface Standing {
   offOrigin: Set<string>;
-  diverged: { here: number; there: number } | null;
+  diverged: { here: number; there: PullRequestCommit[] } | null;
 }
 
 export function dayOf(at: string): string {
@@ -382,7 +392,25 @@ function oldForkOf(history: PullRequestCommits): GraphNode[] {
   return [{ id: fork, lane: BASE_LANE, parents: [], span: OLD_FORK_SPAN }];
 }
 
-function nodesOf(history: PullRequestCommits): GraphNode[] {
+function originForkOf(
+  history: PullRequestCommits,
+  there: PullRequestCommit[],
+): GraphNode[] {
+  const known = new Set([
+    ...outsideOf(history),
+    ...[...history.base_commits, ...history.commits, ...there].map(
+      (one) => one.sha,
+    ),
+  ]);
+  const fork = there[0]?.parents[0];
+  if (!fork || known.has(fork)) return [];
+  return [{ id: fork, lane: BASE_LANE, parents: [history.fork] }];
+}
+
+function nodesOf(
+  history: PullRequestCommits,
+  there: PullRequestCommit[],
+): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
     ...oldForkOf(history),
@@ -391,6 +419,7 @@ function nodesOf(history: PullRequestCommits): GraphNode[] {
       lane: BASE_LANE,
       parents: [],
     })),
+    ...originForkOf(history, there),
     ...(history.stack?.commits ?? []).map((one) => ({
       id: one.sha,
       lane: STACK_LANE,
@@ -405,6 +434,11 @@ function nodesOf(history: PullRequestCommits): GraphNode[] {
     ...ghostsOf(history).map((one) => ({
       id: one.sha,
       lane: GHOST_LANE,
+      parents: one.parents,
+    })),
+    ...there.map((one) => ({
+      id: one.sha,
+      lane: ORIGIN_LANE,
       parents: one.parents,
     })),
   ];
@@ -507,6 +541,7 @@ function styleOf(node: Placed, read: Set<string>): DotStyle {
   if (node.lane === BASE_LANE) return 'base';
   if (node.lane === STACK_LANE) return 'stack';
   if (node.lane === GHOST_LANE) return 'ghost';
+  if (node.lane === ORIGIN_LANE) return 'origin';
   return read.has(node.id) ? 'read' : 'unread';
 }
 
@@ -537,7 +572,9 @@ function relationOf(
 
 export function timelineBuilt(input: TimelineInput): Timeline | null {
   const { history, read } = input;
-  const { offOrigin } = input.standing;
+  const { diverged } = input.standing;
+  const there = diverged?.there ?? [];
+  const offOrigin = diverged ? new Set<string>() : input.standing.offOrigin;
   const order = history.commits.map((one) => one.sha);
   if (!order.length) return null;
   const stack = history.stack;
@@ -553,10 +590,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     [
       BASE_LANE,
       ...(stack ? [STACK_LANE] : []),
+      ...(there.length ? [ORIGIN_LANE] : []),
       PR_LANE,
       ...(ghosts.length ? [GHOST_LANE] : []),
     ],
-    nodesOf(history),
+    nodesOf(history, there),
     spacing,
     input.across,
   );
@@ -574,6 +612,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       ...history.base_commits,
       ...history.commits,
       ...ghosts,
+      ...there,
     ].map((one) => [one.sha, one.subject]),
   );
   const merges = new Set(
@@ -626,7 +665,10 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       pushed: node.lane === PR_LANE ? !offOrigin.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
-      radius: at >= 0 || node.lane === GHOST_LANE ? 6 : 4,
+      radius:
+        at >= 0 || node.lane === GHOST_LANE || node.lane === ORIGIN_LANE
+          ? 6
+          : 4,
       matched: input.matched.has(node.id),
       matchedY: node.y - MATCHED_RISE,
     };
@@ -640,6 +682,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const main = lastOn(BASE_LANE, graph.nodes)!;
   const under = lastOn(STACK_LANE, graph.nodes);
   const head = graph.nodes.get(order.at(-1)!)!;
+  const originHead = graph.nodes.get(there.at(-1)?.sha ?? '');
   const label = (
     kind: TimelineLabel['kind'],
     text: string,
@@ -708,7 +751,8 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
             },
           ]
         : []),
-      firstUnpushed
+      ...(originHead ? [boxed(label('origin', 'origin', originHead))] : []),
+      firstUnpushed || originHead
         ? boxed(label('local', 'local', head))
         : label('head', 'head', head),
       ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
@@ -734,15 +778,24 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       relation: relationOf(input, base, merges.size),
       fork: stack ? '' : history.fork.slice(0, SHORT),
       was: oldFork && !stack ? oldFork.id.slice(0, SHORT) : null,
-      tip: stack || history.behind || oldFork ? null : `${base}'s tip`,
+      tip:
+        stack || history.behind || oldFork || diverged ? null : `${base}'s tip`,
       main: stack?.branch ?? base,
-      behind: history.behind,
+      behind: diverged ? 0 : history.behind,
+      diverged: diverged
+        ? {
+            other: `${plural(there.length, 'other commit')}`,
+            from: there[0]?.parents[0]?.slice(0, SHORT) ?? '',
+            chip: `diverged from origin · ${diverged.here} here, ${there.length} on origin`,
+          }
+        : null,
     },
     presets: presetsOf(order, input, showing),
     key: {
       merge: merges.size > 0,
       tick: long,
       unpushed: firstUnpushed !== undefined,
+      origin: originHead !== undefined,
     },
     order,
     showing,

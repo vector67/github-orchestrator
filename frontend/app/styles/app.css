@@ -4813,6 +4813,10 @@ button.tree-row[aria-current="true"] {
   stroke: var(--blue);
 }
 
+.timeline-lane[data-lane="origin"] {
+  stroke: var(--muted);
+}
+
 .timeline-lane[data-dashed] {
   stroke-dasharray: 4 3;
 }
@@ -4871,6 +4875,12 @@ button.tree-row[aria-current="true"] {
   cursor: default;
   fill: var(--muted);
   stroke: none;
+}
+
+.timeline-dot[data-style="origin"] {
+  cursor: default;
+  fill: var(--page);
+  stroke: var(--muted);
 }
 
 .timeline-dot[data-style="ghost"] {
@@ -5057,6 +5067,11 @@ button.tree-row[aria-current="true"] {
   height: 14px;
   border: 0;
   border-radius: 0;
+}
+
+.timeline-key-item i[data-style="origin"] {
+  background: var(--page);
+  border-color: var(--muted);
 }
 
 .timeline-key-item i[data-style="not-pushed"] {

@@ -1036,7 +1036,7 @@ export interface Stepper {
   authoredAt: string;
   read: boolean;
   merge: boolean;
-  unpushed: boolean;
+  offOrigin: string | null;
   range: DiffRange;
   previous: string | null;
   next: string | null;
@@ -1056,6 +1056,11 @@ function pickedUpAt(
     (one, index) =>
       index > reviewedAt && !read.has(one.sha) && !(skipMerges && isMerge(one)),
   );
+}
+
+function offOriginOf(standing: Standing, sha: string): string | null {
+  if (!standing.offOrigin.has(sha)) return null;
+  return standing.diverged ? 'not on origin' : 'not pushed';
 }
 
 const lastStandings = new WeakMap<
@@ -1081,7 +1086,7 @@ function standingBuilt(
     offOrigin: new Set(here),
     diverged: {
       here: here.length,
-      there: pushed.commits.filter((one) => !kept.has(one.sha)).length,
+      there: pushed.commits.filter((one) => !kept.has(one.sha)),
     },
   };
 }
@@ -1181,7 +1186,7 @@ function stepperBuilt(
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
     merge: isMerge(commit),
-    unpushed: standingOf(history, pushed).offOrigin.has(commit.sha),
+    offOrigin: offOriginOf(standingOf(history, pushed), commit.sha),
     range: rangeOf(history, at, at),
     previous: commits.slice(0, at).findLast(stops)?.sha ?? null,
     next: commits.slice(at + 1).find(stops)?.sha ?? null,

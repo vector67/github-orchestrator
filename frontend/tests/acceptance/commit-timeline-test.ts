@@ -1049,6 +1049,7 @@ module(
 
 const STALE_ONE = '5a5a5a5';
 const STALE_TWO = '6b6b6b6';
+const STALE_FORK = '01d0000';
 
 module(
   'Acceptance | commit timeline with a worktree diverged from origin',
@@ -1070,37 +1071,102 @@ module(
         prCommit(SECOND, FIRST, 'Name the widget'),
         prCommit(THIRD, SECOND, 'Test the widget'),
       ]);
-      board().localCommits = prHistory('01d0000', [
-        prCommit(STALE_ONE, '01d0000', 'Add the widget'),
-        prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
-      ]);
+      board().localCommits = {
+        ...prHistory(STALE_FORK, [
+          prCommit(STALE_ONE, STALE_FORK, 'Add the widget'),
+          prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
+        ]),
+        base_tip: FORK,
+        base_commits: [prCommit(FORK, STALE_FORK, 'Bump the parser')],
+        behind: 1,
+      };
     });
 
-    test('on local a review given on a commit origin no longer has draws no flag', async function (assert) {
+    test("on local origin's commits get a grey lane of their own between main and the worktree's", async function (assert) {
       await visit('/pr/o/r/7/diff');
       await click('[data-test-source="local"]');
 
       await click('[data-test-timeline-toggle]');
 
+      const [onOrigin, here, [fork]] = [
+        dots('origin'),
+        dots('pr'),
+        dots('base').filter((one) => one.sha === FORK),
+      ];
       assert.deepEqual(
-        dots('pr').map((one) => [
-          one.sha,
-          dot(one.sha).getAttribute('data-pushed'),
-        ]),
+        onOrigin.map((one) => [one.sha, one.style]),
         [
-          [STALE_ONE, 'false'],
-          [STALE_TWO, 'false'],
+          [FIRST, 'origin'],
+          [SECOND, 'origin'],
+          [THIRD, 'origin'],
         ],
       );
+      assert.deepEqual(
+        here.map((one) => one.sha),
+        [STALE_ONE, STALE_TWO],
+      );
+      assert.true(fork!.y < onOrigin[0]!.y, 'origin under main');
+      assert.true(onOrigin[0]!.y < here[0]!.y, 'the worktree under origin');
+      assert.true(
+        onOrigin[0]!.x > fork!.x,
+        "origin's lane forks from origin's fork",
+      );
+      assert
+        .dom('[data-test-dot][data-lane="origin"][data-pickable]')
+        .doesNotExist();
+      assert.dom('[data-pushed="false"]').doesNotExist();
+      assert.dom('[data-test-unpushed-lane]').doesNotExist();
+      assert
+        .dom('[data-test-lane-label="origin"]')
+        .hasAttribute('data-at', THIRD);
+      assert
+        .dom('[data-test-lane-label="local"]')
+        .hasAttribute('data-at', STALE_TWO);
+      assert.dom('[data-test-label-box]').exists({ count: 2 });
+      assert.dom('[data-test-lane-label="head"]').doesNotExist();
       assert.dom('[data-test-review-flag]').doesNotExist();
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'origin']);
     });
 
-    test("on origin, where the review's commit is not in the list and nothing was kept, there is no flag either", async function (assert) {
+    test('on local the header counts the worktree and origin apart, and the stepper says its commit is not on origin', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert
+        .dom('[data-test-timeline-header]')
+        .hasText(
+          `2 commits in the worktree · forked from main at ${STALE_FORK} · origin has 3 other commits from ${FORK} diverged from origin · 2 here, 3 on origin`,
+        );
+      assert
+        .dom('[data-test-diverged]')
+        .hasText('diverged from origin · 2 here, 3 on origin');
+      assert.dom('[data-test-not-pushed]').hasText('not on origin');
+    });
+
+    test("clicking one of origin's commits picks nothing", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
+
+      await click(dot(FIRST));
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
+      assert.dom(dot(FIRST)).hasAttribute('data-in-range', 'false');
+    });
+
+    test('on origin there is no second lane and nothing about the worktree', async function (assert) {
       await visit('/pr/o/r/7/diff');
 
       await click('[data-test-timeline-toggle]');
 
+      assert.dom('[data-test-dot][data-lane="origin"]').doesNotExist();
+      assert.dom('[data-test-diverged]').doesNotExist();
+      assert.dom('[data-test-not-pushed]').doesNotExist();
       assert.dom('[data-test-review-flag]').doesNotExist();
+      assert.deepEqual(keyed(), PLAIN_KEY);
     });
   },
 );
