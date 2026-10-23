@@ -697,6 +697,27 @@ def test_a_write_from_another_origin_is_refused_and_queues_nothing(at_work):
     assert tag_of(client) == tag
 
 
+def test_a_write_from_the_board_page_opened_by_the_machines_address_is_taken(at_work):
+    client = client_of(at_work)
+    opened_at = f"192.0.2.10:{PORT}"
+
+    answer = client.post(f"/api/conversations/{KEY}/operations:stop",
+                         headers={"If-Match": tag_of(client), "Host": opened_at,
+                                  "Origin": f"http://{opened_at}"})
+
+    assert answer.status_code == 202
+
+
+def test_a_write_whose_origin_is_not_the_address_it_was_sent_to_is_refused(at_work):
+    client = client_of(at_work)
+
+    answer = client.post(f"/api/conversations/{KEY}/operations:stop",
+                         headers={"If-Match": tag_of(client), "Host": f"192.0.2.10:{PORT}",
+                                  "Origin": f"http://10.0.0.9:{PORT}"})
+
+    assert answer.status_code == 403
+
+
 def test_a_write_the_board_page_sends_is_taken(at_work):
     client = client_of(at_work)
 
