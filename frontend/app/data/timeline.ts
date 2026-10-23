@@ -36,6 +36,9 @@ const DATE_DROP = 28;
 const DATE_RISE = 18;
 const DATE_ROW = 14;
 const RUN_GAP = 4;
+const LABEL_CHAR = 7.5;
+const LABEL_PAD = 6;
+const LABEL_REACH = 10;
 
 export interface Picked {
   from: string;
@@ -110,6 +113,26 @@ export interface TimelineLabel {
   at: string;
   x: number;
   y: number;
+  box: LabelBox | null;
+}
+
+export interface LabelBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function boxed(label: TimelineLabel): TimelineLabel {
+  return {
+    ...label,
+    box: {
+      x: label.x - LABEL_PAD,
+      y: label.y - LABEL_REACH,
+      width: label.text.length * LABEL_CHAR + 2 * LABEL_PAD,
+      height: 2 * LABEL_REACH,
+    },
+  };
 }
 
 export interface TimelineLane {
@@ -623,6 +646,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     at: at.id,
     x: at.x + LABEL_GAP,
     y: at.y,
+    box: null,
   });
   const collapsed = collapsedOf(history, graph.nodes, spacing);
   const ringed = input.hidden
@@ -679,7 +703,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
           ]
         : []),
       firstUnpushed
-        ? label('local', 'local', head)
+        ? boxed(label('local', 'local', head))
         : label('head', 'head', head),
       ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
     ],
@@ -733,6 +757,7 @@ function forkLabelsOf(
     at: at.id,
     x: at.x,
     y: at.y - FLAG_RISE,
+    box: null,
   });
   return [
     above('old-fork', 'was forked', was),

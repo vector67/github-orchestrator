@@ -4914,6 +4914,12 @@ button.tree-row[aria-current="true"] {
   fill: var(--muted);
 }
 
+.timeline-label-box {
+  fill: none;
+  stroke: var(--muted);
+  stroke-dasharray: 4 3;
+}
+
 .timeline-label[data-kind="fork"],
 .timeline-label[data-kind="old-fork"] {
   font-size: 10px;

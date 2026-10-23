@@ -343,6 +343,17 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             </g>
           {{/if}}
           {{#each @timeline.labels key="kind" as |label|}}
+            {{#if label.box}}
+              <rect
+                class="timeline-label-box"
+                x={{label.box.x}}
+                y={{label.box.y}}
+                width={{label.box.width}}
+                height={{label.box.height}}
+                rx="4"
+                data-test-label-box={{label.kind}}
+              />
+            {{/if}}
             <text
               class="timeline-label"
               x={{label.x}}

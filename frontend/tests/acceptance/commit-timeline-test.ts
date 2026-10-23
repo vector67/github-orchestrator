@@ -962,6 +962,17 @@ module(
         .dom('[data-test-lane-label="local"]')
         .hasAttribute('data-at', FOURTH);
       assert.dom('[data-test-lane-label="head"]').doesNotExist();
+      const word = find(
+        '[data-test-lane-label="local"]',
+      )!.getBoundingClientRect();
+      const frame = find(
+        '[data-test-label-box="local"]',
+      )!.getBoundingClientRect();
+      assert.true(
+        inside(word, frame),
+        'the local label sits in a box of its own',
+      );
+      assert.dom('[data-test-label-box]').exists({ count: 1 });
       assert.dom('[data-test-unpushed-lane]').exists({ count: 1 });
       assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
       assert.dom('[data-test-not-pushed]').hasText('not pushed');
