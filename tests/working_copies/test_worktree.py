@@ -28,7 +28,8 @@ def test_the_head_fetch_is_bounded_and_never_prompts(copies, tmp_path):
 
     assert len(run.call_args_list) == 2
     call = run.call_args_list[1]
-    assert call.args[0] == ["git", "-C", str(tmp_path), "fetch", "origin", "PROJ-1 my-branch"]
+    assert call.args[0] == ["git", "-C", str(tmp_path), "fetch", "origin",
+                            "+refs/heads/PROJ-1 my-branch:refs/remotes/origin/PROJ-1 my-branch"]
     assert call.kwargs["timeout"] == GIT_TIMEOUT
     assert call.kwargs["stdin"] is subprocess.DEVNULL
     assert call.kwargs["env"]["GIT_TERMINAL_PROMPT"] == "0"
@@ -72,4 +73,4 @@ def test_a_base_branch_that_is_no_branch_name_is_never_fetched(copies, tmp_path,
     with patch("subprocess.run", side_effect=[listed, _completed(stdout="")]) as run:
         copies.fetch_pr_branch(tmp_path / "repo", a_pr(7, "owner/name"), "feature", base_branch)
 
-    assert [call.args[0][-1] for call in run.call_args_list[1:]] == ["feature"]
+    assert [call.args[0][-1] for call in run.call_args_list[1:]] == ["+refs/heads/feature:refs/remotes/origin/feature"]
