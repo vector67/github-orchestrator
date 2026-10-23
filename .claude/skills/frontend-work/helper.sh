@@ -31,7 +31,7 @@ start() {
     return
   fi
   mkdir -p "$PROFILE"
-  "$CHROME" --headless=new --remote-debugging-port="$PORT" \
+  "$CHROME" --headless=new --disable-features=MacAppCodeSignClone --remote-debugging-port="$PORT" \
     --user-data-dir="$PROFILE" --window-size="${size/x/,}" \
     --force-device-scale-factor=2 --no-first-run --no-default-browser-check \
     about:blank >"$PROFILE/chrome.log" 2>&1 &

@@ -387,7 +387,8 @@ move is something else, is red; on a PR you review nothing is. The chips are
 **requested changes**, failed agent runs, what the agent is doing when that is
 not the move, **N fixes to decide**, **N unsent** review comments, **N
 unresolved** GitHub threads, **N answered** of your threads, **N unpushed**
-commits, **N queued** events, **approved**, **mentioned**, **detailed
+commits (**diverged from origin** instead, with no count, when origin also holds
+commits the worktree lacks), **N queued** events, **approved**, **mentioned**, **detailed
 reviewer** (the PR description's `Detailed reviewer: @<login>` line names you),
 **N mismatches** and **draft**. Hovering a chip says what it means. A run is
 named for what started it: CI fix, rebase on main, review, re-review, thread
@@ -508,7 +509,8 @@ unpushed commits and agent work) and then marks it ready on GitHub, **Dismiss #N
 GitHub. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
-Unpushed in the System block is the count behind the wall's unpushed chip.
+Unpushed in the System block is the count behind the wall's unpushed chip,
+which reads **diverged from origin** instead when the worktree has diverged.
 The right pane shows the agent's notes from `agent-changes.md`, or Claude's
 output, newest last; `⇧C` flips between them. Both follow the board's streams,
 so they change as the files do. When the manager's board is not answering, the
@@ -549,7 +551,8 @@ connection is sent the session's last megabyte of output first.
 
 **Diff** steps through the pull request one commit at a time. A bar over the
 files reads **Commit N of M** with the commit's sha, subject, author and age,
-and a **merge** or **not pushed** pill when one applies. **‹ Prev** and
+and a **merge** or **not pushed** pill when one applies (**not on origin** on a
+worktree diverged from origin). **‹ Prev** and
 **Next ›** step, the **Read** checkbox marks the commit read, and a row of pips
 under the bar, one per commit, shows which are read and jumps to the one you
 click. The tab opens on the first unread commit after your review, or on the
@@ -818,8 +821,8 @@ rows are in it. A group with no rows is not drawn at all. The groups come in one
 order, and the header repeats the counts: **Ready for you**, **Agent working**,
 **Queued for agent**, **Sent back for rework**, **Landing**, **Waiting on
 reviewer**, **Assumed done**, **Deferred**, **Done**, with Assumed done in the
-Done column. On a PR you review, Ready for you is **Answered** and Waiting on
-reviewer is **Waiting on author**, in the Columns view too, and **Not my
+Done column. On a PR you review, Waiting on reviewer is **Waiting on author**,
+in the Columns view too, and **Not my
 conversation** follows Assumed done, in the Done column as well.
 
 On a PR you wrote, a run the agent declines lands by what it says the comment
@@ -831,17 +834,19 @@ comment on an Assumed done or confirmed thread brings it back and the agent runs
 again, as a new comment on a resolved thread does.
 
 On a PR you review, an agent reads each thread whenever a new comment arrives
-and says whose move it is: yours (Answered), someone else's (Waiting on author),
+and says whose move it is: yours (Ready for you), someone else's (Waiting on author),
 settled for you to confirm (Assumed done), or nothing to do with you (Not my
-conversation). Until it has answered, the thread sits in Answered and its card
+conversation). Until it has answered, the thread sits in Ready for you and its card
 says "not yet read". A reply you post from the board moves it to Waiting on
 author at once, and the agent reads it again. Only you move a thread to Done:
 an Assumed done card offers **Confirm** (`g`) and **Not confirm** (`m`), which
-asks where it stands instead. Confirm opens a dialog like Resolve's: it posts
-any reply you write, resolves the thread on GitHub and moves the card to Done;
-left empty, it puts 👍 on the newest reply from someone else unless you untick
-it. On a thread that only mentions you, or on a PR you wrote, Confirm moves the
-card to Done and touches nothing on GitHub. A Not my conversation card offers the same question as **Move…**. It
+asks where it stands instead. Confirm moves the card to Done and asks first, with
+two ticks, both on: resolve the thread on GitHub, and put 👍 on the newest reply
+from someone else. Untick either to leave it undone on GitHub. Confirm posts no
+reply; **Reply and resolve** beside it does. A mention in a review thread gets the
+same Confirm, with Reply and resolve and Resolve on board moved to the right. On
+any other mention, or on a PR you wrote, Confirm moves the card to Done and
+touches nothing on GitHub. A Not my conversation card offers the same question as **Move…**. It
 lists My move, Their move, Not my conversation and Later…, leaving out the group
 the card is in, and Later… opens the Defer dialog. On a PR you wrote it lists
 Needs a fix, which starts a fresh agent run, Needs a reply from me, which puts
@@ -899,14 +904,17 @@ Opening a session takes what the rework should do differently, which is the
 difference between steering the next attempt and starting it over blind; leave it
 blank and the session starts unsteered. Resolve takes the reply that closes the
 comment; leave it blank and it closes with nothing posted, which its button
-says. On a reviewer's card an empty resolve puts 👍 on the newest reply instead,
-and its button says that too. Where the agent had something to
+says. On a reviewer's card an empty resolve can put 👍 on the newest reply
+instead, whether or not it resolves on GitHub: the tick starts off, and the
+button says what it will do. Where the agent had something to
 say about the comment, the reason it skipped one or the note it left on a fix,
 the dialog offers **use the agent's own words**, which pastes that into the box
 for you to edit before it posts.
 
 On someone else's PR, a comment that mentions you and that you have not answered
-is a card of its own, and so is a mention in the PR description. It offers
+is a card of its own, and so is a mention in the PR description. A reply naming
+you on a review thread you started is not a mention: that thread is yours
+already. A mention card offers
 **Reply and resolve** (`v`) and **Resolve on board** (`h`), with **Defer** at the bottom right, and no
 reply link. Its dialog will not post until you write a reply. The reply goes on
 the thread for a review comment, or to the PR's conversation quoting the comment
