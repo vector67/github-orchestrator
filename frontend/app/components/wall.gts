@@ -203,14 +203,13 @@ export default class Wall extends Component<WallSignature> {
     const at = chosen ? order.indexOf(chosen) : this.lastAt - (by > 0 ? 1 : 0);
     const next = stepped(order, at, by);
     if (!next) return;
-    this.leaveTheRow();
+    this.dropFocus();
     this.select(next);
   }
 
-  private leaveTheRow(): void {
+  private dropFocus(): void {
     const focused = document.activeElement;
-    if (focused instanceof HTMLElement && focused.closest('.wall-row'))
-      focused.blur();
+    if (focused instanceof HTMLElement) focused.blur();
   }
 
   private takes(key: string): boolean {
