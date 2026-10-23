@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -115,6 +116,14 @@ def test_fails_when_the_branch_is_already_checked_out_elsewhere(repo, settings, 
     assert "feature-x" in caplog.text
     assert first == repo.parent / "feature-x"
     assert not (repo.parent / "feature-x-pr83").exists()
+
+
+def test_a_worktree_deleted_without_git_is_cut_again(repo, settings):
+    first = _create(settings, repo, "feature-x")
+    shutil.rmtree(first)
+
+    assert _create(settings, repo, "feature-x") == first
+    assert (first / "f").read_text() == "1"
 
 
 def test_a_branch_the_remote_does_not_have_fails_with_gits_reason(repo, settings, caplog):
