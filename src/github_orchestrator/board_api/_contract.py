@@ -1235,8 +1235,9 @@ class ResolveRequest(CloseRequest):
     thumbs_up: bool = Field(
         default=True,
         description="With nothing written, put a thumbs-up on the newest "
-                    "reply of a reviewer's thread as it resolves. False "
-                    "resolves it with no reaction.")
+                    "reply of a reviewer's thread as it resolves, on GitHub "
+                    "or on the board alone. False resolves it with no "
+                    "reaction.")
 
 
 class BriefRequest(BaseModel):

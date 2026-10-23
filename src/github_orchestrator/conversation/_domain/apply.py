@@ -850,7 +850,10 @@ def _newest_other_comment(conversation: Conversation) -> int | None:
 
 def _thread_resolved(conversation: Conversation,
                      command: ThreadResolved) -> Accepted:
-    told = _github_resolved(conversation, True, None, command.at)
+    return _settled_with_thumbs_up(_github_resolved(conversation, True, None, command.at))
+
+
+def _settled_with_thumbs_up(told: Conversation) -> Accepted:
     settled = _settled(told)
     if (told.closing_reply or told.closing_without_thumbs_up
             or told.role != ROLE_REVIEWER):
@@ -889,7 +892,7 @@ def _closing(conversation: Conversation, command: Resolve) -> Accepted:
     if not command.reply:
         if _resolves_on_github(conversation):
             return Accepted(conversation, (ResolveThread(),))
-        return _settled(conversation)
+        return _settled_with_thumbs_up(conversation)
     return Accepted(conversation, (PostReply(body=command.reply),))
 
 

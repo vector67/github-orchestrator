@@ -837,6 +837,19 @@ def test_resolve_posts_the_humans_reply(settings, machine, threads, run_cli):
     assert _stored(threads).standing is ConversationState.DONE
 
 
+def test_resolve_without_resolving_on_github_puts_no_thumbs_up_on_the_thread(
+        settings, machine, threads, run_cli):
+    polled_on_disk(settings.state_dir, THE_PR, seen(settings.config.gh_account, is_author=False))
+    on_github(machine.github, THREAD_KEY, said(COMMENT_ID, "rename this", author="ben"),
+              said(COMMENT_ID + 1, "renamed", author="ana"))
+    hear(threads)
+
+    _directed(run_cli, threads, "resolve", OperationKind.RESOLVE)
+
+    assert machine.github.reactions == {}
+    assert _stored(threads).standing is ConversationState.DONE
+
+
 def test_a_deferred_thread_wakes_by_hand_with_unpark(settings, machine, threads, run_cli):
     _a_colleagues_comment(settings, machine, threads)
     _directed(run_cli, threads, "place", OperationKind.DEFER, to="deferred")

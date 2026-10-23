@@ -370,10 +370,10 @@ const ENTRIES = {
       asks: {
         question: 'Resolve this conversation?',
         note:
-          'Anything you write is posted to GitHub as your reply. Tick the box ' +
-          'to mark the thread resolved there too; left empty, the board then ' +
-          'puts 👍 on the newest reply, unless you untick it. Either way the ' +
-          'card moves to Done. Reopen is one click from there.',
+          'Anything you write is posted to GitHub as your reply. Tick the ' +
+          'boxes to mark the thread resolved there too, or, with nothing ' +
+          'written, to put 👍 on the newest reply. Either way the card moves ' +
+          'to Done. Reopen is one click from there.',
         reply: true,
         resolves: true,
         thumbsUp: true,
@@ -386,7 +386,9 @@ const ENTRIES = {
                 : 'Resolve on GitHub'
             : typed
               ? 'Post reply and resolve on the board'
-              : 'Resolve, posting nothing to GitHub',
+              : thumbing
+                ? 'Resolve on the board and put 👍 on the newest reply'
+                : 'Resolve, posting nothing to GitHub',
       },
       inPhase: {
         answered: { label: 'Resolve', weight: 'primary' },
@@ -433,7 +435,7 @@ const ENTRIES = {
       inPhase: {
         answered: { label: 'Reply and resolve', weight: 'primary' },
         waiting: { label: 'Reply and resolve' },
-        'assumed-done': { label: 'Reply and resolve' },
+        'assumed-done': { label: 'Reply and resolve', weight: 'ghost' },
         'not-mine': { label: 'Reply and resolve' },
         deferred: { label: 'Reply and resolve' },
       },
@@ -450,6 +452,7 @@ const ENTRIES = {
       'moves this mention to Done on the board with nothing posted to GitHub — ' +
       'no reply, no 👍, nothing resolved there',
     asks: null,
+    reviewer: { inPhase: { 'assumed-done': { weight: 'ghost' } } },
     request: () => ({
       verb: 'resolve',
       body: { delete_comment: false, thumbs_up: false },
@@ -544,23 +547,18 @@ const ENTRIES = {
     label: 'Confirm',
     weight: 'primary',
     title:
-      'resolves the thread on GitHub and posts any reply you write — left ' +
-      'empty, it puts 👍 on the newest reply instead',
+      'moves this card to Done and asks whether to resolve the thread on ' +
+      "GitHub and put 👍 on the author's message there",
     asks: {
-      question: 'Confirm and resolve this conversation?',
+      question: 'Confirm this conversation?',
       note:
-        'Anything you write is posted to GitHub as your reply, and the thread ' +
-        'is marked resolved there. Left empty, the board puts 👍 on the newest ' +
-        'reply, unless you untick it. The card moves to Done. Reopen is one ' +
-        'click from there.',
-      reply: true,
+        'The card moves to Done. Untick what should not happen on GitHub. ' +
+        'Reopen is one click from there.',
+      reply: false,
+      resolves: true,
+      resolving: true,
       thumbsUp: true,
-      submit: (typed, _resolving, thumbing) =>
-        typed
-          ? 'Reply and resolve on GitHub'
-          : thumbing
-            ? 'Resolve on GitHub and put 👍 on the newest reply'
-            : 'Resolve on GitHub',
+      submit: () => 'Confirm',
     },
     request: resolveRequest,
     doing: 'confirming',
@@ -827,6 +825,16 @@ const MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
   deferred: ['unpark', 'resolve-here'],
 };
 
+const REVIEW_MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
+  ...MENTION_OFFERS,
+  'assumed-done': [
+    'confirm-resolve',
+    'place',
+    'resolve-here',
+    'resolve-on-board',
+  ],
+};
+
 export function keyOf(decision: Decision): string {
   return ENTRIES[decision].key;
 }
@@ -939,8 +947,10 @@ export function offered(
   if (busy(conversation)) return [];
   if (role === 'reviewer') {
     const phase = reviewerPhase(conversation);
+    const mentionOffers =
+      conversation.kind === 'review' ? REVIEW_MENTION_OFFERS : MENTION_OFFERS;
     const offers =
-      (conversation.mention ? MENTION_OFFERS[phase] : undefined) ??
+      (conversation.mention ? mentionOffers[phase] : undefined) ??
       REVIEWER_OFFERS[phase] ??
       [];
     return offers.map((decision) => reviewerOffer(decision, phase));

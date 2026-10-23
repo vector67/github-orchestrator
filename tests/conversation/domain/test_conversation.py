@@ -981,6 +981,27 @@ def test_resolving_a_reviewer_thread_without_the_thumbs_up_resolves_and_reacts_t
     assert _held(threads).standing is ConversationState.DONE
 
 
+def test_a_reviewers_resolve_kept_on_the_board_still_thumbs_up_the_newest_other_comment(settings):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+
+    _asked(threads, "resolve")
+
+    assert not _on_github(here).is_resolved
+    assert here.github.reactions == {5002: ["+1"]}
+    assert _held(threads).standing is ConversationState.DONE
+
+
+def test_a_reviewers_resolve_kept_on_the_board_without_the_thumbs_up_reacts_to_nothing(settings):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+
+    _asked(threads, "resolve", thumbs_up=False)
+
+    assert here.github.reactions == {}
+    assert _held(threads).standing is ConversationState.DONE
+
+
 def test_a_thread_with_only_the_openers_comments_gets_no_reaction(settings):
     here = _here(settings)
     threads = _reviewer(here, _comment(author="reviewer"),
