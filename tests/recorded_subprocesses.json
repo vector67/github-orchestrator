@@ -42127,6 +42127,21 @@
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
     {
      "argv": [
@@ -42601,6 +42616,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
@@ -43499,6 +43529,21 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 6a7c386af39134dfaf613876b1b098509a02b723\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/seed\", \"add\", \"m\"], null, null]": [
