@@ -119,6 +119,7 @@ class FakeWorkingCopies:
         self.pushes = 0
         self.on_push: Callable[[], None] | None = None
         self.on_pick: Callable[[], None] | None = None
+        self.on_fetch: Callable[[], None] | None = None
         self.on_cut: Callable[[], None] | None = None
         self._push_refusal: str | None = None
         self._push_refusals_left: int | None = None
@@ -473,7 +474,15 @@ class FakeWorkingCopies:
         return None
 
     def _reset(self, worktree: str, sha: str) -> str | None:
-        self._advance(self.checkouts[_key(worktree)], sha)
+        checkout = self.checkouts[_key(worktree)]
+        head, target = self._head(worktree), self.commits[sha].tree
+        tracked = {} if head is None else self.commits[head].tree
+        overwritten = sorted(name for name in checkout.edits
+                             if name not in tracked and name in target)
+        if overwritten:
+            return (f"error: Untracked working tree file '{overwritten[0]}' would be "
+                    "overwritten by merge.")
+        self._advance(checkout, sha)
         return None
 
     def _head_sha(self, path: str | None) -> str | None:
@@ -488,6 +497,8 @@ class FakeWorkingCopies:
         except RuntimeError as exc:
             return str(exc)
         self._fetch_base(base_branch)
+        if self.on_fetch is not None:
+            self.on_fetch()
         return None
 
     def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None:
@@ -503,6 +514,9 @@ class FakeWorkingCopies:
             if ours and mine.get(name) != before.get(name) != theirs.get(name)
             and mine.get(name) != theirs.get(name)))
         return BaseStanding(behind_by=len(behind), conflicts=conflicts, fetched_at=self.fetched_at)
+
+    def _branch_at(self, worktree: str) -> str | None:
+        return self.branch_at(worktree)
 
     def _origin_head(self, worktree: str) -> str | None:
         branch = self.branch_at(worktree)

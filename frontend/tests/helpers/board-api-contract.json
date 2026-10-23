@@ -3456,6 +3456,7 @@
     "agent-working",
     "no-agent-working",
     "uncommitted-changes",
+    "not-diverged",
     "server-error"
    ],
    "type": "string"
@@ -7074,6 +7075,9 @@
      "pattern": "^[A-Za-z0-9_-]+$",
      "type": "string"
     },
+    "mention": {
+     "type": "boolean"
+    },
     "record_state": {
      "$ref": "#/components/schemas/RecordState"
     },
@@ -7096,7 +7100,8 @@
     "state",
     "record_state",
     "author_kind",
-    "updated_at"
+    "updated_at",
+    "mention"
    ],
    "type": "object"
   },

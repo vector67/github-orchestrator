@@ -3,7 +3,7 @@ import pytest
 from github_orchestrator import preview
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, HeldVerdicts
 from github_orchestrator.board_api.fake import IDLE
-from github_orchestrator.board_api.interface import Dashboards, ServerApp
+from github_orchestrator.board_api.interface import Dashboards, KeptReviews, ServerApp
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -59,7 +59,7 @@ def client_for_preview(tmp_path, reviewer):
         dashboard_source_wiring(settings)).get(Dashboards)
     return served_board(here.conversation_managers, here.working_copies, pr=preview.PR,
                         manager=preview.manager_panel(
-                            preview.running(dashboards.dashboard(preview.PR))))
+                            lambda: preview.running(dashboards.dashboard(preview.PR))))
 
 
 RUN_KINDS = {"first", "rebase", "rework", "retry", "start-session"}
@@ -155,9 +155,39 @@ def test_the_previews_own_container_serves_its_pr_on_the_server_app(tmp_path):
     assert web.get(f"{row['board_url']}/api/health").json()["serves"] == "board"
 
 
+def test_the_previews_pr_board_draws_its_dashboard_as_the_wall_does_after_a_queued_reset(tmp_path):
+    pr_processes = FakePrProcesses()
+    github = FakeGitHub()
+    agent_runs = HeldVerdicts(pr_processes)
+    panels = preview.PreviewPanels()
+    container, viewer = preview_container({}, tmp_path, data_dir=tmp_path,
+                                          repo=preview.PR.repo,
+                                          local_path=preview.worktree_in(tmp_path),
+                                          github=github, desktop=FakeDesktop(),
+                                          agent_runs=agent_runs, pr_processes=pr_processes,
+                                          agents_enabled=True, hub=preview.preview_hub(panels))
+    github.account = viewer
+    outside = preview.Outside(github, agent_runs, pr_processes, container.get(ChangeDetection))
+    preview.serve(tmp_path, viewer, outside,
+                  conversation_managers=container.get(ConversationManagerFactory),
+                  dashboards=container.get(Dashboards), panels=panels,
+                  sessions=FakeTerminalSessions(), reviews=container.get(KeptReviews),
+                  shape="diverged")
+    web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
+    board = f"/pr/{preview.PR.repo}/{preview.PR.number}/api"
+
+    web.post(f"{board}/pull-request/operations:queue-reset-to-origin")
+    [row] = web.get("/api/pull-requests").json()["pull_requests"]
+    drawn = web.get(f"{board}/dashboard").json()
+
+    assert drawn["system"]["reset_to_origin"] == row["dashboard"]["system"]["reset_to_origin"]
+    assert row["dashboard"]["system"]["reset_to_origin"] is not None
+    assert drawn["listed_at"] >= row["dashboard"]["listed_at"]
+
+
 def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_every_launcher(tmp_path):
     sessions = FakeTerminalSessions()
-    panel = preview.manager_panel(IDLE, sessions=sessions, worktree=str(tmp_path))
+    panel = preview.manager_panel(lambda: IDLE, sessions=sessions, worktree=str(tmp_path))
 
     assert panel.open_terminal("a") is None
     assert panel.open_terminal("new") is None
@@ -169,7 +199,7 @@ def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_every_launcher(
 
 def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_a_question(tmp_path):
     sessions = FakeTerminalSessions()
-    panel = preview.manager_panel(IDLE, sessions=sessions, worktree=str(tmp_path))
+    panel = preview.manager_panel(lambda: IDLE, sessions=sessions, worktree=str(tmp_path))
 
     assert panel.ask("Why this name?") is None
 

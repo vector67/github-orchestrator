@@ -1,6 +1,7 @@
 import logging
 
 from github_orchestrator.agent_runs import History, LastRun, Run
+from github_orchestrator.board_api import Dashboard
 from github_orchestrator.change_detection import ChangeDetection, CiFailed, Facts
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -189,7 +190,6 @@ class ManagerLoop:
     def _run_ended(self, run: Run, finished: LastRun) -> None:
         self._commands.active_run = None
         self._events.run_ended(run, finished)
-        self._resets.run_if_queued()
         fix_taken, self._fix_taken = self._fix_taken, None
         if fix_taken is not None and fix_taken[0] is run:
             self._finish(fix_taken[1], CiFailed.kind)
@@ -221,12 +221,12 @@ class ManagerLoop:
 
         wrong = self._freeze_on_wrong_branch(state.branch if state else None)
         waiting = self._worklist.waiting(pr)
-        dashboard = self._dashboards.drawn(config, self._conversations(), wrong=wrong,
-                                           run=self._commands.active_run,
-                                           notice=self._commands.notice())
-        self._status_files.write(dashboard)
+        dashboard = self._written_status(wrong)
+        if self._commands.active_run is None:
+            self._resets.run_if_queued()
         if wrong is not None:
             return
+        drawn_with = self._commands.active_run
 
         if self._interrupted:
             self._interrupted = False
@@ -257,3 +257,12 @@ class ManagerLoop:
                 pr, agent,
             )
             self._process_next_event(busy=True)
+        if self._commands.active_run is not drawn_with:
+            self._written_status(None)
+
+    def _written_status(self, wrong: WrongBranch | None) -> Dashboard:
+        dashboard = self._dashboards.drawn(self._config, self._conversations(), wrong=wrong,
+                                           run=self._commands.active_run,
+                                           notice=self._commands.notice())
+        self._status_files.write(dashboard)
+        return dashboard

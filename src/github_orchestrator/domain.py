@@ -88,6 +88,7 @@ class ThreadRow:
     state: str
     author_kind: AuthorKind
     updated_at: str | None
+    mention: bool
 
 
 class Listed(Protocol):

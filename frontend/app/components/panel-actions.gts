@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import DecideDialog from 'frontend/components/decide-dialog';
+import HoldWarning from 'frontend/components/hold-warning';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
   keyOf,
@@ -25,9 +26,12 @@ import didInsert from 'frontend/modifiers/did-insert';
 import type BoardService from 'frontend/services/board';
 import type ComposerService from 'frontend/services/composer';
 import type DraftsService from 'frontend/services/drafts';
+import type HereService from 'frontend/services/here';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
+import type PrControlsService from 'frontend/services/pr-controls';
 import type ReworkService from 'frontend/services/rework';
+import type StoreService from 'frontend/services/store';
 
 export interface PanelActionsSignature {
   Element: HTMLElement;
@@ -52,15 +56,43 @@ const COMPOSER = 'reply-box';
 
 const REPLY_KEY = keyOf('reply');
 
+const CLOSES_A_MENTION: Decision[] = [
+  'resolve-here',
+  'resolve-on-board',
+  'defer',
+];
+
+interface Warned {
+  decision: Decision;
+  gathered: Gathered;
+}
+
 export default class PanelActions extends Component<PanelActionsSignature> {
   @service declare board: BoardService;
   @service declare composer: ComposerService;
+  @service('pr-controls') declare controls: PrControlsService;
   @service declare drafts: DraftsService;
+  @service declare here: HereService;
   @service declare keys: KeysService;
   @service declare rework: ReworkService;
+  @service declare store: StoreService;
 
   @tracked asking: Decision | null = null;
   @tracked spec: DialogSpec | null = null;
+  @tracked warned: Warned | null = null;
+
+  get lastMentionOnAHeldPr(): boolean {
+    const pr = this.here.pr;
+    if (!pr || !this.store.pr(pr.repo, pr.number)?.flags?.on_hold) return false;
+    const open = this.store.summary(pr.repo, pr.number)?.openMentions ?? [];
+    return open.length === 1 && open[0] === this.args.conversationId;
+  }
+
+  private warningFor(decision: Decision, gathered: Gathered): Warned | null {
+    return CLOSES_A_MENTION.includes(decision) && this.lastMentionOnAHeldPr
+      ? { decision, gathered }
+      : null;
+  }
 
   held = (offered: Offer): boolean => {
     const draft = this.args.draft;
@@ -107,7 +139,8 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     } else if (offered.asks === 'composer') {
       this.compose();
     } else if (offered.asks === null) {
-      void this.post(offered.decision);
+      this.warned = this.warningFor(offered.decision, {});
+      if (!this.warned) void this.post(offered.decision);
     } else {
       this.asking = offered.decision;
       this.spec = offered.asks;
@@ -160,9 +193,28 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       return Promise.resolve(true);
     }
     this.cancel();
+    this.warned = decision ? this.warningFor(decision, { ...gathered }) : null;
+    if (this.warned) return Promise.resolve(true);
     return decision
       ? this.post(decision, { ...gathered })
       : Promise.resolve(false);
+  };
+
+  keepTheHold = () => {
+    const warned = this.warned;
+    this.warned = null;
+    if (warned) void this.post(warned.decision, warned.gathered);
+  };
+
+  resumeThePr = async () => {
+    const warned = this.warned;
+    this.warned = null;
+    if (!warned || !(await this.post(warned.decision, warned.gathered))) return;
+    this.controls.press(this.controls.onPage, 'hold');
+  };
+
+  cancelWarning = () => {
+    this.warned = null;
   };
 
   <template>
@@ -219,5 +271,12 @@ export default class PanelActions extends Component<PanelActionsSignature> {
         @cancel={{this.cancel}}
       />
     {{/each}}
+    {{#if this.warned}}
+      <HoldWarning
+        @keep={{this.keepTheHold}}
+        @resume={{this.resumeThePr}}
+        @cancel={{this.cancelWarning}}
+      />
+    {{/if}}
   </template>
 }

@@ -328,11 +328,17 @@ export default class PullRequestDiffService extends Service {
   }
 
   private get onto(): Commits | undefined {
-    return this.threads.pullRequest?.diffs[this.source];
+    return this.threads.pullRequest?.diffs.origin;
+  }
+
+  private get anchoredFrom(): DiffRange | null {
+    if (this.range) return this.range;
+    if (this.source !== 'local') return null;
+    return this.threads.pullRequest?.diffs.local ?? null;
   }
 
   private get anchors(): DiffAnchors | null | undefined {
-    const range = this.range;
+    const range = this.anchoredFrom;
     if (!range) return null;
     const onto = this.onto;
     return onto && this.store.anchors(range, onto);
@@ -364,8 +370,9 @@ export default class PullRequestDiffService extends Service {
   }
 
   get anchoring(): string {
+    const from = this.anchoredFrom;
     const onto = this.onto;
-    return `${this.drawing}>${onto ? commitsOf(onto) : ''}`;
+    return `${this.drawing}>${from ? commitsOf(from) : ''}>${onto ? commitsOf(onto) : ''}`;
   }
 
   load = () => {
@@ -381,8 +388,9 @@ export default class PullRequestDiffService extends Service {
   draw = () => {
     const range = this.range;
     if (range) void waitForPromise(this.drawn(this.pr, range));
+    const from = this.anchoredFrom;
     const onto = this.onto;
-    if (range && onto) void waitForPromise(this.readAnchors(range, onto));
+    if (from && onto) void waitForPromise(this.readAnchors(from, onto));
     const merging = this.merging;
     if (merging) void waitForPromise(this.readMerged(merging));
   };
@@ -472,7 +480,10 @@ export default class PullRequestDiffService extends Service {
   }
 
   private async readPushed(): Promise<void> {
-    await this.store.readPrCommits(this.here.at, 'origin');
+    await Promise.all([
+      this.store.readPrCommits(this.here.at, 'origin'),
+      this.read('origin'),
+    ]);
   }
 
   private async drawn(pr: PerPr, range: DiffRange): Promise<void> {

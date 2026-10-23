@@ -209,6 +209,76 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-pr-diff]').containsText('return rows');
     });
 
+    function divergedLocally() {
+      board().localDiff = {
+        base: 'ba5e000',
+        head: '10ca1e0',
+        files: [
+          changed('src/widgets/changes.py', [
+            added(19, '    return local'),
+            added(20, '    # only here'),
+          ]),
+        ],
+      };
+      board().anchors['ba5e000..10ca1e0'] = {
+        files: [
+          {
+            path: 'src/widgets/changes.py',
+            lines: [
+              { side: 'RIGHT', line: 19, onto: { side: 'RIGHT', line: 23 } },
+            ],
+          },
+        ],
+      };
+    }
+
+    const LOCAL_ROW = (end: string) =>
+      `[data-test-file="src/widgets/changes.py"] [data-test-end="${end}"]`;
+
+    test("a comment written on local is posted at the line it sits on in the pull request's head", async function (assert) {
+      divergedLocally();
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click(`${LOCAL_ROW('+19')} [data-test-add]`);
+
+      assert
+        .dom('[data-test-commenting]')
+        .hasText('Commenting on line +19 (line +23 in the latest commit)');
+
+      await fillIn('[data-test-comment-box] textarea', 'name it better');
+      await click('[data-test-box-save]');
+
+      assert.deepEqual(
+        board().posted.map((one) => [one.verb, one.body]),
+        [
+          [
+            'create-draft',
+            {
+              body: 'name it better',
+              path: 'src/widgets/changes.py',
+              line: 23,
+              side: 'RIGHT',
+              start_line: null,
+              start_side: null,
+            },
+          ],
+        ],
+      );
+    });
+
+    test("a local line the pull request's head lacks says so where the comment box would open, and nothing is posted", async function (assert) {
+      divergedLocally();
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click(`${LOCAL_ROW('+20')} [data-test-add]`);
+
+      assert
+        .dom(`${LOCAL_ROW('+20')} + [data-test-inline] [data-test-unplaced]`)
+        .hasText("This line doesn't exist in the latest commit");
+      assert.dom('[data-test-comment-box]').doesNotExist();
+      assert.deepEqual(board().posted, []);
+    });
+
     test('origin and local each say which head they draw', async function (assert) {
       await visit('/pr/o/r/7/diff');
 

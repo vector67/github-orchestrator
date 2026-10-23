@@ -297,8 +297,9 @@ export function threadRow(
   record_state: RecordState,
   author_kind: AuthorKind,
   updated_at = '2026-10-08T08:00:00Z',
+  mention = false,
 ): ThreadRow {
-  return { key, state, record_state, author_kind, updated_at };
+  return { key, state, record_state, author_kind, updated_at, mention };
 }
 
 export function check(
@@ -1140,6 +1141,7 @@ export class FakeBoard {
         record_state: row.record_state,
         author_kind: row.author_kind,
         updated_at: row.updated_at,
+        mention: row.mention,
       }),
     );
   }
@@ -1155,6 +1157,7 @@ export class FakeBoard {
           one.record_state,
           one.author_kind,
           one.updated_at ?? undefined,
+          one.mention,
         ),
       ),
       unreadable: this.unreadable,

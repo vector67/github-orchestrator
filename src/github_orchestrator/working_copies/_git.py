@@ -261,7 +261,7 @@ class GitWorkingCopies:
         return None if pushed.returncode == 0 else _threads.git_diagnostic(pushed)
 
     def _reset(self, worktree: str, sha: str) -> str | None:
-        return _threads.restore_head(worktree, sha)
+        return _threads.restore_head(worktree, sha, "--keep")
 
     def _head_sha(self, path: str | None) -> str | None:
         return _threads.worktree_head(path)
@@ -291,6 +291,9 @@ class GitWorkingCopies:
         conflicts = tuple(merged.stdout.splitlines()[1:]) if merged.returncode == 1 else ()
         return BaseStanding(behind_by=int(counted.stdout.strip()), conflicts=conflicts,
                             fetched_at=_modified_at(Path(worktree), fetch_head))
+
+    def _branch_at(self, worktree: str) -> str | None:
+        return self._status.current_branch(worktree)
 
     def _origin_head(self, worktree: str) -> str | None:
         branch = self._status.current_branch(worktree)

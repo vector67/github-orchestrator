@@ -126,6 +126,19 @@ class GitWorld:
     def check_out(self, worktree: Path, branch: str) -> None:
         git(worktree, "checkout", "-q", branch)
 
+    def start_branch(self, worktree: Path | str, branch: str) -> None:
+        git(Path(worktree), "checkout", "-q", "-b", branch)
+        git(Path(worktree), "push", "-q", "origin", branch)
+
+    def edit_while_fetching(self, worktree: Path | str, name: str, text: str) -> None:
+        saved = self.root / "saved-mid-fetch"
+        saved.write_text(text)
+        hook = self.repo_dir / ".git" / "hooks" / "reference-transaction"
+        hook.parent.mkdir(parents=True, exist_ok=True)
+        hook.write_text(f'#!/bin/sh\n[ "$1" = committed ] && cp "{saved}" "{Path(worktree) / name}"\n'
+                        "exit 0\n")
+        hook.chmod(0o755)
+
     def local_worktree(self, path: Path, branch: str) -> None:
         git(self.repo_dir, "worktree", "add", "-q", "-b", branch, str(path))
 
@@ -193,6 +206,15 @@ class FakeWorld:
 
     def check_out(self, worktree: Path, branch: str) -> None:
         self.fake.check_out(worktree, branch)
+
+    def start_branch(self, worktree: Path | str, branch: str) -> None:
+        head = self.fake.head_of(worktree)
+        assert head is not None
+        self.fake.origin[branch] = head
+        self.fake.check_out(worktree, branch)
+
+    def edit_while_fetching(self, worktree: Path | str, name: str, text: str) -> None:
+        self.fake.on_fetch = lambda: self.fake.edit(worktree, name, text)
 
     def local_worktree(self, path: Path, branch: str) -> None:
         self.fake.add_worktree(path, branch)
