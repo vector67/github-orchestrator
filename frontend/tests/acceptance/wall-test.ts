@@ -1591,6 +1591,31 @@ module('Acceptance | wall', function (hooks) {
     }
   });
 
+  test('after folding and unfolding Parked, j and Enter open the row j lands on and leave Parked unfolded', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9));
+    await visit('/');
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+
+    await press('j');
+    await press('Enter');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
+    await visit('/');
+    assert.deepEqual(rows(), ['o/r#7', 'o/r#9']);
+  });
+
+  test('j after focusing the gear hands Enter to the row j lands on', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/');
+    await focus('[data-test-settings-open]');
+
+    await press('j');
+    await press('Enter');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
+  });
+
   test('a held c carries on once, however often the key repeats', async function (assert) {
     onTheHub(
       heldPr({
