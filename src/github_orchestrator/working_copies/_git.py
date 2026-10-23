@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import subprocess
 import threading
@@ -305,6 +306,17 @@ class GitWorkingCopies:
         except (OSError, subprocess.TimeoutExpired):
             return None
         return found.stdout.strip() or None if found.returncode == 0 else None
+
+    def _in_the_way(self, worktree: str, head: str, target: str) -> tuple[str, ...] | None:
+        try:
+            added = _threads.run_git(worktree, "diff", "--name-only", "-z", "--no-renames",
+                                     "--diff-filter=A", "--end-of-options", head, target)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if added.returncode != 0:
+            return None
+        return tuple(path for path in added.stdout.split("\0")
+                     if path and os.path.lexists(Path(worktree) / path))
 
     def _descends(self, path: str | None, onto: str, head: str) -> bool:
         return _threads.is_ancestor(path, onto, head)

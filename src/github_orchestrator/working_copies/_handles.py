@@ -57,6 +57,8 @@ class Git(Protocol):
 
     def _origin_head(self, worktree: str) -> str | None: ...
 
+    def _in_the_way(self, worktree: str, head: str, target: str) -> tuple[str, ...] | None: ...
+
     def _branch_at(self, worktree: str) -> str | None: ...
 
     def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None: ...
@@ -207,6 +209,13 @@ class BoundCheckout:
         origin = self.git._origin_head(located.path)
         if origin is None:
             return "origin holds no branch for the worktree to reset to"
+        head = self.git._head_sha(located.path)
+        in_the_way = None if head is None else self.git._in_the_way(located.path, head, origin)
+        if in_the_way is None:
+            return "git could not say what origin's branch adds, so the worktree was left as it is"
+        if in_the_way:
+            return (f"origin's branch adds {', '.join(in_the_way)}, which the worktree holds "
+                    "untracked or ignored, so it was left as it is")
         return self.git._reset(located.path, origin)
 
     def base_standing(self, base_branch: str | None) -> BaseStanding | None:

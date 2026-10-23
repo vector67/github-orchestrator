@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from github_orchestrator.domain import Sha
@@ -36,3 +38,38 @@ def test_a_reset_in_a_clone_that_fetches_only_main_lands_on_origins_current_head
     assert git_checkout.reset_to_origin(BRANCH, "main") is None
 
     assert git_checkout.local_head() == Sha(rewritten)
+
+
+def _origin_tracks(world, name, text):
+    seed = world.root / "seed"
+    (seed / name).write_text(text)
+    git(seed, "add", "-f", name)
+    git(seed, "commit", "-q", "-m", f"track {name}")
+    git(seed, "push", "-q", "--force", "origin", BRANCH)
+
+
+def test_a_reset_leaves_an_ignored_file_that_origin_now_tracks_as_it_is(
+        git_world, git_worktree, git_checkout):
+    git_world.commit(git_worktree, {".gitignore": "secret.env\n"}, "ignore the secret")
+    (git_worktree / "secret.env").write_text("the only copy of the key\n")
+    _origin_tracks(git_world, "secret.env", "placeholder\n")
+
+    refused = git_checkout.reset_to_origin(BRANCH, "main")
+
+    assert refused is not None and "secret.env" in refused
+    assert (git_worktree / "secret.env").read_text() == "the only copy of the key\n"
+
+
+def test_a_reset_leaves_a_file_excluded_in_info_exclude_that_origin_now_tracks_as_it_is(
+        git_world, git_worktree, git_checkout):
+    common = Path(git(git_worktree, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    (common / "info").mkdir(exist_ok=True)
+    (common / "info" / "exclude").write_text("notes.md\n")
+    git_world.commit(git_worktree, {"h": "local\n"}, "local work")
+    (git_worktree / "notes.md").write_text("hours of notes\n")
+    _origin_tracks(git_world, "notes.md", "origin's notes\n")
+
+    refused = git_checkout.reset_to_origin(BRANCH, "main")
+
+    assert refused is not None and "notes.md" in refused
+    assert (git_worktree / "notes.md").read_text() == "hours of notes\n"

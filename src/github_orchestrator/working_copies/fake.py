@@ -522,6 +522,11 @@ class FakeWorkingCopies:
         branch = self.branch_at(worktree)
         return None if branch is None else self.fetched.get(branch)
 
+    def _in_the_way(self, worktree: str, head: str, target: str) -> tuple[str, ...] | None:
+        held, added = self.commits[head].tree, self.commits[target].tree
+        return tuple(sorted(name for name in self.checkouts[_key(worktree)].edits
+                            if name not in held and name in added))
+
     def _descends(self, path: str | None, onto: str, head: str) -> bool:
         if not path or not (Sha.parse(onto) is not None and Sha.parse(head) is not None):
             return False
