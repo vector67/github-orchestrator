@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -542,6 +542,39 @@ def test_the_watched_repos_are_listed_as_the_file_writes_them(tmp_path):
     assert [(str(entry.repo), entry.local_path, entry.new_worktree_command)
             for entry in listed] == [("acme/widgets", "~/src/widgets", "cp .env ."),
                                      ("acme/gadgets", "/src/gadgets", None)]
+
+
+FIRST_START = datetime(2026, 10, 23, 9, 0, tzinfo=timezone.utc)
+LATER = datetime(2026, 10, 24, 9, 30, tzinfo=timezone.utc)
+
+
+def test_a_config_with_no_mentions_start_is_stamped_now_above_what_it_already_says(tmp_path):
+    toml_file = write_config(tmp_path, "# the hub's own words\nhub_port = 8721\n")
+    before = toml_file.read_text()
+
+    started = read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+
+    assert started == FIRST_START
+    assert toml_file.read_text() == f'mentions_start = "{FIRST_START.isoformat()}"\n' + before
+    assert load_config(toml_file).hub_port == 8721
+
+
+def test_a_stamped_mentions_start_is_read_back_and_not_stamped_again(tmp_path):
+    toml_file = write_config(tmp_path)
+    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+
+    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+
+
+def test_moving_the_mentions_start_rewrites_its_one_line(tmp_path):
+    toml_file = write_config(tmp_path)
+    config_file = read_from(toml_file).get(ConfigFile)
+    config_file.mentions_start(FIRST_START)
+
+    config_file.move_mentions_start(LATER)
+
+    assert config_file.mentions_start(FIRST_START) == LATER
+    assert toml_file.read_text().count("mentions_start") == 1
 
 
 def test_a_config_that_will_not_parse_lists_no_repos(tmp_path):

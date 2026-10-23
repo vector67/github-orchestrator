@@ -186,6 +186,11 @@ gh_account = "your-github-username"
 # check; status and update still ask when you run them.
 # check_for_updates = true
 
+# The board's mentions counter counts the mentions of you made since this
+# moment. The hub writes it here the first time it starts and moves it forward
+# each time nothing is left to count, so leave it to the hub.
+# mentions_start = "2026-10-23T09:00:00+00:00"
+
 # Cap on concurrent per-thread agents.
 # max_thread_runs = 4
 

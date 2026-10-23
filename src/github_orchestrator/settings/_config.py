@@ -81,6 +81,7 @@ class OrchestratorConfig:
     tracker: Tracker = Tracker.NONE
     tracker_project: str = ""
     check_for_updates: bool = True
+    mentions_start: str = ""
     repos: tuple[RepoEntry, ...] = ()
 
 
@@ -416,6 +417,14 @@ def _tidied(data_dir: Path) -> list[Path]:
     return removed
 
 
+_MENTIONS_START = "mentions_start"
+_MENTIONS_START_LINE = re.compile(rf"^{_MENTIONS_START}\s*=.*$", re.MULTILINE)
+
+
+def _mentions_start_line(at: datetime) -> str:
+    return f"{_MENTIONS_START} = {_toml_string(at.isoformat())}"
+
+
 class TomlConfigFile:
     def __init__(self, path: Path, problem: ConfigError | None, setup_command: str,
                  restart_command: str, data_dir: Path) -> None:
@@ -488,6 +497,22 @@ class TomlConfigFile:
              **({"new_worktree_command": clone.new_worktree_command}
                 if clone.new_worktree_command else {})}
             for repo, clone in repos.items()])
+
+    def mentions_start(self, now: datetime) -> datetime:
+        written = _read(self._path).get(_MENTIONS_START)
+        if written:
+            return datetime.fromisoformat(written)
+        self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
+        return now
+
+    def move_mentions_start(self, to: datetime) -> None:
+        self._replace(_MENTIONS_START_LINE.sub(_mentions_start_line(to), self._path.read_text(),
+                                               count=1))
+
+    def _replace(self, text: str) -> None:
+        writing = self._path.with_name(f"{self._path.name}.writing")
+        writing.write_text(text)
+        os.replace(writing, self._path)
 
     def move_aside(self, now: datetime) -> str:
         moved = self._path.with_name(f"{self._path.name}.broken-{now:%Y%m%d-%H%M%S}")
