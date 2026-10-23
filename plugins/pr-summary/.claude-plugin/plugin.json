@@ -1,6 +1,6 @@
 {
   "name": "pr-summary",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Summarise a pull request by what was requested, what its authors claim, what its code and tests do, why it was needed, and where those disagree.",
   "license": "MIT"
 }
