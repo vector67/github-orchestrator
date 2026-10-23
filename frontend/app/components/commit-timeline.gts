@@ -70,11 +70,19 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     return () => watching.disconnect();
   };
 
-  get dropped(): string {
+  private get counted(): string {
     const here = this.args.timeline.header.diverged?.here ?? 0;
     return here === 1
-      ? "Its 1 commit that isn't on origin will be dropped."
-      : `Its ${here} commits that aren't on origin will be dropped.`;
+      ? "Its 1 commit that isn't on origin"
+      : `Its ${here} commits that aren't on origin`;
+  }
+
+  get dropped(): string {
+    return `${this.counted} will be dropped.`;
+  }
+
+  get droppedLater(): string {
+    return `${this.counted} will be dropped, and so will any commits the agent makes before then.`;
   }
 
   private clicked(event: MouseEvent): void {
@@ -164,12 +172,23 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               class="timeline-behind"
               data-test-diverged
             >{{@timeline.header.diverged.chip}}</span>
-            <button
-              type="button"
-              class="btn timeline-reset"
-              data-test-reset-to-origin
-              {{on "click" @reset.ask}}
-            >Reset to origin</button>
+            {{#if @reset.standing.queued}}
+              <span class="timeline-reset-queued" data-test-reset-queued>Reset
+                queued until the agent finishes
+                <button
+                  type="button"
+                  class="btn timeline-reset"
+                  data-test-reset-unqueue
+                  {{on "click" @reset.unqueue}}
+                >Cancel</button></span>
+            {{else}}
+              <button
+                type="button"
+                class="btn timeline-reset"
+                data-test-reset-to-origin
+                {{on "click" @reset.ask}}
+              >Reset to origin</button>
+            {{/if}}
           {{/if}}
         </p>
         <span class="timeline-presets" role="group" aria-label="pick a range">
@@ -193,14 +212,26 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             aria-label="reset the worktree to origin"
             data-test-reset-confirm
           >
-            <p class="timeline-reset-question">Reset the worktree to origin?
-              {{this.dropped}}</p>
-            <button
-              type="button"
-              class="btn"
-              data-test-reset-yes
-              {{on "click" @reset.confirm}}
-            >Reset</button>
+            {{#if (eq @reset.confirming "later")}}
+              <p class="timeline-reset-question">Reset the worktree to origin
+                when the agent finishes?
+                {{this.droppedLater}}</p>
+              <button
+                type="button"
+                class="btn"
+                data-test-reset-yes
+                {{on "click" @reset.confirm}}
+              >Reset when it finishes</button>
+            {{else}}
+              <p class="timeline-reset-question">Reset the worktree to origin?
+                {{this.dropped}}</p>
+              <button
+                type="button"
+                class="btn"
+                data-test-reset-yes
+                {{on "click" @reset.confirm}}
+              >Reset</button>
+            {{/if}}
             <button
               type="button"
               class="btn"
@@ -211,11 +242,29 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         {{/if}}
       {{/if}}
       {{#if @reset.refused}}
-        <p
-          class="timeline-reset-refused"
-          role="status"
-          data-test-reset-refused
-        >{{@reset.refused}}</p>
+        <p class="timeline-reset-refused" role="status" data-test-reset-refused>
+          {{@reset.refused}}
+          {{#if @reset.offerLater}}
+            <button
+              type="button"
+              class="btn timeline-reset"
+              data-test-reset-later
+              {{on "click" @reset.askLater}}
+            >Reset when the agent finishes</button>
+          {{/if}}
+        </p>
+      {{/if}}
+      {{#if @reset.standing.outcome}}
+        <p class="timeline-reset-outcome" role="status" data-test-reset-outcome>
+          {{@reset.standing.outcome}}
+          <button
+            type="button"
+            class="btn timeline-reset"
+            aria-label="dismiss"
+            data-test-reset-dismiss
+            {{on "click" @reset.unqueue}}
+          >×</button>
+        </p>
       {{/if}}
       <div
         class="timeline-scroll"

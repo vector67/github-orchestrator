@@ -93,6 +93,7 @@ import {
   placeOf,
   prHeaderOf,
   readOf,
+  resetStandingOf,
   shownOf,
   stepperOf,
   commitNoteOf,
@@ -106,6 +107,7 @@ import {
   type Outstanding,
   type Place,
   type PrHeader,
+  type ResetStanding,
   type Shown,
   type Stepper,
   type CommitNote,
@@ -130,6 +132,7 @@ export type {
   OutstandingGroup,
   OutstandingItem,
   PrHeader,
+  ResetStanding,
   Summaries,
   Pip,
   PipState,
@@ -452,6 +455,12 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  resetStanding(repo: string, number: number): ResetStanding | null {
+    return resetStandingOf(
+      this.prs[keyOf(repo, number)]?.drawn?.system.reset_to_origin,
+    );
   }
 
   outstanding(repo: string, number: number): Outstanding | null {
@@ -943,11 +952,17 @@ export default class StoreService extends Service {
     );
   }
 
-  async resetToOrigin(pr: Numbered): Promise<Refusal | null> {
+  async resetToOrigin(
+    pr: Numbered,
+    verb:
+      'reset-to-origin' | 'queue-reset-to-origin' | 'cancel-reset-to-origin',
+  ): Promise<Refusal | null> {
     try {
       await handed(
-        `${this.here.prefixOf(pr)}/api/pull-request/operations:reset-to-origin`,
+        `${this.here.prefixOf(pr)}/api/pull-request/operations:${verb}`,
       );
+      const drawn = await this.ask({ kind: 'dashboard', pr }, null);
+      if (drawn.changed) drawn.take();
       return null;
     } catch (trouble) {
       if (trouble instanceof Refusal) return trouble;

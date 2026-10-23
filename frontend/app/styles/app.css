@@ -4794,6 +4794,18 @@ button.tree-row[aria-current="true"] {
   font-size: var(--fs-s);
 }
 
+.timeline-reset-queued {
+  margin-left: 8px;
+  font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.timeline-reset-outcome {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
 .timeline-reset-refused {
   margin: 0;
   font-size: var(--fs-s);

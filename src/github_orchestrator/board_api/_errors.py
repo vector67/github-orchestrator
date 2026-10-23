@@ -47,6 +47,10 @@ PR_COMMITS_FAILED = {"description": "git could not list the commits, or find the
 NO_SUCH_MARKED_COMMIT = {"description": "The repository has no such commit.",
                          "model": Errors}
 
+RESET_NOT_QUEUED = {"description": "No agent is working in the worktree, so there "
+                                    "is no run to wait for.",
+                     "model": Errors}
+
 RESET_REFUSED = {"description": "The worktree was left as it was: an agent is "
                                  "working in it, or it holds uncommitted changes.",
                   "model": Errors}

@@ -14,6 +14,7 @@ from github_orchestrator.pr_manager._command_file import Command
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import DashboardSource
+from github_orchestrator.pr_manager._reset import QueuedReset
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_manager.interface import Front
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
@@ -34,8 +35,9 @@ class ManagerLoop:
                  worklist: Worklist, working_copies: WorkingCopies, history: History,
                  conversation_managers: ConversationManagerFactory,
                  change_detection: ChangeDetection, dashboards: DashboardSource,
-                 status_files: StatusFiles) -> None:
+                 status_files: StatusFiles, resets: QueuedReset) -> None:
         self._config = config
+        self._resets = resets
         self._front = front
         self._commands = commands
         self._clock = clock
@@ -187,6 +189,7 @@ class ManagerLoop:
     def _run_ended(self, run: Run, finished: LastRun) -> None:
         self._commands.active_run = None
         self._events.run_ended(run, finished)
+        self._resets.run_if_queued()
         fix_taken, self._fix_taken = self._fix_taken, None
         if fix_taken is not None and fix_taken[0] is run:
             self._finish(fix_taken[1], CiFailed.kind)

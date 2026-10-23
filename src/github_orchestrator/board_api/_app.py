@@ -94,6 +94,7 @@ from github_orchestrator.board_api._errors import (
     PR_COMMITS_FAILED,
     PR_DIFF_FAILED,
     PRECONDITION_FAILED,
+    RESET_NOT_QUEUED,
     RESET_REFUSED,
     TOO_LONG,
     UNREADABLE_RECORD,
@@ -124,7 +125,7 @@ from github_orchestrator.board_api._projection import (
 from github_orchestrator.board_api._reviewed import commit_of, kept
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
-from github_orchestrator.board_api.interface import ManagerPanel, Shelf
+from github_orchestrator.board_api.interface import ManagerPanel, ResetToOrigin, Shelf
 from github_orchestrator.conversation import (
     ConversationManager,
     Denied,
@@ -794,6 +795,34 @@ def reset_to_origin(board: Serving) -> Response:
     failed = board.git.fetch(board.conversations.facts().base_branch, reset=True)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
+    ResetToOrigin.forget(board.shelf)
+    return Response(status_code=204)
+
+
+@writes.post("/pull-request/operations:queue-reset-to-origin", status_code=204,
+             tags=["pull request"], operation_id="queueResetToOrigin",
+             responses={409: RESET_NOT_QUEUED},
+             summary="Reset the worktree to origin as soon as the agent's run ends.")
+def queue_reset_to_origin(board: Serving) -> Response:
+    """Kept beside the thread records, so it outlives a restart. When the run
+    ends the manager fetches origin and resets hard, as a reset asked for
+    now does, unless the worktree then holds uncommitted changes; the
+    dashboard's `reset_to_origin` says which. Commits the agent makes before
+    then are dropped too.
+    """
+    if board.manager.dashboard().working_on is None:
+        raise Refusal(409, ErrorCode.NO_AGENT_WORKING,
+                      "no agent is working in the worktree, so reset it now instead")
+    ResetToOrigin(queued_at=board.clock().strftime(AS_OF_FORMAT)).keep(board.shelf)
+    return Response(status_code=204)
+
+
+@writes.post("/pull-request/operations:cancel-reset-to-origin", status_code=204,
+             tags=["pull request"], operation_id="cancelResetToOrigin",
+             summary="Forget a queued reset, or what the last one did.")
+def cancel_reset_to_origin(board: Serving) -> Response:
+    """Doing nothing when nothing is kept."""
+    ResetToOrigin.forget(board.shelf)
     return Response(status_code=204)
 
 

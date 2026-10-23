@@ -1174,6 +1174,19 @@
     }
    }
   },
+  "/api/pull-request/operations:cancel-reset-to-origin": {
+   "post": {
+    "204": null
+   }
+  },
+  "/api/pull-request/operations:queue-reset-to-origin": {
+   "post": {
+    "204": null,
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/operations:reset-to-origin": {
    "post": {
     "204": null,
@@ -2862,6 +2875,16 @@
      },
      "type": "array"
     },
+    "reset_to_origin": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ResetToOrigin"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "threads": {
      "$ref": "#/components/schemas/ThreadCounts"
     },
@@ -2885,6 +2908,7 @@
     "queue",
     "on_hold",
     "unpushed_commits",
+    "reset_to_origin",
     "diverged",
     "threads",
     "base"
@@ -3415,6 +3439,7 @@
     "summary-refused",
     "harvest-extension-missing",
     "agent-working",
+    "no-agent-working",
     "uncommitted-changes",
     "server-error"
    ],
@@ -5946,6 +5971,46 @@
    },
    "required": [
     "body"
+   ],
+   "type": "object"
+  },
+  "ResetToOrigin": {
+   "properties": {
+    "queued_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "ran_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "refused": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "queued_at",
+    "ran_at",
+    "refused"
    ],
    "type": "object"
   },

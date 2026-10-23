@@ -11,6 +11,7 @@ import type {
   PullRequestCommits,
   ReadMark,
   RecordState,
+  ResetToOrigin,
   WitnessProgress,
   WallGroup,
   WallGroupName,
@@ -1023,6 +1024,28 @@ export function mergeNoteOf(
   return {
     came: merged && merged.filter((one) => !changed.has(one.path)).length,
     own: [...changed],
+  };
+}
+
+export interface ResetStanding {
+  queued: boolean;
+  outcome: string | null;
+  ranAt: string | null;
+}
+
+export function resetStandingOf(
+  kept: ResetToOrigin | null | undefined,
+): ResetStanding | null {
+  if (!kept) return null;
+  return {
+    queued: kept.queued_at !== null,
+    outcome:
+      kept.ran_at === null
+        ? null
+        : kept.refused === null
+          ? 'Reset to origin when the agent finished.'
+          : `The queued reset didn't run: ${kept.refused}`,
+    ranAt: kept.ran_at,
   };
 }
 

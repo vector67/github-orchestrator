@@ -6,6 +6,8 @@ from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     QueuedEvent,
+    ResetToOrigin,
+    Shelves,
     Told,
     UnpushedCommit,
 )
@@ -41,8 +43,9 @@ class DashboardSource:
                  history: History, worklist: Worklist, holds: Holds,
                  dismissals: Dismissals, working_copies: WorkingCopies,
                  conversation_managers: ConversationManagerFactory, pr_processes: PrProcesses,
-                 status_files: StatusFiles, told: Told) -> None:
+                 status_files: StatusFiles, told: Told, shelves: Shelves) -> None:
         self._config_of = config_of
+        self._shelves = shelves
         self._told = told
         self._clock = clock
         self._change_detection = change_detection
@@ -65,6 +68,7 @@ class DashboardSource:
         return self._status_files.laid_over(
             replace(drawn, unpushed_commits=unpushed,
                     diverged=bool(unpushed) and self._behind(worktree, pr),
+                    reset_to_origin=ResetToOrigin.kept(self._shelves.of(pr)),
                     base=self._base(pr)),
             manager=self._told.held().managers.get(pr))
 

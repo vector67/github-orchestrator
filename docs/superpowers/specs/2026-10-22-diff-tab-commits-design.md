@@ -128,7 +128,16 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     no backup (`PrCheckout.fetch(…, reset=True)`). It is refused, changing
     nothing, while an agent works in the worktree (`agent-working`) or it holds
     uncommitted changes (`uncommitted-changes`); the refusal shows under the
-    header as `Not reset: <why>`.
+    header as `Not reset: <why>`. Refused because an agent is working, it offers
+    **Reset when the agent finishes**, which asks `Reset the worktree to origin when the agent finishes? Its N commits that aren't on origin will be dropped, and so will any commits the agent makes before then.` and posts
+    `operations:queue-reset-to-origin`. The queued reset is kept beside the
+    thread records, so it outlives a restart, and the manager runs it the moment
+    the agent's run ends, through the same fetch and hard reset, unless the
+    worktree then holds uncommitted changes. While it waits the chip area reads
+    `Reset queued until the agent finishes` with a **Cancel**
+    (`operations:cancel-reset-to-origin`); afterwards the page says
+    `Reset to origin when the agent finished.` or `The queued reset didn't run: <why>`, with a × that forgets it. The dashboard carries it as
+    `system.reset_to_origin`.
     A new commit whose subject matches a read ghost's counts as read and carries
     `≈ read` above it. Ghosts cannot be picked. **Since my review** picks only
     the commits with no match. The header reads `now forked from <new>, was <old>`, and the note (decision 4) says `<b>Rebased since your review</b> (force-pushed <day date>). K of your read commits were rewritten onto newer main and matched by message; <b>M are new</b>.`

@@ -1226,6 +1226,107 @@ module(
       assert.dom('[data-test-diverged]').exists();
     });
 
+    function reviewedWith(resetToOrigin: {
+      queued_at: string | null;
+      ran_at: string | null;
+      refused: string | null;
+    }) {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: STALE_TWO,
+        },
+        system: { reset_to_origin: resetToOrigin },
+      });
+    }
+
+    function posted(verb: string): number {
+      return board().posted.filter((one) => one.verb === verb).length;
+    }
+
+    test('with an agent at work the refusal offers to reset when it finishes, asking first', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'agent-working',
+        detail: 'an agent is working in the worktree, so it was left as it is',
+      };
+      await click('[data-test-reset-yes]');
+
+      await click('[data-test-reset-later]');
+
+      assert
+        .dom('[data-test-reset-confirm]')
+        .hasText(
+          "Reset the worktree to origin when the agent finishes? Its 2 commits that aren't on origin will be dropped, and so will any commits the agent makes before then. Reset when it finishes Cancel",
+        );
+      assert.strictEqual(posted('queue-reset-to-origin'), 0);
+
+      await click('[data-test-reset-yes]');
+
+      assert.strictEqual(posted('queue-reset-to-origin'), 1);
+      assert
+        .dom('[data-test-reset-queued]')
+        .hasText('Reset queued until the agent finishes Cancel');
+      assert.dom('[data-test-reset-to-origin]').doesNotExist();
+      assert.dom('[data-test-reset-refused]').doesNotExist();
+    });
+
+    test('Cancel takes a queued reset off', async function (assert) {
+      reviewedWith({
+        queued_at: '2026-10-23T09:00:00Z',
+        ran_at: null,
+        refused: null,
+      });
+      await openLocal();
+
+      await click('[data-test-reset-unqueue]');
+
+      assert.strictEqual(posted('cancel-reset-to-origin'), 1);
+      assert.dom('[data-test-reset-queued]').doesNotExist();
+      assert.dom('[data-test-reset-to-origin]').exists();
+    });
+
+    test('once the agent finished the page says the queued reset ran', async function (assert) {
+      reviewedWith({
+        queued_at: null,
+        ran_at: '2026-10-23T09:30:00Z',
+        refused: null,
+      });
+      board().localCommits = null;
+      await openLocal();
+
+      assert
+        .dom('[data-test-reset-outcome]')
+        .hasText('Reset to origin when the agent finished. ×');
+      assert.dom('[data-test-diverged]').doesNotExist();
+
+      await click('[data-test-reset-dismiss]');
+
+      assert.strictEqual(posted('cancel-reset-to-origin'), 1);
+      assert.dom('[data-test-reset-outcome]').doesNotExist();
+    });
+
+    test("once the agent finished the page says why a queued reset didn't run", async function (assert) {
+      reviewedWith({
+        queued_at: null,
+        ran_at: '2026-10-23T09:30:00Z',
+        refused:
+          'the worktree has uncommitted changes, so it was left as it is',
+      });
+      await openLocal();
+
+      assert
+        .dom('[data-test-reset-outcome]')
+        .hasText(
+          "The queued reset didn't run: the worktree has uncommitted changes, so it was left as it is ×",
+        );
+      assert.dom('[data-test-reset-to-origin]').exists();
+    });
+
     test('on origin there is no second lane and nothing about the worktree', async function (assert) {
       await visit('/pr/o/r/7/diff');
 

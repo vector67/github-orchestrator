@@ -88,6 +88,9 @@ class ErrorCode(StrEnum):
     AGENT_WORKING is a reset of the worktree asked for while an agent run is
     going in it; queueing the reset for when the run ends is the way on.
 
+    NO_AGENT_WORKING is a reset queued for when the agent's run ends while
+    no run is going; resetting now is the way on.
+
     UNCOMMITTED_CHANGES is a reset of the worktree asked for while it holds
     changes nobody committed, which a reset would throw away.
 
@@ -144,6 +147,7 @@ class ErrorCode(StrEnum):
     SUMMARY_REFUSED = "summary-refused"
     HARVEST_EXTENSION_MISSING = "harvest-extension-missing"
     AGENT_WORKING = "agent-working"
+    NO_AGENT_WORKING = "no-agent-working"
     UNCOMMITTED_CHANGES = "uncommitted-changes"
     SERVER_ERROR = "server-error"
 
@@ -1424,6 +1428,19 @@ class UnpushedCommit(BaseModel):
     subject: str = Field(description="The first line of its message.")
 
 
+class ResetToOrigin(BaseModel):
+    """A reset of the worktree to origin, queued or carried out."""
+
+    queued_at: str | None = Field(
+        description="When it was queued; null once it has run.")
+    ran_at: str | None = Field(
+        description="When the agent's run ended and the reset was tried; null while "
+                    "it waits.")
+    refused: str | None = Field(
+        description="Why the reset was not carried out when it was tried; null when "
+                    "it was, or while it waits.")
+
+
 class DashboardSystem(BaseModel):
     agent: AgentActivity
     last_run: LastRun | None = Field(
@@ -1437,6 +1454,10 @@ class DashboardSystem(BaseModel):
     unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")
+    reset_to_origin: ResetToOrigin | None = Field(
+        description="A reset of the worktree to origin queued for when the agent's run "
+                    "ends, or how the last queued one went. Null when none is queued "
+                    "or kept.")
     diverged: bool = Field(
         description="The worktree holds commits the pull request lacks and the pull "
                     "request holds commits the worktree lacks, as when origin was "

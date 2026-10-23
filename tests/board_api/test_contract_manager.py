@@ -8,6 +8,7 @@ from github_orchestrator.board_api.interface import (
     DismissUntil,
     ManagerStanding,
     QueuedEvent,
+    ResetToOrigin,
     UnpushedCommit,
 )
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
@@ -21,6 +22,7 @@ WORKING = replace(
     unpushed_commits=(UnpushedCommit("c0ffee1", "handle empty input"),
                       UnpushedCommit("badf00d", "add parser tests")),
     diverged=True,
+    reset_to_origin=ResetToOrigin(queued_at="2026-09-26T21:42:00Z"),
     base=BaseStanding(14, ("src/widgets/parser.py",), 1790000000.0),
     last_run_event="ci-failed",
     last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
@@ -56,6 +58,8 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
             "unpushed_commits": [{"sha": "c0ffee1", "subject": "handle empty input"},
                                  {"sha": "badf00d", "subject": "add parser tests"}],
             "diverged": True,
+            "reset_to_origin": {"queued_at": "2026-09-26T21:42:00Z", "ran_at": None,
+                                "refused": None},
             "threads": {"queued": 1, "live": 2, "proposed": 4, "drafts": 0},
             "base": {"behind_by": 14, "conflicts": ["src/widgets/parser.py"],
                      "fetched_at": "2026-09-21T14:13:20+00:00"},
