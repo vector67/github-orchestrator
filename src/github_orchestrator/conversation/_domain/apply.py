@@ -845,24 +845,25 @@ def _unresolves_on_github(conversation: Conversation) -> bool:
             and conversation.comment_type == KIND_REVIEW)
 
 
-def _newest_other_comment(conversation: Conversation) -> int | None:
+def _newest_other_comment(conversation: Conversation, viewer: str) -> int | None:
     for comment in reversed(conversation.comments):
-        if comment.author != conversation.author and comment.id is not None:
+        if comment.author != viewer and comment.id is not None:
             return comment.id
     return None
 
 
 def _thread_resolved(conversation: Conversation,
                      command: ThreadResolved) -> Accepted:
-    return _settled_with_thumbs_up(_github_resolved(conversation, True, None, command.at))
+    return _settled_with_thumbs_up(_github_resolved(conversation, True, None, command.at),
+                                   command.viewer)
 
 
-def _settled_with_thumbs_up(told: Conversation) -> Accepted:
+def _settled_with_thumbs_up(told: Conversation, viewer: str) -> Accepted:
     settled = _settled(told)
     if (told.closing_reply or told.closing_without_thumbs_up
-            or told.role != ROLE_REVIEWER):
+            or told.role != ROLE_REVIEWER or told.comment_type != KIND_REVIEW):
         return settled
-    comment_id = _newest_other_comment(told)
+    comment_id = _newest_other_comment(told, viewer)
     if comment_id is None:
         return settled
     return Accepted(settled.conversation,
@@ -896,7 +897,7 @@ def _closing(conversation: Conversation, command: Resolve) -> Accepted:
     if not command.reply:
         if _resolves_on_github(conversation):
             return Accepted(conversation, (ResolveThread(),))
-        return _settled_with_thumbs_up(conversation)
+        return _settled_with_thumbs_up(conversation, command.account)
     return Accepted(conversation, (PostReply(body=command.reply),))
 
 

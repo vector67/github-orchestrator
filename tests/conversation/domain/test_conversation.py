@@ -118,9 +118,9 @@ REPLY = _comment(id=5002, author="anna", body="also worker.py")
 BOT_NOTE = _comment(id=9999, author="octocat", body="\U0001F916 on it")
 ANCHORED = ThreadAnchor(is_outdated=True, start_line=8, original_line=44,
                         original_start_line=42, original_commit="cafe1")
-ANSWERED_THREAD = (_comment(author="reviewer"),
+ANSWERED_THREAD = (_comment(author="octocat"),
                    _comment(id=5002, author="jeffrey", body="fixed in a9296db"),
-                   _comment(id=5003, author="reviewer", body="thanks"))
+                   _comment(id=5003, author="octocat", body="thanks"))
 
 
 def _here(settings, *, github=None, agent_runs=None, remote=FakeWorkingCopies,
@@ -1027,13 +1027,43 @@ def test_a_reviewers_resolve_kept_on_the_board_without_the_thumbs_up_reacts_to_n
 
 def test_a_thread_with_only_the_openers_comments_gets_no_reaction(settings):
     here = _here(settings)
-    threads = _reviewer(here, _comment(author="reviewer"),
-                        _comment(id=5002, author="reviewer", body="and the caller too"))
+    threads = _reviewer(here, _comment(author="octocat"),
+                        _comment(id=5002, author="octocat", body="and the caller too"))
 
     _asked(threads, "resolve")
 
     assert _held(threads).standing is ConversationState.DONE
     assert here.github.reactions == {}
+
+
+def test_confirming_a_mention_i_answered_thumbs_up_the_mentioner_not_my_reply(settings):
+    here = _here(settings)
+    threads = _reviewer(here, _comment(author="anna", body="@octocat is this right?"),
+                        _comment(id=5002, author="octocat", body="yes, looks right"))
+
+    _asked(threads, "resolve", resolve=True)
+
+    assert here.github.reactions == {5001: ["+1"]}
+
+
+def test_confirming_a_mention_with_no_reply_thumbs_up_the_mentioner(settings):
+    here = _here(settings)
+    threads = _reviewer(here, _comment(author="anna", body="@octocat is this right?"))
+
+    _asked(threads, "resolve")
+
+    assert here.github.reactions == {5001: ["+1"]}
+
+
+def test_a_reviewers_resolve_of_a_conversation_comment_reacts_to_nothing(settings):
+    here = _here(settings)
+    threads = _open(here, *ANSWERED_THREAD, is_author=False, kind=CommentKind.ISSUE)
+
+    _asked(threads, "resolve")
+
+    assert here.github.reactions == {}
+    assert not _held(threads).fix.reply_note
+    assert _held(threads).standing is ConversationState.DONE
 
 
 def test_a_reviewers_resolve_not_asked_onto_github_posts_the_reply_and_settles_here_only(settings):
