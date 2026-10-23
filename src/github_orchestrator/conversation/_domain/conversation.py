@@ -246,6 +246,7 @@ class Step:
 class Anchor:
     is_outdated: bool = False
     side: Side | None = None
+    line: int | None = None
     start_line: int | None = None
     start_side: Side | None = None
     original_line: int | None = None

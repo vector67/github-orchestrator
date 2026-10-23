@@ -74,7 +74,7 @@ def _anchor_of(thread: Thread) -> Anchor | None:
     anchor = thread.anchor
     if anchor is None:
         return None
-    return Anchor(is_outdated=anchor.is_outdated, side=anchor.side,
+    return Anchor(is_outdated=anchor.is_outdated, side=anchor.side, line=thread.line,
                   start_line=anchor.start_line, start_side=anchor.start_side,
                   original_line=anchor.original_line,
                   original_start_line=anchor.original_start_line,

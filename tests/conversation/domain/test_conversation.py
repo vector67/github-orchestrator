@@ -133,10 +133,10 @@ def _here(settings, *, github=None, agent_runs=None, remote=FakeWorkingCopies,
     return here
 
 
-def _shows(here, *comments, kind=CommentKind.REVIEW, **fields):
+def _shows(here, *comments, kind=CommentKind.REVIEW, line=12, **fields):
     record = here.github.prs[THE_PR]
     record.threads = [one for one in record.threads if one.key != KEY]
-    path, line = (None, None) if kind is CommentKind.ISSUE else ("src/app.py", 12)
+    path, line = (None, None) if kind is CommentKind.ISSUE else ("src/app.py", line)
     on_github(here.github, KEY, *comments, kind=kind, path=path, line=line, **fields)
 
 
@@ -634,12 +634,12 @@ def test_a_reopen_takes_the_roots_current_wording_and_re_reads_the_thread(settin
     assert ("reviewer", "agreed") in asked.comments
 
 
-def _a_poll(here, threads, root, anchor=None):
-    return _polled(here, threads, root, anchor=anchor or ThreadAnchor())
+def _a_poll(here, threads, root, anchor=None, **fields):
+    return _polled(here, threads, root, anchor=anchor or ThreadAnchor(), **fields)
 
 
-def _a_reply(here, threads, root, anchor=None):
-    _shows(here, root, REPLY, anchor=anchor or ThreadAnchor())
+def _a_reply(here, threads, root, anchor=None, **fields):
+    _shows(here, root, REPLY, anchor=anchor or ThreadAnchor(), **fields)
     hear(threads)
     return _held(threads)
 
@@ -672,6 +672,29 @@ def test_a_range_github_moved_comes_back_in_step(settings, arrival):
 
     assert moved.original_start_line == 36
     assert moved.start_line is None
+
+
+@pytest.mark.parametrize("arrival", sorted(ARRIVALS))
+def test_a_line_github_moved_comes_back_in_step(settings, arrival):
+    here = _here(settings)
+    threads = _open(here)
+    _proposed(here, threads)
+
+    moved = ARRIVALS[arrival](here, threads, ROOT, line=30)
+
+    assert moved.line == 30
+
+
+@pytest.mark.parametrize("arrival", sorted(ARRIVALS))
+def test_a_thread_github_calls_outdated_loses_its_line(settings, arrival):
+    here = _here(settings)
+    threads = _open(here)
+    _proposed(here, threads)
+
+    outdated = ARRIVALS[arrival](here, threads, ROOT, line=None, anchor=ThreadAnchor(
+        is_outdated=True, original_line=12, original_commit="cafe1"))
+
+    assert (outdated.is_outdated, outdated.line) == (True, None)
 
 
 @pytest.mark.parametrize("arrival", sorted(ARRIVALS))

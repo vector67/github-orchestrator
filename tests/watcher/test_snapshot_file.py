@@ -60,7 +60,7 @@ def test_a_poll_writes_the_thread_cursor_beside_the_prs_thread_records(settings)
     written = (thread_dir(settings.threads_dir, THE_PR) / "poll.cursor").read_text()
 
     assert written.startswith('{"PRRT_one": {"comments": [[7, "')
-    assert written.endswith('"]], "is_resolved": false}}')
+    assert written.endswith('"]], "is_resolved": false, "line": 3}}')
 
 
 def test_a_restarted_watcher_raises_nothing_for_a_pr_that_did_not_change(settings):
