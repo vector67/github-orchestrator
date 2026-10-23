@@ -704,7 +704,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       relation: relationOf(input, base, merges.size),
       fork: stack ? '' : history.fork.slice(0, SHORT),
       was: oldFork && !stack ? oldFork.id.slice(0, SHORT) : null,
-      tip: stack || history.behind ? null : `${base}'s tip`,
+      tip: stack || history.behind || oldFork ? null : `${base}'s tip`,
       main: stack?.branch ?? base,
       behind: history.behind,
     },

@@ -1145,7 +1145,7 @@ module(
       assert
         .dom('[data-test-timeline-header]')
         .hasText(
-          `3 commits on PROJ-7-fix-the-widget · now forked from main at ${NEW_FORK}, was ${OLD_FORK}, main's tip`,
+          `3 commits on PROJ-7-fix-the-widget · now forked from main at ${NEW_FORK}, was ${OLD_FORK}`,
         );
       assert
         .dom('[data-test-ghost-shas]')
@@ -1261,7 +1261,7 @@ module(
       assert
         .dom('[data-test-commit-note]')
         .hasText(
-          'Rebased since your review (force-pushed Wed 21 Oct). 1 of your read commits were rewritten onto newer main and matched by message; 1 is new; 1 is read as it was. ×',
+          'Rebased since your review (force-pushed Wed 21 Oct). 1 of your read commits was rewritten onto newer main and matched by message; 1 is new; 1 is read as it was. ×',
         );
     });
 

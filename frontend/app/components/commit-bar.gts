@@ -46,6 +46,10 @@ export default class CommitBar extends Component<CommitBarSignature> {
     return `${count} ${count === 1 ? 'is' : 'are'} new`;
   }
 
+  get rewritten(): string {
+    return this.args.note?.rebased?.matched === 1 ? 'was' : 'were';
+  }
+
   get unchanged(): string {
     const count = this.args.note?.rebased?.unchanged ?? 0;
     return count === 1
@@ -191,7 +195,9 @@ export default class CommitBar extends Component<CommitBarSignature> {
               (force-pushed{{#if @note.rebased.pushedOn}}
                 {{@note.rebased.pushedOn}}{{/if}}).
               {{@note.rebased.matched}}
-              of your read commits were rewritten onto newer
+              of your read commits
+              {{this.rewritten}}
+              rewritten onto newer
               {{@base}}
               and matched by message;
               <b>{{this.fresh}}</b>{{#if @note.rebased.unchanged}};
