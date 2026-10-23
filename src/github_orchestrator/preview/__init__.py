@@ -222,7 +222,7 @@ def _answer(comment_id: int, body: str, when: str) -> ThreadComment:
 def reviewer_cards(viewer: str) -> tuple[Card, ...]:
     return (
         Card(9200001, "PRRT_answered",
-             "the author's answer to a thread you raised, at the top of Answered "
+             "the author's answer to a thread you raised, at the top of Ready for you "
              "because it is yours",
              "billing/reader.py", 96, author=viewer, author_name="",
              replies=(_answer(9200101, "Moved the guard into _collect().",
@@ -233,7 +233,7 @@ def reviewer_cards(viewer: str) -> tuple[Card, ...]:
              replies=(_answer(9200102, "Renamed it everywhere, thanks.",
                               "2026-09-12T11:30:00Z"),)),
         Card(9200003, "PRRT_answered_reopened",
-             "an answer that came back after you had spoken, first in Answered wearing "
+             "an answer that came back after you had spoken, first in Ready for you wearing "
              "the reopened mark",
              "billing/header.py", 40, author=viewer, author_name="",
              replies=(_answer(9200110, "Which units?", "2026-09-12T10:00:00Z"),)),

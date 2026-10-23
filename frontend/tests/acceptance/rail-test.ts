@@ -165,7 +165,7 @@ module('Acceptance | rail', function (hooks) {
 
     await visit('/pr/o/r/7/conversations');
 
-    assert.dom('[data-test-heading="ready"]').includesText('Answered');
+    assert.dom('[data-test-heading="ready"]').includesText('Ready for you');
     assert
       .dom('[data-test-heading="waiting"]')
       .includesText('Waiting on author');

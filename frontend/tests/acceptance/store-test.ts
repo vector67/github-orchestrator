@@ -117,7 +117,7 @@ module('Acceptance | one store', function (hooks) {
 
     await visit('/pr/o/r/7/conversations');
 
-    assert.dom('[data-test-heading="ready"]').includesText('Answered');
+    assert.dom('[data-test-heading="ready"]').includesText('Ready for you');
     assert
       .dom('[data-test-your-move]')
       .hasAttribute('data-move', 'not-reviewing');
@@ -140,7 +140,7 @@ module('Acceptance | one store', function (hooks) {
     board().manager = dashboard({ facts: { is_author: false } });
     await clock().tick(LIST);
 
-    assert.dom('[data-test-heading="ready"]').includesText('Answered');
+    assert.dom('[data-test-heading="ready"]').includesText('Ready for you');
   });
 
   test('an assumed done thread counts as done and one that is not mine is left out', async function (assert) {

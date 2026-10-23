@@ -72,7 +72,7 @@ module('Acceptance | board', function (hooks) {
     assert.true(currentURL().startsWith('/pr/o/r/7/conversations'));
   });
 
-  test('a reviewer’s columns use the queue’s words for the author’s answer', async function (assert) {
+  test('a reviewer’s columns read the same as the author’s', async function (assert) {
     board().actAs('reviewer');
 
     await visit('/pr/o/r/7/board');
@@ -81,7 +81,7 @@ module('Acceptance | board', function (hooks) {
       [...document.querySelectorAll('[data-test-column-name]')].map((node) =>
         node.textContent?.trim(),
       ),
-      ['Agent working', 'Answered', 'Needs a look', 'Waiting', 'Done'],
+      ['Agent working', 'Ready for you', 'Needs a look', 'Waiting', 'Done'],
     );
   });
 

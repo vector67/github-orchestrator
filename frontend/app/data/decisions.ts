@@ -614,7 +614,7 @@ const ENTRIES = {
     },
     reviewer: {
       title:
-        'brings this card back to Answered; from Done it unresolves the thread on ' +
+        'brings this card back to Ready for you; from Done it unresolves the thread on ' +
         'GitHub too, which is public',
       inPhase: {
         deferred: { label: 'Undefer' },

@@ -167,7 +167,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.dom('[data-test-next]').hasText('Next answered →');
-    assert.dom('[data-test-kicker]').includesText('1 of 1 answered');
+    assert.dom('[data-test-kicker]').includesText('1 of 1 ready');
   });
 
   test('resolve asks before it writes and offers an empty reply', async function (assert) {

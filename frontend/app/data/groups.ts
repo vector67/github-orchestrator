@@ -80,7 +80,6 @@ const AUTHOR_LABELS: Record<string, string> = {
 
 const REVIEWER_LABELS: Record<string, string> = {
   ...AUTHOR_LABELS,
-  ready: 'Answered',
   waiting: 'Waiting on author',
 };
 
@@ -188,8 +187,7 @@ const AUTHOR_COLUMNS: Group[] = [
 const REVIEWER_COLUMNS: Group[] = AUTHOR_COLUMNS.map((column) =>
   column.key === 'ready'
     ? {
-        key: 'ready',
-        label: 'Answered',
+        ...column,
         hint: 'The author answered your thread, and your drafts not posted yet',
       }
     : column.key === 'attention'
