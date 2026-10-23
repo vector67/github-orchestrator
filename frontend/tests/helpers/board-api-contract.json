@@ -3456,6 +3456,7 @@
     "agent-working",
     "no-agent-working",
     "uncommitted-changes",
+    "not-diverged",
     "server-error"
    ],
    "type": "string"

@@ -126,7 +126,15 @@ from github_orchestrator.board_api._projection import (
 from github_orchestrator.board_api._reviewed import commit_of, kept
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
-from github_orchestrator.board_api.interface import ManagerPanel, ResetToOrigin, Shelf
+from github_orchestrator.board_api.interface import (
+    Dashboard as ManagerDashboard,
+)
+from github_orchestrator.board_api.interface import (
+    ManagerPanel,
+    ManagerStanding,
+    ResetToOrigin,
+    Shelf,
+)
 from github_orchestrator.conversation import (
     ConversationManager,
     Denied,
@@ -795,22 +803,47 @@ def fetch_pull_request(board: Serving) -> Response:
     return Response(status_code=204)
 
 
+def _refuse_unless_diverged(dashboard: ManagerDashboard) -> None:
+    if not dashboard.diverged:
+        raise Refusal(409, ErrorCode.NOT_DIVERGED,
+                      "the worktree has not diverged from origin, so its commits are only "
+                      "unpushed and it was left as it is")
+
+
 @writes.post("/pull-request/operations:reset-to-origin", status_code=204,
              tags=["pull request"], operation_id="resetToOrigin",
              responses={409: RESET_REFUSED, 500: FETCH_FAILED},
-             summary="Fetch origin and reset the worktree hard to origin's head of the branch.")
+             summary="Fetch origin and reset the worktree to origin's head of the branch.")
 def reset_to_origin(board: Serving) -> Response:
     """For a worktree that has diverged from origin. The worktree's commits
     that origin lacks are dropped, with no backup. Refused, changing nothing,
-    while an agent works in the worktree or it holds uncommitted changes.
+    while its manager is not answering or is frozen, an agent works in the
+    worktree, it has not diverged, it holds another branch, or it holds
+    changes nobody committed, untracked files origin would overwrite among
+    them.
     """
-    if board.manager.dashboard().working_on is not None:
+    dashboard = board.manager.dashboard()
+    if dashboard.standing is not ManagerStanding.ANSWERING:
+        raise Refusal(409, ErrorCode.MANAGER_REFUSED,
+                      "the manager is not answering, so whether an agent works in the "
+                      "worktree is not known and it was left as it is")
+    if dashboard.frozen_on is not None:
+        raise Refusal(409, ErrorCode.MANAGER_REFUSED,
+                      f"the worktree holds {dashboard.frozen_on}, another branch, so it "
+                      "was left as it is")
+    if dashboard.working_on is not None:
         raise Refusal(409, ErrorCode.AGENT_WORKING,
                       "an agent is working in the worktree, so it was left as it is")
+    _refuse_unless_diverged(dashboard)
     if not board.git.is_clean():
         raise Refusal(409, ErrorCode.UNCOMMITTED_CHANGES,
                       "the worktree has uncommitted changes, so it was left as it is")
-    failed = board.git.fetch(board.conversations.facts().base_branch, reset=True)
+    facts = board.conversations.facts()
+    if facts.branch is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      "GitHub has not named the pull request's branch, so the worktree "
+                      "was left as it is")
+    failed = board.git.fetch(facts.base_branch, reset_branch=facts.branch)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
     ResetToOrigin.forget(board.shelf)
@@ -822,15 +855,18 @@ def reset_to_origin(board: Serving) -> Response:
              responses={409: RESET_NOT_QUEUED},
              summary="Reset the worktree to origin as soon as the agent's run ends.")
 def queue_reset_to_origin(board: Serving) -> Response:
-    """Kept beside the thread records, so it outlives a restart. When the run
-    ends the manager fetches origin and resets hard, as a reset asked for
-    now does, unless the worktree then holds uncommitted changes; the
-    dashboard's `reset_to_origin` says which. Commits the agent makes before
-    then are dropped too.
+    """Kept beside the thread records, so it outlives a restart. Once the run
+    ends, before the manager starts another, it fetches origin and resets as
+    a reset asked for now does, unless that would lose what a reset asked
+    for now refuses to; the dashboard's `reset_to_origin` says which.
+    Commits the agent makes before then are dropped too. Refused unless the
+    worktree has diverged from origin.
     """
-    if board.manager.dashboard().working_on is None:
+    dashboard = board.manager.dashboard()
+    if dashboard.working_on is None:
         raise Refusal(409, ErrorCode.NO_AGENT_WORKING,
                       "no agent is working in the worktree, so reset it now instead")
+    _refuse_unless_diverged(dashboard)
     ResetToOrigin(queued_at=board.clock().strftime(AS_OF_FORMAT)).keep(board.shelf)
     return Response(status_code=204)
 

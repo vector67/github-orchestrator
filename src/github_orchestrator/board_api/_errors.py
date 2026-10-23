@@ -48,11 +48,14 @@ NO_SUCH_MARKED_COMMIT = {"description": "The repository has no such commit.",
                          "model": Errors}
 
 RESET_NOT_QUEUED = {"description": "No agent is working in the worktree, so there "
-                                    "is no run to wait for.",
+                                    "is no run to wait for, or the worktree has not "
+                                    "diverged from origin.",
                      "model": Errors}
 
-RESET_REFUSED = {"description": "The worktree was left as it was: an agent is "
-                                 "working in it, or it holds uncommitted changes.",
+RESET_REFUSED = {"description": "The worktree was left as it was: its manager "
+                                 "is not answering or is frozen, an agent is working "
+                                 "in it, it has not diverged from origin, or it holds "
+                                 "uncommitted changes.",
                   "model": Errors}
 
 FETCH_FAILED = {"description": "git could not fetch the pull request's branch.",

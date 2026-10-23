@@ -1,7 +1,10 @@
+import json
 from dataclasses import replace
 
+import pytest
+
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
-from github_orchestrator.board_api.interface import ResetToOrigin
+from github_orchestrator.board_api.interface import ManagerStanding, ResetToOrigin
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from tests.board_api.support import (
     THE_PR,
@@ -15,15 +18,16 @@ from tests.board_api.support import (
 RESET = "/api/pull-request/operations:reset-to-origin"
 QUEUE = "/api/pull-request/operations:queue-reset-to-origin"
 CANCEL = "/api/pull-request/operations:cancel-reset-to-origin"
-WORKING = FakeManagerPanel(now=replace(IDLE, working_on="ci-failed"))
+DIVERGED = replace(IDLE, diverged=True)
+WORKING = FakeManagerPanel(now=replace(DIVERGED, working_on="ci-failed"))
 
 
 def reset_board(copies, manager=None, records=None):
-    serving = {} if manager is None else {"manager": manager}
+    serving = {"manager": manager or FakeManagerPanel(now=DIVERGED)}
     if records is not None:
         serving["records"] = records
     return client_of(board_on(fake_threads(working_copies=copies), base_branch="main",
-                              **serving))
+                              branch="feature", **serving))
 
 
 def diverged():
@@ -58,13 +62,55 @@ def test_a_worktree_with_uncommitted_changes_is_left_as_it_is():
 def test_a_worktree_an_agent_is_working_in_is_left_as_it_is():
     copies, _ = diverged()
     before = copies.head_of(WORKTREE)
-    working = FakeManagerPanel(now=replace(IDLE, working_on="ci-failed"))
+    working = FakeManagerPanel(now=replace(DIVERGED, working_on="ci-failed"))
 
     answer = reset_board(copies, working).post(RESET)
 
     assert answer.status_code == 409
     assert answer.json()["errors"][0]["code"] == "agent-working"
     assert copies.head_of(WORKTREE) == before
+
+
+@pytest.mark.parametrize("manager", [
+    FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.GONE)),
+    FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.STARTING)),
+    FakeManagerPanel(now=replace(DIVERGED, frozen_on="someone-elses-branch")),
+], ids=["gone", "starting", "frozen"])
+def test_a_worktree_whose_manager_cannot_say_no_agent_works_in_it_is_left_as_it_is(manager):
+    copies, _ = diverged()
+    before = copies.head_of(WORKTREE)
+
+    answer = reset_board(copies, manager).post(RESET)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "manager-refused"
+    assert copies.head_of(WORKTREE) == before
+
+
+@pytest.mark.parametrize(("operation", "working_on"), [(RESET, None), (QUEUE, "ci-failed")])
+def test_a_worktree_only_ahead_of_origin_keeps_its_unpushed_commits(operation, working_on):
+    copies, _, _ = branched_from_main()
+    unpushed = copies.commit(WORKTREE, {"src/foo.py": "not pushed yet\n"}, "mine")
+    only_ahead = FakeManagerPanel(now=replace(IDLE, working_on=working_on))
+    records = FakeThreadRecords()
+
+    answer = reset_board(copies, only_ahead, records).post(operation)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "not-diverged"
+    assert copies.head_of(WORKTREE) == unpushed
+    assert ResetToOrigin.kept(records.of(THE_PR)) is None
+
+
+@pytest.mark.parametrize("fields", [
+    {"queued_at": 5}, {"queued_at": False}, {"queued_at": 0}, {"queued_at": []},
+    {"queued_at": {}}, {"queued_at": None, "ran_at": 1}, {"queued_at": None, "refused": True},
+])
+def test_a_kept_reset_with_a_field_that_is_not_text_reads_as_none_kept(fields):
+    shelf = FakeThreadRecords().of(THE_PR)
+    shelf.save("reset", "state", json.dumps(fields).encode())
+
+    assert ResetToOrigin.kept(shelf) is None
 
 
 def test_a_reset_queued_while_an_agent_works_is_kept_for_when_its_run_ends():

@@ -57,6 +57,8 @@ class Git(Protocol):
 
     def _origin_head(self, worktree: str) -> str | None: ...
 
+    def _branch_at(self, worktree: str) -> str | None: ...
+
     def _base_standing(self, worktree: str, base_branch: str) -> BaseStanding | None: ...
 
     def _descends(self, path: str | None, onto: str, head: str) -> bool: ...
@@ -180,15 +182,22 @@ class BoundCheckout:
             return "the PR worktree has changes of its own"
         return self.git._reset(located.path, str(landed_base))
 
-    def fetch(self, base_branch: str | None, *, reset: bool = False) -> str | None:
+    def fetch(self, base_branch: str | None, *, reset_branch: str | None = None) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        if reset and not self.git._is_clean(located.path):
-            return "the worktree has uncommitted changes, so it was left as it is"
+        unclean = "the worktree has uncommitted changes, so it was left as it is"
+        if reset_branch is not None and not self.git._is_clean(located.path):
+            return unclean
         failed = self.git._fetch(located.path, base_branch)
-        if failed is not None or not reset:
+        if failed is not None or reset_branch is None:
             return failed
+        here = self.git._branch_at(located.path)
+        if here != reset_branch:
+            return (f"the worktree holds {here or 'no branch'}, not {reset_branch}, "
+                    "so it was left as it is")
+        if not self.git._is_clean(located.path):
+            return unclean
         origin = self.git._origin_head(located.path)
         if origin is None:
             return "origin holds no branch for the worktree to reset to"

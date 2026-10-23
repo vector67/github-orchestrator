@@ -1,8 +1,8 @@
 import logging
 
-from github_orchestrator.board_api.interface import ResetToOrigin, Shelves
+from github_orchestrator.board_api.interface import ResetToOrigin, Shelf, Shelves
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.domain import UtcClock
+from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.working_copies import WorkingCopies
 
@@ -22,15 +22,38 @@ class QueuedReset:
 
     def run_if_queued(self) -> None:
         pr = self._config.pr
-        shelf = self._shelves.of(pr)
-        kept = ResetToOrigin.kept(shelf)
-        if kept is None or kept.queued_at is None:
+        try:
+            self._run_if_queued(pr, self._shelves.of(pr))
+        except Exception:
+            log.exception("%s: the queued reset to origin raised", pr)
+
+    def _run_if_queued(self, pr: Pr, shelf: Shelf) -> None:
+        queued = ResetToOrigin.kept(shelf)
+        if queued is None or queued.queued_at is None:
             return
         facts = self._change_detection.facts(pr)
-        refused = self._working_copies.checkout(pr).fetch(
-            None if facts is None else facts.base_branch, reset=True)
-        if refused is None:
-            log.info("%s: the agent's run ended, so the worktree was reset to origin", pr)
-        else:
-            log.warning("%s: the queued reset to origin did not run: %s", pr, refused)
-        ResetToOrigin(ran_at=self._clock().strftime(_AT), refused=refused).keep(shelf)
+        if facts is None or facts.branch is None:
+            self._did_not_run(pr, shelf, "GitHub has not named the pull request's branch, "
+                                         "so the worktree was left as it is")
+            return
+        checkout = self._working_copies.checkout(pr)
+        failed = checkout.fetch(facts.base_branch)
+        if failed is not None:
+            self._did_not_run(pr, shelf, failed)
+            return
+        if ResetToOrigin.kept(shelf) != queued:
+            log.info("%s: the queued reset to origin was cancelled while origin was fetched", pr)
+            return
+        ResetToOrigin(ran_at=self._now()).keep(shelf)
+        refused = checkout.fetch(facts.base_branch, reset_branch=facts.branch)
+        if refused is not None:
+            self._did_not_run(pr, shelf, refused)
+            return
+        log.info("%s: the agent's run ended, so the worktree was reset to origin", pr)
+
+    def _did_not_run(self, pr: Pr, shelf: Shelf, refused: str) -> None:
+        log.warning("%s: the queued reset to origin did not run: %s", pr, refused)
+        ResetToOrigin(ran_at=self._now(), refused=refused).keep(shelf)
+
+    def _now(self) -> str:
+        return self._clock().strftime(_AT)

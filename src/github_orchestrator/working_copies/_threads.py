@@ -212,9 +212,9 @@ def squash_onto(pr_worktree: str, base: str, tip: str,
     return f"{SQUASH_FAILED} — {git_diagnostic(committed)}"
 
 
-def restore_head(pr_worktree: str, base: str) -> str | None:
+def restore_head(pr_worktree: str, base: str, mode: str = "--hard") -> str | None:
     try:
-        reset = run_git(pr_worktree, "reset", "--hard", "--end-of-options",
+        reset = run_git(pr_worktree, "reset", mode, "--end-of-options",
                         base)
     except (OSError, subprocess.TimeoutExpired) as e:
         return str(e)

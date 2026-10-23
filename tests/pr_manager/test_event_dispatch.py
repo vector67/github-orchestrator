@@ -144,6 +144,18 @@ def test_an_idle_manager_carries_out_ci_failed_and_holds_it_in_flight_while_its_
     assert in_flight_of(manager.event_queue, THE_PR) == [ci_failed('tests')]
 
 
+def test_a_run_a_tick_starts_shows_on_the_dashboard_before_the_next_tick(settings, tmp_path):
+    seed_state(settings, title="t", url="u")
+    seen = []
+    manager = _over(settings, lambda: seen.append(_shown(manager).working_on),
+                    is_author=True, worktree=tmp_path, agent_runs=_alive())
+    manager.event_queue.add(a_pr(1, "o/n"), ci_failed('tests'))
+
+    manager.run()
+
+    assert seen == ["ci-failed"]
+
+
 def test_with_claude_disabled_ci_failed_is_drained_without_a_run(settings, tmp_path):
     runs = _runs()
     manager = manager_over(_with_config(settings, agents_enabled=False), is_author=True, worktree=tmp_path,

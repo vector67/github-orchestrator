@@ -94,6 +94,10 @@ class ErrorCode(StrEnum):
     UNCOMMITTED_CHANGES is a reset of the worktree asked for while it holds
     changes nobody committed, which a reset would throw away.
 
+    NOT_DIVERGED is a reset of the worktree asked for, now or for when the
+    agent's run ends, while the worktree has not diverged from origin; its
+    commits are only unpushed, and a reset would drop them.
+
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
     """
@@ -149,6 +153,7 @@ class ErrorCode(StrEnum):
     AGENT_WORKING = "agent-working"
     NO_AGENT_WORKING = "no-agent-working"
     UNCOMMITTED_CHANGES = "uncommitted-changes"
+    NOT_DIVERGED = "not-diverged"
     SERVER_ERROR = "server-error"
 
 

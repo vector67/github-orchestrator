@@ -891,7 +891,7 @@ def test_a_fetch_that_resets_drops_the_worktrees_own_commits_for_origins_current
     world.commit(pr_worktree, {"h": "x\n"}, "local work")
     _, rewritten = world.advance_base()
 
-    assert pr_checkout.fetch("main", reset=True) is None
+    assert pr_checkout.fetch("main", reset_branch=BRANCH) is None
 
     assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (
         Sha(rewritten), Sha(rewritten))
@@ -905,11 +905,49 @@ def test_a_fetch_that_resets_a_worktree_with_changes_says_so_and_changes_nothing
     world.advance_base()
     world.edit(pr_worktree, "f", "half done\n")
 
-    refused = pr_checkout.fetch("main", reset=True)
+    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
 
     assert refused is not None and "uncommitted changes" in refused
     assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (stale, origin)
     assert pr_checkout.is_clean() is False
+
+
+def test_a_fetch_that_resets_onto_a_file_the_worktree_holds_untracked_leaves_it_as_it_is(
+        world, pr_worktree, pr_checkout):
+    stale = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
+    world.advance_base()
+    world.edit(pr_worktree, "m", "my own notes\n")
+
+    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+
+    assert refused is not None
+    assert pr_checkout.local_head() == stale
+
+
+def test_a_fetch_that_resets_a_worktree_edited_while_it_fetches_says_so_and_keeps_the_commits(
+        world, pr_worktree, pr_checkout):
+    stale = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
+    world.advance_base()
+    world.edit_while_fetching(pr_worktree, "g", "saved mid-fetch\n")
+
+    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+
+    assert refused is not None and "uncommitted changes" in refused
+    assert pr_checkout.local_head() == stale
+
+
+def test_a_fetch_that_resets_a_worktree_switched_to_another_branch_leaves_that_branch_as_it_is(
+        world, pr_worktree, pr_checkout):
+    world.commit(pr_worktree, {"h": "x\n"}, "local work")
+    world.advance_base()
+    assert pr_checkout.no_worktree() is None
+    world.start_branch(pr_worktree, "hotfix")
+    unpushed = world.commit(pr_worktree, {"h": "my hotfix\n"}, "unpushed hotfix")
+
+    refused = pr_checkout.fetch("main", reset_branch=BRANCH)
+
+    assert refused is not None
+    assert world.head_of(pr_worktree) == unpushed
 
 
 def test_a_pr_based_on_main_stacks_on_nothing(world, pr_worktree, pr_checkout):

@@ -74,10 +74,12 @@ class ResetToOrigin:
             return None
         try:
             fields = json.loads(document)
-            return ResetToOrigin(fields.get("queued_at"), fields.get("ran_at"),
-                                 fields.get("refused"))
+            read = [fields.get("queued_at"), fields.get("ran_at"), fields.get("refused")]
         except (ValueError, AttributeError):
             return None
+        if not all(field is None or isinstance(field, str) for field in read):
+            return None
+        return ResetToOrigin(*read)
 
     @staticmethod
     def forget(shelf: "Shelf") -> None:
