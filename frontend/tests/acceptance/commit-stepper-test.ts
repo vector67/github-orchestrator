@@ -3,6 +3,8 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   currentURL,
+  fillIn,
+  find,
   findAll,
   triggerEvent,
   visit,
@@ -89,6 +91,45 @@ module('Acceptance | commit stepper', function (hooks) {
         .length,
       1,
       "the diff asked for is the commit's own range",
+    );
+  });
+
+  test('the bar and the timeline scroll away with the diff', async function (assert) {
+    board().diffs = {
+      ...board().diffs,
+      first: {
+        base: FORK,
+        head: FIRST,
+        files: [
+          changed(
+            'src/widgets/first.py',
+            Array.from({ length: 200 }, (_, at) => added(at + 1, 'a line')),
+          ),
+        ],
+      },
+    };
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    const bar = find('[data-test-commit-stepper]')!;
+    const timeline = find('[data-test-timeline]')!;
+    let scroller = find('[data-test-pr-diff]')!.parentElement!;
+    while (!['auto', 'scroll'].includes(getComputedStyle(scroller).overflowY))
+      scroller = scroller.parentElement!;
+    assert.true(scroller.contains(bar), 'the bar scrolls with the diff');
+    assert.true(scroller.contains(timeline), 'and so does the timeline');
+    assert.deepEqual(
+      [getComputedStyle(bar).position, getComputedStyle(timeline).position],
+      ['static', 'static'],
+      'neither stays pinned in place',
+    );
+
+    scroller.scrollTop = scroller.scrollHeight;
+
+    assert.true(
+      timeline.getBoundingClientRect().bottom <=
+        scroller.getBoundingClientRect().top,
+      'scrolled down, the timeline is out of sight',
     );
   });
 
@@ -189,30 +230,131 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-pr-diff]').containsText('every commit');
   });
 
-  test('threads and commenting are on the last commit, whose lines are the head, and not on earlier ones', async function (assert) {
+  const FIRST_FILE = '[data-test-file="src/widgets/first.py"]';
+
+  function row(end: string): string {
+    return `${FIRST_FILE} [data-test-end="${end}"]`;
+  }
+
+  function anchoredOnTheFirstCommit() {
+    board().diffs['first'] = {
+      base: FORK,
+      head: FIRST,
+      files: [
+        changed('src/widgets/first.py', [
+          added(19, 'first change'),
+          added(20, 'changed later'),
+        ]),
+      ],
+    };
+    board().anchors[`${FORK}..${FIRST}`] = {
+      files: [
+        {
+          path: 'src/widgets/first.py',
+          lines: [
+            { side: 'RIGHT', line: 19, onto: { side: 'RIGHT', line: 23 } },
+          ],
+        },
+      ],
+    };
+  }
+
+  test("a comment on an unchanged line of an early commit is posted at the head's line", async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
+
+    await click(`${row('+19')} [data-test-add]`);
+
+    assert
+      .dom('[data-test-commenting]')
+      .hasText('Commenting on line +19 (line +23 in the latest commit)');
+
+    await fillIn('[data-test-comment-box] textarea', 'name it better');
+    await click('[data-test-box-save]');
+
+    assert.deepEqual(
+      board().posted.map((one) => [one.verb, one.body]),
+      [
+        [
+          'create-draft',
+          {
+            body: 'name it better',
+            path: 'src/widgets/first.py',
+            line: 23,
+            side: 'RIGHT',
+            start_line: null,
+            start_side: null,
+          },
+        ],
+      ],
+    );
+  });
+
+  test('a line a later commit changed says so where the comment box would open, and nothing is posted', async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+
+    await click(`${row('+20')} [data-test-add]`);
+
+    assert
+      .dom(`${row('+20')} + [data-test-inline] [data-test-unplaced]`)
+      .hasText("This line doesn't exist in the latest commit");
+    assert.dom('[data-test-comment-box]').doesNotExist();
+    assert.deepEqual(board().posted, []);
+  });
+
+  test('a thread on the head is drawn on an earlier commit at its line there, and one on a line the commit lacks is counted', async function (assert) {
+    anchoredOnTheFirstCommit();
     board().conversations = [
       thread({
-        anchor: {
-          ...thread().anchor,
-          path: 'src/widgets/third.py',
-          line: 19,
-        },
+        anchor: { ...thread().anchor, path: 'src/widgets/first.py', line: 23 },
       }),
-    ];
-    board().readMarks = [
-      { sha: FIRST, subject: 'Add the widget' },
-      { sha: SECOND, subject: 'Name the widget' },
+      thread({
+        key: 'PRRT_b',
+        github_node_id: 'PRRT_b',
+        anchor: { ...thread().anchor, path: 'src/widgets/first.py', line: 40 },
+      }),
     ];
     await visit('/pr/o/r/7/diff');
 
-    assert.dom('[data-test-pr-diff] [data-test-inline]').exists();
-    assert.dom('[data-test-pr-diff] [data-test-add]').exists();
+    assert.dom(`${row('+19')} + [data-test-inline]`).exists();
+    assert.dom('[data-test-pr-diff] [data-test-inline]').exists({ count: 1 });
+    assert
+      .dom('[data-test-threads-elsewhere]')
+      .hasText("1 thread is on lines this commit doesn't have");
+  });
 
-    await press('[');
+  test('threads in files this diff does not show are not counted', async function (assert) {
+    anchoredOnTheFirstCommit();
+    board().conversations = [
+      thread({
+        anchor: { ...thread().anchor, path: 'src/widgets/elsewhere.py' },
+      }),
+    ];
+    await visit('/pr/o/r/7/diff');
 
-    assert.dom('[data-test-pr-diff]').containsText('second change');
-    assert.dom('[data-test-pr-diff] [data-test-inline]').doesNotExist();
-    assert.dom('[data-test-pr-diff] [data-test-add]').doesNotExist();
+    assert.dom(`${row('+19')}`).exists();
+    assert.dom('[data-test-threads-elsewhere]').doesNotExist();
+  });
+
+  test("Ask the agent cites the head's lines and names the commit it was asked from", async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+    await click(`${row('+19')} [data-test-add]`);
+    await fillIn('[data-test-comment-box] textarea', 'why here?');
+
+    await click('[data-test-box-ask]');
+
+    const [asked] = board().posted.filter((one) => one.verb === 'ask');
+    const { prompt } = asked!.body as { prompt: string };
+    assert.true(
+      prompt.includes('line 23 (new side) of src/widgets/first.py'),
+      prompt,
+    );
+    assert.true(prompt.includes(`commit ${FIRST}`), prompt);
+    assert.true(prompt.endsWith('why here?'), prompt);
   });
 
   test('a deep link to a file and line shows the whole pull request up to the head, where that line is and commenting works', async function (assert) {

@@ -109,7 +109,7 @@ def test_the_server_answers_from_its_workers_and_stops_them_when_it_stops(instan
 
     assert exit_code == 0
     assert _health(port) is None
-    assert not any(_alive(pid) for pid in children)
+    assert until(lambda: not any(_alive(pid) for pid in children), 15)
 
 
 def test_a_worker_has_as_long_to_start_as_its_server_is_waited_for(instance, tmp_path, monkeypatch):

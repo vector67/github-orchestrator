@@ -21,7 +21,7 @@ const DAY_RISE = 14;
 const DAY_GAP = 4;
 const TICK = 7;
 export const LONG = 20;
-const TICKS: Spacing = { ...SPACING, column: 18 };
+const TICKS: Spacing = { ...SPACING, column: 18, most: 36 };
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
@@ -33,7 +33,12 @@ const RUN = 'run';
 const RUN_SPAN = 2;
 const RUN_REACH = 10;
 const DATE_DROP = 28;
-const DATE_RISE = 12;
+const DATE_RISE = 18;
+const DATE_ROW = 14;
+const RUN_GAP = 4;
+const LABEL_CHAR = 7.5;
+const LABEL_PAD = 6;
+const LABEL_REACH = 10;
 
 export interface Picked {
   from: string;
@@ -108,6 +113,26 @@ export interface TimelineLabel {
   at: string;
   x: number;
   y: number;
+  box: LabelBox | null;
+}
+
+export interface LabelBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function boxed(label: TimelineLabel): TimelineLabel {
+  return {
+    ...label,
+    box: {
+      x: label.x - LABEL_PAD,
+      y: label.y - LABEL_REACH,
+      width: label.text.length * LABEL_CHAR + 2 * LABEL_PAD,
+      height: 2 * LABEL_REACH,
+    },
+  };
 }
 
 export interface TimelineLane {
@@ -160,6 +185,12 @@ export interface TimelineHeader {
 
 export type CurveKind = 'fork' | 'merge' | 'ghost';
 
+export interface TimelineKey {
+  merge: boolean;
+  tick: boolean;
+  unpushed: boolean;
+}
+
 export interface Timeline {
   width: number;
   height: number;
@@ -176,6 +207,7 @@ export interface Timeline {
   ghosts: string | null;
   header: TimelineHeader;
   presets: Preset[];
+  key: TimelineKey;
   order: string[];
   showing: Picked;
 }
@@ -194,7 +226,13 @@ export interface TimelineInput {
   hidden: boolean;
   repo: string;
   basePr: number | null;
-  unpushed: Set<string>;
+  standing: Standing;
+  across: number;
+}
+
+export interface Standing {
+  offOrigin: Set<string>;
+  diverged: { here: number; there: number } | null;
 }
 
 export function dayOf(at: string): string {
@@ -298,7 +336,7 @@ function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
 function collapsedOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
-  spacing: Spacing,
+  column: number,
 ): CollapsedRun | null {
   const { run } = keptOf(history);
   const at = placed.get(RUN);
@@ -313,10 +351,7 @@ function collapsedOf(
       short: '',
       subject: `⋯ ${hidden} more`,
     });
-  const width = Math.max(
-    RUN_SPAN * spacing.column - 2 * RUN_REACH,
-    SPACING.column,
-  );
+  const width = Math.max(RUN_SPAN * column - 2 * RUN_REACH, SPACING.column);
   return {
     x: at.x,
     y: at.y,
@@ -324,7 +359,7 @@ function collapsedOf(
     top: at.y - RUN_REACH,
     width,
     height: 2 * RUN_REACH,
-    text: `⋯ ${plural(history.behind - KEPT, 'commit')}`,
+    text: `⋯ ${history.behind - KEPT} more`,
     listed,
   };
 }
@@ -394,7 +429,12 @@ function flagOf(
   column: number,
 ): TimelineFlag | null {
   const reviewed = placed.get(input.reviewedSha ?? '');
-  if (!reviewed || !input.reviewedAt) return null;
+  if (
+    !reviewed ||
+    !input.reviewedAt ||
+    input.standing.offOrigin.has(reviewed.id)
+  )
+    return null;
   const sequence =
     reviewed.lane === PR_LANE
       ? order
@@ -417,17 +457,19 @@ function sinceOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
   base: string,
+  collapsed: CollapsedRun | null,
 ): SinceFork | null {
   const first =
     placed.get(RUN) ?? placed.get(history.base_commits[0]?.sha ?? '');
   const last = placed.get(history.base_commits.at(-1)?.sha ?? '');
   if (!first || !last) return null;
+  const x = collapsed ? collapsed.left - RUN_GAP : first.x - BAND_REACH;
   return {
-    x: first.x - BAND_REACH,
+    x,
     y: first.y - BAND_REACH,
-    width: last.x - first.x + 2 * BAND_REACH,
+    width: last.x + BAND_REACH - x,
     height: 2 * BAND_REACH,
-    textY: first.y - BOX_RISE,
+    textY: first.y - BOX_RISE - (collapsed ? DATE_ROW : 0),
     text: `${plural(history.behind, 'commit')} on ${base} since the fork`,
   };
 }
@@ -495,11 +537,16 @@ function relationOf(
 
 export function timelineBuilt(input: TimelineInput): Timeline | null {
   const { history, read } = input;
+  const { offOrigin } = input.standing;
   const order = history.commits.map((one) => one.sha);
   if (!order.length) return null;
   const stack = history.stack;
   const long = order.length > LONG;
-  const spacing = long ? TICKS : SPACING;
+  const folded = keptOf(history).run.length > 0;
+  const columns = long ? TICKS : SPACING;
+  const spacing = folded
+    ? { ...columns, top: columns.top + DATE_ROW }
+    : columns;
   const ghosts = ghostsOf(history);
   const oldFork = oldForkOf(history)[0];
   const graph = layout(
@@ -511,6 +558,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     ],
     nodesOf(history),
     spacing,
+    input.across,
   );
   const base = input.base ?? 'main';
   const showing =
@@ -533,7 +581,6 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       .filter((one) => one.parents.length > 1)
       .map((one) => one.sha),
   );
-  const folded = keptOf(history).run.length > 0;
   const dates = new Map(
     folded
       ? [
@@ -576,7 +623,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       dateY: node.id === history.fork ? node.y - DATE_RISE : node.y + DATE_DROP,
       dateAnchor:
         node.id === history.fork ? ('start' as const) : ('middle' as const),
-      pushed: node.lane === PR_LANE ? !input.unpushed.has(node.id) : null,
+      pushed: node.lane === PR_LANE ? !offOrigin.has(node.id) : null,
       pickable: at >= 0,
       inRange: at >= from && at <= to && at >= 0,
       radius: at >= 0 || node.lane === GHOST_LANE ? 6 : 4,
@@ -585,10 +632,10 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     };
   });
   const lastPushed = graph.nodes.get(
-    order.findLast((sha) => !input.unpushed.has(sha)) ?? '',
+    order.findLast((sha) => !offOrigin.has(sha)) ?? '',
   );
   const firstUnpushed = graph.nodes.get(
-    order.find((sha) => input.unpushed.has(sha)) ?? '',
+    order.find((sha) => offOrigin.has(sha)) ?? '',
   );
   const main = lastOn(BASE_LANE, graph.nodes)!;
   const under = lastOn(STACK_LANE, graph.nodes);
@@ -605,7 +652,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     at: at.id,
     x: at.x + LABEL_GAP,
     y: at.y,
+    box: null,
   });
+  const collapsed = collapsedOf(history, graph.nodes, graph.column);
   const ringed = input.hidden
     ? undefined
     : graph.nodes.get(input.current ?? '');
@@ -657,9 +706,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
                 : firstUnpushed.x,
               y: firstUnpushed.y - FLAG_RISE,
             },
-            label('local', 'local', head),
           ]
-        : [label('head', 'head', head)]),
+        : []),
+      firstUnpushed
+        ? boxed(label('local', 'local', head))
+        : label('head', 'head', head),
       ...forkLabelsOf(graph.nodes, oldFork?.id, history.fork),
     ],
     current: ringed ? { sha: ringed.id, x: ringed.x, y: ringed.y } : null,
@@ -667,9 +718,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       graph.nodes.get(showing.from) ?? head,
       graph.nodes.get(showing.to) ?? head,
     ),
-    flag: flagOf(order, input, graph.nodes, spacing.column),
-    since: sinceOf(history, graph.nodes, base),
-    collapsed: collapsedOf(history, graph.nodes, spacing),
+    flag: flagOf(order, input, graph.nodes, graph.column),
+    since: sinceOf(history, graph.nodes, base, collapsed),
+    collapsed,
     days: long ? daysOf(history, graph.nodes) : [],
     ghosts: ghosts.length
       ? `your review saw ${ghosts.map((one) => one.sha.slice(0, SHORT)).join(' ')}, rewritten since`
@@ -683,11 +734,16 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       relation: relationOf(input, base, merges.size),
       fork: stack ? '' : history.fork.slice(0, SHORT),
       was: oldFork && !stack ? oldFork.id.slice(0, SHORT) : null,
-      tip: stack || history.behind ? null : `${base}'s tip`,
+      tip: stack || history.behind || oldFork ? null : `${base}'s tip`,
       main: stack?.branch ?? base,
       behind: history.behind,
     },
     presets: presetsOf(order, input, showing),
+    key: {
+      merge: merges.size > 0,
+      tick: long,
+      unpushed: firstUnpushed !== undefined,
+    },
     order,
     showing,
   };
@@ -712,6 +768,7 @@ function forkLabelsOf(
     at: at.id,
     x: at.x,
     y: at.y - FLAG_RISE,
+    box: null,
   });
   return [
     above('old-fork', 'was forked', was),

@@ -8,8 +8,10 @@ import {
   commentingOn,
   linesOf,
   questionAbout,
+  type Lines,
   type Selection,
 } from 'frontend/data/selection';
+import { inLatestOf } from 'frontend/data/anchors';
 import didChange from 'frontend/modifiers/did-change';
 import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
 import type BoardService from 'frontend/services/board';
@@ -20,6 +22,8 @@ import emojiComplete from 'frontend/modifiers/emoji-complete';
 export interface CommentBoxSignature {
   Args: {
     selection: Selection | null;
+    posted?: Lines | null;
+    from?: string | null;
     draft: string;
     saved: Saved;
     close: () => void;
@@ -40,7 +44,9 @@ export default class CommentBox extends Component<CommentBoxSignature> {
 
   get commenting(): string {
     const selection = this.args.selection;
-    return selection ? commentingOn(selection) : LINES_GONE;
+    if (!selection) return LINES_GONE;
+    const posted = this.args.posted ?? null;
+    return commentingOn(selection) + inLatestOf(linesOf(selection), posted);
   }
 
   get creating(): boolean {
@@ -91,7 +97,12 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   ask = async () => {
     const selection = this.args.selection;
     if (selection === null) return;
-    const prompt = questionAbout(linesOf(selection), this.copy.body, null);
+    const prompt = questionAbout(
+      this.args.posted ?? linesOf(selection),
+      this.copy.body,
+      null,
+      this.args.from ?? null,
+    );
     this.sending = true;
     try {
       if (await this.terminal.ask(prompt)) {

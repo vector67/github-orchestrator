@@ -32,6 +32,7 @@ export interface GraphLayout {
   nodes: Map<string, Placed>;
   edges: GraphEdge[];
   lanes: LaneLine[];
+  column: number;
   width: number;
   height: number;
 }
@@ -40,6 +41,7 @@ export interface Spacing {
   left: number;
   top: number;
   column: number;
+  most: number;
   row: number;
   right: number;
   bottom: number;
@@ -49,6 +51,7 @@ export const SPACING: Spacing = {
   left: 24,
   top: 32,
   column: 56,
+  most: 112,
   row: 48,
   right: 72,
   bottom: 48,
@@ -82,17 +85,23 @@ export function layout(
   lanes: string[],
   nodes: GraphNode[],
   spacing: Spacing = SPACING,
+  across = 0,
 ): GraphLayout {
   const columns = columnsOf(nodes);
+  const widest = Math.max(0, ...columns.values());
+  const fitted = widest
+    ? (across - spacing.left - spacing.right) / widest
+    : spacing.column;
+  const column = Math.min(Math.max(fitted, spacing.column), spacing.most);
   const placed = new Map<string, Placed>();
   for (const node of nodes) {
-    const column = columns.get(node.id)!;
+    const at = columns.get(node.id)!;
     const row = lanes.indexOf(node.lane);
     placed.set(node.id, {
       ...node,
-      column,
+      column: at,
       row,
-      x: spacing.left + column * spacing.column,
+      x: spacing.left + at * column,
       y: spacing.top + row * spacing.row,
     });
   }
@@ -126,12 +135,15 @@ export function layout(
       },
     ];
   });
-  const widest = Math.max(0, ...columns.values());
   return {
     nodes: placed,
     edges,
     lanes: lines,
-    width: spacing.left + widest * spacing.column + spacing.right,
+    column,
+    width:
+      column === fitted
+        ? across
+        : spacing.left + widest * column + spacing.right,
     height: spacing.top + (lanes.length - 1) * spacing.row + spacing.bottom,
   };
 }

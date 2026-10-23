@@ -5,6 +5,7 @@ import type {
   Conversation,
   ConversationState,
   Diff,
+  DiffAnchors,
   DiffLine,
   ErrorCode,
   ErrorDetail,
@@ -685,6 +686,7 @@ export class FakeBoard {
   operations: Record<string, Operation[]> = {};
   proposals: Record<string, Proposal[]> = {};
   diffs: Record<string, Diff & { merged?: string }> = {};
+  anchors: Record<string, DiffAnchors> = {};
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
   pushedSinceFetch: Diff | null = null;
@@ -1230,6 +1232,11 @@ export class FakeBoard {
     if (path === '/api/files') {
       return this.linesOf(url.searchParams) ?? this.files ?? undefined;
     }
+    const anchored =
+      /^\/api\/diffs\/([0-9a-f]+\.\.[0-9a-f]+)\/anchors\/[0-9a-f]+\.\.[0-9a-f]+$/.exec(
+        path,
+      );
+    if (anchored) return this.anchors[anchored[1]!] ?? { files: [] };
     const diff = /^\/api\/diffs\/([0-9a-f]+)\.\.([0-9a-f]+)$/.exec(path);
     if (diff) {
       const merged = url.searchParams.get('merged') ?? undefined;

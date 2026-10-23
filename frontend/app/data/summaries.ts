@@ -25,6 +25,7 @@ import {
   LONG,
   timelineBuilt,
   type Picked,
+  type Standing,
   type Timeline,
 } from 'frontend/data/timeline';
 import {
@@ -1057,27 +1058,43 @@ function pickedUpAt(
   );
 }
 
-const lastUnpushed = new WeakMap<
+const lastStandings = new WeakMap<
   PullRequestCommits,
-  { pushed: PullRequestCommits | undefined; unpushed: Set<string> }
+  { pushed: PullRequestCommits | undefined; standing: Standing }
 >();
 
-export function unpushedOf(
+function standingBuilt(
   history: PullRequestCommits,
   pushed: PullRequestCommits | undefined,
-): Set<string> {
-  const last = lastUnpushed.get(history);
-  if (last && last.pushed === pushed) return last.unpushed;
-  const known = new Set(pushed?.commits.map((one) => one.sha));
-  const unpushed = new Set(
-    pushed
-      ? history.commits
-          .filter((one) => !known.has(one.sha))
-          .map((one) => one.sha)
-      : [],
-  );
-  lastUnpushed.set(history, { pushed, unpushed });
-  return unpushed;
+): Standing {
+  if (!pushed) return { offOrigin: new Set(), diverged: null };
+  const local = history.commits.map((one) => one.sha);
+  const originHead = pushed.commits.at(-1)?.sha ?? pushed.fork;
+  const at = local.indexOf(originHead);
+  if (at >= 0 || originHead === history.fork)
+    return { offOrigin: new Set(local.slice(at + 1)), diverged: null };
+  const onOrigin = new Set(pushed.commits.map((one) => one.sha));
+  const here = local.filter((sha) => !onOrigin.has(sha));
+  if (!here.length) return { offOrigin: new Set(), diverged: null };
+  const kept = new Set(local);
+  return {
+    offOrigin: new Set(here),
+    diverged: {
+      here: here.length,
+      there: pushed.commits.filter((one) => !kept.has(one.sha)).length,
+    },
+  };
+}
+
+export function standingOf(
+  history: PullRequestCommits,
+  pushed: PullRequestCommits | undefined,
+): Standing {
+  const last = lastStandings.get(history);
+  if (last && last.pushed === pushed) return last.standing;
+  const standing = standingBuilt(history, pushed);
+  lastStandings.set(history, { pushed, standing });
+  return standing;
 }
 
 interface Matching {
@@ -1164,7 +1181,7 @@ function stepperBuilt(
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
     merge: isMerge(commit),
-    unpushed: unpushedOf(history, pushed).has(commit.sha),
+    unpushed: standingOf(history, pushed).offOrigin.has(commit.sha),
     range: rangeOf(history, at, at),
     previous: commits.slice(0, at).findLast(stops)?.sha ?? null,
     next: commits.slice(at + 1).find(stops)?.sha ?? null,
@@ -1341,6 +1358,7 @@ export interface Looking {
   current: string | null;
   picked: Picked | null;
   hidden: boolean;
+  across: number;
 }
 
 const lastTimelines = new WeakMap<
@@ -1352,6 +1370,7 @@ const lastTimelines = new WeakMap<
     hidden: boolean;
     basePr: number | null;
     pushed: PullRequestCommits | undefined;
+    across: number;
     timeline: Timeline | null;
   }
 >();
@@ -1359,7 +1378,7 @@ const lastTimelines = new WeakMap<
 export function timelineOf(
   pr: PrEntity,
   history: PullRequestCommits | undefined,
-  { current, picked, hidden }: Looking,
+  { current, picked, hidden, across }: Looking,
   basePr: number | null,
   pushed: PullRequestCommits | undefined,
 ): Timeline | null | undefined {
@@ -1371,7 +1390,8 @@ export function timelineOf(
     last.picked === picked &&
     last.hidden === hidden &&
     last.basePr === basePr &&
-    last.pushed === pushed
+    last.pushed === pushed &&
+    last.across === across
   )
     return last.timeline;
   const { read, matched, fresh } = matchingOf(history, pr.read);
@@ -1389,7 +1409,8 @@ export function timelineOf(
     hidden,
     repo: pr.repo,
     basePr,
-    unpushed: unpushedOf(history, pushed),
+    standing: standingOf(history, pushed),
+    across,
   });
   lastTimelines.set(history, {
     pr,
@@ -1398,6 +1419,7 @@ export function timelineOf(
     hidden,
     basePr,
     pushed,
+    across,
     timeline,
   });
   return timeline;
