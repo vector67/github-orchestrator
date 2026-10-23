@@ -106,13 +106,15 @@ class GitStatus:
             return None
         return branch
 
-    def commits_since(self, worktree: Path | str, sha: str | None) -> tuple[str, ...] | None:
+    def commits_since(self, worktree: Path | str, sha: str | None, *,
+                      behind: bool = False) -> tuple[str, ...] | None:
         if not sha:
             return None
         worktree = Path(worktree)
         if not worktree.exists():
             return None
-        listed = self._git(worktree, "since", "rev-list", "--oneline", f"{sha}..HEAD")
+        span = f"HEAD..{sha}" if behind else f"{sha}..HEAD"
+        listed = self._git(worktree, "behind" if behind else "since", "rev-list", "--oneline", span)
         if listed is None:
             return None
         return tuple(listed.splitlines())

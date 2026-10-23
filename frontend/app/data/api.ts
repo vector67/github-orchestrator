@@ -229,6 +229,7 @@ export interface DashboardSystem {
   queue: QueuedEvent[];
   on_hold: boolean;
   unpushed_commits: UnpushedCommit[] | null;
+  diverged: boolean;
   threads: ThreadCounts;
   base: BaseStanding | null;
 }

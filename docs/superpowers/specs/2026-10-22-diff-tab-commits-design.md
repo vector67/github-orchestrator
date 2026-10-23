@@ -117,7 +117,9 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     no origin flag. The header reads `<b>N commits</b> in the worktree · forked from main at <sha> · origin has M other commits from <sha>` and a yellow chip
     `diverged from origin · N here, M on origin`, without the behind chip. The
     stepper's pill on those commits reads `not on origin`. The key adds the hollow
-    grey dot only when origin's lane is drawn. Origin's view is unchanged.
+    grey dot only when origin's lane is drawn. Origin's view is unchanged. On the
+    wall such a worktree's chip reads `diverged from origin`, with no numbers, in
+    place of `N unpushed`, which stays for a worktree only ahead of origin.
     A new commit whose subject matches a read ghost's counts as read and carries
     `≈ read` above it. Ghosts cannot be picked. **Since my review** picks only
     the commits with no match. The header reads `now forked from <new>, was <old>`, and the note (decision 4) says `<b>Rebased since your review</b> (force-pushed <day date>). K of your read commits were rewritten onto newer main and matched by message; <b>M are new</b>.`

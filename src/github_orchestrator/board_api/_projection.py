@@ -505,6 +505,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             unpushed_commits=None if dashboard.unpushed_commits is None
             else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)
                   for commit in dashboard.unpushed_commits],
+            diverged=dashboard.diverged,
             threads=contract.ThreadCounts(
                 queued=dashboard.threads_queued, live=len(dashboard.threads_live),
                 proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts),

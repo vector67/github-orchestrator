@@ -1429,6 +1429,10 @@ class DashboardSystem(BaseModel):
     unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")
+    diverged: bool = Field(
+        description="The worktree holds commits the pull request lacks and the pull "
+                    "request holds commits the worktree lacks, as when origin was "
+                    "rewritten under a worktree holding the older branch.")
     threads: ThreadCounts
     base: BaseStanding | None = Field(
         description="How the branch stands against its freshly fetched base. Null "

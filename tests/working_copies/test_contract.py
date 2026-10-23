@@ -476,6 +476,20 @@ def test_the_commits_since_a_sha_name_each_commit_on_head_after_it(world, pr_wor
     assert world.copies.commits_since(pr_worktree, "0" * 40) is None
 
 
+def test_the_commits_a_sha_holds_that_head_lacks_are_the_ones_it_is_behind(
+        world, pr_worktree, pr_checkout):
+    world.commit(pr_worktree, {"h": "x\n"}, "local work")
+    _, rewritten = world.advance_base()
+    assert pr_checkout.fetch("main") is None
+
+    behind = world.copies.commits_since(pr_worktree, rewritten, behind=True)
+    ahead = world.copies.commits_since(pr_worktree, rewritten)
+
+    assert [line.split(" ", 1)[1] for line in behind] == ["feature work", "more main"]
+    assert rewritten.startswith(behind[0].split(" ")[0])
+    assert (len(ahead), ahead[0].split(" ", 1)[1]) == (2, "local work")
+
+
 def test_a_commit_named_by_a_short_hash_reads_as_its_hash_its_parent_and_where_it_is(
         world, pr_worktree, pr_checkout):
     parent = world.head_of(pr_worktree)

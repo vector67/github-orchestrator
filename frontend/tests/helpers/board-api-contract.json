@@ -2829,6 +2829,9 @@
       }
      ]
     },
+    "diverged": {
+     "type": "boolean"
+    },
     "last_run": {
      "anyOf": [
       {
@@ -2871,6 +2874,7 @@
     "queue",
     "on_hold",
     "unpushed_commits",
+    "diverged",
     "threads",
     "base"
    ],

@@ -470,6 +470,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       queue: [],
       on_hold: false,
       unpushed_commits: [],
+      diverged: false,
       threads: { queued: 0, live: 0, proposed: 0, drafts: 0 },
       base: null,
       ...system,

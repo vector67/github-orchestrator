@@ -106,6 +106,7 @@ class Dashboard:
     queue: tuple[QueuedEvent, ...]
     on_hold: bool
     unpushed_commits: tuple[UnpushedCommit, ...] | None
+    diverged: bool
     base: BaseStanding | None
     threads_queued: int
     threads_live: frozenset[str]
