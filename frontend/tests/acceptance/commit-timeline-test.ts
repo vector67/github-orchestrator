@@ -1312,6 +1312,39 @@ module(
       );
     });
 
+    test('with the note showing, the stuck bar is the bar alone and the note scrolls away', async function (assert) {
+      const shas = long(40);
+      readUpTo(shas, 10);
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: shas[9]!,
+        },
+      });
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      await tabOf(400);
+      assert.dom('[data-test-commit-note]').exists();
+
+      const pane = find('[data-test-diff-pane]') as HTMLElement;
+      pane.scrollTop = 400;
+      await settled();
+
+      const stuck = find('[data-test-commit-stepper]')!;
+      assert.strictEqual(getComputedStyle(stuck).position, 'sticky');
+      assert.true(
+        stuck.getBoundingClientRect().height <= BAR_AT_MOST,
+        `the stuck bar is ${stuck.getBoundingClientRect().height}px tall`,
+      );
+      assert.true(
+        find('[data-test-commit-note]')!.getBoundingClientRect().bottom <=
+          stuck.getBoundingClientRect().top,
+        'the note scrolled away above it',
+      );
+    });
+
     test('the pips become a thin bar when each gets under 40px, and turn back when the bar widens', async function (assert) {
       long(24);
       await visit('/pr/o/r/7/diff');

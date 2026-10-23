@@ -201,7 +201,9 @@ export default class CommitBar extends Component<CommitBarSignature> {
           {{/each}}
         </ol>
       </div>
-      {{#if @note}}
+    </div>
+    {{#if @note}}
+      <div class="commit-note-row">
         <p class="commit-note" data-test-commit-note>
           {{#if @note.rebased}}
             <span><b>Rebased since your review</b>
@@ -230,7 +232,7 @@ export default class CommitBar extends Component<CommitBarSignature> {
             {{on "click" @dismissNote}}
           >×</button>
         </p>
-      {{/if}}
-    </div>
+      </div>
+    {{/if}}
   </template>
 }

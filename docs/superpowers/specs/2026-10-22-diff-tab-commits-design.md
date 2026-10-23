@@ -177,8 +177,10 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     diff to that file, just under the strip. Escape, a click outside the panel or
     the button again close it. At 720px and over nothing changes.
 20. **The commit bar is at most about 70px tall** (#180, decided 2026-10-23),
-    the pips included, at every width and in every state: stepping, a range,
-    with a pill, and stuck over the vertical timeline. Its controls never wrap:
+    its padding and pips included, at every width and in every state: stepping,
+    a range, with a pill, and stuck over the vertical timeline. The note
+    (decision 4) is not part of it: it sits 8px under the bar and, in the
+    vertical timeline, scrolls away while the bar alone stays stuck. Its controls never wrap:
     one line of controls over the pips, with the subject cut by an ellipsis.
     Measured against the width the diff gives it, under 640px it compacts: the
     author, the age, the dots between them and the word `Commit` drop, the

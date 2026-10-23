@@ -4597,10 +4597,16 @@ button.tree-row[aria-current="true"] {
 }
 
 .commit-stepper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.commit-stepper:has(+ .commit-note-row) {
+  border-bottom: 0;
+}
+
+.commit-note-row {
+  padding: 4px 16px 12px;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -4623,7 +4629,8 @@ button.tree-row[aria-current="true"] {
 }
 
 .commit-stepper[data-sizing="full"] .commit-box {
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 6px 12px;
   border: 1.5px solid var(--text);
 }
 
@@ -4661,7 +4668,7 @@ button.tree-row[aria-current="true"] {
 }
 
 .commit-bar .btn {
-  padding: 4px 12px;
+  padding: 2px 12px;
   font-size: var(--fs-s);
 }
 
@@ -5706,12 +5713,14 @@ img.emoji-glyph {
 
 @container (width < 640px) {
   .commit-stepper {
-    gap: 6px;
     padding: 4px 8px;
   }
 
+  .commit-note-row {
+    padding: 4px 8px 12px;
+  }
+
   .commit-stepper[data-sizing="full"] .commit-box {
-    gap: 6px;
     padding: 6px 8px;
   }
 

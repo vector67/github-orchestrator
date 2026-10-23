@@ -6,6 +6,7 @@ import {
   fillIn,
   find,
   findAll,
+  settled,
   triggerEvent,
   visit,
 } from '@ember/test-helpers';
@@ -470,6 +471,28 @@ module('Acceptance | commit stepper', function (hooks) {
       .hasText(
         'Picked up at the first new commit: 2 commits pushed since your review on Tue 20 Oct. ×',
       );
+  });
+
+  test('wide, the whole bar, its padding and pips included, is at most 70px tall, and the note sits under it', async function (assert) {
+    reviewedOn(FIRST);
+    board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+    await visit('/pr/o/r/7/diff');
+    (find('[data-test-diff-tab]') as HTMLElement).style.width = '1400px';
+    await new Promise((done) =>
+      requestAnimationFrame(() => requestAnimationFrame(done)),
+    );
+    await settled();
+
+    const stepper = find('[data-test-commit-stepper]')!.getBoundingClientRect();
+    assert.true(
+      stepper.height <= 70,
+      `the bar is ${stepper.height}px tall with the note showing`,
+    );
+    assert.true(
+      find('[data-test-commit-note]')!.getBoundingClientRect().top >=
+        stepper.bottom,
+      'the note is under the bar, not part of it',
+    );
   });
 
   test('there is no note before you review, nor when nothing was pushed after your review', async function (assert) {
