@@ -83,3 +83,7 @@ a user's layout; `make install_hooks` turns on the pre-commit hook.
 
 - **Never `pytest -n auto`.** `make test` forks `PYTEST_WORKERS` (8) processes
   beside the ember suite; every core on top of that locks up the machine.
+
+- **Dispatch every subagent with `isolation: "worktree"`, even a lone one.**
+  Other Claude instances run agents in this checkout at the same time, so a
+  subagent without its own tree competes with agents its session cannot see.

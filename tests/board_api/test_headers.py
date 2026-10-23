@@ -47,6 +47,16 @@ def test_a_read_addressed_to_the_board_is_answered(served):
     assert as_addressed_to(served, f"localhost:{PORT}", "/").status_code == 200
 
 
+def test_a_read_addressed_to_an_address_of_the_machine_on_the_boards_port_is_answered(served):
+    assert as_addressed_to(served, f"192.0.2.10:{PORT}", "/").status_code == 200, (
+        "a phone opens the board by the machine's address; a rebinding page always "
+        "arrives under its own name, never as a bare address")
+
+
+def test_a_read_addressed_to_an_address_on_another_port_is_refused(served):
+    assert as_addressed_to(served, f"192.0.2.10:{PORT + 1}", "/").status_code == 403
+
+
 def answers(board):
     client = client_of(board)
     return {

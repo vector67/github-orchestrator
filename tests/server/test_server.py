@@ -50,7 +50,7 @@ def test_a_server_whose_port_is_taken_leaves_with_a_line_in_its_log(instance):
 
         assert main(["--port", str(port)]) == 1
 
-    assert f"port {port} is taken" in (instance / "logs" / "server.log").read_text()
+    assert f"cannot listen on 127.0.0.1:{port}" in (instance / "logs" / "server.log").read_text()
 
 
 def test_a_server_told_no_port_serves_the_configs_hub_port(instance, tmp_path):
@@ -63,7 +63,16 @@ def test_a_server_told_no_port_serves_the_configs_hub_port(instance, tmp_path):
 
         assert main([]) == 1
 
-    assert f"port {port} is taken" in (instance / "logs" / "server.log").read_text()
+    assert f"cannot listen on 127.0.0.1:{port}" in (instance / "logs" / "server.log").read_text()
+
+
+def test_a_server_listens_on_the_configs_hub_host(instance, tmp_path):
+    config = tmp_path / "config.toml"
+    config.write_text('hub_host = "192.0.2.1"\n' + config.read_text())
+
+    assert main(["--port", str(_free_port())]) == 1
+
+    assert "cannot listen on 192.0.2.1:" in (instance / "logs" / "server.log").read_text()
 
 
 def test_a_server_that_finds_the_lock_held_leaves_with_a_line_in_its_log(instance):
@@ -144,7 +153,8 @@ from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._supervisor import serve
 from github_orchestrator.server._worker import Worker
 own, port = Path(sys.argv[1]), int(sys.argv[2])
-config = ServerConfig(port=port, workers=1, lock=own / "server.lock", pid=own / "server.pid")
+config = ServerConfig(host="127.0.0.1", port=port, workers=1, lock=own / "server.lock",
+                      pid=own / "server.pid")
 sys.exit(serve(config, Worker(port=port, pid=os.getpid(), logs_dir=own,
                               orphan_check_seconds=0.02)))
 """

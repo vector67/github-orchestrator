@@ -215,6 +215,10 @@ tooltip.
 `hub_port` (default 8720) is the port of the [hub](#the-hub), which serves the
 wall, each PR's page with its board, and the Runs page.
 
+`hub_host` (default `"127.0.0.1"`) is the address the hub listens on. Set it to
+`"0.0.0.0"` to open the board from another device on your network, such as a
+phone. The board has no login, so anyone on that network can then use it.
+
 `tracker` says where the comment agent looks for and proposes tickets when a
 comment asks for work that belongs outside the pull request: `"github"` for
 issues on the pull request's repo, `"jira"` for a Jira project, or `"none"`, the default,

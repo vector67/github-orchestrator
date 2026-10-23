@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 import time
 from collections.abc import Awaitable, Callable
@@ -34,29 +35,45 @@ def _refusal(status: int, code: ErrorCode, detail: str) -> Response:
             mode="json"))
 
 
+def _addressed_here(host: str | None, port: int) -> bool:
+    name, _, at = (host or "").rpartition(":")
+    if at != str(port):
+        return False
+    if name == "localhost":
+        return True
+    try:
+        ipaddress.ip_address(name.strip("[]"))
+    except ValueError:
+        return False
+    return True
+
+
 def _foreign_host(headers: Headers, port: int, name: str) -> str | None:
     """A request addressed to any name but this server's is refused.
 
-    A page on a name its owner points at 127.0.0.1 is same-origin with
+    A page on a name its owner points at this machine is same-origin with
     itself, so the browser lets it read whatever the server answers it. The
     Host it sends is its own name, which is what gives it away, on a read as
-    much as on a write.
+    much as on a write. A bare address can't be rebound, so a phone that opens
+    the board by the machine's address is answered.
     """
     host = headers.get("Host")
-    if host in (f"127.0.0.1:{port}", f"localhost:{port}"):
+    if _addressed_here(host, port):
         return None
     return f"this {name} answers 127.0.0.1:{port}, not {host}"
 
 
 def _foreign_site(headers: Headers, port: int) -> bool:
-    """The server is loopback with no authentication, so what stands between
-    a web page in another tab and the operator's pull requests is that a
-    write, or a terminal, comes from this server's own page.
+    """The server has no authentication, so what stands between a web page
+    in another tab and the operator's pull requests is that a write, or a
+    terminal, comes from this server's own page, at whichever address the
+    page was opened.
     """
     site = headers.get("Sec-Fetch-Site")
     origin = headers.get("Origin")
     return ((site is not None or origin is not None) and site != "same-origin"
-            and origin not in (loopback_url(port), f"http://localhost:{port}"))
+            and origin not in (loopback_url(port), f"http://localhost:{port}",
+                               f"http://{headers.get('Host')}"))
 
 
 def _unguarded(request: Request, port: int) -> Response | None:
