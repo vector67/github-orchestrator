@@ -190,7 +190,8 @@ class BoundCheckout:
             return located.missing
         return self.git._fetch(located.path, base_branch)
 
-    def reset_to_origin(self, branch: str, base_branch: str | None) -> str | None:
+    def reset_to_origin(self, branch: str, base_branch: str | None,
+                        seen: Sha | None) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
@@ -200,23 +201,35 @@ class BoundCheckout:
         failed = self.git._fetch(located.path, base_branch)
         if failed is not None:
             return failed
+        origin = self.git._origin_head(located.path)
+        if origin is None:
+            return "origin holds no branch for the worktree to reset to"
         here = self.git._branch_at(located.path)
         if here != branch:
             return (f"the worktree holds {here or 'no branch'}, not {branch}, "
                     "so it was left as it is")
         if not self.git._is_clean(located.path):
             return unclean
-        origin = self.git._origin_head(located.path)
-        if origin is None:
-            return "origin holds no branch for the worktree to reset to"
         head = self.git._head_sha(located.path)
-        in_the_way = None if head is None else self.git._in_the_way(located.path, head, origin)
+        if head is None:
+            return "the worktree's HEAD will not read, so it was left as it is"
+        return (self._holds_back(located.path, seen, head, origin)
+                or self.git._reset(located.path, origin))
+
+    def _holds_back(self, path: str, seen: Sha | None, head: str, origin: str) -> str | None:
+        if seen is not None and head != str(seen):
+            return (f"the worktree moved to {head[:12]} since {str(seen)[:12]} was shown, "
+                    "so it was left as it is")
+        if self.git._descends(path, origin, head):
+            return ("origin's branch has nothing the worktree lacks, so its own commits are "
+                    "only unpushed and it was left as it is")
+        in_the_way = self.git._in_the_way(path, head, origin)
         if in_the_way is None:
             return "git could not say what origin's branch adds, so the worktree was left as it is"
         if in_the_way:
             return (f"origin's branch adds {', '.join(in_the_way)}, which the worktree holds "
                     "untracked or ignored, so it was left as it is")
-        return self.git._reset(located.path, origin)
+        return None
 
     def base_standing(self, base_branch: str | None) -> BaseStanding | None:
         path = self._path()
