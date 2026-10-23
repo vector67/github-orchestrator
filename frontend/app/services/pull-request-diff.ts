@@ -38,6 +38,7 @@ class PerPr {
   @tracked chosen: string | null = null;
   @tracked picked: Picked | null = null;
   @tracked timelineOpen = false;
+  @tracked across = 0;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
   asked: string | null = null;
@@ -111,8 +112,13 @@ export default class PullRequestDiffService extends Service {
       current: this.stepping?.sha ?? null,
       picked: this.pr.picked,
       hidden: this.hidden,
+      across: this.pr.across,
     });
   }
+
+  fit = (across: number) => {
+    this.pr.across = across;
+  };
 
   get timelineOpen(): boolean {
     return this.pr.timelineOpen && Boolean(this.timeline);
@@ -142,6 +148,19 @@ export default class PullRequestDiffService extends Service {
       return;
     }
     this.pr.picked = picked;
+  };
+
+  get whole(): Picked | null {
+    const { repo, number } = this.here.at;
+    const commits = this.store.pr(repo, number)?.history[this.source]?.commits;
+    return commits?.length
+      ? { from: commits[0]!.sha, to: commits.at(-1)!.sha }
+      : null;
+  }
+
+  showWhole = () => {
+    const whole = this.whole;
+    if (whole) this.choose(whole);
   };
 
   unpick = (): boolean => {

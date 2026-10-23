@@ -328,7 +328,7 @@ def _move_main_on(root: Path) -> None:
 
 STACK_BRANCH = "split-out-the-header-writer"
 
-SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased")
+SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased", "diverged")
 
 
 def _note(root: Path, line: str, subject: str, *, when: str | None = None) -> None:
@@ -411,6 +411,10 @@ def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> 
     if shape == "local":
         _note(root, "- not pushed yet\n", "Note the rework in the changelog")
         _note(root, "- nor this\n", "Thank the reviewers in the changelog")
+    if shape == "diverged":
+        stale = _git(root, "rev-parse", "HEAD").strip()
+        rebase_onto_main(root)
+        _git(root, "reset", "-q", "--hard", stale)
     base = STACK_BRANCH if shape == "stacked" else BASE_BRANCH
     return Repo(str(root), base, _git(root, "rev-parse", "HEAD").strip())
 
@@ -780,7 +784,8 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
           shape: str | None = None) -> list[str]:
     repo = build_repo(worktree_in(directory), reviewer, shape)
     rebased = shape == "rebased"
-    seed(conversation_managers, outside, viewer, repo, reviewer, repo.head if rebased else None)
+    seed(conversation_managers, outside, viewer, repo, reviewer,
+         repo.head if rebased or shape == "diverged" else None)
     panels.panel = manager_panel(running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
     if not rebased:

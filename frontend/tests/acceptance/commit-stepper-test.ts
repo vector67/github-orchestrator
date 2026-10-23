@@ -4,6 +4,7 @@ import {
   click,
   currentURL,
   fillIn,
+  find,
   findAll,
   triggerEvent,
   visit,
@@ -90,6 +91,45 @@ module('Acceptance | commit stepper', function (hooks) {
         .length,
       1,
       "the diff asked for is the commit's own range",
+    );
+  });
+
+  test('the bar and the timeline scroll away with the diff', async function (assert) {
+    board().diffs = {
+      ...board().diffs,
+      first: {
+        base: FORK,
+        head: FIRST,
+        files: [
+          changed(
+            'src/widgets/first.py',
+            Array.from({ length: 200 }, (_, at) => added(at + 1, 'a line')),
+          ),
+        ],
+      },
+    };
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    const bar = find('[data-test-commit-stepper]')!;
+    const timeline = find('[data-test-timeline]')!;
+    let scroller = find('[data-test-pr-diff]')!.parentElement!;
+    while (!['auto', 'scroll'].includes(getComputedStyle(scroller).overflowY))
+      scroller = scroller.parentElement!;
+    assert.true(scroller.contains(bar), 'the bar scrolls with the diff');
+    assert.true(scroller.contains(timeline), 'and so does the timeline');
+    assert.deepEqual(
+      [getComputedStyle(bar).position, getComputedStyle(timeline).position],
+      ['static', 'static'],
+      'neither stays pinned in place',
+    );
+
+    scroller.scrollTop = scroller.scrollHeight;
+
+    assert.true(
+      timeline.getBoundingClientRect().bottom <=
+        scroller.getBoundingClientRect().top,
+      'scrolled down, the timeline is out of sight',
     );
   });
 
@@ -315,6 +355,20 @@ module('Acceptance | commit stepper', function (hooks) {
     );
     assert.true(prompt.includes(`commit ${FIRST}`), prompt);
     assert.true(prompt.endsWith('why here?'), prompt);
+  });
+
+  test('a deep link to a file and line shows the whole pull request up to the head, where that line is and commenting works', async function (assert) {
+    board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+
+    await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fall.py&line=19');
+
+    assert.dom('[data-test-range]').includesText(`${FIRST} → ${THIRD}`);
+    assert
+      .dom(
+        '[data-test-file="src/widgets/all.py"] [data-test-row="added"][data-line="19"]',
+      )
+      .includesText('every commit');
+    assert.dom('[data-test-pr-diff] [data-test-add]').exists();
   });
 
   async function sized(size: string) {
