@@ -40,16 +40,17 @@ from github_orchestrator.domain import Pr
 log = logging.getLogger(__name__)
 
 
-def decide(pr: Pr, ports: Ports) -> None:
+def decide(pr: Pr, ports: Ports, *, only: frozenset[str] | None = None) -> None:
     try:
-        _drain(pr, ports)
+        _drain(pr, ports, only)
     except Exception:
         log.exception("The board's decisions could not be drained for %s",
                       pr)
 
 
-def _drain(pr: Pr, ports: Ports) -> None:
-    pending = ports.records.pending()
+def _drain(pr: Pr, ports: Ports, only: frozenset[str] | None) -> None:
+    pending = {key: entry for key, entry in ports.records.pending().items()
+               if only is None or key in only}
     for key in [key for key, entry in pending.items() if entry.reply is not None]:
         try:
             _reply(pr, key, ports)
@@ -63,7 +64,8 @@ def _drain(pr: Pr, ports: Ports) -> None:
         except Exception:
             log.exception("The intent for %s thread %s failed; it will be "
                           "retried on the next drain", pr, key)
-    send_reviews(pr, ports)
+    if only is None:
+        send_reviews(pr, ports)
 
 
 def _reply(pr: Pr, key: str, ports: Ports) -> None:

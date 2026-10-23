@@ -8,6 +8,7 @@ from github_orchestrator.github import (
     Thread,
     ThreadComment,
 )
+from github_orchestrator.notifications.fake import FakeNotifications
 from tests.builders import a_pr
 from tests.change_detection.support import POLLED_AT
 from tests.conversation.support import PR, REPO, drain, world
@@ -226,6 +227,32 @@ def _posted_on_the_pr(here):
     return [comment.body for thread in here.github.threads(THE_PR)
             if thread.kind is CommentKind.ISSUE for comment in thread.comments
             if comment.author == ME]
+
+
+def test_a_mention_resolved_on_the_board_of_a_held_pr_is_carried_out(settings):
+    here, state = _watching(
+        settings, _issue("IC_1", _said(1, "anna", "@octocat ping", "2025-12-01T10:00:00Z")))
+    manager = _heard(here, state)
+    with manager.editing("IC_1") as editable:
+        editable.resolve()
+
+    manager.tick(FakeNotifications(), on_hold=True)
+
+    assert manager.get("IC_1").standing is ConversationState.DONE
+
+
+def test_a_held_pr_still_waits_on_a_decision_about_anything_but_a_mention(settings):
+    here, state = _watching(
+        settings,
+        _issue("IC_1", _said(1, "anna", "@octocat ping", "2025-12-01T10:00:00Z")),
+        _review_thread("PRRT_one", _said(2, "bob", "rename this", "2025-12-01T11:00:00Z")))
+    manager = _heard(here, state)
+    with manager.editing("PRRT_one") as editable:
+        editable.resolve()
+
+    manager.tick(FakeNotifications(), on_hold=True)
+
+    assert manager.get("PRRT_one").standing is ConversationState.READY
 
 
 def test_reply_and_resolve_on_a_review_thread_mention_replies_there_and_resolves_here_only(settings):

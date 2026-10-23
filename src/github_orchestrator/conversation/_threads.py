@@ -263,8 +263,8 @@ class _Pr:
             return frozenset()
         return unanswered_threads(facts.mentions)
 
-    def decide(self) -> None:
-        decide(self.pr, self.built())
+    def decide(self, only: frozenset[str] | None = None) -> None:
+        decide(self.pr, self.built(), only=only)
 
 
 def _ticket(project: str | None, title: str, body: str) -> Ticket | None:
@@ -612,12 +612,17 @@ class _ConversationManager:
 
     def tick(self, news: ThreadNews, *, on_hold: bool) -> None:
         pr, ports = self._pr.pr, self._pr.ports
-        if not on_hold:
-            try:
+        try:
+            if not on_hold:
                 if ports.records.pending() or _review_waiting(ports):
                     self._pr.decide()
-            except Exception:
-                log.exception("loop %s: the board's pending decisions could not be read", pr)
+            else:
+                mentions = frozenset(conversation.key for conversation in self.all()
+                                     if conversation.mention)
+                if mentions & ports.records.pending().keys():
+                    self._pr.decide(only=mentions)
+        except Exception:
+            log.exception("loop %s: the board's pending decisions could not be read", pr)
         try:
             ask_due_verdicts(ports)
         except Exception:
