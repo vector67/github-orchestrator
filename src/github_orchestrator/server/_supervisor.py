@@ -17,11 +17,11 @@ GRACE_SECONDS = 1
 WORKER_START_SECONDS = 60
 
 
-def _bound(port: int) -> socket.socket:
+def _bound(host: str, port: int) -> socket.socket:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        sock.bind(("127.0.0.1", port))
+        sock.bind((host, port))
         sock.listen()
     except OSError:
         sock.close()
@@ -44,14 +44,15 @@ def serve(config: ServerConfig, worker: Callable[[], ASGIApp]) -> int:
             log.error("another server holds %s, so this one leaves", config.lock)
             return 1
         try:
-            sock = _bound(config.port)
+            sock = _bound(config.host, config.port)
         except OSError as error:
-            log.error("port %d is taken (%s), so the server leaves", config.port, error)
+            log.error("cannot listen on %s:%d (%s), so the server leaves", config.host,
+                      config.port, error)
             return 1
         with sock:
             _write_pid(config.pid)
-            log.info("server %d serving 127.0.0.1:%d with %d workers", os.getpid(), config.port,
-                     config.workers)
+            log.info("server %d serving %s:%d with %d workers", os.getpid(), config.host,
+                     config.port, config.workers)
             Multiprocess(uvicorn.Config(
                 worker, factory=True, workers=config.workers, log_config=None,
                 access_log=False, lifespan="off", proxy_headers=False,

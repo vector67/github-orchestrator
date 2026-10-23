@@ -75,6 +75,7 @@ class OrchestratorConfig:
     board_font_dir: str = ""
     not_fixed_opener: str = "Not fixed — "
     hub_port: int = 8720
+    hub_host: str = "127.0.0.1"
     server_workers: int = 4
     first_names_only: bool = False
     tracker: Tracker = Tracker.NONE

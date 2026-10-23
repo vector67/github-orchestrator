@@ -51,7 +51,7 @@ def files(tmp_path):
 
 
 def _container(files, spawns=None):
-    config = ServerConfig(port=18799, workers=2, lock=files / "server.lock",
+    config = ServerConfig(host="127.0.0.1", port=18799, workers=2, lock=files / "server.lock",
                           pid=files / "server.pid")
     return wire(clocks_of(sleep=lambda seconds: time.sleep(0.01)),
                 LogsWiring(files / "logs", "INFO"),

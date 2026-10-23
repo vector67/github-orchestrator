@@ -1082,7 +1082,8 @@ class ServerProvider(Provider):
 
 
 def server_config(settings: Settings) -> ServerConfig:
-    return ServerConfig(port=settings.config.hub_port, workers=settings.config.server_workers,
+    return ServerConfig(host=settings.config.hub_host, port=settings.config.hub_port,
+                        workers=settings.config.server_workers,
                         lock=settings.server_lock, pid=settings.server_pid)
 
 

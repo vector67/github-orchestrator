@@ -52,6 +52,11 @@ gh_account = "your-github-username"
 # `github-orchestrator status` prints its address.
 # hub_port = 8720
 
+# The address the hub listens on. The default answers this machine only; "0.0.0.0"
+# opens the board to every device on your network, such as a phone. The board has
+# no login, so anyone on that network can then use it.
+# hub_host = "127.0.0.1"
+
 # How many worker processes the server answers the hub's port with. Each
 # serves many requests at once, and they share no lock with each other or with
 # any PR's agent manager.
