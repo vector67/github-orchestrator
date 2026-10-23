@@ -137,10 +137,12 @@ jobs:
       - name: The board loads in headless Chrome without a script error
         run: |
           chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+          perl -e 'alarm 120; exec @ARGV' "$chrome" --headless=new --disable-gpu --no-sandbox \
+            --use-mock-keychain --no-first-run --user-data-dir="$RUNNER_TEMP/chrome-profile" \
+            --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
             --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
           if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
-          grep -q '<script' board.html
+          grep -q '<script' board.html || { tail -n 50 chrome.log; exit 1; }
 
       - name: doctor passes on a fresh install
         run: |
@@ -204,10 +206,12 @@ jobs:
       - name: The board loads in headless Chrome without a script error
         run: |
           chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+          perl -e 'alarm 120; exec @ARGV' "$chrome" --headless=new --disable-gpu --no-sandbox \
+            --use-mock-keychain --no-first-run --user-data-dir="$RUNNER_TEMP/chrome-profile" \
+            --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
             --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
           if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
-          grep -q '<script' board.html
+          grep -q '<script' board.html || { tail -n 50 chrome.log; exit 1; }
 
       - name: doctor passes on a fresh install
         run: |
@@ -299,10 +303,12 @@ jobs:
       - name: The board loads in headless Chrome without a script error
         run: |
           chrome=$(command -v google-chrome || command -v chromium || echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-          "$chrome" --headless=new --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
+          perl -e 'alarm 120; exec @ARGV' "$chrome" --headless=new --disable-gpu --no-sandbox \
+            --use-mock-keychain --no-first-run --user-data-dir="$RUNNER_TEMP/chrome-profile" \
+            --enable-logging=stderr --v=0 --virtual-time-budget=5000 \
             --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
           if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
-          grep -q '<script' board.html
+          grep -q '<script' board.html || { tail -n 50 chrome.log; exit 1; }
 
   update-command:
     needs: build
