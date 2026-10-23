@@ -123,12 +123,12 @@ export default class CommitBar extends Component<CommitBarSignature> {
                   {{@stepper.place}}
                   of
                   {{@stepper.count}}</b>
-                {{#if @stepper.unpushed}}
+                {{#if @stepper.offOrigin}}
                   <span
                     class="commit-pill"
                     data-pill="not-pushed"
                     data-test-not-pushed
-                  >not pushed</span>
+                  >{{@stepper.offOrigin}}</span>
                 {{/if}}
                 {{#if @stepper.merge}}
                   <span class="commit-pill" data-test-merge-pill>merge</span>

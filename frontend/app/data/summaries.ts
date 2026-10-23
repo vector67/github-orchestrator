@@ -11,6 +11,7 @@ import type {
   PullRequestCommits,
   ReadMark,
   RecordState,
+  ResetToOrigin,
   WitnessProgress,
   WallGroup,
   WallGroupName,
@@ -1026,6 +1027,28 @@ export function mergeNoteOf(
   };
 }
 
+export interface ResetStanding {
+  queued: boolean;
+  outcome: string | null;
+  ranAt: string | null;
+}
+
+export function resetStandingOf(
+  kept: ResetToOrigin | null | undefined,
+): ResetStanding | null {
+  if (!kept) return null;
+  return {
+    queued: kept.queued_at !== null,
+    outcome:
+      kept.ran_at === null
+        ? null
+        : kept.refused === null
+          ? 'Reset to origin when the agent finished.'
+          : `The queued reset didn't run: ${kept.refused}`,
+    ranAt: kept.ran_at,
+  };
+}
+
 export interface Stepper {
   place: number;
   count: number;
@@ -1036,7 +1059,7 @@ export interface Stepper {
   authoredAt: string;
   read: boolean;
   merge: boolean;
-  unpushed: boolean;
+  offOrigin: string | null;
   range: DiffRange;
   previous: string | null;
   next: string | null;
@@ -1056,6 +1079,11 @@ function pickedUpAt(
     (one, index) =>
       index > reviewedAt && !read.has(one.sha) && !(skipMerges && isMerge(one)),
   );
+}
+
+function offOriginOf(standing: Standing, sha: string): string | null {
+  if (!standing.offOrigin.has(sha)) return null;
+  return standing.diverged ? 'not on origin' : 'not pushed';
 }
 
 const lastStandings = new WeakMap<
@@ -1081,7 +1109,7 @@ function standingBuilt(
     offOrigin: new Set(here),
     diverged: {
       here: here.length,
-      there: pushed.commits.filter((one) => !kept.has(one.sha)).length,
+      there: pushed.commits.filter((one) => !kept.has(one.sha)),
     },
   };
 }
@@ -1181,7 +1209,7 @@ function stepperBuilt(
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
     merge: isMerge(commit),
-    unpushed: standingOf(history, pushed).offOrigin.has(commit.sha),
+    offOrigin: offOriginOf(standingOf(history, pushed), commit.sha),
     range: rangeOf(history, at, at),
     previous: commits.slice(0, at).findLast(stops)?.sha ?? null,
     next: commits.slice(at + 1).find(stops)?.sha ?? null,

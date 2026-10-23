@@ -5,6 +5,7 @@ import {
   currentURL,
   find,
   findAll,
+  settled,
   triggerEvent,
   visit,
   waitUntil,
@@ -103,7 +104,15 @@ module('Acceptance | commit timeline', function (hooks) {
     });
   }
 
+  async function afterTheGraphIsFitted() {
+    await new Promise((done) =>
+      requestAnimationFrame(() => requestAnimationFrame(done)),
+    );
+    await settled();
+  }
+
   async function dragTo(end: string, sha: string) {
+    await afterTheGraphIsFitted();
     const target = dot(sha).getBoundingClientRect();
     await triggerEvent(`[data-test-handle="${end}"]`, 'pointerdown');
     await triggerEvent('[data-test-timeline-graph]', 'pointermove', {
@@ -1049,6 +1058,7 @@ module(
 
 const STALE_ONE = '5a5a5a5';
 const STALE_TWO = '6b6b6b6';
+const STALE_FORK = '01d0000';
 
 module(
   'Acceptance | commit timeline with a worktree diverged from origin',
@@ -1070,37 +1080,272 @@ module(
         prCommit(SECOND, FIRST, 'Name the widget'),
         prCommit(THIRD, SECOND, 'Test the widget'),
       ]);
-      board().localCommits = prHistory('01d0000', [
-        prCommit(STALE_ONE, '01d0000', 'Add the widget'),
-        prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
-      ]);
+      board().localCommits = {
+        ...prHistory(STALE_FORK, [
+          prCommit(STALE_ONE, STALE_FORK, 'Add the widget'),
+          prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
+        ]),
+        base_tip: FORK,
+        base_commits: [prCommit(FORK, STALE_FORK, 'Bump the parser')],
+        behind: 1,
+      };
     });
 
-    test('on local a review given on a commit origin no longer has draws no flag', async function (assert) {
+    test("on local origin's commits get a grey lane of their own between main and the worktree's", async function (assert) {
       await visit('/pr/o/r/7/diff');
       await click('[data-test-source="local"]');
 
       await click('[data-test-timeline-toggle]');
 
+      const [onOrigin, here, [fork]] = [
+        dots('origin'),
+        dots('pr'),
+        dots('base').filter((one) => one.sha === FORK),
+      ];
       assert.deepEqual(
-        dots('pr').map((one) => [
-          one.sha,
-          dot(one.sha).getAttribute('data-pushed'),
-        ]),
+        onOrigin.map((one) => [one.sha, one.style]),
         [
-          [STALE_ONE, 'false'],
-          [STALE_TWO, 'false'],
+          [FIRST, 'origin'],
+          [SECOND, 'origin'],
+          [THIRD, 'origin'],
         ],
       );
+      assert.deepEqual(
+        here.map((one) => one.sha),
+        [STALE_ONE, STALE_TWO],
+      );
+      assert.true(fork!.y < onOrigin[0]!.y, 'origin under main');
+      assert.true(onOrigin[0]!.y < here[0]!.y, 'the worktree under origin');
+      assert.true(
+        onOrigin[0]!.x > fork!.x,
+        "origin's lane forks from origin's fork",
+      );
+      assert
+        .dom('[data-test-dot][data-lane="origin"][data-pickable]')
+        .doesNotExist();
+      assert.dom('[data-pushed="false"]').doesNotExist();
+      assert.dom('[data-test-unpushed-lane]').doesNotExist();
+      assert
+        .dom('[data-test-lane-label="origin"]')
+        .hasAttribute('data-at', THIRD);
+      assert
+        .dom('[data-test-lane-label="local"]')
+        .hasAttribute('data-at', STALE_TWO);
+      assert.dom('[data-test-label-box]').exists({ count: 2 });
+      assert.dom('[data-test-lane-label="head"]').doesNotExist();
       assert.dom('[data-test-review-flag]').doesNotExist();
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'origin']);
     });
 
-    test("on origin, where the review's commit is not in the list and nothing was kept, there is no flag either", async function (assert) {
+    test('on local the header counts the worktree and origin apart, and the stepper says its commit is not on origin', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      assert
+        .dom('[data-test-timeline-header]')
+        .hasText(
+          `2 commits in the worktree · forked from main at ${STALE_FORK} · origin has 3 other commits from ${FORK} diverged from origin · 2 here, 3 on origin Reset to origin`,
+        );
+      assert
+        .dom('[data-test-diverged]')
+        .hasText('diverged from origin · 2 here, 3 on origin');
+      assert.dom('[data-test-not-pushed]').hasText('not on origin');
+    });
+
+    test("clicking one of origin's commits picks nothing", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
+
+      await click(dot(FIRST));
+
+      assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
+      assert.dom(dot(FIRST)).hasAttribute('data-in-range', 'false');
+    });
+
+    async function openLocal() {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+    }
+
+    function resets(): number {
+      return board().posted.filter((one) => one.verb === 'reset-to-origin')
+        .length;
+    }
+
+    test('Reset to origin asks on the page first, then puts the worktree on origin', async function (assert) {
+      await openLocal();
+
+      await click('[data-test-reset-to-origin]');
+
+      assert
+        .dom('[data-test-reset-confirm]')
+        .hasText(
+          "Reset the worktree to origin? Its 2 commits that aren't on origin will be dropped. Reset Cancel",
+        );
+      assert.strictEqual(resets(), 0, 'nothing is sent before Reset');
+
+      await click('[data-test-reset-yes]');
+
+      assert.strictEqual(resets(), 1);
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        [FIRST, SECOND, THIRD],
+      );
+      assert.dom('[data-test-dot][data-lane="origin"]').doesNotExist();
+      assert.dom('[data-test-diverged]').doesNotExist();
+    });
+
+    test('Cancel leaves the worktree as it is', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+
+      await click('[data-test-reset-no]');
+
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.strictEqual(resets(), 0);
+      assert.dom('[data-test-diverged]').exists();
+    });
+
+    test('a refused reset says why and leaves the drawing as it was', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'uncommitted-changes',
+        detail: 'the worktree has uncommitted changes, so it was left as it is',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the worktree has uncommitted changes, so it was left as it is',
+        );
+      assert.deepEqual(
+        dots('pr').map((one) => one.sha),
+        [STALE_ONE, STALE_TWO],
+      );
+      assert.dom('[data-test-diverged]').exists();
+    });
+
+    function reviewedWith(resetToOrigin: {
+      queued_at: string | null;
+      ran_at: string | null;
+      refused: string | null;
+    }) {
+      board().manager = dashboard({
+        facts: {
+          is_author: false,
+          my_review: 'commented',
+          my_review_at: '2026-10-20T12:00:00Z',
+          my_review_sha: STALE_TWO,
+        },
+        system: { reset_to_origin: resetToOrigin },
+      });
+    }
+
+    function posted(verb: string): number {
+      return board().posted.filter((one) => one.verb === verb).length;
+    }
+
+    test('with an agent at work the refusal offers to reset when it finishes, asking first', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'agent-working',
+        detail: 'an agent is working in the worktree, so it was left as it is',
+      };
+      await click('[data-test-reset-yes]');
+
+      await click('[data-test-reset-later]');
+
+      assert
+        .dom('[data-test-reset-confirm]')
+        .hasText(
+          "Reset the worktree to origin when the agent finishes? Its 2 commits that aren't on origin will be dropped, and so will any commits the agent makes before then. Reset when it finishes Cancel",
+        );
+      assert.strictEqual(posted('queue-reset-to-origin'), 0);
+
+      await click('[data-test-reset-yes]');
+
+      assert.strictEqual(posted('queue-reset-to-origin'), 1);
+      assert
+        .dom('[data-test-reset-queued]')
+        .hasText('Reset queued until the agent finishes Cancel');
+      assert.dom('[data-test-reset-to-origin]').doesNotExist();
+      assert.dom('[data-test-reset-refused]').doesNotExist();
+    });
+
+    test('Cancel takes a queued reset off', async function (assert) {
+      reviewedWith({
+        queued_at: '2026-10-23T09:00:00Z',
+        ran_at: null,
+        refused: null,
+      });
+      await openLocal();
+
+      await click('[data-test-reset-unqueue]');
+
+      assert.strictEqual(posted('cancel-reset-to-origin'), 1);
+      assert.dom('[data-test-reset-queued]').doesNotExist();
+      assert.dom('[data-test-reset-to-origin]').exists();
+    });
+
+    test('once the agent finished the page says the queued reset ran', async function (assert) {
+      reviewedWith({
+        queued_at: null,
+        ran_at: '2026-10-23T09:30:00Z',
+        refused: null,
+      });
+      board().localCommits = null;
+      await openLocal();
+
+      assert
+        .dom('[data-test-reset-outcome]')
+        .hasText('Reset to origin when the agent finished. ×');
+      assert.dom('[data-test-diverged]').doesNotExist();
+
+      await click('[data-test-reset-dismiss]');
+
+      assert.strictEqual(posted('cancel-reset-to-origin'), 1);
+      assert.dom('[data-test-reset-outcome]').doesNotExist();
+    });
+
+    test("once the agent finished the page says why a queued reset didn't run", async function (assert) {
+      reviewedWith({
+        queued_at: null,
+        ran_at: '2026-10-23T09:30:00Z',
+        refused:
+          'the worktree has uncommitted changes, so it was left as it is',
+      });
+      await openLocal();
+
+      assert
+        .dom('[data-test-reset-outcome]')
+        .hasText(
+          "The queued reset didn't run: the worktree has uncommitted changes, so it was left as it is ×",
+        );
+      assert.dom('[data-test-reset-to-origin]').exists();
+    });
+
+    test('on origin there is no second lane and nothing about the worktree', async function (assert) {
       await visit('/pr/o/r/7/diff');
 
       await click('[data-test-timeline-toggle]');
 
+      assert.dom('[data-test-dot][data-lane="origin"]').doesNotExist();
+      assert.dom('[data-test-diverged]').doesNotExist();
+      assert.dom('[data-test-not-pushed]').doesNotExist();
       assert.dom('[data-test-review-flag]').doesNotExist();
+      assert.deepEqual(keyed(), PLAIN_KEY);
     });
   },
 );

@@ -1044,15 +1044,22 @@ function chipsOf(
           'Threads you opened that the author has answered',
         )
       : null,
-    countChip(
-      'unpushed',
-      system.unpushed_commits?.length ?? null,
-      (count) => `${count} unpushed`,
-      ROW_HINTS['unpushed']!,
-      (system.unpushed_commits?.length ?? 0) >= UNPUSHED_BACKLOG
-        ? 'warn'
-        : 'plain',
-    ),
+    system.diverged
+      ? chip(
+          'diverged',
+          'diverged from origin',
+          'The worktree and origin each hold commits the other lacks',
+          'warn',
+        )
+      : countChip(
+          'unpushed',
+          system.unpushed_commits?.length ?? null,
+          (count) => `${count} unpushed`,
+          ROW_HINTS['unpushed']!,
+          (system.unpushed_commits?.length ?? 0) >= UNPUSHED_BACKLOG
+            ? 'warn'
+            : 'plain',
+        ),
     code === 'on-hold'
       ? null
       : countChip(

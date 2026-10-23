@@ -950,6 +950,25 @@ module('Acceptance | wall', function (hooks) {
       .doesNotExist();
   });
 
+  test('a worktree diverged from origin says so in place of its unpushed count', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          system: { unpushed_commits: unpushed(2), diverged: true },
+        },
+      }),
+      heldPr({
+        number: 8,
+        dashboard: { system: { unpushed_commits: unpushed(2) } },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(chips('o/r#7'), ['diverged from origin']);
+    assert.deepEqual(chips('o/r#8'), ['2 unpushed']);
+  });
+
   test('a backlog of unpushed commits stands out from a few', async function (assert) {
     onTheHub(
       heldPr({ dashboard: { system: { unpushed_commits: unpushed(1) } } }),

@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
 import type { Picked, Timeline } from 'frontend/data/timeline';
+import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
 
 type End = 'from' | 'to';
@@ -21,6 +22,7 @@ export interface CommitTimelineSignature {
     stretch: (end: End, sha: string) => void;
     choose: (picked: Picked | null) => void;
     fit: (across: number) => void;
+    reset: ResetControls;
   };
 }
 
@@ -67,6 +69,21 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     watching.observe(scroll);
     return () => watching.disconnect();
   };
+
+  private get counted(): string {
+    const here = this.args.timeline.header.diverged?.here ?? 0;
+    return here === 1
+      ? "Its 1 commit that isn't on origin"
+      : `Its ${here} commits that aren't on origin`;
+  }
+
+  get dropped(): string {
+    return `${this.counted} will be dropped.`;
+  }
+
+  get droppedLater(): string {
+    return `${this.counted} will be dropped, and so will any commits the agent makes before then.`;
+  }
 
   private clicked(event: MouseEvent): void {
     const target = event.target as Element;
@@ -116,8 +133,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       <header class="timeline-head">
         <p class="timeline-title" data-test-timeline-header>
           <b>{{@timeline.header.count}}</b>
-          on
-          {{@timeline.header.branch}}
+          {{#if @timeline.header.diverged}}
+            in the worktree
+          {{else}}
+            on
+            {{@timeline.header.branch}}
+          {{/if}}
           ·
           {{@timeline.header.relation}}
           {{#if @timeline.header.fork}}<code
@@ -140,6 +161,35 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             <span class="timeline-aside">{{@timeline.header.base}}'s new commits
               aren't in this diff</span>
           {{else if @timeline.header.tip}}, {{@timeline.header.tip}}{{/if}}
+          {{#if @timeline.header.diverged}}
+            · origin has
+            {{@timeline.header.diverged.other}}
+            from
+            <code
+              class="timeline-fork"
+            >{{@timeline.header.diverged.from}}</code>
+            <span
+              class="timeline-behind"
+              data-test-diverged
+            >{{@timeline.header.diverged.chip}}</span>
+            {{#if @reset.standing.queued}}
+              <span class="timeline-reset-queued" data-test-reset-queued>Reset
+                queued until the agent finishes
+                <button
+                  type="button"
+                  class="btn timeline-reset"
+                  data-test-reset-unqueue
+                  {{on "click" @reset.unqueue}}
+                >Cancel</button></span>
+            {{else}}
+              <button
+                type="button"
+                class="btn timeline-reset"
+                data-test-reset-to-origin
+                {{on "click" @reset.ask}}
+              >Reset to origin</button>
+            {{/if}}
+          {{/if}}
         </p>
         <span class="timeline-presets" role="group" aria-label="pick a range">
           {{#each @timeline.presets key="name" as |preset|}}
@@ -154,6 +204,68 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{/each}}
         </span>
       </header>
+      {{#if @timeline.header.diverged}}
+        {{#if @reset.confirming}}
+          <div
+            class="timeline-reset-confirm"
+            role="alertdialog"
+            aria-label="reset the worktree to origin"
+            data-test-reset-confirm
+          >
+            {{#if (eq @reset.confirming "later")}}
+              <p class="timeline-reset-question">Reset the worktree to origin
+                when the agent finishes?
+                {{this.droppedLater}}</p>
+              <button
+                type="button"
+                class="btn"
+                data-test-reset-yes
+                {{on "click" @reset.confirm}}
+              >Reset when it finishes</button>
+            {{else}}
+              <p class="timeline-reset-question">Reset the worktree to origin?
+                {{this.dropped}}</p>
+              <button
+                type="button"
+                class="btn"
+                data-test-reset-yes
+                {{on "click" @reset.confirm}}
+              >Reset</button>
+            {{/if}}
+            <button
+              type="button"
+              class="btn"
+              data-test-reset-no
+              {{on "click" @reset.cancel}}
+            >Cancel</button>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if @reset.refused}}
+        <p class="timeline-reset-refused" role="status" data-test-reset-refused>
+          {{@reset.refused}}
+          {{#if @reset.offerLater}}
+            <button
+              type="button"
+              class="btn timeline-reset"
+              data-test-reset-later
+              {{on "click" @reset.askLater}}
+            >Reset when the agent finishes</button>
+          {{/if}}
+        </p>
+      {{/if}}
+      {{#if @reset.standing.outcome}}
+        <p class="timeline-reset-outcome" role="status" data-test-reset-outcome>
+          {{@reset.standing.outcome}}
+          <button
+            type="button"
+            class="btn timeline-reset"
+            aria-label="dismiss"
+            data-test-reset-dismiss
+            {{on "click" @reset.unqueue}}
+          >×</button>
+        </p>
+      {{/if}}
       <div
         class="timeline-scroll"
         {{didChange this.listen}}
@@ -470,6 +582,12 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               data-style="not-pushed"
             ></i>
             not pushed</span>
+        {{/if}}
+        {{#if @timeline.key.origin}}
+          <span class="timeline-key-item" data-test-key="origin"><i
+              data-style="origin"
+            ></i>
+            on origin, not here</span>
         {{/if}}
         {{#if @timeline.key.merge}}
           <span class="timeline-key-item" data-test-key="merge-pip"><i

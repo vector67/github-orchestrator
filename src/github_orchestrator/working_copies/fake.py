@@ -353,15 +353,17 @@ class FakeWorkingCopies:
         checkout = self.checkouts.get(_key(worktree))
         return None if checkout is None else checkout.branch
 
-    def commits_since(self, worktree: Path | str, sha: str | None) -> tuple[str, ...] | None:
+    def commits_since(self, worktree: Path | str, sha: str | None, *,
+                      behind: bool = False) -> tuple[str, ...] | None:
         if not sha or _key(worktree) not in self.checkouts:
             return None
         since = self._resolve(sha)
         head = self._head(worktree)
         if since is None or head is None:
             return None
+        listed = self._range(head, since) if behind else self._range(since, head)
         return tuple(f"{commit[:7]} {self.commits[commit].message.splitlines()[0]}"
-                     for commit in self._range(since, head))
+                     for commit in listed)
 
     def checkout(self, pr: Pr) -> BoundCheckout:
         return BoundCheckout(self, pr)

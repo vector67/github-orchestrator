@@ -470,6 +470,8 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       queue: [],
       on_hold: false,
       unpushed_commits: [],
+      diverged: false,
+      reset_to_origin: null,
       threads: { queued: 0, live: 0, proposed: 0, drafts: 0 },
       base: null,
       ...system,
@@ -1325,6 +1327,14 @@ export class FakeBoard {
       return this.askTheAgent(url, init, headers);
     }
     if (url.endsWith('/api/pull-request:fetch')) return this.fetchBranch();
+    if (url.endsWith('/api/pull-request/operations:reset-to-origin')) {
+      return this.resetToOrigin(url);
+    }
+    const queueing =
+      /\/api\/pull-request\/operations:((?:queue|cancel)-reset-to-origin)$/.exec(
+        url,
+      );
+    if (queueing) return this.queueReset(url, queueing[1]!);
     const marking = READ_MARK.exec(url);
     if (marking) return this.mark(url, marking[1]!, init);
     const told = MANAGER_VERB.exec(url);
@@ -1448,6 +1458,50 @@ export class FakeBoard {
     this.readMarks =
       verb === 'mark-read' ? [...others, { sha: body.sha, subject }] : others;
     return this.json(200, { marks: this.readMarks });
+  }
+
+  private queueReset(url: string, verb: string): Response {
+    this.posted.push({ url, key: '', verb, ifMatch: null, body: null });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    if (this.manager) {
+      this.manager = {
+        ...this.manager,
+        system: {
+          ...this.manager.system,
+          reset_to_origin:
+            verb === 'queue-reset-to-origin'
+              ? {
+                  queued_at: new Date(Date.now()).toISOString(),
+                  ran_at: null,
+                  refused: null,
+                }
+              : null,
+        },
+      };
+      this.streamed();
+    }
+    return respond(null, { status: 204 });
+  }
+
+  private resetToOrigin(url: string): Response {
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'reset-to-origin',
+      ifMatch: null,
+      body: null,
+    });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.localCommits = null;
+    return respond(null, { status: 204 });
   }
 
   private fetchBranch(): Response {

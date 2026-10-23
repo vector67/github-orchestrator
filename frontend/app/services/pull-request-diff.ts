@@ -25,11 +25,26 @@ import type {
   DiffSource,
   MergeNote,
   PickedRange,
+  ResetStanding,
   Stepper,
 } from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export type { DiffSource } from 'frontend/services/store';
+
+export type ResetWhen = 'now' | 'later';
+
+export interface ResetControls {
+  confirming: ResetWhen | null;
+  refused: string | null;
+  offerLater: boolean;
+  standing: ResetStanding | null;
+  ask: () => void;
+  askLater: () => void;
+  confirm: () => void;
+  cancel: () => void;
+  unqueue: () => void;
+}
 
 class PerPr {
   @tracked failed = false;
@@ -41,6 +56,9 @@ class PerPr {
   @tracked across = 0;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
+  @tracked confirmingReset: ResetWhen | null = null;
+  @tracked resetRefused: string | null = null;
+  @tracked offerLater = false;
   asked: string | null = null;
 
   constructor(readonly scope: PrScope) {}
@@ -72,7 +90,7 @@ export default class PullRequestDiffService extends Service {
   }
 
   get asking(): string {
-    return `pull-request-diff@${this.source}@${this.threads.pullRequest?.head_sha ?? ''}`;
+    return `pull-request-diff@${this.source}@${this.threads.pullRequest?.head_sha ?? ''}@${this.resetStanding?.ranAt ?? ''}`;
   }
 
   get diff(): Diff | undefined {
@@ -149,6 +167,90 @@ export default class PullRequestDiffService extends Service {
     }
     this.pr.picked = picked;
   };
+
+  private get resetStanding(): ResetStanding | null {
+    const { repo, number } = this.here.at;
+    return this.store.resetStanding(repo, number);
+  }
+
+  get reset(): ResetControls {
+    const pr = this.pr;
+    return {
+      confirming: pr.confirmingReset,
+      refused: pr.resetRefused,
+      offerLater: pr.offerLater,
+      standing: this.resetStanding,
+      ask: this.askReset,
+      askLater: this.askResetLater,
+      confirm: this.confirmReset,
+      cancel: this.cancelReset,
+      unqueue: this.unqueueReset,
+    };
+  }
+
+  askReset = () => this.asked('now');
+
+  askResetLater = () => this.asked('later');
+
+  private asked(when: ResetWhen): void {
+    this.pr.confirmingReset = when;
+    this.pr.resetRefused = null;
+    this.pr.offerLater = false;
+  }
+
+  cancelReset = () => {
+    this.pr.confirmingReset = null;
+  };
+
+  confirmReset = () => {
+    const pr = this.pr;
+    void waitForPromise(
+      pr.confirmingReset === 'later' ? this.queueing(pr) : this.resetting(pr),
+    );
+  };
+
+  unqueueReset = () => {
+    void waitForPromise(
+      this.store
+        .resetToOrigin(this.here.at, 'cancel-reset-to-origin')
+        .catch((trouble) => reportError('cancel the queued reset', trouble)),
+    );
+  };
+
+  private async queueing(pr: PerPr): Promise<void> {
+    pr.confirmingReset = null;
+    try {
+      const refused = await this.store.resetToOrigin(
+        this.here.at,
+        'queue-reset-to-origin',
+      );
+      if (pr.scope.left) return;
+      pr.resetRefused = refused ? `Not queued: ${refused.detail}` : null;
+    } catch (trouble) {
+      void reportError('queue a reset to origin', trouble);
+    }
+  }
+
+  private async resetting(pr: PerPr): Promise<void> {
+    pr.confirmingReset = null;
+    try {
+      const refused = await this.store.resetToOrigin(
+        this.here.at,
+        'reset-to-origin',
+      );
+      if (pr.scope.left) return;
+      pr.resetRefused = refused ? `Not reset: ${refused.detail}` : null;
+      pr.offerLater = refused?.code === 'agent-working';
+      if (refused) return;
+      await Promise.all([
+        this.read('local'),
+        this.store.readPrCommits(this.here.at, 'local'),
+        this.store.readPrCommits(this.here.at, 'origin'),
+      ]);
+    } catch (trouble) {
+      void reportError('reset the worktree to origin', trouble);
+    }
+  }
 
   get whole(): Picked | null {
     const { repo, number } = this.here.at;

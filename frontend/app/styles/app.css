@@ -4768,6 +4768,51 @@ button.tree-row[aria-current="true"] {
   border-radius: 999px;
 }
 
+.timeline-reset {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.timeline-reset-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--text);
+  box-shadow: inset 4px 0 0 var(--yellow);
+}
+
+.timeline-reset-question {
+  margin: 0 8px 0 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
+.timeline-reset-confirm .btn {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.timeline-reset-queued {
+  margin-left: 8px;
+  white-space: nowrap;
+  font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.timeline-reset-outcome {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
+.timeline-reset-refused {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+
 .timeline-aside {
   font-size: var(--fs-s);
   color: var(--muted);
@@ -4811,6 +4856,10 @@ button.tree-row[aria-current="true"] {
 
 .timeline-lane[data-lane="stack"] {
   stroke: var(--blue);
+}
+
+.timeline-lane[data-lane="origin"] {
+  stroke: var(--muted);
 }
 
 .timeline-lane[data-dashed] {
@@ -4871,6 +4920,12 @@ button.tree-row[aria-current="true"] {
   cursor: default;
   fill: var(--muted);
   stroke: none;
+}
+
+.timeline-dot[data-style="origin"] {
+  cursor: default;
+  fill: var(--page);
+  stroke: var(--muted);
 }
 
 .timeline-dot[data-style="ghost"] {
@@ -5057,6 +5112,11 @@ button.tree-row[aria-current="true"] {
   height: 14px;
   border: 0;
   border-radius: 0;
+}
+
+.timeline-key-item i[data-style="origin"] {
+  background: var(--page);
+  border-color: var(--muted);
 }
 
 .timeline-key-item i[data-style="not-pushed"] {

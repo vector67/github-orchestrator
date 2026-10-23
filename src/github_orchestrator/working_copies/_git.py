@@ -190,8 +190,9 @@ class GitWorkingCopies:
     def wrong_branch(self, pr: Pr, *, now: float) -> WrongBranch | None:
         return self._trouble.wrong_branch(pr, now=now)
 
-    def commits_since(self, worktree: Path | str, sha: str | None) -> tuple[str, ...] | None:
-        return self._status.commits_since(worktree, sha)
+    def commits_since(self, worktree: Path | str, sha: str | None, *,
+                      behind: bool = False) -> tuple[str, ...] | None:
+        return self._status.commits_since(worktree, sha, behind=behind)
 
     def checkout(self, pr: Pr) -> BoundCheckout:
         return BoundCheckout(self, pr)

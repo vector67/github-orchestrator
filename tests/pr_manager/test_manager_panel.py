@@ -104,9 +104,9 @@ class CountingCopies(FakeWorkingCopies):
         super().__init__()
         self.counted = 0
 
-    def commits_since(self, worktree, sha):
+    def commits_since(self, worktree, sha, *, behind=False):
         self.counted += 1
-        return super().commits_since(worktree, sha)
+        return super().commits_since(worktree, sha, behind=behind)
 
 
 def _one_commit_ahead(settings, tmp_path):

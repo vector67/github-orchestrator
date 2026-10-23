@@ -249,9 +249,9 @@ class _AskedCopies(FakeWorkingCopies):
         super().__init__()
         self.asked = []
 
-    def commits_since(self, worktree, sha):
+    def commits_since(self, worktree, sha, *, behind=False):
         self.asked.append(worktree)
-        return super().commits_since(worktree, sha)
+        return super().commits_since(worktree, sha, behind=behind)
 
 
 def test_a_pr_with_no_worktree_says_git_cannot_count_its_commits(settings, tmp_path):
@@ -265,12 +265,13 @@ def test_a_pr_with_no_worktree_says_git_cannot_count_its_commits(settings, tmp_p
 
 
 class _ListedCopies(FakeWorkingCopies):
-    def __init__(self, *listed):
+    def __init__(self, *listed, behind=()):
         super().__init__()
         self.listed = listed
+        self.behind = behind
 
-    def commits_since(self, worktree, sha):
-        return self.listed
+    def commits_since(self, worktree, sha, *, behind=False):
+        return self.behind if behind else self.listed
 
 
 def test_an_unpushed_commit_with_an_empty_subject_is_read_with_an_empty_subject(
@@ -282,6 +283,21 @@ def test_an_unpushed_commit_with_an_empty_subject_is_read_with_an_empty_subject(
 
     assert unmanaged.unpushed_commits == (
         UnpushedCommit("c0ffee1", "Second change"), UnpushedCommit("badf00d", ""))
+
+
+@pytest.mark.parametrize(("listed", "behind", "diverged"), [
+    (("c0ffee1 Local work",), (), False),
+    (("c0ffee1 Local work",), ("badf00d Rewritten work",), True),
+    ((), ("badf00d Rewritten work",), False),
+], ids=["ahead of origin", "diverged", "behind origin"])
+def test_a_worktree_has_diverged_when_each_side_holds_commits_the_other_lacks(
+        settings, tmp_path, listed, behind, diverged):
+    seed(settings, POLLED)
+    copies = _ListedCopies(*listed, behind=behind)
+
+    _, unmanaged = _both(settings, tmp_path, working_copies=copies)
+
+    assert unmanaged.diverged is diverged
 
 
 def test_a_frozen_pr_dismissed_until_its_next_event_carries_both(

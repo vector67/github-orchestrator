@@ -724,7 +724,7 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
 
 def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
                    reviewed_on: str | None) -> None:
-    head = _git(repo.worktree, "rev-parse", "HEAD").strip()
+    head = _git(repo.worktree, "rev-parse", f"origin/{PR_BRANCH}").strip()
     first = _git(repo.worktree, "rev-list", "--reverse", f"{repo.base_branch}..HEAD").split()[0]
     state = PullRequestState(title=PR_TITLE, url=f"https://github.com/{PR.repo}/pull/{PR.number}",
                              branch=PR_BRANCH, base_branch=repo.base_branch,

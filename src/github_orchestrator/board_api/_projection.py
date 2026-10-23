@@ -505,6 +505,11 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             unpushed_commits=None if dashboard.unpushed_commits is None
             else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)
                   for commit in dashboard.unpushed_commits],
+            diverged=dashboard.diverged,
+            reset_to_origin=None if dashboard.reset_to_origin is None
+            else contract.ResetToOrigin(queued_at=dashboard.reset_to_origin.queued_at,
+                                        ran_at=dashboard.reset_to_origin.ran_at,
+                                        refused=dashboard.reset_to_origin.refused),
             threads=contract.ThreadCounts(
                 queued=dashboard.threads_queued, live=len(dashboard.threads_live),
                 proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts),

@@ -1,5 +1,6 @@
+import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -51,6 +52,36 @@ class QueuedEvent:
 class UnpushedCommit:
     sha: str
     subject: str
+
+
+RESET_TO_ORIGIN = "reset"
+_RESET_STATE = "state"
+
+
+@dataclass(frozen=True)
+class ResetToOrigin:
+    queued_at: str | None = None
+    ran_at: str | None = None
+    refused: str | None = None
+
+    def keep(self, shelf: "Shelf") -> None:
+        shelf.save(RESET_TO_ORIGIN, _RESET_STATE, json.dumps(asdict(self)).encode())
+
+    @staticmethod
+    def kept(shelf: "Shelf") -> "ResetToOrigin | None":
+        document = shelf.list(RESET_TO_ORIGIN).get(_RESET_STATE)
+        if document is None:
+            return None
+        try:
+            fields = json.loads(document)
+            return ResetToOrigin(fields.get("queued_at"), fields.get("ran_at"),
+                                 fields.get("refused"))
+        except (ValueError, AttributeError):
+            return None
+
+    @staticmethod
+    def forget(shelf: "Shelf") -> None:
+        shelf.delete(RESET_TO_ORIGIN, _RESET_STATE)
 
 
 @dataclass(frozen=True)
@@ -106,6 +137,8 @@ class Dashboard:
     queue: tuple[QueuedEvent, ...]
     on_hold: bool
     unpushed_commits: tuple[UnpushedCommit, ...] | None
+    diverged: bool
+    reset_to_origin: ResetToOrigin | None
     base: BaseStanding | None
     threads_queued: int
     threads_live: frozenset[str]

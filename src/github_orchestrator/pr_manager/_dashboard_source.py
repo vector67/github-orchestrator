@@ -6,6 +6,8 @@ from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     QueuedEvent,
+    ResetToOrigin,
+    Shelves,
     Told,
     UnpushedCommit,
 )
@@ -41,8 +43,9 @@ class DashboardSource:
                  history: History, worklist: Worklist, holds: Holds,
                  dismissals: Dismissals, working_copies: WorkingCopies,
                  conversation_managers: ConversationManagerFactory, pr_processes: PrProcesses,
-                 status_files: StatusFiles, told: Told) -> None:
+                 status_files: StatusFiles, told: Told, shelves: Shelves) -> None:
         self._config_of = config_of
+        self._shelves = shelves
         self._told = told
         self._clock = clock
         self._change_detection = change_detection
@@ -61,8 +64,12 @@ class DashboardSource:
         worktree = wrong.worktree if wrong is not None else self._pr_processes.manager_path(pr) or ""
         drawn = self.drawn(self._config_of(pr, worktree), self._conversation_managers.of(pr),
                            wrong=wrong, run=None, notice=None)
+        unpushed = self._unpushed(worktree, pr)
         return self._status_files.laid_over(
-            replace(drawn, unpushed_commits=self._unpushed(worktree, pr), base=self._base(pr)),
+            replace(drawn, unpushed_commits=unpushed,
+                    diverged=bool(unpushed) and self._behind(worktree, pr),
+                    reset_to_origin=ResetToOrigin.kept(self._shelves.of(pr)),
+                    base=self._base(pr)),
             manager=self._told.held().managers.get(pr))
 
     def drawn(self, config: ManagerConfig, threads: ConversationManager, *,
@@ -90,6 +97,11 @@ class DashboardSource:
         if commits is None:
             return None
         return tuple(_unpushed_commit(line) for line in commits)
+
+    def _behind(self, worktree: str, pr: Pr) -> bool:
+        facts = self._change_detection.facts(pr)
+        return bool(self._working_copies.commits_since(
+            worktree, None if facts is None else facts.head_sha, behind=True))
 
     def _base(self, pr: Pr) -> BaseStanding | None:
         facts = self._change_detection.facts(pr)

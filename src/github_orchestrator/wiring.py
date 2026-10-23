@@ -49,6 +49,7 @@ from github_orchestrator.board_api.interface import (
     ManagerStanding,
     ServerApp,
     SetupDesk,
+    Shelves,
     Told,
     TourMarker,
 )
@@ -131,6 +132,7 @@ from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
 from github_orchestrator.pr_manager._panel import FilePanels
+from github_orchestrator.pr_manager._reset import QueuedReset
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes._background import BackgroundPrProcesses
@@ -1097,6 +1099,7 @@ class PrManagerProvider(Provider):
     scope = Scope.APP
     config = from_context(provides=ManagerConfig, scope=Scope.APP)
     commands = provide(ManagerCommands)
+    resets = provide(QueuedReset)
 
     events = provide(EventCarryOut)
     pr_manager = provide(ManagerLoop, provides=PrManager)
@@ -1129,6 +1132,10 @@ class DashboardSourceProvider(Provider):
     @provide
     def command_files(self, wiring: DashboardSourceWiring) -> CommandFiles:
         return CommandFiles(wiring.data_dir)
+
+    @provide
+    def shelves(self, records: ThreadRecords) -> Shelves:
+        return records
 
 
 class CommandsAndStatus:
