@@ -220,6 +220,13 @@ export default class PullRequestDiffService extends Service {
     return anchors === undefined ? null : postedAt(lines, anchors);
   };
 
+  get askedFrom(): string | null {
+    const picked = this.picked;
+    if (picked) return `commits ${picked.fromShort} to ${picked.toShort}`;
+    const stepper = this.stepper;
+    return stepper ? `commit ${stepper.short}` : null;
+  }
+
   get elsewhere(): string | null {
     return elsewhereOf(this.inline.elsewhere, Boolean(this.picked));
   }

@@ -1,4 +1,5 @@
 import type { DiffAnchors, DiffSide } from 'frontend/data/api';
+import { markOf } from 'frontend/data/diff-rows';
 import type { Inline, Inlined } from 'frontend/data/inline';
 import type { Lines } from 'frontend/data/selection';
 
@@ -66,16 +67,34 @@ export function postedAt(
 
 export function drawnOn(inlined: Inlined, anchors: DiffAnchors | null): Placed {
   if (!anchors) return { ...inlined, elsewhere: 0 };
+  const drawn = new Set(anchors.files.map((one) => one.path));
   const shown: Inline[] = [];
+  let elsewhere = 0;
   for (const one of inlined.shown) {
     const lines = carried(one.lines, anchors, 'from head');
     if (lines) shown.push({ ...one, lines });
+    else if (drawn.has(one.lines.path)) elsewhere += 1;
   }
-  return {
-    shown,
-    outdated: inlined.outdated,
-    elsewhere: inlined.shown.length - shown.length,
-  };
+  return { shown, outdated: inlined.outdated, elsewhere };
+}
+
+function same(one: Lines, other: Lines): boolean {
+  return (
+    one.line === other.line &&
+    one.side === other.side &&
+    one.start_line === other.start_line &&
+    (one.start_line === null || one.start_side === other.start_side)
+  );
+}
+
+export function inLatestOf(shown: Lines, posted: Lines | null): string {
+  if (!posted || same(shown, posted)) return '';
+  const last = markOf({ side: posted.side, line: posted.line });
+  const where =
+    posted.start_line === null
+      ? `line ${last}`
+      : `lines ${markOf({ side: posted.start_side ?? posted.side, line: posted.start_line })} to ${last}`;
+  return ` (${where} in the latest commit)`;
 }
 
 export function elsewhereOf(count: number, picked: boolean): string | null {

@@ -15,7 +15,12 @@ import { NOT_AT_HEAD } from 'frontend/data/anchors';
 import { DIFF_FAILED, DIFF_LOADING } from 'frontend/data/diff-rows';
 import { treeOf, type TreeRow } from 'frontend/data/file-tree';
 import type { Inline } from 'frontend/data/inline';
-import { linesOf, selectionOf, type Selection } from 'frontend/data/selection';
+import {
+  linesOf,
+  selectionOf,
+  type Lines,
+  type Selection,
+} from 'frontend/data/selection';
 import { BLANK, NEW_DRAFT, type Saved } from 'frontend/services/drafts';
 import type DraftsService from 'frontend/services/drafts';
 import type CommitBoxService from 'frontend/services/commit-box';
@@ -94,12 +99,13 @@ export default class DiffTab extends Component<DiffTabSignature> {
     if (lines) this.drafts.place(this.draftKey, this.saved, lines);
   };
 
-  get unplaced(): boolean {
+  get posted(): Lines | null {
     const selection = this.selection;
-    return (
-      selection !== null &&
-      this.pullRequestDiff.headLines(linesOf(selection)) === null
-    );
+    return selection && this.pullRequestDiff.headLines(linesOf(selection));
+  }
+
+  get unplaced(): boolean {
+    return this.selection !== null && this.posted === null;
   }
 
   edit = (item: Inline) => {
@@ -312,6 +318,8 @@ export default class DiffTab extends Component<DiffTabSignature> {
                   {{else}}
                     <CommentBox
                       @selection={{selection}}
+                      @posted={{this.posted}}
+                      @from={{this.pullRequestDiff.askedFrom}}
                       @draft={{this.draftKey}}
                       @saved={{this.saved}}
                       @close={{this.close}}

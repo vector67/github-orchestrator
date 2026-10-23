@@ -226,6 +226,11 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
 
     await click(`${row('+19')} [data-test-add]`);
+
+    assert
+      .dom('[data-test-commenting]')
+      .hasText('Commenting on line +19 (line +23 in the latest commit)');
+
     await fillIn('[data-test-comment-box] textarea', 'name it better');
     await click('[data-test-box-save]');
 
@@ -279,6 +284,37 @@ module('Acceptance | commit stepper', function (hooks) {
     assert
       .dom('[data-test-threads-elsewhere]')
       .hasText("1 thread is on lines this commit doesn't have");
+  });
+
+  test('threads in files this diff does not show are not counted', async function (assert) {
+    anchoredOnTheFirstCommit();
+    board().conversations = [
+      thread({
+        anchor: { ...thread().anchor, path: 'src/widgets/elsewhere.py' },
+      }),
+    ];
+    await visit('/pr/o/r/7/diff');
+
+    assert.dom(`${row('+19')}`).exists();
+    assert.dom('[data-test-threads-elsewhere]').doesNotExist();
+  });
+
+  test("Ask the agent cites the head's lines and names the commit it was asked from", async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+    await click(`${row('+19')} [data-test-add]`);
+    await fillIn('[data-test-comment-box] textarea', 'why here?');
+
+    await click('[data-test-box-ask]');
+
+    const [asked] = board().posted.filter((one) => one.verb === 'ask');
+    const { prompt } = asked!.body as { prompt: string };
+    assert.true(
+      prompt.includes('line 23 (new side) of src/widgets/first.py'),
+      prompt,
+    );
+    assert.true(prompt.includes(`commit ${FIRST}`), prompt);
+    assert.true(prompt.endsWith('why here?'), prompt);
   });
 
   async function sized(size: string) {
