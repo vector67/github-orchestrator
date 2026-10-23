@@ -5225,7 +5225,8 @@ button.tree-row[aria-current="true"] {
 }
 
 .inline-card,
-.comment-box {
+.comment-box,
+.comment-unplaced {
   font-family: var(--body-stack, system-ui, sans-serif);
   font-size: var(--fs-l);
   line-height: 1.5;
@@ -5391,6 +5392,25 @@ button.tree-row[aria-current="true"] {
 
 .comment-box .commenting {
   font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.comment-unplaced {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+}
+
+.threads-elsewhere {
+  margin: 0;
+  padding: 8px 16px 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
   color: var(--muted);
 }
 

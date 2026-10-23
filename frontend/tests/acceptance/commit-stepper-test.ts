@@ -3,6 +3,7 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   currentURL,
+  fillIn,
   findAll,
   triggerEvent,
   visit,
@@ -189,30 +190,95 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-pr-diff]').containsText('every commit');
   });
 
-  test('threads and commenting are on the last commit, whose lines are the head, and not on earlier ones', async function (assert) {
+  const FIRST_FILE = '[data-test-file="src/widgets/first.py"]';
+
+  function row(end: string): string {
+    return `${FIRST_FILE} [data-test-end="${end}"]`;
+  }
+
+  function anchoredOnTheFirstCommit() {
+    board().diffs['first'] = {
+      base: FORK,
+      head: FIRST,
+      files: [
+        changed('src/widgets/first.py', [
+          added(19, 'first change'),
+          added(20, 'changed later'),
+        ]),
+      ],
+    };
+    board().anchors[`${FORK}..${FIRST}`] = {
+      files: [
+        {
+          path: 'src/widgets/first.py',
+          lines: [
+            { side: 'RIGHT', line: 19, onto: { side: 'RIGHT', line: 23 } },
+          ],
+        },
+      ],
+    };
+  }
+
+  test("a comment on an unchanged line of an early commit is posted at the head's line", async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
+
+    await click(`${row('+19')} [data-test-add]`);
+    await fillIn('[data-test-comment-box] textarea', 'name it better');
+    await click('[data-test-box-save]');
+
+    assert.deepEqual(
+      board().posted.map((one) => [one.verb, one.body]),
+      [
+        [
+          'create-draft',
+          {
+            body: 'name it better',
+            path: 'src/widgets/first.py',
+            line: 23,
+            side: 'RIGHT',
+            start_line: null,
+            start_side: null,
+          },
+        ],
+      ],
+    );
+  });
+
+  test('a line a later commit changed says so where the comment box would open, and nothing is posted', async function (assert) {
+    anchoredOnTheFirstCommit();
+    await visit('/pr/o/r/7/diff');
+
+    await click(`${row('+20')} [data-test-add]`);
+
+    assert
+      .dom(`${row('+20')} + [data-test-inline] [data-test-unplaced]`)
+      .hasText("This line doesn't exist in the latest commit");
+    assert.dom('[data-test-comment-box]').doesNotExist();
+    assert.deepEqual(board().posted, []);
+  });
+
+  test('a thread on the head is drawn on an earlier commit at its line there, and one on a line the commit lacks is counted', async function (assert) {
+    anchoredOnTheFirstCommit();
     board().conversations = [
       thread({
-        anchor: {
-          ...thread().anchor,
-          path: 'src/widgets/third.py',
-          line: 19,
-        },
+        anchor: { ...thread().anchor, path: 'src/widgets/first.py', line: 23 },
       }),
-    ];
-    board().readMarks = [
-      { sha: FIRST, subject: 'Add the widget' },
-      { sha: SECOND, subject: 'Name the widget' },
+      thread({
+        key: 'PRRT_b',
+        github_node_id: 'PRRT_b',
+        anchor: { ...thread().anchor, path: 'src/widgets/first.py', line: 40 },
+      }),
     ];
     await visit('/pr/o/r/7/diff');
 
-    assert.dom('[data-test-pr-diff] [data-test-inline]').exists();
-    assert.dom('[data-test-pr-diff] [data-test-add]').exists();
-
-    await press('[');
-
-    assert.dom('[data-test-pr-diff]').containsText('second change');
-    assert.dom('[data-test-pr-diff] [data-test-inline]').doesNotExist();
-    assert.dom('[data-test-pr-diff] [data-test-add]').doesNotExist();
+    assert.dom(`${row('+19')} + [data-test-inline]`).exists();
+    assert.dom('[data-test-pr-diff] [data-test-inline]').exists({ count: 1 });
+    assert
+      .dom('[data-test-threads-elsewhere]')
+      .hasText("1 thread is on lines this commit doesn't have");
   });
 
   async function sized(size: string) {

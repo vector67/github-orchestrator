@@ -587,9 +587,14 @@ and removed, starts folded; click its header to open it. Context expands up,
 down or all, as in a proposed fix's diff. The tab reads the diff again when the
 PR's head moves.
 
-You can comment only on the last commit, on a range that ends at the head, or
-on the whole diff; an earlier commit is read-only. There, hovering a line in a
-hunk shows a `+` in its gutter. Click the `+` or a line
+You can comment on any commit, any range, or the whole diff. GitHub anchors a
+comment to the PR's head, so a comment on an earlier commit is posted on the
+same line of the head. A line changed or deleted by a later commit, or in a file
+deleted or renamed since, has no such line: the box says "This line doesn't
+exist in the latest commit" instead and nothing is posted. Threads show on an
+earlier commit at the line they sit on there, and a line above the diff counts
+those on lines the commit doesn't have. Hovering a line in a hunk shows a `+`
+in its gutter. Click the `+` or a line
 number to select that line, then drag or shift-click to stretch the selection.
 It can take in − and + lines together but stays in the hunk it started in,
 because GitHub refuses a comment whose lines span two hunks. Lines shown by

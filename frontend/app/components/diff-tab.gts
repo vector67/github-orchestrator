@@ -11,6 +11,7 @@ import MergeNote from 'frontend/components/merge-note';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
+import { NOT_AT_HEAD } from 'frontend/data/anchors';
 import { DIFF_FAILED, DIFF_LOADING } from 'frontend/data/diff-rows';
 import { treeOf, type TreeRow } from 'frontend/data/file-tree';
 import type { Inline } from 'frontend/data/inline';
@@ -89,8 +90,17 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.selection = selection;
     if (opening) this.boxOpen = true;
     if (!this.boxOpen) return;
-    this.drafts.place(this.draftKey, this.saved, linesOf(selection));
+    const lines = this.pullRequestDiff.headLines(linesOf(selection));
+    if (lines) this.drafts.place(this.draftKey, this.saved, lines);
   };
+
+  get unplaced(): boolean {
+    const selection = this.selection;
+    return (
+      selection !== null &&
+      this.pullRequestDiff.headLines(linesOf(selection)) === null
+    );
+  }
 
   edit = (item: Inline) => {
     const file = this.pullRequestDiff.shown?.files.find(
@@ -169,7 +179,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         this.pullRequestDiff.readDetails
         this.pullRequestDiff.anchored
       }}
-      {{didChange this.pullRequestDiff.draw this.pullRequestDiff.drawing}}
+      {{didChange this.pullRequestDiff.draw this.pullRequestDiff.anchoring}}
     >
       <aside class="diff-tree" data-test-tree>
         <div class="diff-sources" data-test-diff-sources>
@@ -272,6 +282,11 @@ export default class DiffTab extends Component<DiffTabSignature> {
             />
           {{/if}}
         {{/if}}
+        {{#if this.pullRequestDiff.elsewhere}}
+          <p class="threads-elsewhere" data-test-threads-elsewhere>
+            {{this.pullRequestDiff.elsewhere}}
+          </p>
+        {{/if}}
         <div
           class="diff-files"
           data-test-diff-files
@@ -290,12 +305,18 @@ export default class DiffTab extends Component<DiffTabSignature> {
                 @edit={{this.edit}}
               >
                 <:commenting as |selection|>
-                  <CommentBox
-                    @selection={{selection}}
-                    @draft={{this.draftKey}}
-                    @saved={{this.saved}}
-                    @close={{this.close}}
-                  />
+                  {{#if this.unplaced}}
+                    <p class="comment-unplaced" data-test-unplaced>
+                      {{NOT_AT_HEAD}}
+                    </p>
+                  {{else}}
+                    <CommentBox
+                      @selection={{selection}}
+                      @draft={{this.draftKey}}
+                      @saved={{this.saved}}
+                      @close={{this.close}}
+                    />
+                  {{/if}}
                 </:commenting>
               </PrDiff>
             {{else}}

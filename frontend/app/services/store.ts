@@ -13,6 +13,7 @@ import type {
   DashboardStatus,
   DashboardSystem,
   Diff,
+  DiffAnchors,
   Emoji,
   EmojiList,
   FileLines,
@@ -280,6 +281,11 @@ export function commitsOf(commits: DiffRange): string {
   return commits.merged ? `${range}?merged=${commits.merged}` : range;
 }
 
+function anchorsOf(range: DiffRange, onto: Commits): string {
+  const anchors = `${range.base}..${range.head}/anchors/${onto.base}..${onto.head}`;
+  return range.merged ? `${anchors}?merged=${range.merged}` : anchors;
+}
+
 function markOf(operations: Operation[]): string {
   return operations.map((one) => `${one.id}:${one.state}`).join('|');
 }
@@ -390,6 +396,7 @@ export default class StoreService extends Service {
   @tracked private prSummaries: Record<string, PrSummaryEntity> = {};
   @tracked private lost: Record<string, boolean> = {};
   @tracked private diffs: Record<string, Diff> = {};
+  @tracked private anchored: Record<string, DiffAnchors> = {};
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
   @tracked private groups: WallGroupName[] | null = null;
@@ -587,6 +594,10 @@ export default class StoreService extends Service {
 
   diff(commits: DiffRange): Diff | undefined {
     return this.diffs[commitsOf(commits)];
+  }
+
+  anchors(range: DiffRange, onto: Commits): DiffAnchors | undefined {
+    return this.anchored[anchorsOf(range, onto)];
   }
 
   stepper(
@@ -864,6 +875,22 @@ export default class StoreService extends Service {
       const path = this.here.api(`/api/diffs/${key}`);
       try {
         this.takeDiff(await fetched<Diff>(path), key);
+        return 'answered';
+      } catch (trouble) {
+        void reportError(`read ${path}`, trouble);
+        return 'failed';
+      }
+    });
+  }
+
+  readAnchors(range: DiffRange, onto: Commits): Promise<Drawing> {
+    if (this.anchors(range, onto)) return Promise.resolve('answered');
+    const key = anchorsOf(range, onto);
+    return this.once(`anchors ${key}`, async () => {
+      const path = this.here.api(`/api/diffs/${key}`);
+      try {
+        const anchors = await fetched<DiffAnchors>(path);
+        this.anchored = { ...this.anchored, [key]: anchors };
         return 'answered';
       } catch (trouble) {
         void reportError(`read ${path}`, trouble);

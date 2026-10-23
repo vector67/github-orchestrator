@@ -1,10 +1,17 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
-import type { Commits, Diff } from 'frontend/data/api';
+import type { Commits, Diff, DiffAnchors } from 'frontend/data/api';
+import {
+  drawnOn,
+  elsewhereOf,
+  postedAt,
+  type Placed,
+} from 'frontend/data/anchors';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
 import { ordered, type Picked, type Timeline } from 'frontend/data/timeline';
 import { reportError } from 'frontend/data/report';
+import type { Lines } from 'frontend/data/selection';
 import { keyOf } from 'frontend/data/wall';
 import type CommitBoxService from 'frontend/services/commit-box';
 import type HereService from 'frontend/services/here';
@@ -193,14 +200,38 @@ export default class PullRequestDiffService extends Service {
     return this.failed;
   }
 
+  private get onto(): Commits | undefined {
+    return this.threads.pullRequest?.diffs[this.source];
+  }
+
+  private get anchors(): DiffAnchors | null | undefined {
+    const range = this.range;
+    if (!range) return null;
+    const onto = this.onto;
+    return onto && this.store.anchors(range, onto);
+  }
+
   get commenting(): boolean {
-    const picked = this.picked;
-    return picked ? picked.head : !this.stepper?.next;
+    return this.anchors !== undefined;
+  }
+
+  headLines = (lines: Lines): Lines | null => {
+    const anchors = this.anchors;
+    return anchors === undefined ? null : postedAt(lines, anchors);
+  };
+
+  get elsewhere(): string | null {
+    return elsewhereOf(this.inline.elsewhere, Boolean(this.picked));
   }
 
   get drawing(): string {
     const range = this.range;
     return range ? commitsOf(range) : '';
+  }
+
+  get anchoring(): string {
+    const onto = this.onto;
+    return `${this.drawing}>${onto ? commitsOf(onto) : ''}`;
   }
 
   load = () => {
@@ -216,6 +247,8 @@ export default class PullRequestDiffService extends Service {
   draw = () => {
     const range = this.range;
     if (range) void waitForPromise(this.drawn(this.pr, range));
+    const onto = this.onto;
+    if (range && onto) void waitForPromise(this.readAnchors(range, onto));
     const merging = this.merging;
     if (merging) void waitForPromise(this.readMerged(merging));
   };
@@ -300,6 +333,10 @@ export default class PullRequestDiffService extends Service {
     await this.store.readDiff(range);
   }
 
+  private async readAnchors(range: DiffRange, onto: Commits): Promise<void> {
+    await this.store.readAnchors(range, onto);
+  }
+
   private async readPushed(): Promise<void> {
     await this.store.readPrCommits(this.here.at, 'origin');
   }
@@ -310,7 +347,11 @@ export default class PullRequestDiffService extends Service {
     pr.unreadable = outcome === 'failed' ? commitsOf(range) : null;
   }
 
-  get inline(): Inlined {
+  get inline(): Placed {
+    return drawnOn(this.atHead, this.anchors ?? null);
+  }
+
+  private get atHead(): Inlined {
     const role = this.threads.role;
     if (!role) return { shown: [], outdated: {} };
     return inlineOf(this.threads.conversations, {
