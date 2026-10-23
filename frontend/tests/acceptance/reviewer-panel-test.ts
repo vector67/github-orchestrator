@@ -4,11 +4,14 @@ import { visit, click, fillIn, select } from '@ember/test-helpers';
 import {
   added,
   comment,
+  dashboard,
   diffOf,
+  heldPr,
   operation,
   proposal,
   setupFakeBoard,
   thread,
+  type DashboardOver,
   type FakeBoard,
 } from 'frontend/tests/helpers/fake-board';
 import type { CommitVerdict } from 'frontend/data/api';
@@ -578,6 +581,121 @@ module('Acceptance | mention card', function (hooks) {
     assert.dom('[data-test-kicker]').includesText('PR description');
   });
 });
+
+module(
+  'Acceptance | the last mention on a held pull request',
+  function (hooks) {
+    setupApplicationTest(hooks);
+    const board = setupFakeBoard(hooks);
+
+    const HELD: DashboardOver = {
+      facts: {
+        is_author: false,
+        mentioned: true,
+        mentions: [
+          { author: 'mei', at: '2026-10-01T10:00:00Z', answered: false },
+        ],
+      },
+      manager: { on_hold: true },
+      system: { on_hold: true },
+    };
+
+    hooks.beforeEach(function () {
+      mentioned(board());
+      board().held = [heldPr({ dashboard: HELD })];
+      board().manager = dashboard(HELD);
+    });
+
+    function verbs(): string[] {
+      return board().posted.map((one) => one.verb);
+    }
+
+    test('Resolve on board warns that the mention is all that shows the PR, and posts nothing yet', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+      await click('[data-test-decision="resolve-on-board"]');
+
+      assert
+        .dom('[data-test-hold-warning]')
+        .hasAttribute('role', 'alertdialog')
+        .includesText('This mention is the only reason you can see this PR.');
+      assert.deepEqual(verbs(), []);
+    });
+
+    test('Back on hold closes the mention and leaves the hold', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+      await click('[data-test-decision="resolve-on-board"]');
+
+      await click('[data-test-hold-warning-keep]');
+
+      assert.deepEqual(verbs(), ['resolve']);
+      assert.dom('[data-test-hold-warning]').doesNotExist();
+    });
+
+    test('Resume this PR closes the mention and resumes the PR', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+      await click('[data-test-decision="resolve-on-board"]');
+
+      await click('[data-test-hold-warning-resume]');
+
+      assert.deepEqual(verbs(), ['resolve', 'resume']);
+    });
+
+    test('cancelling the warning closes nothing', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+      await click('[data-test-decision="resolve-on-board"]');
+
+      await click('[data-test-hold-warning-cancel]');
+
+      assert.deepEqual(verbs(), []);
+      assert.dom('[data-test-hold-warning]').doesNotExist();
+    });
+
+    test('Reply and resolve warns after its own dialog', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+      await click('[data-test-decision="resolve-here"]');
+      await fillIn('[data-test-dialog-body]', 'It does, the guard stays.');
+
+      await click('[data-test-dialog-submit]');
+
+      assert.dom('[data-test-hold-warning]').exists();
+      assert.deepEqual(verbs(), []);
+
+      await click('[data-test-hold-warning-keep]');
+
+      assert.deepEqual(board().posted[0]!.body, {
+        reply: 'It does, the guard stays.',
+        delete_comment: false,
+      });
+    });
+
+    test('Defer warns after its own dialog', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+      await click('[data-test-decision="defer"]');
+
+      await click('[data-test-dialog-submit]');
+
+      assert.dom('[data-test-hold-warning]').exists();
+
+      await click('[data-test-hold-warning-keep]');
+
+      assert.deepEqual(verbs(), ['defer']);
+    });
+
+    test('with another mention still open, Resolve on board does not warn', async function (assert) {
+      board().conversations = [
+        ...board().conversations,
+        thread({ key: 'IC_other', github_node_id: 'IC_other', mention: true }),
+      ];
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+      await click('[data-test-decision="resolve-on-board"]');
+
+      assert.dom('[data-test-hold-warning]').doesNotExist();
+      assert.deepEqual(verbs(), ['resolve']);
+    });
+  },
+);
 
 module('Acceptance | a commit a reply names', function (hooks) {
   setupApplicationTest(hooks);

@@ -106,6 +106,7 @@ export interface Summaries {
   bot: Tally;
   move: NextMove;
   mismatches: string | null;
+  openMentions: string[];
 }
 
 type Threads = Record<string, Thread>;
@@ -421,6 +422,9 @@ function summarised(
   const human = tallyOf(others.filter((one) => one.author_kind === 'human'));
   const bot = tallyOf(others.filter((one) => one.author_kind === 'bot'));
   const drafts = all.filter((one) => one.state === 'draft').length;
+  const openMentions = all
+    .filter((one) => one.mention && !CLOSED_MENTION.includes(one.state))
+    .map((one) => one.key);
   return {
     role,
     groups: role ? groupsOf(readOf(threads, operations), role) : {},
@@ -438,11 +442,10 @@ function summarised(
       drafts,
       human,
       bot,
-      openMentions: all.filter(
-        (one) => one.mention && !CLOSED_MENTION.includes(one.state),
-      ).length,
+      openMentions: openMentions.length,
     }),
     mismatches: mismatchesOf(pr?.mismatches ?? null),
+    openMentions,
   };
 }
 
