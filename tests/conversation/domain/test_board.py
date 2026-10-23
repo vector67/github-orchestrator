@@ -306,6 +306,31 @@ def test_a_retried_fix_is_queued_again_with_a_fresh_budget(here):
     assert _replies(here) == []
 
 
+def _heard_while_claude_was_disabled(here: Here) -> None:
+    here.threads = here.world.threads(agents_enabled=False)
+    here.heard()
+    here.threads = here.world.threads(agents_enabled=True)
+
+
+def test_a_retry_starts_the_fix_never_written_while_claude_was_disabled(here):
+    _heard_while_claude_was_disabled(here)
+    here.world.agent_runs.script(RunOutcome(finishes=False))
+
+    stored = here.asked(lambda conversation: conversation.retry())
+
+    assert stored.fix.run.kind == OperationKind.FIRST
+    assert stored.standing is ConversationState.WORKING
+
+
+def test_a_refusal_puts_an_before_a_state_that_starts_with_a_vowel(here):
+    _heard_while_claude_was_disabled(here)
+
+    refused = _refused_and_left(here, lambda conversation: conversation.rework(
+        note="again please"))
+
+    assert refused.reason == "an absent fix is not yours to send back"
+
+
 def _posted_on_the_pr(here: Here):
     return [thread for thread in here.github.prs[THE_PR].threads
             if thread.kind is CommentKind.ISSUE and thread.key != "IC_one"]
