@@ -805,6 +805,8 @@ def _rework(conversation: Conversation, command: Rework) -> Accepted:
 
 
 def _retry(conversation: Conversation) -> Accepted:
+    if conversation.fix.state == ABSENT:
+        return _first(conversation)
     return Accepted(with_fix(conversation, state=QUEUED, attempts=0,
                               started_at=None, decision_error=None))
 
