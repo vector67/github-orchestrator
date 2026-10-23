@@ -179,6 +179,18 @@ def test_a_conversation_holding_a_mention_i_have_not_answered_is_marked_a_mentio
     assert manager.get("IC_1").mention is True
 
 
+def test_the_line_of_threads_says_which_rows_hold_a_mention(settings):
+    here, state = _watching(
+        settings,
+        _issue("IC_1", _said(1, "anna", "@octocat ping", "2026-09-01T10:00:00Z")),
+        _review_thread("PRRT_one", _said(2, "bob", "rename this", "2026-09-01T11:00:00Z")))
+
+    manager = _heard(here, state)
+
+    assert {row.key: row.mention for row in manager.counts().rows} == {
+        "IC_1": True, "PRRT_one": False}
+
+
 def test_a_mention_i_answered_on_github_is_no_longer_marked(settings):
     here, state = _watching(
         settings, _issue("IC_1", _said(1, "anna", "@octocat ping", "2026-09-01T10:00:00Z")))

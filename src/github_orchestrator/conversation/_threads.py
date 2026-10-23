@@ -646,7 +646,8 @@ class _ConversationManager:
                           key=conversation.key, standing=conversation.standing.value,
                           state=conversation.state,
                           author_kind=author_kind_of(conversation.author, account),
-                          updated_at=conversation.updated_at)
+                          updated_at=conversation.updated_at,
+                          mention=conversation.mention)
                           for conversation in readable),
                       unreadable=tuple(unreadable), listed_at=listed_at)
 

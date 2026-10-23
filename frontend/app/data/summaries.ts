@@ -116,6 +116,7 @@ const LEFT_OUT: RecordState[] = ['draft', 'enrolled', 'discarded', 'not_mine'];
 const NOT_YOURS: RecordState[] = [...LEFT_OUT, 'rejected', 'removed'];
 const DONE: ConversationState[] = ['done', 'waiting', 'assumed-done'];
 const PARKED: ConversationState[] = ['waiting', 'deferred'];
+const CLOSED_MENTION: ConversationState[] = ['done', 'deferred'];
 
 function read(one: Thread): boolean {
   return 'etag' in one;
@@ -240,6 +241,7 @@ interface Board {
   drafts: number;
   human: Tally;
   bot: Tally;
+  openMentions: number;
 }
 
 function unique(people: string[]): string[] {
@@ -355,7 +357,7 @@ function yourTurn(state: Move, board: Board): Move {
 
 function onTop(state: Move | null, board: Board): Move {
   if ((board.flags?.frozen_on ?? null) !== null) return 'release-worktree';
-  if (board.flags?.on_hold) return 'on-hold';
+  if (board.flags?.on_hold) return board.openMentions ? 'mention' : 'on-hold';
   if (state === null) return 'first-poll';
   if (state === 'closed') return state;
   if (board.isAuthor) return onYourPr(state, board);
@@ -386,7 +388,10 @@ function nextMoveOf(facts: PrFacts | null, board: Board): NextMove {
     muted,
     reviewers: pick?.reviewers ?? [],
     stillRequested: pick?.stillRequested ?? [],
-    mentionedBy: pick?.mentionedBy ?? [],
+    mentionedBy:
+      code === 'mention' && facts && !pick?.mentionedBy
+        ? unanswered(facts, null)
+        : (pick?.mentionedBy ?? []),
     flags: flagsOf(facts),
     unresolved: facts?.unresolved_threads ?? 0,
   };
@@ -433,6 +438,9 @@ function summarised(
       drafts,
       human,
       bot,
+      openMentions: all.filter(
+        (one) => one.mention && !CLOSED_MENTION.includes(one.state),
+      ).length,
     }),
     mismatches: mismatchesOf(pr?.mismatches ?? null),
   };

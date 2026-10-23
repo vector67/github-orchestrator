@@ -98,7 +98,8 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         flags_changed_at="2026-10-08T09:01:00Z",
         unreadable_threads=(), threads_listed_at="2026-10-08T08:59:00Z",
         thread_rows=(ThreadRow(key="PRRT_1", standing="ready", state="open",
-                               author_kind=AuthorKind.BOT, updated_at="2026-10-08T08:30:00Z"),))
+                               author_kind=AuthorKind.BOT, updated_at="2026-10-08T08:30:00Z",
+                               mention=False),))
 
     answer = client_for(manager=FakeManagerPanel(now=drawn)).get("/api/dashboard").json()
 
@@ -117,7 +118,8 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         "frozen_on": None, "on_hold": True, "working_on": "new-comments", "hidden": True,
         "threads_live": 2, "changed_at": "2026-10-08T09:01:00Z"}
     assert answer["threads"] == [{"key": "PRRT_1", "state": "ready", "record_state": "open",
-                                  "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z"}]
+                                  "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z",
+                                  "mention": False}]
     assert answer["listed_at"] == "2026-10-08T08:59:00Z"
 
 
