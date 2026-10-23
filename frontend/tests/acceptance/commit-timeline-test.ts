@@ -5,6 +5,7 @@ import {
   currentURL,
   find,
   findAll,
+  settled,
   triggerEvent,
   visit,
   waitUntil,
@@ -103,7 +104,15 @@ module('Acceptance | commit timeline', function (hooks) {
     });
   }
 
+  async function afterTheGraphIsFitted() {
+    await new Promise((done) =>
+      requestAnimationFrame(() => requestAnimationFrame(done)),
+    );
+    await settled();
+  }
+
   async function dragTo(end: string, sha: string) {
+    await afterTheGraphIsFitted();
     const target = dot(sha).getBoundingClientRect();
     await triggerEvent(`[data-test-handle="${end}"]`, 'pointerdown');
     await triggerEvent('[data-test-timeline-graph]', 'pointermove', {
