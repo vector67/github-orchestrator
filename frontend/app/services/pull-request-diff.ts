@@ -137,6 +137,19 @@ export default class PullRequestDiffService extends Service {
     this.pr.picked = picked;
   };
 
+  get whole(): Picked | null {
+    const { repo, number } = this.here.at;
+    const commits = this.store.pr(repo, number)?.history[this.source]?.commits;
+    return commits?.length
+      ? { from: commits[0]!.sha, to: commits.at(-1)!.sha }
+      : null;
+  }
+
+  showWhole = () => {
+    const whole = this.whole;
+    if (whole) this.choose(whole);
+  };
+
   unpick = (): boolean => {
     if (!this.pr.picked) return false;
     this.pr.picked = null;

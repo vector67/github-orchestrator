@@ -215,6 +215,20 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-pr-diff] [data-test-add]').doesNotExist();
   });
 
+  test('a deep link to a file and line shows the whole pull request up to the head, where that line is and commenting works', async function (assert) {
+    board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+
+    await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fall.py&line=19');
+
+    assert.dom('[data-test-range]').includesText(`${FIRST} → ${THIRD}`);
+    assert
+      .dom(
+        '[data-test-file="src/widgets/all.py"] [data-test-row="added"][data-line="19"]',
+      )
+      .includesText('every commit');
+    assert.dom('[data-test-pr-diff] [data-test-add]').exists();
+  });
+
   async function sized(size: string) {
     await click('[data-test-settings-open]');
     await click('[data-test-commit-sizing-open]');

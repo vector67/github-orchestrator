@@ -45,6 +45,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   @tracked filter = '';
   private pane: HTMLElement | null = null;
   private followed: unknown = null;
+  private shownLinked: unknown = null;
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
 
   constructor(owner: Owner, args: DiffTabSignature['Args']) {
@@ -134,6 +135,18 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.scrollTo(path);
   };
 
+  get linked(): string {
+    return this.args.line && this.pullRequestDiff.whole
+      ? `${this.args.file ?? ''}|${this.args.line}`
+      : '';
+  }
+
+  showLinked = (_: HTMLElement, linked: unknown) => {
+    if (!linked || linked === this.shownLinked) return;
+    this.shownLinked = linked;
+    this.pullRequestDiff.showWhole();
+  };
+
   follow = (pane: HTMLElement, scrolling: unknown) => {
     this.pane = pane;
     if (scrolling === this.followed) return;
@@ -170,6 +183,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         this.pullRequestDiff.anchored
       }}
       {{didChange this.pullRequestDiff.draw this.pullRequestDiff.drawing}}
+      {{didChange this.showLinked this.linked}}
     >
       <aside class="diff-tree" data-test-tree>
         <div class="diff-sources" data-test-diff-sources>
