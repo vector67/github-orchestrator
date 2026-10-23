@@ -754,6 +754,7 @@ function bandOf(
   action: Action | null,
   move: string,
   since: string[] | null,
+  next: NextMove,
 ): Band {
   if (shown.drawn.frozen) {
     return {
@@ -761,6 +762,14 @@ function bandOf(
       label: 'Next · frozen',
       detail: null,
       computed: frozenComputed(shown.drawn.frozen),
+    };
+  }
+  if (shown.drawn.system.on_hold && next.code === 'mention') {
+    return {
+      state: 'on-hold',
+      label: `Next · on hold, shown because ${mentionedOf(next)}`,
+      detail: null,
+      computed: null,
     };
   }
   if (shown.drawn.system.on_hold) {
@@ -1217,7 +1226,7 @@ export function dashboardOf(
       : null,
     reason: reasonOf(shown, summaries),
     chips: chipsOf(shown, summaries, failing, now),
-    band: bandOf(shown, action, move, since),
+    band: bandOf(shown, action, move, since, next),
     frozen: frozen
       ? {
           worktree: withoutBidiControls(tildeOf(frozen.worktree)),

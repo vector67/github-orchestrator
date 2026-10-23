@@ -1340,6 +1340,20 @@ button.copy-directory {
   color: var(--muted);
 }
 
+.decide-dialog > form.hold-warning {
+  border: 2px solid var(--yellow);
+  border-top-width: 6px;
+}
+
+.decide-dialog > form.hold-warning .dialog-kicker {
+  color: var(--yellow-text);
+}
+
+.decide-dialog > form.hold-warning .note {
+  line-height: 1.5;
+  color: var(--text);
+}
+
 .decide-dialog textarea {
   box-sizing: border-box;
   width: 100%;

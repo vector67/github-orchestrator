@@ -982,6 +982,7 @@ export interface ThreadRow {
   record_state: RecordState;
   author_kind: AuthorKind;
   updated_at: string | null;
+  mention: boolean;
 }
 
 export interface Ticket {

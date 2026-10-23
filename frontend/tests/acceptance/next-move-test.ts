@@ -433,6 +433,40 @@ module('Acceptance | next move', function (hooks) {
     });
   }
 
+  const HELD_WITH_A_MENTION: DashboardOver = {
+    facts: reviewed('approved', { mentions: [mention('anna')] }),
+    manager: { on_hold: true },
+    system: { on_hold: true },
+  };
+
+  test('an open mention pierces the hold and asks for you', async function (assert) {
+    const shown = await seen({
+      ...HELD_WITH_A_MENTION,
+      threads: [row('IC_1', 'ready', 'open', 'human', undefined, true)],
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, text('[data-test-band-label]')],
+      [
+        'mention',
+        'needs-you',
+        'Next · on hold, shown because anna mentioned you',
+      ],
+    );
+  });
+
+  for (const state of ['done', 'deferred'] as const) {
+    test(`a held pull request whose mention is ${state} on the board is back on hold`, async function (assert) {
+      assert.deepEqual(
+        await moveAndGroup({
+          ...HELD_WITH_A_MENTION,
+          threads: [row('IC_1', state, 'open', 'human', undefined, true)],
+        }),
+        ['on-hold', 'parked'],
+      );
+    });
+  }
+
   test('a frozen pull request asks for the worktree back even when on hold', async function (assert) {
     assert.deepEqual(
       await moveAndGroup({

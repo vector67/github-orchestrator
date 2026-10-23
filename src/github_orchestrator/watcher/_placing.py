@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Protocol
 
 from github_orchestrator.change_detection import ChangeDetection
@@ -53,6 +54,11 @@ class WindowPlacement:
         log.debug("ensure_pr_window %s (is_author=%s)", pr, is_author)
         branch = facts.branch or None
         manager = self._pr_processes.manager(pr)
+        if manager is ManagerPane.EXITED and self._worktree_deleted(pr):
+            log.warning("ensure_pr_window %s: its worktree %s is gone; closing the stale "
+                        "record so a fresh worktree is cut", pr, self._pr_processes.manager_path(pr))
+            self._pr_processes.close(pr)
+            manager = ManagerPane.NO_WINDOW
         if manager is not ManagerPane.NO_WINDOW:
             if self._handled_mismatch(pr, manager is ManagerPane.RUNNING, branch):
                 return
@@ -126,6 +132,10 @@ class WindowPlacement:
             return True
         self._working_copies.handed_off(pr, defunct_name)
         return True
+
+    def _worktree_deleted(self, pr: Pr) -> bool:
+        path = self._pr_processes.manager_path(pr)
+        return path is not None and not Path(path).is_dir()
 
     def _other_windows(self, pr: Pr) -> dict[Pr, str]:
         windows = {}

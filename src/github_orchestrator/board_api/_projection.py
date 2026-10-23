@@ -533,7 +533,8 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
         threads=[contract.ThreadRow(
             key=row.key, state=domain.ConversationState(row.standing),
             record_state=contract.RecordState(row.state), author_kind=row.author_kind,
-            updated_at=row.updated_at) for row in dashboard.thread_rows],
+            updated_at=row.updated_at, mention=row.mention)
+            for row in dashboard.thread_rows],
         unreadable=list(dashboard.unreadable_threads),
         listed_at=dashboard.threads_listed_at,
     )

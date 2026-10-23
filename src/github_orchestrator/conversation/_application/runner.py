@@ -295,7 +295,7 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
                 ports.github.resolve_thread(conversation)
             except Exception as exc:
                 return ThreadResolveFailed(_failed(conversation, effect, exc))
-            return ThreadResolved(at=ports.clock.now())
+            return ThreadResolved(at=ports.clock.now(), viewer=ports.config.gh_account)
         case UnresolveThread():
             try:
                 ports.github.unresolve_thread(conversation)

@@ -1599,6 +1599,9 @@ class ThreadRow(BaseModel):
     updated_at: str | None = Field(
         description="When the record was last saved. A full conversation "
                     "with the same stamp is the fuller copy.")
+    mention: bool = Field(
+        description="The thread names you and you have not answered it, so "
+                    "it can show a held pull request.")
 
 
 class Dashboard(BaseModel):
