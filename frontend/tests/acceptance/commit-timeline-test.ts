@@ -20,6 +20,7 @@ import {
   prDiff,
   setupFakeBoard,
 } from 'frontend/tests/helpers/fake-board';
+import type { PullRequestCommits } from 'frontend/data/api';
 
 const FORK = 'ba5e000';
 const FIRST = 'a1a1a1a';
@@ -91,6 +92,52 @@ async function paneOf(width: number) {
     requestAnimationFrame(() => requestAnimationFrame(done)),
   );
   await settled();
+}
+
+async function tabOf(width: number) {
+  (find('[data-test-diff-tab]') as HTMLElement).style.maxWidth = `${width}px`;
+  await new Promise((done) =>
+    requestAnimationFrame(() => requestAnimationFrame(done)),
+  );
+  await settled();
+}
+
+const BAR_AT_MOST = 70;
+
+function shownIn(one: Element, box: DOMRect): boolean {
+  const own = one.getBoundingClientRect();
+  const holder = one.parentElement!;
+  const inHolder =
+    holder.matches('[data-test-commit-bar]') ||
+    inside(own, holder.getBoundingClientRect());
+  return inHolder && inside(own, box);
+}
+
+function barFits(assert: Assert, state: string) {
+  const box = find('[data-test-commit-box]')!.getBoundingClientRect();
+  assert.true(
+    box.height <= BAR_AT_MOST,
+    `${state}, the bar is ${box.height}px tall`,
+  );
+  const hidden = findAll(
+    '[data-test-commit-bar] > *, [data-test-commit-place], [data-test-commit-bar] .commit-sha, [data-test-merge-pill], [data-test-range-pill]',
+  ).filter((one) => !shownIn(one, box));
+  assert.deepEqual(
+    hidden.map((one) => one.textContent.trim()),
+    [],
+    `${state}, every control is in sight`,
+  );
+}
+
+function withLongSubjects(history: PullRequestCommits): PullRequestCommits {
+  return {
+    ...history,
+    commits: history.commits.map((one) => ({
+      ...one,
+      subject: `${one.subject}, and everything else it needed before it could ship`,
+      author: 'Anna Example-Longname',
+    })),
+  };
 }
 
 function rowsOn(lane: string): string[] {
@@ -650,6 +697,32 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
     await press('[');
     await press(']');
     assert.dom('[data-test-commit-place]').hasText('Commit 4 of 4');
+  });
+
+  test('in a narrow tab the bar keeps its controls on one line over the pips, stepping, on a merge and in a range', async function (assert) {
+    localStorage.setItem(SKIP_MERGES, 'false');
+    board().commits = withLongSubjects(board().commits);
+    await visit('/pr/o/r/7/diff');
+    await tabOf(400);
+
+    barFits(assert, 'stepping');
+
+    await press(']');
+
+    assert.dom('[data-test-merge-pill]').exists();
+    barFits(assert, 'on a merge, with its pill');
+
+    await press('t');
+    await click('[data-test-preset="all"]');
+
+    assert.dom('[data-test-range]').exists();
+    barFits(assert, 'in a range');
+
+    await press('Escape');
+    await press('[');
+    await press('[');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 1 of 4');
   });
 
   test('picked in the timeline a merge is shown even while merges are skipped', async function (assert) {
@@ -1212,6 +1285,30 @@ module(
       assert.false(
         holder.contains(find('[data-test-diff-files]')),
         'and lets go once the diff starts',
+      );
+    });
+
+    test('in a narrow tab the bar stuck over the vertical timeline stays at most 70px tall, under the Files button', async function (assert) {
+      long(40);
+      board().commits = withLongSubjects(board().commits);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      await tabOf(400);
+
+      const stepper = find('[data-test-commit-stepper]')!;
+      assert.strictEqual(getComputedStyle(stepper).position, 'sticky');
+      assert.true(
+        stepper.getBoundingClientRect().height <= BAR_AT_MOST,
+        `the stuck bar is ${stepper.getBoundingClientRect().height}px tall`,
+      );
+
+      (find('[data-test-diff-pane]') as HTMLElement).scrollTop = 400;
+      await settled();
+
+      const button = find('[data-test-files-toggle]')!.getBoundingClientRect();
+      assert.true(
+        stepper.getBoundingClientRect().top >= button.bottom,
+        'scrolled, it sits under the Files button',
       );
     });
 

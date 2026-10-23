@@ -4444,7 +4444,7 @@ kbd {
 
 .diff-tree[data-panel] {
   position: absolute;
-  top: 0;
+  top: var(--files-bar);
   bottom: 0;
   left: 0;
   z-index: 4;
@@ -4606,6 +4606,7 @@ button.tree-row[aria-current="true"] {
 
 .diff-head {
   flex: none;
+  container-type: inline-size;
 }
 
 .diff-head[data-vertical] > .commit-stepper {
@@ -4652,8 +4653,8 @@ button.tree-row[aria-current="true"] {
 
 .commit-bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 12px;
+  white-space: nowrap;
   align-items: center;
   font-size: var(--fs-m);
   line-height: 1.5;
@@ -4676,13 +4677,13 @@ button.tree-row[aria-current="true"] {
   border-color: var(--hairline);
 }
 
-.commit-what {
+.commit-bar > .commit-what {
   display: flex;
-  flex: 1 1 240px;
-  flex-wrap: wrap;
-  gap: 4px 8px;
+  flex: 1 1 0;
+  gap: 8px;
   align-items: baseline;
   min-width: 0;
+  overflow: hidden;
 }
 
 .commit-sep,
@@ -4696,7 +4697,11 @@ button.tree-row[aria-current="true"] {
   font-size: var(--fs-s);
 }
 
-.commit-subject {
+.commit-what > .commit-subject {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: var(--fw-strong);
 }
 
@@ -5697,4 +5702,47 @@ img.emoji-glyph {
 
 .diff-tab[data-narrow] .diff-head[data-vertical] > .commit-stepper {
   top: var(--files-bar);
+}
+
+@container (width < 640px) {
+  .commit-stepper {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .commit-stepper[data-sizing="full"] .commit-box {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  .commit-bar {
+    gap: 6px;
+  }
+
+  .commit-bar .btn {
+    padding: 2px 8px;
+  }
+
+  .commit-what {
+    gap: 4px;
+  }
+
+  .commit-wordy,
+  .commit-what > .commit-by,
+  .commit-what > .commit-age,
+  .commit-what > .commit-sep {
+    display: none;
+  }
+
+  .commit-pill {
+    padding: 0 4px;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+}
+
+@container (width < 480px) {
+  .commit-step-word {
+    display: none;
+  }
 }

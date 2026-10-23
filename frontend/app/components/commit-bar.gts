@@ -86,7 +86,7 @@ export default class CommitBar extends Component<CommitBarSignature> {
       data-sizing={{this.commitBox.sizing}}
       data-test-commit-stepper
     >
-      <div class="commit-box">
+      <div class="commit-box" data-test-commit-box>
         {{#if this.full}}
           {{#if @picked}}
             <div class="commit-bar" data-test-commit-bar data-mode="range">
@@ -106,7 +106,7 @@ export default class CommitBar extends Component<CommitBarSignature> {
                 title="back to the commit you were on Esc"
                 data-test-back-to-stepping
                 {{on "click" @unpick}}
-              >Back to stepping</button>
+              >Back<span class="commit-wordy"> to stepping</span></button>
               <button
                 type="button"
                 class="btn"
@@ -125,9 +125,12 @@ export default class CommitBar extends Component<CommitBarSignature> {
                 disabled={{if @stepper.previous false true}}
                 data-test-step="previous"
                 {{on "click" (fn @step -1)}}
-              >‹ Prev <kbd>[</kbd></button>
+              >‹<span class="commit-step-word"> Prev</span>
+                <kbd>[</kbd></button>
               <span class="commit-what">
-                <b data-test-commit-place>Commit
+                <b data-test-commit-place><span
+                    class="commit-wordy"
+                  >Commit</span>
                   {{@stepper.place}}
                   of
                   {{@stepper.count}}</b>
@@ -173,7 +176,8 @@ export default class CommitBar extends Component<CommitBarSignature> {
                 disabled={{if @stepper.next false true}}
                 data-test-step="next"
                 {{on "click" (fn @step 1)}}
-              >Next <kbd>]</kbd> ›</button>
+              ><span class="commit-step-word">Next </span><kbd>]</kbd>
+                ›</button>
             </div>
           {{/if}}
         {{/if}}

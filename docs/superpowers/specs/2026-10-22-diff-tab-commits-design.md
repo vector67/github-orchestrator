@@ -176,6 +176,15 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     the left side of the diff. Picking a file closes the panel and scrolls the
     diff to that file, just under the strip. Escape, a click outside the panel or
     the button again close it. At 720px and over nothing changes.
+20. **The commit bar is at most about 70px tall** (#180, decided 2026-10-23),
+    the pips included, at every width and in every state: stepping, a range,
+    with a pill, and stuck over the vertical timeline. Its controls never wrap:
+    one line of controls over the pips, with the subject cut by an ellipsis.
+    Measured against the width the diff gives it, under 640px it compacts: the
+    author, the age, the dots between them and the word `Commit` drop, the
+    padding tightens and the pills shrink. Under 480px `Prev` and `Next` keep
+    only their arrows and **Back to stepping** reads **Back**. Keys and
+    behaviour are unchanged.
 
 ## Spacing
 

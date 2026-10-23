@@ -1396,6 +1396,13 @@ module('Acceptance | pr diff', function (hooks) {
         );
         assert.true(tree.right > pane.left);
         assert.true(tree.right < pane.right, 'not across all of it');
+        const button = find(
+          '[data-test-files-toggle]',
+        )!.getBoundingClientRect();
+        assert.true(
+          tree.top >= button.bottom,
+          'the Files button stays clear of it, there to close it',
+        );
       });
 
       test('picking a file closes the panel and scrolls the diff to that file', async function (assert) {
