@@ -615,6 +615,7 @@ export default class StoreService extends Service {
     chosen: string | null,
     picked: Picked | null,
     skipMerges: boolean,
+    across: number,
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
     return (
@@ -627,6 +628,7 @@ export default class StoreService extends Service {
         picked,
         skipMerges,
         source === 'local' ? held.history.origin : undefined,
+        across,
       )
     );
   }

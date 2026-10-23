@@ -570,7 +570,9 @@ review saw once the branch was rewritten. Click a dot for one commit;
 shift-click another, or drag the band's handles, to pick a range, which the bar
 then shows as `from → to` with its commit and file counts and
 **Back to stepping**. **All**, **Since my review** and **This commit** pick
-the common ranges.
+the common ranges. The commits are dots while the pane has room for them, ticks
+when it is narrower, and narrower still the oldest fold into a `⋯ N earlier`
+pill, which you can click to scroll sideways through them all.
 
 **Commit box sizing** in the settings gear sets how much of this shows. Full is
 all of it; Minimal keeps only the pips; Hidden drops the stepper and shows the

@@ -286,6 +286,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
             @unpick={{this.pullRequestDiff.unpick}}
             @timelineOpen={{this.pullRequestDiff.timelineOpen}}
             @toggleTimeline={{this.pullRequestDiff.toggleTimeline}}
+            @fit={{this.pullRequestDiff.fitPips}}
           />
         {{/if}}
         {{#if this.pullRequestDiff.mergeNote}}
@@ -304,6 +305,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
               @stretch={{this.pullRequestDiff.stretch}}
               @choose={{this.pullRequestDiff.choose}}
               @fit={{this.pullRequestDiff.fit}}
+              @unfold={{this.pullRequestDiff.unfold}}
               @reset={{this.pullRequestDiff.reset}}
             />
           {{/if}}

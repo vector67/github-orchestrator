@@ -101,10 +101,19 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     dot. The server sends each such commit with its place among main's commits
     since the fork (`base_forks`), beside the capped `base_commits` (#146,
     decided 2026-10-23).
-14. **A long PR.** Past about 20 commits the dots shrink to small ticks, shas show
-    only at the band's ends and the stepper's commit, and a day row under the
-    lane marks where each day starts. The pips become a thin bar, one segment per
-    commit.
+14. **A long PR, by width** (#146, decided 2026-10-23). The graph counts the
+    columns it needs: the longest lane's commits plus main's drawn dots and
+    pills. When each gets at least 40px of the pane it draws dots, spread to fill
+    the width up to 112px apart. Otherwise, when each gets at least 10px, the
+    branch's dots shrink to small ticks spread to fill the width, shas show only
+    at the band's ends and the stepper's commit, and a day row under the lane
+    marks where each day starts. Narrower still, the branch's oldest commits fold
+    into a pill `⋯ <k> earlier` until the rest fit as ticks; the fold never takes
+    the stepper's commit or either end of the range in the diff, so when those
+    stop it short the rest scroll sideways. Clicking the pill unfolds every
+    commit into a sideways scroll. All of this is worked out again whenever the
+    pane changes width. The pips follow the same rule against the width of their
+    own row: under 40px a pip, they become a thin bar, one segment per commit.
 15. **Unpushed local commits.** With the diff on **local**, commits the worktree
     has not pushed extend the PR lane past an `origin` flag as dashed hollow dots
     on a dashed line, ending in a dashed `local` label. The stepper adds a yellow

@@ -54,6 +54,8 @@ class PerPr {
   @tracked picked: Picked | null = null;
   @tracked timelineOpen = false;
   @tracked across = 0;
+  @tracked pipsAcross = 0;
+  @tracked unfolded = false;
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
   @tracked confirmingReset: ResetWhen | null = null;
@@ -109,6 +111,7 @@ export default class PullRequestDiffService extends Service {
       this.pr.chosen,
       this.pr.picked,
       this.commitBox.skipMerges,
+      this.pr.pipsAcross,
     );
   }
 
@@ -131,11 +134,20 @@ export default class PullRequestDiffService extends Service {
       picked: this.pr.picked,
       hidden: this.hidden,
       across: this.pr.across,
+      unfolded: this.pr.unfolded,
     });
   }
 
   fit = (across: number) => {
     this.pr.across = across;
+  };
+
+  fitPips = (across: number) => {
+    this.pr.pipsAcross = across;
+  };
+
+  unfold = () => {
+    this.pr.unfolded = true;
   };
 
   get timelineOpen(): boolean {

@@ -4998,6 +4998,10 @@ button.tree-row[aria-current="true"] {
   stroke: var(--hairline);
 }
 
+.commit-pips-measure {
+  height: 0;
+}
+
 .commit-pips[data-thin] {
   gap: 0;
 }

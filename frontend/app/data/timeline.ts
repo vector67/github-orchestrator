@@ -2,6 +2,7 @@ import type { PullRequestCommit, PullRequestCommits } from 'frontend/data/api';
 import {
   layout,
   SPACING,
+  type GraphLayout,
   type GraphNode,
   type Placed,
   type Spacing,
@@ -21,8 +22,11 @@ const DAY_DROP = 36;
 const DAY_RISE = 14;
 const DAY_GAP = 4;
 const TICK = 7;
-export const LONG = 20;
-const TICKS: Spacing = { ...SPACING, column: 18, most: 36 };
+const DOT_ROOM = 40;
+const TICK_ROOM = 10;
+const DOTS: Spacing = { ...SPACING, column: DOT_ROOM, most: SPACING.most };
+const TICKS: Spacing = { ...SPACING, column: TICK_ROOM, most: DOT_ROOM };
+const EARLIER = 'earlier';
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
@@ -61,6 +65,14 @@ export type DotStyle =
 
 export type DotShape = 'dot' | 'diamond' | 'tick';
 
+export type Drawn = 'dot' | 'tick' | 'fold';
+
+export function drawnAs(columns: number, room: number): Drawn {
+  if (!room || !columns) return 'dot';
+  const each = room / columns;
+  return each >= DOT_ROOM ? 'dot' : each >= TICK_ROOM ? 'tick' : 'fold';
+}
+
 export interface TimelineDot {
   sha: string;
   short: string;
@@ -97,7 +109,7 @@ export interface Listed {
   subject: string;
 }
 
-export interface CollapsedRun {
+export interface Pill {
   x: number;
   y: number;
   left: number;
@@ -105,6 +117,9 @@ export interface CollapsedRun {
   width: number;
   height: number;
   text: string;
+}
+
+export interface CollapsedRun extends Pill {
   listed: Listed[];
 }
 
@@ -214,6 +229,7 @@ export interface Timeline {
   flag: TimelineFlag | null;
   since: SinceFork | null;
   collapsed: CollapsedRun[];
+  earlier: Pill | null;
   days: TimelineDay[];
   ghosts: string | null;
   header: TimelineHeader;
@@ -239,6 +255,7 @@ export interface TimelineInput {
   basePr: number | null;
   standing: Standing;
   across: number;
+  unfolded: boolean;
 }
 
 export interface Standing {
@@ -392,7 +409,37 @@ function foldsOf(history: PullRequestCommits): Fold[] {
   );
 }
 
-function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
+function spanOf(text: string, column: number): number {
+  return Math.max(
+    RUN_SPAN,
+    Math.ceil(
+      (text.length * LABEL_CHAR + 2 * LABEL_PAD + 2 * RUN_REACH) / column,
+    ),
+  );
+}
+
+function pillAt(at: Placed, column: number, text: string): Pill {
+  const width = (at.span ?? RUN_SPAN) * column - 2 * RUN_REACH;
+  return {
+    x: at.x,
+    y: at.y,
+    left: at.x - width / 2,
+    top: at.y - RUN_REACH,
+    width,
+    height: 2 * RUN_REACH,
+    text,
+  };
+}
+
+function earlierText(count: number): string {
+  return `⋯ ${count} earlier`;
+}
+
+function baseNodesOf(
+  history: PullRequestCommits,
+  lane: string,
+  column: number,
+): GraphNode[] {
   const stretches = stretchesOf(history);
   if (!stretches.some((one) => 'fold' in one))
     return stretches.flatMap((one) =>
@@ -404,7 +451,12 @@ function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
   return stretches.map((one) => {
     const node =
       'fold' in one
-        ? { id: one.fold.id, lane, parents: [before], span: RUN_SPAN }
+        ? {
+            id: one.fold.id,
+            lane,
+            parents: [before],
+            span: spanOf(one.fold.text, column),
+          }
         : { id: one.commit.sha, lane, parents: [before] };
     before = node.id;
     return node;
@@ -419,19 +471,7 @@ function collapsedOf(
   return foldsOf(history).flatMap((fold) => {
     const at = placed.get(fold.id);
     if (!at) return [];
-    const width = Math.max(RUN_SPAN * column - 2 * RUN_REACH, SPACING.column);
-    return [
-      {
-        x: at.x,
-        y: at.y,
-        left: at.x - width / 2,
-        top: at.y - RUN_REACH,
-        width,
-        height: 2 * RUN_REACH,
-        text: fold.text,
-        listed: fold.listed,
-      },
-    ];
+    return [{ ...pillAt(at, column, fold.text), listed: fold.listed }];
   });
 }
 
@@ -480,8 +520,17 @@ function originForkOf(
 function nodesOf(
   history: PullRequestCommits,
   there: PullRequestCommit[],
+  column: number,
+  earlier: number,
 ): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
+  const hidden = new Set(
+    history.commits.slice(0, earlier).map((one) => one.sha),
+  );
+  const via = (parents: string[]) => [
+    ...new Set(parents.map((one) => (hidden.has(one) ? EARLIER : one))),
+  ];
+  const first = history.commits[0];
   return [
     ...oldForkOf(history),
     ...outsideOf(history).map((id) => ({
@@ -495,23 +544,72 @@ function nodesOf(
       lane: STACK_LANE,
       parents: one.parents,
     })),
-    ...baseNodesOf(history, onBase),
-    ...history.commits.map((one) => ({
+    ...baseNodesOf(history, onBase, column),
+    ...(earlier && first
+      ? [
+          {
+            id: EARLIER,
+            lane: PR_LANE,
+            parents: first.parents,
+            span: spanOf(earlierText(earlier), column),
+          },
+        ]
+      : []),
+    ...history.commits.slice(earlier).map((one) => ({
       id: one.sha,
       lane: PR_LANE,
-      parents: one.parents,
+      parents: via(one.parents),
     })),
     ...ghostsOf(history).map((one) => ({
       id: one.sha,
       lane: GHOST_LANE,
-      parents: one.parents,
+      parents: via(one.parents),
     })),
     ...there.map((one) => ({
       id: one.sha,
       lane: ORIGIN_LANE,
-      parents: one.parents,
+      parents: via(one.parents),
     })),
   ];
+}
+
+interface Drawing {
+  graph: GraphLayout;
+  ticked: boolean;
+  earlier: number;
+}
+
+function drawingOf(
+  input: TimelineInput,
+  lanes: string[],
+  there: PullRequestCommit[],
+  keep: number,
+): Drawing {
+  const { history, across } = input;
+  const top = foldsOf(history).length ? DATE_ROW : 0;
+  const room = across && across - SPACING.left - SPACING.right;
+  const drawn = (spacing: Spacing, earlier: number): Drawing => ({
+    graph: layout(
+      lanes,
+      nodesOf(history, there, spacing.column, earlier),
+      { ...spacing, top: spacing.top + top },
+      across,
+    ),
+    ticked: spacing === TICKS,
+    earlier,
+  });
+  const dots = drawn(DOTS, 0);
+  if (drawnAs(dots.graph.widest, room) === 'dot') return dots;
+  const ticks = drawn(TICKS, 0);
+  if (input.unfolded || drawnAs(ticks.graph.widest, room) === 'tick')
+    return ticks;
+  let best = ticks;
+  for (let earlier = 1; earlier <= keep; earlier += 1) {
+    const folded = drawn(TICKS, earlier);
+    if (folded.graph.widest < best.graph.widest) best = folded;
+    if (drawnAs(folded.graph.widest, room) === 'tick') return folded;
+  }
+  return best;
 }
 
 function bandOf(from: Placed, to: Placed): TimelineBand {
@@ -653,26 +751,9 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const order = history.commits.map((one) => one.sha);
   if (!order.length) return null;
   const stack = history.stack;
-  const long = order.length > LONG;
   const folded = foldsOf(history).length > 0;
-  const columns = long ? TICKS : SPACING;
-  const spacing = folded
-    ? { ...columns, top: columns.top + DATE_ROW }
-    : columns;
   const ghosts = ghostsOf(history);
   const oldFork = oldForkOf(history)[0];
-  const graph = layout(
-    [
-      BASE_LANE,
-      ...(stack ? [STACK_LANE] : []),
-      ...(there.length ? [ORIGIN_LANE] : []),
-      PR_LANE,
-      ...(ghosts.length ? [GHOST_LANE] : []),
-    ],
-    nodesOf(history, there),
-    spacing,
-    input.across,
-  );
   const base = input.base ?? 'main';
   const showing =
     input.picked ??
@@ -681,6 +762,25 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       : { from: input.current, to: input.current });
   const from = order.indexOf(showing.from);
   const to = order.indexOf(showing.to);
+  const kept = [
+    from,
+    to,
+    input.hidden ? -1 : order.indexOf(input.current ?? ''),
+  ].filter((one) => one >= 0);
+  const drawing = drawingOf(
+    input,
+    [
+      BASE_LANE,
+      ...(stack ? [STACK_LANE] : []),
+      ...(there.length ? [ORIGIN_LANE] : []),
+      PR_LANE,
+      ...(ghosts.length ? [GHOST_LANE] : []),
+    ],
+    there,
+    Math.min(order.length - 1, ...kept),
+  );
+  const { graph, ticked } = drawing;
+  const shelved = graph.nodes.get(EARLIER);
   const subjects = new Map(
     [
       ...(stack?.commits ?? []),
@@ -706,7 +806,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   );
   const leaving = new Set(forkCommitsOf(history).map((one) => one.sha));
   const placed = [...graph.nodes.values()].filter(
-    (node) => !node.id.startsWith(RUN),
+    (node) => !node.id.startsWith(RUN) && node.id !== EARLIER,
   );
   const dots = placed.map((node) => {
     const at = order.indexOf(node.id);
@@ -715,7 +815,8 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     const subject = subjects.get(node.id);
     const shape: DotShape = merges.has(node.id)
       ? 'diamond'
-      : long && at >= 0
+      : ticked &&
+          (at >= 0 || node.lane === ORIGIN_LANE || node.lane === GHOST_LANE)
         ? 'tick'
         : 'dot';
     return {
@@ -737,7 +838,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       showSha:
         (folded && leaving.has(node.id)) ||
         (at >= 0 &&
-          (!long ||
+          (!ticked ||
             [showing.from, showing.to, input.current].includes(node.id))),
       date: date ? dayOf(date) : null,
       dateY: node.id === history.fork ? node.y - DATE_RISE : node.y + DATE_DROP,
@@ -846,7 +947,10 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     flag: flagOf(order, input, graph.nodes, graph.column),
     since: sinceOf(history, graph.nodes, base, collapsed),
     collapsed,
-    days: long ? daysOf(history, graph.nodes) : [],
+    earlier: shelved
+      ? pillAt(shelved, graph.column, earlierText(drawing.earlier))
+      : null,
+    days: ticked ? daysOf(history, graph.nodes) : [],
     ghosts: ghosts.length
       ? `your review saw ${ghosts.map((one) => one.sha.slice(0, SHORT)).join(' ')}, rewritten since`
       : null,
@@ -875,7 +979,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     presets: presetsOf(order, input, showing),
     key: {
       merge: merges.size > 0,
-      tick: long,
+      tick: ticked,
       unpushed: firstUnpushed !== undefined,
       origin: originHead !== undefined,
     },

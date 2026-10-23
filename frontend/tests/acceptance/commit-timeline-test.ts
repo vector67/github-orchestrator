@@ -963,11 +963,44 @@ module(
       return findAll('[data-test-sha]').map((one) => one.textContent.trim());
     }
 
-    test('past twenty commits the dots turn to ticks, shas show only where you are, and a day row marks each day', async function (assert) {
+    function readUpTo(shas: string[], count: number) {
+      board().readMarks = shas
+        .slice(0, count)
+        .map((sha, index) => ({ sha, subject: `step ${index}` }));
+    }
+
+    async function paneOf(width: number) {
+      (find('.timeline-scroll') as HTMLElement).style.width = `${width}px`;
+      await new Promise((done) =>
+        requestAnimationFrame(() => requestAnimationFrame(done)),
+      );
+      await settled();
+    }
+
+    function shapes(): string[] {
+      return [
+        ...new Set(
+          dots('pr').map((one) => dot(one.sha).getAttribute('data-shape')!),
+        ),
+      ];
+    }
+
+    function earlier(): number | null {
+      const text = find('[data-test-earlier]')?.textContent.trim() ?? '';
+      const folded = /^⋯ (\d+) earlier$/.exec(text);
+      return folded ? Number(folded[1]) : null;
+    }
+
+    function graphWidth(): number {
+      return Number(find('[data-test-timeline-graph]')!.getAttribute('width'));
+    }
+
+    test('with under 40px a commit the dots turn to ticks, shas show only where you are, and a day row marks each day', async function (assert) {
       const shas = long(24);
       await visit('/pr/o/r/7/diff');
 
       await click('[data-test-timeline-toggle]');
+      await paneOf(800);
 
       assert.true(
         dots('pr').every(
@@ -988,10 +1021,6 @@ module(
         ),
         'each day starts at its first commit',
       );
-      assert
-        .dom('[data-test-commit-stepper] .commit-pips')
-        .hasAttribute('data-thin');
-      assert.strictEqual(findAll('[data-test-pip]').length, 24);
 
       await click(dot(shas[3]!));
       await click(dot(shas[10]!), { shiftKey: true });
@@ -1023,15 +1052,101 @@ module(
       );
     });
 
-    test('twenty commits keep their dots, their shas and their pips', async function (assert) {
-      long(20);
+    test('the same pull request is dots in a wide pane, ticks in a narrower one, and ticks after a fold of its oldest in a narrow one', async function (assert) {
+      const shas = long(40);
+      readUpTo(shas, 30);
       await visit('/pr/o/r/7/diff');
-
       await click('[data-test-timeline-toggle]');
 
-      assert.dom('[data-test-dot][data-shape="tick"]').doesNotExist();
-      assert.strictEqual(shasShown().length, 20);
-      assert.dom('[data-test-day]').doesNotExist();
+      await paneOf(1800);
+
+      assert.deepEqual(shapes(), ['dot']);
+      assert.strictEqual(shasShown().length, 40);
+      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.strictEqual(graphWidth(), 1800, 'spread to fill the pane');
+
+      await paneOf(800);
+
+      assert.deepEqual(shapes(), ['tick']);
+      assert.deepEqual(shasShown(), [shas[30]]);
+      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.strictEqual(graphWidth(), 800, 'spread to fill the pane');
+
+      await paneOf(400);
+
+      const folded = earlier() ?? 0;
+      assert.true(folded > 0, 'the oldest fold into a pill');
+      assert.deepEqual(shapes(), ['tick']);
+      assert.strictEqual(dots('pr')[0]!.sha, shas[folded]);
+      assert.strictEqual(dots('pr').length, 40 - folded);
+      assert.strictEqual(graphWidth(), 400, 'and the rest fit the pane');
+      assert.dom('[data-test-current]').hasAttribute('data-at', shas[30]!);
+
+      await paneOf(1800);
+
+      assert.deepEqual(shapes(), ['dot']);
+      assert.dom('[data-test-earlier]').doesNotExist();
+    });
+
+    test('a fold never hides the commit you are on or an end of the range in the diff', async function (assert) {
+      const shas = long(40);
+      readUpTo(shas, 18);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+
+      await paneOf(300);
+
+      assert.strictEqual(earlier(), 18);
+      assert.strictEqual(dots('pr')[0]!.sha, shas[18]);
+
+      await paneOf(1800);
+      await click(dot(shas[16]!), { shiftKey: true });
+      await paneOf(300);
+
+      assert.deepEqual(inRange(), shas.slice(16, 19));
+      assert.strictEqual(earlier(), 16);
+      assert.strictEqual(dots('pr')[0]!.sha, shas[16]);
+    });
+
+    test('clicking the fold unfolds every commit into a sideways scroll', async function (assert) {
+      const shas = long(40);
+      readUpTo(shas, 30);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      await paneOf(400);
+
+      await click('[data-test-earlier]');
+      await paneOf(400);
+
+      assert.dom('[data-test-earlier]').doesNotExist();
+      assert.strictEqual(dots('pr').length, 40);
+      assert.deepEqual(shapes(), ['tick']);
+      assert.true(graphWidth() > 400, 'wider than the pane, which scrolls');
+    });
+
+    test('the pips become a thin bar when each gets under 40px, and turn back when the bar widens', async function (assert) {
+      long(24);
+      await visit('/pr/o/r/7/diff');
+      const bar = find(
+        '[data-test-commit-stepper] .commit-pips',
+      )!.parentElement!;
+      const widen = async (width: number) => {
+        bar.style.width = `${width}px`;
+        await new Promise((done) =>
+          requestAnimationFrame(() => requestAnimationFrame(done)),
+        );
+        await settled();
+      };
+
+      await widen(600);
+
+      assert
+        .dom('[data-test-commit-stepper] .commit-pips')
+        .hasAttribute('data-thin');
+      assert.strictEqual(findAll('[data-test-pip]').length, 24);
+
+      await widen(1200);
+
       assert
         .dom('[data-test-commit-stepper] .commit-pips')
         .doesNotHaveAttribute('data-thin');
@@ -1229,6 +1344,25 @@ module(
         .dom('[data-test-diverged]')
         .hasText('diverged from origin · 2 here, 3 on origin');
       assert.dom('[data-test-not-pushed]').hasText('not on origin');
+    });
+
+    test("where the worktree's commits turn to ticks, so do origin's", async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+
+      (find('.timeline-scroll') as HTMLElement).style.width = '200px';
+      await new Promise((done) =>
+        requestAnimationFrame(() => requestAnimationFrame(done)),
+      );
+      await settled();
+
+      assert.deepEqual(
+        [...dots('pr'), ...dots('origin')].map((one) =>
+          dot(one.sha).getAttribute('data-shape'),
+        ),
+        ['tick', 'tick', 'tick', 'tick', 'tick'],
+      );
     });
 
     test("clicking one of origin's commits picks nothing", async function (assert) {

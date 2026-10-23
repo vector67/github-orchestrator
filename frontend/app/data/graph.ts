@@ -33,6 +33,7 @@ export interface GraphLayout {
   edges: GraphEdge[];
   lanes: LaneLine[];
   column: number;
+  widest: number;
   width: number;
   height: number;
 }
@@ -140,6 +141,7 @@ export function layout(
     edges,
     lanes: lines,
     column,
+    widest,
     width:
       column === fitted
         ? across

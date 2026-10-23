@@ -22,6 +22,7 @@ export interface CommitTimelineSignature {
     stretch: (end: End, sha: string) => void;
     choose: (picked: Picked | null) => void;
     fit: (across: number) => void;
+    unfold: () => void;
     reset: ResetControls;
   };
 }
@@ -90,6 +91,10 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     const opens = target.closest('[data-opens]')?.getAttribute('data-opens');
     if (opens) {
       void this.router.transitionTo(opens);
+      return;
+    }
+    if (target.closest('[data-earlier]')) {
+      this.args.unfold();
       return;
     }
     const pill = target
@@ -470,6 +475,28 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               >{{run.text}}</text>
             </g>
           {{/each}}
+          {{#if @timeline.earlier}}
+            <g
+              class="timeline-run"
+              data-earlier
+              data-x={{@timeline.earlier.x}}
+              data-test-earlier
+            >
+              <rect
+                x={{@timeline.earlier.left}}
+                y={{@timeline.earlier.top}}
+                width={{@timeline.earlier.width}}
+                height={{@timeline.earlier.height}}
+                rx="10"
+              />
+              <text
+                x={{@timeline.earlier.x}}
+                y={{@timeline.earlier.y}}
+                text-anchor="middle"
+                dominant-baseline="middle"
+              >{{@timeline.earlier.text}}</text>
+            </g>
+          {{/if}}
           {{#each @timeline.labels key="kind" as |label|}}
             {{#if label.box}}
               <rect
