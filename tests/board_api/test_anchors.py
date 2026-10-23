@@ -1,6 +1,12 @@
+import time
 from pathlib import Path
 
-from github_orchestrator.working_copies.fake import FakeWorkingCopies
+from github_orchestrator.working_copies import FileDiff
+from github_orchestrator.working_copies.fake import (
+    DiffHunk,
+    DiffLine,
+    FakeWorkingCopies,
+)
 from tests.board_api.support import (
     THE_PR,
     WORKTREE,
@@ -10,8 +16,8 @@ from tests.board_api.support import (
 )
 
 
-def pull_request(first, *commits):
-    copies = FakeWorkingCopies()
+def pull_request(first, *commits, copies=None):
+    copies = copies or FakeWorkingCopies()
     shas = [copies.add_repo(Path("/nonexistent/repo"), first, "first")]
     for number, files in enumerate(commits):
         shas.append(copies.publish("feature", shas[-1], files, f"commit {number}"))
@@ -84,3 +90,26 @@ def test_a_line_the_pull_requests_diff_does_not_show_has_no_place():
     answer = anchors(client, shas[0], shas[1], shas)
 
     assert onto(answer, "src/foo.py", "RIGHT", 1) is None
+
+
+def in_context(path, size):
+    lines = tuple(DiffLine(kind="context", old_line=n, new_line=n, text=f"line {n}")
+                  for n in range(1, size + 1))
+    return FileDiff(path=path, old_path=None, status="modified", added=0, removed=0,
+                    is_binary=False,
+                    hunks=(DiffHunk(old_start=1, old_lines=size, new_start=1, new_lines=size,
+                                    section=None, lines=lines),))
+
+
+def test_a_diff_of_thousands_of_lines_anchors_in_under_a_second():
+    size = 5000
+    copies = FakeWorkingCopies()
+    copies.show_diff((in_context("src/big.py", size),))
+    client, shas = pull_request({"src/big.py": "old\n"}, {"src/big.py": "new\n"}, copies=copies)
+
+    started = time.monotonic()
+    answer = anchors(client, shas[0], shas[1], shas)
+    elapsed = time.monotonic() - started
+
+    assert onto(answer, "src/big.py", "LEFT", size) == {"side": "LEFT", "line": size}
+    assert elapsed < 1, f"anchoring {2 * size} diff lines took {elapsed:.1f}s"
