@@ -5,14 +5,18 @@ import pytest
 
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import ManagerStanding, ResetToOrigin
+from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from tests.board_api.support import (
+    KEY,
     THE_PR,
     WORKTREE,
     board_on,
     branched_from_main,
     client_of,
     fake_threads,
+    heard_on,
+    proposed,
 )
 
 RESET = "/api/pull-request/operations:reset-to-origin"
@@ -148,3 +152,25 @@ def test_cancelling_a_queued_reset_forgets_it():
 
     assert answer.status_code == 204
     assert ResetToOrigin.kept(records.of(THE_PR)) is None
+
+
+def test_a_fix_picked_but_not_pushed_keeps_the_worktree_from_a_reset():
+    copies, _ = diverged()
+    copies.refuse_pushes("rejected: non-fast-forward")
+    board = board_on(fake_threads(working_copies=copies), base_branch="main", branch="feature",
+                     manager=FakeManagerPanel(now=DIVERGED))
+    heard_on(board)
+    proposed(board)
+    client = client_of(board)
+    tag = client.get(f"/api/conversations/{KEY}").json()["etag"]
+    assert client.post(f"/api/conversations/{KEY}/operations:approve",
+                       headers={"If-Match": tag}, json={}).status_code == 202
+    board.threads.tick(FakeNotifications(), on_hold=False)
+    landed = board.threads.get(KEY).fix.landed_sha
+    assert landed is not None and copies.head_of(WORKTREE) == str(landed)
+
+    answer = client.post(RESET)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "operation-outstanding"
+    assert copies.head_of(WORKTREE) == str(landed)

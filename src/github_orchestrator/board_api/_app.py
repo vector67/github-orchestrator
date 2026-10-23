@@ -818,9 +818,9 @@ def reset_to_origin(board: Serving) -> Response:
     """For a worktree that has diverged from origin. The worktree's commits
     that origin lacks are dropped, with no backup. Refused, changing nothing,
     while its manager is not answering or is frozen, an agent works in the
-    worktree, it has not diverged, it holds another branch, or it holds
-    changes nobody committed, untracked files origin would overwrite among
-    them.
+    worktree, it has not diverged, it holds another branch, it holds
+    changes nobody committed, untracked or ignored files origin would
+    overwrite among them, or a fix is picked onto it and not pushed yet.
     """
     dashboard = board.manager.dashboard()
     if dashboard.standing is not ManagerStanding.ANSWERING:
@@ -844,6 +844,10 @@ def reset_to_origin(board: Serving) -> Response:
                       "GitHub has not named the pull request's branch, so the worktree "
                       "was left as it is")
     seen = board.git.local_head()
+    if any(conversation.fix.awaits_push for conversation in board.conversations.all()):
+        raise Refusal(409, ErrorCode.OPERATION_OUTSTANDING,
+                      "a fix was picked onto the branch and is not pushed yet, so the "
+                      "worktree was left as it is")
     failed = board.git.fetch(facts.base_branch)
     if seen is None or failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed or "the worktree's HEAD will not read")
