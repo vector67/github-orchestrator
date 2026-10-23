@@ -31,6 +31,8 @@ import type PullRequestDiffService from 'frontend/services/pull-request-diff';
 
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
+const NARROW_TAB = 720;
+
 export interface DiffTabSignature {
   Args: {
     file: string | null;
@@ -49,10 +51,19 @@ export default class DiffTab extends Component<DiffTabSignature> {
   @tracked editing: Inline | null = null;
   @tracked boxOpen = false;
   @tracked filter = '';
+  @tracked narrow = false;
+  @tracked filesOpen = false;
   private pane: HTMLElement | null = null;
   private followed: unknown = null;
   private shownLinked: unknown = null;
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
+  private readonly filesKeymap: Keymap = {
+    take: (key) => {
+      if (key !== 'Escape') return false;
+      this.closeFiles();
+      return true;
+    },
+  };
 
   constructor(owner: Owner, args: DiffTabSignature['Args']) {
     super(owner, args);
@@ -63,6 +74,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   willDestroy(): void {
     super.willDestroy();
     this.keys.drop(this.keymap);
+    this.keys.drop(this.filesKeymap);
   }
 
   private takes(key: string): boolean {
@@ -146,7 +158,48 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.filter = (event.target as HTMLInputElement).value;
   };
 
+  get treeShown(): boolean {
+    return !this.narrow || this.filesOpen;
+  }
+
+  measureTab = (tab: HTMLElement) => {
+    const watching = new ResizeObserver(() => {
+      this.narrow = tab.clientWidth < NARROW_TAB;
+      if (!this.narrow) this.closeFiles();
+    });
+    watching.observe(tab);
+    return () => watching.disconnect();
+  };
+
+  toggleFiles = () => {
+    if (this.filesOpen) this.closeFiles();
+    else this.openFiles();
+  };
+
+  private openFiles(): void {
+    this.filesOpen = true;
+    this.keys.push('dialog', this.filesKeymap);
+  }
+
+  closeFiles = () => {
+    if (!this.filesOpen) return;
+    this.filesOpen = false;
+    this.keys.drop(this.filesKeymap);
+  };
+
+  closeOutside = (panel: HTMLElement) => {
+    const pressed = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (panel.contains(target) || target.closest('[data-files-toggle]'))
+        return;
+      this.closeFiles();
+    };
+    document.addEventListener('mousedown', pressed);
+    return () => document.removeEventListener('mousedown', pressed);
+  };
+
   go = (path: string) => {
+    this.closeFiles();
     this.args.show(path);
     this.scrollTo(path);
   };
@@ -192,7 +245,9 @@ export default class DiffTab extends Component<DiffTabSignature> {
   <template>
     <div
       class="diff-tab"
+      data-narrow={{if this.narrow "true"}}
       data-test-diff-tab
+      {{didChange this.measureTab}}
       {{didChange this.pullRequestDiff.load this.pullRequestDiff.asking}}
       {{didChange
         this.pullRequestDiff.readDetails
@@ -201,77 +256,97 @@ export default class DiffTab extends Component<DiffTabSignature> {
       {{didChange this.pullRequestDiff.draw this.pullRequestDiff.anchoring}}
       {{didChange this.showLinked this.linked}}
     >
-      <aside class="diff-tree" data-test-tree>
-        <div class="diff-sources" data-test-diff-sources>
-          <span
-            class="seg"
-            role="group"
-            aria-label="which head the diff runs to"
-          >
-            <button
-              type="button"
-              aria-pressed={{if
-                (eq this.pullRequestDiff.source "origin")
-                "true"
-                "false"
-              }}
-              title="origin: the PR branch on GitHub, as last fetched"
-              data-test-source="origin"
-              {{on "click" (fn this.pullRequestDiff.show "origin")}}
-            >origin</button>
-            <button
-              type="button"
-              aria-pressed={{if
-                (eq this.pullRequestDiff.source "local")
-                "true"
-                "false"
-              }}
-              title="local: the commit the PR's worktree has checked out, with any commits not pushed yet"
-              data-test-source="local"
-              {{on "click" (fn this.pullRequestDiff.show "local")}}
-            >local</button>
-          </span>
-          {{#if this.hidden}}
-            {{#if this.pullRequestDiff.timeline}}
+      {{#if this.treeShown}}
+        <aside
+          class="diff-tree"
+          data-panel={{if this.narrow "true"}}
+          data-test-tree
+          {{didChange this.closeOutside}}
+        >
+          <div class="diff-sources" data-test-diff-sources>
+            <span
+              class="seg"
+              role="group"
+              aria-label="which head the diff runs to"
+            >
               <button
                 type="button"
-                class="btn"
-                title="the branch's timeline t"
                 aria-pressed={{if
-                  this.pullRequestDiff.timelineOpen
+                  (eq this.pullRequestDiff.source "origin")
                   "true"
                   "false"
                 }}
-                data-test-timeline-toggle
-                {{on "click" this.pullRequestDiff.toggleTimeline}}
-              >Timeline <kbd>t</kbd></button>
+                title="origin: the PR branch on GitHub, as last fetched"
+                data-test-source="origin"
+                {{on "click" (fn this.pullRequestDiff.show "origin")}}
+              >origin</button>
+              <button
+                type="button"
+                aria-pressed={{if
+                  (eq this.pullRequestDiff.source "local")
+                  "true"
+                  "false"
+                }}
+                title="local: the commit the PR's worktree has checked out, with any commits not pushed yet"
+                data-test-source="local"
+                {{on "click" (fn this.pullRequestDiff.show "local")}}
+              >local</button>
+            </span>
+            {{#if this.hidden}}
+              {{#if this.pullRequestDiff.timeline}}
+                <button
+                  type="button"
+                  class="btn"
+                  title="the branch's timeline t"
+                  aria-pressed={{if
+                    this.pullRequestDiff.timelineOpen
+                    "true"
+                    "false"
+                  }}
+                  data-test-timeline-toggle
+                  {{on "click" this.pullRequestDiff.toggleTimeline}}
+                >Timeline <kbd>t</kbd></button>
+              {{/if}}
             {{/if}}
+          </div>
+          {{#if this.pullRequestDiff.fetching}}
+            <span class="fetching-chip" data-test-fetching>fetching…</span>
           {{/if}}
-        </div>
-        {{#if this.pullRequestDiff.fetching}}
-          <span class="fetching-chip" data-test-fetching>fetching…</span>
-        {{/if}}
-        <input
-          type="search"
-          class="diff-tree-filter"
-          aria-label="filter the changed files"
-          placeholder="Filter changed files"
-          data-test-tree-filter
-          value={{this.filter}}
-          {{on "input" this.filtering}}
-        />
-        <FileTree
-          @rows={{this.tree}}
-          @current={{@file}}
-          @choose={{this.go}}
-          @count={{this.countOf}}
-        />
-      </aside>
+          <input
+            type="search"
+            class="diff-tree-filter"
+            aria-label="filter the changed files"
+            placeholder="Filter changed files"
+            data-test-tree-filter
+            value={{this.filter}}
+            {{on "input" this.filtering}}
+          />
+          <FileTree
+            @rows={{this.tree}}
+            @current={{@file}}
+            @choose={{this.go}}
+            @count={{this.countOf}}
+          />
+        </aside>
+      {{/if}}
       <div
         class="diff-main"
         data-test-diff-pane
         {{didChange this.follow this.scrolling}}
       >
+        {{#if this.narrow}}
+          <div class="diff-files-bar">
+            <button
+              type="button"
+              class="btn"
+              aria-expanded={{if this.filesOpen "true" "false"}}
+              title="the changed files"
+              data-files-toggle
+              data-test-files-toggle
+              {{on "click" this.toggleFiles}}
+            >Files</button>
+          </div>
+        {{/if}}
         <div
           class="diff-head"
           data-vertical={{if

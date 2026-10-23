@@ -4415,6 +4415,8 @@ kbd {
 }
 
 .diff-tab {
+  --files-bar: 36px;
+
   display: grid;
   flex: 1;
   grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
@@ -4433,6 +4435,42 @@ kbd {
 
 .diff-tree .seg {
   align-self: flex-start;
+}
+
+.diff-tab[data-narrow] {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.diff-tree[data-panel] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  width: min(300px, 85%);
+  background: var(--page);
+  box-shadow: 4px 0 16px rgb(0 0 0 / 18%);
+}
+
+.diff-files-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex: none;
+  box-sizing: border-box;
+  height: var(--files-bar);
+  align-items: center;
+  padding: 0 16px;
+  background: var(--page);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.diff-files-bar .btn {
+  padding: 2px 12px;
+  font-size: var(--fs-s);
 }
 
 .fetching-chip {
@@ -5651,4 +5689,12 @@ img.emoji-glyph {
 .comment-body img {
   height: 1.25em;
   vertical-align: -0.25em;
+}
+
+.diff-tab[data-narrow] .diff-file {
+  scroll-margin-top: var(--files-bar);
+}
+
+.diff-tab[data-narrow] .diff-head[data-vertical] > .commit-stepper {
+  top: var(--files-bar);
 }

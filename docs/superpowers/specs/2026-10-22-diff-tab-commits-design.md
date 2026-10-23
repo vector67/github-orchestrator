@@ -166,6 +166,16 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     A new commit whose subject matches a read ghost's counts as read and carries
     `≈ read` above it. Ghosts cannot be picked. **Since my review** picks only
     the commits with no match. The header reads `now forked from <new>, was <old>`, and the note (decision 4) says `<b>Rebased since your review</b> (force-pushed <day date>). K of your read commits were rewritten onto newer main and matched by message; <b>M are new</b>.`
+19. **A narrow diff tab hides the file tree behind a Files button** (#180,
+    decided 2026-10-23). When the diff tab itself, measured rather than the
+    window, is under 720px wide, the left column goes and the diff takes the
+    whole width. A **Files** button sits in a slim strip stuck to the top left
+    of the diff pane, above the commit bar, which sticks under it in the
+    vertical timeline. It opens the left column's contents (the origin/local
+    switch, the filter, the tree, and Hidden's Timeline button) as a panel over
+    the left side of the diff. Picking a file closes the panel and scrolls the
+    diff to that file, just under the strip. Escape, a click outside the panel or
+    the button again close it. At 720px and over nothing changes.
 
 ## Spacing
 

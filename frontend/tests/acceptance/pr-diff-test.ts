@@ -6,6 +6,7 @@ import {
   fillIn,
   find,
   findAll,
+  settled,
   triggerEvent,
   visit,
   waitFor,
@@ -50,6 +51,14 @@ function scrolledTo(path: string): boolean {
   const offset =
     file.getBoundingClientRect().top - pane.getBoundingClientRect().top;
   return pane.scrollTop > 0 && Math.abs(offset) < 2;
+}
+
+async function tabOf(width: number) {
+  (find('[data-test-diff-tab]') as HTMLElement).style.maxWidth = `${width}px`;
+  await new Promise((done) =>
+    requestAnimationFrame(() => requestAnimationFrame(done)),
+  );
+  await settled();
 }
 
 module('Acceptance | pr diff', function (hooks) {
@@ -1317,6 +1326,156 @@ module('Acceptance | pr diff', function (hooks) {
         currentURL(),
         '/pr/o/r/7/diff?file=src%2Fwidgets%2Fold.py',
       );
+    });
+
+    module('in a narrow tab', function () {
+      function opened(): boolean {
+        return find('[data-test-tree]') !== null;
+      }
+
+      test('under 720px the tree leaves the side column and a Files button at the top of the diff takes its place', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+
+        await tabOf(700);
+
+        assert.dom('[data-test-tree]').doesNotExist();
+        assert.dom('[data-test-tree-filter]').doesNotExist();
+        assert.dom('[data-test-diff-sources]').doesNotExist();
+        assert.dom('[data-test-diff-pane] [data-test-files-toggle]').exists();
+        assert
+          .dom('[data-test-files-toggle]')
+          .hasAttribute('aria-expanded', 'false');
+
+        const pane = find('[data-test-diff-pane]') as HTMLElement;
+        pane.scrollTop = pane.scrollHeight;
+        const button = find(
+          '[data-test-files-toggle]',
+        )!.getBoundingClientRect();
+        const shown = pane.getBoundingClientRect();
+        assert.true(
+          button.top >= shown.top,
+          'scrolled down, the button is still in sight',
+        );
+        assert.true(button.bottom <= shown.bottom);
+      });
+
+      test('at 720px and over the tree stays in the side column, with no Files button', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+
+        await tabOf(720);
+
+        assert.dom('[data-test-files-toggle]').doesNotExist();
+        assert.dom('[data-test-tree-filter]').exists();
+        const tree = find('[data-test-tree]')!.getBoundingClientRect();
+        const pane = find('[data-test-diff-pane]')!.getBoundingClientRect();
+        assert.true(
+          tree.right <= pane.left + 1,
+          'the tree sits beside the diff',
+        );
+      });
+
+      test('Files opens the switch, the filter and the tree over the left of the diff', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+        await tabOf(480);
+
+        await click('[data-test-files-toggle]');
+
+        assert
+          .dom('[data-test-files-toggle]')
+          .hasAttribute('aria-expanded', 'true');
+        assert.dom('[data-test-tree] [data-test-diff-sources]').exists();
+        assert.dom('[data-test-tree] [data-test-tree-filter]').exists();
+        assert
+          .dom('[data-test-tree] [data-test-tree-row="file"]')
+          .exists({ count: 4 });
+        const tree = find('[data-test-tree]')!.getBoundingClientRect();
+        const pane = find('[data-test-diff-pane]')!.getBoundingClientRect();
+        assert.true(
+          tree.left <= pane.left + 1,
+          'over the left side of the diff',
+        );
+        assert.true(tree.right > pane.left);
+        assert.true(tree.right < pane.right, 'not across all of it');
+      });
+
+      test('picking a file closes the panel and scrolls the diff to that file', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+        await tabOf(480);
+        await click('[data-test-files-toggle]');
+
+        await click(
+          '[data-test-tree-row="file"][data-path="src/widgets/old.py"]',
+        );
+
+        assert.false(opened(), 'the panel closed');
+        assert.strictEqual(
+          currentURL(),
+          '/pr/o/r/7/diff?file=src%2Fwidgets%2Fold.py',
+        );
+        const pane = find('[data-test-diff-pane]') as HTMLElement;
+        const file = find(
+          '[data-test-file="src/widgets/old.py"]',
+        )!.getBoundingClientRect();
+        const button = find(
+          '[data-test-files-toggle]',
+        )!.getBoundingClientRect();
+        assert.true(pane.scrollTop > 0, 'the diff scrolled');
+        assert.true(
+          file.top >= button.bottom,
+          'old.py is under the Files button',
+        );
+        assert.true(
+          file.top < pane.getBoundingClientRect().bottom,
+          'and in sight',
+        );
+      });
+
+      test('Escape closes the panel, even from the filter, and so does a click outside it', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+        await tabOf(480);
+
+        await click('[data-test-files-toggle]');
+        await triggerEvent(document, 'keydown', { key: 'Escape' });
+
+        assert.false(opened(), 'Escape closed it');
+
+        await click('[data-test-files-toggle]');
+        await fillIn('[data-test-tree-filter]', 'old');
+        await triggerEvent('[data-test-tree-filter]', 'keydown', {
+          key: 'Escape',
+        });
+
+        assert.false(opened(), 'Escape in the filter closed it');
+
+        await click('[data-test-files-toggle]');
+        await click('[data-test-tree-filter]');
+
+        assert.true(opened(), 'a click inside keeps it open');
+
+        await click('[data-test-diff-files]');
+
+        assert.false(opened(), 'a click outside closed it');
+
+        await click('[data-test-files-toggle]');
+        await click('[data-test-files-toggle]');
+
+        assert.false(opened(), 'the button closes it again');
+      });
+
+      test('widening the tab puts the tree back in the side column', async function (assert) {
+        await visit('/pr/o/r/7/diff');
+        await tabOf(480);
+        await click('[data-test-files-toggle]');
+
+        await tabOf(900);
+
+        assert.dom('[data-test-files-toggle]').doesNotExist();
+        assert.dom('[data-test-tree-filter]').exists();
+
+        await tabOf(480);
+
+        assert.false(opened(), 'narrowed again, it starts closed');
+      });
     });
   });
 });
