@@ -33,7 +33,8 @@ class ClaudeCommandLines:
         return ["--print", "--model", model, "--tools", "", "--strict-mcp-config"]
 
     def read_only(self, model: str) -> list[str]:
-        return ["--print", "--model", model, "--tools", READ_ONLY_TOOLS]
+        return ["--print", "--model", model, "--tools", READ_ONLY_TOOLS,
+                "--setting-sources", "user", "--strict-mcp-config"]
 
     def rebase_session(self) -> list[str]:
         return [REBASE_ON_MAIN]
