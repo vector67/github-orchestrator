@@ -1,8 +1,10 @@
 import difflib
 import hashlib
 import itertools
+import threading
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -131,6 +133,7 @@ class FakeWorkingCopies:
         self._shown_diff: tuple[FileDiff, ...] | None = None
         self._diff_shown = False
         self._binary_paths: set[str] = set()
+        self._serializing: dict[Pr, threading.Lock] = {}
 
     def refuse_pushes(self, reason: str | None, *, times: int | None = None) -> None:
         self._push_refusal = reason
@@ -375,6 +378,11 @@ class FakeWorkingCopies:
         branch = self.github.head_branch(pr)
         holder = self._holder(branch) if branch else None
         return Located(holder) if holder is not None else not_found(pr, branch, "")
+
+    @contextmanager
+    def _serialized(self, pr: Pr) -> Iterator[None]:
+        with self._serializing.setdefault(pr, threading.Lock()):
+            yield
 
     def _is_clean(self, worktree: str) -> bool:
         return self._changed_files(worktree) == 0

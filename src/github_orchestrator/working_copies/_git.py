@@ -1,9 +1,11 @@
+import fcntl
 import logging
 import os
 import shutil
 import subprocess
 import threading
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -214,6 +216,17 @@ class GitWorkingCopies:
             return missing
         self._pr_worktrees[pr] = found
         return Located(str(found))
+
+    @contextmanager
+    def _serialized(self, pr: Pr) -> Iterator[None]:
+        lock = pr_worktrees(self._thread_worktrees_dir, pr).with_suffix(".lock")
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(lock, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(descriptor)
 
     def _is_clean(self, worktree: str) -> bool:
         try:

@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 
 import pytest
@@ -146,3 +147,65 @@ def test_a_reset_leaves_a_file_excluded_in_info_exclude_that_origin_now_tracks_a
 
     assert refused is not None and "notes.md" in refused
     assert (git_worktree / "notes.md").read_text() == "hours of notes\n"
+
+
+KEY = "PRRT_kwDOlock"
+
+
+def _paused(monkeypatch, world, step):
+    real = getattr(world.copies, step)
+    inside, go_on = threading.Event(), threading.Event()
+
+    def pausing(*args):
+        inside.set()
+        assert go_on.wait(timeout=10)
+        return real(*args)
+
+    monkeypatch.setattr(world.copies, step, pausing)
+    return inside, go_on
+
+
+def _in_a_thread(act):
+    done = []
+    thread = threading.Thread(target=lambda: done.append(act()))
+    thread.start()
+    return thread, done
+
+
+@pytest.mark.parametrize("step", ["_pick", "_push"])
+def test_a_reset_waits_for_a_pick_or_push_under_way_and_then_refuses_the_head_it_moved(
+        world, pr_worktree, pr_checkout, monkeypatch, step):
+    seen = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
+    world.advance_base()
+    cut = pr_checkout.workspace(KEY, None).ensure().workspace
+    tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix the middle"))
+    if step == "_push":
+        assert cut.pick(tip).landed_sha is not None
+    inside, go_on = _paused(monkeypatch, world, step)
+    landing, landed = _in_a_thread(
+        (lambda: cut.pick(tip)) if step == "_pick" else pr_checkout.push)
+    assert inside.wait(timeout=10)
+
+    resetting, reset = _in_a_thread(lambda: pr_checkout.reset_to_origin(BRANCH, "main", seen))
+    resetting.join(timeout=0.2)
+    waited = resetting.is_alive()
+    go_on.set()
+    landing.join(timeout=10)
+    resetting.join(timeout=10)
+
+    assert waited
+    assert landed and reset and reset[0] is not None
+    assert pr_checkout.local_head() != seen
+
+
+def test_an_unpick_keeps_a_commit_made_after_it_checked_the_worktree_was_clean(
+        world, pr_worktree, pr_checkout, monkeypatch):
+    base = Sha(world.head_of(pr_worktree))
+    landed = Sha(world.commit(pr_worktree, {"fix": "fix\n"}, "the fix"))
+    later = _meanwhile(monkeypatch, world, "_is_clean", lambda: world.commit(
+        pr_worktree, {"later": "later\n"}, "a commit after the fix"))
+
+    refused = pr_checkout.unpick(base, landed)
+
+    assert refused is not None
+    assert world.head_of(pr_worktree) == later[0]

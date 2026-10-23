@@ -1,3 +1,4 @@
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
@@ -34,6 +35,8 @@ def not_found(pr: Pr, branch: str | None, where: str) -> Located:
 
 class Git(Protocol):
     def _pr_worktree(self, pr: Pr) -> Located: ...
+
+    def _serialized(self, pr: Pr) -> AbstractContextManager[None]: ...
 
     def _is_clean(self, worktree: str) -> bool: ...
 
@@ -87,6 +90,9 @@ class Git(Protocol):
     def _blob(self, worktree: str, sha: str, path: str) -> bytes | None: ...
 
 
+_UNCLEAN = "the worktree has uncommitted changes, so it was left as it is"
+
+
 def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
 
@@ -124,8 +130,9 @@ class BoundWorkspace:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return Picked(refusal=located.missing)
-        return self.git._pick(located.path, self.branch, _text(self.base_sha),
-                              _text(thread_sha), message)
+        with self.git._serialized(self.pr):
+            return self.git._pick(located.path, self.branch, _text(self.base_sha),
+                                  _text(thread_sha), message)
 
     def head_sha(self) -> Sha | None:
         return Sha.parse(self.git._head_sha(self.path))
@@ -170,19 +177,21 @@ class BoundCheckout:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        return self.git._push(located.path)
+        with self.git._serialized(self.pr):
+            return self.git._push(located.path)
 
     def unpick(self, landed_base: Sha, landed_sha: Sha) -> str | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        head = self.git._head_sha(located.path)
-        if head != str(landed_sha):
-            return (f"the PR branch has moved on to {(head or 'no commit')[:12]} since "
-                    f"{str(landed_sha)[:12]} was picked onto it")
-        if not self.git._is_clean(located.path):
-            return "the PR worktree has changes of its own"
-        return self.git._reset(located.path, str(landed_base))
+        with self.git._serialized(self.pr):
+            if not self.git._is_clean(located.path):
+                return "the PR worktree has changes of its own"
+            head = self.git._head_sha(located.path)
+            if head != str(landed_sha):
+                return (f"the PR branch has moved on to {(head or 'no commit')[:12]} since "
+                        f"{str(landed_sha)[:12]} was picked onto it")
+            return self.git._reset(located.path, str(landed_base))
 
     def fetch(self, base_branch: str | None) -> str | None:
         located = self.git._pr_worktree(self.pr)
@@ -195,26 +204,28 @@ class BoundCheckout:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
-        unclean = "the worktree has uncommitted changes, so it was left as it is"
         if not self.git._is_clean(located.path):
-            return unclean
+            return _UNCLEAN
         failed = self.git._fetch(located.path, base_branch)
         if failed is not None:
             return failed
-        origin = self.git._origin_head(located.path)
+        with self.git._serialized(self.pr):
+            return self._reset_fetched(located.path, branch, seen)
+
+    def _reset_fetched(self, path: str, branch: str, seen: Sha | None) -> str | None:
+        origin = self.git._origin_head(path)
         if origin is None:
             return "origin holds no branch for the worktree to reset to"
-        here = self.git._branch_at(located.path)
+        here = self.git._branch_at(path)
         if here != branch:
             return (f"the worktree holds {here or 'no branch'}, not {branch}, "
                     "so it was left as it is")
-        if not self.git._is_clean(located.path):
-            return unclean
-        head = self.git._head_sha(located.path)
+        if not self.git._is_clean(path):
+            return _UNCLEAN
+        head = self.git._head_sha(path)
         if head is None:
             return "the worktree's HEAD will not read, so it was left as it is"
-        return (self._holds_back(located.path, seen, head, origin)
-                or self.git._reset(located.path, origin))
+        return self._holds_back(path, seen, head, origin) or self.git._reset(path, origin)
 
     def _holds_back(self, path: str, seen: Sha | None, head: str, origin: str) -> str | None:
         if seen is not None and head != str(seen):
