@@ -30,15 +30,15 @@ jobs:
           if [ -z "$run" ]; then
             echo "no successful pre-release run on $GITHUB_SHA; run the pre-release workflow on this commit first"; exit 1
           fi
-          gh run download "$run" --repo "$GITHUB_REPOSITORY" --name release --dir .
-          ls dist/*.whl install.sh
+          gh run download "$run" --repo "$GITHUB_REPOSITORY" --name release --dir tested
+          ls tested/dist/*.whl tested/install.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: release
           path: |
-            dist/*.whl
-            install.sh
+            tested/dist/*.whl
+            tested/install.sh
           if-no-files-found: error
 
   publish:
