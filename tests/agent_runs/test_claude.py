@@ -415,7 +415,7 @@ def test_a_verdict_is_asked_of_sonnet_with_no_tools(runs, world, claude):
     assert asked.argv == ["claude", "--print", "--model", "sonnet", "--tools", "", "--strict-mcp-config"]
 
 
-def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell(
+def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell_and_none_of_its_settings(
         runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")
 
@@ -425,7 +425,8 @@ def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell(
     assert runs.drain_summaries(10)
 
     [asked] = claude.asked
-    assert asked.argv == ["claude", "--print", "--model", MODEL, "--tools", "Read,Grep,Glob"]
+    assert asked.argv == ["claude", "--print", "--model", MODEL, "--tools", "Read,Grep,Glob",
+                          "--setting-sources", "user", "--strict-mcp-config"]
     assert asked.cwd == str(tmp_path)
 
 
