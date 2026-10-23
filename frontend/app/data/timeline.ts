@@ -185,6 +185,12 @@ export interface TimelineHeader {
 
 export type CurveKind = 'fork' | 'merge' | 'ghost';
 
+export interface TimelineKey {
+  merge: boolean;
+  tick: boolean;
+  unpushed: boolean;
+}
+
 export interface Timeline {
   width: number;
   height: number;
@@ -201,6 +207,7 @@ export interface Timeline {
   ghosts: string | null;
   header: TimelineHeader;
   presets: Preset[];
+  key: TimelineKey;
   order: string[];
   showing: Picked;
 }
@@ -733,6 +740,11 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       behind: history.behind,
     },
     presets: presetsOf(order, input, showing),
+    key: {
+      merge: merges.size > 0,
+      tick: long,
+      unpushed: firstUnpushed !== undefined,
+    },
     order,
     showing,
   };

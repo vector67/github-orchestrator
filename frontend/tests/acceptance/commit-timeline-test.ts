@@ -71,6 +71,14 @@ function inside(inner: DOMRect, outer: DOMRect): boolean {
   );
 }
 
+function keyed(): string[] {
+  return findAll('[data-test-key]').map(
+    (one) => one.getAttribute('data-test-key') ?? '',
+  );
+}
+
+const PLAIN_KEY = ['unread', 'read', 'current', 'base', 'band'];
+
 function increasing(values: number[]): boolean {
   return values.every((one, index) => index === 0 || one > values[index - 1]!);
 }
@@ -181,6 +189,7 @@ module('Acceptance | commit timeline', function (hooks) {
     assert.dom('[data-test-lane-label="head"]').hasAttribute('data-at', THIRD);
     assert.dom('[data-test-current]').hasAttribute('data-at', SECOND);
     assert.dom('[data-test-fork-curve]').exists({ count: 1 });
+    assert.deepEqual(keyed(), PLAIN_KEY, 'the key names only what is drawn');
   });
 
   test('with main moved on, main runs past the fork to its tip and the header says how far behind the branch is', async function (assert) {
@@ -557,6 +566,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
         Number(dot(MERGE).getAttribute('data-x')),
       'the main commit it pulled in comes before the merge',
     );
+    assert.deepEqual(keyed(), [...PLAIN_KEY, 'merge', 'merge-pip']);
   });
 
   test('stepping skips merges while the box is ticked, and its pip is striped', async function (assert) {
@@ -873,6 +883,7 @@ module(
         ),
       );
       assert.deepEqual(shasShown(), [shas[0]]);
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'tick']);
       const days = findAll('[data-test-day]');
       assert.deepEqual(
         days.map((one) => one.textContent.trim()),
@@ -973,6 +984,7 @@ module(
         'the local label sits in a box of its own',
       );
       assert.dom('[data-test-label-box]').exists({ count: 1 });
+      assert.deepEqual(keyed(), [...PLAIN_KEY, 'not-pushed']);
       assert.dom('[data-test-unpushed-lane]').exists({ count: 1 });
       assert.dom('[data-test-commit-place]').hasText('Commit 3 of 4');
       assert.dom('[data-test-not-pushed]').hasText('not pushed');

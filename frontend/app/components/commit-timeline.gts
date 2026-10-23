@@ -407,23 +407,63 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         <p class="timeline-ghosts" data-test-ghost-shas>{{@timeline.ghosts}}</p>
       {{/if}}
       <p class="timeline-key" data-test-timeline-key>
-        <span class="timeline-key-item"><i data-style="unread"></i>
+        <span class="timeline-key-item" data-test-key="unread"><i
+            data-style="unread"
+          ></i>
           unread</span>
-        <span class="timeline-key-item"><i data-style="read"></i> read</span>
-        <span class="timeline-key-item"><i data-style="current"></i>
+        <span class="timeline-key-item" data-test-key="read"><i
+            data-style="read"
+          ></i>
+          read</span>
+        <span class="timeline-key-item" data-test-key="current"><i
+            data-style="current"
+          ></i>
           this commit</span>
-        <span class="timeline-key-item"><i data-style="base"></i>
+        <span class="timeline-key-item" data-test-key="base"><i
+            data-style="base"
+          ></i>
           {{@timeline.header.main}}</span>
         {{#if (eq @timeline.header.main @timeline.header.base)}}{{else}}
-          <span class="timeline-key-item"><i data-style="stack"></i>
+          <span class="timeline-key-item" data-test-key="stack"><i
+              data-style="stack"
+            ></i>
             {{@timeline.header.base}}</span>
         {{/if}}
         {{#if @timeline.ghosts}}
-          <span class="timeline-key-item"><i data-style="ghost"></i>
+          <span class="timeline-key-item" data-test-key="ghost"><i
+              data-style="ghost"
+            ></i>
             what your review saw</span>
         {{/if}}
-        <span class="timeline-key-item"><i data-style="band"></i>
+        <span class="timeline-key-item" data-test-key="band"><i
+            data-style="band"
+          ></i>
           in the diff</span>
+        {{#if @timeline.key.merge}}
+          <span class="timeline-key-item" data-test-key="merge"><i
+              data-style="merge"
+            ></i>
+            merge from
+            {{@timeline.header.main}}</span>
+        {{/if}}
+        {{#if @timeline.key.tick}}
+          <span class="timeline-key-item" data-test-key="tick"><i
+              data-style="tick"
+            ></i>
+            commit</span>
+        {{/if}}
+        {{#if @timeline.key.unpushed}}
+          <span class="timeline-key-item" data-test-key="not-pushed"><i
+              data-style="not-pushed"
+            ></i>
+            not pushed</span>
+        {{/if}}
+        {{#if @timeline.key.merge}}
+          <span class="timeline-key-item" data-test-key="merge-pip"><i
+              data-style="merge-pip"
+            ></i>
+            a merge in the pips</span>
+        {{/if}}
         <span class="timeline-aside">click a dot for one commit · shift-click or
           drag the handles for a range</span>
       </p>

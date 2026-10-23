@@ -5046,6 +5046,38 @@ button.tree-row[aria-current="true"] {
   color: var(--muted);
 }
 
+.timeline-key-item i[data-style="merge"] {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+.timeline-key-item i[data-style="tick"] {
+  width: 3px;
+  height: 14px;
+  border: 0;
+  border-radius: 0;
+}
+
+.timeline-key-item i[data-style="not-pushed"] {
+  background: var(--page);
+  border-style: dashed;
+}
+
+.timeline-key-item i[data-style="merge-pip"] {
+  width: 16px;
+  height: 6px;
+  background-color: var(--muted);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    var(--page) 3px 5px
+  );
+  border: 0;
+  border-radius: 0;
+}
+
 .timeline-key-item i[data-style="band"] {
   width: 16px;
   background: var(--yellow);
