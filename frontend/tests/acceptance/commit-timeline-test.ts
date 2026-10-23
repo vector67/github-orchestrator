@@ -1623,7 +1623,13 @@ module(
 
       await click('[data-test-reset-yes]');
 
-      assert.strictEqual(resets(), 1);
+      assert.deepEqual(
+        board()
+          .posted.filter((one) => one.verb === 'reset-to-origin')
+          .map((one) => one.body),
+        [{ head: STALE_TWO }],
+        'the reset names the head the page drew',
+      );
       assert.dom('[data-test-reset-confirm]').doesNotExist();
       assert.deepEqual(
         dots('pr').map((one) => one.sha),

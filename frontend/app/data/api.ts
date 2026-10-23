@@ -761,6 +761,10 @@ export interface ReplyRequest {
   body: string;
 }
 
+export interface ResetRequest {
+  head: string;
+}
+
 export interface ResetToOrigin {
   queued_at: string | null;
   ran_at: string | null;

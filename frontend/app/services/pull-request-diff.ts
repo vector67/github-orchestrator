@@ -239,10 +239,20 @@ export default class PullRequestDiffService extends Service {
 
   private async resetting(pr: PerPr): Promise<void> {
     pr.confirmingReset = null;
+    const { repo, number } = this.here.at;
+    const head = this.store
+      .pr(repo, number)
+      ?.history.local?.commits.at(-1)?.sha;
+    if (!head) {
+      pr.resetRefused =
+        'Not reset: the page has not read the worktree’s commits yet';
+      return;
+    }
     try {
       const refused = await this.store.resetToOrigin(
         this.here.at,
         'reset-to-origin',
+        { head },
       );
       if (pr.scope.left) return;
       pr.resetRefused = refused ? `Not reset: ${refused.detail}` : null;

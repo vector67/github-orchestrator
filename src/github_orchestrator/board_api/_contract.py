@@ -1078,6 +1078,11 @@ class ReadMarkRequest(BaseModel):
     sha: Sha
 
 
+class ResetRequest(BaseModel):
+    head: Sha = Field(description="The worktree's HEAD the page showed. The reset refuses "
+                                  "once the worktree has moved on from it.")
+
+
 class Commits(BaseModel):
     """Two commits that address a diff: `/diffs/{base}..{head}`."""
 
