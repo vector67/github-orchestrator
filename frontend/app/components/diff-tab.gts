@@ -272,44 +272,51 @@ export default class DiffTab extends Component<DiffTabSignature> {
         data-test-diff-pane
         {{didChange this.follow this.scrolling}}
       >
-        {{#if this.pullRequestDiff.stepper}}
-          <CommitBar
-            @stepper={{this.pullRequestDiff.stepper}}
-            @step={{this.pullRequestDiff.step}}
-            @go={{this.pullRequestDiff.go}}
-            @tick={{this.pullRequestDiff.tick}}
-            @note={{this.pullRequestDiff.note}}
-            @base={{this.pullRequestDiff.baseName}}
-            @dismissNote={{this.pullRequestDiff.dismissNote}}
-            @picked={{this.pullRequestDiff.picked}}
-            @pickedFiles={{this.pullRequestDiff.pickedFiles}}
-            @unpick={{this.pullRequestDiff.unpick}}
-            @timelineOpen={{this.pullRequestDiff.timelineOpen}}
-            @toggleTimeline={{this.pullRequestDiff.toggleTimeline}}
-            @fit={{this.pullRequestDiff.fitPips}}
-          />
-        {{/if}}
-        {{#if this.pullRequestDiff.mergeNote}}
-          <MergeNote
-            @note={{this.pullRequestDiff.mergeNote}}
-            @base={{this.pullRequestDiff.baseName}}
-            @skipping={{this.commitBox.skipMerges}}
-            @skip={{this.pullRequestDiff.skipMerges}}
-          />
-        {{/if}}
-        {{#if this.pullRequestDiff.timelineOpen}}
-          {{#if this.pullRequestDiff.timeline}}
-            <CommitTimeline
-              @timeline={{this.pullRequestDiff.timeline}}
-              @pick={{this.pullRequestDiff.pick}}
-              @stretch={{this.pullRequestDiff.stretch}}
-              @choose={{this.pullRequestDiff.choose}}
-              @fit={{this.pullRequestDiff.fit}}
-              @unfold={{this.pullRequestDiff.unfold}}
-              @reset={{this.pullRequestDiff.reset}}
+        <div
+          class="diff-head"
+          data-vertical={{if
+            this.pullRequestDiff.timelineOpen
+            (if this.pullRequestDiff.timeline.vertical "true")
+          }}
+        >
+          {{#if this.pullRequestDiff.stepper}}
+            <CommitBar
+              @stepper={{this.pullRequestDiff.stepper}}
+              @step={{this.pullRequestDiff.step}}
+              @go={{this.pullRequestDiff.go}}
+              @tick={{this.pullRequestDiff.tick}}
+              @note={{this.pullRequestDiff.note}}
+              @base={{this.pullRequestDiff.baseName}}
+              @dismissNote={{this.pullRequestDiff.dismissNote}}
+              @picked={{this.pullRequestDiff.picked}}
+              @pickedFiles={{this.pullRequestDiff.pickedFiles}}
+              @unpick={{this.pullRequestDiff.unpick}}
+              @timelineOpen={{this.pullRequestDiff.timelineOpen}}
+              @toggleTimeline={{this.pullRequestDiff.toggleTimeline}}
+              @fit={{this.pullRequestDiff.fitPips}}
             />
           {{/if}}
-        {{/if}}
+          {{#if this.pullRequestDiff.mergeNote}}
+            <MergeNote
+              @note={{this.pullRequestDiff.mergeNote}}
+              @base={{this.pullRequestDiff.baseName}}
+              @skipping={{this.commitBox.skipMerges}}
+              @skip={{this.pullRequestDiff.skipMerges}}
+            />
+          {{/if}}
+          {{#if this.pullRequestDiff.timelineOpen}}
+            {{#if this.pullRequestDiff.timeline}}
+              <CommitTimeline
+                @timeline={{this.pullRequestDiff.timeline}}
+                @pick={{this.pullRequestDiff.pick}}
+                @stretch={{this.pullRequestDiff.stretch}}
+                @choose={{this.pullRequestDiff.choose}}
+                @fit={{this.pullRequestDiff.fit}}
+                @reset={{this.pullRequestDiff.reset}}
+              />
+            {{/if}}
+          {{/if}}
+        </div>
         {{#if this.pullRequestDiff.elsewhere}}
           <p class="threads-elsewhere" data-test-threads-elsewhere>
             {{this.pullRequestDiff.elsewhere}}

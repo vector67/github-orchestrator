@@ -4566,6 +4566,17 @@ button.tree-row[aria-current="true"] {
   border-bottom: 1px solid var(--hairline);
 }
 
+.diff-head {
+  flex: none;
+}
+
+.diff-head[data-vertical] > .commit-stepper {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--page);
+}
+
 .commit-box {
   display: flex;
   flex-direction: column;
@@ -4941,6 +4952,36 @@ button.tree-row[aria-current="true"] {
   stroke-width: 1.5;
 }
 
+.commit-timeline[data-vertical] .timeline-handle {
+  cursor: ns-resize;
+}
+
+.timeline-row {
+  cursor: pointer;
+}
+
+.timeline-row:not([data-pickable]) {
+  cursor: default;
+}
+
+.timeline-row-hit {
+  fill: transparent;
+}
+
+.timeline-row:hover .timeline-row-hit {
+  fill: var(--hairline);
+}
+
+.timeline-row-sha,
+.timeline-row-subject {
+  font-size: 12px;
+  fill: var(--text);
+}
+
+.timeline-row-sha {
+  fill: var(--muted);
+}
+
 .timeline-flag line {
   stroke: var(--text);
   stroke-dasharray: 3 3;
@@ -5044,6 +5085,12 @@ button.tree-row[aria-current="true"] {
 .timeline-run-sha {
   margin-right: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.commit-timeline[data-vertical] .timeline-flag text {
+  paint-order: stroke;
+  stroke: var(--page);
+  stroke-width: 4px;
 }
 
 .timeline-key {

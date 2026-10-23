@@ -571,8 +571,9 @@ shift-click another, or drag the band's handles, to pick a range, which the bar
 then shows as `from → to` with its commit and file counts and
 **Back to stepping**. **All**, **Since my review** and **This commit** pick
 the common ranges. The commits are dots while the pane has room for them, ticks
-when it is narrower, and narrower still the oldest fold into a `⋯ N earlier`
-pill, which you can click to scroll sideways through them all.
+when it is narrower, and narrower still the timeline turns vertical: one row
+per commit, oldest on top, with its short sha and subject, and the commit bar
+stays at the top of the pane while you scroll past it.
 
 **Commit box sizing** in the settings gear sets how much of this shows. Full is
 all of it; Minimal keeps only the pips; Hidden drops the stepper and shows the
