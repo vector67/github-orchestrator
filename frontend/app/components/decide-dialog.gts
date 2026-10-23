@@ -20,6 +20,10 @@ const focused = modifier((element: HTMLElement) => {
   element.focus();
 });
 
+function thumbedAtFirst(spec: DialogSpec): boolean {
+  return spec.thumbsUp === true && spec.resolving === true;
+}
+
 export interface DecideDialogSignature {
   Element: HTMLDivElement;
   Args: {
@@ -42,7 +46,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
   @tracked wakePr = '';
   @tracked deleting = false;
   @tracked resolving = this.args.spec.resolving === true;
-  @tracked thumbing = this.args.spec.thumbsUp === true;
+  @tracked thumbing = thumbedAtFirst(this.args.spec);
   @tracked wording: string | null = null;
   @tracked ticket: Ticket | null = this.args.spec.ticket ?? null;
   @tracked outcome = this.args.spec.outcomes?.[0]?.to ?? '';
@@ -82,7 +86,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
       this.typed !== (this.args.spec.prefill ?? '') ||
       this.deleting ||
       this.resolving !== (this.args.spec.resolving === true) ||
-      this.thumbing !== (this.args.spec.thumbsUp === true) ||
+      this.thumbing !== thumbedAtFirst(this.args.spec) ||
       this.reworded !== null ||
       this.ticket !== (this.args.spec.ticket ?? null) ||
       this.wake !== 'manual' ||
@@ -134,11 +138,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
   }
 
   get offersThumbsUp(): boolean {
-    return (
-      Boolean(this.args.spec.thumbsUp) &&
-      !this.typed.trim() &&
-      (!this.offersResolve || this.resolving)
-    );
+    return Boolean(this.args.spec.thumbsUp) && !this.typed.trim();
   }
 
   get offersGithubTicks(): boolean {
@@ -425,7 +425,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
                   checked={{this.thumbing}}
                   {{on "change" this.toggleThumbsUp}}
                 />
-                Put 👍 on the newest reply
+                Post 👍 on the author's message
               </label>
             {{/if}}
           </fieldset>

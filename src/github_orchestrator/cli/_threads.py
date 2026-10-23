@@ -222,7 +222,7 @@ def thread_resolve(args: argparse.Namespace, *, conversation_managers: Conversat
                    gist_model: str | None) -> None:
     _directed_or_die(args, conversation_managers, lambda conversation: conversation.resolve(
         reply=args.reply, delete_comment=args.delete_comment, resolve=args.resolve,
-        thumbs_up=not args.no_thumbs_up), "resolved")
+        thumbs_up=args.resolve and not args.no_thumbs_up), "resolved")
 
 
 def thread_reject(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,

@@ -183,7 +183,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.dom('[data-test-dialog-body]').hasValue('');
     assert
       .dom('[data-test-dialog]')
-      .includesText('👍 on the newest reply')
+      .includesText("👍 on the author's message")
       .includesText('moves to Done');
 
     await click('[data-test-dialog-submit]');
@@ -192,6 +192,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, {
       delete_comment: false,
       resolve: false,
+      thumbs_up: false,
     });
   });
 
@@ -297,16 +298,35 @@ module('Acceptance | reviewer panel', function (hooks) {
       );
   });
 
-  test('resolve opens with resolving on GitHub unticked and resolves on the board alone', async function (assert) {
+  test('resolve opens with resolving on GitHub and the 👍 unticked and resolves on the board alone', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     await click('[data-test-decision="resolve"]');
 
     assert.dom('[data-test-resolve]').isNotChecked();
-    assert.dom('[data-test-thumbs-up]').doesNotExist();
+    assert.dom('[data-test-thumbs-up]').isNotChecked();
     assert
       .dom('[data-test-dialog-submit]')
       .hasText('Resolve, posting nothing to GitHub');
+
+    await click('[data-test-dialog-submit]');
+
+    assert.deepEqual(board().posted[0]!.body, {
+      delete_comment: false,
+      resolve: false,
+      thumbs_up: false,
+    });
+  });
+
+  test('the 👍 alone resolves on the board and reacts on GitHub', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-decision="resolve"]');
+
+    await click('[data-test-thumbs-up]');
+
+    assert
+      .dom('[data-test-dialog-submit]')
+      .hasText('Resolve on the board and put 👍 on the newest reply');
 
     await click('[data-test-dialog-submit]');
 
@@ -332,6 +352,7 @@ module('Acceptance | reviewer panel', function (hooks) {
 
     await click('[data-test-decision="resolve"]');
     await click('[data-test-resolve]');
+    await click('[data-test-thumbs-up]');
 
     assert
       .dom('[data-test-dialog-submit]')
@@ -344,15 +365,12 @@ module('Acceptance | reviewer panel', function (hooks) {
       .hasText('Reply and resolve on GitHub');
   });
 
-  test('unticking the 👍 resolves with no reaction', async function (assert) {
+  test('ticking resolve alone resolves on GitHub with no reaction', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
     await click('[data-test-decision="resolve"]');
     await click('[data-test-resolve]');
 
-    assert.dom('[data-test-thumbs-up]').isChecked();
-
-    await click('[data-test-thumbs-up]');
-
+    assert.dom('[data-test-thumbs-up]').isNotChecked();
     assert.dom('[data-test-dialog-submit]').hasText('Resolve on GitHub');
 
     await click('[data-test-dialog-submit]');
@@ -644,7 +662,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     board().actAs('reviewer');
   });
 
-  test('an assumed done card offers Confirm, which resolves it on GitHub and puts 👍 on the newest reply', async function (assert) {
+  test('an assumed done card offers Confirm, which asks only whether to resolve on GitHub and put 👍 there, both ticked', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
@@ -652,10 +670,10 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.dom('[data-test-decision="place"]').includesText('Not confirm');
     await click('[data-test-decision="confirm-resolve"]');
 
+    assert.dom('[data-test-dialog-body]').doesNotExist();
+    assert.dom('[data-test-resolve]').isChecked();
     assert.dom('[data-test-thumbs-up]').isChecked();
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve on GitHub and put 👍 on the newest reply');
+    assert.dom('[data-test-dialog-submit]').hasText('Confirm');
     await click('[data-test-dialog-submit]');
 
     assert.strictEqual(board().posted[0]!.verb, 'resolve');
@@ -665,25 +683,49 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     });
   });
 
-  test('confirm posts the reply written into it and resolves the thread on GitHub', async function (assert) {
+  test('confirm with resolving unticked keeps the thread open on GitHub and still puts 👍 there', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
     await click('[data-test-decision="confirm-resolve"]');
 
-    await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
+    await click('[data-test-resolve]');
+
+    assert.dom('[data-test-thumbs-up]').isChecked();
     await click('[data-test-dialog-submit]');
 
-    assert.strictEqual(board().posted[0]!.verb, 'resolve');
     assert.deepEqual(board().posted[0]!.body, {
-      reply: 'Thanks, that covers it.',
       delete_comment: false,
-      resolve: true,
+      resolve: false,
     });
   });
 
-  test('confirm on a mention still only moves it to Done on the board', async function (assert) {
+  test('a mention in a review thread offers Confirm and Not confirm first, with its replies on the right', async function (assert) {
     board().conversations = [
       board().threadIn('assumed-done', { key: KEY, mention: true }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(
+      [...document.querySelectorAll('[data-test-decision]')].map((node) => [
+        node.getAttribute('data-test-decision'),
+        node.getAttribute('data-weight'),
+      ]),
+      [
+        ['confirm-resolve', 'primary'],
+        ['place', 'secondary'],
+        ['resolve-here', 'ghost'],
+        ['resolve-on-board', 'ghost'],
+      ],
+    );
+  });
+
+  test('confirm on a mention outside a review thread still only moves it to Done on the board', async function (assert) {
+    board().conversations = [
+      board().threadIn('assumed-done', {
+        key: KEY,
+        mention: true,
+        kind: 'issue',
+      }),
     ];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
