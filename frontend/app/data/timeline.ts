@@ -21,7 +21,7 @@ const DAY_RISE = 14;
 const DAY_GAP = 4;
 const TICK = 7;
 export const LONG = 20;
-const TICKS: Spacing = { ...SPACING, column: 18 };
+const TICKS: Spacing = { ...SPACING, column: 18, most: 36 };
 const FLAG_DROP = 38;
 const BOX_RISE = 18;
 const LABEL_GAP = 20;
@@ -227,6 +227,7 @@ export interface TimelineInput {
   repo: string;
   basePr: number | null;
   standing: Standing;
+  across: number;
 }
 
 export interface Standing {
@@ -335,7 +336,7 @@ function baseNodesOf(history: PullRequestCommits, lane: string): GraphNode[] {
 function collapsedOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
-  spacing: Spacing,
+  column: number,
 ): CollapsedRun | null {
   const { run } = keptOf(history);
   const at = placed.get(RUN);
@@ -350,10 +351,7 @@ function collapsedOf(
       short: '',
       subject: `⋯ ${hidden} more`,
     });
-  const width = Math.max(
-    RUN_SPAN * spacing.column - 2 * RUN_REACH,
-    SPACING.column,
-  );
+  const width = Math.max(RUN_SPAN * column - 2 * RUN_REACH, SPACING.column);
   return {
     x: at.x,
     y: at.y,
@@ -560,6 +558,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     ],
     nodesOf(history),
     spacing,
+    input.across,
   );
   const base = input.base ?? 'main';
   const showing =
@@ -655,7 +654,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     y: at.y,
     box: null,
   });
-  const collapsed = collapsedOf(history, graph.nodes, spacing);
+  const collapsed = collapsedOf(history, graph.nodes, graph.column);
   const ringed = input.hidden
     ? undefined
     : graph.nodes.get(input.current ?? '');
@@ -719,7 +718,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       graph.nodes.get(showing.from) ?? head,
       graph.nodes.get(showing.to) ?? head,
     ),
-    flag: flagOf(order, input, graph.nodes, spacing.column),
+    flag: flagOf(order, input, graph.nodes, graph.column),
     since: sinceOf(history, graph.nodes, base, collapsed),
     collapsed,
     days: long ? daysOf(history, graph.nodes) : [],

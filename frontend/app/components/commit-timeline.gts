@@ -20,6 +20,7 @@ export interface CommitTimelineSignature {
     pick: (sha: string, extend: boolean) => void;
     stretch: (end: End, sha: string) => void;
     choose: (picked: Picked | null) => void;
+    fit: (across: number) => void;
   };
 }
 
@@ -57,6 +58,14 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       svg.removeEventListener('pointerup', dropped);
       svg.removeEventListener('pointerleave', dropped);
     };
+  };
+
+  measure = (scroll: HTMLElement) => {
+    const watching = new ResizeObserver(() =>
+      this.args.fit(scroll.clientWidth),
+    );
+    watching.observe(scroll);
+    return () => watching.disconnect();
   };
 
   private clicked(event: MouseEvent): void {
@@ -145,7 +154,11 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           {{/each}}
         </span>
       </header>
-      <div class="timeline-scroll" {{didChange this.listen}}>
+      <div
+        class="timeline-scroll"
+        {{didChange this.listen}}
+        {{didChange this.measure}}
+      >
         <svg
           class="timeline-graph"
           width={{@timeline.width}}

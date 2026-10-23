@@ -7,6 +7,7 @@ import {
   findAll,
   triggerEvent,
   visit,
+  waitUntil,
 } from '@ember/test-helpers';
 import {
   added,
@@ -190,6 +191,11 @@ module('Acceptance | commit timeline', function (hooks) {
     assert.dom('[data-test-current]').hasAttribute('data-at', SECOND);
     assert.dom('[data-test-fork-curve]').exists({ count: 1 });
     assert.deepEqual(keyed(), PLAIN_KEY, 'the key names only what is drawn');
+    assert.true(
+      Number(find('[data-test-timeline-graph]')!.getAttribute('width')) <
+        (find('.timeline-scroll') as HTMLElement).clientWidth,
+      'a short branch is not stretched across the whole pane',
+    );
   });
 
   test('with main moved on, main runs past the fork to its tip and the header says how far behind the branch is', async function (assert) {
@@ -905,6 +911,30 @@ module(
       await click(dot(shas[10]!), { shiftKey: true });
 
       assert.deepEqual(shasShown(), [shas[3], shas[10]]);
+    });
+
+    test('the graph spreads its columns across the pane, and again when the pane changes width', async function (assert) {
+      long(24);
+      await visit('/pr/o/r/7/diff');
+
+      await click('[data-test-timeline-toggle]');
+
+      const pane = find('.timeline-scroll') as HTMLElement;
+      const drawn = () =>
+        Number(find('[data-test-timeline-graph]')!.getAttribute('width'));
+      await waitUntil(() => drawn() === pane.clientWidth);
+
+      assert.strictEqual(drawn(), pane.clientWidth, 'it fills the pane');
+
+      const before = pane.clientWidth;
+      pane.style.width = `${before - 80}px`;
+      await waitUntil(() => drawn() === pane.clientWidth);
+
+      assert.strictEqual(
+        drawn(),
+        before - 80,
+        'and fills it again once narrower',
+      );
     });
 
     test('twenty commits keep their dots, their shas and their pips', async function (assert) {
