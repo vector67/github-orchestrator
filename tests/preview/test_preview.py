@@ -239,7 +239,9 @@ def _count(repo, *revisions):
         repo.worktree, "log", "--format=%ad", "--date=short", "main..HEAD").split())) >= 3),
     ("local", lambda repo: _count(repo, f"origin/{preview.PR_BRANCH}..HEAD") == 2),
     ("diverged", lambda repo: _count(repo, f"origin/{preview.PR_BRANCH}..HEAD") > 0
-     and _count(repo, f"HEAD..origin/{preview.PR_BRANCH}") > 0),
+     and _count(repo, f"HEAD..origin/{preview.PR_BRANCH}") > 0
+     and _count(repo, "HEAD..main") > 20
+     and _count(repo, f"origin/{preview.PR_BRANCH}..main") > 2),
 ])
 def test_each_preview_shape_builds_the_branch_it_is_named_for(tmp_path, shape, holds):
     repo = preview.build_repo(preview.worktree_in(tmp_path), shape=shape)

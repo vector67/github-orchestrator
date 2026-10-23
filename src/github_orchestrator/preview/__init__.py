@@ -344,9 +344,9 @@ def _merge_main_in(root: Path) -> None:
     _note(root, "- after the merge\n", "Note the merge in the changelog")
 
 
-def _fall_behind(root: Path) -> None:
+def _fall_behind(root: Path, first: int = 0) -> None:
     _git(root, "checkout", "-q", BASE_BRANCH)
-    for number in range(30):
+    for number in range(first, first + 30):
         _note(root, f"- release {number}\n", f"Note release {number} in the changelog")
     _git(root, "checkout", "-q", PR_BRANCH)
 
@@ -413,7 +413,9 @@ def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> 
         _note(root, "- nor this\n", "Thank the reviewers in the changelog")
     if shape == "diverged":
         stale = _git(root, "rev-parse", "HEAD").strip()
+        _fall_behind(root)
         rebase_onto_main(root)
+        _fall_behind(root, 30)
         _git(root, "reset", "-q", "--hard", stale)
     base = STACK_BRANCH if shape == "stacked" else BASE_BRANCH
     return Repo(str(root), base, _git(root, "rev-parse", "HEAD").strip())

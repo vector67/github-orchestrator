@@ -848,6 +848,83 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
     assert.dom('[data-test-collapsed-list]').doesNotExist();
   });
 
+  test('a lane that leaves main inside the fold splits it at a dot of its own, named by its sha', async function (assert) {
+    const run = mainRun(40);
+    const onMain = (index: number) =>
+      prCommit(run[index]!, run[index - 1] ?? FORK, `main ${index}`);
+    board().localCommits = {
+      ...prHistory(FORK, [
+        prCommit(FIRST, FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+      ]),
+      fork_at: '2026-10-01T09:00:00Z',
+      behind: 40,
+      base_tip: run[39]!,
+      base_commits: [...range(0, 10), ...range(30, 40)].map(onMain),
+      base_forks: [{ commit: onMain(17), at: 17 }],
+    };
+    board().commits = {
+      ...prHistory(run[17]!, [
+        prCommit(THIRD, run[17]!, 'Add the widget onto newer main'),
+      ]),
+      behind: 22,
+      base_tip: run[39]!,
+      base_commits: [...range(18, 28), ...range(30, 40)].map(onMain),
+    };
+    await visit('/pr/o/r/7/diff');
+    await click('[data-test-source="local"]');
+
+    await click('[data-test-timeline-toggle]');
+
+    const main = dots('base');
+    assert.deepEqual(
+      main.map((one) => one.sha),
+      [FORK, run[17], run[38], run[39]],
+    );
+    const pills = findAll('[data-test-collapsed]');
+    assert.deepEqual(
+      pills.map((one) => one.textContent?.trim()),
+      ['⋯ 17', '⋯ 20 more'],
+    );
+    const [first, second] = pills.map((one) =>
+      Number(one.getAttribute('data-x')),
+    );
+    const leaving = main[1]!;
+    assert.true(
+      increasing([main[0]!.x, first!, leaving.x, second!]),
+      'the dot sits between the two pills',
+    );
+    assert.true(
+      findAll('[data-test-sha]').some(
+        (one) => one.textContent.trim() === run[17],
+      ),
+      'with its sha under it',
+    );
+    assert.true(
+      find('[data-test-fork-curve][data-lane="origin"]')!
+        .getAttribute('d')!
+        .startsWith(`M ${leaving.x} ${leaving.y} `),
+      "origin's lane leaves from it",
+    );
+    assert.true(
+      dots('pr').every((one) => one.x < leaving.x),
+      "the worktree's lane still leaves from the older fork",
+    );
+    assert
+      .dom('[data-test-since-fork]')
+      .hasText('40 commits on main since the fork');
+
+    await click(pills[1]!);
+
+    const listed = findAll('[data-test-collapsed-list] li').map((one) =>
+      one.textContent?.replace(/\s+/g, ' ').trim(),
+    );
+    assert.deepEqual(listed, [
+      '⋯ 12 more',
+      ...range(30, 38).map((index) => `${run[index]} main ${index}`),
+    ]);
+  });
+
   test('twenty behind, every one of them is a dot of its own', async function (assert) {
     behind(20, range(0, 20));
     await visit('/pr/o/r/7/diff');

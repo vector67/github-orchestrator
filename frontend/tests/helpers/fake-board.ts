@@ -1841,6 +1841,7 @@ export function prHistory(
     base_tip: fork,
     base_commits: [],
     behind: 0,
+    base_forks: [],
     fork_at: '2026-10-19T09:00:00Z',
     stack: null,
     reviewed: null,

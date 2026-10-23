@@ -910,6 +910,7 @@ def test_the_pull_requests_commits_run_oldest_first_from_where_it_left_its_base(
         "base_commits": [{"sha": main, "parents": [base], "subject": "someone else's",
                           "author": "T", "authored_at": "2026-01-01T00:03:00Z"}],
         "behind": 1,
+        "base_forks": [],
         "fork_at": "2026-01-01T00:01:00Z",
         "stack": None,
         "reviewed": None,
@@ -931,6 +932,23 @@ def test_far_behind_main_only_the_oldest_and_newest_of_mains_new_commits_are_sen
     assert subjects == ["someone else's", *(f"main {number}" for number in range(9)),
                         *(f"main {number}" for number in range(14, 24))]
     assert answer["base_tip"] == tip
+
+
+def test_on_local_where_a_rewritten_origin_left_main_is_sent_with_its_place_among_mains_new_commits():
+    copies, _, _ = branched_from_main()
+    main = [copies.origin["main"]]
+    for number in range(24):
+        main.append(copies.publish("main", main[-1], {"src/elsewhere.py": f"{number}\n"},
+                                   f"main {number}"))
+    copies.publish("feature", main[12], {"src/foo.py": "rewritten\n"}, "check first")
+    copies.fetch_pr_branch(Path(WORKTREE), THE_PR, "feature", "main")
+
+    answers = {source: pr_commits_of(copies, source=source).json()
+               for source in ("origin", "local")}
+
+    assert [(fork["commit"]["sha"], fork["commit"]["subject"], fork["at"])
+            for fork in answers["local"]["base_forks"]] == [(main[12], "main 11", 12)]
+    assert answers["origin"]["base_forks"] == []
 
 
 def test_a_pull_request_on_another_branch_is_served_with_that_branchs_own_commits():

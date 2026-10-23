@@ -56,6 +56,11 @@ export interface ApproveRequest {
 
 export type AuthorKind = 'mine' | 'human' | 'bot';
 
+export interface BaseFork {
+  commit: PullRequestCommit;
+  at: number;
+}
+
 export interface BaseStanding {
   behind_by: number;
   conflicts: string[];
@@ -702,6 +707,7 @@ export interface PullRequestCommits {
   base_tip: string;
   base_commits: PullRequestCommit[];
   behind: number;
+  base_forks: BaseFork[];
   fork_at: string;
   stack: Stack | null;
   reviewed: ReviewedCommits | null;

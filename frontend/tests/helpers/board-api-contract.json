@@ -1884,6 +1884,21 @@
    ],
    "type": "string"
   },
+  "BaseFork": {
+   "properties": {
+    "at": {
+     "type": "integer"
+    },
+    "commit": {
+     "$ref": "#/components/schemas/PullRequestCommit"
+    }
+   },
+   "required": [
+    "commit",
+    "at"
+   ],
+   "type": "object"
+  },
   "BaseStanding": {
    "properties": {
     "behind_by": {
@@ -5690,6 +5705,12 @@
      },
      "type": "array"
     },
+    "base_forks": {
+     "items": {
+      "$ref": "#/components/schemas/BaseFork"
+     },
+     "type": "array"
+    },
     "base_tip": {
      "pattern": "^[0-9a-f]{7,40}$",
      "type": "string"
@@ -5737,6 +5758,7 @@
     "base_tip",
     "base_commits",
     "behind",
+    "base_forks",
     "fork_at",
     "stack",
     "reviewed"

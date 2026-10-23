@@ -36,7 +36,7 @@ function svgX(svg: SVGSVGElement, event: PointerEvent): number | null {
 
 export default class CommitTimeline extends Component<CommitTimelineSignature> {
   @service declare router: RouterService;
-  @tracked listing = false;
+  @tracked listing: number | null = null;
   private dragging: End | null = null;
   private dragged: string | null = null;
 
@@ -92,8 +92,11 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       void this.router.transitionTo(opens);
       return;
     }
-    if (target.closest('[data-collapsed]')) {
-      this.listing = !this.listing;
+    const pill = target
+      .closest('[data-collapsed]')
+      ?.getAttribute('data-collapsed');
+    if (pill) {
+      this.listing = this.listing === Number(pill) ? null : Number(pill);
       return;
     }
     const sha = target.closest('[data-pickable]')?.getAttribute('data-sha');
@@ -444,29 +447,29 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               >{{day.text}}</text>
             </g>
           {{/each}}
-          {{#if @timeline.collapsed}}
+          {{#each @timeline.collapsed key="x" as |run index|}}
             <g
               class="timeline-run"
-              data-collapsed
-              data-x={{@timeline.collapsed.x}}
-              aria-expanded={{if this.listing "true" "false"}}
+              data-collapsed={{index}}
+              data-x={{run.x}}
+              aria-expanded={{if (eq this.listing index) "true" "false"}}
               data-test-collapsed
             >
               <rect
-                x={{@timeline.collapsed.left}}
-                y={{@timeline.collapsed.top}}
-                width={{@timeline.collapsed.width}}
-                height={{@timeline.collapsed.height}}
+                x={{run.left}}
+                y={{run.top}}
+                width={{run.width}}
+                height={{run.height}}
                 rx="10"
               />
               <text
-                x={{@timeline.collapsed.x}}
-                y={{@timeline.collapsed.y}}
+                x={{run.x}}
+                y={{run.y}}
                 text-anchor="middle"
                 dominant-baseline="middle"
-              >{{@timeline.collapsed.text}}</text>
+              >{{run.text}}</text>
             </g>
-          {{/if}}
+          {{/each}}
           {{#each @timeline.labels key="kind" as |label|}}
             {{#if label.box}}
               <rect
@@ -514,20 +517,20 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           />
         </svg>
       </div>
-      {{#if this.listing}}
-        {{#if @timeline.collapsed}}
+      {{#each @timeline.collapsed key="x" as |run index|}}
+        {{#if (eq this.listing index)}}
           <ol
             class="timeline-run-list"
             aria-label="the commits folded into the pill"
             data-test-collapsed-list
           >
-            {{#each @timeline.collapsed.listed key="@index" as |one|}}
+            {{#each run.listed key="@index" as |one|}}
               <li><code class="timeline-run-sha">{{one.short}}</code>
                 {{one.subject}}</li>
             {{/each}}
           </ol>
         {{/if}}
-      {{/if}}
+      {{/each}}
       {{#if @timeline.ghosts}}
         <p class="timeline-ghosts" data-test-ghost-shas>{{@timeline.ghosts}}</p>
       {{/if}}

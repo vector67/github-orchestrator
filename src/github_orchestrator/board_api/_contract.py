@@ -1017,6 +1017,16 @@ class ReviewedCommits(BaseModel):
     commits: list[PullRequestCommit]
 
 
+class BaseFork(BaseModel):
+    """One of the base's commits since the fork that another line of commits
+    leaves from: origin's, when the worktree has diverged from it, or the
+    branch your review saw."""
+
+    commit: PullRequestCommit
+    at: int = Field(description="How many of the base's commits since the fork "
+                                "come before it.")
+
+
 class PullRequestCommits(BaseModel):
     """The pull request's own commits, oldest first. Each one's diff is
     `/diffs/{parent}..{sha}`, and any run of them is `/diffs/{first's parent}..{last}`."""
@@ -1033,6 +1043,10 @@ class PullRequestCommits(BaseModel):
                     "it in the pull request's diff. Past `BASE_COMMITS_AT_EACH_END` "
                     "twice over, only that many of the oldest and of the newest.")
     behind: int = Field(description="How many commits the base gained since the fork.")
+    base_forks: list[BaseFork] = Field(
+        description="The base's commits since the fork that origin's head or what "
+                    "your review saw left from, sent whether or not "
+                    "`base_commits` holds them.")
     fork_at: str = Field(description="When the fork commit was written.")
     stack: Stack | None = Field(
         description="Where the base branch left the repository's default branch, "

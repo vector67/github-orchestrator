@@ -28,6 +28,7 @@ from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
     ApproveRequest,
+    BaseFork,
     BriefRequest,
     ClientError,
     CloseRequest,
@@ -319,14 +320,31 @@ def read_pull_request_commits(request: Request, board: Serving,
     commits, base_commits, stacked = ([commit_of(commit) for commit in run]
                                       for run in (history.commits, sent,
                                                   () if stack is None else stack.commits))
+    reviewed = _reviewed(board, commits)
+    leaving = [] if reviewed is None else [str(reviewed.fork)]
+    if source is DiffSource.LOCAL:
+        leaving.append(_origin_fork(board, facts.base_branch, {
+            str(history.fork), *(commit.sha for commit in commits)}))
+    places = {str(commit.sha): at for at, commit in enumerate(history.base_commits)}
     return etag.answered(request, PullRequestCommits(
         fork=str(history.fork), commits=commits,
         base_tip=str(history.base_tip), base_commits=base_commits,
         behind=len(history.base_commits),
+        base_forks=[BaseFork(commit=commit_of(history.base_commits[places[sha]]),
+                             at=places[sha])
+                    for sha in dict.fromkeys(leaving) if sha in places],
         fork_at=history.fork_at.astimezone(UTC).strftime(AS_OF_FORMAT),
         stack=None if stack is None else Stack(
             branch=stack.branch, fork=str(stack.fork), commits=stacked),
-        reviewed=_reviewed(board, commits)))
+        reviewed=reviewed))
+
+
+def _origin_fork(board: Board, base_branch: str | None, ours: set[str]) -> str:
+    origin = board.git.origin_head()
+    if origin is None or str(origin) in ours:
+        return ""
+    theirs = board.git.pr_commits(base_branch, origin)
+    return "" if theirs is None else str(theirs.fork)
 
 
 def _reviewed(board: Board, commits: list[PullRequestCommit]) -> ReviewedCommits | None:

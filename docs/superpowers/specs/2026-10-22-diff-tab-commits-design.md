@@ -91,9 +91,16 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     header names the base: `base is #<n> <branch>, which is based on main`. The
     stepper counts only this PR's commits.
 13. **Far behind.** When main is more than about 20 commits ahead, its run between
-    the fork and its last two commits collapses into a pill `⋯ <k> commits`;
+    the fork and its last two commits collapses into a pill `⋯ <k> more`;
     clicking it opens the list in a popover, still context only. The fork and
-    main's tip stay real dots, with their dates under them.
+    main's tip stay real dots, with their dates under them. A commit inside that
+    run that another lane leaves from (origin's lane when the worktree has
+    diverged, the ghost lane's old fork, a stacked base's) stays a real dot with
+    its short sha under it, and splits the run into one pill per stretch:
+    `⋯ <k>` before it and `⋯ <k> more` for the last. That lane leaves from that
+    dot. The server sends each such commit with its place among main's commits
+    since the fork (`base_forks`), beside the capped `base_commits` (#146,
+    decided 2026-10-23).
 14. **A long PR.** Past about 20 commits the dots shrink to small ticks, shas show
     only at the band's ends and the stepper's commit, and a day row under the
     lane marks where each day starts. The pips become a thin bar, one segment per
