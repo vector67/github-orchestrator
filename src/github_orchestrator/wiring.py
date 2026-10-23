@@ -102,6 +102,8 @@ from github_orchestrator.github._traffic import Traffic
 from github_orchestrator.harvest import BoardExtension
 from github_orchestrator.harvest._chrome import Run as ChromeRun
 from github_orchestrator.harvest._extension import CopiedExtension
+from github_orchestrator.mentions import MentionsInbox
+from github_orchestrator.mentions._inbox import GitHubMentionsInbox
 from github_orchestrator.notifications import (
     BoardPages,
     Courier,
@@ -725,6 +727,17 @@ class AgentChangesProvider(Provider):
     @provide
     def agent_changes(self) -> AgentChanges:
         return DiskAgentChanges()
+
+
+class MentionsProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def mentions_inbox(self, settings: Settings, pull_requests: PullRequests,
+                       conversation_managers: ConversationManagerFactory,
+                       config_file: ConfigFile, clock: UtcClock) -> MentionsInbox:
+        return GitHubMentionsInbox(tuple(settings.repos), pull_requests, conversation_managers,
+                                   config_file, clock, settings.data_dir / "mentions.json")
 
 
 @dataclass(frozen=True)
@@ -1628,6 +1641,7 @@ def make_container(env: Mapping[str, str], home: Path,
         summary_lane_wiring(settings, clamp),
         *mode_wirings(settings, managed, clamp),
         AgentChangesProvider,
+        MentionsProvider,
         ReportCommandsWiring(sys.executable),
         AgentRunsWiring(
             subprocess.Popen, subprocess.run,

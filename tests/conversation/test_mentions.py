@@ -49,7 +49,8 @@ def test_a_comment_naming_me_is_a_mention_saying_who_when_and_where(settings):
 
     assert mentions == (Mention(author="anna", at="2026-09-01T10:00:00Z", kind="review",
                                 thread="PRRT_one", comment_id=101,
-                                body="@octocat what do you think?", answered=False),)
+                                body="@octocat what do you think?", answered=False,
+                                edited_at="2026-09-01T10:00:00Z"),)
 
 
 def test_only_my_name_as_a_whole_word_by_someone_else_is_a_mention(settings):

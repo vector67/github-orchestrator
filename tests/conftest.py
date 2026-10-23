@@ -53,6 +53,7 @@ from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import Settings, fake_settings
 from github_orchestrator.wiring import (
     ClocksWiring,
+    MentionsProvider,
     Part,
     SettingsWiring,
     Wiring,
@@ -329,6 +330,7 @@ def build_container(settings: Settings, *fakes: Part,
         pr_summaries_wiring(settings),
         summary_lane_wiring(settings, ()),
         conversation_wiring(settings),
+        MentionsProvider,
         *fakes,
     )
 

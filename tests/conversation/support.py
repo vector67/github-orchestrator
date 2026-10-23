@@ -75,6 +75,7 @@ class World:
     standing: Standing
     clock: Callable[[], datetime] | None = None
     monotonic: Callable[[], float] | None = None
+    container: dishka.Container | None = None
 
     def threads(self, *, is_author: bool | None = None, worktree: str = WORKTREE,
                 repo: str = REPO, pr: int = PR, pr_run_live: bool = False,
@@ -177,7 +178,7 @@ def world(settings: Settings, *, github: FakeGitHub | None = None,
                            working_copies, thread_records, clocks, change_detection)
     return World(settings, github, working_copies, agent_runs, thread_records,
                  pr_processes, container.get(ConversationManagerFactory), container.get(ChangeDetection),
-                 container.get(Standing), clock, monotonic)
+                 container.get(Standing), clock, monotonic, container)
 
 
 def conversation_managers_over(settings: Settings, *, github: FakeGitHub | None = None,

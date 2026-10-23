@@ -52,7 +52,8 @@ def _in_thread(threads: Sequence[FetchedThread], account: str,
                         else _later_on_the_pr(threads, account, comment.created_at))
             found.append(Mention(author=comment.author, at=comment.created_at,
                                  kind=thread.kind, thread=thread.key, comment_id=comment.id,
-                                 body=comment.body, answered=answered))
+                                 body=comment.body, answered=answered,
+                                 edited_at=comment.updated_at))
     return found
 
 

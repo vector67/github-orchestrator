@@ -155,6 +155,7 @@ class Mention:
     comment_id: int | None
     body: str
     answered: bool
+    edited_at: str | None = None
 
 
 @dataclass(frozen=True)

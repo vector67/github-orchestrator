@@ -2,6 +2,7 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -338,8 +339,12 @@ class _World:
                  or sorted(self.world.repos, key=str))
         if not any(repo in self.world.repos for repo in repos):
             return Failure(f"{SEARCH_REFUSED} (HTTP 422)")
-        whose = next(_WHOSE[a] for a in argv if a in _WHOSE)
-        found = self.world.search(repos, whose)
+        updated = next((a.removeprefix("--updated=>=") for a in argv
+                        if a.startswith("--updated=>=")), None)
+        if updated is not None:
+            found = self.world.mentioned_since(repos, datetime.fromisoformat(updated))
+        else:
+            found = self.world.search(repos, next(_WHOSE[a] for a in argv if a in _WHOSE))
         return [{"number": pr.number, "repository": {"nameWithOwner": str(pr.repo)}}
                 for pr in found]
 

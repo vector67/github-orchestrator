@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pytest
 
 from github_orchestrator.domain import Location, Repo, Side
@@ -88,6 +90,23 @@ def test_the_open_prs_that_mention_me_are_found_by_their_own_search(world, githu
     world.add_pr(a_pr(3, REPO), _state(author="anna"), status="MERGED", mentioned=True)
 
     assert github.search([Repo.parse(REPO)], "mentions") == [a_pr(2, REPO)]
+
+
+def test_every_pr_mentioning_me_updated_since_a_moment_is_found_open_closed_or_merged(world,
+                                                                                    github):
+    world.add_pr(a_pr(1, REPO), _state(author="anna"), mentioned=True,
+                 updated_at="2026-10-20T23:59:59Z")
+    world.add_pr(a_pr(2, REPO), _state(author="anna"), status="MERGED", mentioned=True,
+                 updated_at="2026-10-22T08:00:00Z")
+    world.add_pr(a_pr(3, REPO), _state(author="anna"), status="CLOSED", mentioned=True,
+                 updated_at="2026-10-21T00:00:00Z")
+    world.add_pr(a_pr(4, REPO), _state(author="anna"), updated_at="2026-10-22T08:00:00Z")
+    world.add_pr(a_pr(5, REPO), _state(author="anna"), mentioned=True,
+                 updated_at="2026-10-22T08:00:00Z")
+
+    found = github.mentioned_since([Repo.parse(REPO)], datetime(2026, 10, 21, tzinfo=UTC))
+
+    assert sorted(found) == [a_pr(2, REPO), a_pr(3, REPO), a_pr(5, REPO)]
 
 
 def test_a_search_kept_to_one_repo_finds_nothing_in_another(world, github):

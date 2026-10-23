@@ -198,13 +198,13 @@ class Gh:
             raise GhError(f"gh graphql mutation failed: {reasons}")
         return payload
 
-    def search_prs(self, whose: str, repos: Collection[Repo]) -> list[Pr]:
+    def search_prs(self, repos: Collection[Repo], *filters: str, open_only: bool = True) -> list[Pr]:
         cmd = [
             "gh", "search", "prs",
             "--json", "number,repository",
-            "--state", "open",
+            *(("--state", "open") if open_only else ()),
             f"--limit={SEARCH_LIMIT}",
-            whose,
+            *filters,
             *(f"--repo={repo}" for repo in sorted(repos, key=str)),
         ]
 

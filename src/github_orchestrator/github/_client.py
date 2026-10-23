@@ -1,6 +1,7 @@
 import logging
 import subprocess
 from collections.abc import Collection, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -97,7 +98,7 @@ class GhCliGitHub:
 
     def _mine(self, gh: Gh, repos: Collection[Repo]) -> set[Repo]:
         return {pr.repo for whose in ("author", "review-requested")
-                for pr in gh.search_prs(_SEARCHES[whose], repos)}
+                for pr in gh.search_prs(repos, _SEARCHES[whose])}
 
     def check_access(self, account: str, repo: Repo) -> str | None:
         try:
@@ -114,7 +115,12 @@ class GhCliGitHub:
         return None
 
     def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]:
-        return self._gh.search_prs(_SEARCHES[whose], repos)
+        return self._gh.search_prs(repos, _SEARCHES[whose])
+
+    def mentioned_since(self, repos: Collection[Repo], since: datetime) -> list[Pr]:
+        updated = since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return self._gh.search_prs(repos, _SEARCHES["mentions"], f"--updated=>={updated}",
+                                   open_only=False)
 
     def pr_state(self, pr: Pr) -> PullRequestState:
         ahead = self._states_ahead.pop(pr, None)

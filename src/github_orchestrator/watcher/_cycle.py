@@ -15,6 +15,7 @@ from github_orchestrator.change_detection import (
 from github_orchestrator.conversation import ConversationManagerFactory, ThreadActivity
 from github_orchestrator.domain import HubState, Pr, Sleep, UtcClock
 from github_orchestrator.github import PullRequests
+from github_orchestrator.mentions import MentionsInbox
 from github_orchestrator.notifications import Courier
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
@@ -64,7 +65,8 @@ class PollingWatcher:
                  change_detection: ChangeDetection, dismissals: Dismissals, server: Server,
                  placement: Placement,
                  teardown: Teardown, saving: Saving, say: Say, setup_files: SetupFiles,
-                 releases: Releases, summary_lane: SummaryLane, reviews: KeptReviews) -> None:
+                 releases: Releases, summary_lane: SummaryLane, reviews: KeptReviews,
+                 mentions_inbox: MentionsInbox) -> None:
         self._config = config
         self._clock = clock
         self._sleep = sleep
@@ -91,6 +93,7 @@ class PollingWatcher:
         self._releases = releases
         self._summary_lane = summary_lane
         self._reviews = reviews
+        self._mentions_inbox = mentions_inbox
 
     def run_cycle(self) -> None:
         try:
@@ -379,6 +382,10 @@ class PollingWatcher:
             self._summary_lane.poll()
         except Exception:
             log.exception("Could not start the next summary")
+        try:
+            self._mentions_inbox.search_if_due()
+        except Exception:
+            log.exception("Could not search for mentions")
         log.debug("--- watcher end ---")
 
         summary = (f"Polled {len(set(found))} PRs, {total_events} events queued, "

@@ -1,6 +1,7 @@
 import itertools
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 from pathlib import Path
 
 from github_orchestrator.domain import Location, Pr, Repo
@@ -61,6 +62,7 @@ class FakePullRequest:
     review_requested: bool = False
     viewer_reviewed: bool = False
     mentioned: bool = False
+    updated_at: str = FAKE_NOW
     threads: list[Thread] = field(default_factory=list)
     review_comments: dict[int, list[ReviewComment]] = field(default_factory=dict)
     pending_review: int | None = None
@@ -103,10 +105,10 @@ class FakeGitHub:
                status: str = "OPEN", created_at: str | None = None,
                review_requested: bool = False,
                viewer_reviewed: bool = False,
-               mentioned: bool = False) -> FakePullRequest:
+               mentioned: bool = False, updated_at: str = FAKE_NOW) -> FakePullRequest:
         self.repos.add(pr.repo)
         record = FakePullRequest(pr, state, status, created_at,
-                                 review_requested, viewer_reviewed, mentioned)
+                                 review_requested, viewer_reviewed, mentioned, updated_at)
         self.prs[pr] = record
         return record
 
@@ -170,6 +172,12 @@ class FakeGitHub:
     def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]:
         return [record.pr for record in self._open_in(repos) if self._found(record, whose)]
 
+    def mentioned_since(self, repos: Collection[Repo], since: datetime) -> list[Pr]:
+        seen = self._searchable(repos)
+        return [record.pr for record in self.prs.values()
+                if record.pr.repo in seen and record.mentioned
+                and datetime.fromisoformat(record.updated_at) >= since]
+
     def _found(self, record: FakePullRequest, whose: Whose) -> bool:
         if whose == "author":
             return record.state.author == self.account
@@ -177,10 +185,14 @@ class FakeGitHub:
             return record.mentioned
         return record.review_requested
 
-    def _open_in(self, repos: Collection[Repo]) -> list[FakePullRequest]:
+    def _searchable(self, repos: Collection[Repo]) -> set[Repo]:
         seen = {repo for repo in repos if repo in self.repos}
         if not seen:
             raise GhError(f"gh search prs failed (exit 1): {SEARCH_REFUSED}")
+        return seen
+
+    def _open_in(self, repos: Collection[Repo]) -> list[FakePullRequest]:
+        seen = self._searchable(repos)
         return [record for record in self.prs.values()
                 if record.status == "OPEN" and record.pr.repo in seen]
 

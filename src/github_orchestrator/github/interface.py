@@ -1,5 +1,6 @@
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Literal, Protocol
@@ -231,6 +232,8 @@ class SentReview:
 
 class PullRequests(Protocol):
     def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]: ...
+
+    def mentioned_since(self, repos: Collection[Repo], since: datetime) -> list[Pr]: ...
 
     def prefetch(self, prs: Sequence[Pr]) -> None: ...
 

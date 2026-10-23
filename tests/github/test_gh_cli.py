@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -224,6 +225,19 @@ def test_every_repo_is_searched_in_one_gh_call_with_no_cap_below_githubs():
     assert [word for word in call.argv if word.startswith("--repo=")] == [
         "--repo=acme/gadgets", "--repo=acme/widgets"]
     assert "--limit=1000" in call.argv
+
+
+def test_the_mentions_since_search_asks_for_every_state_updated_from_that_moment_in_utc():
+    gh = ScriptedGh().answer("search prs", [])
+
+    real_github(gh=gh).mentioned_since(
+        [Repo.parse("acme/widgets")],
+        datetime(2026, 10, 21, 11, 30, tzinfo=timezone(timedelta(hours=2))))
+
+    [call] = [request for request in gh.calls if request.route == "search prs"]
+    assert "--mentions=@me" in call.argv
+    assert "--updated=>=2026-10-21T09:30:00Z" in call.argv
+    assert not any(word.startswith("--state") for word in call.argv)
 
 
 def test_a_search_result_with_no_repository_is_skipped():

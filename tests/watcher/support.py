@@ -11,6 +11,7 @@ from github_orchestrator.desktop import Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import Repo
 from github_orchestrator.github.fake import FakeGitHub
+from github_orchestrator.mentions import MentionsInbox
 from github_orchestrator.notifications import BoardPages
 from github_orchestrator.notifications.fake import FakeBoardPages, FakeNotifications
 from github_orchestrator.pr_processes import PrProcesses
@@ -112,6 +113,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       github_token: str | None = None,
                       releases_address: str | None = None,
                       summary_lane: SummaryLane | None = None,
+                      mentions_inbox: MentionsInbox | None = None,
                       ) -> dishka.Container:
     github = github or watching(settings)
     providers: list[Part] = [
@@ -142,6 +144,8 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
         providers.append(fake_provider(Logs, logs))
     if summary_lane is not None:
         providers.append(fake_provider(SummaryLane, summary_lane))
+    if mentions_inbox is not None:
+        providers.append(fake_provider(MentionsInbox, mentions_inbox))
     if dry_run:
         providers.extend(dry_run_parts(settings))
     return build_container(settings, *providers, clocks=clocks_of(clock or at_now, sleep=sleep))

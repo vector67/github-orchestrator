@@ -288,6 +288,12 @@ PACKAGES = {
         may_import=(),
         role="the Harvest extension's board copy is made from the Chrome install it is handed, and knows nothing of the board that asks for it",
     ),
+    "mentions": Package(
+        pinned=frozenset({"MentionsInbox"}),
+        may_import=("github", "conversation"),
+        role="the mentions inbox searches GitHub and reads review threads to list what mentions the user, and knows nothing of the watcher that runs it or the board that shows it",
+        imported_by=("wiring", "watcher"),
+    ),
     "notifications": Package(
         pinned=frozenset({
             "BoardPages", "Courier", "FixProgress", "Polling", "PrStatus", "Runs", "Settling",
@@ -355,7 +361,7 @@ PACKAGES = {
         pinned=frozenset({"Health", "Releases", "Watcher", "WatcherHealth"}),
         may_import=("settings", "github", "desktop", "notifications", "pr_event_queue", "pr_processes",
                     "conversation", "change_detection", "working_copies", "thread_records",
-                    "board_api", "pr_summaries"),
+                    "board_api", "pr_summaries", "mentions"),
         role="the watcher polls through GitHub, change detection and review threads, hands events to the event_queue and windows to PR windows, keeps the server running, and only its entry point builds the container",
         imported_by=("wiring", "cli._cli", "cli._status", "cli._restart", "cli._restart_all",
                      "cli._doctor", "cli._update"),
