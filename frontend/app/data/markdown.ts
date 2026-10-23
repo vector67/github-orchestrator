@@ -13,6 +13,8 @@ import {
 
 const SAFE_HREF = /^https?:\/\//i;
 
+const FRAGMENT_HREF = /^#/;
+
 const DRAWN_TAGS = [
   'p',
   'br',
@@ -76,7 +78,8 @@ function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
       return highlightedHtml(code, language);
     },
   });
-  made.validateLink = (url) => SAFE_HREF.test(url.trim());
+  made.validateLink = (url) =>
+    SAFE_HREF.test(url.trim()) || FRAGMENT_HREF.test(url.trim());
   made.renderer.rules.image = (tokens, at) => {
     const image = tokens[at];
     const source = String(image?.attrGet('src') ?? '');
@@ -87,7 +90,7 @@ function parser(breaks: boolean, html = false): ReturnType<typeof MarkdownIt> {
   return made;
 }
 
-const COMMENTS = parser(true);
+const COMMENTS = parser(true, true);
 
 COMMENTS.inline.ruler.push('emoji', emojiTyped);
 
@@ -139,12 +142,27 @@ export function markdownWith(
     const named = {
       emojis: new Map(emojis.map((emoji) => [emoji.name, emoji])),
     };
+    const pictures = new Set(emojis.map((emoji) => emoji.picture));
     drawing = copied((text) =>
-      sanitised(COMMENTS.render(text, named), EMOJI_TAGS, EMOJI_ATTRIBUTES),
+      onlyPictured(
+        sanitised(COMMENTS.render(text, named), EMOJI_TAGS, EMOJI_ATTRIBUTES),
+        pictures,
+      ),
     );
     DRAWN_WITH.set(emojis, drawing);
   }
   return drawing;
+}
+
+function onlyPictured(
+  drawn: DocumentFragment,
+  pictures: Set<string>,
+): DocumentFragment {
+  for (const image of drawn.querySelectorAll('img')) {
+    if (!pictures.has(image.getAttribute('src') ?? ''))
+      image.replaceWith(image.alt);
+  }
+  return drawn;
 }
 
 const NOTES_DRAWN = copied((text) => sanitised(NOTES.render(text)));
