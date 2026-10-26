@@ -10,7 +10,8 @@ export type Standing = 'connecting' | 'live' | 'ended' | 'exited' | 'lost';
 const ENDED = 1000;
 const GONE = 4404;
 const ENCODER = new TextEncoder();
-const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+const MONO =
+  '"MesloLGS Nerd Font Mono", "MesloLGS NF", ui-monospace, SFMono-Regular, Menlo, "Symbols Nerd Font Mono", monospace';
 
 function leaving(event: KeyboardEvent): boolean {
   return event.ctrlKey && event.shiftKey && event.key === 'ArrowLeft';
@@ -65,7 +66,7 @@ export class Session {
     this.screen = new Terminal({
       cursorBlink: true,
       fontFamily: MONO,
-      fontSize: 12.5,
+      fontSize: 12,
       scrollback: 5000,
       screenReaderMode: true,
       theme: this.themeOf(colours),
