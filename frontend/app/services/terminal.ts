@@ -22,6 +22,12 @@ function colours(): Colours {
   return {
     ground: style.getPropertyValue('--tty-ground').trim(),
     text: style.getPropertyValue('--tty-text').trim(),
+    cursor: {
+      light: style.getPropertyValue('--tty-cursor-light').trim(),
+      lightText: style.getPropertyValue('--tty-cursor-light-text').trim(),
+      dark: style.getPropertyValue('--tty-cursor-dark').trim(),
+      darkText: style.getPropertyValue('--tty-cursor-dark-text').trim(),
+    },
   };
 }
 

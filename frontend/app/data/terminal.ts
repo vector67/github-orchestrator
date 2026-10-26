@@ -13,6 +13,14 @@ const ENCODER = new TextEncoder();
 const MONO =
   '"MesloLGS Nerd Font Mono", "MesloLGS NF", ui-monospace, SFMono-Regular, Menlo, "Symbols Nerd Font Mono", monospace';
 
+const LIGHT_SYSTEM = window.matchMedia('(prefers-color-scheme: light)');
+
+function cursorOf({ cursor }: Colours, light: boolean) {
+  return light
+    ? { cursor: cursor.light, cursorAccent: cursor.lightText }
+    : { cursor: cursor.dark, cursorAccent: cursor.darkText };
+}
+
 function leaving(event: KeyboardEvent): boolean {
   return event.ctrlKey && event.shiftKey && event.key === 'ArrowLeft';
 }
@@ -20,6 +28,7 @@ function leaving(event: KeyboardEvent): boolean {
 export interface Colours {
   ground: string;
   text: string;
+  cursor: { light: string; lightText: string; dark: string; darkText: string };
 }
 
 function bytesOf(binary: string): Uint8Array<ArrayBuffer> {
@@ -52,6 +61,16 @@ export class Session {
   private leave: () => void = () => {};
 
   private readonly lost: () => void;
+  private readonly colours: Colours;
+
+  private readonly followSystem = (event: MediaQueryListEvent): void => {
+    const theme = this.screen.options.theme;
+    if (!theme?.background) return;
+    this.screen.options.theme = {
+      ...theme,
+      ...cursorOf(this.colours, event.matches),
+    };
+  };
 
   constructor(
     listed: TerminalSession,
@@ -62,6 +81,7 @@ export class Session {
     this.listed = listed;
     this.address = address;
     this.lost = lost;
+    this.colours = colours;
     this.element.className = 'tty-screen';
     this.screen = new Terminal({
       cursorBlink: true,
@@ -72,6 +92,7 @@ export class Session {
       theme: this.themeOf(colours),
     });
     this.screen.loadAddon(this.fit);
+    LIGHT_SYSTEM.addEventListener('change', this.followSystem);
     this.socket = this.connect(address);
     this.screen.onData((typed) => this.send(ENCODER.encode(typed)));
     this.screen.onBinary((typed) => this.send(bytesOf(typed)));
@@ -118,13 +139,12 @@ export class Session {
     if (this.opened && this.element.isConnected) this.fit.fit();
   }
 
-  private themeOf({ ground, text }: Colours) {
-    if (!ground || !text) return {};
+  private themeOf(colours: Colours) {
+    if (!colours.ground || !colours.text) return {};
     return {
-      background: ground,
-      foreground: text,
-      cursor: text,
-      cursorAccent: ground,
+      background: colours.ground,
+      foreground: colours.text,
+      ...cursorOf(colours, LIGHT_SYSTEM.matches),
     };
   }
 
@@ -172,6 +192,7 @@ export class Session {
 
   close(): void {
     this.leaving = true;
+    LIGHT_SYSTEM.removeEventListener('change', this.followSystem);
     this.screen.dispose();
     this.element.remove();
   }
