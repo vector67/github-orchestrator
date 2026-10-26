@@ -37,6 +37,7 @@ export default class TerminalTab extends Component {
 
   @tracked askingCount = false;
   @tracked count = DEFAULT_COUNT;
+  @tracked fullscreen = false;
 
   get launchers(): Launcher[] {
     return LAUNCHERS;
@@ -90,6 +91,14 @@ export default class TerminalTab extends Component {
       ?.focus();
   };
 
+  enterFullscreen = () => {
+    this.fullscreen = true;
+  };
+
+  leaveFullscreen = () => {
+    this.fullscreen = false;
+  };
+
   rebase = (event: Event) => {
     event.preventDefault();
     if (!COUNT.test(this.count)) return;
@@ -120,6 +129,14 @@ export default class TerminalTab extends Component {
                 data-test-session-standing
               >{{one.said}}</span>{{/if}}</button>
         {{/each}}
+        {{#if this.selected}}
+          <button
+            type="button"
+            class="launch"
+            data-test-terminal-fullscreen
+            {{on "click" this.enterFullscreen}}
+          ><span class="does">Fullscreen</span></button>
+        {{/if}}
         <h2 class="h">Start</h2>
         {{#each this.launchers key="keys" as |one|}}
           {{#if (this.asksHere one)}}
@@ -151,7 +168,20 @@ export default class TerminalTab extends Component {
         <p class="note" data-test-terminal-leave>Ctrl+Shift+← leaves the
           terminal for this list.</p>
       </aside>
-      <section class="tty" data-test-screen>
+      <section
+        class="tty"
+        data-fullscreen={{if this.fullscreen "true"}}
+        data-test-screen
+      >
+        {{#if this.fullscreen}}
+          <button
+            type="button"
+            class="tty-unfull"
+            aria-label="Leave fullscreen"
+            data-test-terminal-leave-fullscreen
+            {{on "click" this.leaveFullscreen}}
+          >×</button>
+        {{/if}}
         {{#if this.lost}}
           <p class="tty-lost" role="status" data-test-terminal-lost>
             Lost connection with the board, please wait. Your terminal session

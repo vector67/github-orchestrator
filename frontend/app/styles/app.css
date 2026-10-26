@@ -3931,6 +3931,34 @@ kbd {
   background: var(--tty-ground);
 }
 
+.tty[data-fullscreen] {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+}
+
+.tty-unfull {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 1;
+  padding: 0 6px;
+  font: inherit;
+  font-size: var(--fs-m);
+  line-height: 1.4;
+  cursor: pointer;
+  color: inherit;
+  background: var(--tty-ground);
+  border: 1px solid currentcolor;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.tty-unfull:hover,
+.tty-unfull:focus-visible {
+  opacity: 1;
+}
+
 .tty-standing {
   margin: 0;
   padding: 24px;

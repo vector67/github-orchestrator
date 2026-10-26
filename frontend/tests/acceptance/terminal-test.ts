@@ -105,6 +105,31 @@ module('Acceptance | terminal', function (hooks) {
     assert.ok(size!.rows > 0, 'it sent its rows');
   });
 
+  test('the fullscreen button lays the terminal over the whole page until its × closes it', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const page = document
+      .querySelector('#ember-testing')!
+      .getBoundingClientRect();
+    const edges = (): number[] => {
+      const screen = find('[data-test-screen]')!.getBoundingClientRect();
+      return [screen.left, screen.top, screen.right, screen.bottom];
+    };
+    const whole = [page.left, page.top, page.right, page.bottom];
+
+    await click('[data-test-terminal-fullscreen]');
+
+    assert.deepEqual(edges(), whole);
+    assert.dom('[data-test-terminal-leave-fullscreen]').hasText('×');
+
+    await click('[data-test-terminal-leave-fullscreen]');
+
+    assert.dom('[data-test-terminal-leave-fullscreen]').doesNotExist();
+    assert.notDeepEqual(edges(), whole);
+    assert.strictEqual(board().socketsOf('shell-1').length, 1);
+  });
+
   test('Esc inside the terminal goes to the shell and leaves you on the tab', async function (assert) {
     onTheHub();
     board().terminalSessions = [SHELL];
