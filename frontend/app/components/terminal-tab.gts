@@ -129,14 +129,6 @@ export default class TerminalTab extends Component {
                 data-test-session-standing
               >{{one.said}}</span>{{/if}}</button>
         {{/each}}
-        {{#if this.selected}}
-          <button
-            type="button"
-            class="launch"
-            data-test-terminal-fullscreen
-            {{on "click" this.enterFullscreen}}
-          ><span class="does">Fullscreen</span></button>
-        {{/if}}
         <h2 class="h">Start</h2>
         {{#each this.launchers key="keys" as |one|}}
           {{#if (this.asksHere one)}}
@@ -176,11 +168,20 @@ export default class TerminalTab extends Component {
         {{#if this.fullscreen}}
           <button
             type="button"
-            class="tty-unfull"
+            class="tty-corner"
             aria-label="Leave fullscreen"
             data-test-terminal-leave-fullscreen
             {{on "click" this.leaveFullscreen}}
           >×</button>
+        {{else if this.selected}}
+          <button
+            type="button"
+            class="tty-corner"
+            aria-label="Fullscreen"
+            title="Fullscreen"
+            data-test-terminal-fullscreen
+            {{on "click" this.enterFullscreen}}
+          >⤢</button>
         {{/if}}
         {{#if this.lost}}
           <p class="tty-lost" role="status" data-test-terminal-lost>

@@ -3923,6 +3923,7 @@ kbd {
 }
 
 .tty {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -3937,7 +3938,7 @@ kbd {
   z-index: 35;
 }
 
-.tty-unfull {
+.tty-corner {
   position: absolute;
   top: 4px;
   right: 6px;
@@ -3954,8 +3955,8 @@ kbd {
   opacity: 0.6;
 }
 
-.tty-unfull:hover,
-.tty-unfull:focus-visible {
+.tty-corner:hover,
+.tty-corner:focus-visible {
   opacity: 1;
 }
 
@@ -3976,7 +3977,6 @@ kbd {
 .tty-host {
   flex: 1;
   min-height: 0;
-  padding: 10px 14px;
 }
 
 .tty-screen {

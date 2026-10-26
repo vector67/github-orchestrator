@@ -118,6 +118,7 @@ module('Acceptance | terminal', function (hooks) {
     };
     const whole = [page.left, page.top, page.right, page.bottom];
 
+    assert.dom('[data-test-screen] [data-test-terminal-fullscreen]').exists();
     await click('[data-test-terminal-fullscreen]');
 
     assert.deepEqual(edges(), whole);
