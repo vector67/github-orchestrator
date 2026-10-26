@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 from github_orchestrator.agent_runs import History, Summaries, ThreadWork
-from github_orchestrator.change_detection import ChangeDetection
+from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewerStatus
 from github_orchestrator.conversation._adapters.agents import ThreadAgents
 from github_orchestrator.conversation._adapters.clock import SystemClock
 from github_orchestrator.conversation._adapters.conversations import Conversations
@@ -153,6 +153,12 @@ from github_orchestrator.working_copies import WorkingCopies
 log = logging.getLogger(__name__)
 
 _ANSWERED = frozenset({OPEN, RESOLVED, ASSUMED_DONE, CONFIRMED})
+
+_GIVEN = {Verdict.APPROVE: ReviewerStatus.APPROVED,
+          Verdict.REQUEST_CHANGES: ReviewerStatus.CHANGES_REQUESTED,
+          Verdict.COMMENT: ReviewerStatus.COMMENTED}
+
+_VERDICTS = frozenset({ReviewerStatus.APPROVED, ReviewerStatus.CHANGES_REQUESTED})
 _YOURS = _ANSWERED | {WAITING_ON_REVIEWER, DEFERRED}
 
 @dataclass(frozen=True)
@@ -514,6 +520,22 @@ class _ConversationManager:
 
     def reviews(self) -> Sequence[Review]:
         return self._pr.ports.records.reviews()
+
+    def as_sent(self, facts: Facts) -> Facts:
+        polled_at = facts.polled_at
+        if polled_at is None:
+            return facts
+        sent = [review for review in self.reviews()
+                if review.state is OperationState.APPLIED and review.settled_at is not None
+                and review.settled_at >= polled_at]
+        if not sent:
+            return facts
+        newest = max(sent, key=lambda review: review.settled_at or "")
+        given = _GIVEN[newest.verdict]
+        if given is ReviewerStatus.COMMENTED and facts.my_review in _VERDICTS:
+            return replace(facts, viewer_requested=False)
+        return replace(facts, my_review=given, my_review_at=newest.settled_at,
+                       viewer_requested=False)
 
     def facts(self) -> PrFacts:
         ports = self._pr.ports

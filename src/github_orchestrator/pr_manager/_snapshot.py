@@ -36,6 +36,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  threads: ConversationManager, wrong: WrongBranch | None,
                  notice: str | None, hidden: bool) -> Dashboard:
     counts = threads.counts()
+    facts = None if facts is None else threads.as_sent(facts)
     since = _since_review(facts)
     return Dashboard(
         pr=config.pr,
