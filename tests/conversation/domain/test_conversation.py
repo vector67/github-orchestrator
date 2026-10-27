@@ -376,6 +376,21 @@ def test_taking_over_the_pr_hands_a_thread_you_waited_on_as_its_reviewer_to_you(
     assert (conversation.role, conversation.standing) == ("author", ConversationState.READY)
 
 
+def test_a_commit_made_without_a_run_is_proposed_on_a_thread_that_never_had_a_fix(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+    sha = here.working_copies.commit(WORKTREE, {"f": "split\n"}, "Split the test file")
+
+    with threads.editing(KEY) as editable:
+        reported = editable.ready(sha, tests="passed")
+
+    assert not isinstance(reported, Denied)
+    fix = _held(threads).fix
+    assert (fix.state, str(fix.thread_sha)) == ("proposed", sha)
+
+
 def test_a_thread_still_reviewed_keeps_waiting_as_the_reviewers(settings):
     here = _here(settings)
     threads = _waiting_reviewer(here)

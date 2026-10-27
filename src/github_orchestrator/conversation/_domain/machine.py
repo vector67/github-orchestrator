@@ -783,7 +783,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     DeclarePlan: (_planning((QUEUED, RUNNING, IN_SESSION), "takes no plan"),),
     StepDone: (_planning((QUEUED, RUNNING, IN_SESSION, PROPOSED), "marks no step"),
                _step_in_the_plan),
-    ReportReady: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
+    ReportReady: (_reported_on((ABSENT, RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                   _a_commit, _on_the_base, _a_known_confidence),
     MoveBase: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                _a_commit),
