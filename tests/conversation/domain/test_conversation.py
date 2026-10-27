@@ -359,6 +359,44 @@ def test_a_thread_that_arrives_after_you_take_over_the_pr_wants_a_fix_as_on_your
     assert len(here.agent_runs.started) == 1
 
 
+def _waiting_reviewer(here):
+    threads = _reviewer(here, _comment(author="octocat"))
+    _asked(threads, "place", ConversationState.WAITING)
+    return threads
+
+
+def test_taking_over_the_pr_hands_a_thread_you_waited_on_as_its_reviewer_to_you(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("author", ConversationState.READY)
+
+
+def test_a_thread_still_reviewed_keeps_waiting_as_the_reviewers(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("reviewer", ConversationState.WAITING)
+
+
+def test_taking_over_the_pr_leaves_a_resolved_thread_closed(settings):
+    here = _here(settings)
+    threads = _open(here, is_author=False, is_resolved=True)
+
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("author", ConversationState.DONE)
+
+
 def test_a_reviewer_conversation_has_no_fix_to_run(settings):
     here = _here(settings)
 

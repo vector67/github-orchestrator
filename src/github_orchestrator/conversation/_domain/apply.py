@@ -147,6 +147,7 @@ from github_orchestrator.conversation._domain.events import (
     RunTimedOut,
     SessionRefused,
     ShellRefused,
+    TakenOver,
     ThreadResolved,
     ThreadResolveFailed,
     ThreadUnresolved,
@@ -295,6 +296,11 @@ def create_draft(*, key: str, body: str, anchor: Location, author: str,
 def _my_move(conversation: Conversation) -> Conversation:
     return replace(conversation, state=OPEN, verdict=None, verdict_for=None,
                    verdict_asked_for=None, verdict_asks=0, verdict_asked_at=None)
+
+
+def _taken_over(conversation: Conversation) -> Conversation:
+    taken = replace(conversation, role=ROLE_AUTHOR)
+    return _my_move(taken) if conversation.state in PLACED_BY_A_VERDICT else taken
 
 
 def _read_and_asked(outcome: Accepted, at: str | None) -> Accepted:
@@ -1071,6 +1077,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _verdict_given(conversation, command)
         case VerdictDue():
             return Accepted(conversation)
+        case TakenOver():
+            return Accepted(_taken_over(conversation))
         case CommitCheckDue():
             return _commit_check_due(conversation, command, at)
         case CommitChecked():
