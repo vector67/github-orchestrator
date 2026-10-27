@@ -280,6 +280,15 @@ def test_close_is_accepted_and_handed_to_the_manager():
     assert panel.closed == 1
 
 
+def test_take_over_is_accepted_and_handed_to_the_manager():
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post("/api/manager:take-over")
+
+    assert answer.status_code == 202
+    assert panel.taken_over == 1
+
+
 def test_mark_ready_is_accepted_and_handed_to_the_manager():
     panel = FakeManagerPanel()
 
@@ -293,7 +302,7 @@ def test_mark_ready_is_accepted_and_handed_to_the_manager():
     ("/api/manager:hold", None), ("/api/manager:resume", None),
     ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
     ("/api/manager:dismiss", {"until": "next-event"}), ("/api/manager:close", None),
-    ("/api/manager:mark-ready", None),
+    ("/api/manager:mark-ready", None), ("/api/manager:take-over", None),
 ])
 def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
     panel = FakeManagerPanel(refusal="an agent is already running")
@@ -304,7 +313,7 @@ def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
     [error] = answer.json()["errors"]
     assert (error["code"], error["detail"]) == ("manager-refused", "an agent is already running")
     assert (panel.carried_on, panel.reviews_started, panel.dismissed, panel.closed,
-            panel.marked_ready) == (0, 0, None, 0, 0)
+            panel.marked_ready, panel.taken_over) == (0, 0, None, 0, 0, 0)
     assert panel.dashboard().on_hold is False
 
 
@@ -317,7 +326,7 @@ def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
     assert set(commands) == {"/api/manager:hold", "/api/manager:resume",
                              "/api/manager:carry-on", "/api/manager:start-review",
                              "/api/manager:dismiss", "/api/manager:close",
-                             "/api/manager:mark-ready"}
+                             "/api/manager:mark-ready", "/api/manager:take-over"}
     assert all(command["responses"]["202"]["headers"]["Location"]
                for command in commands.values())
 

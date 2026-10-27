@@ -8,6 +8,7 @@ from github_orchestrator.conversation._domain.apply import create
 from github_orchestrator.conversation._domain.commit_check import commit_check_due
 from github_orchestrator.conversation._domain.conversation import (
     ROLE_AUTHOR,
+    ROLE_REVIEWER,
     Anchor,
     Comment,
     Conversation,
@@ -16,6 +17,7 @@ from github_orchestrator.conversation._domain.events import (
     CommitCheckDue,
     Refresh,
     Reopen,
+    TakenOver,
     VerdictDue,
 )
 from github_orchestrator.conversation._domain.machine import Accepted, Deferred, Refused
@@ -177,6 +179,19 @@ def refresh(pr: Pr, stale: list[FetchedThread], ports: Ports, *,
         if changed:
             refreshed.append(thread.key)
     return refreshed
+
+
+def hand_over_taken_over(ports: Ports) -> None:
+    if ports.pull_requests.role() != ROLE_AUTHOR:
+        return
+    for listed in ports.records.list():
+        if listed.is_unreadable or listed.role != ROLE_REVIEWER:
+            continue
+        with ports.records.update(listed.key) as update:
+            conversation = update.conversation
+            if conversation is None or conversation.role != ROLE_REVIEWER:
+                continue
+            update.conversation = run(ports, conversation, TakenOver()).conversation
 
 
 def ask_due_verdicts(ports: Ports) -> None:

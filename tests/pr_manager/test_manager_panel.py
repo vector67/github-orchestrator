@@ -259,6 +259,15 @@ def _reviewer_of(settings, tmp_path, *script, **modules):
     return board
 
 
+def test_take_over_from_the_board_makes_you_the_author_of_someone_elses_pr(settings, tmp_path):
+    board = ServerPanel()
+    seen = []
+    _reviewer_of(settings, tmp_path, lambda: seen.append(board.panel.dashboard().is_author),
+                 lambda: board.panel.take_over(),
+                 lambda: seen.append(board.panel.dashboard().is_author), board=board)
+    assert seen == [False, True]
+
+
 def test_start_review_from_the_board_starts_the_review_agent_a_review_request_would(
         settings, tmp_path):
     runs = _runs(Outcome(finishes=False))

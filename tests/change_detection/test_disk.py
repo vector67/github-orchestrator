@@ -34,7 +34,7 @@ EXPECTED = (
     '"review_decision": "changes-requested", "latest_reviewer": "octocat", '
     '"reviewer_status": {"octocat": "changes-requested"}, "pending_reviewers": ["bob"], '
     '"review_requested": true, "unresolved_thread_count": 1, "is_author": false, '
-    '"review_anchor_at": "2026-08-31T00:00:00Z", "review_anchor_sha": "sha1", '
+    '"taken_over": false, "review_anchor_at": "2026-08-31T00:00:00Z", "review_anchor_sha": "sha1", '
     '"since_anchor_commits": 1, "since_anchor_force_push": false, '
     '"since_anchor_comments": 0, "since_anchor_reviews": 0, "since_anchor_resolved": 0, '
     '"detailed_reviewer": "octocat", "is_detailed_reviewer": true, '

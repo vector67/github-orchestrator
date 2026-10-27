@@ -4,6 +4,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from typing import ClassVar, Protocol
 
+from github_orchestrator.change_detection import Facts
 from github_orchestrator.conversation._application.asking import Denied
 from github_orchestrator.conversation._domain.conversation import (
     WAKE_MANUAL,
@@ -172,6 +173,8 @@ class ConversationManager(Protocol):
                     direction: str = "") -> Review | Denied: ...
 
     def reviews(self) -> Sequence[Review]: ...
+
+    def as_sent(self, facts: Facts) -> Facts: ...
 
     def facts(self) -> PrFacts: ...
 

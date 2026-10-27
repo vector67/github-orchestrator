@@ -121,7 +121,8 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
     detailed_reviewer = detailed_reviewer_match.group(1) if detailed_reviewer_match else None
     is_detailed_reviewer = detailed_reviewer == account
 
-    is_author_pr = state.author == account
+    taken_over = bool((old or {}).get("taken_over"))
+    is_author_pr = state.author == account or taken_over
 
     activity = compute_review_activity(
         account=account,
@@ -173,6 +174,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "review_requested": poll.review_requested,
         "unresolved_thread_count": poll.unresolved_thread_count,
         "is_author": is_author_pr,
+        "taken_over": taken_over,
         **activity,
         "detailed_reviewer": detailed_reviewer,
         "is_detailed_reviewer": is_detailed_reviewer,
@@ -349,6 +351,10 @@ def ended(*, still_open: bool, merged: bool) -> PrClosed:
 
 def closing(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     return {**(snapshot or {}), "pending_teardown": True}
+
+
+def taking_over(snapshot: dict[str, Any]) -> dict[str, Any]:
+    return {**snapshot, "taken_over": True, "is_author": True}
 
 
 def is_closing(snapshot: dict[str, Any] | None) -> bool:

@@ -672,7 +672,7 @@ CONVERSATION_MEMBERS = frozenset({"of"})
 ROLE_MEMBERS = {
     "ConversationManager": frozenset({
         "editing", "get", "all", "open_draft", "open_thread", "send_review", "reviews",
-        "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
+        "as_sent", "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
         "recheck"}),
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "resolve", "reject", "place",
@@ -703,8 +703,8 @@ def test_the_manager_and_a_conversation_offer_only_their_own_methods(role):
 
 
 CHANGE_DETECTION_MEMBERS = frozenset({
-    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "forget",
-    "archive_other_repos",
+    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "take_over",
+    "forget", "archive_other_repos",
 })
 
 

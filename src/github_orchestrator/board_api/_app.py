@@ -788,6 +788,16 @@ def mark_pull_request_ready(board: Serving) -> Response:
     return _handed_over(board, board.manager.mark_ready())
 
 
+@writes.post("/manager:take-over", status_code=202, tags=["manager"],
+             operation_id="takeOverPullRequest", responses=HANDED_TO_THE_MANAGER,
+             summary="Treat this pull request as yours though someone else opened it.")
+def take_over_pull_request(board: Serving) -> Response:
+    """From then on the orchestrator treats you as the pull request's author:
+    its agents, its next move and the author's controls.
+    """
+    return _handed_over(board, board.manager.take_over())
+
+
 MAX_GIT_LINES = 2000
 
 

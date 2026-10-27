@@ -12,6 +12,7 @@ from github_orchestrator.change_detection._rules import (
     closing,
     ended,
     is_closing,
+    taking_over,
 )
 from github_orchestrator.change_detection._stored import current_form
 from github_orchestrator.change_detection.interface import (
@@ -140,6 +141,11 @@ class DiskChangeDetection:
 
     def close(self, pr: Pr) -> None:
         self._save(pr, closing(self._last(pr)))
+
+    def take_over(self, pr: Pr) -> None:
+        snapshot = self._last(pr)
+        if snapshot is not None:
+            self._save(pr, taking_over(snapshot))
 
     def forget(self, pr: Pr) -> bool:
         path = self._file(pr)

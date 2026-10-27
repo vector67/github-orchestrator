@@ -850,6 +850,14 @@
     }
    }
   },
+  "/api/manager:take-over": {
+   "post": {
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/mentions": {
    "get": {
     "200": {

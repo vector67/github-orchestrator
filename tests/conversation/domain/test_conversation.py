@@ -347,6 +347,71 @@ def test_a_reviewer_conversation_whose_newest_comment_is_the_openers_is_my_move_
     assert (conversation.standing, conversation.unread) == (ConversationState.READY, True)
 
 
+def test_a_thread_that_arrives_after_you_take_over_the_pr_wants_a_fix_as_on_your_own(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+    here.change_detection.take_over(THE_PR)
+
+    on_github(here.github, "PRRT_two", _comment(id=6001), path="src/app.py", line=30)
+    hear(threads)
+    drain(threads)
+
+    assert len(here.agent_runs.started) == 1
+
+
+def _waiting_reviewer(here):
+    threads = _reviewer(here, _comment(author="octocat"))
+    _asked(threads, "place", ConversationState.WAITING)
+    return threads
+
+
+def test_taking_over_the_pr_hands_a_thread_you_waited_on_as_its_reviewer_to_you(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("author", ConversationState.READY)
+
+
+def test_a_commit_made_without_a_run_is_proposed_on_a_thread_that_never_had_a_fix(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+    sha = here.working_copies.commit(WORKTREE, {"f": "split\n"}, "Split the test file")
+
+    with threads.editing(KEY) as editable:
+        reported = editable.ready(sha, tests="passed")
+
+    assert not isinstance(reported, Denied)
+    fix = _held(threads).fix
+    assert (fix.state, str(fix.thread_sha)) == ("proposed", sha)
+
+
+def test_a_thread_still_reviewed_keeps_waiting_as_the_reviewers(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("reviewer", ConversationState.WAITING)
+
+
+def test_taking_over_the_pr_leaves_a_resolved_thread_closed(settings):
+    here = _here(settings)
+    threads = _open(here, is_author=False, is_resolved=True)
+
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+
+    conversation = _held(threads)
+    assert (conversation.role, conversation.standing) == ("author", ConversationState.DONE)
+
+
 def test_a_reviewer_conversation_has_no_fix_to_run(settings):
     here = _here(settings)
 

@@ -79,6 +79,10 @@ export const SHORTCUTS: ShortcutGroup[] = [
         keys: [capOfControl('mark-ready')],
         does: 'Ready for review, after you confirm',
       },
+      {
+        keys: [capOfControl('take-over')],
+        does: 'Take over someone else’s pull request as yours',
+      },
       { keys: [capOfControl('close')], does: 'Close the pull request' },
       { keys: [capOfControl('dismiss')], does: 'Dismiss' },
       { keys: [capOfControl('git')], does: 'Git palette' },

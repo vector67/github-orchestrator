@@ -1,6 +1,13 @@
+from dataclasses import replace
+
+from github_orchestrator.conversation import Verdict
+from github_orchestrator.github import ReviewState
+from github_orchestrator.github.fake import FakeGitHub, Review
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
-from tests.pr_manager.polls import POLLED, REVIEWED, polled_pr, seed
-from tests.pr_manager.support import ServerPanel, run_manager, seed_state
+from tests.builders import a_pr
+from tests.change_detection.support import ACCOUNT
+from tests.pr_manager.polls import POLLED, REVIEWED, REVIEWED_AT, polled_pr, seed
+from tests.pr_manager.support import ServerPanel, manager_over, run_manager, seed_state
 
 
 def _drawn(settings, tmp_path, *script, is_author=True, **modules):
@@ -90,3 +97,42 @@ def test_an_unfrozen_dashboard_names_no_branch_held_here(settings, tmp_path):
 
     assert (dashboard.frozen_on, dashboard.expected_branch, dashboard.seconds_left) == (
         None, None, None)
+
+
+def _sent(settings, tmp_path, seen, verdict, body=None):
+    seed(settings, seen)
+    github = FakeGitHub()
+    github.add_pr(a_pr())
+    manager = manager_over(settings, None, worktree=tmp_path, is_author=False, github=github)
+    manager.conversation_managers.of(a_pr()).send_review(verdict, body)
+    manager.run()
+    return manager.board.panel.dashboard()
+
+
+def test_a_review_sent_since_the_last_poll_reads_as_given(settings, tmp_path):
+    asked = polled_pr(author="alice", reviews=(), pending_reviewers=(ACCOUNT,))
+
+    dashboard = _sent(settings, tmp_path, asked, Verdict.APPROVE)
+
+    assert (dashboard.my_review, dashboard.my_review_at, dashboard.viewer_requested) == (
+        "approved", "2026-09-24T12:00:00Z", False)
+
+
+def test_a_comment_sent_after_an_approval_keeps_the_approval_and_ends_the_request(
+        settings, tmp_path):
+    approved = Review(ACCOUNT, ReviewState.APPROVED, REVIEWED_AT, "abc000")
+    asked = polled_pr(author="alice", reviews=(approved,), pending_reviewers=(ACCOUNT,))
+
+    dashboard = _sent(settings, tmp_path, asked, Verdict.COMMENT, "one more thing")
+
+    assert (dashboard.my_review, dashboard.my_review_at, dashboard.viewer_requested) == (
+        "approved", REVIEWED_AT, False)
+
+
+def test_the_first_poll_after_a_sent_review_has_the_last_word(settings, tmp_path):
+    asked_again = replace(polled_pr(author="alice", reviews=(), pending_reviewers=(ACCOUNT,))[0],
+                          polled_at="2026-09-24T12:05:00Z")
+
+    dashboard = _sent(settings, tmp_path, (asked_again,), Verdict.APPROVE)
+
+    assert (dashboard.my_review, dashboard.viewer_requested) == (None, True)

@@ -20,6 +20,7 @@ export type Control =
   | 'carry-on'
   | 'start-review'
   | 'mark-ready'
+  | 'take-over'
   | 'dismiss'
   | 'close'
   | 'git'
@@ -64,6 +65,8 @@ const HINTS = {
     'Takes this PR off the wall, until its next event or forever; you choose after the click',
   'mark-ready':
     'Marks this draft ready for review on GitHub, after you confirm with what is still outstanding in front of you',
+  'take-over':
+    'Treats this pull request as yours from now on, though someone else opened it: its agents fix CI, rebase and answer threads as they do on your own',
 };
 
 const BOARD_DOWN = {
@@ -74,6 +77,8 @@ const BOARD_DOWN = {
   close: 'Close goes through the manager’s board, which is not answering.',
   'mark-ready':
     'Ready for review goes through the manager’s board, which is not answering.',
+  'take-over':
+    'Take over goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
 };
 
@@ -147,6 +152,8 @@ function offerOf(
   if (control === 'mark-ready' && !(on.yours && shown.facts?.draft))
     return ABSENT;
   if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
+  if (control === 'take-over' && shown.facts?.is_author !== false)
+    return ABSENT;
   const why = heldBackOf(control, shown);
   if (why) return held(why);
   if (!on.live) return held(BOARD_DOWN[control]);
@@ -161,6 +168,7 @@ const KEYS: Record<Control, string> = {
   'carry-on': 'c',
   'start-review': 'a',
   'mark-ready': 'r',
+  'take-over': 'T',
   dismiss: 'd',
   close: 'Q',
   git: 'g',
@@ -179,7 +187,13 @@ export function capOfControl(control: Control): string {
 }
 
 type Command =
-  'hold' | 'carry-on' | 'start-review' | 'mark-ready' | 'close' | 'release';
+  | 'hold'
+  | 'carry-on'
+  | 'start-review'
+  | 'mark-ready'
+  | 'take-over'
+  | 'close'
+  | 'release';
 
 export default class PrControlsService extends Service {
   @service declare dashboard: DashboardService;
