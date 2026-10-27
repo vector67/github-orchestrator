@@ -429,6 +429,11 @@ it are today's runs,
 since local midnight, and what they cost. The wall reads the hub every five
 seconds.
 
+The bar also counts the mentions of you, made since the hub first ran this
+version, that the board has not closed; a PR's title bar shows the same count. Clicking the number lists each mention, with its author, PR and text:
+**Open on the board** opens that PR at its thread, and one the board does not
+hold says **not on the board** and links to the comment on GitHub.
+
 ### A PR's page
 
 Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>`: on its Summary
@@ -438,7 +443,8 @@ button, the title, whose PR it is, the branch, the PR's number linking to it on
 GitHub, your move, the chips its wall row shows and the settings gear. The PRs
 button opens the switcher, whose first entry is **Wall**. The gear, on the
 wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch,
-**Commit box sizing** for the Diff tab (Full, Minimal or Hidden) and
+**Commit box sizing** for the Diff tab (Full, Minimal or Hidden),
+**Terminal colours** for the Terminal tab and
 the watcher's last poll: a green dot, **Polled successfully** and how long ago,
 or a red dot and what went wrong when polls fail. **N mismatches** is the
 Alignment judge's count in the PR's latest summary, shown even once the summary
@@ -508,7 +514,10 @@ when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
 own draft, which first lists what is still outstanding (unsent drafts, Board
 threads waiting on you, threads unresolved on GitHub that the Board has not
 resolved or does not track, failing CI, a needed rebase,
-unpushed commits and agent work) and then marks it ready on GitHub, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
+unpushed commits and agent work) and then marks it ready on GitHub, **Take over**
+(`⇧T`) on someone else's PR, after which the orchestrator treats it as yours:
+agents fix CI, rebase and answer its comments, the author's buttons appear, and
+the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
 GitHub. Each button's tooltip says what
 it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
@@ -547,6 +556,15 @@ Inside the terminal every key goes to the shell, `Tab` and `Esc` included.
 `Ctrl`+`Shift`+`←` leaves it for the session list, where the page's own keys
 work again. The screen is also written to an accessibility tree for screen
 readers.
+
+The **⤢** at the screen's top right makes the terminal fill the whole page;
+the **×** in its place puts it back. The terminal draws in MesloLGS Nerd Font
+at 12px when it is installed, so nvim's icons show. Its border takes the
+background the program paints. **Terminal colours** in the settings gear opens
+a dialog: **Mode** is System, Light or Dark, and **Light theme** and **Dark
+theme** pick what each mode draws in (Default, Solarized, Tokyo Night, Monokai,
+One, Gruvbox, Catppuccin, Dracula or Nord). The choices are kept in this
+browser.
 
 A session lives as long as the page's connection to it. Moving between tabs or
 PRs keeps it; reloading or closing the browser tab ends it. One started from
