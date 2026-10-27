@@ -148,7 +148,7 @@ module('Acceptance | terminal', function (hooks) {
     assert.ok(true, 'and went back once the program cleared in the default');
   });
 
-  test('the terminal is light or dark as the settings menu says, System until you pick, kept in this browser', async function (assert) {
+  test('Terminal colours opens a dialog that picks System, Light or Dark and a named theme for each, kept in this browser', async function (assert) {
     onTheHub();
     board().terminalSessions = [SHELL];
     await visit('/pr/o/r/7/terminal');
@@ -159,16 +159,56 @@ module('Acceptance | terminal', function (hooks) {
     await click('[data-test-settings-open]');
     await click('[data-test-terminal-theme-open]');
 
+    assert.dom('[data-test-settings-menu]').doesNotExist();
+    assert.dom('[data-test-terminal-colours]').exists();
     assert.dom('[data-test-terminal-theme="system"]').isChecked();
+    assert.dom('[data-test-light-theme="default-light"]').isChecked();
+    assert.dom('[data-test-dark-theme="default-dark"]').isChecked();
+    assert.deepEqual(texts('[data-test-dark-theme-name]'), [
+      'Default',
+      'Solarized Dark',
+      'Tokyo Night',
+      'Monokai',
+      'One Dark',
+      'Gruvbox Dark',
+      'Catppuccin Mocha',
+      'Dracula',
+      'Nord',
+    ]);
+    assert.deepEqual(texts('[data-test-light-theme-name]'), [
+      'Default',
+      'Solarized Light',
+      'Tokyo Night Day',
+      'One Light',
+      'Gruvbox Light',
+      'Catppuccin Latte',
+    ]);
     assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', system);
 
-    await click('[data-test-terminal-theme="light"]');
-    assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', 'light');
-    assert.strictEqual(localStorage.getItem('terminal-theme'), 'light');
-
     await click('[data-test-terminal-theme="dark"]');
+    await click('[data-test-dark-theme="tokyo-night"]');
     assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', 'dark');
-    assert.strictEqual(localStorage.getItem('terminal-theme'), 'dark');
+    assert
+      .dom('[data-test-screen]')
+      .hasAttribute('data-tty-scheme', 'tokyo-night');
+
+    await click('[data-test-terminal-theme="light"]');
+    await click('[data-test-light-theme="solarized-light"]');
+    assert
+      .dom('[data-test-screen]')
+      .hasAttribute('data-tty-scheme', 'solarized-light');
+    assert.strictEqual(localStorage.getItem('terminal-theme'), 'light');
+    assert.strictEqual(
+      localStorage.getItem('terminal-light-theme'),
+      'solarized-light',
+    );
+    assert.strictEqual(
+      localStorage.getItem('terminal-dark-theme'),
+      'tokyo-night',
+    );
+
+    await triggerEvent(document, 'keydown', { key: 'Escape' });
+    assert.dom('[data-test-terminal-colours]').doesNotExist();
   });
 
   test('Esc inside the terminal goes to the shell and leaves you on the tab', async function (assert) {

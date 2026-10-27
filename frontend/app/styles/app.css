@@ -3965,6 +3965,16 @@ kbd {
   opacity: 1;
 }
 
+.terminal-schemes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+}
+
+.decide-dialog .terminal-colours legend {
+  font-weight: var(--fw-strong);
+}
+
 .tty-standing {
   margin: 0;
   padding: 24px;

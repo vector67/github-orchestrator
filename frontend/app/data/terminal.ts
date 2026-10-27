@@ -4,6 +4,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import type { TerminalSession } from 'frontend/data/api';
 import { tildeOf } from 'frontend/data/address';
+import type { Scheme } from 'frontend/data/terminal-themes';
 
 export type Standing = 'connecting' | 'live' | 'ended' | 'exited' | 'lost';
 
@@ -17,16 +18,6 @@ const DEFAULT_GROUND = 'default';
 
 function leaving(event: KeyboardEvent): boolean {
   return event.ctrlKey && event.shiftKey && event.key === 'ArrowLeft';
-}
-
-export interface Scheme {
-  ground: string;
-  text: string;
-}
-
-export interface Colours {
-  light: Scheme;
-  dark: Scheme;
 }
 
 function rgbOf(packed: number): string {
@@ -72,8 +63,7 @@ export class Session {
   private leave: () => void = () => {};
 
   private readonly lost: () => void;
-  private readonly colours: Colours;
-  private light: boolean;
+  private scheme: Scheme;
   private edge: string | null = null;
   private host: HTMLElement | null = null;
   private sampling = false;
@@ -82,15 +72,13 @@ export class Session {
   constructor(
     listed: TerminalSession,
     address: string,
-    colours: Colours,
-    light: boolean,
+    scheme: Scheme,
     lost: () => void,
   ) {
     this.listed = listed;
     this.address = address;
     this.lost = lost;
-    this.colours = colours;
-    this.light = light;
+    this.scheme = scheme;
     this.element.className = 'tty-screen';
     this.screen = new Terminal({
       cursorBlink: true,
@@ -150,22 +138,23 @@ export class Session {
     if (this.opened && this.element.isConnected) this.fit.fit();
   }
 
-  paint(light: boolean): void {
-    this.light = light;
+  paint(scheme: Scheme): void {
+    this.scheme = scheme;
     this.palette.clear();
     this.screen.options.theme = this.themeOf();
+    this.paintHost();
   }
 
   private themeOf() {
-    const { ground, text } = this.light
-      ? this.colours.light
-      : this.colours.dark;
+    const { ground, text, cursor, selection, ansi } = this.scheme;
     if (!ground || !text) return {};
     return {
+      ...ansi,
       background: this.edge ?? ground,
       foreground: text,
-      cursor: text,
+      cursor,
       cursorAccent: ground,
+      selectionBackground: selection,
     };
   }
 
@@ -183,7 +172,9 @@ export class Session {
   }
 
   private paintHost(): void {
-    if (this.host) this.host.style.backgroundColor = this.edge ?? '';
+    if (this.host) {
+      this.host.style.backgroundColor = this.edge ?? this.scheme.ground;
+    }
   }
 
   private edgeOfScreen(): string | null {

@@ -67,6 +67,7 @@ def palette_css() -> bytes:
         f'  :root:not([data-theme="light"]) {{ {dark} }}\n'
         "}\n"
         f':root[data-theme="dark"] {{ {dark} }}\n'
+        f":root {{ {palette.theme_variables()} }}\n"
     ).encode()
 
 

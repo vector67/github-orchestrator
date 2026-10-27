@@ -3,7 +3,13 @@ import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type { TerminalSession } from 'frontend/data/api';
 import { reportError } from 'frontend/data/report';
-import { Session, type Colours } from 'frontend/data/terminal';
+import { Session } from 'frontend/data/terminal';
+import {
+  DARK_THEMES,
+  LIGHT_THEMES,
+  schemeOf,
+  type NamedTheme,
+} from 'frontend/data/terminal-themes';
 import { tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
@@ -22,29 +28,29 @@ export type TerminalTheme = 'system' | 'light' | 'dark';
 export const TERMINAL_THEMES: TerminalTheme[] = ['system', 'light', 'dark'];
 
 const REMEMBERED_THEME = 'terminal-theme';
+const REMEMBERED_LIGHT = 'terminal-light-theme';
+const REMEMBERED_DARK = 'terminal-dark-theme';
 
 const LIGHT_SYSTEM = window.matchMedia('(prefers-color-scheme: light)');
 
-function colours(): Colours {
-  const style = getComputedStyle(document.documentElement);
-  const read = (name: string) => style.getPropertyValue(name).trim();
-  return {
-    light: {
-      ground: read('--tty-light-ground'),
-      text: read('--tty-light-text'),
-    },
-    dark: { ground: read('--tty-dark-ground'), text: read('--tty-dark-text') },
-  };
-}
-
-function recalledTheme(): TerminalTheme {
+function recalled<T extends string>(key: string, among: T[], fallback: T): T {
   try {
-    const kept = localStorage.getItem(REMEMBERED_THEME);
-    return TERMINAL_THEMES.find((one) => one === kept) ?? 'system';
+    const kept = localStorage.getItem(key);
+    return among.find((one) => one === kept) ?? fallback;
   } catch {
-    return 'system';
+    return fallback;
   }
 }
+
+function keep(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+}
+
+const keysOf = (themes: NamedTheme[]) => themes.map((one) => one.key);
 
 export default class TerminalService extends Service {
   @service declare here: HereService;
@@ -54,7 +60,21 @@ export default class TerminalService extends Service {
   @tracked private held: Record<string, Session[]> = {};
   @tracked private chosen: Record<string, string> = {};
   @tracked reach: Reach = 'unknown';
-  @tracked theme: TerminalTheme = recalledTheme();
+  @tracked theme: TerminalTheme = recalled(
+    REMEMBERED_THEME,
+    TERMINAL_THEMES,
+    'system',
+  );
+  @tracked lightTheme = recalled(
+    REMEMBERED_LIGHT,
+    keysOf(LIGHT_THEMES),
+    'default-light',
+  );
+  @tracked darkTheme = recalled(
+    REMEMBERED_DARK,
+    keysOf(DARK_THEMES),
+    'default-dark',
+  );
   @tracked private systemLight = LIGHT_SYSTEM.matches;
 
   private looking: number | null = null;
@@ -70,14 +90,26 @@ export default class TerminalService extends Service {
     return this.theme === 'system' ? this.systemLight : this.theme === 'light';
   }
 
+  get scheme(): string {
+    return this.light ? this.lightTheme : this.darkTheme;
+  }
+
   chooseTheme(theme: TerminalTheme): void {
     this.theme = theme;
     this.repaint();
-    try {
-      localStorage.setItem(REMEMBERED_THEME, theme);
-    } catch {
-      return;
-    }
+    keep(REMEMBERED_THEME, theme);
+  }
+
+  chooseLightTheme(key: string): void {
+    this.lightTheme = key;
+    this.repaint();
+    keep(REMEMBERED_LIGHT, key);
+  }
+
+  chooseDarkTheme(key: string): void {
+    this.darkTheme = key;
+    this.repaint();
+    keep(REMEMBERED_DARK, key);
   }
 
   private followSystem = (event: MediaQueryListEvent): void => {
@@ -87,7 +119,7 @@ export default class TerminalService extends Service {
 
   private repaint(): void {
     for (const sessions of Object.values(this.held)) {
-      for (const one of sessions) one.paint(this.light);
+      for (const one of sessions) one.paint(schemeOf(this.scheme));
     }
   }
 
@@ -254,8 +286,7 @@ export default class TerminalService extends Service {
     return new Session(
       listed,
       this.addressOf(listed.id),
-      colours(),
-      this.light,
+      schemeOf(this.scheme),
       this.lost,
     );
   }

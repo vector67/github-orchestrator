@@ -14,11 +14,7 @@ import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type ThemeService from 'frontend/services/theme';
-import {
-  TERMINAL_THEMES,
-  type TerminalTheme,
-} from 'frontend/services/terminal';
-import type TerminalService from 'frontend/services/terminal';
+import TerminalColours from 'frontend/components/terminal-colours';
 
 const TOOTH_RADIUS = 5.75;
 const TEETH = 8;
@@ -35,17 +31,6 @@ const SIZINGS = COMMIT_SIZINGS.map((size) => ({
   name: SIZING_NAMES[size],
 }));
 
-const TERMINAL_THEME_NAMES: Record<TerminalTheme, string> = {
-  system: 'System',
-  light: 'Light',
-  dark: 'Dark',
-};
-
-const TERMINAL_CHOICES = TERMINAL_THEMES.map((theme) => ({
-  theme,
-  name: TERMINAL_THEME_NAMES[theme],
-}));
-
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
 export default class SettingsMenu extends Component {
@@ -54,11 +39,10 @@ export default class SettingsMenu extends Component {
   @service declare keys: KeysService;
   @service declare theme: ThemeService;
   @service declare commitBox: CommitBoxService;
-  @service declare terminal: TerminalService;
 
   @tracked showing = false;
   @tracked sizing = false;
-  @tracked terminalTheming = false;
+  @tracked colouring = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
 
@@ -83,7 +67,6 @@ export default class SettingsMenu extends Component {
   close = () => {
     this.showing = false;
     this.sizing = false;
-    this.terminalTheming = false;
     this.keys.drop(this.keymap);
   };
 
@@ -97,11 +80,14 @@ export default class SettingsMenu extends Component {
 
   size = (sizing: CommitSizing) => this.commitBox.choose(sizing);
 
-  openTerminalTheming = () => {
-    this.terminalTheming = !this.terminalTheming;
+  openColours = () => {
+    this.close();
+    this.colouring = true;
   };
 
-  themeTerminal = (theme: TerminalTheme) => this.terminal.chooseTheme(theme);
+  closeColours = () => {
+    this.colouring = false;
+  };
 
   get harvestLabel(): string {
     return `Harvest timer: ${this.harvestSwitch.on ? 'on' : 'off'}`;
@@ -184,29 +170,11 @@ export default class SettingsMenu extends Component {
           <button
             type="button"
             class="setting"
-            aria-expanded={{if this.terminalTheming "true" "false"}}
+            aria-haspopup="dialog"
             data-test-setting
             data-test-terminal-theme-open
-            {{on "click" this.openTerminalTheming}}
+            {{on "click" this.openColours}}
           >Terminal colours</button>
-          {{#if this.terminalTheming}}
-            <fieldset class="setting-choices" data-test-terminal-themes>
-              <legend class="visually-hidden">Terminal colours</legend>
-              {{#each TERMINAL_CHOICES key="theme" as |choice|}}
-                <label class="setting-choice">
-                  <input
-                    type="radio"
-                    name="terminal-theme"
-                    value={{choice.theme}}
-                    checked={{eq this.terminal.theme choice.theme}}
-                    data-test-terminal-theme={{choice.theme}}
-                    {{on "change" (fn this.themeTerminal choice.theme)}}
-                  />
-                  {{choice.name}}
-                </label>
-              {{/each}}
-            </fieldset>
-          {{/if}}
           {{#if this.hub.pollStatus}}
             <span
               class="settings-health tone-{{this.hub.pollStatus.tone}}"
@@ -222,6 +190,9 @@ export default class SettingsMenu extends Component {
                 >{{this.hub.pollStatus.when}}</span>{{/if}}</span>
           {{/if}}
         </div>
+      {{/if}}
+      {{#if this.colouring}}
+        <TerminalColours @close={{this.closeColours}} />
       {{/if}}
       {{#if this.harvestSwitch.settingUp}}
         <HarvestSetup />
