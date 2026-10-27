@@ -17,18 +17,33 @@ const LOOK_EVERY_MS = 500;
 const LOOK_FOR_MS = 15_000;
 const RETRY_EVERY_MS = 1000;
 
+export type TerminalTheme = 'system' | 'light' | 'dark';
+
+export const TERMINAL_THEMES: TerminalTheme[] = ['system', 'light', 'dark'];
+
+const REMEMBERED_THEME = 'terminal-theme';
+
+const LIGHT_SYSTEM = window.matchMedia('(prefers-color-scheme: light)');
+
 function colours(): Colours {
   const style = getComputedStyle(document.documentElement);
+  const read = (name: string) => style.getPropertyValue(name).trim();
   return {
-    ground: style.getPropertyValue('--tty-ground').trim(),
-    text: style.getPropertyValue('--tty-text').trim(),
-    cursor: {
-      light: style.getPropertyValue('--tty-cursor-light').trim(),
-      lightText: style.getPropertyValue('--tty-cursor-light-text').trim(),
-      dark: style.getPropertyValue('--tty-cursor-dark').trim(),
-      darkText: style.getPropertyValue('--tty-cursor-dark-text').trim(),
+    light: {
+      ground: read('--tty-light-ground'),
+      text: read('--tty-light-text'),
     },
+    dark: { ground: read('--tty-dark-ground'), text: read('--tty-dark-text') },
   };
+}
+
+function recalledTheme(): TerminalTheme {
+  try {
+    const kept = localStorage.getItem(REMEMBERED_THEME);
+    return TERMINAL_THEMES.find((one) => one === kept) ?? 'system';
+  } catch {
+    return 'system';
+  }
 }
 
 export default class TerminalService extends Service {
@@ -39,10 +54,42 @@ export default class TerminalService extends Service {
   @tracked private held: Record<string, Session[]> = {};
   @tracked private chosen: Record<string, string> = {};
   @tracked reach: Reach = 'unknown';
+  @tracked theme: TerminalTheme = recalledTheme();
+  @tracked private systemLight = LIGHT_SYSTEM.matches;
 
   private looking: number | null = null;
   private retrying: number | null = null;
   private awaiting: string | null = null;
+
+  constructor(...args: ConstructorParameters<typeof Service>) {
+    super(...args);
+    LIGHT_SYSTEM.addEventListener('change', this.followSystem);
+  }
+
+  get light(): boolean {
+    return this.theme === 'system' ? this.systemLight : this.theme === 'light';
+  }
+
+  chooseTheme(theme: TerminalTheme): void {
+    this.theme = theme;
+    this.repaint();
+    try {
+      localStorage.setItem(REMEMBERED_THEME, theme);
+    } catch {
+      return;
+    }
+  }
+
+  private followSystem = (event: MediaQueryListEvent): void => {
+    this.systemLight = event.matches;
+    this.repaint();
+  };
+
+  private repaint(): void {
+    for (const sessions of Object.values(this.held)) {
+      for (const one of sessions) one.paint(this.light);
+    }
+  }
 
   get sessions(): Session[] {
     const pr = this.here.pr;
@@ -136,6 +183,7 @@ export default class TerminalService extends Service {
 
   willDestroy(): void {
     super.willDestroy();
+    LIGHT_SYSTEM.removeEventListener('change', this.followSystem);
     this.stopLooking();
     this.stopRetrying();
   }
@@ -203,7 +251,13 @@ export default class TerminalService extends Service {
   }
 
   private connect(listed: TerminalSession): Session {
-    return new Session(listed, this.addressOf(listed.id), colours(), this.lost);
+    return new Session(
+      listed,
+      this.addressOf(listed.id),
+      colours(),
+      this.light,
+      this.lost,
+    );
   }
 
   private addressOf(id: string): string {

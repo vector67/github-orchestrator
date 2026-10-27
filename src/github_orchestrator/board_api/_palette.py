@@ -11,12 +11,10 @@ RED = "#dc3f4b"
 GREY_TINT = "#f4f4f4"
 FLAG_GROUND = "#3a3a3a"
 
-TTY_GROUND = "#0d0d0d"
-TTY_TEXT = "#e6e6e6"
-TTY_CURSOR_LIGHT = "#657b83"
-TTY_CURSOR_LIGHT_TEXT = "#eee8d5"
-TTY_CURSOR_DARK = "#839496"
-TTY_CURSOR_DARK_TEXT = "#073642"
+TTY_LIGHT_GROUND = WHITE
+TTY_LIGHT_TEXT = "#1a1a1a"
+TTY_DARK_GROUND = "#0d0d0d"
+TTY_DARK_TEXT = "#e6e6e6"
 
 
 def channels(colour: str) -> tuple[int, int, int]:
@@ -102,12 +100,10 @@ class Palette:
     syntax_title: str
     syntax_type: str
     syntax_name: str
-    tty_ground: str
-    tty_text: str
-    tty_cursor_light: str
-    tty_cursor_light_text: str
-    tty_cursor_dark: str
-    tty_cursor_dark_text: str
+    tty_light_ground: str
+    tty_light_text: str
+    tty_dark_ground: str
+    tty_dark_text: str
 
 
 LIGHT = Palette(
@@ -163,12 +159,10 @@ LIGHT = Palette(
     syntax_title="#6639ba",
     syntax_type="#953800",
     syntax_name="#116329",
-    tty_ground=TTY_GROUND,
-    tty_text=TTY_TEXT,
-    tty_cursor_light=TTY_CURSOR_LIGHT,
-    tty_cursor_light_text=TTY_CURSOR_LIGHT_TEXT,
-    tty_cursor_dark=TTY_CURSOR_DARK,
-    tty_cursor_dark_text=TTY_CURSOR_DARK_TEXT,
+    tty_light_ground=TTY_LIGHT_GROUND,
+    tty_light_text=TTY_LIGHT_TEXT,
+    tty_dark_ground=TTY_DARK_GROUND,
+    tty_dark_text=TTY_DARK_TEXT,
 )
 
 DARK_PAGE = over(WHITE, 0.06, BLACK)
@@ -230,10 +224,8 @@ DARK = Palette(
     syntax_title="#d2a8ff",
     syntax_type="#ffa657",
     syntax_name="#7ee787",
-    tty_ground=TTY_GROUND,
-    tty_text=TTY_TEXT,
-    tty_cursor_light=TTY_CURSOR_LIGHT,
-    tty_cursor_light_text=TTY_CURSOR_LIGHT_TEXT,
-    tty_cursor_dark=TTY_CURSOR_DARK,
-    tty_cursor_dark_text=TTY_CURSOR_DARK_TEXT,
+    tty_light_ground=TTY_LIGHT_GROUND,
+    tty_light_text=TTY_LIGHT_TEXT,
+    tty_dark_ground=TTY_DARK_GROUND,
+    tty_dark_text=TTY_DARK_TEXT,
 )

@@ -13,22 +13,33 @@ const ENCODER = new TextEncoder();
 const MONO =
   '"MesloLGS Nerd Font Mono", "MesloLGS NF", ui-monospace, SFMono-Regular, Menlo, "Symbols Nerd Font Mono", monospace';
 
-const LIGHT_SYSTEM = window.matchMedia('(prefers-color-scheme: light)');
-
-function cursorOf({ cursor }: Colours, light: boolean) {
-  return light
-    ? { cursor: cursor.light, cursorAccent: cursor.lightText }
-    : { cursor: cursor.dark, cursorAccent: cursor.darkText };
-}
+const DEFAULT_GROUND = 'default';
 
 function leaving(event: KeyboardEvent): boolean {
   return event.ctrlKey && event.shiftKey && event.key === 'ArrowLeft';
 }
 
-export interface Colours {
+export interface Scheme {
   ground: string;
   text: string;
-  cursor: { light: string; lightText: string; dark: string; darkText: string };
+}
+
+export interface Colours {
+  light: Scheme;
+  dark: Scheme;
+}
+
+function rgbOf(packed: number): string {
+  return `rgb(${(packed >> 16) & 255}, ${(packed >> 8) & 255}, ${packed & 255})`;
+}
+
+function mostOf(tally: Map<string, number>): string {
+  let most = DEFAULT_GROUND;
+  let highest = 0;
+  for (const [ground, count] of tally) {
+    if (count > highest) [most, highest] = [ground, count];
+  }
+  return most;
 }
 
 function bytesOf(binary: string): Uint8Array<ArrayBuffer> {
@@ -62,26 +73,24 @@ export class Session {
 
   private readonly lost: () => void;
   private readonly colours: Colours;
-
-  private readonly followSystem = (event: MediaQueryListEvent): void => {
-    const theme = this.screen.options.theme;
-    if (!theme?.background) return;
-    this.screen.options.theme = {
-      ...theme,
-      ...cursorOf(this.colours, event.matches),
-    };
-  };
+  private light: boolean;
+  private edge: string | null = null;
+  private host: HTMLElement | null = null;
+  private sampling = false;
+  private readonly palette = new Map<number, string>();
 
   constructor(
     listed: TerminalSession,
     address: string,
     colours: Colours,
+    light: boolean,
     lost: () => void,
   ) {
     this.listed = listed;
     this.address = address;
     this.lost = lost;
     this.colours = colours;
+    this.light = light;
     this.element.className = 'tty-screen';
     this.screen = new Terminal({
       cursorBlink: true,
@@ -89,10 +98,10 @@ export class Session {
       fontSize: 12,
       scrollback: 5000,
       screenReaderMode: true,
-      theme: this.themeOf(colours),
+      theme: this.themeOf(),
     });
     this.screen.loadAddon(this.fit);
-    LIGHT_SYSTEM.addEventListener('change', this.followSystem);
+    this.screen.onRender(() => this.sampleSoon());
     this.socket = this.connect(address);
     this.screen.onData((typed) => this.send(ENCODER.encode(typed)));
     this.screen.onBinary((typed) => this.send(bytesOf(typed)));
@@ -126,6 +135,8 @@ export class Session {
 
   mount(into: HTMLElement, leave: () => void): void {
     this.leave = leave;
+    this.host = into;
+    this.paintHost();
     into.appendChild(this.element);
     if (!this.opened) {
       this.screen.open(this.element);
@@ -139,13 +150,78 @@ export class Session {
     if (this.opened && this.element.isConnected) this.fit.fit();
   }
 
-  private themeOf(colours: Colours) {
-    if (!colours.ground || !colours.text) return {};
+  paint(light: boolean): void {
+    this.light = light;
+    this.palette.clear();
+    this.screen.options.theme = this.themeOf();
+  }
+
+  private themeOf() {
+    const { ground, text } = this.light
+      ? this.colours.light
+      : this.colours.dark;
+    if (!ground || !text) return {};
     return {
-      background: colours.ground,
-      foreground: colours.text,
-      ...cursorOf(colours, LIGHT_SYSTEM.matches),
+      background: this.edge ?? ground,
+      foreground: text,
+      cursor: text,
+      cursorAccent: ground,
     };
+  }
+
+  private sampleSoon(): void {
+    if (this.sampling) return;
+    this.sampling = true;
+    requestAnimationFrame(() => {
+      this.sampling = false;
+      const edge = this.edgeOfScreen();
+      if (edge === this.edge) return;
+      this.edge = edge;
+      this.screen.options.theme = this.themeOf();
+      this.paintHost();
+    });
+  }
+
+  private paintHost(): void {
+    if (this.host) this.host.style.backgroundColor = this.edge ?? '';
+  }
+
+  private edgeOfScreen(): string | null {
+    const buffer = this.screen.buffer.active;
+    const { cols, rows } = this.screen;
+    const tally = new Map<string, number>();
+    const count = (x: number, y: number) => {
+      const cell = buffer.getLine(buffer.viewportY + y)?.getCell(x);
+      if (!cell) return;
+      const ground = cell.isBgRGB()
+        ? rgbOf(cell.getBgColor())
+        : cell.isBgPalette()
+          ? this.paletteColour(cell.getBgColor())
+          : DEFAULT_GROUND;
+      tally.set(ground, (tally.get(ground) ?? 0) + 1);
+    };
+    for (let x = 0; x < cols; x++) {
+      count(x, 0);
+      count(x, rows - 1);
+    }
+    for (let y = 1; y < rows - 1; y++) {
+      count(0, y);
+      count(cols - 1, y);
+    }
+    const most = mostOf(tally);
+    return most === DEFAULT_GROUND ? null : most;
+  }
+
+  private paletteColour(index: number): string {
+    const known = this.palette.get(index);
+    if (known) return known;
+    const probe = document.createElement('span');
+    probe.className = `xterm-bg-${index}`;
+    this.screen.element?.querySelector('.xterm-rows')?.appendChild(probe);
+    const colour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    this.palette.set(index, colour);
+    return colour;
   }
 
   private connect(address: string): WebSocket {
@@ -192,7 +268,6 @@ export class Session {
 
   close(): void {
     this.leaving = true;
-    LIGHT_SYSTEM.removeEventListener('change', this.followSystem);
     this.screen.dispose();
     this.element.remove();
   }

@@ -51,7 +51,8 @@ TYPE_ON_GROUND = (
     ("a file header", "--diff-text", "--diff-file"),
     ("a note", "--diff-note-text", "--diff-note"),
     ("a diff error", "--diff-error", "--diff-ground"),
-    ("the terminal's type", "--tty-text", "--tty-ground"),
+    ("the terminal's type when light", "--tty-light-text", "--tty-light-ground"),
+    ("the terminal's type when dark", "--tty-dark-text", "--tty-dark-ground"),
     *(
         (f"{token} code on {where}", f"--syntax-{token}", ground)
         for token in ("keyword", "string", "comment", "constant", "title",

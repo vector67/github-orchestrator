@@ -31,8 +31,7 @@ PAGE_VARIABLES = (
     "link", "green",
     "green_fill", "green_text", "grey", "mark", "grey_fill", "red", "red_fill", "red_text", "flag",
     "ready_ground", "ready_text", "ready_muted", "ready_edge", "selected", "range_highlight",
-    "tty_ground", "tty_text", "tty_cursor_light", "tty_cursor_light_text",
-    "tty_cursor_dark", "tty_cursor_dark_text",
+    "tty_light_ground", "tty_light_text", "tty_dark_ground", "tty_dark_text",
 )
 
 

@@ -13,6 +13,7 @@ const HARVEST_TIMER = 'harvest-timer';
 const COMMIT_SIZING = 'commit-box-sizing';
 const COMMIT_NOTES = 'commit-notes-dismissed';
 const SKIP_MERGES = 'commit-skip-merges';
+const TERMINAL_THEME = 'terminal-theme';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
@@ -25,6 +26,7 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(COMMIT_SIZING);
     localStorage.removeItem(COMMIT_NOTES);
     localStorage.removeItem(SKIP_MERGES);
+    localStorage.removeItem(TERMINAL_THEME);
   });
 }
 

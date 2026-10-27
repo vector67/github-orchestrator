@@ -131,6 +131,46 @@ module('Acceptance | terminal', function (hooks) {
     assert.strictEqual(board().socketsOf('shell-1').length, 1);
   });
 
+  test('the border around the screen takes the background the program paints at its edges', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const border = () =>
+      getComputedStyle(find('[data-test-screen] .tty-host')!).backgroundColor;
+    const plain = border();
+
+    board().print('shell-1', '\x1b[48;2;1;2;3m\x1b[2J');
+    await waitUntil(() => border() === 'rgb(1, 2, 3)', { timeout: 3000 });
+    assert.ok(true, 'the border took the colour the program cleared with');
+
+    board().print('shell-1', '\x1b[0m\x1b[2J');
+    await waitUntil(() => border() === plain, { timeout: 3000 });
+    assert.ok(true, 'and went back once the program cleared in the default');
+  });
+
+  test('the terminal is light or dark as the settings menu says, System until you pick, kept in this browser', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const system = matchMedia('(prefers-color-scheme: light)').matches
+      ? 'light'
+      : 'dark';
+
+    await click('[data-test-settings-open]');
+    await click('[data-test-terminal-theme-open]');
+
+    assert.dom('[data-test-terminal-theme="system"]').isChecked();
+    assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', system);
+
+    await click('[data-test-terminal-theme="light"]');
+    assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', 'light');
+    assert.strictEqual(localStorage.getItem('terminal-theme'), 'light');
+
+    await click('[data-test-terminal-theme="dark"]');
+    assert.dom('[data-test-screen]').hasAttribute('data-tty-theme', 'dark');
+    assert.strictEqual(localStorage.getItem('terminal-theme'), 'dark');
+  });
+
   test('Esc inside the terminal goes to the shell and leaves you on the tab', async function (assert) {
     onTheHub();
     board().terminalSessions = [SHELL];

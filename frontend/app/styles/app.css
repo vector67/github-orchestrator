@@ -3928,8 +3928,13 @@ kbd {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  color: var(--tty-text);
-  background: var(--tty-ground);
+  color: var(--tty-dark-text);
+  background: var(--tty-dark-ground);
+}
+
+.tty[data-tty-theme="light"] {
+  color: var(--tty-light-text);
+  background: var(--tty-light-ground);
 }
 
 .tty[data-fullscreen] {
@@ -3949,7 +3954,7 @@ kbd {
   line-height: 1.4;
   cursor: pointer;
   color: inherit;
-  background: var(--tty-ground);
+  background: inherit;
   border: 1px solid currentcolor;
   border-radius: 4px;
   opacity: 0.6;
@@ -3977,6 +3982,7 @@ kbd {
 .tty-host {
   flex: 1;
   min-height: 0;
+  padding: 10px 14px;
 }
 
 .tty-screen {

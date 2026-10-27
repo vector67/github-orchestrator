@@ -163,6 +163,7 @@ export default class TerminalTab extends Component {
       <section
         class="tty"
         data-fullscreen={{if this.fullscreen "true"}}
+        data-tty-theme={{if this.terminal.light "light" "dark"}}
         data-test-screen
       >
         {{#if this.fullscreen}}
