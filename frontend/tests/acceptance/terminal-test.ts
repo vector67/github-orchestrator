@@ -383,7 +383,9 @@ module('Acceptance | terminal', function (hooks) {
     });
     await visit('/pr/o/r/7/dashboard');
 
-    assert.dom('[data-test-your-move]').hasText('Next Decide 1 fix');
+    assert
+      .dom('[data-test-your-move]')
+      .hasText('Next 1 comment · agents finished');
     assert.dom('[data-test-your-move] [data-test-rebase]').doesNotExist();
   });
 

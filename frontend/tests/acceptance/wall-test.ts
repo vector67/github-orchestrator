@@ -184,7 +184,7 @@ module('Acceptance | wall', function (hooks) {
         `${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title], ${lead} .meta`,
       ),
       [
-        'Decide 1 fix',
+        '1 comment · agents finished',
         'human threads, 0 of 1 done',
         'Tidy the importer',
         '#8 · your PR · tidy',
@@ -487,7 +487,7 @@ module('Acceptance | wall', function (hooks) {
       'Release the worktree',
       'On hold',
       'On hold',
-      'Decide 2 fixes',
+      '3 comments · agents in progress',
       'Send your review',
       'Re-review',
       'Agent is carrying on',
@@ -507,7 +507,7 @@ module('Acceptance | wall', function (hooks) {
         'Waiting on the author',
         'Waiting on the author',
         'Agent is fixing 3 human threads',
-        'Decide 2 bot fixes',
+        '2 bot comments · agents finished',
         'Agent is fixing 1 bot thread',
         'Address changes from bob, carol',
         'Waiting on carol to re-review',
@@ -931,7 +931,7 @@ module('Acceptance | wall', function (hooks) {
 
     await visit('/');
 
-    assert.deepEqual(verbsOf([7]), ['Decide 1 fix']);
+    assert.deepEqual(verbsOf([7]), ['1 comment · agents finished']);
     assert.deepEqual(chips('o/r#7'), [
       'CI failing',
       'conflicts with main',

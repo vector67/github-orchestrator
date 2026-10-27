@@ -303,6 +303,11 @@ function fixes(count: number): string {
   return count === 1 ? '1 fix' : `${count} fixes`;
 }
 
+function commentsOf(tally: Tally, noun: string): string {
+  const agents = tally.agentOn ? 'agents in progress' : 'agents finished';
+  return `${plural(tally.toDecide + tally.agentOn, noun)} · ${agents}`;
+}
+
 function moveOf(shown: ShownPr, summaries: Summaries): string {
   const { threads, agent } = shown.drawn.system;
   const { move, human, bot } = summaries;
@@ -315,11 +320,11 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'address-feedback':
       return `Address changes from ${listed(move.reviewers)}`;
     case 'human-comments':
-      return `Decide ${fixes(human.toDecide)}`;
+      return commentsOf(human, 'comment');
     case 'agent-on-human-comments':
       return `Agent is fixing ${plural(human.agentOn, 'human thread')}`;
     case 'bot-comments':
-      return `Decide ${fixes(bot.toDecide).replace(' ', ' bot ')}`;
+      return commentsOf(bot, 'bot comment');
     case 'agent-on-bot-comments':
       return `Agent is fixing ${plural(bot.agentOn, 'bot thread')}`;
     case 'send-review':

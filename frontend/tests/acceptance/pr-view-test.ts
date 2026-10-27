@@ -82,7 +82,10 @@ module('Acceptance | pr view', function (hooks) {
     assert.dom('[data-test-pr-title]').hasText('#7 PROJ-7 · Fix the widget');
     assert
       .dom('[data-test-pr-heading] + [data-test-your-move]')
-      .hasText('Next Decide 1 fix', 'the move counts the thread the page read');
+      .hasText(
+        'Next 1 comment · agents finished',
+        'the move counts the thread the page read',
+      );
     assert.deepEqual(texts('[data-test-tab]'), [
       'Summary 1',
       'Board 2',
@@ -433,7 +436,7 @@ module('Acceptance | pr view', function (hooks) {
       'the switcher’s rows take the edge the rail’s rows draw',
     );
     assert.deepEqual(texts('[data-test-switcher-row] [data-test-verb]'), [
-      'Decide 1 fix',
+      '1 comment · agents finished',
       'Waiting on reviewers carol',
       'On hold',
     ]);
@@ -493,7 +496,7 @@ module('Acceptance | pr view', function (hooks) {
     await click('[data-test-switcher-open]');
 
     assert.deepEqual(texts('[data-test-switcher-row] [data-test-verb]'), [
-      'Decide 1 fix',
+      '1 comment · agents finished',
       'Waiting on reviewers carol',
       'On hold',
     ]);

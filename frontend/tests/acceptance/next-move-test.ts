@@ -513,8 +513,8 @@ module('Acceptance | next move', function (hooks) {
   });
 
   for (const [name, kind, move, verb] of [
-    ['human', 'human', 'human-comments', 'Decide 2 fixes'],
-    ['bot', 'bot', 'bot-comments', 'Decide 2 bot fixes'],
+    ['human', 'human', 'human-comments', '2 comments · agents finished'],
+    ['bot', 'bot', 'bot-comments', '2 bot comments · agents finished'],
   ] as const) {
     test(`comments waiting on you come before failing CI: ${name}`, async function (assert) {
       const shown = await seen({
@@ -533,6 +533,23 @@ module('Acceptance | next move', function (hooks) {
         shown.computed.startsWith('PR state: Fix CI'),
         'what the pull request wants sits beneath',
       );
+    });
+  }
+
+  for (const [name, kind, verb] of [
+    ['human', 'human', '2 comments · agents in progress'],
+    ['bot', 'bot', '2 bot comments · agents in progress'],
+  ] as const) {
+    test(`comments waiting on you say an agent is still on one of them: ${name}`, async function (assert) {
+      const shown = await seen({
+        facts: CI_FAILING,
+        threads: [
+          row('PRRT_1', 'ready', 'open', kind),
+          row('PRRT_2', 'working', 'open', kind),
+        ],
+      });
+
+      assert.strictEqual(shown.verb, verb);
     });
   }
 
