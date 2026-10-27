@@ -1175,6 +1175,33 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
+  test("someone else's pull request offers Take over, which T takes over", async function (assert) {
+    onTheHub({ facts: { is_author: false } });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="take-over"]')
+      .hasText('Take over ⇧T')
+      .hasAttribute('title', /\w/);
+
+    await press('T');
+
+    assert.deepEqual(verbs(), ['take-over']);
+  });
+
+  test('only a pull request known to be someone else’s offers Take over', async function (assert) {
+    for (const is_author of [true, null]) {
+      onTheHub({ facts: { is_author } });
+      await visit('/pr/o/r/7/dashboard');
+
+      assert.dom('[data-test-control="take-over"]').doesNotExist();
+
+      await press('T');
+
+      assert.deepEqual(verbs(), []);
+    }
+  });
+
   test('a pull request that is not your draft offers no Ready for review', async function (assert) {
     for (const facts of [{ draft: false }, { draft: true, is_author: false }]) {
       onTheHub({ facts });

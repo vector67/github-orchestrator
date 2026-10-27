@@ -218,6 +218,29 @@ def test_a_pr_never_polled_can_still_be_closed(detection):
     assert detection.tracked() == [(THE_PR)]
 
 
+def test_taking_over_someone_elses_pr_makes_you_its_author_at_once(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    detection.take_over(THE_PR)
+
+    assert detection.facts(THE_PR).is_author is True
+
+
+def test_a_pr_you_took_over_stays_yours_through_later_polls(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+
+    detection.advance(THE_PR, poll(pr_state(author="hubot", mergeable_state="dirty")), set())
+
+    assert detection.facts(THE_PR).is_author is True
+
+
+def test_taking_over_a_pr_never_polled_knows_nothing_of_it(detection):
+    detection.take_over(THE_PR)
+
+    assert detection.facts(THE_PR) is None
+
+
 def test_a_forgotten_pr_is_no_longer_known(detection):
     detection.advance(THE_PR, poll(), set())
 

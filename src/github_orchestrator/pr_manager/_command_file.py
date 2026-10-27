@@ -24,6 +24,7 @@ class Command(StrEnum):
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
     MARK_READY = "mark-ready"
+    TAKE_OVER = "take-over"
 
 
 @dataclass(frozen=True)

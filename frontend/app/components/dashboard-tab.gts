@@ -51,6 +51,7 @@ const KEYED = [
   'carry-on',
   'start-review',
   'mark-ready',
+  'take-over',
   'dismiss',
   'close',
   'git',
@@ -373,6 +374,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   {{on "click" (fn this.press "mark-ready")}}
                 >Ready for review
                   <kbd>{{capOfControl "mark-ready"}}</kbd></button>
+              {{/if}}
+              {{#if (this.offered "take-over")}}
+                <button
+                  type="button"
+                  class="btn"
+                  disabled={{this.heldBack "take-over"}}
+                  title={{this.titleOf "take-over"}}
+                  data-test-control="take-over"
+                  {{on "click" (fn this.press "take-over")}}
+                >Take over
+                  <kbd>{{capOfControl "take-over"}}</kbd></button>
               {{/if}}
               <button
                 type="button"

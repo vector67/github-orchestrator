@@ -10,6 +10,7 @@ from github_orchestrator.change_detection._rules import (
     closing,
     ended,
     is_closing,
+    taking_over,
 )
 from github_orchestrator.change_detection.interface import (
     Facts,
@@ -76,6 +77,11 @@ class FakeChangeDetection:
 
     def close(self, pr: Pr) -> None:
         self._held[pr] = json.dumps(closing(self._last(pr)))
+
+    def take_over(self, pr: Pr) -> None:
+        snapshot = self._last(pr)
+        if snapshot is not None:
+            self._held[pr] = json.dumps(taking_over(snapshot))
 
     def forget(self, pr: Pr) -> bool:
         self._held.pop(pr, None)

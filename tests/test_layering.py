@@ -703,8 +703,8 @@ def test_the_manager_and_a_conversation_offer_only_their_own_methods(role):
 
 
 CHANGE_DETECTION_MEMBERS = frozenset({
-    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "forget",
-    "archive_other_repos",
+    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "take_over",
+    "forget", "archive_other_repos",
 })
 
 

@@ -13,7 +13,6 @@ class PullRequests:
         self._change_detection = change_detection
         self._pr = pr
         self._github = github
-        self._role: str | None = None
 
     def ci_green(self) -> bool | None:
         facts = self._change_detection.facts(self._pr)
@@ -42,12 +41,10 @@ class PullRequests:
         return (facts.title if facts else None) or None
 
     def role(self) -> str | None:
-        if self._role is None:
-            facts = self._facts()
-            is_author = None if facts is None else facts.is_author
-            if is_author is not None:
-                self._role = ROLE_AUTHOR if is_author else ROLE_REVIEWER
-        return self._role
+        facts = self._facts()
+        if facts is None or facts.is_author is None:
+            return None
+        return ROLE_AUTHOR if facts.is_author else ROLE_REVIEWER
 
     def author(self) -> str | None:
         facts = self._facts()

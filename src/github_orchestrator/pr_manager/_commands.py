@@ -101,6 +101,9 @@ class ManagerCommands:
                 self._close()
             case Command.MARK_READY:
                 self._mark_ready()
+            case Command.TAKE_OVER:
+                self._change_detection.take_over(self._config.pr)
+                log.info("%s: taken over — treated as yours from now on", self._config.pr)
 
     def _set_on_hold(self, on_hold: bool) -> None:
         pr = self._config.pr

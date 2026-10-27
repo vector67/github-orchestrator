@@ -347,6 +347,18 @@ def test_a_reviewer_conversation_whose_newest_comment_is_the_openers_is_my_move_
     assert (conversation.standing, conversation.unread) == (ConversationState.READY, True)
 
 
+def test_a_thread_that_arrives_after_you_take_over_the_pr_wants_a_fix_as_on_your_own(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+    here.change_detection.take_over(THE_PR)
+
+    on_github(here.github, "PRRT_two", _comment(id=6001), path="src/app.py", line=30)
+    hear(threads)
+    drain(threads)
+
+    assert len(here.agent_runs.started) == 1
+
+
 def test_a_reviewer_conversation_has_no_fix_to_run(settings):
     here = _here(settings)
 
