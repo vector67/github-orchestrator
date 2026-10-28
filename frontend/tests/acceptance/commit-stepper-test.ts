@@ -21,12 +21,14 @@ import {
   setupFakeBoard,
   thread,
 } from 'frontend/tests/helpers/fake-board';
+import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 
 const FORK = 'ba5e000';
 const FIRST = 'a1a1a1a';
 const SECOND = 'b2b2b2b';
 const THIRD = 'c3c3c3c';
 const COMMIT_SIZING = 'commit-box-sizing';
+const AUTO_READ = 'commit-auto-read';
 
 function pips(): (string | undefined)[] {
   return findAll('[data-test-pip]').map(
@@ -565,5 +567,141 @@ module('Acceptance | commit stepper', function (hooks) {
 
     assert.dom('[data-test-pip]').exists({ count: 3 });
     assert.dom('[data-test-commit-note]').doesNotExist();
+  });
+
+  module('auto read', function (hooks) {
+    const clock = setupFakeClock(hooks);
+
+    function longFirstCommit() {
+      board().diffs['first'] = {
+        base: FORK,
+        head: FIRST,
+        files: [
+          changed(
+            'src/widgets/first.py',
+            Array.from({ length: 200 }, (_, at) => added(at + 1, 'a line')),
+          ),
+        ],
+      };
+    }
+
+    test('auto read is a choice in the settings menu, Off until you pick another, kept in this browser', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-settings-open]');
+      await click('[data-test-auto-read-open]');
+
+      assert.deepEqual(
+        findAll('[data-test-auto-read]').map((one) =>
+          one.parentElement!.textContent.trim(),
+        ),
+        [
+          'Off',
+          'Instantly',
+          'After 2 seconds',
+          'After 5 seconds',
+          'After 10 seconds',
+          'After 30 seconds',
+          'Scrolled to the bottom',
+        ],
+      );
+      assert.dom('[data-test-auto-read="off"]').isChecked();
+
+      await click('[data-test-auto-read="5s"]');
+
+      assert.dom('[data-test-auto-read="5s"]').isChecked();
+      assert.strictEqual(localStorage.getItem(AUTO_READ), '5s');
+    });
+
+    test('Off never marks a commit read on its own', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+
+      await clock().tick(60_000);
+
+      assert.deepEqual(board().readMarks, []);
+    });
+
+    test('Instantly marks the commit read as it opens', async function (assert) {
+      localStorage.setItem(AUTO_READ, 'instant');
+
+      await visit('/pr/o/r/7/diff');
+
+      assert.deepEqual(board().readMarks, [
+        { sha: FIRST, subject: 'Add the widget' },
+      ]);
+      assert.dom('[data-test-read]').isChecked();
+    });
+
+    test('after a delay, the commit is read once you have stayed on it that long', async function (assert) {
+      localStorage.setItem(AUTO_READ, '2s');
+      await visit('/pr/o/r/7/diff');
+
+      await clock().tick(1000);
+
+      assert.deepEqual(board().readMarks, []);
+
+      await clock().tick(1000);
+
+      assert.deepEqual(pips(), ['current', 'unread', 'unread']);
+      assert.deepEqual(board().readMarks, [
+        { sha: FIRST, subject: 'Add the widget' },
+      ]);
+    });
+
+    test('stepping on before the delay leaves the commit unread and starts the count again', async function (assert) {
+      localStorage.setItem(AUTO_READ, '5s');
+      await visit('/pr/o/r/7/diff');
+
+      await clock().tick(4000);
+      await press(']');
+      await clock().tick(4000);
+
+      assert.deepEqual(board().readMarks, []);
+
+      await clock().tick(1000);
+
+      assert.deepEqual(board().readMarks, [
+        { sha: SECOND, subject: 'Name the widget' },
+      ]);
+    });
+
+    test('Scrolled to the bottom marks the commit read once its end is in view', async function (assert) {
+      localStorage.setItem(AUTO_READ, 'bottom');
+      longFirstCommit();
+      await visit('/pr/o/r/7/diff');
+
+      assert.deepEqual(board().readMarks, []);
+
+      const pane = find('[data-test-diff-pane]')!;
+      pane.scrollTop = pane.scrollHeight;
+      await triggerEvent(pane, 'scroll');
+
+      assert.deepEqual(board().readMarks, [
+        { sha: FIRST, subject: 'Add the widget' },
+      ]);
+    });
+
+    test('Scrolled to the bottom marks a commit that fits on screen as it opens', async function (assert) {
+      localStorage.setItem(AUTO_READ, 'bottom');
+
+      await visit('/pr/o/r/7/diff');
+
+      assert.deepEqual(board().readMarks, [
+        { sha: FIRST, subject: 'Add the widget' },
+      ]);
+    });
+
+    test('a commit you untick stays unread while you are on it', async function (assert) {
+      localStorage.setItem(AUTO_READ, 'bottom');
+      longFirstCommit();
+      await visit('/pr/o/r/7/diff');
+      const pane = find('[data-test-diff-pane]')!;
+      pane.scrollTop = pane.scrollHeight;
+      await triggerEvent(pane, 'scroll');
+
+      await click('[data-test-read]');
+      await triggerEvent(pane, 'scroll');
+
+      assert.deepEqual(board().readMarks, []);
+    });
   });
 });

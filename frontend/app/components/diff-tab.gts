@@ -75,6 +75,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
     super.willDestroy();
     this.keys.drop(this.keymap);
     this.keys.drop(this.filesKeymap);
+    this.pullRequestDiff.stopDwelling();
   }
 
   private takes(key: string): boolean {
@@ -228,6 +229,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
     else this.scrollTo(this.args.file);
   };
 
+  scrolled = (event: Event) => {
+    this.pullRequestDiff.reachedBottom(event.currentTarget as HTMLElement);
+  };
+
   private scrollTo(path: string): void {
     this.pane
       ?.querySelector(`[data-path="${CSS.escape(path)}"]`)
@@ -254,6 +259,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         this.pullRequestDiff.anchored
       }}
       {{didChange this.pullRequestDiff.draw this.pullRequestDiff.anchoring}}
+      {{didChange this.pullRequestDiff.dwell this.pullRequestDiff.dwelling}}
       {{didChange this.showLinked this.linked}}
     >
       {{#if this.treeShown}}
@@ -333,6 +339,11 @@ export default class DiffTab extends Component<DiffTabSignature> {
         class="diff-main"
         data-test-diff-pane
         {{didChange this.follow this.scrolling}}
+        {{didChange
+          this.pullRequestDiff.reachedBottom
+          this.pullRequestDiff.shown
+        }}
+        {{on "scroll" this.scrolled}}
       >
         {{#if this.narrow}}
           <div class="diff-files-bar">

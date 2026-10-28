@@ -444,6 +444,7 @@ GitHub, your move, the chips its wall row shows and the settings gear. The PRs
 button opens the switcher, whose first entry is **Wall**. The gear, on the
 wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch,
 **Commit box sizing** for the Diff tab (Full, Minimal or Hidden),
+**Auto read** for marking commits read on their own,
 **Terminal colours** for the Terminal tab and
 the watcher's last poll: a green dot, **Polled successfully** and how long ago,
 or a red dot and what went wrong when polls fail. **N mismatches** is the
@@ -599,6 +600,11 @@ the common ranges. The commits are dots while the pane has room for them, ticks
 when it is narrower, and narrower still the timeline turns vertical: one row
 per commit, oldest on top, with its short sha and subject, and the commit bar
 stays at the top of the pane while you scroll past it.
+
+**Auto read** in the settings gear ticks Read for you: Off (the default),
+Instantly when the commit opens, after 2, 5, 10 or 30 seconds on it, or once
+you scroll to the bottom of its diff. Untick a commit it marked and it stays
+unread while you are on it.
 
 **Commit box sizing** in the settings gear sets how much of this shows. Full is
 all of it; Minimal keeps only the pips; Hidden drops the stepper and shows the

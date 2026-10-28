@@ -5,7 +5,9 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import HarvestSetup from 'frontend/components/harvest-setup';
 import {
+  AUTO_READS,
   COMMIT_SIZINGS,
+  type AutoRead,
   type CommitSizing,
 } from 'frontend/services/commit-box';
 import type CommitBoxService from 'frontend/services/commit-box';
@@ -31,6 +33,21 @@ const SIZINGS = COMMIT_SIZINGS.map((size) => ({
   name: SIZING_NAMES[size],
 }));
 
+const AUTO_READ_NAMES: Record<AutoRead, string> = {
+  off: 'Off',
+  instant: 'Instantly',
+  '2s': 'After 2 seconds',
+  '5s': 'After 5 seconds',
+  '10s': 'After 10 seconds',
+  '30s': 'After 30 seconds',
+  bottom: 'Scrolled to the bottom',
+};
+
+const AUTO_READ_CHOICES = AUTO_READS.map((when) => ({
+  when,
+  name: AUTO_READ_NAMES[when],
+}));
+
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
 export default class SettingsMenu extends Component {
@@ -42,6 +59,7 @@ export default class SettingsMenu extends Component {
 
   @tracked showing = false;
   @tracked sizing = false;
+  @tracked autoReading = false;
   @tracked colouring = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
@@ -67,6 +85,7 @@ export default class SettingsMenu extends Component {
   close = () => {
     this.showing = false;
     this.sizing = false;
+    this.autoReading = false;
     this.keys.drop(this.keymap);
   };
 
@@ -79,6 +98,12 @@ export default class SettingsMenu extends Component {
   };
 
   size = (sizing: CommitSizing) => this.commitBox.choose(sizing);
+
+  openAutoRead = () => {
+    this.autoReading = !this.autoReading;
+  };
+
+  autoRead = (when: AutoRead) => this.commitBox.chooseAutoRead(when);
 
   openColours = () => {
     this.close();
@@ -161,6 +186,32 @@ export default class SettingsMenu extends Component {
                     checked={{eq this.commitBox.sizing choice.size}}
                     data-test-commit-sizing={{choice.size}}
                     {{on "change" (fn this.size choice.size)}}
+                  />
+                  {{choice.name}}
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/if}}
+          <button
+            type="button"
+            class="setting"
+            aria-expanded={{if this.autoReading "true" "false"}}
+            data-test-setting
+            data-test-auto-read-open
+            {{on "click" this.openAutoRead}}
+          >Auto read</button>
+          {{#if this.autoReading}}
+            <fieldset class="setting-choices" data-test-auto-reads>
+              <legend class="visually-hidden">Auto read</legend>
+              {{#each AUTO_READ_CHOICES key="when" as |choice|}}
+                <label class="setting-choice">
+                  <input
+                    type="radio"
+                    name="commit-auto-read"
+                    value={{choice.when}}
+                    checked={{eq this.commitBox.autoRead choice.when}}
+                    data-test-auto-read={{choice.when}}
+                    {{on "change" (fn this.autoRead choice.when)}}
                   />
                   {{choice.name}}
                 </label>

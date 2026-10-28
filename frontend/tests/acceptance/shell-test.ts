@@ -120,7 +120,7 @@ module('Acceptance | shell', function (hooks) {
   });
 
   for (const page of ['/pr/o/r/7/conversations', '/']) {
-    test(`on ${page} a gear opens the settings menu, which holds the theme, the Harvest timer, commit box sizing and the terminal's colours, and closes on Escape`, async function (assert) {
+    test(`on ${page} a gear opens the settings menu, which holds the theme, the Harvest timer, commit box sizing, auto read and the terminal's colours, and closes on Escape`, async function (assert) {
       await visit(page);
       const before = currentURL();
 
@@ -145,6 +145,7 @@ module('Acceptance | shell', function (hooks) {
             : 'Dark theme',
           'Harvest timer: off',
           'Commit box sizing',
+          'Auto read',
           'Terminal colours',
         ],
       );

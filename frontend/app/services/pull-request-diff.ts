@@ -14,6 +14,7 @@ import { reportError } from 'frontend/data/report';
 import type { Lines } from 'frontend/data/selection';
 import { keyOf } from 'frontend/data/wall';
 import type CommitBoxService from 'frontend/services/commit-box';
+import type { AutoRead } from 'frontend/services/commit-box';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
 import type ReviewService from 'frontend/services/review';
@@ -67,12 +68,25 @@ class PerPr {
 
 const fresh = (scope: PrScope): PerPr => new PerPr(scope);
 
+const afterThisRender = (): Promise<void> => Promise.resolve();
+
+const AUTO_READ_WAITS: Partial<Record<AutoRead, number>> = {
+  '2s': 2_000,
+  '5s': 5_000,
+  '10s': 10_000,
+  '30s': 30_000,
+};
+
 export default class PullRequestDiffService extends Service {
   @service declare here: HereService;
   @service declare store: StoreService;
   @service declare threads: ThreadsService;
   @service declare review: ReviewService;
   @service declare commitBox: CommitBoxService;
+
+  private dwelt: string | null = null;
+  private dwellTimer: ReturnType<typeof setInterval> | null = null;
+  private autoMarked: string | null = null;
 
   private get pr(): PerPr {
     return this.here.scope.of(fresh);
@@ -417,6 +431,58 @@ export default class PullRequestDiffService extends Service {
     this.pr.chosen = sha;
     this.pr.picked = null;
   };
+
+  get dwelling(): string {
+    const sha = this.pr.picked ? '' : (this.stepper?.sha ?? '');
+    return `${keyOf(this.here.at)}@${sha}@${this.commitBox.autoRead}`;
+  }
+
+  dwell = () => {
+    const dwelling = this.dwelling;
+    if (this.dwelt === dwelling) return;
+    this.stopDwelling();
+    this.dwelt = dwelling;
+    this.autoMarked = null;
+    const stepper = this.pr.picked ? null : this.stepper;
+    if (!stepper || stepper.read) return;
+    const when = this.commitBox.autoRead;
+    if (when === 'instant') this.autoMark(stepper.sha);
+    const wait = AUTO_READ_WAITS[when];
+    if (wait === undefined) return;
+    const timer = setInterval(() => {
+      clearInterval(timer);
+      this.autoMark(stepper.sha);
+    }, wait);
+    this.dwellTimer = timer;
+  };
+
+  stopDwelling = () => {
+    if (this.dwellTimer !== null) clearInterval(this.dwellTimer);
+    this.dwellTimer = null;
+    this.dwelt = null;
+  };
+
+  reachedBottom = (pane: HTMLElement) => {
+    if (this.commitBox.autoRead !== 'bottom' || this.pr.picked) return;
+    const stepper = this.stepper;
+    if (!stepper || stepper.read || !this.shown) return;
+    if (pane.scrollTop + pane.clientHeight < pane.scrollHeight - 1) return;
+    this.autoMark(stepper.sha);
+  };
+
+  private autoMark(sha: string): void {
+    if (this.autoMarked === sha) return;
+    this.autoMarked = sha;
+    void waitForPromise(this.autoMarking(sha));
+  }
+
+  private async autoMarking(sha: string): Promise<void> {
+    await afterThisRender();
+    this.pr.chosen = sha;
+    await this.store
+      .markRead(this.here.at, sha, true)
+      .catch((trouble) => reportError('mark a commit read', trouble));
+  }
 
   tick = (marked: boolean) => {
     const stepper = this.stepper;
