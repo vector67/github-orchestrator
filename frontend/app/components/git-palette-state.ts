@@ -1,5 +1,6 @@
 import { tracked } from '@glimmer/tracking';
 import type { GitRun } from 'frontend/data/api';
+import type { Pressing } from 'frontend/data/decisions';
 import {
   FORCE_PUSH,
   isValidPrefix,
@@ -18,7 +19,7 @@ interface Ran {
 
 interface PaletteHands {
   run(keys: string): Promise<Tried<GitRun>>;
-  running(): boolean;
+  pressing(): Pressing | null;
   openInTerminal(keys: string, line: string): Promise<void>;
   say(text: string, tone: 'done' | 'failed'): void;
   opened(keymap: Keymap): void;
@@ -41,11 +42,11 @@ export default class GitPaletteState {
   constructor(private readonly hands: PaletteHands) {}
 
   get running(): boolean {
-    return this.hands.running();
+    return Boolean(this.hands.pressing()?.pressed);
   }
 
   get ring(): boolean {
-    return this.running && Boolean(this.chosen?.ring);
+    return Boolean(this.hands.pressing()?.ring);
   }
 
   get isOpen(): boolean {

@@ -757,6 +757,7 @@ interface PrWrite extends Carrying {
   until?: (facts: PrFacts) => boolean;
   leaves?: boolean;
   unsent?: string;
+  ringsOn?: string[];
 }
 
 const PR_WRITES = {
@@ -829,7 +830,12 @@ const PR_WRITES = {
     slot: 'read',
     unsent: 'Not marked unread',
   },
-  git: { doing: 'running git', square: null, slot: 'git' },
+  git: {
+    doing: 'running git',
+    square: null,
+    slot: 'git',
+    ringsOn: ['f', 'p', 'pra'],
+  },
   'open-session': {
     doing: 'opening the session',
     square: null,
@@ -916,6 +922,11 @@ function refusalOf(kind: string, reason: string | null): string | null {
   return unsent ? `${unsent}: ${reason}` : reason;
 }
 
+function ringsFor(kind: string, on: string | null): boolean {
+  if (carryingOf(kind)?.ring) return true;
+  return on !== null && Boolean(prWriteOf(kind)?.ringsOn?.includes(on));
+}
+
 export function pressedBy(write: Written | null | undefined): Pressed {
   const kind = write?.kind ?? '';
   const pressed = write?.state === 'sent' ? kind : null;
@@ -924,7 +935,7 @@ export function pressedBy(write: Written | null | undefined): Pressed {
     pressed,
     doing: pressed && doingOf(carryingOf(pressed)?.doing ?? pressed),
     pending: pressed && inFlight(pressed),
-    ring: pressed !== null && Boolean(carryingOf(pressed)?.ring),
+    ring: pressed !== null && ringsFor(pressed, write?.body ?? null),
     refused: refused ? refusalOf(kind, write.reason ?? null) : null,
     code: refused ? (write.reason_code ?? null) : null,
   };

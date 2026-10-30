@@ -1305,6 +1305,7 @@ export default class StoreService extends Service {
       'git',
       () => posted<GitRun>(path, null, { keys }),
       'manager git',
+      keys,
     );
     if (!taken.done) return taken;
     this.drop(pr, local);
