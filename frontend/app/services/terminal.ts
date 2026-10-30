@@ -152,17 +152,17 @@ export default class TerminalService extends Service {
   private async going(key: string, worktree: string | null): Promise<void> {
     const pr = this.here.pr;
     await this.refresh();
-    if (pr === null || worktree === null || this.selectIn(worktree)) return;
-    this.toasts.say(
-      'The session this comment expected is not in the Terminal tab; checking what happened',
-      'failed',
-    );
+    if (pr === null || (worktree !== null && this.selectIn(worktree))) return;
     const checked = await this.store.checkSession(pr, key);
     if (!checked.done) {
       this.toasts.say(checked.why, 'failed');
     } else if (checked.body === null) {
       this.toasts.say(
-        'No session was running, so the comment is back where it was before the session opened',
+        'The session this comment expected is not running; the board checked and found none',
+        'failed',
+      );
+      this.toasts.say(
+        'The comment is back where it was before the session opened',
         'done',
       );
     } else {

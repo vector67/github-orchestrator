@@ -769,7 +769,6 @@ export class FakeBoard {
   mentions: Mentions = { searched_at: null, mentions: [] };
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
-  sessionFoundOnCheck: TerminalSession | null = null;
   sessionGoneTo: Conversation | null = null;
   opensOutside = false;
   opensLater = false;
@@ -1740,15 +1739,8 @@ export class FakeBoard {
   }
 
   private checkSession(key: string): Response {
-    if (this.sessionFoundOnCheck) {
-      this.terminalSessions = [
-        ...this.terminalSessions,
-        this.sessionFoundOnCheck,
-      ];
-    }
-    const directory = this.proposals[key]?.[0]?.directory;
     const running = this.terminalSessions.find(
-      (one) => one.worktree === directory,
+      (one) => one.worktree === `/wt/thread-${key}`,
     );
     const before = this.conversations.find((one) => one.key === key)!;
     const after = running ? before : (this.sessionGoneTo ?? before);

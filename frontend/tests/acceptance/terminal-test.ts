@@ -322,9 +322,8 @@ module('Acceptance | terminal', function (hooks) {
       .hasAttribute('aria-current', 'true');
   });
 
-  test('a Session open conversation whose session is gone says so, checks, and puts the comment back where it was', async function (assert) {
+  test('a Session open conversation whose session is gone says so and puts the comment back where it was', async function (assert) {
     board().conversations = [board().threadIn('session', { key: 'k1' })];
-    board().proposals['k1'] = [proposal({ directory: '/wt/thread-k1' })];
     board().terminalSessions = [SHELL];
     board().sessionGoneTo = board().threadIn('proposed', { key: 'k1' });
     await visit('/pr/o/r/7/conversations/k1');
@@ -338,22 +337,19 @@ module('Acceptance | terminal', function (hooks) {
       ['k1'],
     );
     assert.deepEqual(texts('[data-test-toast]'), [
-      'The session this comment expected is not in the Terminal tab; checking what happened',
-      'No session was running, so the comment is back where it was before the session opened',
+      'The session this comment expected is not running; the board checked and found none',
+      'The comment is back where it was before the session opened',
     ]);
     await visit('/pr/o/r/7/conversations/k1');
     assert.dom('[data-test-go-to-session]').doesNotExist();
   });
 
-  test('a session the page missed but the board still runs is opened once the check finds it', async function (assert) {
+  test('a Session open conversation with no proposal to name its worktree is led to the session the board finds for it', async function (assert) {
     board().conversations = [board().threadIn('session', { key: 'k1' })];
-    board().proposals['k1'] = [proposal({ directory: '/wt/thread-k1' })];
-    board().terminalSessions = [SHELL];
-    board().sessionFoundOnCheck = {
-      id: 'claude-k1',
-      argv: ['claude'],
-      worktree: '/wt/thread-k1',
-    };
+    board().terminalSessions = [
+      { id: 'claude-k1', argv: ['claude'], worktree: '/wt/thread-k1' },
+      SHELL,
+    ];
     await visit('/pr/o/r/7/conversations/k1');
 
     await click('[data-test-go-to-session]');
@@ -362,6 +358,7 @@ module('Acceptance | terminal', function (hooks) {
     assert
       .dom('[data-test-session="claude-k1"]')
       .hasAttribute('aria-current', 'true');
+    assert.dom('[data-test-toast]').doesNotExist();
   });
 
   test('on the hub a Terminal tab whose hub stops answering says so', async function (assert) {
