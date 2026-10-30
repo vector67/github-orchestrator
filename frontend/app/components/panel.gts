@@ -123,7 +123,10 @@ const PanelView: TOC<PanelSignature> = <template>
             </h2>
           {{/if}}
           {{#if @panel.in_session}}
-            <GoToSession @directory={{@panel.fix_directory}} />
+            <GoToSession
+              @conversation={{@panel.id}}
+              @directory={{@panel.fix_directory}}
+            />
           {{/if}}
           {{#if @panel.banner}}
             <aside

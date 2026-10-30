@@ -5,7 +5,7 @@ import type RouterService from '@ember/routing/router-service';
 import type TerminalService from 'frontend/services/terminal';
 
 export interface GoToSessionSignature {
-  Args: { directory: string | null };
+  Args: { conversation: string; directory: string | null };
 }
 
 export default class GoToSession extends Component<GoToSessionSignature> {
@@ -13,10 +13,10 @@ export default class GoToSession extends Component<GoToSessionSignature> {
   @service declare terminal: TerminalService;
 
   go = async (): Promise<void> => {
-    const { directory } = this.args;
+    const { conversation, directory } = this.args;
     const { terminal } = this;
     await this.router.transitionTo('terminal');
-    if (directory) terminal.selectIn(directory);
+    await terminal.goTo(conversation, directory);
   };
 
   <template>

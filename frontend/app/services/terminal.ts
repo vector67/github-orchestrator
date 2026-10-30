@@ -139,10 +139,37 @@ export default class TerminalService extends Service {
     if (pr !== null) this.chosen = { ...this.chosen, [keyOf(pr)]: id };
   };
 
-  selectIn = (worktree: string): void => {
+  selectIn = (worktree: string): boolean => {
     const found = this.sessions.find((one) => one.listed.worktree === worktree);
     if (found) this.select(found.id);
+    return found !== undefined;
   };
+
+  goTo(key: string, worktree: string | null): Promise<void> {
+    return waitForPromise(this.going(key, worktree));
+  }
+
+  private async going(key: string, worktree: string | null): Promise<void> {
+    const pr = this.here.pr;
+    await this.refresh();
+    if (pr === null || worktree === null || this.selectIn(worktree)) return;
+    this.toasts.say(
+      'The session this comment expected is not in the Terminal tab; checking what happened',
+      'failed',
+    );
+    const checked = await this.store.checkSession(pr, key);
+    if (!checked.done) {
+      this.toasts.say(checked.why, 'failed');
+    } else if (checked.body === null) {
+      this.toasts.say(
+        'No session was running, so the comment is back where it was before the session opened',
+        'done',
+      );
+    } else {
+      await this.refresh();
+      this.select(checked.body);
+    }
+  }
 
   refresh(): Promise<string[]> {
     return waitForPromise(this.refreshed());
