@@ -68,6 +68,7 @@ export type Move =
   | 'request-reviewers'
   | 'mark-ready-for-review'
   | 'await-rerequest'
+  | 'await-ready'
   | 'mention'
   | 'mentioned';
 
@@ -208,6 +209,7 @@ const WAITING: Move[] = [
   'await-author',
   'await-rerequest',
   'await-rereview',
+  'await-ready',
 ];
 
 const BEFORE_ANYTHING: Move[] = [
@@ -323,6 +325,7 @@ function notReviewing(facts: PrFacts): Pick {
 function ofReviewer(facts: PrFacts): Pick {
   const reviewed = reviewedBefore(facts);
   if (facts.viewer_requested) {
+    if (facts.draft) return { move: 'await-ready' };
     return { move: reviewed ? 'rereview' : 'review' };
   }
   if (!reviewed) return notReviewing(facts);
