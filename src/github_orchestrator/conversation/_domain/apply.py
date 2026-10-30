@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SessionGone,
     SetCommitVerdict,
     StartSession,
     StepDone,
@@ -70,6 +71,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ROLE_AUTHOR,
     ROLE_REVIEWER,
     RUNNING,
+    SESSION_GONE,
     WAITING_ON_REVIEWER,
     WITHDRAWN,
     Anchor,
@@ -578,6 +580,17 @@ def _session_refused(conversation: Conversation,
                               decision_error=command.reason))
 
 
+def _session_gone(conversation: Conversation) -> Accepted:
+    fix = conversation.fix
+    if fix.session_from is not None:
+        back = with_fix(conversation, state=fix.session_from)
+    elif fix.commits:
+        back = with_fix(conversation, state=PROPOSED)
+    else:
+        back = with_fix(conversation, state=FAILED, reason=SESSION_GONE)
+    return Accepted(with_fix(back, session_from=None, decision_error=SESSION_GONE))
+
+
 def _fail_or_retry(conversation: Conversation, reason: str, at: str | None,
                    effects: tuple[Any, ...] = ()) -> Accepted:
     if conversation.fix.attempts < MAX_ATTEMPTS:
@@ -792,7 +805,8 @@ def _start_session(conversation: Conversation, command: StartSession) -> Accepte
     brief = (Brief(note=command.steer, pointed=command.pointed, include=command.include)
              if command.pointed or command.include else fix.run.brief)
     return Accepted(
-        with_fix(conversation, state=IN_SESSION, decision_error=None),
+        with_fix(conversation, state=IN_SESSION, session_from=fix.state,
+                 decision_error=None),
         (CutWorkspace(), OpenSession(back_to=fix.state, steer=command.steer,
                                      skipped=fix.state == DECLINED, brief=brief)),
     )
@@ -1109,6 +1123,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _fail_or_retry(conversation, command.reason, at)
         case SessionRefused():
             return _session_refused(conversation, command)
+        case SessionGone():
+            return _session_gone(conversation)
         case RunStarted():
             return _run_started(conversation, command)
         case RunExited():

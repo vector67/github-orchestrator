@@ -206,6 +206,7 @@ LANDED = "landed"
 ABSENT = "absent"
 
 WITHDRAWN = "stopped before it finished"
+SESSION_GONE = "the session ended without reporting back"
 
 FILE = "file"
 PICK = "pick"
@@ -339,6 +340,7 @@ class Fix:
     ticket_key: str | None = None
     ticket_url: str | None = None
     file_error: str | None = None
+    session_from: str | None = None
 
     @property
     def is_proposed(self) -> bool:

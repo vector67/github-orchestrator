@@ -17,6 +17,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SessionGone,
     StartSession,
     Stop,
     Unpark,
@@ -39,6 +40,7 @@ from github_orchestrator.conversation._domain.conversation import (
     RESOLVED,
     RUN_KINDS,
     RUNNING,
+    SESSION_GONE,
     WAITING_ON_REVIEWER,
     WAKE_PUSH_PREFIX,
     WITHDRAWN,
@@ -410,8 +412,9 @@ def _sync_fix(operations: list[Operation], after: Conversation,
     if index is None:
         return
     synced = _synced(operations[index], after, at)
-    if isinstance(command, SessionRefused):
-        synced = replace(synced, state=OperationState.REFUSED, reason=command.reason,
+    if isinstance(command, SessionRefused | SessionGone):
+        reason = command.reason if isinstance(command, SessionRefused) else SESSION_GONE
+        synced = replace(synced, state=OperationState.REFUSED, reason=reason,
                          reason_code=ReasonCode.AGENT_UNAVAILABLE,
                          settled_at=_settled_at(operations[index], OperationState.REFUSED,
                                                 at))

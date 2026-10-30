@@ -1797,6 +1797,14 @@ class TerminalSessionList(BaseModel):
     sessions: list[TerminalSession] = Field(description="Oldest first.")
 
 
+class SessionCheck(BaseModel):
+    session: str | None = Field(
+        description="The id of the terminal session still running in the "
+                    "thread's worktree, or null when none is and the thread "
+                    "has been put back where it was before the session opened.")
+    conversation: Conversation = Field(description="The thread after the check.")
+
+
 class DismissRequest(BaseModel):
     until: DismissUntil = Field(
         description="How long the pull request stays dismissed: until its "

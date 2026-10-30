@@ -353,6 +353,31 @@ def test_a_session_started_on_a_proposal_is_in_session(stage):
     assert session.steer == "look at the callers"
 
 
+def test_a_session_found_gone_puts_the_fix_back_where_it_was(stage):
+    threads = _commented(stage)
+    propose(stage, threads, KEY)
+    stage.agent_runs.pr_processes.open(THE_PR, Path(WORKTREE))
+    with threads.editing(KEY) as editable:
+        editable.start_session(steer="look at the callers")
+    drain(threads)
+
+    with threads.editing(KEY) as editable:
+        editable.session_gone()
+
+    assert _standing(threads) is ConversationState.READY
+
+
+def test_a_session_found_gone_on_a_fix_not_in_session_is_denied(stage):
+    threads = _commented(stage)
+    propose(stage, threads, KEY)
+
+    with threads.editing(KEY) as editable:
+        denied = editable.session_gone()
+
+    assert isinstance(denied, Denied)
+    assert _standing(threads) is ConversationState.READY
+
+
 def test_a_stopped_run_leaves_the_fix_for_the_operator(stage):
     threads = _commented(stage)
     start_run(stage, threads, finishes=False)

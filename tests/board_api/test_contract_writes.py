@@ -7,6 +7,7 @@ from github_orchestrator.conversation import Classification, ConversationState
 from github_orchestrator.github import CommentKind
 from github_orchestrator.github.fake import FakeGitHub, GhError
 from github_orchestrator.notifications.fake import FakeNotifications
+from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.board_api.support import (
     ACCOUNT,
@@ -374,6 +375,50 @@ def test_start_session_hands_the_session_the_lines_it_was_pointed_at(ready):
 
     [opened] = ready.stage.agent_runs.sessions
     assert [one.text for one in opened.fix.pointed] == ["here"]
+
+
+def _in_session(board):
+    board.stage.agent_runs.pr_processes.open(THE_PR, Path(WORKTREE))
+    settled_by(board, "start-session")
+
+
+def _checked(board):
+    return client_of(board).post(f"/api/conversations/{KEY}/operations:check-session")
+
+
+def test_check_session_puts_a_thread_whose_session_is_gone_back_where_it_was(ready):
+    _in_session(ready)
+
+    answer = _checked(ready)
+
+    assert answer.status_code == 200
+    assert answer.json()["session"] is None
+    assert answer.json()["conversation"]["state"] == "ready"
+    assert ready.threads.get(KEY).standing is ConversationState.READY
+
+
+def test_check_session_answers_the_session_still_running_in_the_threads_worktree():
+    sessions = FakeTerminalSessions()
+    steered = board_on(fake_threads(FakeGitHub(account=ACCOUNT), clock=at(NOW)),
+                       sessions=sessions)
+    heard_on(steered, KEY)
+    proposed(steered)
+    [proposal] = client_of(steered).get(f"/api/conversations/{KEY}/proposals").json()
+    _in_session(steered)
+    running_there = sessions.start(proposal["directory"], ["claude"])
+
+    answer = _checked(steered)
+
+    assert answer.status_code == 200
+    assert answer.json()["session"] == running_there
+    assert steered.threads.get(KEY).standing is ConversationState.IN_SESSION
+
+
+def test_check_session_refuses_a_thread_with_no_session_open(ready):
+    answer = _checked(ready)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "nothing-in-flight"
 
 
 def test_open_shell_opens_a_login_shell_in_the_threads_own_worktree(ready):

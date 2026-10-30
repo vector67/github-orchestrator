@@ -842,6 +842,11 @@ export interface SendReviewRequest {
   body?: string | null;
 }
 
+export interface SessionCheck {
+  session: string | null;
+  conversation: Conversation;
+}
+
 export interface SessionOperation {
   id: string;
   conversation: string | null;

@@ -525,6 +525,7 @@ def _migrated(version: int, document: Document) -> Document:
         "ticket_key": document.get("ticket_key"),
         "ticket_url": document.get("ticket_url"),
         "file_error": document.get("file_error"),
+        "session_from": document.get("session_from"),
         "verdict": _verdict(document),
         "verdict_for": document.get("verdict_for"),
         "verdict_asked_for": document.get("verdict_asked_for"),
