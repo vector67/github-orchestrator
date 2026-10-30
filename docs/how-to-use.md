@@ -572,10 +572,14 @@ theme** pick what each mode draws in (Default, Solarized, Tokyo Night, Monokai,
 One, Gruvbox, Catppuccin, Dracula or Nord). The choices are kept in this
 browser.
 
-A session lives as long as the page's connection to it. Moving between tabs or
-PRs keeps it; reloading or closing the browser tab ends it. One started from
-the palette or the board waits 30 seconds for the page to connect. Each
-connection is sent the session's last megabyte of output first.
+A session outlives the page: it lives as long as its command. Moving between
+tabs or PRs, reloading or closing the browser tab leaves it running, and the
+page reattaches when the board lists it again. One started from the tab's own
+list, the git palette, **Rebase on main** or the comment box's **Ask** ends if
+no page connects within 30 seconds. A thread's **Steer it yourself** session
+and **Open a shell** wait however long the page takes, since the board opens
+them after it answers. Each connection is sent the session's last megabyte of
+output first.
 
 **Diff** steps through the pull request one commit at a time. A bar over the
 files reads **Commit N of M** with the commit's sha, subject, author and age,
@@ -834,8 +838,12 @@ the machine's own setting.
 
 Outcomes arrive as a toast: a black bar at the top right for about four seconds,
 one when the board queues a decision, one when that decision lands, and one when
-an agent finishes and a row moves into Ready for you. Failures never go there —
-the banner under the header keeps those.
+an agent finishes and a row moves into Ready for you. Most refusals stay off the
+toasts and say why in red on what you pressed, as below. A failure toasts only when that place cannot say it: a held control you
+press anyway gives its reason, a refused Close or Dismiss, a session from the
+git palette that did not open, and a **Go to the session** whose session is no
+longer running, with a second toast that the comment is back where it was. The
+banner under the header says when the board cannot be reached.
 
 While a decision is on its way, the button you pressed says what it is doing,
 the other buttons wait, and the footer, the thread's row and its card in the diff
