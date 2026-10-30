@@ -143,7 +143,7 @@ def test_a_queued_reset_whose_record_cannot_be_written_does_not_run_and_the_run_
 
     def queued_onto_a_shelf_that_takes_no_more():
         _queue(manager)
-        shelf_dir.append(next(settings.threads_dir.rglob("state.reset")).parent)
+        shelf_dir.append(next(settings.threads_dir.rglob("state-0.reset")).parent)
         shelf_dir[0].chmod(0o555)
 
     runs = FakeAgentRuns(FakePrProcesses()).script(Outcome())

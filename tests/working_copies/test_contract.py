@@ -512,7 +512,7 @@ def test_a_thread_gets_its_own_worktree_at_the_pr_head(world, pr_worktree, cut):
 
     assert cut.base_sha == Sha(world.head_of(pr_worktree))
     assert cut.head_sha() == cut.base_sha
-    assert world.branch_at(checkout) == f"orchestrator/thread/{PR}/{KEY}"
+    assert world.branch_at(checkout) == f"orchestrator/thread/{PR}/{KEY}-798"
     assert checkout != str(pr_worktree)
 
 
@@ -521,8 +521,8 @@ def test_a_thread_key_that_is_no_file_name_is_encoded_into_its_branch_and_worktr
 ):
     cut = pr_checkout.workspace("MDI0/UmV2=", None).ensure().workspace
 
-    assert world.branch_at(cut.path) == f"orchestrator/thread/{PR}/MDI0%2FUmV2%3D"
-    assert cut.path.endswith(f"/{PR}/MDI0%2FUmV2%3D")
+    assert world.branch_at(cut.path) == f"orchestrator/thread/{PR}/MDI0%2FUmV2%3D-3d"
+    assert cut.path.endswith(f"/{PR}/MDI0%2FUmV2%3D-3d")
 
 
 @pytest.mark.parametrize("key", ["", ".", ".."])
@@ -563,7 +563,7 @@ def test_a_dropped_workspace_is_gone(world, pr_worktree, cut):
     assert world.branch_at(cut.path) is None
 
 
-THREAD_BRANCH = f"orchestrator/thread/{PR}/{KEY}"
+THREAD_BRANCH = f"orchestrator/thread/{PR}/{KEY}-798"
 
 
 def test_forgetting_a_pr_takes_its_worktree_its_thread_workspaces_and_their_branches(world, pr_worktree, cut):

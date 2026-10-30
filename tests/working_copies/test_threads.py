@@ -107,7 +107,7 @@ def test_a_workspace_is_cut_off_the_pr_head_on_its_own_branch(
     wt, branch = cut.path, cut.branch
     assert wt == str(thread_worktree(worktrees_dir, THE_PR, THREAD_KEY))
     assert (Path(wt) / "f").read_text() == "base\n"
-    assert branch == f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    assert branch == f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
     assert str(cut.base_sha) == head
     verify = _git(pr_worktree, "rev-parse", "--verify", branch)
     assert verify.returncode == 0
@@ -126,6 +126,15 @@ def test_a_workspace_cut_over_a_stale_one_starts_clean(git, pr_worktree):
     assert not (Path(wt) / "leftover").exists()
     listing = _git(pr_worktree, "worktree", "list", "--porcelain").stdout
     assert listing.count(wt) == 1
+
+
+def test_two_keys_that_differ_only_by_case_are_cut_two_workspaces(git, pr_worktree):
+    upper = _cut(git, pr_worktree, key="PRRT_abcR")
+    lower = _cut(git, pr_worktree, key="PRRT_abcr")
+
+    assert upper.path.lower() != lower.path.lower()
+    assert upper.branch.lower() != lower.branch.lower()
+    assert Path(upper.path).is_dir() and Path(lower.path).is_dir()
 
 
 def test_the_new_worktree_command_initialises_a_workspace_it_just_cut(settings, pr_worktree):
@@ -148,7 +157,7 @@ def test_a_cut_that_failed_leaves_a_branch_the_next_cut_clears(
     git, pr_worktree, worktrees_dir
 ):
     head = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
-    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
 
     worktrees_dir.mkdir(parents=True)
     blocker = worktrees_dir / "acme"

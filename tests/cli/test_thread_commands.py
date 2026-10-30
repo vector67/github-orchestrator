@@ -204,7 +204,7 @@ def test_open_creates_worktree_branch_and_record(pr_worktree, store, threads,
     wt = thread_worktree(store.worktrees, THE_PR, THREAD_KEY)
     assert wt.is_dir()
     assert (wt / "f").read_text() == "1"
-    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
     verify = _git(pr_worktree, "rev-parse", "--verify", branch)
     assert verify.returncode == 0
     assert verify.stdout.strip() == head
@@ -239,7 +239,7 @@ def test_open_on_a_thread_that_already_has_a_record_reopens_it(
         "an intact checkout is the one the agent is working in"
     )
     assert [p.name for p in thread_dir(store.threads, THE_PR).glob("*.json")] == [
-        f"{THREAD_KEY}.json"
+        f"{THREAD_KEY}-f.json"
     ]
     assert _stored(threads).body == "edited comment text"
     listing = _git(pr_worktree, "worktree", "list", "--porcelain").stdout
@@ -337,7 +337,7 @@ def test_open_retries_after_failed_add_left_the_branch_behind(
     pr_worktree, store, threads, body_file, run_cli
 ):
     head = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
-    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
 
     store.worktrees.mkdir(parents=True)
     blocker = store.worktrees / "acme"

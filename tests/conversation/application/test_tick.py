@@ -267,7 +267,7 @@ def test_a_started_run_works_in_a_workspace_cut_off_the_pr_head(settings):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert _started_in(agent_runs) == [_checkout(here)]
-    assert here.working_copies.branches[f"orchestrator/thread/{THE_PR.number}/{KEY}"] == head
+    assert here.working_copies.branches[f"orchestrator/thread/{THE_PR.number}/{KEY}-f"] == head
     assert _read(threads).fix.base_sha == Sha(head)
 
 
