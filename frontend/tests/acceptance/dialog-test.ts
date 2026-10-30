@@ -8,6 +8,7 @@ import {
   triggerEvent,
 } from '@ember/test-helpers';
 import {
+  comment,
   dashboard,
   operation,
   proposal,
@@ -615,6 +616,24 @@ module('Acceptance | dialog', function (hooks) {
       assert.dom('[data-test-commit-file]').doesNotExist();
       assert.dom('[data-test-delete]').doesNotExist();
       assert.dom('[data-test-dialog-submit]').hasText('Post reply');
+    });
+
+    test('shows the comment it answers above the reply box', async function (assert) {
+      board().comments['k1'] = [
+        comment({ id: 1, author: 'anna', body: 'Is the cache ever stale?' }),
+        comment({ id: 2, author: 'octocat', body: 'Looking into it.' }),
+      ];
+      await visit('/pr/o/r/7/conversations/k1');
+
+      await click('[data-test-decision="approve"]');
+
+      assert.dom('[data-test-replying-to]').containsText('Anna Example');
+      assert
+        .dom('[data-test-replying-to]')
+        .containsText('Is the cache ever stale?');
+      assert
+        .dom('[data-test-replying-to]')
+        .doesNotContainText('Looking into it.');
     });
 
     test('posts the reply as you left it, and resolves only when ticked', async function (assert) {

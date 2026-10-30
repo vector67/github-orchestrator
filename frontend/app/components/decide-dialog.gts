@@ -15,6 +15,7 @@ import modal, { focusFirstField } from 'frontend/modifiers/modal';
 import type DialogDraftsService from 'frontend/services/dialog-drafts';
 import type { Held } from 'frontend/services/dialog-drafts';
 import autocomplete from 'frontend/modifiers/autocomplete';
+import CommentBody from 'frontend/components/comment-body';
 
 const focused = modifier((element: HTMLElement) => {
   element.focus();
@@ -369,6 +370,26 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
               class="dialog-kicker"
               data-test-reply-kicker
             >{{this.accepting.reply_kicker}}</p>
+            {{#if this.accepting.replying_to}}
+              <article
+                class="transcript-entry replying-to"
+                data-test-replying-to
+              >
+                <div class="entry-head">
+                  <span class="entry-who">{{if
+                      this.accepting.replying_to.author_name
+                      this.accepting.replying_to.author_name
+                      this.accepting.replying_to.author
+                    }}</span>
+                  {{#if this.accepting.replying_to.meta}}
+                    <span class="entry-meta">
+                      {{this.accepting.replying_to.meta}}
+                    </span>
+                  {{/if}}
+                </div>
+                <CommentBody @body={{this.accepting.replying_to.body}} />
+              </article>
+            {{/if}}
           {{/if}}
           {{#if @agentWords}}
             <button
