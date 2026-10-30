@@ -144,7 +144,11 @@ module('Acceptance | pr diff', function (hooks) {
       const visiting = visit('/pr/o/r/7/diff');
       await waitFor('[data-test-pr-diff]');
 
-      assert.dom('[data-test-fetching]').hasText('fetching…');
+      assert
+        .dom('[data-test-fetching]')
+        .hasText('fetching the branch…')
+        .hasAttribute('data-pending');
+      assert.dom('[data-test-fetching] [data-test-ring]').exists();
       assert.dom('[data-test-pr-diff]').containsText('return rows');
 
       release();
@@ -291,7 +295,7 @@ module('Acceptance | pr diff', function (hooks) {
         .hasAttribute('title', /not pushed yet/);
     });
 
-    test('a fetch git refuses leaves the diff it already drew', async function (assert) {
+    test('a fetch git refuses leaves the diff it already drew and says why where it said fetching', async function (assert) {
       board().refusal = {
         status: 500,
         code: 'git-failed',
@@ -302,6 +306,11 @@ module('Acceptance | pr diff', function (hooks) {
 
       assert.dom('[data-test-pr-diff]').containsText('return rows');
       assert.dom('[data-test-diff-failed]').doesNotExist();
+      assert
+        .dom('[data-test-fetching]')
+        .hasText('Not fetched: git fetch origin feature failed')
+        .hasAttribute('data-refused')
+        .doesNotHaveAttribute('data-pending');
     });
   });
 

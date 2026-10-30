@@ -5,7 +5,7 @@ import type RouterService from '@ember/routing/router-service';
 import type { DismissUntil, GitRun } from 'frontend/data/api';
 import { dismissedSaying, type Dismissal } from 'frontend/data/dashboard';
 import { capOf, leavesThePage, type PrVerb } from 'frontend/data/decisions';
-import { tried, type Tried } from 'frontend/data/tried';
+import type { Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
 import type DashboardService from 'frontend/services/dashboard';
 import type HereService from 'frontend/services/here';
@@ -177,7 +177,8 @@ export function capOfControl(control: Control): string {
 }
 
 export function controlOf(verb: PrVerb | null): Control | null {
-  return verb === 'resume' ? 'hold' : verb;
+  if (verb === 'resume') return 'hold';
+  return (Object.keys(KEYS) as Control[]).find((one) => one === verb) ?? null;
 }
 
 type Command =
@@ -214,7 +215,7 @@ export default class PrControlsService extends Service {
       held: this.dashboard.onTheWall,
       live,
       showing: live ? 'board' : 'hub',
-      pending: Boolean(summary?.pressing.pressed),
+      pending: Boolean(summary?.pressing.controls.pressed),
     };
   }
 
@@ -227,7 +228,7 @@ export default class PrControlsService extends Service {
       held: true,
       live: row.drawn.standing === 'answering',
       showing: 'hub',
-      pending: row.summaries.pressing.pressed !== null,
+      pending: row.summaries.pressing.controls.pressed !== null,
     };
   }
 
@@ -274,10 +275,7 @@ export default class PrControlsService extends Service {
 
   runGit = (on: Controlled, keys: string): Promise<Tried<GitRun>> =>
     waitForPromise(
-      tried(
-        'manager git',
-        this.store.runGit(`${this.prefix(on)}/api/manager/git`, keys),
-      ),
+      this.store.runGit(on.shown, `${this.prefix(on)}/api/manager/git`, keys),
     );
 
   private carryOut(on: Controlled, control: Command): Promise<void> {

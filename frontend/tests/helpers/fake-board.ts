@@ -1496,6 +1496,11 @@ export class FakeBoard {
   private mark(url: string, verb: string, init: RequestInit): Response {
     const body = JSON.parse(init.body as string) as { sha: string };
     this.posted.push({ url, key: '', verb, ifMatch: null, body });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
     const others = this.readMarks.filter((one) => one.sha !== body.sha);
     const subject =
       [...this.commits.commits, ...(this.localCommits?.commits ?? [])].find(

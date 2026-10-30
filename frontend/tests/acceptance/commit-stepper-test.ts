@@ -9,6 +9,7 @@ import {
   settled,
   triggerEvent,
   visit,
+  waitFor,
 } from '@ember/test-helpers';
 import {
   added,
@@ -213,6 +214,48 @@ module('Acceptance | commit stepper', function (hooks) {
 
     assert.deepEqual(board().readMarks, []);
     assert.dom('[data-test-read]').isNotChecked();
+  });
+
+  test('a tick on its way shows the box ticked and pending, the pips as the server has them, until the server keeps it', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    const release = board().hold(
+      /\/api\/pull-request\/read-marks\/operations:mark-read$/,
+    );
+
+    const clicking = click('[data-test-read]');
+    await waitFor('[data-test-read-box][data-pending]');
+
+    assert.dom('[data-test-read]').isChecked();
+    assert.dom('[data-test-read-box]').includesText('marking it read…');
+    assert.dom('[data-test-read-box] [data-test-ring]').doesNotExist();
+    assert.deepEqual(pips(), ['current', 'unread', 'unread']);
+
+    release();
+    await clicking;
+
+    assert.dom('[data-test-read-box]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-read]').isChecked();
+    await press(']');
+    assert.deepEqual(pips(), ['read', 'current', 'unread']);
+  });
+
+  test('a tick the server refuses puts the box back and says why beside it', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    board().refusal = {
+      status: 404,
+      code: 'no-such-commit',
+      detail: 'that commit is not in the pull request',
+    };
+
+    await click('[data-test-read]');
+
+    assert.dom('[data-test-read]').isNotChecked();
+    assert.dom('[data-test-read-box]').hasAttribute('data-refused');
+    assert
+      .dom('[data-test-read-refused]')
+      .hasText('Not marked read: that commit is not in the pull request');
+    assert.dom('[data-test-toast]').doesNotExist();
+    assert.deepEqual(board().readMarks, []);
   });
 
   test('[ and ] still step once the Read box has the focus', async function (assert) {

@@ -5,6 +5,7 @@ export interface GitCommand {
   display: string;
   where: Where;
   takesNumber: boolean;
+  ring: boolean;
 }
 
 function command(
@@ -12,8 +13,9 @@ function command(
   display: string,
   where: Where,
   takesNumber = false,
+  ring = false,
 ): GitCommand {
-  return { keys, display, where, takesNumber };
+  return { keys, display, where, takesNumber, ring };
 }
 
 export const REBASE_ON_MAIN = command(
@@ -23,9 +25,9 @@ export const REBASE_ON_MAIN = command(
 );
 
 export const GIT_COMMANDS: GitCommand[] = [
-  command('f', 'git push --force-with-lease', 'here'),
-  command('p', 'git push', 'here'),
-  command('pra', 'git pull --rebase --autostash', 'here'),
+  command('f', 'git push --force-with-lease', 'here', false, true),
+  command('p', 'git push', 'here', false, true),
+  command('pra', 'git pull --rebase --autostash', 'here', false, true),
   command('s', 'git status', 'here'),
   command('l', 'git log', 'shown'),
   command('d', 'git diff HEAD', 'shown'),

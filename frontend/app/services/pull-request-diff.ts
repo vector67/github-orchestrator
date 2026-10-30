@@ -8,9 +8,9 @@ import {
   postedAt,
   type Placed,
 } from 'frontend/data/anchors';
+import type { Pressing, Pressings } from 'frontend/data/decisions';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
 import { ordered, type Picked, type Timeline } from 'frontend/data/timeline';
-import { reportError } from 'frontend/data/report';
 import type { Lines } from 'frontend/data/selection';
 import { keyOf } from 'frontend/data/wall';
 import type CommitBoxService from 'frontend/services/commit-box';
@@ -35,8 +35,12 @@ export type { DiffSource } from 'frontend/services/store';
 
 export type ResetWhen = 'now' | 'later';
 
+type ResetVerb =
+  'reset-to-origin' | 'queue-reset-to-origin' | 'cancel-reset-to-origin';
+
 export interface ResetControls {
   confirming: ResetWhen | null;
+  pressing: Pressing | null;
   refused: string | null;
   offerLater: boolean;
   standing: ResetStanding | null;
@@ -49,7 +53,6 @@ export interface ResetControls {
 
 class PerPr {
   @tracked failed = false;
-  @tracked fetching = false;
   @tracked source: DiffSource = 'origin';
   @tracked chosen: string | null = null;
   @tracked picked: Picked | null = null;
@@ -59,8 +62,6 @@ class PerPr {
   @tracked stepless = false;
   @tracked unreadable: string | null = null;
   @tracked confirmingReset: ResetWhen | null = null;
-  @tracked resetRefused: string | null = null;
-  @tracked offerLater = false;
   asked: string | null = null;
 
   constructor(readonly scope: PrScope) {}
@@ -96,8 +97,13 @@ export default class PullRequestDiffService extends Service {
     return this.pr.failed;
   }
 
-  get fetching(): boolean {
-    return this.pr.fetching;
+  private get pressing(): Pressings | null {
+    const { repo, number } = this.here.at;
+    return this.store.summary(repo, number)?.pressing ?? null;
+  }
+
+  get fetch(): Pressing | null {
+    return this.pressing?.fetch ?? null;
   }
 
   get source(): DiffSource {
@@ -195,10 +201,13 @@ export default class PullRequestDiffService extends Service {
 
   get reset(): ResetControls {
     const pr = this.pr;
+    const pressing = this.pressing?.reset ?? null;
+    const refused = pr.confirmingReset ? null : (pressing?.refused ?? null);
     return {
       confirming: pr.confirmingReset,
-      refused: pr.resetRefused,
-      offerLater: pr.offerLater,
+      pressing,
+      refused,
+      offerLater: refused !== null && pressing?.code === 'agent-working',
       standing: this.resetStanding,
       ask: this.askReset,
       askLater: this.askResetLater,
@@ -214,8 +223,6 @@ export default class PullRequestDiffService extends Service {
 
   private asked(when: ResetWhen): void {
     this.pr.confirmingReset = when;
-    this.pr.resetRefused = null;
-    this.pr.offerLater = false;
   }
 
   cancelReset = () => {
@@ -225,61 +232,32 @@ export default class PullRequestDiffService extends Service {
   confirmReset = () => {
     const pr = this.pr;
     void waitForPromise(
-      pr.confirmingReset === 'later' ? this.queueing(pr) : this.resetting(pr),
+      this.resetting(
+        pr,
+        pr.confirmingReset === 'later'
+          ? 'queue-reset-to-origin'
+          : 'reset-to-origin',
+      ),
     );
   };
 
   unqueueReset = () => {
-    void waitForPromise(
-      this.store
-        .resetToOrigin(this.here.at, 'cancel-reset-to-origin')
-        .catch((trouble) => reportError('cancel the queued reset', trouble)),
-    );
+    void waitForPromise(this.resetting(this.pr, 'cancel-reset-to-origin'));
   };
 
-  private async queueing(pr: PerPr): Promise<void> {
+  private async resetting(pr: PerPr, verb: ResetVerb): Promise<void> {
+    const at = this.here.at;
+    const taken = await this.store.resetToOrigin(at, verb);
     pr.confirmingReset = null;
-    try {
-      const refused = await this.store.resetToOrigin(
-        this.here.at,
-        'queue-reset-to-origin',
-      );
-      if (pr.scope.left) return;
-      pr.resetRefused = refused ? `Not queued: ${refused.detail}` : null;
-    } catch (trouble) {
-      void reportError('queue a reset to origin', trouble);
-    }
-  }
-
-  private async resetting(pr: PerPr): Promise<void> {
-    pr.confirmingReset = null;
-    const { repo, number } = this.here.at;
-    const head = this.store
-      .pr(repo, number)
-      ?.history.local?.commits.at(-1)?.sha;
-    if (!head) {
-      pr.resetRefused =
-        'Not reset: the page has not read the worktree’s commits yet';
-      return;
-    }
-    try {
-      const refused = await this.store.resetToOrigin(
-        this.here.at,
-        'reset-to-origin',
-        { head },
-      );
-      if (pr.scope.left) return;
-      pr.resetRefused = refused ? `Not reset: ${refused.detail}` : null;
-      pr.offerLater = refused?.code === 'agent-working';
-      if (refused) return;
+    if (!taken.done) return;
+    if (verb === 'reset-to-origin' && !pr.scope.left) {
       await Promise.all([
         this.read('local'),
-        this.store.readPrCommits(this.here.at, 'local'),
-        this.store.readPrCommits(this.here.at, 'origin'),
+        this.store.readPrCommits(at, 'local'),
+        this.store.readPrCommits(at, 'origin'),
       ]);
-    } catch (trouble) {
-      void reportError('reset the worktree to origin', trouble);
     }
+    taken.body();
   }
 
   get whole(): Picked | null {
@@ -479,20 +457,14 @@ export default class PullRequestDiffService extends Service {
   private async autoMarking(sha: string): Promise<void> {
     await afterThisRender();
     this.pr.chosen = sha;
-    await this.store
-      .markRead(this.here.at, sha, true)
-      .catch((trouble) => reportError('mark a commit read', trouble));
+    await this.store.markRead(this.here.at, sha, true);
   }
 
   tick = (marked: boolean) => {
     const stepper = this.stepper;
     if (!stepper) return;
     this.pr.chosen = stepper.sha;
-    void waitForPromise(
-      this.store
-        .markRead(this.here.at, stepper.sha, marked)
-        .catch((trouble) => reportError('mark a commit read', trouble)),
-    );
+    void waitForPromise(this.store.markRead(this.here.at, stepper.sha, marked));
   };
 
   show = (source: DiffSource) => {
@@ -504,22 +476,22 @@ export default class PullRequestDiffService extends Service {
   };
 
   private async fetchingBranch(pr: PerPr): Promise<void> {
-    pr.fetching = true;
-    try {
-      await this.read(pr.source, false);
-      if (pr.scope.left) return;
-      await this.store.hand(this.here.api('/api/pull-request:fetch'));
-      if (pr.scope.left) return;
-      if (pr.source !== 'origin') return;
+    await this.read(pr.source, false);
+    if (pr.scope.left) return;
+    const taken = await this.store.press(
+      this.here.at,
+      'fetch',
+      'fetch the pull request',
+      this.here.api('/api/pull-request:fetch'),
+    );
+    if (!taken.done) return;
+    if (!pr.scope.left && pr.source === 'origin') {
       await Promise.all([
         this.fetched(pr, 'origin'),
         this.readHistory(pr, 'origin'),
       ]);
-    } catch (trouble) {
-      void reportError('fetch the pull request', trouble);
-    } finally {
-      pr.fetching = false;
     }
+    taken.body();
   }
 
   private read(source: DiffSource, revalidate = true) {

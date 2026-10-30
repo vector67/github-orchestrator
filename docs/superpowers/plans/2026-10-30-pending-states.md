@@ -91,6 +91,8 @@ Done when: every manager verb shows pending from the click on both pages, and
 
 ### 5. The diff page: fetch, reset, mark read, git palette
 
+**Done** in the commit that adds this line.
+
 Decisions 3, 4, 6, 7. `pull-request-diff.ts` `fetching` and the reset's wait
 move to the store; the mark-read checkbox shows the ticked value pending;
 the git palette's `running` uses the same look. Fetch, reset and the palette

@@ -18,7 +18,11 @@ import type {
   WallGroupName,
 } from 'frontend/data/api';
 import { edgeOf } from 'frontend/data/dashboard';
-import { pressingOf, type Pressing } from 'frontend/data/decisions';
+import {
+  pressingOf,
+  type Pressing,
+  type Pressings,
+} from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
@@ -110,7 +114,7 @@ export interface Summaries {
   move: NextMove;
   mismatches: string | null;
   openMentions: string[];
-  pressing: Pressing;
+  pressing: Pressings;
 }
 
 type Threads = Record<string, Thread>;
@@ -138,7 +142,10 @@ function operationsOf(thread: Thread, operations: Operations): Operation[] {
   ) as unknown as Operation[];
 }
 
-function pressedOn(pr: PrEntity | undefined, operations: Operations): Pressing {
+function pressedOn(
+  pr: PrEntity | undefined,
+  operations: Operations,
+): Pressings {
   return pressingOf(
     (pr?.sent ?? []).flatMap((id) => {
       const one = operations[operationKey({ id, conversation: null })];
@@ -1087,6 +1094,8 @@ export interface Stepper {
   author: string;
   authoredAt: string;
   read: boolean;
+  marking: string | null;
+  markRefused: string | null;
   merge: boolean;
   offOrigin: string | null;
   range: DiffRange;
@@ -1238,6 +1247,8 @@ function stepperBuilt(
     author: commit.author,
     authoredAt: commit.authored_at,
     read: read.has(commit.sha),
+    marking: null,
+    markRefused: null,
     merge: isMerge(commit),
     offOrigin: offOriginOf(standingOf(history, pushed), commit.sha),
     range: rangeOf(history, at, at),
@@ -1310,6 +1321,16 @@ export function stepperOf(
     stepper,
   });
   return stepper;
+}
+
+export function tickedOn(stepper: Stepper, mark: Pressing): Stepper {
+  if (mark.on !== stepper.sha) return stepper;
+  return {
+    ...stepper,
+    read: mark.pressed ? mark.pressed === 'mark-read' : stepper.read,
+    marking: mark.pending,
+    markRefused: mark.refused,
+  };
 }
 
 interface Rebased {

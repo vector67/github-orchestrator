@@ -69,7 +69,7 @@ import {
   type StoredOperation,
   type Thread,
 } from 'frontend/data/entities';
-import { isPrVerb, settledBy, type PrVerb } from 'frontend/data/decisions';
+import { settledBy, slotOf, type PrVerb } from 'frontend/data/decisions';
 import {
   abandonUnder,
   fetched,
@@ -109,6 +109,7 @@ import {
   timelineOf,
   summaryOf,
   summaryTabOf,
+  tickedOn,
   wallOf,
   type Entered,
   type Outstanding,
@@ -258,6 +259,8 @@ const SUMMARY_MOVED =
   'again; look at it before you press.';
 
 const READ_MARKS = '/api/pull-request/read-marks';
+
+const UNREAD_HEAD = 'the page has not read the worktree’s commits yet';
 
 const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
 
@@ -626,7 +629,7 @@ export default class StoreService extends Service {
     across: number,
   ): Stepper | null | undefined {
     const held = this.pr(pr.repo, pr.number);
-    return (
+    const stepper =
       held &&
       stepperOf(
         held.history[source],
@@ -637,8 +640,9 @@ export default class StoreService extends Service {
         skipMerges,
         source === 'local' ? held.history.origin : undefined,
         across,
-      )
-    );
+      );
+    const mark = this.summary(pr.repo, pr.number)?.pressing.read;
+    return stepper && mark ? tickedOn(stepper, mark) : stepper;
   }
 
   pickedRange(
@@ -990,30 +994,57 @@ export default class StoreService extends Service {
     pr: Numbered,
     verb:
       'reset-to-origin' | 'queue-reset-to-origin' | 'cancel-reset-to-origin',
-    asked?: ResetRequest,
-  ): Promise<Refusal | null> {
-    try {
-      await handed(
-        `${this.here.prefixOf(pr)}/api/pull-request/operations:${verb}`,
-        asked,
-      );
-      const drawn = await this.ask({ kind: 'dashboard', pr }, null);
-      if (drawn.changed) drawn.take();
-      return null;
-    } catch (trouble) {
-      if (trouble instanceof Refusal) return trouble;
-      throw trouble;
-    }
+  ): Promise<Tried<() => void>> {
+    const head =
+      this.pr(pr.repo, pr.number)?.history.local?.commits.at(-1)?.sha ?? null;
+    const asked: ResetRequest | undefined =
+      verb === 'reset-to-origin' && head ? { head } : undefined;
+    const { taken, local } = await this.sendOn(
+      pr,
+      verb,
+      () =>
+        verb === 'reset-to-origin' && !head
+          ? Promise.reject(
+              new Refusal({
+                status: 409,
+                code: 'malformed-request',
+                detail: UNREAD_HEAD,
+              }),
+            )
+          : handed(
+              `${this.here.prefixOf(pr)}/api/pull-request/operations:${verb}`,
+              asked,
+            ),
+      `${verb} the worktree`,
+    );
+    if (!taken.done) return taken;
+    const drawn = await this.ask({ kind: 'dashboard', pr }, null).catch(
+      () => null,
+    );
+    if (drawn?.changed) drawn.take();
+    return { done: true, body: () => this.drop(pr, local) };
   }
 
   async markRead(pr: Numbered, sha: string, marked: boolean): Promise<void> {
     const verb = marked ? 'mark-read' : 'mark-unread';
-    const { marks } = await write<ReadMarks>(
-      `${this.here.prefixOf(pr)}${READ_MARKS}/operations:${verb}`,
-      null,
-      { sha },
+    const { taken, local } = await this.sendOn(
+      pr,
+      verb,
+      () =>
+        write<ReadMarks>(
+          `${this.here.prefixOf(pr)}${READ_MARKS}/operations:${verb}`,
+          null,
+          { sha },
+        ),
+      'mark a commit read',
+      sha,
     );
-    this.changePr(pr.repo, pr.number, (held) => ({ ...held, read: marks }));
+    if (!taken.done) return;
+    this.changePr(pr.repo, pr.number, (held) => ({
+      ...held,
+      read: taken.body.marks,
+    }));
+    this.drop(pr, local);
   }
 
   private readTagged<T>(path: string, take: (body: T) => void): Promise<Read> {
@@ -1169,10 +1200,6 @@ export default class StoreService extends Service {
     this.markSent(pr, null, [...this.sentOn(pr, null), going.id]);
   }
 
-  hand(path: string, body?: unknown): Promise<void> {
-    return handed(path, body);
-  }
-
   async press(
     pr: Numbered,
     verb: PrVerb,
@@ -1180,18 +1207,30 @@ export default class StoreService extends Service {
     path: string,
     body?: unknown,
   ): Promise<Tried<() => void>> {
-    for (const one of this.pressedOn(pr)) this.drop(pr, one);
-    const local = this.hold(pr, this.sending(null, verb, null));
-    const taken = await tried(where, handed(path, body));
-    if (!taken.done) {
-      this.refuse(pr, local, taken.why, taken.code);
-      return taken;
-    }
+    const { taken, local } = await this.sendOn(
+      pr,
+      verb,
+      () => handed(path, body),
+      where,
+    );
+    if (!taken.done) return taken;
     return { done: true, body: () => this.settle(pr, local, true) };
   }
 
-  async runGit(path: string, keys: string): Promise<GitRun> {
-    return (await posted<GitRun>(path, null, { keys })).body;
+  async runGit(
+    pr: Numbered,
+    path: string,
+    keys: string,
+  ): Promise<Tried<GitRun>> {
+    const { taken, local } = await this.sendOn(
+      pr,
+      'git',
+      () => posted<GitRun>(path, null, { keys }),
+      'manager git',
+    );
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    return { done: true, body: taken.body.body };
   }
 
   markSeen(key: string): void {
@@ -1472,8 +1511,24 @@ export default class StoreService extends Service {
     const held = this.operations[keyOf(pr.repo, pr.number)] ?? {};
     return this.sentOn(pr, null).flatMap((id) => {
       const one = held[operationKey({ id, conversation: null })];
-      return one && isPrVerb(one.kind ?? '') ? [one] : [];
+      return one && slotOf(one.kind ?? '') ? [one] : [];
     });
+  }
+
+  private async sendOn<T>(
+    pr: Numbered,
+    verb: PrVerb,
+    asking: () => Promise<T>,
+    where: string,
+    on: string | null = null,
+  ): Promise<{ taken: Tried<T>; local: StoredOperation }> {
+    for (const one of this.pressedOn(pr)) {
+      if (slotOf(one.kind ?? '') === slotOf(verb)) this.drop(pr, one);
+    }
+    const local = this.hold(pr, this.sending(null, verb, on));
+    const taken = await tried(where, asking());
+    if (!taken.done) this.refuse(pr, local, taken.why, taken.code);
+    return { taken, local };
   }
 
   private settle(pr: Numbered, one: StoredOperation, answered: boolean): void {

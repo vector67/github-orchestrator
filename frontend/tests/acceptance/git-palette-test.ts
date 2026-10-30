@@ -1,6 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { currentURL, findAll, triggerEvent, visit } from '@ember/test-helpers';
+import {
+  currentURL,
+  findAll,
+  triggerEvent,
+  visit,
+  waitFor,
+} from '@ember/test-helpers';
 import {
   dashboard,
   heldPr,
@@ -83,6 +89,41 @@ module('Acceptance | git palette', function (hooks) {
       'To github.com:o/r.git',
       'a1b2c3d..e4f5a6b HEAD -> fix',
     ]);
+  });
+
+  test('a push on its way holds the palette pending from Enter, with the ring before what it runs', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/manager\/git$/);
+
+    await press('g', 'p');
+    const pressing = press('Enter');
+    await waitFor('[data-test-palette-foot][data-pending]');
+
+    assert.dom('[data-test-palette-footer]').hasText('running: git push …');
+    assert.dom('[data-test-palette-foot] [data-test-ring]').exists();
+    assert.dom('[data-test-palette-run]').isDisabled();
+
+    release();
+    await pressing;
+
+    assert.dom('[data-test-palette-foot]').doesNotExist();
+    assert.dom('[data-test-git-output-command]').hasText('git push');
+  });
+
+  test('git status on its way is pending with no ring', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/manager\/git$/);
+
+    await press('g', 's');
+    const pressing = press('Enter');
+    await waitFor('[data-test-palette-foot][data-pending]');
+
+    assert.dom('[data-test-palette-foot] [data-test-ring]').doesNotExist();
+
+    release();
+    await pressing;
   });
 
   test('a command that fails shows its exit code as a failure', async function (assert) {
@@ -241,7 +282,8 @@ module('Acceptance | git palette', function (hooks) {
       .dom('[data-test-git-output-status]')
       .hasText(
         'git status did not run: the palette names no command for these keys',
-      );
+      )
+      .hasAttribute('data-refused');
     assert.deepEqual(board().reported, []);
   });
 

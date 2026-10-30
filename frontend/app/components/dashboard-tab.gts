@@ -83,6 +83,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
+    running: () => Boolean(this.summaries?.pressing.git.pressed),
     openInTerminal: async (keys, line) => {
       if (await this.terminal.open(keys, line)) {
         void this.router.transitionTo('terminal');
@@ -167,7 +168,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.offer(control).state !== 'absent';
 
   get pressing(): Pressing | null {
-    return this.summaries?.pressing ?? null;
+    return this.summaries?.pressing.controls ?? null;
   }
 
   get pending(): boolean {

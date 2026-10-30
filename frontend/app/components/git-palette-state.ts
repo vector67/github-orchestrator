@@ -18,6 +18,7 @@ interface Ran {
 
 interface PaletteHands {
   run(keys: string): Promise<Tried<GitRun>>;
+  running(): boolean;
   openInTerminal(keys: string, line: string): Promise<void>;
   say(text: string, tone: 'done' | 'failed'): void;
   opened(keymap: Keymap): void;
@@ -27,7 +28,6 @@ interface PaletteHands {
 export default class GitPaletteState {
   @tracked buffer: string | null = null;
   @tracked forceAsked = false;
-  @tracked running = false;
   @tracked ran: Ran | null = null;
 
   readonly keymap: Keymap = {
@@ -39,6 +39,14 @@ export default class GitPaletteState {
   };
 
   constructor(private readonly hands: PaletteHands) {}
+
+  get running(): boolean {
+    return this.hands.running();
+  }
+
+  get ring(): boolean {
+    return this.running && Boolean(this.chosen?.ring);
+  }
 
   get isOpen(): boolean {
     return this.buffer !== null || this.ran !== null;
@@ -128,7 +136,6 @@ export default class GitPaletteState {
   }
 
   private async runGit(chosen: GitCommand, line: string): Promise<void> {
-    this.running = true;
     const run = await this.hands.run(chosen.keys);
     const ran: Ran = run.done
       ? { command: line, answer: run.body, failed: null }
@@ -137,7 +144,6 @@ export default class GitPaletteState {
           answer: null,
           failed: `${line} did not run: ${run.why}`,
         };
-    this.running = false;
     this.forceAsked = false;
     if (this.buffer === null) {
       this.hands.say(

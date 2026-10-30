@@ -742,42 +742,98 @@ const ENTRIES = {
 
 export type Decision = keyof typeof ENTRIES;
 
+export type Slot = 'controls' | 'fetch' | 'reset' | 'read' | 'git';
+
 interface PrWrite extends Carrying {
+  slot: Slot;
   until?: (facts: PrFacts) => boolean;
   leaves?: boolean;
+  unsent?: string;
 }
 
 const PR_WRITES = {
-  hold: { doing: 'putting it on hold', square: null },
-  resume: { doing: 'resuming the agent', square: null },
-  'carry-on': { doing: 'carrying on', square: null },
-  'start-review': { doing: 'starting a review agent', square: null },
+  hold: { doing: 'putting it on hold', square: null, slot: 'controls' },
+  resume: { doing: 'resuming the agent', square: null, slot: 'controls' },
+  'carry-on': { doing: 'carrying on', square: null, slot: 'controls' },
+  'start-review': {
+    doing: 'starting a review agent',
+    square: null,
+    slot: 'controls',
+  },
   'mark-ready': {
     doing: 'marking it ready for review',
     square: null,
+    slot: 'controls',
     ring: true,
     until: (facts) => !facts.draft,
   },
-  'take-over': { doing: 'taking it over', square: null },
-  dismiss: { doing: 'dismissing it', square: null, leaves: true },
+  'take-over': { doing: 'taking it over', square: null, slot: 'controls' },
+  dismiss: {
+    doing: 'dismissing it',
+    square: null,
+    slot: 'controls',
+    leaves: true,
+  },
   close: {
     doing: 'closing it',
     square: null,
+    slot: 'controls',
     ring: true,
     until: (facts) => facts.ended,
     leaves: true,
   },
-  release: { doing: 'asking for the release', square: null },
+  release: { doing: 'asking for the release', square: null, slot: 'controls' },
+  fetch: {
+    doing: 'fetching the branch',
+    square: null,
+    slot: 'fetch',
+    ring: true,
+    unsent: 'Not fetched',
+  },
+  'reset-to-origin': {
+    doing: 'resetting to origin',
+    square: null,
+    slot: 'reset',
+    ring: true,
+    unsent: 'Not reset',
+  },
+  'queue-reset-to-origin': {
+    doing: 'queueing the reset',
+    square: null,
+    slot: 'reset',
+    unsent: 'Not queued',
+  },
+  'cancel-reset-to-origin': {
+    doing: 'taking the reset off',
+    square: null,
+    slot: 'reset',
+    unsent: 'Not taken off',
+  },
+  'mark-read': {
+    doing: 'marking it read',
+    square: null,
+    slot: 'read',
+    unsent: 'Not marked read',
+  },
+  'mark-unread': {
+    doing: 'marking it unread',
+    square: null,
+    slot: 'read',
+    unsent: 'Not marked unread',
+  },
+  git: { doing: 'running git', square: null, slot: 'git' },
 } satisfies Record<string, PrWrite>;
 
 export type PrVerb = keyof typeof PR_WRITES;
+
+const SLOTS: Slot[] = ['controls', 'fetch', 'reset', 'read', 'git'];
 
 function prWriteOf(kind: string): PrWrite | undefined {
   return (PR_WRITES as Record<string, PrWrite | undefined>)[kind];
 }
 
-export function isPrVerb(kind: string): kind is PrVerb {
-  return prWriteOf(kind) !== undefined;
+export function slotOf(kind: string): Slot | undefined {
+  return prWriteOf(kind)?.slot;
 }
 
 export function leavesThePage(verb: PrVerb): boolean {
@@ -796,32 +852,51 @@ export function settledBy(
 
 export interface Pressing {
   pressed: PrVerb | null;
+  on: string | null;
   doing: string | null;
   pending: string | null;
   ring: boolean;
   refused: string | null;
+  code: string | null;
 }
+
+export type Pressings = Record<Slot, Pressing>;
 
 interface Written {
   kind: string;
   state: string;
   reason: string | null;
+  reason_code?: string | null;
+  body?: string | null;
 }
 
-export function pressingOf(writes: Written[]): Pressing {
-  const write = writes.findLast((one) => local(one) && isPrVerb(one.kind));
+function refusalOf(write: Written): string | null {
+  const unsent = prWriteOf(write.kind)?.unsent;
+  return unsent ? `${unsent}: ${write.reason}` : write.reason;
+}
+
+function pressingIn(writes: Written[], slot: Slot): Pressing {
+  const write = writes.findLast(
+    (one) => local(one) && slotOf(one.kind) === slot,
+  );
   const pressed = write && sent(write) ? (write.kind as PrVerb) : null;
   const refused =
-    write?.state === 'refused' && !prWriteOf(write.kind)?.leaves
-      ? write.reason
-      : null;
+    write?.state === 'refused' && !prWriteOf(write.kind)?.leaves ? write : null;
   return {
     pressed,
+    on: write?.body ?? null,
     doing: pressed && doingOf(PR_WRITES[pressed].doing),
     pending: pressed && inFlight(pressed),
     ring: pressed !== null && Boolean(prWriteOf(pressed)?.ring),
-    refused,
+    refused: refused && refusalOf(refused),
+    code: refused?.reason_code ?? null,
   };
+}
+
+export function pressingOf(writes: Written[]): Pressings {
+  return Object.fromEntries(
+    SLOTS.map((slot) => [slot, pressingIn(writes, slot)]),
+  ) as Pressings;
 }
 
 const CARRIED: Record<

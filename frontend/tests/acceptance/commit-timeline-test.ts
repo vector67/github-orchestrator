@@ -8,6 +8,7 @@ import {
   settled,
   triggerEvent,
   visit,
+  waitFor,
   waitUntil,
 } from '@ember/test-helpers';
 import {
@@ -1639,6 +1640,30 @@ module(
       assert.dom('[data-test-diverged]').doesNotExist();
     });
 
+    test('a reset on its way holds the question pending, with the ring and the word on Reset, until the board answers', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      const release = board().hold(
+        /\/api\/pull-request\/operations:reset-to-origin$/,
+      );
+
+      const clicking = click('[data-test-reset-yes]');
+      await waitFor('[data-test-reset-confirm][data-pending]');
+
+      assert
+        .dom('[data-test-reset-yes]')
+        .hasText('Resetting to origin…')
+        .isDisabled();
+      assert.dom('[data-test-reset-yes] [data-test-ring]').exists();
+      assert.dom('[data-test-reset-no]').isDisabled();
+
+      release();
+      await clicking;
+
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.dom('[data-test-diverged]').doesNotExist();
+    });
+
     test('Cancel leaves the worktree as it is', async function (assert) {
       await openLocal();
       await click('[data-test-reset-to-origin]');
@@ -1665,7 +1690,9 @@ module(
         .dom('[data-test-reset-refused]')
         .hasText(
           'Not reset: the worktree has uncommitted changes, so it was left as it is',
-        );
+        )
+        .hasAttribute('data-refused');
+      assert.dom('[data-test-reset-confirm]').doesNotExist();
       assert.deepEqual(
         dots('pr').map((one) => one.sha),
         [STALE_ONE, STALE_TWO],
@@ -1735,6 +1762,51 @@ module(
       assert.strictEqual(posted('cancel-reset-to-origin'), 1);
       assert.dom('[data-test-reset-queued]').doesNotExist();
       assert.dom('[data-test-reset-to-origin]').exists();
+    });
+
+    test('a Cancel on its way holds the queued reset pending, saying so on Cancel, with no ring', async function (assert) {
+      reviewedWith({
+        queued_at: '2026-10-23T09:00:00Z',
+        ran_at: null,
+        refused: null,
+      });
+      await openLocal();
+      const release = board().hold(
+        /\/api\/pull-request\/operations:cancel-reset-to-origin$/,
+      );
+
+      const clicking = click('[data-test-reset-unqueue]');
+      await waitFor('[data-test-reset-queued][data-pending]');
+
+      assert
+        .dom('[data-test-reset-unqueue]')
+        .hasText('Taking the reset off…')
+        .isDisabled();
+      assert.dom('[data-test-reset-queued] [data-test-ring]').doesNotExist();
+
+      release();
+      await clicking;
+
+      assert.dom('[data-test-reset-queued]').doesNotExist();
+    });
+
+    test('a Cancel that never reaches the board says so on the page, with no toast', async function (assert) {
+      reviewedWith({
+        queued_at: '2026-10-23T09:00:00Z',
+        ran_at: null,
+        refused: null,
+      });
+      await openLocal();
+      board().broken = /operations:cancel-reset-to-origin$/;
+
+      await click('[data-test-reset-unqueue]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText('Not taken off: the board server is not answering')
+        .hasAttribute('data-refused');
+      assert.dom('[data-test-reset-queued]').exists();
+      assert.dom('[data-test-toast]').doesNotExist();
     });
 
     test('once the agent finished the page says the queued reset ran', async function (assert) {

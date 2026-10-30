@@ -152,14 +152,19 @@ export default class CommitBar extends Component<CommitBarSignature> {
                 <span class="commit-sep">·</span>
                 <span class="commit-age">{{this.age}}</span>
               </span>
-              <label class="commit-read">
+              <label
+                class="commit-read"
+                data-pending={{if @stepper.marking "true"}}
+                data-refused={{if @stepper.markRefused "true"}}
+                data-test-read-box
+              >
                 <input
                   type="checkbox"
                   checked={{@stepper.read}}
                   data-test-read
                   {{on "change" this.ticked}}
                 />
-                Read
+                {{if @stepper.marking @stepper.marking "Read"}}
               </label>
               <button
                 type="button"
@@ -202,6 +207,11 @@ export default class CommitBar extends Component<CommitBarSignature> {
         </ol>
       </div>
     </div>
+    {{#if @stepper.markRefused}}
+      <p class="refusal" data-refused="true" data-test-read-refused>
+        {{@stepper.markRefused}}
+      </p>
+    {{/if}}
     {{#if @note}}
       <div class="commit-note-row">
         <p class="commit-note" data-test-commit-note>

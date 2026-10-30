@@ -297,7 +297,10 @@ export default class Wall extends Component<WallSignature> {
                 data-flip-group={{section.group}}
                 data-move={{reading.code}}
                 data-pending={{if (this.pending pr) "true"}}
-                data-refused={{if pr.summaries.pressing.refused "true"}}
+                data-refused={{if
+                  pr.summaries.pressing.controls.refused
+                  "true"
+                }}
                 data-test-wall-row={{keyOf pr}}
               >
                 <button
@@ -329,11 +332,11 @@ export default class Wall extends Component<WallSignature> {
                           class="state-chip tone-accent moved"
                           data-test-moved
                         >moved here</span>{{/if}}{{#if
-                        pr.summaries.pressing.pending
+                        pr.summaries.pressing.controls.pending
                       }}<span class="state-chip" data-test-pending>{{#if
-                            pr.summaries.pressing.ring
+                            pr.summaries.pressing.controls.ring
                           }}<PendingRing
-                            />{{/if}}{{pr.summaries.pressing.pending}}</span>{{/if}}</span><span
+                            />{{/if}}{{pr.summaries.pressing.controls.pending}}</span>{{/if}}</span><span
                       class="age"
                       title={{this.ageHintOf section pr}}
                       data-test-age
@@ -353,11 +356,11 @@ export default class Wall extends Component<WallSignature> {
                       {{reading.whose}}{{/if}}{{#if reading.branch}}
                       ·
                       <span class="mono">{{reading.branch}}</span>{{/if}}</span>
-                  {{#if pr.summaries.pressing.refused}}
+                  {{#if pr.summaries.pressing.controls.refused}}
                     <span
                       class="refusal"
                       data-test-refusal={{keyOf pr}}
-                    >{{pr.summaries.pressing.refused}}</span>
+                    >{{pr.summaries.pressing.controls.refused}}</span>
                   {{/if}}
                   <span id={{says}} class="wall-says">{{#if
                       reading.reason
@@ -367,11 +370,12 @@ export default class Wall extends Component<WallSignature> {
                     }}<span>{{chip.text}}: {{chip.hint}}.</span>{{/each}}{{#if
                       pr.moved
                     }}<span>moved here.</span>{{/if}}{{#if
-                      pr.summaries.pressing.pending
-                    }}<span>{{pr.summaries.pressing.pending}}</span>{{/if}}{{#if
-                      pr.summaries.pressing.refused
+                      pr.summaries.pressing.controls.pending
                     }}<span
-                      >{{pr.summaries.pressing.refused}}.</span>{{/if}}<span
+                      >{{pr.summaries.pressing.controls.pending}}</span>{{/if}}{{#if
+                      pr.summaries.pressing.controls.refused
+                    }}<span
+                      >{{pr.summaries.pressing.controls.refused}}.</span>{{/if}}<span
                     >{{this.ageHintOf section pr}}.</span><span>{{#if
                         this.store.severalReposShown
                       }}{{pr.repo}}{{/if}}#{{pr.number}}{{#if reading.whose}}

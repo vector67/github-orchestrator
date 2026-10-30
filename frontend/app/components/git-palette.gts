@@ -9,6 +9,7 @@ import {
   reachable,
 } from 'frontend/data/git';
 import type GitPaletteState from 'frontend/components/git-palette-state';
+import PendingRing from 'frontend/components/pending-ring';
 
 interface GitPaletteSignature {
   Args: {
@@ -65,7 +66,11 @@ const GitPalette: TOC<GitPaletteSignature> = <template>
                 lines are shown.</p>
             {{/if}}
           {{else}}
-            <span class="git-status failed" data-test-git-output-status><i
+            <span
+              class="git-status failed"
+              data-refused="true"
+              data-test-git-output-status
+            ><i
                 class="sq alarm"
                 data-test-alarm
               ></i>{{@palette.ran.failed}}</span>
@@ -87,8 +92,14 @@ const GitPalette: TOC<GitPaletteSignature> = <template>
         {{/each}}
         <div class="buf" data-test-palette-buffer>&gt; g
           {{@palette.typed}}</div>
-        <div class="foot">
-          <span class="note" data-test-palette-footer>{{@palette.footer}}</span>
+        <div
+          class="foot"
+          data-pending={{if @palette.running "true"}}
+          data-test-palette-foot
+        >
+          <span class="note" data-test-palette-footer>{{#if
+              @palette.ring
+            }}<PendingRing />{{/if}}{{@palette.footer}}</span>
           {{#if @palette.runLabel}}
             <button
               type="button"

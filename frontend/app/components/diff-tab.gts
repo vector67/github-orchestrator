@@ -8,6 +8,7 @@ import CommentBox from 'frontend/components/comment-box';
 import CommitBar from 'frontend/components/commit-bar';
 import CommitTimeline from 'frontend/components/commit-timeline';
 import MergeNote from 'frontend/components/merge-note';
+import PendingRing from 'frontend/components/pending-ring';
 import FileTree from 'frontend/components/file-tree';
 import PrDiff from 'frontend/components/pr-diff';
 import Waiting from 'frontend/components/waiting';
@@ -315,8 +316,19 @@ export default class DiffTab extends Component<DiffTabSignature> {
               {{/if}}
             {{/if}}
           </div>
-          {{#if this.pullRequestDiff.fetching}}
-            <span class="fetching-chip" data-test-fetching>fetching…</span>
+          {{#if this.pullRequestDiff.fetch.pending}}
+            <span
+              class="fetching-chip"
+              data-pending="true"
+              data-test-fetching
+            >{{#if this.pullRequestDiff.fetch.ring}}<PendingRing
+                />{{/if}}{{this.pullRequestDiff.fetch.pending}}</span>
+          {{else if this.pullRequestDiff.fetch.refused}}
+            <span
+              class="fetching-chip"
+              data-refused="true"
+              data-test-fetching
+            >{{this.pullRequestDiff.fetch.refused}}</span>
           {{/if}}
           <input
             type="search"
