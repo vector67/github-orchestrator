@@ -1214,6 +1214,75 @@ module('Acceptance | pr diff', function (hooks) {
       );
     });
 
+    test('Add to review on a card shows it pending, its controls held, until the board answers, then flashes', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      document.documentElement.removeAttribute('data-still');
+      const release = board().hold(/operations:enrol$/);
+
+      const adding = click(
+        '[data-test-card="d1"] [data-test-card-decide="enrol"]',
+      );
+      await waitFor('[data-test-card="d1"][data-pending]');
+
+      assert
+        .dom('[data-test-card="d1"] [data-test-standing]')
+        .hasText('adding it to your review…');
+      assert
+        .dom('[data-test-card="d1"] [data-test-card-decide]')
+        .doesNotExist();
+      assert.dom('[data-test-card="d1"] [data-test-card-edit]').doesNotExist();
+
+      release();
+      await adding;
+
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+      assert.dom('[data-test-card="d1"]').hasAttribute('data-decided');
+    });
+
+    test('a refused Add to review leaves the card as it was and says why on it, with no toast', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      board().refusal = {
+        status: 409,
+        code: 'already-enrolled',
+        detail: 'd1 is enrolled',
+      };
+
+      await click('[data-test-card="d1"] [data-test-card-decide="enrol"]');
+
+      assert.dom('[data-test-card="d1"]').hasAttribute('data-refused');
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+      assert
+        .dom('[data-test-card="d1"] [data-test-refusal]')
+        .includesText('That draft is in your review already');
+      assert.dom('[data-test-card="d1"] [data-test-edit-again]').doesNotExist();
+      assert
+        .dom('[data-test-card="d1"] [data-test-card-decide="enrol"]')
+        .exists();
+      assert.dom('[data-test-toast]').doesNotExist();
+    });
+
+    test('Discard on a card shows it pending until the board answers', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      const release = board().hold(/operations:discard$/);
+
+      const discarding = click(
+        '[data-test-card="d1"] [data-test-card-decide="discard"]',
+      );
+      await waitFor('[data-test-card="d1"][data-pending]');
+
+      assert
+        .dom('[data-test-card="d1"] [data-test-standing]')
+        .hasText('discarding it…');
+      assert
+        .dom('[data-test-card="d1"] [data-test-card-decide]')
+        .doesNotExist();
+
+      release();
+      await discarding;
+
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+    });
+
     test('a draft’s card asks the agent a question about the draft in a new terminal session', async function (assert) {
       await visit('/pr/o/r/7/diff');
 

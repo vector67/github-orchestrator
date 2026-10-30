@@ -50,6 +50,7 @@ const PanelView: TOC<PanelSignature> = <template>
                 <article
                   class="transcript-entry"
                   data-marked={{if entry.highlighted "1"}}
+                  data-pending={{if entry.pending "true"}}
                   data-test-entry
                 >
                   <div class="entry-head">

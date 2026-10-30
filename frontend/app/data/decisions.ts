@@ -677,6 +677,7 @@ const ENTRIES = {
     request: ({ body }) => ({ verb: 'reply', body: { body } }),
     doing: 'replying',
     square: null,
+    pending: true,
   },
   enrol: {
     key: 'e',
@@ -689,6 +690,7 @@ const ENTRIES = {
     savedFirst: true,
     doing: 'adding it to your review',
     square: 'ready',
+    pending: true,
   },
   'post-now': {
     key: 'G',
@@ -720,6 +722,7 @@ const ENTRIES = {
     asks: null,
     doing: 'discarding it',
     square: 'done',
+    pending: true,
   },
   'withdraw-from-review': {
     key: 'l',
@@ -731,6 +734,7 @@ const ENTRIES = {
     asks: null,
     doing: 'leaving it out of your review',
     square: 'ready',
+    pending: true,
   },
 } satisfies Record<string, Entry>;
 

@@ -28,6 +28,7 @@ export interface Inline {
   standing: Standing;
   pending: string | null;
   refused: string | null;
+  retype: boolean;
 }
 
 export interface Inlined {
@@ -77,6 +78,7 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
       standing: standingOf(conversation),
       pending: draft.pending,
       refused: draft.refused,
+      retype: draft.retype,
     };
   }
   return {
@@ -90,6 +92,7 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
     standing: standingOf(conversation),
     pending: null,
     refused: null,
+    retype: false,
   };
 }
 

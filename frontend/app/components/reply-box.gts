@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
-import { tracked } from '@glimmer/tracking';
 import type { ReplyBox } from 'frontend/data/panel';
 import didInsert from 'frontend/modifiers/did-insert';
 import type BoardService from 'frontend/services/board';
@@ -26,8 +25,6 @@ const PARKS =
 export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
   @service declare board: BoardService;
   @service declare composer: ComposerService;
-
-  @tracked sending = false;
 
   get open(): boolean {
     return this.composer.isOpen(this.args.conversationId);
@@ -54,7 +51,7 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
   }
 
   get blocked(): boolean {
-    return this.sending || !this.composer.words.trim();
+    return !this.composer.words.trim();
   }
 
   expand = () => {
@@ -73,19 +70,17 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
     this.composer.words = (event.target as HTMLTextAreaElement).value;
   };
 
-  send = async (event: Event) => {
+  again = () => {
+    this.composer.open(this.args.conversationId);
+    this.composer.words = this.args.reply.refused?.body ?? '';
+  };
+
+  send = (event: Event) => {
     event.preventDefault();
     const words = this.composer.words.trim();
-    if (this.sending || !words) return;
-    this.sending = true;
-    try {
-      const sent = await this.board.decide(this.args.conversationId, 'reply', {
-        body: words,
-      });
-      if (sent) this.composer.close();
-    } finally {
-      this.sending = false;
-    }
+    if (!words) return;
+    this.composer.close();
+    void this.board.decide(this.args.conversationId, 'reply', { body: words });
   };
 
   <template>
@@ -119,6 +114,17 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
         </div>
       </form>
     {{else}}
+      {{#if @reply.refused}}
+        <p class="refusal" data-refused="true" data-test-reply-refused>
+          {{@reply.refused.reason}}
+          <button
+            type="button"
+            class="card-edit"
+            data-test-edit-again
+            {{on "click" this.again}}
+          >Edit again</button>
+        </p>
+      {{/if}}
       <button
         type="button"
         class="reply-open"

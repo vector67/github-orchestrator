@@ -291,9 +291,11 @@ module('Acceptance | drafts', function (hooks) {
 
     await click('[data-test-decision="enrol"]');
 
+    assert.dom('[data-test-composer]').hasAttribute('data-refused');
     assert
-      .dom('[data-test-toast]')
+      .dom('[data-test-draft-note]')
       .containsText("That line is not in the pull request's diff");
+    assert.dom('[data-test-toast]').doesNotExist();
   });
 
   test('a draft is discarded, and brought back from Done', async function (assert) {

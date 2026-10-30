@@ -1,6 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, fillIn, triggerKeyEvent, visit } from '@ember/test-helpers';
+import {
+  click,
+  fillIn,
+  triggerKeyEvent,
+  visit,
+  waitFor,
+} from '@ember/test-helpers';
 import {
   comment,
   setupFakeBoard,
@@ -289,6 +295,54 @@ module('Acceptance | reply', function (hooks) {
     await fillIn(BOX, 'mail me@car');
 
     assert.dom(SUGGESTIONS).doesNotExist();
+  });
+
+  test('Post reply closes the box at once and the thread shows the reply pending until the board answers', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'good catch');
+    const release = board().hold(/operations:reply$/);
+
+    const posting = click('[data-test-reply-send]');
+    await waitFor('[data-test-entry][data-pending]');
+
+    assert.dom(BOX).doesNotExist();
+    assert
+      .dom('[data-test-entry][data-pending] [data-test-entry-body]')
+      .hasText('good catch');
+    assert
+      .dom('[data-test-entry][data-pending] [data-test-entry-meta]')
+      .hasText('replying…');
+
+    release();
+    await posting;
+
+    assert.dom('[data-test-entry][data-pending]').doesNotExist();
+    assert.dom('[data-test-toast]').doesNotExist();
+  });
+
+  test('a refused reply leaves the thread as it was and says why, and Edit again reopens the box with the words', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'good catch');
+    board().refusal = {
+      status: 409,
+      code: 'operation-outstanding',
+      detail: 'something is in flight',
+    };
+
+    await click('[data-test-reply-send]');
+
+    assert.dom('[data-test-entry]').exists({ count: 1 });
+    assert.dom('[data-test-reply-refused]').hasAttribute('data-refused');
+    assert
+      .dom('[data-test-reply-refused]')
+      .includesText('Something is already on its way for this thread');
+    assert.dom('[data-test-toast]').doesNotExist();
+
+    await click('[data-test-reply-refused] [data-test-edit-again]');
+
+    assert.dom(BOX).hasValue('good catch');
   });
 
   test('asking again for the composer already open keeps the words', async function (assert) {

@@ -105,6 +105,7 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
     const refused = this.args.draft?.refused;
     if (refused && !this.locked) return refused;
     if (this.going) return GOING_NOTE;
+    if (this.args.draft?.pending) return this.args.draft.pending;
     if (this.locked) return SAVING_NOTE;
     if (!this.lines) return PICK_A_LINE;
     return this.args.draft?.enrolled ? ENROLLED_NOTE : DRAFT_NOTE;

@@ -53,6 +53,10 @@ export default class InlineCard extends Component<InlineCardSignature> {
     return this.args.edit !== undefined && !this.args.item.locked;
   }
 
+  get retypable(): boolean {
+    return this.editable && this.args.item.retype;
+  }
+
   get draftingLocally(): boolean {
     return this.editable && this.args.item.standing === 'local';
   }
@@ -167,7 +171,7 @@ export default class InlineCard extends Component<InlineCardSignature> {
           {{#if @item.refused}}
             <p class="refusal" data-test-refusal>
               {{@item.refused}}
-              {{#if this.editable}}
+              {{#if this.retypable}}
                 <button
                   type="button"
                   class="card-edit"

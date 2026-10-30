@@ -40,6 +40,7 @@ export interface TranscriptEntry {
   body: string;
   meta: string;
   highlighted: boolean;
+  pending: boolean;
 }
 
 export interface PlanStep {
@@ -71,6 +72,7 @@ export interface ReplyBox {
   threaded: boolean;
   parks: boolean;
   note: string;
+  refused: { reason: string; body: string } | null;
 }
 
 export interface FileStat {
@@ -141,6 +143,7 @@ export interface DraftView {
   posting: boolean;
   pending: string | null;
   refused: string | null;
+  retype: boolean;
 }
 
 export interface Panel {
@@ -333,6 +336,13 @@ const UNREPLIED = ['draft', 'enrolled', 'done'];
 
 const COMPOSED = ['draft', 'enrolled'];
 
+const DRAFT_WRITES: string[] = [
+  'edit-draft',
+  'enrol',
+  'discard',
+  'withdraw-from-review',
+];
+
 function composing(conversation: Conversation): boolean {
   return conversation.kind === 'draft' && COMPOSED.includes(conversation.state);
 }
@@ -343,13 +353,13 @@ export function draftOf(
 ): DraftView | null {
   if (!composing(conversation) || !details) return null;
   const { path, line, start_line, start_side, side } = conversation.anchor;
-  const edit = details.operations.findLast(
-    (one): one is DraftOperation => one.kind === 'edit-draft',
+  const write = details.operations.findLast((one): one is DraftOperation =>
+    DRAFT_WRITES.includes(one.kind),
   );
   const saving =
-    edit !== undefined && outstanding(conversation)?.id === edit.id;
+    write?.kind === 'edit-draft' && outstanding(conversation)?.id === write.id;
   return {
-    body: (saving && edit.body) || (details.comments[0]?.body ?? ''),
+    body: (saving && write.body) || (details.comments[0]?.body ?? ''),
     path: path ?? '',
     line,
     start_line,
@@ -358,8 +368,9 @@ export function draftOf(
     editable: !busy(conversation),
     enrolled: conversation.state === 'enrolled',
     posting: outstanding(conversation)?.kind === 'post-now',
-    pending: saving && sent(edit) ? inFlight(edit.kind) : null,
-    refused: edit?.state === 'refused' ? edit.reason : null,
+    pending: write && sent(write) ? inFlight(write.kind) : null,
+    refused: write?.state === 'refused' ? write.reason : null,
+    retype: write?.kind === 'edit-draft',
   };
 }
 
@@ -531,12 +542,40 @@ export function transcriptOf(
       relative(one.created_at, context.now),
     ),
     highlighted: at === cameBack && at > 0,
+    pending: false,
   }));
+}
+
+function replyingOf(
+  conversation: Conversation,
+  operations: Operation[],
+  context: Context,
+): TranscriptEntry[] {
+  const going = outstanding(conversation);
+  const reply = operations.find((one) => one.id === going?.id);
+  if (reply?.kind !== 'reply' || !reply.body) return [];
+  return [
+    {
+      author: context.viewer,
+      author_name: context.names[context.viewer] ?? '',
+      body: reply.body,
+      meta: inFlight(reply.kind),
+      highlighted: false,
+      pending: sent(reply),
+    },
+  ];
+}
+
+function replyRefused(operations: Operation[]): ReplyBox['refused'] {
+  const last = operations.findLast((one) => one.kind === 'reply');
+  if (last?.kind !== 'reply' || last.state !== 'refused') return null;
+  return { reason: last.reason ?? '', body: last.body };
 }
 
 function replyOf(
   conversation: Conversation,
   comments: Comment[],
+  operations: Operation[],
   context: Context,
 ): ReplyBox | null {
   if (
@@ -550,6 +589,7 @@ function replyOf(
     threaded: conversation.kind === 'review',
     parks: conversation.state === 'ready',
     note: context.role === 'reviewer' ? REVIEWER_REPLY_NOTE : '',
+    refused: replyRefused(operations),
   };
 }
 
@@ -936,7 +976,7 @@ export function panelOf(
   );
   const { proposal } = fix;
   const actions = offered(conversation, context.role, proposal);
-  const reply = replyOf(conversation, comments, context);
+  const reply = replyOf(conversation, comments, operations, context);
   const replyTo = replyToOf(conversation, context);
   const top = {
     id: conversation.key,
@@ -960,7 +1000,10 @@ export function panelOf(
     draft: draftOf(conversation, details),
     transcript: composing(conversation)
       ? []
-      : transcriptOf(conversation, comments, context),
+      : [
+          ...transcriptOf(conversation, comments, context),
+          ...replyingOf(conversation, operations, context),
+        ],
     reply,
     reply_action:
       reply &&
