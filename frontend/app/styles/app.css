@@ -2268,7 +2268,8 @@ button.expander:focus-visible {
   border-style: dashed;
 }
 
-[data-refused] {
+[data-refused],
+.edge[data-refused][data-square] {
   box-shadow: inset 3px 0 0 var(--red);
 }
 

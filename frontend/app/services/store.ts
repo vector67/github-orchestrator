@@ -69,6 +69,7 @@ import {
   type StoredOperation,
   type Thread,
 } from 'frontend/data/entities';
+import { isPrVerb, settledBy, type PrVerb } from 'frontend/data/decisions';
 import {
   abandonUnder,
   fetched,
@@ -1172,6 +1173,23 @@ export default class StoreService extends Service {
     return handed(path, body);
   }
 
+  async press(
+    pr: Numbered,
+    verb: PrVerb,
+    where: string,
+    path: string,
+    body?: unknown,
+  ): Promise<Tried<() => void>> {
+    for (const one of this.pressedOn(pr)) this.drop(pr, one);
+    const local = this.hold(pr, this.sending(null, verb, null));
+    const taken = await tried(where, handed(path, body));
+    if (!taken.done) {
+      this.refuse(pr, local, taken.why, taken.code);
+      return taken;
+    }
+    return { done: true, body: () => this.settle(pr, local, true) };
+  }
+
   async runGit(path: string, keys: string): Promise<GitRun> {
     return (await posted<GitRun>(path, null, { keys })).body;
   }
@@ -1450,6 +1468,19 @@ export default class StoreService extends Service {
     );
   }
 
+  private pressedOn(pr: Numbered): StoredOperation[] {
+    const held = this.operations[keyOf(pr.repo, pr.number)] ?? {};
+    return this.sentOn(pr, null).flatMap((id) => {
+      const one = held[operationKey({ id, conversation: null })];
+      return one && isPrVerb(one.kind ?? '') ? [one] : [];
+    });
+  }
+
+  private settle(pr: Numbered, one: StoredOperation, answered: boolean): void {
+    const facts = this.prs[keyOf(pr.repo, pr.number)]?.facts ?? null;
+    if (settledBy(one.kind ?? '', facts, answered)) this.drop(pr, one);
+  }
+
   private sentOn(pr: Numbered, conversation: string | null): string[] {
     const key = keyOf(pr.repo, pr.number);
     const on =
@@ -1621,6 +1652,9 @@ export default class StoreService extends Service {
             : merged(held.flags, manager, (flags) => flags.changed_at),
       };
     });
+    for (const one of this.pressedOn({ repo, number })) {
+      if (one.state === 'sent') this.settle({ repo, number }, one, false);
+    }
   }
 
   private replayShelf(held: HeldPullRequests): void {

@@ -521,7 +521,12 @@ agents fix CI, rebase and answer its comments, the author's buttons appear, and
 the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
 GitHub. Each button's tooltip says what
-it does, or why it is held back. `cli undismiss --repo <owner/name> <pr>`
+it does, or why it is held back. From the press, by button or key, the band is
+faded, the pressed button says what it is doing and the others wait; Ready for
+review and Close stay that way, with a turning ring, until the dashboard shows
+the PR ready or closed. A command the manager refuses says why on the band, in
+red; a refused Close or Dismiss says so in a toast instead. The wall's rows do
+the same, with the word among the row's chips. `cli undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
 Unpushed in the System block is the count behind the wall's unpushed chip,
 which reads **diverged from origin** instead when the worktree has diverged.

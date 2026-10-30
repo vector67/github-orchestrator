@@ -18,6 +18,7 @@ import type {
   WallGroupName,
 } from 'frontend/data/api';
 import { edgeOf } from 'frontend/data/dashboard';
+import { pressingOf, type Pressing } from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
@@ -109,6 +110,7 @@ export interface Summaries {
   move: NextMove;
   mismatches: string | null;
   openMentions: string[];
+  pressing: Pressing;
 }
 
 type Threads = Record<string, Thread>;
@@ -134,6 +136,15 @@ function operationsOf(thread: Thread, operations: Operations): Operation[] {
       return one ? [one] : [];
     },
   ) as unknown as Operation[];
+}
+
+function pressedOn(pr: PrEntity | undefined, operations: Operations): Pressing {
+  return pressingOf(
+    (pr?.sent ?? []).flatMap((id) => {
+      const one = operations[operationKey({ id, conversation: null })];
+      return one ? [one] : [];
+    }) as unknown as Operation[],
+  );
 }
 
 const readSoFar = new WeakMap<Threads, WeakMap<Operations, Conversation[]>>();
@@ -452,6 +463,7 @@ function summarised(
     }),
     mismatches: mismatchesOf(pr?.mismatches ?? null),
     openMentions,
+    pressing: pressedOn(pr, operations),
   };
 }
 

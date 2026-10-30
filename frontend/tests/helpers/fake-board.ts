@@ -1715,6 +1715,11 @@ export class FakeBoard {
       ifMatch: headers.get('If-Match'),
       body,
     });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
     if (this.manager && (verb === 'hold' || verb === 'resume')) {
       this.manager = {
         ...this.manager,

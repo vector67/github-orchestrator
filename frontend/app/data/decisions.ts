@@ -1,5 +1,6 @@
 import type {
   Conversation,
+  PrFacts,
   Proposal,
   ProposalKind,
   Ticket,
@@ -741,11 +742,99 @@ const ENTRIES = {
 
 export type Decision = keyof typeof ENTRIES;
 
+interface PrWrite extends Carrying {
+  until?: (facts: PrFacts) => boolean;
+  leaves?: boolean;
+}
+
+const PR_WRITES = {
+  hold: { doing: 'putting it on hold', square: null },
+  resume: { doing: 'resuming the agent', square: null },
+  'carry-on': { doing: 'carrying on', square: null },
+  'start-review': { doing: 'starting a review agent', square: null },
+  'mark-ready': {
+    doing: 'marking it ready for review',
+    square: null,
+    ring: true,
+    until: (facts) => !facts.draft,
+  },
+  'take-over': { doing: 'taking it over', square: null },
+  dismiss: { doing: 'dismissing it', square: null, leaves: true },
+  close: {
+    doing: 'closing it',
+    square: null,
+    ring: true,
+    until: (facts) => facts.ended,
+    leaves: true,
+  },
+  release: { doing: 'asking for the release', square: null },
+} satisfies Record<string, PrWrite>;
+
+export type PrVerb = keyof typeof PR_WRITES;
+
+function prWriteOf(kind: string): PrWrite | undefined {
+  return (PR_WRITES as Record<string, PrWrite | undefined>)[kind];
+}
+
+export function isPrVerb(kind: string): kind is PrVerb {
+  return prWriteOf(kind) !== undefined;
+}
+
+export function leavesThePage(verb: PrVerb): boolean {
+  return Boolean(prWriteOf(verb)?.leaves);
+}
+
+export function settledBy(
+  kind: string,
+  facts: PrFacts | null,
+  answered: boolean,
+): boolean {
+  const until = prWriteOf(kind)?.until;
+  if (!until) return answered;
+  return facts !== null && until(facts);
+}
+
+export interface Pressing {
+  pressed: PrVerb | null;
+  doing: string | null;
+  pending: string | null;
+  ring: boolean;
+  refused: string | null;
+}
+
+interface Written {
+  kind: string;
+  state: string;
+  reason: string | null;
+}
+
+export function pressingOf(writes: Written[]): Pressing {
+  const write = writes.findLast((one) => local(one) && isPrVerb(one.kind));
+  const pressed = write && sent(write) ? (write.kind as PrVerb) : null;
+  const refused =
+    write?.state === 'refused' && !prWriteOf(write.kind)?.leaves
+      ? write.reason
+      : null;
+  return {
+    pressed,
+    doing: pressed && doingOf(PR_WRITES[pressed].doing),
+    pending: pressed && inFlight(pressed),
+    ring: pressed !== null && Boolean(prWriteOf(pressed)?.ring),
+    refused,
+  };
+}
+
 const CARRIED: Record<
-  Decision | 'edit-draft' | 'create-draft' | 'send-review' | 'ask-the-agent',
+  | Decision
+  | PrVerb
+  | 'edit-draft'
+  | 'create-draft'
+  | 'send-review'
+  | 'ask-the-agent',
   Carrying
 > = {
   ...ENTRIES,
+  ...PR_WRITES,
   'create-draft': {
     doing: 'saving the draft',
     square: null,

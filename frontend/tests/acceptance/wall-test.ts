@@ -1787,7 +1787,7 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  test('h pressed twice before the hub answers the first hold resumes, rather than holding twice', async function (assert) {
+  test('h pressed twice before the hub answers the first hold sends one hold', async function (assert) {
     onTheHub(heldPr(), heldPr({ number: 8 }));
     await visit('/');
     await press('j');
@@ -1800,8 +1800,101 @@ module('Acceptance | wall', function (hooks) {
 
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),
-      ['o/r#7 hold', 'o/r#7 resume'],
+      ['o/r#7 hold'],
     );
+  });
+
+  test('a hold pressed on a row is pending on that row from the click, saying what it does, until the hub answers', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+    const release = board().hold(/\/api\/pull-requests\/o\/r\/7:hold$/);
+
+    const clicking = click(
+      '[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]',
+    );
+    await waitFor('[data-test-wall-row="o/r#7"][data-pending]');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-pending]')
+      .hasText('putting it on hold…');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')
+      .isDisabled();
+    assert
+      .dom('[data-test-wall-row="o/r#8"]')
+      .doesNotHaveAttribute('data-pending');
+
+    release();
+    await clicking;
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-pending]').doesNotExist();
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')
+      .hasText('Resume');
+  });
+
+  test('c on the selected row is pending on it until its manager answers', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          system: {
+            last_run: {
+              event: 'ci-failed',
+              exit_code: 0,
+              ended_at: new Date(clock().now - 60_000).toISOString(),
+            },
+          },
+        },
+      }),
+    );
+    await visit('/');
+    await press('j');
+    const release = board().hold(/\/api\/manager:carry-on$/);
+
+    const pressing = press('c');
+    await waitFor('[data-test-wall-row="o/r#7"][data-pending]');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-pending]')
+      .hasText('carrying on…');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-pending] [data-test-ring]')
+      .doesNotExist();
+
+    release();
+    await pressing;
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .doesNotHaveAttribute('data-pending');
+  });
+
+  test('Ready for review from the wall stays pending on the row with the ring until the row shows it ready', async function (assert) {
+    onTheHub(heldPr({ dashboard: { facts: { draft: true } } }));
+    await visit('/');
+    await press('j');
+
+    await press('r');
+    await press('y');
+
+    assert.dom('[data-test-wall-row="o/r#7"]').hasAttribute('data-pending');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-pending]')
+      .hasText('marking it ready for review…');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-pending] [data-test-ring]')
+      .exists();
+    assert.dom('[data-test-toast]').doesNotExist();
+
+    onTheHub(heldPr({ dashboard: { facts: { draft: false } } }));
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"]')
+      .doesNotHaveAttribute('data-pending');
   });
 
   test('the dashboard’s Q and g do nothing on the wall', async function (assert) {
@@ -2354,7 +2447,7 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(github().opened, []);
   });
 
-  test('a command the hub refuses says why in a toast', async function (assert) {
+  test('a command the hub refuses says why on its row, with no toast', async function (assert) {
     onTheHub(heldPr());
     await visit('/');
     await press('j');
@@ -2366,9 +2459,14 @@ module('Acceptance | wall', function (hooks) {
 
     await press('h');
 
+    assert.dom('[data-test-wall-row="o/r#7"]').hasAttribute('data-refused');
     assert
-      .dom('[data-test-toast]')
-      .includesText('the watcher holds no pull request o/r#7');
+      .dom('[data-test-refusal="o/r#7"]')
+      .hasText('the watcher holds no pull request o/r#7');
+    assert.dom('[data-test-toast]').doesNotExist();
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')
+      .hasText('Hold');
   });
 
   test('the wall follows the watcher, asking with the tag it was last given', async function (assert) {

@@ -9,6 +9,7 @@ import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import HubBar from 'frontend/components/hub-bar';
+import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil } from 'frontend/data/api';
@@ -171,6 +172,8 @@ export default class Wall extends Component<WallSignature> {
   releasable = (pr: WallRow): boolean =>
     this.controls.offer(this.controls.ofRow(pr), 'release').state === 'ready';
 
+  pending = (pr: WallRow): boolean => this.controls.ofRow(pr).pending;
+
   titleOf = (pr: WallRow, control: Control): string | null => {
     const offer = this.controls.offer(this.controls.ofRow(pr), control);
     return 'title' in offer ? offer.title : null;
@@ -293,6 +296,8 @@ export default class Wall extends Component<WallSignature> {
                 data-flip-key={{keyOf pr}}
                 data-flip-group={{section.group}}
                 data-move={{reading.code}}
+                data-pending={{if (this.pending pr) "true"}}
+                data-refused={{if pr.summaries.pressing.refused "true"}}
                 data-test-wall-row={{keyOf pr}}
               >
                 <button
@@ -323,7 +328,12 @@ export default class Wall extends Component<WallSignature> {
                         />{{/each}}{{#if pr.moved}}<span
                           class="state-chip tone-accent moved"
                           data-test-moved
-                        >moved here</span>{{/if}}</span><span
+                        >moved here</span>{{/if}}{{#if
+                        pr.summaries.pressing.pending
+                      }}<span class="state-chip" data-test-pending>{{#if
+                            pr.summaries.pressing.ring
+                          }}<PendingRing
+                            />{{/if}}{{pr.summaries.pressing.pending}}</span>{{/if}}</span><span
                       class="age"
                       title={{this.ageHintOf section pr}}
                       data-test-age
@@ -343,6 +353,12 @@ export default class Wall extends Component<WallSignature> {
                       {{reading.whose}}{{/if}}{{#if reading.branch}}
                       ·
                       <span class="mono">{{reading.branch}}</span>{{/if}}</span>
+                  {{#if pr.summaries.pressing.refused}}
+                    <span
+                      class="refusal"
+                      data-test-refusal={{keyOf pr}}
+                    >{{pr.summaries.pressing.refused}}</span>
+                  {{/if}}
                   <span id={{says}} class="wall-says">{{#if
                       reading.reason
                     }}<span>{{reading.reason}}.</span>{{/if}}{{#each
@@ -350,10 +366,13 @@ export default class Wall extends Component<WallSignature> {
                       as |chip|
                     }}<span>{{chip.text}}: {{chip.hint}}.</span>{{/each}}{{#if
                       pr.moved
-                    }}<span>moved here.</span>{{/if}}<span>{{this.ageHintOf
-                        section
-                        pr
-                      }}.</span><span>{{#if
+                    }}<span>moved here.</span>{{/if}}{{#if
+                      pr.summaries.pressing.pending
+                    }}<span>{{pr.summaries.pressing.pending}}</span>{{/if}}{{#if
+                      pr.summaries.pressing.refused
+                    }}<span
+                      >{{pr.summaries.pressing.refused}}.</span>{{/if}}<span
+                    >{{this.ageHintOf section pr}}.</span><span>{{#if
                         this.store.severalReposShown
                       }}{{pr.repo}}{{/if}}#{{pr.number}}{{#if reading.whose}}
                         ·
@@ -365,6 +384,7 @@ export default class Wall extends Component<WallSignature> {
                   {{#if (this.releasable pr)}}<button
                       type="button"
                       class="row-control release"
+                      disabled={{this.pending pr}}
                       data-test-release
                       title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
                       {{on "focus" (fn this.select pr)}}
@@ -373,6 +393,7 @@ export default class Wall extends Component<WallSignature> {
                   {{#unless reading.frozen}}<button
                       type="button"
                       class="row-control"
+                      disabled={{this.pending pr}}
                       title={{this.titleOf pr "hold"}}
                       data-test-wall-control="hold"
                       {{on "focus" (fn this.select pr)}}
@@ -380,6 +401,7 @@ export default class Wall extends Component<WallSignature> {
                     >{{if reading.onHold "Resume" "Hold"}}</button><button
                       type="button"
                       class="row-control"
+                      disabled={{this.pending pr}}
                       title={{this.titleOf pr "dismiss"}}
                       data-test-wall-control="dismiss"
                       {{on "focus" (fn this.select pr)}}

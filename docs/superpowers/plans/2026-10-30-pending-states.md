@@ -79,6 +79,8 @@ too, and `board.acting` no longer exists.
 
 ### 4. PR controls on the dashboard and the wall
 
+**Done** in the commit that adds this line.
+
 Decisions 1, 3, 4, 5, 7. `pr-controls.sent` moves to the PR's store record and
 widens to every manager verb, from buttons and keys on `dashboard-tab.gts` and
 `wall.gts`. Close PR and Ready for review get the ring and last until the

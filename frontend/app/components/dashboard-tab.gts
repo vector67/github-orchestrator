@@ -3,13 +3,14 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { pulses } from 'frontend/motion';
-import { fn } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import type { DismissUntil } from 'frontend/data/api';
 import GitPalette from 'frontend/components/git-palette';
 import GitPaletteState from 'frontend/components/git-palette-state';
+import PendingRing from 'frontend/components/pending-ring';
 import RebaseButton from 'frontend/components/rebase-button';
 import {
   clockOf,
@@ -19,6 +20,7 @@ import {
   threadsWaitingOf,
   type Reading,
 } from 'frontend/data/dashboard';
+import type { Pressing } from 'frontend/data/decisions';
 import { notesOf } from 'frontend/data/markdown';
 import type { Numbered } from 'frontend/data/wall';
 import drawn from 'frontend/modifiers/drawn';
@@ -32,6 +34,7 @@ import type { Keymap } from 'frontend/services/keys';
 import type PrControlsService from 'frontend/services/pr-controls';
 import {
   capOfControl,
+  controlOf,
   keyedControl,
   type Control,
   type Controlled,
@@ -163,8 +166,25 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   offered = (control: Control): boolean =>
     this.offer(control).state !== 'absent';
 
+  get pressing(): Pressing | null {
+    return this.summaries?.pressing ?? null;
+  }
+
+  get pending(): boolean {
+    return Boolean(this.pressing?.pressed);
+  }
+
+  pressed = (control: Control): boolean =>
+    controlOf(this.pressing?.pressed ?? null) === control;
+
+  ringed = (control: Control): boolean =>
+    this.pressed(control) && Boolean(this.pressing?.ring);
+
+  labelOf = (control: Control, label: string): string =>
+    this.pressed(control) ? (this.pressing?.doing ?? label) : label;
+
   heldBack = (control: Control): boolean =>
-    this.offer(control).state === 'held';
+    this.pending || this.offer(control).state === 'held';
 
   titleOf = (control: Control): string | null => {
     const offer = this.offer(control);
@@ -174,7 +194,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   };
 
   get releaseAsked(): boolean {
-    return this.offer('release').state === 'asked';
+    return this.pending || this.offer('release').state === 'asked';
   }
 
   showPane = (pane: Pane) => {
@@ -272,6 +292,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
       {{else if this.reading}}
         <section
           class="actionband {{this.reading.band.state}}"
+          data-pending={{if this.pending "true"}}
+          data-refused={{if this.pressing.refused "true"}}
           data-test-action-band
           data-test-band={{this.reading.band.state}}
         >
@@ -309,6 +331,9 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 {{this.reading.notice}}
               </div>
             {{/if}}
+            {{#if this.pressing.refused}}
+              <p class="refusal" data-test-refusal>{{this.pressing.refused}}</p>
+            {{/if}}
           </div>
           <div class="controls">
             {{#if this.reading.frozen}}
@@ -318,7 +343,9 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 disabled={{this.releaseAsked}}
                 data-test-control="release"
                 {{on "click" (fn this.press "release")}}
-              >Release now <kbd>{{capOfControl "release"}}</kbd></button>
+              >{{#if (this.ringed "release")}}<PendingRing
+                  />{{/if}}{{this.labelOf "release" "Release now"}}
+                <kbd>{{capOfControl "release"}}</kbd></button>
             {{else}}
               {{#if this.threadsWaiting}}
                 <button
@@ -332,18 +359,22 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 <button
                   type="button"
                   class="btn fill"
+                  disabled={{this.pending}}
                   title={{this.titleOf "hold"}}
                   data-test-control="resume"
                   {{on "click" (fn this.press "hold")}}
-                >Resume the agent <kbd>{{capOfControl "hold"}}</kbd></button>
+                >{{this.labelOf "hold" "Resume the agent"}}
+                  <kbd>{{capOfControl "hold"}}</kbd></button>
               {{else}}
                 <button
                   type="button"
                   class="btn"
+                  disabled={{this.pending}}
                   title={{this.titleOf "hold"}}
                   data-test-control="hold"
                   {{on "click" (fn this.press "hold")}}
-                >Put on hold <kbd>{{capOfControl "hold"}}</kbd></button>
+                >{{this.labelOf "hold" "Put on hold"}}
+                  <kbd>{{capOfControl "hold"}}</kbd></button>
               {{/if}}
               <button
                 type="button"
@@ -352,7 +383,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 title={{this.titleOf "carry-on"}}
                 data-test-control="carry-on"
                 {{on "click" (fn this.press "carry-on")}}
-              >Carry on <kbd>{{capOfControl "carry-on"}}</kbd></button>
+              >{{this.labelOf "carry-on" "Carry on"}}
+                <kbd>{{capOfControl "carry-on"}}</kbd></button>
               {{#if (this.offered "start-review")}}
                 <button
                   type="button"
@@ -361,7 +393,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   title={{this.titleOf "start-review"}}
                   data-test-control="start-review"
                   {{on "click" (fn this.press "start-review")}}
-                >Start a review agent
+                >{{this.labelOf "start-review" "Start a review agent"}}
                   <kbd>{{capOfControl "start-review"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "mark-ready")}}
@@ -372,7 +404,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   title={{this.titleOf "mark-ready"}}
                   data-test-control="mark-ready"
                   {{on "click" (fn this.press "mark-ready")}}
-                >Ready for review
+                >{{#if (this.ringed "mark-ready")}}<PendingRing
+                    />{{/if}}{{this.labelOf "mark-ready" "Ready for review"}}
                   <kbd>{{capOfControl "mark-ready"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "take-over")}}
@@ -383,7 +416,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   title={{this.titleOf "take-over"}}
                   data-test-control="take-over"
                   {{on "click" (fn this.press "take-over")}}
-                >Take over
+                >{{this.labelOf "take-over" "Take over"}}
                   <kbd>{{capOfControl "take-over"}}</kbd></button>
               {{/if}}
               <button
@@ -393,7 +426,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 title={{this.titleOf "dismiss"}}
                 data-test-control="dismiss"
                 {{on "click" (fn this.press "dismiss")}}
-              >Dismiss #{{this.reading.number}}
+              >{{this.labelOf
+                  "dismiss"
+                  (concat "Dismiss #" this.reading.number)
+                }}
                 <kbd>{{capOfControl "dismiss"}}</kbd></button>
               {{#if (this.offered "close")}}
                 <button
@@ -403,7 +439,11 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   title={{this.titleOf "close"}}
                   data-test-control="close"
                   {{on "click" (fn this.press "close")}}
-                >Close PR #{{this.reading.number}}
+                >{{#if (this.ringed "close")}}<PendingRing
+                    />{{/if}}{{this.labelOf
+                    "close"
+                    (concat "Close PR #" this.reading.number)
+                  }}
                   <kbd>{{capOfControl "close"}}</kbd></button>
               {{/if}}
             {{/if}}

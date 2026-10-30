@@ -7,6 +7,7 @@ import {
   findAll,
   triggerEvent,
   visit,
+  waitFor,
 } from '@ember/test-helpers';
 import {
   check,
@@ -1052,9 +1053,69 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert.deepEqual(verbs(), ['mark-ready']);
     assert.dom('[data-test-ready-confirm]').doesNotExist();
+    assert.dom('[data-test-toast]').doesNotExist();
+  });
+
+  test('Ready for review stays pending with the ring after the manager takes it, until the dashboard shows the pull request ready', async function (assert) {
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+    await press('y');
+
+    assert.deepEqual(verbs(), ['mark-ready']);
+    assert.dom('[data-test-action-band]').hasAttribute('data-pending');
+    assert
+      .dom('[data-test-control="mark-ready"]')
+      .includesText('Marking it ready for review…')
+      .isDisabled();
+    assert.dom('[data-test-control="mark-ready"] [data-test-ring]').exists();
+    assert.dom('[data-test-control="dismiss"]').isDisabled();
+
+    onTheHub({ facts: { draft: false } });
+    await streamed();
+
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-control="mark-ready"]').doesNotExist();
+    assert.dom('[data-test-control="dismiss"]').isNotDisabled();
+  });
+
+  test('Close stays pending with the ring after the manager takes it, until the dashboard shows the pull request closed', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-control="close"]');
+    await click('[data-test-close-option]');
+
+    assert.deepEqual(verbs(), ['close']);
+    assert.dom('[data-test-action-band]').hasAttribute('data-pending');
+    assert.dom('[data-test-control="close"]').includesText('Closing it…');
+    assert.dom('[data-test-control="close"] [data-test-ring]').exists();
+
+    onTheHub({ facts: { ended: true } });
+    await streamed();
+
+    assert.dom('[data-test-action-band][data-pending]').doesNotExist();
+  });
+
+  test('a close the manager refuses says why in a toast and leaves the band as it was', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    board().refusal = {
+      status: 409,
+      code: 'manager-refused',
+      detail: 'the manager is busy',
+    };
+
+    await click('[data-test-control="close"]');
+    await click('[data-test-close-option]');
+
     assert
       .dom('[data-test-toast]')
-      .hasText('Asked GitHub to mark #7 ready for review.');
+      .hasText('The manager did not take the close: the manager is busy');
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-refused');
+    assert.dom('[data-test-control="close"]').includesText('Close PR #7');
   });
 
   test('the ready question lists what is outstanding, a line per kind with its count, the first kind open', async function (assert) {
@@ -1285,18 +1346,92 @@ module('Acceptance | dashboard', function (hooks) {
       );
   });
 
-  test('a command the manager does not take says so', async function (assert) {
+  test('a command the manager does not take says so on the band, which is left as it was, with no toast', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
     board().broken = /\/api\/manager:hold$/;
 
     await press('h');
 
+    assert.dom('[data-test-action-band]').hasAttribute('data-refused');
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
     assert
-      .dom('[data-test-toast]')
-      .hasText(
-        'The manager did not take the hold: the board server is not answering',
-      );
+      .dom('[data-test-action-band] [data-test-refusal]')
+      .hasText('the board server is not answering');
+    assert.dom('[data-test-control="hold"]').includesText('Put on hold');
+    assert.dom('[data-test-control="hold"]').isNotDisabled();
+    assert.dom('[data-test-toast]').doesNotExist();
+  });
+
+  test('a command the manager refuses says why on the band, and the next press takes the refusal away', async function (assert) {
+    onTheHub({ system: { last_run: EARLIER_RUN } });
+    await visit('/pr/o/r/7/dashboard');
+    board().refusal = {
+      status: 409,
+      code: 'manager-refused',
+      detail: 'the manager is busy',
+    };
+
+    await click('[data-test-control="carry-on"]');
+
+    assert
+      .dom('[data-test-action-band] [data-test-refusal]')
+      .hasText('the manager is busy');
+
+    await press('h');
+
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-refused');
+    assert.dom('[data-test-refusal]').doesNotExist();
+  });
+
+  test('a manager command is pending on the band from the key, the pressed button saying what it does, until the manager answers', async function (assert) {
+    onTheHub({ system: { last_run: EARLIER_RUN } });
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/manager:carry-on$/);
+
+    const pressing = press('c');
+    await waitFor('[data-test-action-band][data-pending]');
+
+    assert
+      .dom('[data-test-control="carry-on"]')
+      .includesText('Carrying on…')
+      .isDisabled();
+    assert
+      .dom('[data-test-control="carry-on"] [data-test-ring]')
+      .doesNotExist();
+    assert
+      .dom('[data-test-control="hold"]')
+      .includesText('Put on hold')
+      .isDisabled();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
+
+    release();
+    await pressing;
+
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-control="carry-on"]').includesText('Carry on');
+    assert.deepEqual(verbs(), ['carry-on'], 'the second c sent nothing');
+  });
+
+  test('a hold through the hub is pending on the band from the click until the hub answers', async function (assert) {
+    onTheHub();
+    board().broken = /\/stream$/;
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/pull-requests\/o\/r\/7:hold$/);
+
+    const clicking = click('[data-test-control="hold"]');
+    await waitFor('[data-test-action-band][data-pending]');
+
+    assert
+      .dom('[data-test-control="hold"]')
+      .includesText('Putting it on hold…')
+      .isDisabled();
+
+    release();
+    await clicking;
+
+    assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-control="resume"]').exists();
   });
 
   test('a frozen pull request’s band asks for the release, with where the worktree is and both branches', async function (assert) {
