@@ -1,3 +1,4 @@
+import stat
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -574,6 +575,37 @@ def test_moving_the_mentions_start_rewrites_its_one_line(tmp_path):
     config_file.move_mentions_start(LATER)
 
     assert config_file.mentions_start(FIRST_START) == LATER
+    assert toml_file.read_text().count("mentions_start") == 1
+
+
+def test_stamping_the_mentions_start_keeps_the_config_private(tmp_path):
+    toml_file = write_config(tmp_path)
+    toml_file.chmod(0o600)
+
+    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+
+    assert stat.S_IMODE(toml_file.stat().st_mode) == 0o600
+
+
+def test_stamping_the_mentions_start_writes_through_a_symlinked_config(tmp_path):
+    dotfiles = tmp_path / "dotfiles"
+    dotfiles.mkdir()
+    kept = write_config(dotfiles, "hub_port = 8721\n")
+    toml_file = tmp_path / "config.toml"
+    toml_file.symlink_to(kept)
+
+    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+
+    assert toml_file.readlink() == kept
+    assert load_config(kept).hub_port == 8721
+    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+
+
+def test_an_empty_mentions_start_is_stamped_in_its_own_line(tmp_path):
+    toml_file = write_config(tmp_path, 'mentions_start = ""\nhub_port = 8721\n')
+
+    assert read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START) == FIRST_START
+    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
     assert toml_file.read_text().count("mentions_start") == 1
 
 

@@ -499,10 +499,14 @@ class TomlConfigFile:
             for repo, clone in repos.items()])
 
     def mentions_start(self, now: datetime) -> datetime:
-        written = _read(self._path).get(_MENTIONS_START)
+        data = _read(self._path)
+        written = data.get(_MENTIONS_START)
         if written:
             return datetime.fromisoformat(written)
-        self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
+        if _MENTIONS_START in data:
+            self.move_mentions_start(now)
+        else:
+            self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
         return now
 
     def move_mentions_start(self, to: datetime) -> None:
@@ -510,9 +514,11 @@ class TomlConfigFile:
                                                count=1))
 
     def _replace(self, text: str) -> None:
-        writing = self._path.with_name(f"{self._path.name}.writing")
+        target = self._path.resolve()
+        writing = target.with_name(f"{target.name}.writing")
         writing.write_text(text)
-        os.replace(writing, self._path)
+        shutil.copymode(target, writing)
+        os.replace(writing, target)
 
     def move_aside(self, now: datetime) -> str:
         moved = self._path.with_name(f"{self._path.name}.broken-{now:%Y%m%d-%H%M%S}")
