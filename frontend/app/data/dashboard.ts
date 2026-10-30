@@ -128,6 +128,7 @@ const STATE_LABELS: Partial<Record<Move, string>> = {
   'await-reviewers': 'Waiting on reviewers',
   'await-author': WAITING_FOR_AUTHOR,
   'await-rerequest': WAITING_FOR_AUTHOR,
+  'await-ready': WAITING_FOR_AUTHOR,
   mention: 'Answer the mention',
   mentioned: 'Mentioned',
 };
@@ -265,6 +266,8 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
       return afterApprovingOf(move);
     case 'await-rerequest':
       return 'Waiting for the author to ask you to review again';
+    case 'await-ready':
+      return 'Waiting for the author to mark it ready for review';
     case 'not-reviewing':
       return 'You are not a reviewer on this PR';
     case 'mention':
@@ -348,6 +351,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
       return 'Waiting on the author';
     case 'await-rerequest':
       return 'Waiting on the author to ask you again';
+    case 'await-ready':
+      return 'Waiting on the author to mark it ready for review';
     case 'rereview':
       return 'Re-review';
     case 'mention':
@@ -452,6 +457,8 @@ function reviewerReasonOf(
       ];
     case 'await-rerequest':
       return [YOUR_REVIEW_WORDS[facts.my_review ?? ''] ?? 'you reviewed'];
+    case 'await-ready':
+      return ['requested from you', 'still a draft'];
     default:
       return null;
   }

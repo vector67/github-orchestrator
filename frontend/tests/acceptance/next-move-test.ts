@@ -867,6 +867,25 @@ module('Acceptance | next move', function (hooks) {
     });
   }
 
+  for (const [name, facts] of [
+    ['review', reviewing({ viewer_requested: true })],
+    ['re-review', ASKED_AGAIN],
+  ] as const) {
+    test(`a draft you were asked to review waits on the author to mark it ready: ${name}`, async function (assert) {
+      const shown = await seen({ facts: { ...facts, draft: true } });
+
+      assert.deepEqual(
+        [shown.move, shown.group, shown.verb, shown.reason],
+        [
+          'await-ready',
+          'waiting-on-others',
+          'Waiting on the author to mark it ready for review',
+          'requested from you · still a draft',
+        ],
+      );
+    });
+  }
+
   test('your turn to review comes before a mention', async function (assert) {
     assert.deepEqual(
       await moveAndGroup({
