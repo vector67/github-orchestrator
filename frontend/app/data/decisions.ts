@@ -779,6 +779,7 @@ const REFUSED_ON_A_DRAFT: string[] = [
 ];
 
 export interface Writing {
+  outgoing: boolean;
   pending: string | null;
   ring: boolean;
   refused: string | null;
@@ -797,10 +798,11 @@ export function writtenOn(
   const write = conversation.operations.findLast((one) =>
     REFUSED_ON_A_DRAFT.includes(one.kind),
   );
-  const goingOut = conversation.state === 'enrolled' && reviewSending;
+  const outgoing = conversation.state === 'enrolled' && reviewSending;
   const waiting =
-    going && sent(going) ? going.kind : goingOut ? 'send-review' : null;
+    going && sent(going) ? going.kind : outgoing ? 'send-review' : null;
   return {
+    outgoing,
     pending: waiting === null ? null : inFlight(waiting),
     ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
     refused: write?.state === 'refused' ? write.reason : null,

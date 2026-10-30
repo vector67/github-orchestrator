@@ -74,7 +74,7 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
       fold: null,
       entries: opener ? [{ ...opener, body: draft.body }, ...rest] : [],
       draft,
-      locked: draftLocked(draft, context.reviewSending),
+      locked: draftLocked(draft),
       standing: standingOf(conversation),
       pending: draft.pending,
       ring: draft.ring,

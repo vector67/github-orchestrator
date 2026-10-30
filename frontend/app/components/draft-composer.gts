@@ -27,7 +27,6 @@ import {
 } from 'frontend/services/drafts';
 import type DraftsService from 'frontend/services/drafts';
 import type PullRequestDiffService from 'frontend/services/pull-request-diff';
-import type ReviewService from 'frontend/services/review';
 import autocomplete from 'frontend/modifiers/autocomplete';
 
 export interface DraftComposerSignature {
@@ -60,7 +59,6 @@ const DRAFT_NOTE =
 export default class DraftComposer extends Component<DraftComposerSignature> {
   @service declare drafts: DraftsService;
   @service declare router: RouterService;
-  @service declare review: ReviewService;
   @service declare pullRequestDiff: PullRequestDiffService;
 
   @tracked private browsing: Browsing | null = null;
@@ -84,7 +82,7 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
   get locked(): boolean {
     const draft = this.args.draft;
     if (this.creating) return false;
-    return !draft || draftLocked(draft, this.review.inFlight);
+    return !draft || draftLocked(draft);
   }
 
   get unsaveable(): boolean {
@@ -98,7 +96,7 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
   get going(): boolean {
     const draft = this.args.draft;
     if (!draft) return false;
-    return draft.posting || (draft.enrolled && this.review.inFlight);
+    return draft.posting || draft.outgoing;
   }
 
   get pending(): string | null {

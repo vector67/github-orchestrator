@@ -148,6 +148,7 @@ export interface DraftView {
   editable: boolean;
   enrolled: boolean;
   posting: boolean;
+  outgoing: boolean;
   pending: string | null;
   ring: boolean;
   refused: string | null;
@@ -375,10 +376,9 @@ export function draftOf(
 }
 
 export function draftLocked(
-  draft: Pick<DraftView, 'editable' | 'enrolled'>,
-  reviewSending: boolean,
+  draft: Pick<DraftView, 'editable' | 'outgoing'>,
 ): boolean {
-  return !draft.editable || (draft.enrolled && reviewSending);
+  return !draft.editable || draft.outgoing;
 }
 
 function draftNotes(conversation: Conversation): Note[] {
