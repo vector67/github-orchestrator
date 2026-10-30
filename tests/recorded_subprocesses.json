@@ -262,6 +262,28 @@
    ]
   },
   "tests.preview.test_preview.client_for_preview:8917fe3d": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"diff\", \"--no-color\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"67eaa3f42ebcf407dc379c34d381a37ed307b947\", \"462fc216f30d355b3a3fbc125187e54edbd496d6\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "diff",
+      "--no-color",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "67eaa3f42ebcf407dc379c34d381a37ed307b947",
+      "462fc216f30d355b3a3fbc125187e54edbd496d6"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/billing/api.py b/billing/api.py\nindex 7f7bab6..7875b14 100644\n--- a/billing/api.py\n+++ b/billing/api.py\n@@ -67,7 +67,7 @@ def step_066(line_items):\n     return [item for item in line_items if item.id != 66]\n \n def step_069(line_items):\n-    return [item for item in line_items if item.id != 69]\n+    return sorted(line_items)\n \n def step_072(line_items):\n     return [item for item in line_items if item.id != 72]\ndiff --git a/billing/columns.py b/billing/columns.py\nindex 4f08a02..5c42bf1 100644\n--- a/billing/columns.py\n+++ b/billing/columns.py\n@@ -12,7 +12,7 @@ def step_009(line_items):\n def step_012(line_items):\n     return [item for item in line_items if item.id != 12]\n \n-def step_015(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 15]\n \n def step_018(line_items):\ndiff --git a/billing/constants.py b/billing/constants.py\nindex 48f4641..13eced9 100644\n--- a/billing/constants.py\n+++ b/billing/constants.py\n@@ -9,7 +9,7 @@ def step_006(line_items):\n def step_009(line_items):\n     return [item for item in line_items if item.id != 9]\n \n-def step_012(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 12]\n \n def step_015(line_items):\ndiff --git a/billing/format.py b/billing/format.py\nindex 37dc5aa..59973bd 100644\n--- a/billing/format.py\n+++ b/billing/format.py\n@@ -54,7 +54,7 @@ def step_051(line_items):\n def step_054(line_items):\n     return [item for item in line_items if item.id != 54]\n \n-def step_057(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 57]\n \n def step_060(line_items):\ndiff --git a/billing/guard.py b/billing/guard.py\nindex 5824c18..ffd6b73 100644\n--- a/billing/guard.py\n+++ b/billing/guard.py\n@@ -41,7 +41,7 @@ def step_039(line_items):\n \n def step_042(line_items):\n     return [item for item in line_items if item.id != 42]\n-\n+    return sorted(line_items)\n def step_045(line_items):\n     return [item for item in line_items if item.id != 45]\n \ndiff --git a/billing/header.py b/billing/header.py\nindex f5ec43f..606b752 100644\n--- a/billing/header.py\n+++ b/billing/header.py\n@@ -37,7 +37,7 @@ def step_036(line_items):\n     return [item for item in line_items if item.id != 36]\n \n def step_039(line_items):\n-    return [item for item in line_items if item.id != 39]\n+    return sorted(line_items)\n \n def step_042(line_items):\n     return [item for item in line_items if item.id != 42]\ndiff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex bbe0799..6d98825 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -115,7 +115,7 @@ def step_114(line_items):\n     return [item for item in line_items if item.id != 114]\n \n def step_117(line_items):\n-    return [item for item in line_items if item.id != 117]\n+    return sorted(line_items)\n \n def step_120(line_items):\n     return [item for item in line_items if item.id != 120]\ndiff --git a/billing/parser.py b/billing/parser.py\nindex e760e84..6472713 100644\n--- a/billing/parser.py\n+++ b/billing/parser.py\n@@ -30,7 +30,7 @@ def step_027(line_items):\n def step_030(line_items):\n     return [item for item in line_items if item.id != 30]\n \n-def step_033(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 33]\n \n def step_036(line_items):\ndiff --git a/billing/reader.py b/billing/reader.py\nindex 5f1014c..8ac55ac 100644\n--- a/billing/reader.py\n+++ b/billing/reader.py\n@@ -93,7 +93,7 @@ def step_090(line_items):\n def step_093(line_items):\n     return [item for item in line_items if item.id != 93]\n \n-def step_096(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 96]\n \n def step_099(line_items):\ndiff --git a/billing/units.py b/billing/units.py\nindex c3b2851..c8f11d8 100644\n--- a/billing/units.py\n+++ b/billing/units.py\n@@ -19,8 +19,8 @@ def step_018(line_items):\n     return [item for item in line_items if item.id != 18]\n \n def step_021(line_items):\n-    return [item for item in line_items if item.id != 21]\n-\n+    return sorted(line_items)\n+    return [item.in_units() for item in line_items]\n def step_024(line_items):\n     return [item for item in line_items if item.id != 24]\n \n@@ -45,7 +45,7 @@ def step_042(line_items):\n def step_045(line_items):\n     return [item for item in line_items if item.id != 45]\n \n-def step_048(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 48]\n \n def step_051(line_items):\n"
+    }
+   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"462fc21^{commit}\"], null, null]": [
     {
      "argv": [
@@ -306,6 +328,62 @@
      "stdout": {
       "b64": ""
      }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"merge-base\", \"--end-of-options\", \"main\", \"462fc216f30d355b3a3fbc125187e54edbd496d6\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "merge-base",
+      "--end-of-options",
+      "main",
+      "462fc216f30d355b3a3fbc125187e54edbd496d6"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"main^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"origin/main^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "origin/main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"show\", \"--end-of-options\", \"462fc216f30d355b3a3fbc125187e54edbd496d6\"], null, null]": [
@@ -655,22 +733,6 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "462fc216f30d355b3a3fbc125187e54edbd496d6\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"rev-list\", \"--oneline\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
-      "rev-list",
-      "--oneline",
-      "462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -2897,38 +2959,6 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "1\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-list\", \"--oneline\", \"957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
-      "rev-list",
-      "--oneline",
-      "957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "8040b06 what the agent proposes for PRRT_push_rejected\n257635c a change the fix now conflicts with\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-list\", \"--oneline\", \"HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
-      "rev-list",
-      "--oneline",
-      "HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"04e263da35d57b5307c42ef97e486a60d6bcb67f^{commit}\"], null, null]": [
@@ -28630,23 +28660,6 @@
      "stdout": "0\n"
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined\", \"rev-list\", \"--count\", \"--end-of-options\", \"23fc9c248c4822e5ea7f486a98c19f1196929ec5..HEAD\"], null, null]": [
     {
      "argv": [
@@ -29420,6 +29433,58 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "what the agent proposes for PRRT_ready\n\n"
+    }
+   ]
+  },
+  "tests/preview/test_preview.py::test_the_preview_serves_a_manager_panel_with_something_in_every_part": {
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
+      "rev-list",
+      "--oneline",
+      "957f94bd6578b9d5656133d177d907ac0bc86ea6..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "8040b06 what the agent proposes for PRRT_push_rejected\n257635c a change the fix now conflicts with\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
+      "rev-list",
+      "--oneline",
+      "HEAD..957f94bd6578b9d5656133d177d907ac0bc86ea6"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/preview/test_preview.py::test_the_previews_dashboard_counts_the_threads_its_board_holds[reviewed]": {
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"rev-list\", \"--oneline\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "rev-list",
+      "--oneline",
+      "462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },

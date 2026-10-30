@@ -96,9 +96,11 @@ def test_the_preview_seeds_a_reviewer_pr_in_every_state_a_reviewer_draws(
     threads = reviewed.get("/api/conversations").json()["conversations"]
 
     assert {thread["state"] for thread in threads} == {
-        "ready", "waiting", "assumed-done", "not-mine", "deferred", "done"}, (
+        "ready", "waiting", "assumed-done", "not-mine", "deferred", "done",
+        "draft", "enrolled"}, (
         "a reviewed PR has no agent and no fix, so these are the states a "
-        "thread of it can be in")
+        "thread of it can be in, with the reviewer's own drafts, one of them "
+        "in the review")
     assert any(thread["reopened"] for thread in threads)
     assert any(thread["unread"] for thread in threads)
     assert any(thread["state"] == "ready" and not thread["unread"] for thread in threads)

@@ -48,7 +48,7 @@ from github_orchestrator.conversation import (
     EditableConversation,
 )
 from github_orchestrator.desktop.fake import FakeDesktop
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import Location, Pr, Side
 from github_orchestrator.domain import Repo as RepoName
 from github_orchestrator.github import (
     CommentKind,
@@ -502,6 +502,16 @@ class _Seeding:
         with self.conversations.editing(card.key) as conversation:
             reported(conversation)
 
+    def draft(self, body: str, path: str, line: int, *, enrolled: bool = False) -> None:
+        drafted = self.conversations.open_draft(body, Location(path=path, line=line,
+                                                               side=Side.AFTER))
+        if isinstance(drafted, Denied):
+            raise RuntimeError(f"the preview drafted what it refuses: {drafted.reason}")
+        if enrolled:
+            with self.conversations.editing(drafted.key) as conversation:
+                conversation.enrol()
+            self.conversations.tick(self.news, on_hold=False)
+
     def placed(self, card: Card, verdict: str) -> None:
         self.outside.agent_runs.give(verdict, key=card.key)
 
@@ -721,6 +731,10 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
     seeding.open(confirmed)
     seeding.placed(confirmed, "assumed-done")
     seeding.ask(confirmed, lambda conversation: conversation.place(ConversationState.DONE))
+    seeding.draft("Could this read the units from the table instead?",
+                  assumed_done.path, assumed_done.line)
+    seeding.draft("Name the guard for what it checks.", assumed_done.path,
+                  assumed_done.line, enrolled=True)
     seeding.hear(Thread(key="IC_mention", kind=CommentKind.ISSUE, comments=(
         _said(9200201, COLLEAGUE, COLLEAGUE_NAME,
               f"@{viewer} does the export still need the guard once the reader "
