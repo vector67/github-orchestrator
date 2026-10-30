@@ -23,6 +23,8 @@ import { KIND_LABELS, nameOf, sentence, type Seen } from 'frontend/data/rows';
 import {
   atWork,
   busy,
+  confirmed,
+  local,
   newestOf,
   outstanding,
   PHASE_HINTS,
@@ -155,6 +157,12 @@ export interface DraftView {
   retype: boolean;
 }
 
+export interface Footer {
+  pressed: string | null;
+  ring: boolean;
+  refused: string | null;
+}
+
 export interface Panel {
   id: string;
   role: string;
@@ -178,6 +186,7 @@ export interface Panel {
   reply: ReplyBox | null;
   reply_action: Affordance | null;
   actions: Offer[];
+  footer: Footer;
   can_delete: boolean;
   accept: AcceptView | null;
   rework: ReworkView | null;
@@ -990,6 +999,8 @@ export function panelOf(
 ): Panel {
   const comments = details?.comments ?? [];
   const operations = details?.operations ?? [];
+  const settled = operations.filter((one) => !local(one));
+  const shown = confirmed(conversation);
   const reviewer = nameOf(
     conversation.comments[0]?.author ?? '',
     context.names,
@@ -998,6 +1009,8 @@ export function panelOf(
   const actions = offered(conversation, context.role, proposal);
   const reply = replyOf(conversation, comments, operations, context);
   const replyTo = replyToOf(conversation, context);
+  const draft = draftOf(conversation, details, context.reviewSending);
+  const written = writtenOn(conversation, context.reviewSending);
   const top = {
     id: conversation.key,
     role: context.role,
@@ -1017,7 +1030,7 @@ export function panelOf(
     anchor: anchorOf(conversation),
     code: codeOf(conversation, context),
     loading: details === null,
-    draft: draftOf(conversation, details, context.reviewSending),
+    draft,
     transcript: composing(conversation)
       ? []
       : [
@@ -1036,37 +1049,42 @@ export function panelOf(
           }
         : null,
     actions,
+    footer: {
+      pressed: written.sending,
+      ring: written.ring,
+      refused: draft || reply?.refused ? null : written.refused,
+    },
     can_delete: canDelete(conversation, comments, context.viewer),
   };
   if (context.role === 'reviewer') {
     return {
       ...top,
       ...NO_FIX,
-      ...commitCheckOf(conversation),
+      ...commitCheckOf(shown),
       notes: [
-        ...deferralNotes(conversation, operations),
-        ...draftNotes(conversation),
-        ...queuedNote(conversation),
+        ...deferralNotes(shown, settled),
+        ...draftNotes(shown),
+        ...queuedNote(shown),
       ],
     };
   }
   const replying = withoutCode(proposal);
-  const plan = planOf(conversation, operations, context);
+  const plan = planOf(shown, settled, context);
   const files = fix.files;
-  const phase = phaseOf(conversation);
+  const phase = phaseOf(shown);
   const failure = FAILURES[phase];
   const decides = (decision: string) =>
     actions.some((one) => one.decision === decision);
   return {
     ...top,
-    fix_label: fixLabelOf(conversation, plan, proposal),
+    fix_label: fixLabelOf(shown, plan, proposal),
     fix_directory: proposal?.directory ?? null,
     in_session: phase === 'session',
-    banner: bannerOf(conversation, plan, operations, files, proposal),
-    proposed_reply: replying ? sentReplyOf(proposal, operations) : null,
+    banner: bannerOf(shown, plan, settled, files, proposal),
+    proposed_reply: replying ? sentReplyOf(proposal, settled) : null,
     proposed_ticket: proposal?.ticket ?? null,
     summary: proposal?.summary || proposal?.agent_note || '',
-    failure: failure ? failureOf(phase, failure, operations, replying) : null,
+    failure: failure ? failureOf(phase, failure, settled, replying) : null,
     plan,
     confidence: proposal?.confidence ?? null,
     confidence_note: proposal?.confidence_note ?? '',
@@ -1075,22 +1093,22 @@ export function panelOf(
     files,
     files_label: files.length ? counted(files.length, 'file') : '',
     notes: [
-      ...deferralNotes(conversation, operations),
-      ...workNotes(conversation, operations, proposal, context),
-      ...draftNotes(conversation),
-      ...queuedNote(conversation),
+      ...deferralNotes(shown, settled),
+      ...workNotes(shown, settled, proposal, context),
+      ...draftNotes(shown),
+      ...queuedNote(shown),
     ],
-    fold: foldOf(conversation, proposal, operations, files),
+    fold: foldOf(shown, proposal, settled, files),
     fold_placeholder: FOLD_PLACEHOLDERS[phase] ?? '',
     accept: decides('approve')
-      ? acceptOf(conversation, proposal, plan, files, reviewer, context)
+      ? acceptOf(shown, proposal, plan, files, reviewer, context)
       : null,
     rework: decides('rework')
       ? { ...REWORK, reviewers: repliersOf(comments, context) }
       : null,
     agent_words:
       phase === 'declined'
-        ? (newest(operations, RUN_KINDS)?.reason ?? null)
+        ? (newest(settled, RUN_KINDS)?.reason ?? null)
         : null,
     commit_check: null,
   };

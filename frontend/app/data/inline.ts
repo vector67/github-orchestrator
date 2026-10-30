@@ -1,4 +1,5 @@
 import type { Conversation } from 'frontend/data/api';
+import { writtenOn } from 'frontend/data/decisions';
 import { groupsFor, type Role } from 'frontend/data/groups';
 import {
   draftLocked,
@@ -82,6 +83,10 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
       retype: draft.retype,
     };
   }
+  const { pending, ring, refused } = writtenOn(
+    conversation,
+    context.reviewSending,
+  );
   return {
     key: conversation.key,
     path,
@@ -91,9 +96,9 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
     draft: null,
     locked: true,
     standing: standingOf(conversation),
-    pending: null,
-    ring: false,
-    refused: null,
+    pending,
+    ring,
+    refused,
     retype: false,
   };
 }

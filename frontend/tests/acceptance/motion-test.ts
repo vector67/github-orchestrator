@@ -9,7 +9,7 @@ import {
   visit,
   waitUntil,
 } from '@ember/test-helpers';
-import type { Anchor, ErrorCode } from 'frontend/data/api';
+import type { Anchor } from 'frontend/data/api';
 import {
   added,
   changed,
@@ -108,9 +108,11 @@ module('Acceptance | motion', function (hooks) {
     return row.top > box.top - pixel && row.bottom < box.bottom + pixel;
   }
 
-  async function refused(code: ErrorCode): Promise<void> {
-    board().refusal = { status: 409, code, detail: code };
-    await click('[data-test-decision="unpark"]');
+  async function queued(decision: 'unpark' | 'resolve-here'): Promise<void> {
+    await click(`[data-test-decision="${decision}"]`);
+    if (find('[data-test-dialog-submit]')) {
+      await click('[data-test-dialog-submit]');
+    }
   }
 
   async function diffWithADraft(): Promise<void> {
@@ -204,26 +206,26 @@ module('Acceptance | motion', function (hooks) {
   test('a toast clicked away is gone, and the others stay', async function (assert) {
     board().conversations = [board().threadIn('waiting', { key: 'b' })];
     await visit('/pr/o/r/7/conversations/b');
-    await refused('operation-outstanding');
-    await refused('agents-disabled');
+    await queued('unpark');
+    await queued('resolve-here');
 
     await click('[data-test-toast]');
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('switched off');
+    assert.dom('[data-test-toast]').containsText('resolving');
   });
 
   test('a toast leaves when its time is up, and one raised after it stays', async function (assert) {
     board().conversations = [board().threadIn('waiting', { key: 'b' })];
     await visit('/pr/o/r/7/conversations/b');
-    await refused('operation-outstanding');
+    await queued('unpark');
     await clock().tick(2000);
-    await refused('agents-disabled');
+    await queued('resolve-here');
 
     await clock().tick(1000);
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('switched off');
+    assert.dom('[data-test-toast]').containsText('resolving');
   });
 
   test('a toast that goes leaves the mark on a row whose flash is still playing', async function (assert) {
@@ -245,7 +247,8 @@ module('Acceptance | motion', function (hooks) {
       .getAnimations()
       .filter((one) => one instanceof CSSAnimation)
       .forEach((one) => one.pause());
-    await refused('operation-outstanding');
+    await queued('unpark');
+    await clock().tick(1000);
 
     await click('[data-test-toast]');
     await clock().tick(1000);
@@ -259,8 +262,8 @@ module('Acceptance | motion', function (hooks) {
   test('a toast clicked away is marked leaving while it fades, then goes', async function (assert) {
     board().conversations = [board().threadIn('waiting', { key: 'b' })];
     await visit('/pr/o/r/7/conversations/b');
-    await refused('operation-outstanding');
-    await refused('agents-disabled');
+    await queued('unpark');
+    await queued('resolve-here');
     inMotion();
 
     await click('[data-test-toast]');
@@ -277,7 +280,7 @@ module('Acceptance | motion', function (hooks) {
     await settled();
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('switched off');
+    assert.dom('[data-test-toast]').containsText('resolving');
   });
 
   test('a decision marks the decided card, and its toast waits for the card to land and a rest after', async function (assert) {
@@ -309,7 +312,7 @@ module('Acceptance | motion', function (hooks) {
     assert.dom('[data-test-toast]').hasText('Queued: bringing it back.');
   });
 
-  test('a refused decision toasts at once, before the re-read lands', async function (assert) {
+  test('a refused decision says so on the footer at once, before the re-read lands', async function (assert) {
     board().conversations = [
       thread({ key: 'a', state: 'ready' }),
       board().threadIn('waiting', { key: 'b' }),
@@ -329,7 +332,9 @@ module('Acceptance | motion', function (hooks) {
     const pressing = click('[data-test-decision="unpark"]');
     await waitUntil(() => slides().length > 0);
 
-    assert.dom('[data-test-toast]').containsText('It has been read again');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('It has been read again');
     assert.dom('#c-b').doesNotHaveAttribute('data-decided');
 
     slides().forEach((one) => one.finish());

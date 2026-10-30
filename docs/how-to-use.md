@@ -832,6 +832,11 @@ one when the board queues a decision, one when that decision lands, and one when
 an agent finishes and a row moves into Ready for you. Failures never go there —
 the banner under the header keeps those.
 
+While a decision is on its way, the button you pressed says what it is doing,
+the other buttons wait, and the footer, the thread's row and its card in the diff
+are faded until the board answers. A decision the board refuses says why on the
+footer, in red, with the buttons as they were.
+
 The reply box is the one way to answer a reviewer without deciding anything. It
 stays a **Reply to Anna** link until you click it, and folds back to the link
 once the reply is away. The link names the last person on the thread other than

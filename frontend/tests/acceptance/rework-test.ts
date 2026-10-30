@@ -141,7 +141,9 @@ module('Acceptance | rework', function (hooks) {
     await fillIn('[data-test-rework-body]', 'try again');
     await click('[data-test-send-rework]');
 
-    assert.dom('[data-test-toast]').containsText('Agents are switched off');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('Agents are switched off');
   });
 
   test('it names itself and says what to write in the box', async function (assert) {

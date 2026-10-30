@@ -10,7 +10,7 @@ import {
   reviewSending,
   type Review,
 } from 'frontend/data/review';
-import { sent } from 'frontend/data/thread';
+import { local, sent } from 'frontend/data/thread';
 import type BoardService from 'frontend/services/board';
 import type PollService from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
@@ -65,7 +65,7 @@ export default class ReviewService extends Service {
   get trouble(): string | null {
     const going = this.going;
     if (going?.state !== 'refused') return null;
-    if ((going as { local?: boolean }).local) return going.reason;
+    if (local(going)) return going.reason;
     return (
       `GitHub refused the review: ${going.reason ?? going.reason_code ?? ''}. ` +
       'Every draft is still in it.'

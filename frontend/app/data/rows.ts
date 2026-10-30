@@ -13,6 +13,7 @@ import {
 } from 'frontend/data/groups';
 import {
   busy,
+  confirmed,
   newestOf,
   outstanding,
   PHASE_HINTS,
@@ -236,7 +237,8 @@ export function rowOf(
   conversation: Conversation & { provisional?: boolean },
   seen: Seen,
 ): Row {
-  const steps = stepsOf(conversation, seen);
+  const shown = confirmed(conversation);
+  const steps = stepsOf(shown, seen);
   const standing = draftStanding(conversation);
   const { done, total } = counted(steps);
   const phase = phaseOf(conversation);
@@ -248,7 +250,7 @@ export function rowOf(
     square: squareOf(conversation),
     gist: gistOf(conversation, seen),
     reference: referenceOf(conversation),
-    meta: pending ?? metaOf(conversation, seen, steps),
+    meta: pending ?? metaOf(shown, seen, steps),
     steps,
     steps_text: total ? `${done} / ${total} changes` : phase,
     steps_hint: total ? '' : `${phase}: ${PHASE_HINTS[phase]}`,

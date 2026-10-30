@@ -5,6 +5,7 @@ import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import DecideDialog from 'frontend/components/decide-dialog';
 import HoldWarning from 'frontend/components/hold-warning';
+import PendingRing from 'frontend/components/pending-ring';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
   keyOf,
@@ -20,6 +21,7 @@ import type {
   Affordance,
   DraftView,
   Fold,
+  Footer,
   ReworkView,
 } from 'frontend/data/panel';
 import didInsert from 'frontend/modifiers/did-insert';
@@ -38,6 +40,7 @@ export interface PanelActionsSignature {
   Args: {
     conversationId: string;
     actions: Offer[];
+    footer: Footer;
     replyAction?: Affordance | null;
     replies?: boolean;
     canDelete: boolean;
@@ -100,19 +103,23 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     return this.drafts.unsaved(this.args.conversationId, draft);
   };
 
-  get acting(): boolean {
-    return this.board.isActing(this.args.conversationId);
+  get pending(): boolean {
+    return this.args.footer.pressed !== null;
   }
 
-  unavailable = (offered: Offer): boolean => this.acting || this.held(offered);
+  pressed = (offered: Offer): boolean =>
+    this.args.footer.pressed === offered.decision;
+
+  unavailable = (offered: Offer): boolean => this.pending || this.held(offered);
 
   titleOf = (offered: Offer): string =>
     this.held(offered) ? SAVE_FIRST : offered.title;
 
+  ringed = (offered: Offer): boolean =>
+    this.pressed(offered) && this.args.footer.ring;
+
   labelOf = (offered: Offer): string =>
-    this.board.doing(this.args.conversationId) === offered.decision
-      ? offered.doing
-      : offered.label;
+    this.pressed(offered) ? offered.doing : offered.label;
 
   private post(decision: Decision, gathered: Gathered = {}): Promise<boolean> {
     return this.board.decide(this.args.conversationId, decision, gathered);
@@ -221,10 +228,14 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     <footer
       class="actions"
       id="panel-actions"
-      aria-busy={{if this.acting "true"}}
+      data-pending={{if this.pending "true"}}
+      data-refused={{if @footer.refused "true"}}
       {{didInsert this.offer}}
       ...attributes
     >
+      {{#if @footer.refused}}
+        <p class="refusal" data-test-refusal>{{@footer.refused}}</p>
+      {{/if}}
       {{#if @replyAction}}
         <button
           type="button"
@@ -244,7 +255,9 @@ export default class PanelActions extends Component<PanelActionsSignature> {
           disabled={{this.unavailable offered}}
           data-test-decision={{offered.decision}}
           {{on "click" (fn this.decide offered)}}
-        >{{this.labelOf offered}}
+        >{{#if (this.ringed offered)}}<PendingRing />{{/if}}{{this.labelOf
+            offered
+          }}
           <kbd>{{offered.cap}}</kbd></button>
       {{/each}}
     </footer>

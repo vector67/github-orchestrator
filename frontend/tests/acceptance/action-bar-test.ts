@@ -10,8 +10,12 @@ import {
 } from 'frontend/tests/helpers/fake-board';
 
 function bar(): string[] {
-  return [...document.querySelectorAll('#panel-actions button')].map(
-    (button) => button.firstChild?.textContent?.trim() ?? '',
+  return [...document.querySelectorAll('#panel-actions button')].map((button) =>
+    [...button.childNodes]
+      .filter((one) => one.nodeName !== 'KBD')
+      .map((one) => one.textContent)
+      .join('')
+      .trim(),
   );
 }
 

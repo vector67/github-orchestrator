@@ -68,6 +68,8 @@ and shows a refusal on the element.
 
 ### 3. The panel footer
 
+**Done** in the commit that adds this line.
+
 Decisions 1, 3. `board.acting` moves into the store, so the footer, the rail
 row and the inline card for a thread all read one record. `board.acting` and
 `isActing` go.

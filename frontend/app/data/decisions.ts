@@ -7,6 +7,8 @@ import type {
 import type { Role } from 'frontend/data/groups';
 import {
   busy,
+  confirmed,
+  local,
   newestOf,
   outstanding,
   phaseOf,
@@ -91,7 +93,6 @@ interface Carrying {
   square: string | null;
   toast?: (gathered: Gathered) => string;
   opensTerminal?: boolean;
-  pending?: boolean;
   ring?: boolean;
 }
 
@@ -133,7 +134,6 @@ export interface Carried {
   request: Request;
   toast: { text: string; square: string } | null;
   opensTerminal: boolean;
-  pending: boolean;
 }
 
 export const WAKE_CONDITIONS = [
@@ -293,6 +293,7 @@ const ENTRIES = {
     doing: 'opening a fix session',
     square: 'rework',
     opensTerminal: true,
+    ring: true,
   },
   'open-shell': {
     key: 'q',
@@ -307,6 +308,7 @@ const ENTRIES = {
     doing: 'opening a shell',
     square: 'ready',
     opensTerminal: true,
+    ring: true,
   },
   fix: {
     key: 'i',
@@ -680,7 +682,6 @@ const ENTRIES = {
     request: ({ body }) => ({ verb: 'reply', body: { body } }),
     doing: 'replying',
     square: null,
-    pending: true,
   },
   enrol: {
     key: 'e',
@@ -693,7 +694,6 @@ const ENTRIES = {
     savedFirst: true,
     doing: 'adding it to your review',
     square: 'ready',
-    pending: true,
   },
   'post-now': {
     key: 'G',
@@ -725,7 +725,6 @@ const ENTRIES = {
     asks: null,
     doing: 'discarding it',
     square: 'done',
-    pending: true,
   },
   'withdraw-from-review': {
     key: 'l',
@@ -737,7 +736,6 @@ const ENTRIES = {
     asks: null,
     doing: 'leaving it out of your review',
     square: 'ready',
-    pending: true,
   },
 } satisfies Record<string, Entry>;
 
@@ -756,7 +754,6 @@ const CARRIED: Record<
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
     doing: 'saving',
     square: null,
-    pending: true,
   },
   'send-review': {
     doing: 'sending the review',
@@ -770,16 +767,9 @@ const CARRIED: Record<
   },
 };
 
-const REFUSED_ON_A_DRAFT: string[] = [
-  'edit-draft',
-  'enrol',
-  'discard',
-  'withdraw-from-review',
-  'ask-the-agent',
-];
-
 export interface Writing {
   outgoing: boolean;
+  sending: string | null;
   pending: string | null;
   ring: boolean;
   refused: string | null;
@@ -795,14 +785,13 @@ export function writtenOn(
   reviewSending: boolean,
 ): Writing {
   const going = outstanding(conversation);
-  const write = conversation.operations.findLast((one) =>
-    REFUSED_ON_A_DRAFT.includes(one.kind),
-  );
+  const write = conversation.operations.findLast(local);
   const outgoing = conversation.state === 'enrolled' && reviewSending;
   const waiting =
     going && sent(going) ? going.kind : outgoing ? 'send-review' : null;
   return {
     outgoing,
+    sending: waiting,
     pending: waiting === null ? null : inFlight(waiting),
     ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
     refused: write?.state === 'refused' ? write.reason : null,
@@ -1011,6 +1000,14 @@ export function offered(
   role: Role,
   proposal?: Proposal,
 ): Offer[] {
+  return offeredOn(confirmed(conversation), role, proposal);
+}
+
+function offeredOn(
+  conversation: Conversation,
+  role: Role,
+  proposal?: Proposal,
+): Offer[] {
   if (busy(conversation)) return [];
   if (role === 'reviewer') {
     const phase = reviewerPhase(conversation);
@@ -1046,7 +1043,6 @@ export function carriedOut(
             square: carrying.square,
           },
     opensTerminal: Boolean(carrying.opensTerminal),
-    pending: Boolean(carrying.pending),
   };
 }
 

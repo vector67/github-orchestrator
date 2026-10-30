@@ -11,8 +11,12 @@ import {
 } from 'frontend/tests/helpers/fake-board';
 
 function offered(): readonly string[] {
-  return [...document.querySelectorAll('[data-test-decision]')].map(
-    (button) => button.firstChild?.textContent?.trim() ?? '',
+  return [...document.querySelectorAll('[data-test-decision]')].map((button) =>
+    [...button.childNodes]
+      .filter((one) => one.nodeName !== 'KBD')
+      .map((one) => one.textContent)
+      .join('')
+      .trim(),
   );
 }
 

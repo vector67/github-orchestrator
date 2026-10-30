@@ -477,7 +477,9 @@ module('Acceptance | one store', function (hooks) {
     await click('[data-test-decision="resolve"]');
     await click('[data-test-dialog-submit]');
 
-    assert.dom('[data-test-toast]').containsText('already on its way');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('already on its way');
     assert.strictEqual(badge(), '1 ready');
     assert
       .dom('[data-test-your-move]')

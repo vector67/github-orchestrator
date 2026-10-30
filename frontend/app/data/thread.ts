@@ -127,6 +127,17 @@ export function sent(operation: { state: string }): boolean {
   return operation.state === SENT;
 }
 
+export function local(operation: object): boolean {
+  return 'local' in operation && operation.local === true;
+}
+
+export function confirmed(conversation: Conversation): Conversation {
+  return {
+    ...conversation,
+    operations: conversation.operations.filter((one) => !local(one)),
+  };
+}
+
 export function unsettled(operation: { state: string }): boolean {
   return OUTSTANDING.includes(operation.state);
 }
@@ -180,6 +191,10 @@ function readyPhase(conversation: Conversation): Phase {
 }
 
 export function phaseOf(conversation: Conversation): Phase {
+  return phaseFrom(confirmed(conversation));
+}
+
+function phaseFrom(conversation: Conversation): Phase {
   switch (conversation.state) {
     case 'ready':
       return readyPhase(conversation);

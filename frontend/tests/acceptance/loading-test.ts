@@ -200,14 +200,14 @@ module('Acceptance | loading', function (hooks) {
     const release = board().hold(/operations:unpark$/);
 
     const clicking = click('[data-test-decision="unpark"]');
-    await waitFor('#panel-actions[aria-busy="true"]');
+    await waitFor('#panel-actions[data-pending]');
 
     assert.dom('[data-test-decision="unpark"]').isDisabled();
 
     release();
     await clicking;
 
-    assert.dom('#panel-actions').doesNotHaveAttribute('aria-busy');
+    assert.dom('#panel-actions').doesNotHaveAttribute('data-pending');
     assert.strictEqual(board().posted.length, 1);
   });
 

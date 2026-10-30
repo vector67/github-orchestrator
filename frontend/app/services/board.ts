@@ -20,8 +20,6 @@ import type ToastsService from 'frontend/services/toasts';
 
 type Answered = () => Promise<void>;
 
-const REFUSED = 'failed';
-
 export default class BoardService extends Service {
   @service declare dialogDrafts: DialogDraftsService;
   @service('poll') declare loader: PollService;
@@ -32,16 +30,7 @@ export default class BoardService extends Service {
   @service declare terminal: TerminalService;
   @service declare router: RouterService;
 
-  @tracked private acting: Record<string, string> = {};
   @tracked private decided: string | null = null;
-
-  isActing(key: string): boolean {
-    return key in this.acting;
-  }
-
-  doing(key: string): string | undefined {
-    return this.acting[key];
-  }
 
   isDecided = (key: string): boolean => this.decided === key;
 
@@ -49,45 +38,23 @@ export default class BoardService extends Service {
     key: string,
     decision: string,
     { verb, body }: Carried['request'],
-    pending: boolean,
     answered?: Answered,
   ): Promise<boolean> {
     const conversation = this.threads.thread(key);
     if (!conversation) return false;
-    this.acting = { ...this.acting, [key]: decision };
-    try {
-      const done = await this.wrote(
-        key,
-        verb,
-        conversation.etag,
-        body,
-        pending,
-        answered,
-      );
-      if (done) this.dialogDrafts.forget(key);
-      return done;
-    } finally {
-      const rest = { ...this.acting };
-      delete rest[key];
-      this.acting = rest;
-    }
-  }
-
-  private async wrote(
-    key: string,
-    verb: string,
-    etag: string,
-    body: Record<string, unknown>,
-    pending: boolean,
-    answered?: Answered,
-  ): Promise<boolean> {
-    const pr = this.here.at;
-    const written = await this.store.decide(pr, key, verb, etag, body, pending);
+    const written = await this.store.decide(
+      this.here.at,
+      key,
+      decision,
+      verb,
+      conversation.etag,
+      body,
+    );
     if (!written.done) {
-      if (!pending) this.toasts.say(written.why, REFUSED);
       if (written.code === MOVED) await this.loader.refreshList();
       return false;
     }
+    this.dialogDrafts.forget(key);
     await answered?.();
     await flip(() => {
       written.body();
@@ -111,11 +78,8 @@ export default class BoardService extends Service {
     gathered: Gathered = {},
     answered?: Answered,
   ): Promise<boolean> {
-    const { request, toast, opensTerminal, pending } = carriedOut(
-      decision,
-      gathered,
-    );
-    const acted = this.acted(key, decision, request, pending, answered);
+    const { request, toast, opensTerminal } = carriedOut(decision, gathered);
+    const acted = this.acted(key, decision, request, answered);
     if (!(await waitForPromise(acted))) return false;
     if (opensTerminal) {
       this.terminal.expect();

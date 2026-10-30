@@ -19,7 +19,11 @@ export interface PanelSignature {
 }
 
 function offersAnything(panel: Panel) {
-  return Boolean(panel.actions?.length) || Boolean(panel.reply_action);
+  return (
+    Boolean(panel.actions?.length) ||
+    Boolean(panel.reply_action) ||
+    Boolean(panel.footer.refused)
+  );
 }
 
 function replies(panel: Panel) {
@@ -242,6 +246,7 @@ const PanelView: TOC<PanelSignature> = <template>
       <PanelActions
         @conversationId={{@panel.id}}
         @actions={{@panel.actions}}
+        @footer={{@panel.footer}}
         @replyAction={{@panel.reply_action}}
         @replies={{replies @panel}}
         @canDelete={{@panel.can_delete}}

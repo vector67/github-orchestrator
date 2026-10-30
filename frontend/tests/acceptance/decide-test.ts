@@ -99,7 +99,10 @@ module('Acceptance | decide', function (hooks) {
     await click('[data-test-dialog-submit]');
 
     assert.strictEqual(board().posted.length, 1, 'nothing is retried');
-    assert.dom('[data-test-toast]').containsText('It has been read again');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('It has been read again');
+    assert.dom('[data-test-toast]').doesNotExist();
     assert
       .dom('[data-test-decision="unpark"]')
       .exists('the buttons are drawn from the state the re-read gave');
@@ -116,13 +119,54 @@ module('Acceptance | decide', function (hooks) {
     await click('[data-test-decision="resolve"]');
     await click('[data-test-dialog-submit]');
 
-    assert.dom('[data-test-toast]').containsText('already on its way');
     assert
-      .dom('[data-test-toast] [data-test-square]')
-      .hasAttribute('data-square', 'failed');
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('already on its way');
   });
 
-  test('a refusal the board has no words for is shown in its own', async function (assert) {
+  test('a decision is pending on the footer and its rail row from the click, the pressed button saying what it does, until the board answers', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    const release = board().hold(/operations:approve$/);
+    await click('[data-test-decision="approve"]');
+
+    const submitting = click('[data-test-dialog-submit]');
+    await waitFor('#panel-actions[data-pending]');
+
+    assert.dom('[data-test-decision="approve"]').includesText('Accepting…');
+    assert.dom('[data-test-decision="approve"]').isDisabled();
+    assert.dom('[data-test-decision="reject"]').includesText('Reject');
+    assert.dom('[data-test-decision="reject"]').isDisabled();
+    assert.dom('#c-k1').hasAttribute('data-pending');
+    assert.dom('#c-k1 [data-test-meta]').hasText('accepting…');
+
+    release();
+    await submitting;
+
+    assert.dom('#panel-actions').doesNotHaveAttribute('data-pending');
+    assert.dom('#c-k1').doesNotHaveAttribute('data-pending');
+  });
+
+  test('the pressed button gives its own word when another decision sends the same request', async function (assert) {
+    board().conversations = [
+      board().threadIn('waiting', { key: 'k1', mention: true }),
+    ];
+    board().actAs('reviewer');
+    await visit('/pr/o/r/7/conversations/k1');
+    const release = board().hold(/operations:resolve$/);
+
+    const clicking = click('[data-test-decision="resolve-on-board"]');
+    await waitFor('#panel-actions[data-pending]');
+
+    assert
+      .dom('[data-test-decision="resolve-on-board"]')
+      .includesText('Resolving on the board…');
+    assert.dom('#c-k1 [data-test-meta]').hasText('resolving on the board…');
+
+    release();
+    await clicking;
+  });
+
+  test('a refusal the board has no words for is shown in its own on the footer, which is left as it was, with no toast', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     board().refusal = {
       status: 409,
@@ -133,22 +177,51 @@ module('Acceptance | decide', function (hooks) {
     await click('[data-test-decision="approve"]');
     await click('[data-test-dialog-submit]');
 
-    assert.dom('[data-test-toast]').containsText('approve again to land it');
+    assert.dom('#panel-actions').hasAttribute('data-refused');
+    assert.dom('#panel-actions').doesNotHaveAttribute('data-pending');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .includesText('approve again to land it');
+    assert.dom('[data-test-decision="approve"]').includesText('Accept');
+    assert.dom('[data-test-decision="approve"]').isNotDisabled();
+    assert.dom('[data-test-toast]').doesNotExist();
   });
 
-  test('the pressed button says what it is doing until the board answers', async function (assert) {
+  test('a refused retry is not read as the agent giving up again', async function (assert) {
+    board().conversations = [board().threadIn('failed', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
-    const release = board().hold(/operations:approve$/);
-    await click('[data-test-decision="approve"]');
+    board().refusal = {
+      status: 409,
+      code: 'operation-outstanding',
+      detail: 'thread k1 already has an operation waiting',
+    };
 
-    const submitting = click('[data-test-dialog-submit]');
-    await waitFor('[data-test-decision="approve"][disabled]');
+    await click('[data-test-decision="retry"]');
 
-    assert.dom('[data-test-decision="approve"]').includesText('Accepting…');
-    assert.dom('[data-test-decision="reject"]').includesText('Reject');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .includesText('already on its way');
+    assert.dom('[data-test-notes]').doesNotIncludeText('already on its way');
+    assert
+      .dom('#c-k1 [data-test-meta]')
+      .doesNotIncludeText('already on its way');
+  });
 
-    release();
-    await submitting;
+  test('a refused rework leaves the proposal standing', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    board().refusal = {
+      status: 409,
+      code: 'operation-outstanding',
+      detail: 'thread k1 already has an operation waiting',
+    };
+
+    await click('[data-test-decision="rework"]');
+    await fillIn('[data-test-rework-body]', 'try again');
+    await click('[data-test-send-rework]');
+
+    assert.dom('#panel-actions [data-test-refusal]').exists();
+    assert.dom('[data-test-decision="approve"]').exists();
+    assert.dom('[data-test-decision="retry"]').doesNotExist();
   });
 
   test('a reply is posted in the operator own words', async function (assert) {

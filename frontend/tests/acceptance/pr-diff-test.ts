@@ -1441,6 +1441,43 @@ module('Acceptance | pr diff', function (hooks) {
       assert.deepEqual(document.getAnimations(), []);
     });
 
+    test('a decision sent from the board footer shows its thread’s card pending with the word, until the board answers', async function (assert) {
+      await visit('/pr/o/r/7/conversations/k1');
+      const release = board().hold(/operations:fix$/);
+
+      const deciding = click('[data-test-decision="fix"]');
+      await waitFor('#panel-actions[data-pending]');
+      const leaving = click('[data-test-tab="diff"]');
+      await waitFor('[data-test-card="k1"][data-pending]');
+
+      assert
+        .dom('[data-test-card="k1"] [data-test-standing]')
+        .hasText('writing a fix…');
+
+      release();
+      await deciding;
+      await leaving;
+
+      assert.dom('[data-test-card="k1"]').doesNotHaveAttribute('data-pending');
+    });
+
+    test('a decision the board refused from the footer says why on its thread’s card', async function (assert) {
+      await visit('/pr/o/r/7/conversations/k1');
+      board().refusal = {
+        status: 409,
+        code: 'operation-outstanding',
+        detail: 'thread k1 already has an operation waiting',
+      };
+
+      await click('[data-test-decision="fix"]');
+      await visit('/pr/o/r/7/diff');
+
+      assert.dom('[data-test-card="k1"]').hasAttribute('data-refused');
+      assert
+        .dom('[data-test-card="k1"] [data-test-refusal]')
+        .includesText('already on its way');
+    });
+
     function resolvedOnGitHub(key: string): void {
       board().conversations = board().conversations.map((one) =>
         one.key === key ? { ...one, github_resolved: true, etag: '"t2"' } : one,

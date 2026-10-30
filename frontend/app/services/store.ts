@@ -1105,14 +1105,12 @@ export default class StoreService extends Service {
   async decide(
     pr: Numbered,
     key: string,
+    kind: string,
     verb: string,
     etag: string,
     body: Record<string, unknown>,
-    pending: boolean,
   ): Promise<Tried<() => void>> {
-    const local = pending
-      ? this.hold(pr, this.sending(key, verb, body['body']))
-      : null;
+    const local = this.hold(pr, this.sending(key, kind, body['body']));
     const written = await tried(
       'write',
       write<Outcome>(
@@ -1122,7 +1120,7 @@ export default class StoreService extends Service {
       ),
     );
     if (!written.done) {
-      if (local) this.refuse(pr, local, written.why, written.code);
+      this.refuse(pr, local, written.why, written.code);
       return written;
     }
     return {
@@ -1497,10 +1495,10 @@ export default class StoreService extends Service {
   private takeOutcome(
     pr: Numbered,
     { operation, conversation }: Outcome,
-    local: StoredOperation | null,
+    local: StoredOperation,
   ): void {
     const { repo, number } = pr;
-    if (local) this.drop(pr, local);
+    this.drop(pr, local);
     this.takeAnswer(pr, operation);
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};
