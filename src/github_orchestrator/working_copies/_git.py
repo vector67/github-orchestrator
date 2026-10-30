@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -55,8 +55,9 @@ class GitWorkingCopies:
     def __init__(self, github: PullRequests, notifications: Worktrees,
                  mismatched_dir: Path, worktree_conflicts_dir: Path,
                  thread_worktrees_dir: Path, clones: Mapping[Repo, Clone], *, grace_seconds: int,
-                 run_idle_seconds: int) -> None:
+                 run_idle_seconds: int, in_session: Callable[[str], bool]) -> None:
         self._github = github
+        self._in_session = in_session
         self._clones = clones
         self._pr_worktrees: dict[Pr, Path] = {}
         self._notifications = notifications
@@ -214,7 +215,8 @@ class GitWorkingCopies:
             missing = not_found(pr, branch, f"of {clone} ")
             log.warning("%s", missing.missing)
             return missing
-        _threads.rename_bare_workspaces(str(found), self._thread_worktrees_dir, pr)
+        _threads.rename_bare_workspaces(str(found), self._thread_worktrees_dir, pr,
+                                        self._in_session)
         self._pr_worktrees[pr] = found
         return Located(str(found))
 
@@ -238,7 +240,11 @@ class GitWorkingCopies:
         return status.returncode == 0 and not status.stdout.strip()
 
     def _thread_path(self, pr: Pr, key: str) -> str:
-        return str(thread_worktree(self._thread_worktrees_dir, pr, key))
+        path = thread_worktree(self._thread_worktrees_dir, pr, key)
+        bare = _threads.bare_key_worktree(self._thread_worktrees_dir, pr, key)
+        if not path.exists() and bare is not None and bare.is_dir():
+            return str(bare)
+        return str(path)
 
     def _ensure_workspace(self, worktree: str, pr: Pr, key: str,
                           base_sha: str | None) -> str:

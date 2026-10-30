@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from github_orchestrator.domain import Sha
+from github_orchestrator.terminal_sessions.fake import FakeTerminals
 from tests.builders import a_pr
 from tests.disk_layout import thread_worktree
 from tests.working_copies.support import copies_for
@@ -581,6 +582,58 @@ def test_a_fix_cut_under_its_bare_key_still_lands_once_the_names_carry_its_case(
 
     assert picked.landed_sha is not None, picked
     assert Path(cut.path).is_dir() and not bare.exists()
+
+
+def _left_under_its_bare_key(git, pr_worktree, worktrees_dir):
+    cut, sha = _fix_in_a_workspace(git, pr_worktree)
+    bare = thread_worktree(worktrees_dir, THE_PR, THREAD_KEY).with_name(THREAD_KEY)
+    _git(pr_worktree, "worktree", "move", cut.path, str(bare))
+    _git(pr_worktree, "branch", "-m", cut.branch, f"orchestrator/thread/{PR}/{THREAD_KEY}")
+    return cut, sha, bare
+
+
+def _upgraded_with_a_session_in(settings, pr_worktree, worktree):
+    terminals = FakeTerminals()
+    terminals.of(THE_PR).start(str(worktree), ["claude"])
+    return copies_for(settings, THE_PR, pr_worktree, terminals=terminals)
+
+
+def test_a_bare_key_workspace_a_session_is_in_stays_where_the_session_is(
+    settings, git, pr_worktree, worktrees_dir
+):
+    _, _, bare = _left_under_its_bare_key(git, pr_worktree, worktrees_dir)
+    upgraded = _upgraded_with_a_session_in(settings, pr_worktree, bare)
+
+    assert _in(upgraded).no_worktree() is None
+
+    renamed = thread_worktree(worktrees_dir, THE_PR, THREAD_KEY)
+    assert (bare / "f").is_file() and not renamed.exists()
+
+
+def test_a_workspace_left_under_its_bare_key_is_found_there_and_still_lands(
+    settings, git, pr_worktree, worktrees_dir
+):
+    cut, sha, bare = _left_under_its_bare_key(git, pr_worktree, worktrees_dir)
+    upgraded = _upgraded_with_a_session_in(settings, pr_worktree, bare)
+    held = _held(upgraded, pr_worktree, cut.base_sha)
+
+    picked = held.pick(sha)
+
+    assert held.path == str(bare)
+    assert picked.landed_sha is not None, picked
+
+
+def test_a_bare_key_workspace_is_not_moved_into_a_directory_already_at_its_new_name(
+    settings, git, pr_worktree, worktrees_dir
+):
+    _, _, bare = _left_under_its_bare_key(git, pr_worktree, worktrees_dir)
+    renamed = thread_worktree(worktrees_dir, THE_PR, THREAD_KEY)
+    renamed.mkdir()
+    upgraded = copies_for(settings, THE_PR, pr_worktree)
+
+    assert _in(upgraded).no_worktree() is None
+
+    assert (bare / "f").is_file() and not (renamed / THREAD_KEY).exists()
 
 
 def test_an_abbreviated_thread_sha_the_tip_moved_past_is_still_refused(
