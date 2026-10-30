@@ -1,6 +1,6 @@
 ---
 name: frontend-work
-description: Must be invoked for any requested front-end change in this repository — anything under `frontend/`, the board's look, layout, styles or behaviour in the browser
+description: Must be invoked for any requested front-end change in this repository — anything under `frontend/`, the board's look, layout, styles or behaviour in the browser — and for mockups or design drafts of a board screen
 ---
 
 # Frontend work
@@ -27,3 +27,9 @@ description: Must be invoked for any requested front-end change in this reposito
   `helper.sh` with no arguments lists every command. Each one prints the console
   and any `Uncaught` error raised while it ran, and exits 1 on an uncaught error:
   that is a failed check even when the screenshot looks right.
+
+- **Mock up from the running board.** A mockup or design draft of a board screen
+  starts from `helper.sh` screenshots of the live board (each PR at
+  `/pr/<owner>/<repo>/<n>/` on the hub) and reuses only treatments the board
+  already has. The hub generates its colours and fonts at runtime and serves
+  them at `/palette.css` and `/fonts.css`; `frontend/app/styles` holds none.

@@ -66,4 +66,6 @@ description: Use for any change to this repository — the branch, worktree, tes
    `git branch --merged main` lists it).
 9. Close the issue with `gh issue close <n>` once the merge has passed step 7,
    unless a pushed `Closes #<n>` already closed it. Prove it with
-   `gh issue view <n> --json state`.
+   `gh issue view <n> --json state`. A merge that delivers only a spec or a plan
+   leaves the issue open as the tracker for the build: comment on it with the
+   spec's path instead.
