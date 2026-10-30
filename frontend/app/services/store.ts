@@ -74,6 +74,7 @@ import {
   settledBy,
   slotOf,
   type PrVerb,
+  type SetupWrite,
 } from 'frontend/data/decisions';
 import {
   abandonUnder,
@@ -93,7 +94,7 @@ import {
   type Unheld,
 } from 'frontend/data/refusal';
 import { reportError } from 'frontend/data/report';
-import { tried, type Tried } from 'frontend/data/tried';
+import { MOVED, tried, type Tried } from 'frontend/data/tried';
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
@@ -262,6 +263,9 @@ const SECTIONS_ENTERED = 'hub-sections-entered';
 const SUMMARY_MOVED =
   'The summary moved before your click reached the board. It has been read ' +
   'again; look at it before you press.';
+
+const CONFIG_MOVED =
+  'The config changed since this page read it. Check your choices and save again.';
 
 const READ_MARKS = '/api/pull-request/read-marks';
 
@@ -433,6 +437,10 @@ export default class StoreService extends Service {
   @tracked clones: Record<string, SetupClone> = {};
   @tracked setupOperation: SetupOperation | null = null;
   @tracked movedTo: string | null = null;
+  @tracked setupWrite: {
+    write: StoredOperation | null;
+    fields: Record<string, string>;
+  } = { write: null, fields: {} };
   @tracked tour: Tour | null = null;
   @tracked harvestExtension: {
     write: StoredOperation | null;
@@ -507,32 +515,25 @@ export default class StoreService extends Service {
     return held ? summaryTabOf(held, head, role) : null;
   }
 
-  summarise(pr: Numbered): Promise<string | null> {
-    return this.summarised(pr, 'summarise');
-  }
-
-  summariseWithGithubApi(pr: Numbered): Promise<string | null> {
-    return this.summarised(pr, 'summarise-with-github-api');
-  }
-
-  private async summarised(pr: Numbered, verb: string): Promise<string | null> {
+  async summarise(
+    pr: Numbered,
+    verb: 'summarise' | 'summarise-with-github-api',
+  ): Promise<void> {
     const at = `${this.here.prefixOf(pr)}${FEED_PATHS.summary}`;
     const etag = this.prSummaries[keyOf(pr.repo, pr.number)]?.etag ?? null;
-    try {
-      const { body } = await posted<PrSummary>(
-        `${at}/operations:${verb}`,
-        etag,
-        {},
-      );
-      this.takePrSummary(pr, body);
-      return null;
-    } catch (trouble) {
-      if (!(trouble instanceof Refusal)) {
-        void reportError(`${verb} ${at}`, trouble);
-        return DOWN;
-      }
-      if (trouble.code !== 'precondition-failed') return trouble.detail;
-      return this.summaryReadAgain(pr, at);
+    const { taken, local } = await this.sendOn(
+      pr,
+      verb,
+      () => posted<PrSummary>(`${at}/operations:${verb}`, etag, {}),
+      `${verb} ${at}`,
+    );
+    if (taken.done) {
+      this.takePrSummary(pr, taken.body.body);
+      this.drop(pr, local);
+      return;
+    }
+    if (taken.code === MOVED) {
+      this.refuse(pr, local, await this.summaryReadAgain(pr, at), MOVED);
     }
   }
 
@@ -766,18 +767,14 @@ export default class StoreService extends Service {
     this.setup = await fetched<Setup>('/api/setup');
   }
 
-  async readAccount(login: string): Promise<void> {
-    const account = await fetched<SetupAccount>(
-      `/api/setup/accounts/${encodeURIComponent(login)}`,
-    );
-    this.accounts = { ...this.accounts, [login]: account };
-  }
-
-  async readRepoChoices(login: string): Promise<void> {
-    const { repos } = await fetched<SetupRepoChoices>(
-      `/api/setup/accounts/${encodeURIComponent(login)}/repos`,
-    );
-    this.repoChoices = { ...this.repoChoices, [login]: repos };
+  checkAccount(login: string): Promise<boolean> {
+    const at = `/api/setup/accounts/${encodeURIComponent(login)}`;
+    return this.sendSetup('check-account', async () => {
+      const account = await fetched<SetupAccount>(at);
+      this.accounts = { ...this.accounts, [login]: account };
+      const { repos } = await fetched<SetupRepoChoices>(`${at}/repos`);
+      this.repoChoices = { ...this.repoChoices, [login]: repos };
+    });
   }
 
   async readRepoByName(login: string, repo: string): Promise<void> {
@@ -793,29 +790,71 @@ export default class StoreService extends Service {
     return clone;
   }
 
-  async writeSetup(asked: SetupRequest): Promise<void> {
+  writeSetup(asked: SetupRequest): Promise<boolean> {
     const pid = this.health?.pid ?? null;
-    const { body, location } = await put<SetupOperation>(
-      '/api/setup',
-      this.setup?.etag ?? '',
-      asked,
-    );
-    this.setupOperation = body;
-    this.restarting = {
-      pid,
-      operation: location ?? `/api/setup/operations/${body.id}`,
-    };
+    return this.sendSetup('write-setup', async () => {
+      const { body, location } = await put<SetupOperation>(
+        '/api/setup',
+        this.setup?.etag ?? '',
+        asked,
+      );
+      this.setupOperation = body;
+      this.restarting = {
+        pid,
+        operation: location ?? `/api/setup/operations/${body.id}`,
+      };
+    });
   }
 
-  async moveAside(): Promise<void> {
+  moveAside(): Promise<boolean> {
     const pid = this.health?.pid ?? null;
-    const { body } = await posted<MovedAside>(
-      '/api/setup:move-aside',
-      null,
-      {},
-    );
-    this.movedTo = body.moved_to;
-    this.restarting = { pid, operation: null };
+    return this.sendSetup('move-aside', async () => {
+      const { body } = await posted<MovedAside>(
+        '/api/setup:move-aside',
+        null,
+        {},
+      );
+      this.movedTo = body.moved_to;
+      this.restarting = { pid, operation: null };
+    });
+  }
+
+  private async sendSetup(
+    kind: SetupWrite,
+    asking: () => Promise<void>,
+  ): Promise<boolean> {
+    const write = this.sending(null, kind, null);
+    this.setupWrite = { write, fields: {} };
+    try {
+      await asking();
+      this.setupWrite = { write: null, fields: {} };
+      return true;
+    } catch (trouble) {
+      void reportError(kind, trouble);
+      this.setupWrite = {
+        write: {
+          ...write,
+          state: 'refused',
+          reason: await this.setupRefusal(trouble),
+        },
+        fields: trouble instanceof Refusal ? trouble.fields : {},
+      };
+      return false;
+    }
+  }
+
+  private async setupRefusal(trouble: unknown): Promise<string | null> {
+    if (!(trouble instanceof Refusal)) return DOWN;
+    if (trouble.code === MOVED) {
+      return this.readSetup().then(
+        () => CONFIG_MOVED,
+        () => DOWN,
+      );
+    }
+    if (Object.keys(trouble.fields).length) {
+      return trouble.fields['config'] ?? null;
+    }
+    return trouble.detail;
   }
 
   dropSetupOperation(): void {
