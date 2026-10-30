@@ -735,6 +735,22 @@
      "stdout": "462fc216f30d355b3a3fbc125187e54edbd496d6\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:8917fe3d>/worktree\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -2837,6 +2853,22 @@
      "returncode": 1,
      "stderr": "error: could not apply 85d2319... what the agent proposes for PRRT_rebasing\nhint: After resolving the conflicts, mark them with\nhint: \"git add/rm <pathspec>\", then run\nhint: \"git cherry-pick --continue\".\nhint: You can instead skip this commit with \"git cherry-pick --skip\".\nhint: To abort and get back to the state before \"git cherry-pick\",\nhint: run \"git cherry-pick --abort\".\nhint: Disable this message with \"git config set advice.mergeConflict false\"\n",
      "stdout": "Auto-merging billing/invoice_writer.py\nCONFLICT (content): Merge conflict in billing/invoice_writer.py\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"push\"], null, null]": [
@@ -8029,6 +8061,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -8340,6 +8402,36 @@
      "stdout": "[main faf9c64] the fix\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+)\n create mode 100644 g\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"push\"], null, null]": [
     {
      "argv": [
@@ -8629,6 +8721,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -8809,6 +8931,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -8993,6 +9145,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -9175,6 +9357,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -9286,6 +9498,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -9401,6 +9643,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -9497,6 +9755,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -9597,6 +9871,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -9712,6 +10016,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -9808,6 +10128,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -9908,6 +10244,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -10023,6 +10389,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -10134,6 +10530,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -10279,6 +10705,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_202-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -10445,6 +10901,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
     {
      "argv": [
@@ -10587,6 +11059,36 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 856ffec).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -10787,6 +11289,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -10931,6 +11449,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -11056,6 +11604,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -11198,6 +11776,36 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 856ffec).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
@@ -11387,6 +11995,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -11484,6 +12108,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -11599,6 +12253,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -11712,6 +12396,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -11823,6 +12537,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -12005,6 +12749,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -12209,6 +12983,36 @@
      "returncode": 0,
      "stderr": "",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -12427,6 +13231,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -12538,6 +13372,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -12722,6 +13586,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -12904,6 +13798,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -13001,6 +13911,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -13116,6 +14056,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -13227,6 +14197,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -13342,6 +14342,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -13453,6 +14483,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -13568,6 +14628,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -13679,6 +14769,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -13830,6 +14950,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -13941,6 +15091,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -14125,6 +15305,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -14305,6 +15515,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -14489,6 +15729,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -14600,6 +15870,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -14715,6 +16015,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -14826,6 +16156,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -15139,6 +16499,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -15250,6 +16640,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -15365,6 +16785,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -15476,6 +16926,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -15604,6 +17084,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -15717,6 +17227,36 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -15828,6 +17368,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -16042,6 +17612,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -16138,6 +17724,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -16240,6 +17842,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -16337,6 +17955,36 @@
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
      "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101-f\n"
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -29098,42 +30746,6 @@
     }
    ]
   },
-  "tests/preview/test_preview.py::test_every_seeded_thread_answers_every_read_its_card_makes[reviewed]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done-7800\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done-7800",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined-f00\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "--no-optional-locks",
-      "-C",
-      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined-f00",
-      "status",
-      "--porcelain",
-      "--untracked-files=no"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ]
-  },
   "tests/preview/test_preview.py::test_every_seeded_thread_answers_every_read_its_card_makes[seeded]": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_assumed_done-7800\", \"rev-list\", \"--count\", \"--end-of-options\", \"23fc9c248c4822e5ea7f486a98c19f1196929ec5..HEAD\"], null, null]": [
     {
@@ -29169,6 +30781,23 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "0\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined-f00\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_declined-f00",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/data/thread-worktrees/acme/widgets/7/PRRT_deferred-f00\", \"rev-list\", \"--count\", \"--end-of-options\", \"23fc9c248c4822e5ea7f486a98c19f1196929ec5..HEAD\"], null, null]": [
@@ -34878,6 +36507,22 @@
      "stdout": "Auto-merging billing/invoice_writer.py\nCONFLICT (content): Merge conflict in billing/invoice_writer.py\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"push\"], null, null]": [
     {
      "argv": [
@@ -39200,6 +40845,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-tree\", \"--write-tree\", \"--name-only\", \"--no-messages\", \"HEAD\", \"refs/remotes/origin/main\"], null, null]": [
     {
      "argv": [
@@ -39507,6 +41168,22 @@
        "text": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\t\tbranch 'main' of <TMP>/origin\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -39985,6 +41662,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-tree\", \"--write-tree\", \"--name-only\", \"--no-messages\", \"HEAD\", \"refs/remotes/origin/main\"], null, null]": [
     {
      "argv": [
@@ -40317,6 +42010,22 @@
      },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref refs/heads/gone\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -40905,6 +42614,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -41056,6 +42781,22 @@
        "text": "6a7c386af39134dfaf613876b1b098509a02b723\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -41262,6 +43003,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -41593,6 +43350,22 @@
        "text": "1fdb7cd5ccaf78328a29874b252020964c01f106\t\tbranch 'main' of <TMP>/origin\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -42091,6 +43864,22 @@
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc-798 (was 971346d).\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -42386,6 +44175,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -42880,6 +44685,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"push\", \"-q\", \"origin\", \"hotfix\"], null, null]": [
     {
      "argv": [
@@ -43311,6 +45132,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -43779,6 +45616,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -44337,6 +46190,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6\", \"6a7c386af39134dfaf613876b1b098509a02b723\"], null, null]": [
     {
      "argv": [
@@ -44765,6 +46634,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-tree\", \"--write-tree\", \"--name-only\", \"--no-messages\", \"HEAD\", \"refs/remotes/origin/main\"], null, null]": [
     {
      "argv": [
@@ -45162,6 +47047,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
     {
      "argv": [
@@ -45472,6 +47373,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -45777,6 +47694,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 972d2e9] Fix the middle line\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"972d2e93bf1e93f256f48e7af72d7c9af0ffacaa\"], null, null]": [
@@ -46150,6 +48083,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 0a58032] second half\n Date: Thu Jan 1 00:00:00 2026 +0000\n 2 files changed, 2 insertions(+), 1 deletion(-)\n create mode 100644 h\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"0a58032a43f298adfcb238e5b0938b18691d6311\"], null, null]": [
@@ -46635,6 +48584,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--count\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67...HEAD\"], null, null]": [
     {
      "argv": [
@@ -46981,6 +48946,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -47197,6 +49178,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc-798 (was 75c86c5).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -47508,6 +49505,22 @@
      }
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
     {
      "argv": [
@@ -47637,6 +49650,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 75c86c5] fix\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"push\"], null, null]": [
@@ -48225,6 +50254,22 @@
      "stdout": "1fdb7cd5ccaf78328a29874b252020964c01f106\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
     {
      "argv": [
@@ -48587,6 +50632,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 1f4016b] fix the middle\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4\"], null, null]": [
@@ -49128,6 +51189,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\"], null, null]": [
     {
      "argv": [
@@ -49425,6 +51502,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -50088,6 +52181,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--count\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
     {
      "argv": [
@@ -50692,6 +52801,22 @@
      "stdout": "[feature 75c86c5] fix\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--count\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
     {
      "argv": [
@@ -51023,6 +53148,22 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_prs_checkout_reads_the_worktree_its_head_branch_is_checked_out_in[git]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
     {
      "argv": [
@@ -51148,6 +53289,22 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_prs_checkout_with_its_worktree_says_nothing_is_missing[git]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
     {
      "argv": [
@@ -51517,6 +53674,22 @@
      "stdout": "7e39035e431d1b7d75cde4b06d0a4d7c922f104f\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -51823,6 +53996,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -52153,6 +54342,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -52373,6 +54578,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -52549,6 +54770,22 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_thread_key_that_names_no_worktree_of_its_own_is_refused[git-..]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -52656,6 +54893,22 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_thread_key_that_names_no_worktree_of_its_own_is_refused[git-.]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -52763,6 +55016,22 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_a_thread_key_that_names_no_worktree_of_its_own_is_refused[git-]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -52959,6 +55228,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -53199,6 +55484,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -53718,6 +56019,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\"], null, null]": [
     {
      "argv": [
@@ -54094,6 +56411,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_kwDOabc-798 (was 78d7c2a).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -54873,6 +57206,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge\", \"-q\", \"--no-ff\", \"--no-commit\", \"origin/main\"], null, null]": [
     {
      "argv": [
@@ -55165,6 +57514,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[feature 75c86c5] fix\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"reset\", \"--keep\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
@@ -55637,6 +58002,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -56001,6 +58382,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -56636,6 +59033,38 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/70/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/70/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -57045,6 +59474,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -57367,6 +59812,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -57854,13 +60315,13 @@
    ]
   },
   "tests/working_copies/test_contract.py::test_progress_counts_commits_and_changed_files[fake]": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/test-1204/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/test-1224/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
       "git",
       "--no-optional-locks",
       "-C",
-      "<BASETEMP>/test-1204/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "<BASETEMP>/test-1224/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
       "status",
       "--porcelain",
       "--untracked-files=no"
@@ -57921,6 +60382,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -58231,6 +60708,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -58588,6 +61081,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -59488,6 +61997,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -60030,6 +62555,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\"], null, null]": [
     {
      "argv": [
@@ -60382,6 +62923,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -62113,6 +64670,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[--output=/tmp/pwned]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62142,6 +64715,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62151,6 +64727,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[-x]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62180,6 +64772,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62189,6 +64784,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[..]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62218,6 +64829,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62227,6 +64841,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[a b]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62256,6 +64886,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62265,6 +64898,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[a^b]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62294,6 +64943,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62303,6 +64955,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_a_base_branch_that_is_no_branch_name_never_reaches_git[feature/x.lock]": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62332,6 +65000,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62341,6 +65012,22 @@
    ]
   },
   "tests/working_copies/test_diff.py::test_the_base_branch_a_pr_really_has_ends_option_parsing": {
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62370,6 +65057,9 @@
      "fs": {
       "repo/.git": {
        "dir": true
+      },
+      "repo/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62379,6 +65069,22 @@
    ]
   },
   "tests/working_copies/test_git_failures_are_logged.py::test_a_git_that_hangs_is_logged_with_the_worktree[head_sha]": {
+   "[[\"git\", \"-C\", \"<TMP>\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62408,6 +65114,9 @@
      "fs": {
       ".git": {
        "dir": true
+      },
+      ".git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62417,6 +65126,22 @@
    ]
   },
   "tests/working_copies/test_git_failures_are_logged.py::test_a_git_that_hangs_is_logged_with_the_worktree[report_branch]": {
+   "[[\"git\", \"-C\", \"<TMP>\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62446,6 +65171,9 @@
      "fs": {
       ".git": {
        "dir": true
+      },
+      ".git/HEAD": {
+       "text": "ref: refs/heads/main\n"
       }
      },
      "returncode": 0,
@@ -62565,6 +65293,22 @@
      "stdout": "diff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex efaec44..4f658fc 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -5,6 +5,7 @@ def write(items):\n     begin()\n     middle()\n     header()\n-    for a in items:\n+    for item in items:\n+        check(item)\n         emit(a)\n     footer()\ndiff --git a/gone.py b/gone.py\ndeleted file mode 100644\nindex f1adef6..0000000\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-nothing here\ndiff --git a/logo.png b/logo.png\nnew file mode 100644\nindex 0000000..c866266\nBinary files /dev/null and b/logo.png differ\ndiff --git a/old/name.py b/new/name.py\nsimilarity index 96%\nrename from old/name.py\nrename to new/name.py\nindex 0478600..14e3734 100644\n--- a/old/name.py\n+++ b/new/name.py\n@@ -1,4 +1,4 @@\n-line 1\n+line one\n line 2\n line 3\n line 4\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62598,6 +65342,22 @@
       "--end-of-options",
       "7d4c85a404ea548a54987221a0e4132f9ad16130",
       "7d4c85a404ea548a54987221a0e4132f9ad16130"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
      ],
      "fs": {},
      "returncode": 0,
@@ -62645,6 +65405,22 @@
      "stdout": "diff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex efaec44..4f658fc 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -5,6 +5,7 @@ def write(items):\n     begin()\n     middle()\n     header()\n-    for a in items:\n+    for item in items:\n+        check(item)\n         emit(a)\n     footer()\ndiff --git a/gone.py b/gone.py\ndeleted file mode 100644\nindex f1adef6..0000000\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-nothing here\ndiff --git a/logo.png b/logo.png\nnew file mode 100644\nindex 0000000..c866266\nBinary files /dev/null and b/logo.png differ\ndiff --git a/old/name.py b/new/name.py\nsimilarity index 96%\nrename from old/name.py\nrename to new/name.py\nindex 0478600..14e3734 100644\n--- a/old/name.py\n+++ b/new/name.py\n@@ -1,4 +1,4 @@\n-line 1\n+line one\n line 2\n line 3\n line 4\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62683,6 +65459,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "diff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex efaec44..4f658fc 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -5,6 +5,7 @@ def write(items):\n     begin()\n     middle()\n     header()\n-    for a in items:\n+    for item in items:\n+        check(item)\n         emit(a)\n     footer()\ndiff --git a/gone.py b/gone.py\ndeleted file mode 100644\nindex f1adef6..0000000\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-nothing here\ndiff --git a/logo.png b/logo.png\nnew file mode 100644\nindex 0000000..c866266\nBinary files /dev/null and b/logo.png differ\ndiff --git a/old/name.py b/new/name.py\nsimilarity index 96%\nrename from old/name.py\nrename to new/name.py\nindex 0478600..14e3734 100644\n--- a/old/name.py\n+++ b/new/name.py\n@@ -1,4 +1,4 @@\n-line 1\n+line one\n line 2\n line 3\n line 4\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -62725,6 +65517,22 @@
      "stdout": "diff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex efaec44..4f658fc 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -5,6 +5,7 @@ def write(items):\n     begin()\n     middle()\n     header()\n-    for a in items:\n+    for item in items:\n+        check(item)\n         emit(a)\n     footer()\ndiff --git a/gone.py b/gone.py\ndeleted file mode 100644\nindex f1adef6..0000000\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-nothing here\ndiff --git a/logo.png b/logo.png\nnew file mode 100644\nindex 0000000..c866266\nBinary files /dev/null and b/logo.png differ\ndiff --git a/old/name.py b/new/name.py\nsimilarity index 96%\nrename from old/name.py\nrename to new/name.py\nindex 0478600..14e3734 100644\n--- a/old/name.py\n+++ b/new/name.py\n@@ -1,4 +1,4 @@\n-line 1\n+line one\n line 2\n line 3\n line 4\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -62763,6 +65571,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "diff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex efaec44..4f658fc 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -5,6 +5,7 @@ def write(items):\n     begin()\n     middle()\n     header()\n-    for a in items:\n+    for item in items:\n+        check(item)\n         emit(a)\n     footer()\ndiff --git a/gone.py b/gone.py\ndeleted file mode 100644\nindex f1adef6..0000000\n--- a/gone.py\n+++ /dev/null\n@@ -1 +0,0 @@\n-nothing here\ndiff --git a/logo.png b/logo.png\nnew file mode 100644\nindex 0000000..c866266\nBinary files /dev/null and b/logo.png differ\ndiff --git a/old/name.py b/new/name.py\nsimilarity index 96%\nrename from old/name.py\nrename to new/name.py\nindex 0478600..14e3734 100644\n--- a/old/name.py\n+++ b/new/name.py\n@@ -1,4 +1,4 @@\n-line 1\n+line one\n line 2\n line 3\n line 4\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/1/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/1/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -64147,6 +66971,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6\", \"6a7c386af39134dfaf613876b1b098509a02b723\"], null, null]": [
     {
      "argv": [
@@ -64673,6 +67513,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"d5db9dc1b9665f73601e82a71dda7cc5b86bea7e\", \"427a677ac10bcf816ad8402693879c793106f477\"], null, null]": [
     {
      "argv": [
@@ -65041,6 +67897,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"82a2417cb5b1f234d4d859a77ba3f36ddc7ff315\", \"e8639ca865a1e21d9cf8bea6768e91a78f828689\"], null, null]": [
     {
      "argv": [
@@ -65372,6 +68244,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"a172063492f74016644b2739bec66b23c11946ef\"], null, null]": [
     {
      "argv": [
@@ -65694,6 +68582,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -66217,6 +69121,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"push\", \"-q\", \"origin\", \"hotfix\"], null, null]": [
     {
      "argv": [
@@ -66701,6 +69621,22 @@
      },
      "returncode": 0,
      "stderr": "From <TMP>/origin\n   7e39035..1fdb7cd  main       -> origin/main\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -67387,6 +70323,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"push\"], null, null]": [
     {
      "argv": [
@@ -68027,6 +70979,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -68390,6 +71358,22 @@
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was e562a01).\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
     {
      "argv": [
@@ -68698,6 +71682,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
     {
      "argv": [
@@ -68894,6 +71894,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_clean_pr_worktree_is_clean": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -68928,6 +71944,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_commit_git_does_not_know_has_no_message": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"log\", \"-1\", \"--format=%B\", \"--end-of-options\", \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"], null, null]": [
     {
      "argv": [
@@ -69114,6 +72146,22 @@
        "text": "5bb75caf04461a4b4d83161d057f810f19b5f40e\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -69416,6 +72464,22 @@
        "text": "34c43391b3610a8f92a4561f44b2420a44d329cf\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -69764,6 +72828,22 @@
      "stdout": "[main e562a01] fix PRRT_101\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n[main c11dda9] second attempt\n Author: Ada Lovelace <ada@example.com>\n Date: Mon Feb 2 02:02:02 2026 +0000\n 1 file changed, 1 insertion(+)\n create mode 100644 g\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-list\", \"--count\", \"2d53e0429f477a026a7253afb784c12078e9fc03..HEAD\"], null, null]": [
     {
      "argv": [
@@ -70083,6 +73163,22 @@
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 2d53e04).\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
     {
      "argv": [
@@ -70368,6 +73464,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
     {
      "argv": [
@@ -70561,6 +73673,410 @@
     }
    ]
   },
+  "tests/working_copies/test_threads.py::test_a_fix_cut_under_its_bare_key_still_lands_once_the_names_carry_its_case": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_101-f"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_101\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_101",
+      "orchestrator/thread/7/PRRT_101-f"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": null,
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101-f": {
+       "text": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+      },
+      "prwork/.git/worktrees/PRRT_101-f/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_101-f\", \"orchestrator/thread/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_101-f",
+      "orchestrator/thread/7/PRRT_101"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101": {
+       "text": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+      },
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101-f": null,
+      "prwork/.git/worktrees/PRRT_101-f/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"cherry-pick\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03..orchestrator/thread/7/PRRT_101-f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "cherry-pick",
+      "--end-of-options",
+      "2d53e0429f477a026a7253afb784c12078e9fc03..orchestrator/thread/7/PRRT_101-f"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/main": {
+       "text": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+      },
+      "prwork/f": {
+       "text": "fixed\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "[main e562a01] fix PRRT_101\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "refs/heads/orchestrator/thread/7/PRRT_101\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-list\", \"--count\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-list",
+      "--count",
+      "--end-of-options",
+      "2d53e0429f477a026a7253afb784c12078e9fc03..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"orchestrator/thread/7/PRRT_101-f^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "orchestrator/thread/7/PRRT_101-f^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_101-f\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_101-f",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f",
+      "2d53e0429f477a026a7253afb784c12078e9fc03"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101-f": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "prwork/.git/worktrees/PRRT_101-f/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_101-f\n"
+      },
+      "prwork/.git/worktrees/PRRT_101-f/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/acme": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101-f\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_101-f')\n",
+     "stdout": "HEAD is now at 2d53e04 base\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_101\nHEAD e562a0113d53195ca87119e3bb0aafef96013ce0\nbranch refs/heads/orchestrator/thread/7/PRRT_101\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f"
+     ],
+     "fs": {
+      "thread-worktrees/acme/widgets/7/PRRT_101": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101-f": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101-f\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/f": {
+       "text": "fixed\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101"
+     ],
+     "fs": {
+      "thread-worktrees/acme/widgets/7/PRRT_101": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101-f": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/.git": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101-f/f": null,
+      "thread-worktrees/acme/widgets/7/PRRT_101/.git": {
+       "text": "gitdir: <TMP>/prwork/.git/worktrees/PRRT_101-f\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_101/f": {
+       "text": "fixed\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\", \"add\", \"f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f",
+      "add",
+      "f"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\", \"commit\", \"-q\", \"-m\", \"fix PRRT_101\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f",
+      "commit",
+      "-q",
+      "-m",
+      "fix PRRT_101"
+     ],
+     "fs": {
+      "prwork/.git/refs/heads/orchestrator/thread/7/PRRT_101-f": {
+       "text": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_101-f",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e562a0113d53195ca87119e3bb0aafef96013ce0\n"
+    }
+   ]
+  },
   "tests/working_copies/test_threads.py::test_a_fix_that_changed_nothing_has_no_files": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/prwork\", \"diff\", \"--numstat\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
     {
@@ -70671,6 +74187,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_fix_with_no_workspace_is_refused_rather_than_raising": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -70750,6 +74282,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main f4201c6] second attempt\n Author: Ada Lovelace <ada@example.com>\n Date: Mon Feb 2 02:02:02 2026 +0000\n 2 files changed, 2 insertions(+), 1 deletion(-)\n create mode 100644 g\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"reset\", \"--soft\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
@@ -71115,6 +74663,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main f62b079] the fix as it now stands\n Author: Grace Hopper <grace@example.com>\n Date: Tue Mar 3 03:03:03 2026 +0000\n 3 files changed, 3 insertions(+), 1 deletion(-)\n create mode 100644 g\n create mode 100644 h\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"log\", \"-1\", \"--format=%s%n%an <%ae>%n%aI\"], null, null]": [
@@ -71602,6 +75166,22 @@
      "stdout": "[main e0cbdde] Rename the helper\n 2 files changed, 2 insertions(+), 1 deletion(-)\n create mode 100644 g\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"log\", \"-1\", \"--format=%s\"], null, null]": [
     {
      "argv": [
@@ -71973,6 +75553,22 @@
      "stdout": "[main ef3a477] Rename the helper\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"log\", \"-1\", \"--format=%B\"], null, null]": [
     {
      "argv": [
@@ -72233,6 +75829,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_pick_whose_revs_are_not_commits_never_reaches_git[--output=/tmp/pwned-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -72251,6 +75863,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_pick_whose_revs_are_not_commits_never_reaches_git[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa---output=/tmp/pwned]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -72269,6 +75897,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_pick_whose_revs_are_not_commits_never_reaches_git[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-HEAD]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
      "argv": [
@@ -72287,6 +75931,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_push_to_a_remote_that_is_gone_keeps_both_fatal_lines": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"push\"], null, null]": [
     {
      "argv": [
@@ -72336,6 +75996,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_push_with_no_remote_keeps_gits_fatal_line_and_drops_its_advice": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"push\"], null, null]": [
     {
      "argv": [
@@ -72449,6 +76125,22 @@
       "diff",
       "--cached",
       "--quiet"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
      ],
      "fs": {},
      "returncode": 0,
@@ -72834,6 +76526,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -73080,6 +76788,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main e562a01] fix PRRT_101\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n[main c11dda9] second attempt\n Author: Ada Lovelace <ada@example.com>\n Date: Mon Feb 2 02:02:02 2026 +0000\n 1 file changed, 1 insertion(+)\n create mode 100644 g\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"reset\", \"--hard\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
@@ -73451,6 +77175,22 @@
      ],
      "fs": {},
      "returncode": 1,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
      "stderr": "",
      "stdout": ""
     }
@@ -73828,6 +77568,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main e562a01] fix PRRT_101\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n[main c11dda9] second attempt\n Author: Ada Lovelace <ada@example.com>\n Date: Mon Feb 2 02:02:02 2026 +0000\n 1 file changed, 1 insertion(+)\n create mode 100644 g\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"reset\", \"--hard\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
@@ -74221,6 +77977,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"reset\", \"--soft\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
     {
      "argv": [
@@ -74506,6 +78278,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -74540,6 +78328,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_a_tracked_change_makes_the_pr_worktree_dirty[unstaged]": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -74604,6 +78408,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 2d53e04).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -74809,6 +78629,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
     {
      "argv": [
@@ -74973,6 +78809,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -75119,6 +78971,22 @@
        "text": "ec5ec182dc8106a1a141de2a023bcacc9697014a\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -75310,6 +79178,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -75403,6 +79287,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main e562a01] fix PRRT_101\n Date: Thu Jan 1 00:00:00 2026 +0000\n 1 file changed, 1 insertion(+), 1 deletion(-)\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-list\", \"--count\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03..HEAD\"], null, null]": [
@@ -75645,6 +79545,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113^{commit}\"], null, null]": [
     {
      "argv": [
@@ -75865,6 +79781,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
     {
      "argv": [
@@ -76062,6 +79994,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
     {
      "argv": [
@@ -76243,6 +80191,22 @@
    ]
   },
   "tests/working_copies/test_threads.py::test_an_untracked_file_leaves_the_pr_worktree_clean": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"status\", \"--porcelain\", \"--untracked-files=no\"], null, null]": [
     {
      "argv": [
@@ -76324,6 +80288,22 @@
        "text": "34c43391b3610a8f92a4561f44b2420a44d329cf\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""
@@ -76557,6 +80537,40 @@
     }
    ]
   },
+  "tests/working_copies/test_threads.py::test_dropping_a_fix_that_never_had_a_workspace_removes_no_worktree_and_deletes_no_branch": {
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/prwork\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
+    }
+   ]
+  },
   "tests/working_copies/test_threads.py::test_dropping_a_fix_that_never_had_a_workspace_runs_no_git": {
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
     {
@@ -76606,6 +80620,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 2d53e04).\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
@@ -76779,6 +80809,22 @@
      "stdout": "Deleted branch orchestrator/thread/7/PRRT_101-f (was 2d53e04).\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"orchestrator/thread/7/PRRT_101-f\"], null, null]": [
     {
      "argv": [
@@ -76949,6 +80995,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -77246,6 +81308,22 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-list\", \"--count\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03...HEAD\"], null, null]": [
     {
      "argv": [
@@ -77470,6 +81548,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_101-f' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],
@@ -77790,6 +81884,22 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "[main f4201c6] second attempt\n Author: Ada Lovelace <ada@example.com>\n Date: Mon Feb 2 02:02:02 2026 +0000\n 2 files changed, 2 insertions(+), 1 deletion(-)\n create mode 100644 g\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"reset\", \"--soft\", \"--end-of-options\", \"2d53e0429f477a026a7253afb784c12078e9fc03\"], null, null]": [
@@ -78133,6 +82243,22 @@
      "fs": {},
      "returncode": 1,
      "stderr": "error: branch 'orchestrator/thread/7/PRRT_abcr-f0' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/prwork\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads/orchestrator/thread/7/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "for-each-ref",
+      "--format=%(refname)",
+      "refs/heads/orchestrator/thread/7/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
      "stdout": ""
     }
    ],

@@ -214,6 +214,7 @@ class GitWorkingCopies:
             missing = not_found(pr, branch, f"of {clone} ")
             log.warning("%s", missing.missing)
             return missing
+        _threads.rename_bare_workspaces(str(found), self._thread_worktrees_dir, pr)
         self._pr_worktrees[pr] = found
         return Located(str(found))
 
