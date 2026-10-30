@@ -887,9 +887,8 @@ export function settledBy(
   return facts !== null && until(facts);
 }
 
-export interface Pressing {
-  pressed: PrVerb | null;
-  on: string | null;
+export interface Pressed {
+  pressed: string | null;
   doing: string | null;
   pending: string | null;
   ring: boolean;
@@ -897,36 +896,49 @@ export interface Pressing {
   code: string | null;
 }
 
+export interface Pressing extends Pressed {
+  pressed: PrVerb | null;
+  on: string | null;
+}
+
 export type Pressings = Record<Slot, Pressing>;
 
 interface Written {
-  kind: string;
-  state: string;
-  reason: string | null;
+  kind?: string;
+  state?: string;
+  reason?: string | null;
   reason_code?: string | null;
   body?: string | null;
 }
 
-function refusalOf(write: Written): string | null {
-  const unsent = prWriteOf(write.kind)?.unsent;
-  return unsent ? `${unsent}: ${write.reason}` : write.reason;
+function refusalOf(kind: string, reason: string | null): string | null {
+  const unsent = prWriteOf(kind)?.unsent;
+  return unsent ? `${unsent}: ${reason}` : reason;
+}
+
+export function pressedBy(write: Written | null | undefined): Pressed {
+  const kind = write?.kind ?? '';
+  const pressed = write?.state === 'sent' ? kind : null;
+  const refused = write?.state === 'refused' && !prWriteOf(kind)?.leaves;
+  return {
+    pressed,
+    doing: pressed && doingOf(carryingOf(pressed)?.doing ?? pressed),
+    pending: pressed && inFlight(pressed),
+    ring: pressed !== null && Boolean(carryingOf(pressed)?.ring),
+    refused: refused ? refusalOf(kind, write.reason ?? null) : null,
+    code: refused ? (write.reason_code ?? null) : null,
+  };
 }
 
 function pressingIn(writes: Written[], slot: Slot): Pressing {
   const write = writes.findLast(
-    (one) => local(one) && slotOf(one.kind) === slot,
+    (one) => local(one) && slotOf(one.kind ?? '') === slot,
   );
-  const pressed = write && sent(write) ? (write.kind as PrVerb) : null;
-  const refused =
-    write?.state === 'refused' && !prWriteOf(write.kind)?.leaves ? write : null;
+  const shown = pressedBy(write);
   return {
-    pressed,
+    ...shown,
+    pressed: shown.pressed as PrVerb | null,
     on: write?.body ?? null,
-    doing: pressed && doingOf(PR_WRITES[pressed].doing),
-    pending: pressed && inFlight(pressed),
-    ring: pressed !== null && Boolean(prWriteOf(pressed)?.ring),
-    refused: refused && refusalOf(refused),
-    code: refused?.reason_code ?? null,
   };
 }
 
@@ -984,28 +996,6 @@ const CARRIED: Record<
   },
 };
 
-export interface Pressed {
-  doing: string | null;
-  ring: boolean;
-  refused: string | null;
-}
-
-export function pressedBy(write: Partial<Written> | null): Pressed {
-  const carrying =
-    write?.state === 'sent' ? carryingOf(write.kind ?? '') : undefined;
-  return {
-    doing: carrying ? doingOf(carrying.doing) : null,
-    ring: Boolean(carrying?.ring),
-    refused: write?.state === 'refused' ? (write.reason ?? null) : null,
-  };
-}
-
-export interface Opening {
-  pending: string | null;
-  ring: boolean;
-  refused: string | null;
-}
-
 interface Answered extends Written {
   answer?: string;
 }
@@ -1014,16 +1004,10 @@ export function opensTerminal(kind: string): boolean {
   return Boolean(carryingOf(kind)?.opensTerminal);
 }
 
-export function openingOf(writes: Answered[]): Opening {
-  const write = writes.findLast(
-    (one) => local(one) && one.answer !== undefined,
+export function openingOf(writes: Answered[]): Pressed {
+  return pressedBy(
+    writes.findLast((one) => local(one) && one.answer !== undefined),
   );
-  const waiting = write && sent(write) ? write.kind : null;
-  return {
-    pending: waiting && inFlight(waiting),
-    ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
-    refused: write?.state === 'refused' ? write.reason : null,
-  };
 }
 
 export interface Writing {
@@ -1034,6 +1018,8 @@ export interface Writing {
   refused: string | null;
   retype: boolean;
 }
+
+const SENDING_REVIEW: Written = { kind: 'send-review', state: 'sent' };
 
 function carryingOf(kind: string): Carrying | undefined {
   return (CARRIED as Record<string, Carrying | undefined>)[kind];
@@ -1046,14 +1032,15 @@ export function writtenOn(
   const going = outstanding(conversation);
   const write = conversation.operations.findLast(local);
   const outgoing = conversation.state === 'enrolled' && reviewSending;
-  const waiting =
-    going && sent(going) ? going.kind : outgoing ? 'send-review' : null;
+  const shown = pressedBy(
+    going && sent(going) ? going : outgoing ? SENDING_REVIEW : null,
+  );
   return {
     outgoing,
-    sending: waiting,
-    pending: waiting === null ? null : inFlight(waiting),
-    ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
-    refused: write?.state === 'refused' ? write.reason : null,
+    sending: shown.pressed,
+    pending: shown.pending,
+    ring: shown.ring,
+    refused: pressedBy(write).refused,
     retype: write?.kind === 'edit-draft',
   };
 }

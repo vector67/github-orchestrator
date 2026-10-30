@@ -15,7 +15,7 @@ import { keyOf, type Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
 import type { Summaries } from 'frontend/services/store';
-import type { Opening, Pressings } from 'frontend/data/decisions';
+import type { Pressed, Pressings } from 'frontend/data/decisions';
 import type ToastsService from 'frontend/services/toasts';
 import { after, durationOf } from 'frontend/motion';
 
@@ -171,7 +171,7 @@ export default class TerminalService extends Service {
     return this.summary?.pressing ?? null;
   }
 
-  get opening(): Opening | null {
+  get opening(): Pressed | null {
     return this.summary?.opening ?? null;
   }
 
