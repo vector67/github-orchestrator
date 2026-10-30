@@ -1535,10 +1535,7 @@ export default class StoreService extends Service {
         ];
     const taken = new Map<string, Merged>();
     for (const [thread, one] of named) {
-      taken.set(
-        thread,
-        threadMerged(held[thread], { ...one, provisional: false }),
-      );
+      taken.set(thread, threadMerged(held[thread], one));
     }
     this.threads = {
       ...this.threads,
@@ -1724,10 +1721,7 @@ export default class StoreService extends Service {
     this.takeAnswer(pr, operation);
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};
-    const taken = threadMerged(held[conversation.key], {
-      ...conversation,
-      provisional: true,
-    });
+    const taken = threadMerged(held[conversation.key], conversation);
     this.threads = {
       ...this.threads,
       [key]: { ...held, [conversation.key]: taken.thread },

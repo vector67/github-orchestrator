@@ -55,7 +55,6 @@ function unreadableRow(key: string): Row {
     standing: null,
     standing_label: '',
     alert: '',
-    provisional: false,
     pending: false,
   };
 }

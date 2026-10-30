@@ -40,7 +40,6 @@ export interface Row {
   standing: Standing | null;
   standing_label: string;
   alert: string;
-  provisional: boolean;
   pending: boolean;
 }
 
@@ -233,10 +232,7 @@ function draftStanding(conversation: Conversation): Standing | null {
     : null;
 }
 
-export function rowOf(
-  conversation: Conversation & { provisional?: boolean },
-  seen: Seen,
-): Row {
+export function rowOf(conversation: Conversation, seen: Seen): Row {
   const shown = confirmed(conversation);
   const steps = stepsOf(shown, seen);
   const standing = draftStanding(conversation);
@@ -257,7 +253,6 @@ export function rowOf(
     standing,
     standing_label: standing ? STANDING_LABELS[standing] : '',
     alert: alertOf(conversation),
-    provisional: conversation.provisional === true,
     pending: pending !== null,
   };
 }
