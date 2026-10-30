@@ -3979,6 +3979,32 @@ kbd {
   font: inherit;
 }
 
+.launchers > .refusal {
+  padding: 5px 16px;
+  font-size: var(--fs-s);
+}
+
+:has(> .rebase-refusal) {
+  flex-wrap: wrap;
+}
+
+.rebase-refusal {
+  display: block;
+  flex-basis: 100%;
+  padding: 4px 0 0;
+  font-size: var(--fs-s);
+  white-space: normal;
+}
+
+.sess.opening {
+  cursor: default;
+}
+
+.sess.opening > .refusal {
+  padding: 0;
+  font-size: var(--fs-s);
+}
+
 .tty {
   position: relative;
   display: flex;

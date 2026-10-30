@@ -3,7 +3,9 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import PendingRing from 'frontend/components/pending-ring';
 import showsSession from 'frontend/modifiers/shows-session';
+import type { Opening, Pressing } from 'frontend/data/decisions';
 import type { Session } from 'frontend/data/terminal';
 import type DashboardService from 'frontend/services/dashboard';
 import type TerminalService from 'frontend/services/terminal';
@@ -74,6 +76,21 @@ export default class TerminalTab extends Component {
 
   isSelected = (one: Session): boolean => one === this.selected;
 
+  get launched(): Pressing | null {
+    return this.terminal.pressing?.session ?? null;
+  }
+
+  get drained(): Opening | null {
+    const opening = this.terminal.opening;
+    return opening?.pending || opening?.refused ? opening : null;
+  }
+
+  launching = (one: Launcher): boolean => {
+    const keys = this.launched?.pressed ? this.launched.on : null;
+    if (keys === null) return false;
+    return one.counts ? keys.startsWith(one.keys) : keys === one.keys;
+  };
+
   launch = (one: Launcher) => {
     if (one.counts) this.askingCount = true;
     else void this.terminal.open(one.keys, one.does);
@@ -129,32 +146,57 @@ export default class TerminalTab extends Component {
                 data-test-session-standing
               >{{one.said}}</span>{{/if}}</button>
         {{/each}}
+        {{#if this.drained}}
+          <div
+            class="sess opening"
+            data-pending={{if this.drained.pending "true"}}
+            data-refused={{if this.drained.refused "true"}}
+            data-test-opening
+          >{{#if this.drained.pending}}<b>{{#if this.drained.ring}}<PendingRing
+                  />{{/if}}{{this.drained.pending}}</b>{{else}}<p
+                class="refusal"
+                data-test-refusal
+              >{{this.drained.refused}}</p>{{/if}}</div>
+        {{/if}}
         <h2 class="h">Start</h2>
-        {{#each this.launchers key="keys" as |one|}}
-          {{#if (this.asksHere one)}}
-            <form class="launch count" {{on "submit" this.rebase}}>
-              <span><label>git rebase -i HEAD~<input
-                    type="number"
-                    min="1"
-                    value={{this.count}}
-                    data-test-rebase-count
-                    {{on "input" this.noteCount}}
-                  /></label>
-                <button
-                  type="submit"
-                  class="btn"
-                  data-test-rebase-open
-                >Open</button></span>
-            </form>
-          {{else}}
-            <button
-              type="button"
-              class="launch"
-              data-test-launch={{one.keys}}
-              {{on "click" (fn this.launch one)}}
-            ><span class="does">{{one.does}}</span></button>
+        <div
+          class="launchers"
+          data-pending={{if this.launched.pressed "true"}}
+          data-refused={{if this.launched.refused "true"}}
+          data-test-launchers
+        >
+          {{#each this.launchers key="keys" as |one|}}
+            {{#if (this.asksHere one)}}
+              <form class="launch count" {{on "submit" this.rebase}}>
+                <span><label>git rebase -i HEAD~<input
+                      type="number"
+                      min="1"
+                      value={{this.count}}
+                      data-test-rebase-count
+                      {{on "input" this.noteCount}}
+                    /></label>
+                  <button
+                    type="submit"
+                    class="btn"
+                    data-test-rebase-open
+                  >Open</button></span>
+              </form>
+            {{else}}
+              <button
+                type="button"
+                class="launch"
+                data-test-launch={{one.keys}}
+                {{on "click" (fn this.launch one)}}
+              ><span class="does">{{#if (this.launching one)}}{{#if
+                      this.launched.ring
+                    }}<PendingRing
+                      />{{/if}}{{this.launched.doing}}{{else}}{{one.does}}{{/if}}</span></button>
+            {{/if}}
+          {{/each}}
+          {{#if this.launched.refused}}
+            <p class="refusal" data-test-refusal>{{this.launched.refused}}</p>
           {{/if}}
-        {{/each}}
+        </div>
         <p class="note">A real pty in this PR’s worktree. The board’s “Open a
           session” starts its steered agent session here.</p>
         <p class="note" data-test-terminal-leave>Ctrl+Shift+← leaves the

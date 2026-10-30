@@ -742,7 +742,8 @@ const ENTRIES = {
 
 export type Decision = keyof typeof ENTRIES;
 
-export type Slot = 'controls' | 'fetch' | 'reset' | 'read' | 'git';
+export type Slot =
+  'controls' | 'fetch' | 'reset' | 'read' | 'git' | 'session' | 'ask';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -822,11 +823,31 @@ const PR_WRITES = {
     unsent: 'Not marked unread',
   },
   git: { doing: 'running git', square: null, slot: 'git' },
+  'open-session': {
+    doing: 'opening the session',
+    square: null,
+    slot: 'session',
+    ring: true,
+  },
+  'ask-the-agent': {
+    doing: 'asking the agent',
+    square: null,
+    slot: 'ask',
+    ring: true,
+  },
 } satisfies Record<string, PrWrite>;
 
 export type PrVerb = keyof typeof PR_WRITES;
 
-const SLOTS: Slot[] = ['controls', 'fetch', 'reset', 'read', 'git'];
+const SLOTS: Slot[] = [
+  'controls',
+  'fetch',
+  'reset',
+  'read',
+  'git',
+  'session',
+  'ask',
+];
 
 function prWriteOf(kind: string): PrWrite | undefined {
   return (PR_WRITES as Record<string, PrWrite | undefined>)[kind];
@@ -905,7 +926,7 @@ const CARRIED: Record<
   | 'edit-draft'
   | 'create-draft'
   | 'send-review'
-  | 'ask-the-agent',
+  | 'prepare-harvest-extension',
   Carrying
 > = {
   ...ENTRIES,
@@ -924,12 +945,54 @@ const CARRIED: Record<
     square: null,
     ring: true,
   },
-  'ask-the-agent': {
-    doing: 'asking the agent',
+  'prepare-harvest-extension': {
+    doing: 'setting up the extension',
     square: null,
     ring: true,
   },
 };
+
+export interface Pressed {
+  doing: string | null;
+  ring: boolean;
+  refused: string | null;
+}
+
+export function pressedBy(write: Partial<Written> | null): Pressed {
+  const carrying =
+    write?.state === 'sent' ? carryingOf(write.kind ?? '') : undefined;
+  return {
+    doing: carrying ? doingOf(carrying.doing) : null,
+    ring: Boolean(carrying?.ring),
+    refused: write?.state === 'refused' ? (write.reason ?? null) : null,
+  };
+}
+
+export interface Opening {
+  pending: string | null;
+  ring: boolean;
+  refused: string | null;
+}
+
+interface Answered extends Written {
+  answer?: string;
+}
+
+export function opensTerminal(kind: string): boolean {
+  return Boolean(carryingOf(kind)?.opensTerminal);
+}
+
+export function openingOf(writes: Answered[]): Opening {
+  const write = writes.findLast(
+    (one) => local(one) && one.answer !== undefined,
+  );
+  const waiting = write && sent(write) ? write.kind : null;
+  return {
+    pending: waiting && inFlight(waiting),
+    ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
+    refused: write?.state === 'refused' ? write.reason : null,
+  };
+}
 
 export interface Writing {
   outgoing: boolean;
@@ -1206,7 +1269,7 @@ export function carriedOut(
             text: carrying.toast?.(gathered) ?? `Queued: ${carrying.doing}.`,
             square: carrying.square,
           },
-    opensTerminal: Boolean(carrying.opensTerminal),
+    opensTerminal: opensTerminal(decision),
   };
 }
 

@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, find, visit } from '@ember/test-helpers';
+import { click, find, visit, waitFor } from '@ember/test-helpers';
 import { setupFakeBoard } from 'frontend/tests/helpers/fake-board';
 
 const HARVEST_TIMER = 'harvest-timer';
@@ -98,8 +98,31 @@ module('Acceptance | harvest timer', function (hooks) {
     await click('[data-test-harvest-prepare]');
 
     assert
-      .dom('[data-test-harvest-setup]')
-      .includesText('Chrome has no Harvest Time Tracker installed');
+      .dom('[data-test-harvest-setup] [data-test-refusal]')
+      .hasAttribute('data-refused')
+      .hasText('Chrome has no Harvest Time Tracker installed');
+    assert.dom('[data-test-harvest-prepare]').isNotDisabled();
+  });
+
+  test('setting up the extension shows it pending, with the ring, until the board answers', async function (assert) {
+    await switchedOn();
+    const release = board().hold(/\/api\/harvest-extension:prepare$/);
+
+    const preparing = click('[data-test-harvest-prepare]');
+    await waitFor('[data-test-harvest-prepare][data-pending]');
+
+    assert
+      .dom('[data-test-harvest-prepare]')
+      .hasText('Setting up the extension…')
+      .isDisabled();
+    assert.dom('[data-test-harvest-prepare] [data-test-ring]').exists();
+
+    release();
+    await preparing;
+
+    assert
+      .dom('[data-test-harvest-folder]')
+      .hasText(board().harvestExtensionFolder);
   });
 
   test('closing the setup leaves the switch on', async function (assert) {

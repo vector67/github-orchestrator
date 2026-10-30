@@ -1,7 +1,9 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import { waitForPromise } from '@ember/test-waiters';
+import PendingRing from 'frontend/components/pending-ring';
+import { pressedBy, type Pressed } from 'frontend/data/decisions';
 import modal from 'frontend/modifiers/modal';
 import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type StoreService from 'frontend/services/store';
@@ -10,18 +12,15 @@ export default class HarvestSetup extends Component {
   @service declare harvestSwitch: HarvestSwitchService;
   @service declare store: StoreService;
 
-  @tracked folder: string | null = null;
-  @tracked refused: string | null = null;
+  get folder(): string | null {
+    return this.store.harvestExtension.folder;
+  }
 
-  prepare = async () => {
-    const prepared = await this.store.prepareHarvestExtension();
-    if (typeof prepared === 'string') {
-      this.refused = prepared;
-      return;
-    }
-    this.refused = null;
-    this.folder = prepared.folder;
-  };
+  get preparing(): Pressed {
+    return pressedBy(this.store.harvestExtension.write);
+  }
+
+  prepare = () => waitForPromise(this.store.prepareHarvestExtension());
 
   close = () => this.harvestSwitch.doneSettingUp();
 
@@ -62,16 +61,23 @@ export default class HarvestSetup extends Component {
         {{else}}
           <p class="note">The Harvest extension puts its timer beside the gear
             once Chrome loads a copy of it that knows this board.</p>
-          {{#if this.refused}}
-            <p class="note refused">{{this.refused}}</p>
+          {{#if this.preparing.refused}}
+            <p
+              class="refusal"
+              data-refused="true"
+              data-test-refusal
+            >{{this.preparing.refused}}</p>
           {{/if}}
           <div class="dialog-actions">
             <button
               type="button"
               class="primary"
+              disabled={{if this.preparing.doing true}}
+              data-pending={{if this.preparing.doing "true"}}
               data-test-harvest-prepare
               {{on "click" this.prepare}}
-            >Set up the extension</button>
+            >{{#if this.preparing.doing}}{{#if this.preparing.ring}}<PendingRing
+                  />{{/if}}{{this.preparing.doing}}{{else}}Set up the extension{{/if}}</button>
             <button type="button" class="ghost" {{on "click" this.close}}>Not
               now
               <kbd>Esc</kbd></button>

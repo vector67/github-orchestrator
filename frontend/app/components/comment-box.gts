@@ -1,5 +1,4 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
@@ -14,6 +13,8 @@ import {
 import { inLatestOf } from 'frontend/data/anchors';
 import didChange from 'frontend/modifiers/did-change';
 import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
+import PendingRing from 'frontend/components/pending-ring';
+import type { Pressing } from 'frontend/data/decisions';
 import type BoardService from 'frontend/services/board';
 import type DraftsService from 'frontend/services/drafts';
 import type TerminalService from 'frontend/services/terminal';
@@ -36,8 +37,6 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   @service declare terminal: TerminalService;
   @service declare router: RouterService;
 
-  @tracked private sending = false;
-
   get copy(): Copy {
     return this.drafts.copyOf(this.args.draft, this.args.saved);
   }
@@ -57,12 +56,18 @@ export default class CommentBox extends Component<CommentBoxSignature> {
     return !this.drafts.saveable(this.args.draft, this.args.saved);
   }
 
+  get asking(): Pressing | null {
+    return this.creating ? (this.terminal.pressing?.ask ?? null) : null;
+  }
+
   get pending(): string | null {
-    return this.creating ? this.drafts.making.pending : null;
+    if (!this.creating) return null;
+    return this.asking?.pending ?? this.drafts.making.pending;
   }
 
   get refused(): string | null {
-    return this.creating ? this.drafts.making.refused : null;
+    if (!this.creating) return null;
+    return this.asking?.refused ?? this.drafts.making.refused;
   }
 
   focus = (element: HTMLElement) => {
@@ -97,7 +102,7 @@ export default class CommentBox extends Component<CommentBoxSignature> {
 
   get unaskable(): boolean {
     return (
-      this.sending ||
+      Boolean(this.asking?.pressed) ||
       this.args.selection === null ||
       this.copy.body.trim() === ''
     );
@@ -112,13 +117,8 @@ export default class CommentBox extends Component<CommentBoxSignature> {
       null,
       this.args.from ?? null,
     );
-    this.sending = true;
-    try {
-      if (await this.terminal.ask(prompt, null)) {
-        void this.router.transitionTo('terminal');
-      }
-    } finally {
-      this.sending = false;
+    if (await this.terminal.ask(prompt, null)) {
+      void this.router.transitionTo('terminal');
     }
   };
 
@@ -130,7 +130,9 @@ export default class CommentBox extends Component<CommentBoxSignature> {
       data-test-comment-box
       {{on "submit" this.save}}
     >
-      <span class="commenting" data-test-commenting>{{if
+      <span class="commenting" data-test-commenting>{{#if
+          this.asking.ring
+        }}<PendingRing />{{/if}}{{if
           this.pending
           this.pending
           this.commenting

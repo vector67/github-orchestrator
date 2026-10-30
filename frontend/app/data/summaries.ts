@@ -19,7 +19,9 @@ import type {
 } from 'frontend/data/api';
 import { edgeOf } from 'frontend/data/dashboard';
 import {
+  openingOf,
   pressingOf,
+  type Opening,
   type Pressing,
   type Pressings,
 } from 'frontend/data/decisions';
@@ -115,6 +117,7 @@ export interface Summaries {
   mismatches: string | null;
   openMentions: string[];
   pressing: Pressings;
+  opening: Opening;
 }
 
 type Threads = Record<string, Thread>;
@@ -471,6 +474,7 @@ function summarised(
     mismatches: mismatchesOf(pr?.mismatches ?? null),
     openMentions,
     pressing: pressedOn(pr, operations),
+    opening: openingOf(all.flatMap((one) => operationsOf(one, operations))),
   };
 }
 

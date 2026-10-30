@@ -87,7 +87,11 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     openInTerminal: async (keys, line) => {
       if (await this.terminal.open(keys, line)) {
         void this.router.transitionTo('terminal');
+        return;
       }
+      const refused = this.summaries?.pressing.session.refused;
+      if (refused)
+        this.toasts.say(`${line} did not open: ${refused}`, 'failed');
     },
     say: (text, tone) => this.toasts.say(text, tone),
     opened: (keymap) => this.keys.push('dialog', keymap),

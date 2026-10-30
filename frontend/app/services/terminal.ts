@@ -10,17 +10,18 @@ import {
   schemeOf,
   type NamedTheme,
 } from 'frontend/data/terminal-themes';
-import { tried, type Tried } from 'frontend/data/tried';
+import type { Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
+import type { Summaries } from 'frontend/services/store';
+import type { Opening, Pressings } from 'frontend/data/decisions';
 import type ToastsService from 'frontend/services/toasts';
 import { after, durationOf } from 'frontend/motion';
 
 export type Reach = 'unknown' | 'answering' | 'unreachable';
 
 const LOOK_EVERY_MS = 500;
-const LOOK_FOR_MS = 15_000;
 const RETRY_EVERY_MS = 1000;
 
 export type TerminalTheme = 'system' | 'light' | 'dark';
@@ -79,7 +80,6 @@ export default class TerminalService extends Service {
 
   private looking: number | null = null;
   private retrying: number | null = null;
-  private awaiting: string | null = null;
 
   constructor(...args: ConstructorParameters<typeof Service>) {
     super(...args);
@@ -162,13 +162,22 @@ export default class TerminalService extends Service {
     }
   }
 
+  private get summary(): Summaries | null {
+    const pr = this.here.pr;
+    return pr === null ? null : this.store.summary(pr.repo, pr.number);
+  }
+
+  get pressing(): Pressings | null {
+    return this.summary?.pressing ?? null;
+  }
+
+  get opening(): Opening | null {
+    return this.summary?.opening ?? null;
+  }
+
   open(keys: string, line: string): Promise<boolean> {
     return waitForPromise(
-      this.opened(
-        (pr) => tried('terminal', this.store.openSession(pr, keys)),
-        line,
-        true,
-      ),
+      this.opened((pr) => this.store.openSession(pr, keys), line),
     );
   }
 
@@ -177,7 +186,6 @@ export default class TerminalService extends Service {
       this.opened(
         (pr) => this.store.askTheAgent(pr, prompt, about),
         'The question for the agent',
-        about === null,
       ),
     );
   }
@@ -185,17 +193,11 @@ export default class TerminalService extends Service {
   private async opened(
     start: (pr: Numbered) => Promise<Tried<unknown>>,
     line: string,
-    toastRefusal: boolean,
   ): Promise<boolean> {
     const pr = this.here.pr;
     if (pr === null) return false;
     const answer = await start(pr);
-    if (!answer.done) {
-      if (toastRefusal) {
-        this.toasts.say(`${line} did not open: ${answer.why}`, 'failed');
-      }
-      return false;
-    }
+    if (!answer.done) return false;
     this.reach = 'answering';
     const fresh = this.adopt(pr);
     if (fresh.length === 0) {
@@ -212,11 +214,9 @@ export default class TerminalService extends Service {
     const pr = this.here.pr;
     const key = pr === null ? null : keyOf(pr);
     this.stopLooking();
-    this.awaiting = key;
-    const until = Date.now() + LOOK_FOR_MS;
     this.looking = setInterval(() => {
       const now = this.here.pr === null ? null : keyOf(this.here.pr);
-      if (now !== key || Date.now() > until) this.stopLooking();
+      if (now !== key || !this.opening?.pending) this.stopLooking();
       else void this.refresh();
     }, LOOK_EVERY_MS);
   }
@@ -269,7 +269,6 @@ export default class TerminalService extends Service {
   private stopLooking(): void {
     if (this.looking !== null) clearInterval(this.looking);
     this.looking = null;
-    this.awaiting = null;
   }
 
   private adopt(pr: Numbered): string[] {
@@ -286,7 +285,6 @@ export default class TerminalService extends Service {
     if (!fresh.length) return [];
     this.held = { ...this.held, [key]: [...known, ...fresh] };
     this.select(fresh.at(-1)!.id);
-    if (this.awaiting === key) this.stopLooking();
     return fresh.map((one) => one.id);
   }
 

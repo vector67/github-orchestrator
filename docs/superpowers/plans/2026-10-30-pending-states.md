@@ -103,6 +103,8 @@ lists it, and a refusal lands on the element rather than `reportError`.
 
 ### 6. Terminal launchers, rebase, ask the agent, harvest
 
+**Done** in the commit that adds this line.
+
 Decisions 3, 4, 5, 7. `rebase-button.gts`, `terminal-tab.gts`,
 `comment-box.gts` Ask the agent, `harvest-setup.gts`. All get the ring; a
 session the drain opens stays pending until it is listed.

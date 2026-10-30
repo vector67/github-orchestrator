@@ -601,6 +601,14 @@ const THROUGH_THE_HUB = /^\/pr\/([^/]+\/[^/]+)\/(\d+)(\/api\/.*)$/;
 
 type Side = 'board' | 'hub';
 
+interface Draining {
+  key: string;
+  id: string;
+  kind: 'start-session' | 'open-shell';
+  argv: string[];
+  worktree: string;
+}
+
 export interface Posted {
   url: string;
   key: string;
@@ -762,9 +770,11 @@ export class FakeBoard {
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
   opensOutside = false;
+  opensLater = false;
   sockets: FakeSocket[] = [];
 
   private madeSessions = 0;
+  private draining: Draining[] = [];
 
   get role(): 'author' | 'reviewer' {
     const shown = this.boardOf(
@@ -853,6 +863,43 @@ export class FakeBoard {
         one.hear(JSON.stringify({ exit_code: exitCode }));
         one.close(1000);
       });
+  }
+
+  openLater(): void {
+    for (const one of this.draining) {
+      if (!this.opensOutside) this.startSession(one.argv, one.worktree);
+      this.settleOnThread(one, 'applied', null);
+    }
+    this.draining = [];
+  }
+
+  refuseLater(reason: string): void {
+    for (const one of this.draining)
+      this.settleOnThread(one, 'refused', reason);
+    this.draining = [];
+  }
+
+  private settleOnThread(
+    { key, id, kind }: Draining,
+    state: OperationSummary['state'],
+    reason: string | null,
+  ): void {
+    this.conversations = this.conversations.map((one) =>
+      one.key === key
+        ? {
+            ...one,
+            operations: [
+              ...one.operations,
+              summary({ id, kind, state, reason }),
+            ],
+          }
+        : one,
+    );
+  }
+
+  private drain(one: Draining): void {
+    if (this.opensLater) this.draining.push(one);
+    else this.startSession(one.argv, one.worktree);
   }
 
   private startSession(argv: string[], worktree: string): void {
@@ -1387,11 +1434,17 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     const id = `op_${this.posted.length}`;
-    if (verb === 'start-session') {
-      this.startSession(['claude', '--resume', key], `/wt/thread-${key}`);
-    }
-    if (verb === 'open-shell') {
-      this.startSession(['/bin/zsh', '-l'], `/wt/thread-${key}`);
+    if (verb === 'start-session' || verb === 'open-shell') {
+      this.drain({
+        key,
+        id,
+        kind: verb,
+        argv:
+          verb === 'start-session'
+            ? ['claude', '--resume', key]
+            : ['/bin/zsh', '-l'],
+        worktree: `/wt/thread-${key}`,
+      });
     }
     if (verb === 'send-review') {
       const review = operation({

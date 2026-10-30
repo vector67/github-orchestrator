@@ -69,7 +69,12 @@ import {
   type StoredOperation,
   type Thread,
 } from 'frontend/data/entities';
-import { settledBy, slotOf, type PrVerb } from 'frontend/data/decisions';
+import {
+  opensTerminal,
+  settledBy,
+  slotOf,
+  type PrVerb,
+} from 'frontend/data/decisions';
 import {
   abandonUnder,
   fetched,
@@ -429,6 +434,10 @@ export default class StoreService extends Service {
   @tracked setupOperation: SetupOperation | null = null;
   @tracked movedTo: string | null = null;
   @tracked tour: Tour | null = null;
+  @tracked harvestExtension: {
+    write: StoredOperation | null;
+    folder: string | null;
+  } = { write: null, folder: null };
   @tracked emojis: Emoji[] = [];
   @tracked private assignable: Record<string, string[]> = {};
   private assignableAsked = new Set<string>();
@@ -876,15 +885,23 @@ export default class StoreService extends Service {
     );
   }
 
-  async prepareHarvestExtension(): Promise<HarvestExtensionFolder | string> {
-    const at = '/api/harvest-extension:prepare';
-    try {
-      return (await posted<HarvestExtensionFolder>(at, null, {})).body;
-    } catch (trouble) {
-      if (trouble instanceof Refusal) return trouble.detail;
-      void reportError(`prepare ${at}`, trouble);
-      return DOWN;
-    }
+  async prepareHarvestExtension(): Promise<void> {
+    const write = this.sending(null, 'prepare-harvest-extension', null);
+    this.harvestExtension = { ...this.harvestExtension, write };
+    const prepared = await tried(
+      'prepare /api/harvest-extension:prepare',
+      posted<HarvestExtensionFolder>(
+        '/api/harvest-extension:prepare',
+        null,
+        {},
+      ),
+    );
+    this.harvestExtension = prepared.done
+      ? { write: null, folder: prepared.body.body.folder }
+      : {
+          ...this.harvestExtension,
+          write: { ...write, state: 'refused', reason: prepared.why },
+        };
   }
 
   async readTour(): Promise<void> {
@@ -1099,13 +1116,22 @@ export default class StoreService extends Service {
     this.takeSessions(pr, listing);
   }
 
-  async openSession(pr: Numbered, keys: string): Promise<void> {
-    const { body } = await posted<TerminalSessionList>(
-      this.here.api('/api/terminal/sessions'),
-      null,
-      { keys },
+  async openSession(pr: Numbered, keys: string): Promise<Tried<void>> {
+    const { taken, local } = await this.sendOn(
+      pr,
+      'open-session',
+      () =>
+        posted<TerminalSessionList>(
+          this.here.api('/api/terminal/sessions'),
+          null,
+          {
+            keys,
+          },
+        ),
+      'terminal',
+      keys,
     );
-    this.takeSessions(pr, body);
+    return this.listed(pr, taken, local);
   }
 
   async askTheAgent(
@@ -1113,24 +1139,32 @@ export default class StoreService extends Service {
     prompt: string,
     about: string | null,
   ): Promise<Tried<void>> {
-    const local =
-      about === null
-        ? null
-        : this.hold(pr, this.sending(about, 'ask-the-agent', null));
-    const asked = await tried(
-      'terminal',
+    const asking = () =>
       posted<TerminalSessionList>(
         `${this.here.prefixOf(pr)}/api/terminal/questions`,
         null,
         { prompt },
-      ),
-    );
-    if (!asked.done) {
-      if (local) this.refuse(pr, local, asked.why, asked.code);
-      return asked;
-    }
-    if (local) this.drop(pr, local);
-    this.takeSessions(pr, asked.body.body);
+      );
+    const { taken, local } =
+      about === null
+        ? await this.sendOn(pr, 'ask-the-agent', asking, 'terminal')
+        : await this.sendHeld(
+            pr,
+            this.hold(pr, this.sending(about, 'ask-the-agent', null)),
+            asking,
+            'terminal',
+          );
+    return this.listed(pr, taken, local);
+  }
+
+  private listed(
+    pr: Numbered,
+    taken: Tried<{ body: TerminalSessionList }>,
+    local: StoredOperation,
+  ): Tried<void> {
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    this.takeSessions(pr, taken.body.body);
     return { done: true, body: undefined };
   }
 
@@ -1142,7 +1176,12 @@ export default class StoreService extends Service {
     etag: string,
     body: Record<string, unknown>,
   ): Promise<Tried<() => void>> {
-    const local = this.hold(pr, this.sending(key, kind, body['body']));
+    const local = opensTerminal(kind)
+      ? await this.listing(
+          pr,
+          this.hold(pr, this.sending(key, kind, body['body'])),
+        )
+      : this.hold(pr, this.sending(key, kind, body['body']));
     const written = await tried(
       'write',
       write<Outcome>(
@@ -1338,7 +1377,46 @@ export default class StoreService extends Service {
     this.managers = { ...this.managers, [keyOf(pr.repo, pr.number)]: now };
   }
 
+  private async listing(
+    pr: Numbered,
+    local: StoredOperation,
+  ): Promise<StoredOperation> {
+    try {
+      await this.readSessions(pr);
+    } catch {
+      return local;
+    }
+    const listed = { ...local, listed: this.sessionIds(pr) };
+    this.mergeOperations(keyOf(pr.repo, pr.number), [listed]);
+    return listed;
+  }
+
+  private sessionIds(pr: Numbered): string[] {
+    return this.manager(pr).sessions.map((one) => one.id);
+  }
+
+  private settleOpening(pr: Numbered, listing: TerminalSessionList): void {
+    const key = keyOf(pr.repo, pr.number);
+    const held = this.operations[key] ?? {};
+    for (const conversation of Object.keys(this.threads[key] ?? {})) {
+      for (const id of this.sentOn(pr, conversation)) {
+        const one = held[operationKey({ id, conversation })];
+        if (!one || one.state !== 'sent' || one.answer === undefined) continue;
+        const answer = held[operationKey({ id: one.answer, conversation })];
+        const fresh = listing.sessions.some(
+          ({ id: session }) => one.listed && !one.listed.includes(session),
+        );
+        if (answer?.state === 'refused') {
+          this.refuse(pr, one, answer.reason ?? '', answer.reason_code ?? null);
+        } else if (fresh || answer?.state === 'applied') {
+          this.drop(pr, one);
+        }
+      }
+    }
+  }
+
   private takeSessions(pr: Numbered, listing: TerminalSessionList): void {
+    this.settleOpening(pr, listing);
     this.managers = {
       ...this.managers,
       [keyOf(pr.repo, pr.number)]: {
@@ -1525,7 +1603,20 @@ export default class StoreService extends Service {
     for (const one of this.pressedOn(pr)) {
       if (slotOf(one.kind ?? '') === slotOf(verb)) this.drop(pr, one);
     }
-    const local = this.hold(pr, this.sending(null, verb, on));
+    return this.sendHeld(
+      pr,
+      this.hold(pr, this.sending(null, verb, on)),
+      asking,
+      where,
+    );
+  }
+
+  private async sendHeld<T>(
+    pr: Numbered,
+    local: StoredOperation,
+    asking: () => Promise<T>,
+    where: string,
+  ): Promise<{ taken: Tried<T>; local: StoredOperation }> {
     const taken = await tried(where, asking());
     if (!taken.done) this.refuse(pr, local, taken.why, taken.code);
     return { taken, local };
@@ -1584,7 +1675,13 @@ export default class StoreService extends Service {
     local: StoredOperation,
   ): void {
     const { repo, number } = pr;
-    this.drop(pr, local);
+    if (opensTerminal(local.kind ?? '')) {
+      this.mergeOperations(keyOf(repo, number), [
+        { ...local, answer: operation.id },
+      ]);
+    } else {
+      this.drop(pr, local);
+    }
     this.takeAnswer(pr, operation);
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};

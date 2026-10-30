@@ -780,19 +780,53 @@ module('Acceptance | pr diff', function (hooks) {
       assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
     });
 
-    test('the comment box’s Ask the agent is disabled while its question is in flight', async function (assert) {
+    test('the comment box shows its question pending, with the ring, its Ask held, until the session opens', async function (assert) {
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
       await click(`${row('+20')} [data-test-add]`);
       await fillIn('[data-test-comment-box] textarea', 'why a comment here?');
       const release = board().hold(/\/api\/terminal\/questions$/);
 
       const asking = click('[data-test-box-ask]');
-      await waitFor('[data-test-box-ask][disabled]');
+      await waitFor('[data-test-comment-box][data-pending]');
 
+      assert.dom('[data-test-commenting]').hasText('asking the agent…');
+      assert.dom('[data-test-comment-box] [data-test-ring]').exists();
       assert.dom('[data-test-box-ask]').isDisabled();
+      assert
+        .dom('[data-test-comment-box] textarea')
+        .hasValue('why a comment here?');
 
       release();
       await asking;
+
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    });
+
+    test('a question the board refuses stays in the comment box, which says why, with no toast', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'why a comment here?');
+      board().refusal = {
+        status: 409,
+        code: 'agents-disabled',
+        detail: 'agents are off',
+      };
+
+      await click('[data-test-box-ask]');
+
+      assert.strictEqual(
+        currentURL(),
+        '/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py',
+      );
+      assert.dom('[data-test-comment-box]').hasAttribute('data-refused');
+      assert
+        .dom('[data-test-comment-box] [data-test-refusal]')
+        .includesText('Agents are switched off on this board');
+      assert
+        .dom('[data-test-comment-box] textarea')
+        .hasValue('why a comment here?');
+      assert.dom('[data-test-box-ask]').isNotDisabled();
+      assert.dom('[data-test-toast]').doesNotExist();
     });
 
     test('a draft being edited has no Add to review in its box', async function (assert) {

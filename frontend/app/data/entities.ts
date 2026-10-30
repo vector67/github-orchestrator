@@ -31,6 +31,8 @@ export type StoredOperation = { id: string } & Partial<
     state?: HeldState;
     body?: string | null;
     local?: boolean;
+    listed?: string[];
+    answer?: string;
   };
 
 export interface HeardLine extends OutputLine {

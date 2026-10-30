@@ -348,6 +348,51 @@ module('Acceptance | terminal', function (hooks) {
     assert.strictEqual(board().socketsOf('made-1').length, 1);
   });
 
+  test('a launcher shows its session opening, with the ring, from the click until the board lists it', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/terminal');
+    const release = board().hold(/\/api\/terminal\/sessions$/);
+
+    const launching = click('[data-test-launch="new"]');
+    await waitFor('[data-test-launchers][data-pending]');
+
+    assert.dom('[data-test-launch="new"]').hasText('Opening the session…');
+    assert.dom('[data-test-launch="new"] [data-test-ring]').exists();
+    assert.dom('[data-test-launch="a"]').hasText('git add -p');
+    assert.dom('[data-test-launch="a"] [data-test-ring]').doesNotExist();
+
+    release();
+    await launching;
+
+    assert.dom('[data-test-launchers]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-launch="new"]').hasText('Shell in the worktree');
+    assert
+      .dom('[data-test-session="made-1"]')
+      .hasAttribute('aria-current', 'true');
+  });
+
+  test('a launcher the board refuses says why on the launchers, with no toast', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/terminal');
+    board().refusal = {
+      status: 409,
+      code: 'terminal-refused',
+      detail: "refused: the worktree holds another PR's branch",
+    };
+
+    await click('[data-test-launch="c"]');
+
+    assert.dom('[data-test-launchers]').hasAttribute('data-refused');
+    assert
+      .dom('[data-test-launchers] [data-test-refusal]')
+      .hasText("refused: the worktree holds another PR's branch");
+    assert.dom('[data-test-toast]').doesNotExist();
+
+    await click('[data-test-launch="a"]');
+
+    assert.dom('[data-test-launchers]').doesNotHaveAttribute('data-refused');
+  });
+
   test('rebase -i asks how many commits before it starts', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');
@@ -406,6 +451,52 @@ module('Acceptance | terminal', function (hooks) {
 
     assert.deepEqual(opened(), [{ keys: 'r' }]);
     assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+  });
+
+  test('Rebase on main shows its session opening, with the ring, from the click until the board lists it', async function (assert) {
+    needingARebase(REBASE_NEXT);
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/terminal\/sessions$/);
+
+    const rebasing = click('[data-test-your-move] [data-test-rebase]');
+    await waitFor('[data-test-your-move] [data-test-rebase][data-pending]');
+
+    assert
+      .dom('[data-test-your-move] [data-test-rebase]')
+      .hasText('Opening the session…')
+      .isDisabled();
+    assert
+      .dom('[data-test-your-move] [data-test-rebase] [data-test-ring]')
+      .exists();
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+
+    release();
+    await rebasing;
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+  });
+
+  test('a Rebase on main the board refuses says why beside the button, with no toast', async function (assert) {
+    needingARebase(REBASE_NEXT);
+    await visit('/pr/o/r/7/dashboard');
+    board().refusal = {
+      status: 409,
+      code: 'terminal-refused',
+      detail: "refused: the worktree holds another PR's branch",
+    };
+
+    await click('[data-test-your-move] [data-test-rebase]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+    assert
+      .dom('[data-test-your-move] [data-test-rebase]')
+      .hasAttribute('data-refused')
+      .hasText('Rebase on main')
+      .isNotDisabled();
+    assert
+      .dom('[data-test-your-move] [data-test-rebase-refusal]')
+      .hasText("refused: the worktree holds another PR's branch");
+    assert.dom('[data-test-toast]').doesNotExist();
   });
 
   test('when the next move is a rebase, the bar names it once, on the button', async function (assert) {
@@ -579,6 +670,79 @@ module('Acceptance | terminal', function (hooks) {
     assert
       .dom('[data-test-session="made-1"]')
       .hasAttribute('aria-current', 'true');
+  });
+
+  test('a session the drain opens stays pending in the list, with the ring, until the board lists it', async function (assert) {
+    board().terminalSessions = [SHELL];
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    board().opensLater = true;
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="open-shell"]');
+    await clock().tick(500);
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    assert
+      .dom('[data-test-opening]')
+      .hasAttribute('data-pending')
+      .hasText('opening a shell…');
+    assert.dom('[data-test-opening] [data-test-ring]').exists();
+
+    board().openLater();
+    await clock().tick(500);
+
+    assert.dom('[data-test-opening]').doesNotExist();
+    assert
+      .dom('[data-test-session="made-1"]')
+      .hasAttribute('aria-current', 'true');
+  });
+
+  test('a session the drain refuses says why in the list', async function (assert) {
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    board().opensLater = true;
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="open-shell"]');
+    board().refuseLater('the worktree could not be cut');
+    await clock().tick(5000);
+    await clock().tick(500);
+
+    assert
+      .dom('[data-test-opening]')
+      .hasAttribute('data-refused')
+      .doesNotHaveAttribute('data-pending');
+    assert
+      .dom('[data-test-opening] [data-test-refusal]')
+      .hasText('the worktree could not be cut');
+    assert.dom('[data-test-opening] [data-test-ring]').doesNotExist();
+  });
+
+  test('a session the drain opened outside the page ends the wait once the board says it is applied', async function (assert) {
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    board().opensLater = true;
+    board().opensOutside = true;
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="open-shell"]');
+    board().openLater();
+    await clock().tick(5000);
+    await clock().tick(500);
+
+    assert.dom('[data-test-opening]').doesNotExist();
+  });
+
+  test('a session the drain opens keeps the footer pending past the board’s answer', async function (assert) {
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    board().opensLater = true;
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="open-shell"]');
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('#panel-actions').hasAttribute('data-pending');
+    assert
+      .dom('[data-test-decision="open-shell"]')
+      .includesText('Opening a shell…');
   });
 
   test('a session whose command exits keeps its screen and its place in the list, with a bar that says its exit code', async function (assert) {
