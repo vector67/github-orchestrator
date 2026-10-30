@@ -1736,12 +1736,12 @@ export default class StoreService extends Service {
       this.drop(pr, local);
     }
     this.takeAnswer(pr, operation);
-    this.takeThread(pr, { ...conversation, provisional: true });
+    this.takeThread(pr, conversation);
   }
 
   private takeThread(
     { repo, number }: Numbered,
-    conversation: Parameters<typeof threadMerged>[1],
+    conversation: Conversation,
   ): void {
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};
