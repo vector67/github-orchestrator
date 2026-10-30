@@ -14,6 +14,7 @@ from github_orchestrator.conversation import (
     ErrorCode,
     OperationKind,
     OperationState,
+    ReasonCode,
 )
 from github_orchestrator.domain import Sha
 from github_orchestrator.notifications.fake import FakeNotifications
@@ -329,15 +330,28 @@ def test_a_session_found_gone_puts_a_declined_fix_back_to_declined(bench):
     assert bench.stored().fix.is_declined
 
 
-def test_a_session_found_gone_settles_its_operation_refused_saying_so(bench):
+def _the_session(bench):
+    [session] = [operation for operation in bench.stored().operations
+                 if operation.kind == OperationKind.START_SESSION]
+    return session
+
+
+def test_a_session_found_gone_on_a_proposal_settles_as_the_proposal_it_left(bench):
     _in_session(bench)
 
     _session_gone(bench)
 
-    [session] = [operation for operation in bench.stored().operations
-                 if operation.kind == OperationKind.START_SESSION]
+    assert _the_session(bench).state == OperationState.APPLIED
+
+
+def test_a_session_found_gone_on_a_declined_fix_settles_declined_again(bench):
+    _session_on_declined(bench)
+
+    _session_gone(bench)
+
+    session = _the_session(bench)
     assert session.state == OperationState.REFUSED
-    assert session.reason == "the session ended without reporting back"
+    assert session.reason_code == ReasonCode.AGENT_DECLINED
 
 
 def _from_before_sessions_were_remembered(bench):
