@@ -16,6 +16,7 @@ class FakeSession:
     exit_code: int | None = None
     connections: int = 0
     connected_once: bool = False
+    kept: bool = False
 
 
 class FakeConnection:
@@ -54,10 +55,16 @@ class FakeTerminalSessions:
         self._ids = itertools.count(1)
 
     def start(self, worktree: str, argv: list[str]) -> str:
+        return self._started(worktree, argv, kept=False)
+
+    def start_kept(self, worktree: str, argv: list[str]) -> str:
+        return self._started(worktree, argv, kept=True)
+
+    def _started(self, worktree: str, argv: list[str], *, kept: bool) -> str:
         if self.refusal is not None:
             raise FileNotFoundError(2, self.refusal, worktree)
         session = Session(f"session-{next(self._ids)}", tuple(argv), worktree)
-        self.sessions[session.id] = FakeSession(session)
+        self.sessions[session.id] = FakeSession(session, kept=kept)
         return session.id
 
     def listed(self) -> list[Session]:
@@ -84,6 +91,10 @@ class FakeTerminalSessions:
 
     def started(self) -> list[tuple[str, tuple[str, ...]]]:
         return [(held.session.worktree, held.session.argv) for held in self.sessions.values()]
+
+    def kept(self) -> list[tuple[str, tuple[str, ...]]]:
+        return [(held.session.worktree, held.session.argv) for held in self.sessions.values()
+                if held.kept]
 
 
 class FakeTerminals:

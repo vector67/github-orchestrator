@@ -217,6 +217,21 @@ def test_a_split_starts_a_terminal_session_in_the_worktree_it_names(
     assert len(processes.spawned) == 1
 
 
+def test_a_kept_split_starts_a_session_no_page_has_to_claim(windows, sessions, worktree):
+    assert windows.split_kept(THE_PR, str(worktree), ["claude", "Rework it"]) is None
+
+    assert sessions.kept() == [(str(worktree), ("claude", "Rework it"))]
+
+
+def test_a_kept_split_whose_session_cannot_start_is_refused_with_the_reason(
+        windows, sessions, worktree):
+    sessions.refusal = "No such file or directory"
+
+    refused = windows.split_kept(THE_PR, str(worktree), ["claude", "Rework it"])
+
+    assert refused is not None and "No such file or directory" in refused
+
+
 def test_a_split_whose_session_cannot_start_is_refused_with_the_reason(
         windows, sessions, worktree):
     sessions.refusal = "No such file or directory"

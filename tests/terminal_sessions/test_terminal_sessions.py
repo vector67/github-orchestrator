@@ -265,6 +265,15 @@ def test_a_session_no_page_connects_to_ends_after_the_wait(settings, worktree):
     assert sessions.attach(started) is None
 
 
+def test_a_kept_session_no_page_connects_to_outlives_the_wait(settings, worktree):
+    sessions = real_terminal_sessions(settings, first_connection_seconds=0.05)
+    started = sessions.start_kept(str(worktree), FOREVER)
+    time.sleep(1)
+
+    assert [session.id for session in sessions.listed()] == [started]
+    _ended_everything(sessions)
+
+
 def _parent_of(pid: int) -> int:
     listed = subprocess.Popen(["ps", "-o", "ppid=", "-p", str(pid)],
                               stdout=subprocess.PIPE, text=True)

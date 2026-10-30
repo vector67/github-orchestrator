@@ -355,7 +355,7 @@ class FakeAgentRuns:
         return refused
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
-        return self.pr_processes.split(pr, worktree, shell_argv())
+        return self.pr_processes.split_kept(pr, worktree, shell_argv())
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in((json.dumps(entry) for entry in reversed(self.ledger)), pr)

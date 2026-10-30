@@ -69,8 +69,10 @@ records this).
 - A Terminal tab session outlives the page and the board: the pty lives as long
   as its command, in the manager's process, and a page that lost its connection
   reattaches when the board lists the session again, replaying its kept output.
-  One started by a split still ends when no page connects within 30 seconds.
-  (Was: a session ended when its last connection closed, `f5ce0302` — a board
+  One started by a split still ends when no page connects within 30 seconds,
+  except a thread's steered session or shell: the drain opens it after the
+  202, and the thread's "Go to the session" must find it however late the page
+  comes (#230). (Was: a session ended when its last connection closed, `f5ce0302` — a board
   stopping mid-`/rebase-on-main` hung up the Claude run inside it.)
 - Switching tmux and browser mode swaps whole modules, chosen in one place in
   wiring. No other code branches on the mode, and no mode flag crosses into the
