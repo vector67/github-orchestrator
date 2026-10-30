@@ -24,6 +24,7 @@ from github_orchestrator.conversation._domain.events import (
     RunStarted,
     RunTimedOut,
     Wake,
+    WorkspaceCut,
 )
 from github_orchestrator.domain import Pr
 
@@ -172,11 +173,28 @@ class Runs:
             if self.live_count(ports) >= cap:
                 return
             try:
-                self._apply(ports, conversation.key,
-                            RunStarted(at=ports.clock.now()))
+                if self._cut(pr, conversation.key, ports):
+                    self._apply(ports, conversation.key,
+                                RunStarted(at=ports.clock.now()))
             except Exception:
                 log.exception("thread runs %s: starting a run for %s "
                               "failed", pr, conversation.key)
+
+    def _cut(self, pr: Pr, key: str, ports: Ports) -> bool:
+        with ports.records.update(key) as update:
+            conversation = update.conversation
+            if conversation is None:
+                return False
+            cut = thread_workspace(ports, conversation).ensure()
+            if cut.workspace is None:
+                log.warning("thread runs %s: could not cut a worktree for %s, "
+                            "so its run waits: %s", pr, key, cut.failure)
+                return False
+            outcome = run(ports, conversation,
+                          WorkspaceCut(base_sha=cut.workspace.base_sha))
+            if outcome.conversation != conversation:
+                update.conversation = outcome.conversation
+            return True
 
     def _wake_reason(self, pr: Pr, wake_on: str | None,
                      ports: Ports) -> str | None:
