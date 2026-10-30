@@ -11,6 +11,7 @@ from github_orchestrator.domain import Location, Sha, Side
 from github_orchestrator.github import CommentKind, ThreadComment
 from github_orchestrator.github import ReviewState as GitHubReviewState
 from github_orchestrator.github.fake import FakeGitHub, ThreadAnchor
+from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
@@ -308,19 +309,6 @@ def test_a_refresh_brings_the_reviewer_the_review_and_the_range_back_in_step(set
     assert (stored.start_line, stored.original_start_line) == (8, 5)
 
 
-def test_an_opened_thread_names_a_workspace_cut_off_the_pr_head(settings):
-    here = _world(settings)
-    threads = here.threads()
-
-    [opened] = _heard(here, threads).created
-
-    assert here.working_copies.holds_thread(THE_PR, KEY)
-    assert here.working_copies.branches[f"orchestrator/thread/{THE_PR.number}/{KEY}"] == (
-        _pr_head(here))
-    assert opened.fix.base_sha == Sha(_pr_head(here))
-    assert threads.get(KEY).fix.base_sha == opened.fix.base_sha
-
-
 def test_a_thread_first_seen_resolved_is_created_done_with_no_fix(settings):
     agent_runs = AnswersLater()
     here = _world(settings, agent_runs=agent_runs)
@@ -393,7 +381,10 @@ def test_a_comment_on_a_thread_that_has_landed_marks_it_and_queues_a_run(setting
     assert reopened.standing is ConversationState.QUEUED
     assert reopened.fix.run.kind is OperationKind.FIRST
     assert reopened.reopened is True
-    assert reopened.fix.base_sha == landed.fix.landed_sha
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert threads.get(KEY).fix.base_sha == landed.fix.landed_sha
     assert here.working_copies.head_of(_checkout(here)) == str(landed.fix.landed_sha)
 
 
@@ -405,9 +396,11 @@ def test_a_reopened_thread_whose_workspace_has_gone_is_given_a_new_one(settings)
     _replied(here.github)
 
     [reopened] = hear(threads).created
-
     assert reopened.standing is ConversationState.QUEUED
-    assert Sha(here.working_copies.head_of(_checkout(here))) == reopened.fix.base_sha
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert Sha(here.working_copies.head_of(_checkout(here))) == threads.get(KEY).fix.base_sha
 
 
 def test_a_reopen_is_summarised_over_the_whole_thread_an_open_over_the_root(settings):
@@ -431,16 +424,18 @@ def test_a_reopen_is_summarised_over_the_whole_thread_an_open_over_the_root(sett
     ]
 
 
-def test_a_thread_whose_workspace_will_not_cut_does_not_stop_the_others(settings):
-    here = _world(settings, working_copies=refuses_to_cut("PRRT_2"))
+def test_a_thread_whose_workspace_will_not_cut_is_still_opened_and_summarised(settings):
+    agent_runs = AnswersLater()
+    here = _world(settings, working_copies=refuses_to_cut("PRRT_2"), agent_runs=agent_runs)
     threads = here.threads()
     for number in (1, 2, 3):
         _on_github(here.github, f"PRRT_{number}", (root(id=number),))
 
     opened = hear(threads).created
 
-    assert [c.key for c in opened] == ["PRRT_1", "PRRT_3"]
-    assert threads.get("PRRT_2") is None
+    assert [c.key for c in opened] == ["PRRT_1", "PRRT_2", "PRRT_3"]
+    assert threads.get("PRRT_2").standing is ConversationState.QUEUED
+    assert CommentAsked("PRRT_2", PATH, LINE, BODY, 60) in agent_runs.asked
 
 
 def test_a_thread_whose_record_will_not_read_is_never_written_over(settings, tmp_path):
@@ -514,18 +509,6 @@ def test_a_refresh_moves_no_status_and_spends_no_attempt(settings):
     assert (stored.fix.picked, stored.fix.pushed, stored.fix.answered) == (
         landed.fix.picked, landed.fix.pushed, landed.fix.answered)
     assert agent_runs.asked == []
-
-
-def test_a_refresh_opens_nothing_for_a_thread_with_no_record(settings):
-    here = _world(settings, working_copies=refuses_to_cut(KEY))
-    threads = here.threads()
-    _replied(here.github)
-    hear(threads)
-    _reply_edited(here.github)
-
-    assert hear(threads).refreshed == ()
-    assert threads.get(KEY) is None
-    assert list(here.working_copies.branches) == ["main"]
 
 
 def test_one_thread_that_will_not_refresh_leaves_the_next_alone(settings):

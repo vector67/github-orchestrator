@@ -19,6 +19,7 @@ from github_orchestrator.notifications.fake import FakeNotifications, FixReady
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.thread_records.fake import FakeThreadRecords
+from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import failing, passing
 from tests.conversation.support import (
@@ -256,6 +257,44 @@ def test_a_launch_failure_that_spends_the_budget_stamps_the_managers_clock(setti
     settled = _read(threads)
     assert settled.fix.has_failed
     assert settled.decidable_at == "2026-09-12T08:30:00Z"
+
+
+def test_a_started_run_works_in_a_workspace_cut_off_the_pr_head(settings):
+    agent_runs = _agent_runs()
+    here, threads = _ready_world(settings, agent_runs=agent_runs)
+    head = here.working_copies.head_of(WORKTREE)
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert _started_in(agent_runs) == [_checkout(here)]
+    assert here.working_copies.branches[f"orchestrator/thread/{THE_PR.number}/{KEY}"] == head
+    assert _read(threads).fix.base_sha == Sha(head)
+
+
+def test_each_run_starts_as_soon_as_its_own_workspace_is_cut(settings):
+    agent_runs = _agent_runs().script(KEEPS_GOING, KEEPS_GOING)
+    here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
+    started_at_each_cut = []
+    here.working_copies.on_cut = lambda: started_at_each_cut.append(len(agent_runs.started))
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    assert started_at_each_cut == [0, 1]
+
+
+def test_a_fix_whose_workspace_will_not_cut_waits_queued_and_the_rest_start(settings):
+    working_copies = FakeWorkingCopies()
+    working_copies.refuse_workspace("PRRT_1")
+    agent_runs = _agent_runs().script(KEEPS_GOING)
+    here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs,
+                                 working_copies=working_copies)
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    waiting = _read(threads, "PRRT_1")
+    assert waiting.standing is ConversationState.QUEUED
+    assert waiting.fix.attempts == 0
+    assert _started_in(agent_runs) == [_checkout(here, "PRRT_2")]
 
 
 def test_nothing_is_spawned_while_claude_is_disabled(settings):

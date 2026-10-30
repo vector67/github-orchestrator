@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from github_orchestrator.domain import Repo
+from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
@@ -83,9 +84,11 @@ def _threads(settings, copies):
     repo_at(copies, the_clone(settings), {"f": "1\n"}, pr=THE_PR)
     for comment_id, key in enumerate(("PRRT_123", "PRRT_456"), 1):
         on_github(github, key, said(comment_id, "rename this"), pr=THE_PR)
-    hear(conversation_managers_over(settings, github=github, working_copies=copies,
-                             thread_records=disk_thread_records(settings.threads_dir)
-                             ).of(THE_PR))
+    threads = conversation_managers_over(settings, github=github, working_copies=copies,
+                                         thread_records=disk_thread_records(settings.threads_dir)
+                                         ).of(THE_PR)
+    hear(threads)
+    threads.tick(FakeNotifications(), on_hold=False)
     checkout = copies.thread_checkout(THE_PR, "PRRT_123")
     branch = copies.branch_at(checkout)
     assert branch in copies.branches

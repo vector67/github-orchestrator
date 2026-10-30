@@ -319,7 +319,7 @@ def test_open_on_a_thread_whose_comment_was_deleted_cuts_its_workspace_again(
                                                      "HEAD").stdout.strip())
 
 
-def test_open_failed_worktree_add_exits_nonzero_without_record(
+def test_open_failed_worktree_add_exits_nonzero_and_leaves_the_thread_queued(
     pr_worktree, store, threads, body_file, run_cli
 ):
     store.worktrees.mkdir(parents=True)
@@ -330,7 +330,7 @@ def test_open_failed_worktree_add_exits_nonzero_without_record(
     assert ran.code != 0
     assert ran.out == ""
     assert ran.err != ""
-    assert _stored(threads) is None
+    assert _stored(threads).standing is ConversationState.QUEUED
 
 
 def test_open_retries_after_failed_add_left_the_branch_behind(

@@ -260,7 +260,7 @@ def create(
         return Accepted(replace(conversation, fix=Fix(state=ABSENT)),
                         (WriteGist(source=GIST_ROOT),))
     return Accepted(replace(conversation, operations=(first,)),
-                    (CutWorkspace(), WriteGist(source=GIST_ROOT)))
+                    (WriteGist(source=GIST_ROOT),))
 
 
 def create_draft(*, key: str, body: str, anchor: Location, author: str,
@@ -784,8 +784,7 @@ def _first(conversation: Conversation) -> Accepted:
         with_fix(conversation, state=QUEUED, run=Run(kind=OperationKind.FIRST), attempts=0,
                   started_at=None, steps=frozenset(), landed_base=None,
                   landed_sha=None, push_error=None, reply_error=None,
-                  decision_error=None, reply_note=None, pending_reply=""),
-        (CutWorkspace(),))
+                  decision_error=None, reply_note=None, pending_reply=""))
 
 
 def _start_session(conversation: Conversation, command: StartSession) -> Accepted:
@@ -948,7 +947,7 @@ def _unpark(conversation: Conversation, at: str | None) -> Accepted:
                          landed_base=None, landed_sha=None, push_error=None,
                          reply_error=None, decision_error=None,
                          reply_note=None)
-    return Accepted(requeued, (CutWorkspace(), WriteGist(source=GIST_THREAD)))
+    return Accepted(requeued, (WriteGist(source=GIST_THREAD),))
 
 
 def _closing_reply_posted(conversation: Conversation,
