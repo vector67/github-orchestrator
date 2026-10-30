@@ -49,6 +49,7 @@ export default class BoardService extends Service {
     key: string,
     decision: string,
     { verb, body }: Carried['request'],
+    pending: boolean,
     answered?: Answered,
   ): Promise<boolean> {
     const conversation = this.threads.thread(key);
@@ -60,6 +61,7 @@ export default class BoardService extends Service {
         verb,
         conversation.etag,
         body,
+        pending,
         answered,
       );
       if (done) this.dialogDrafts.forget(key);
@@ -76,15 +78,13 @@ export default class BoardService extends Service {
     verb: string,
     etag: string,
     body: Record<string, unknown>,
+    pending: boolean,
     answered?: Answered,
   ): Promise<boolean> {
     const pr = this.here.at;
-    const written = await tried(
-      'write',
-      this.store.decide(pr, key, verb, etag, body),
-    );
+    const written = await this.store.decide(pr, key, verb, etag, body, pending);
     if (!written.done) {
-      this.toasts.say(written.why, REFUSED);
+      if (!pending) this.toasts.say(written.why, REFUSED);
       if (written.code === MOVED) await this.loader.refreshList();
       return false;
     }
@@ -111,8 +111,11 @@ export default class BoardService extends Service {
     gathered: Gathered = {},
     answered?: Answered,
   ): Promise<boolean> {
-    const { request, toast, opensTerminal } = carriedOut(decision, gathered);
-    const acted = this.acted(key, decision, request, answered);
+    const { request, toast, opensTerminal, pending } = carriedOut(
+      decision,
+      gathered,
+    );
+    const acted = this.acted(key, decision, request, pending, answered);
     if (!(await waitForPromise(acted))) return false;
     if (opensTerminal) {
       this.terminal.expect();

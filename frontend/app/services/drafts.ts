@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import type { DiffSide } from 'frontend/data/api';
 import type { Lines } from 'frontend/data/selection';
 import type BoardService from 'frontend/services/board';
+import type ThreadsService from 'frontend/services/threads';
 
 export interface Saved {
   body: string;
@@ -92,26 +93,23 @@ function sameAs(copy: Copy, saved: Saved): boolean {
 
 export default class DraftsService extends Service {
   @service declare board: BoardService;
+  @service declare threads: ThreadsService;
 
   @tracked private copies: Record<string, Copy> = {};
-  @tracked private saving: string[] = [];
 
-  async save(key: string, saved: Saved): Promise<string | null> {
+  edit(key: string, saved: Saved): boolean {
     const asked = requestOf(this.copyOf(key, saved));
-    if (!asked || !this.saveable(key, saved)) return null;
-    this.saving = [...this.saving, key];
-    try {
-      if (key !== NEW_DRAFT) {
-        return (await this.board.decide(key, 'edit-draft', { draft: asked }))
-          ? key
-          : null;
-      }
-      const made = await this.board.createDraft(asked);
-      if (made) this.forget(NEW_DRAFT);
-      return made;
-    } finally {
-      this.saving = this.saving.filter((one) => one !== key);
-    }
+    if (!asked || !this.saveable(key, saved)) return false;
+    void this.board.decide(key, 'edit-draft', { draft: asked });
+    return true;
+  }
+
+  async create(): Promise<string | null> {
+    const asked = requestOf(this.copyOf(NEW_DRAFT, BLANK));
+    if (!asked || !this.saveable(NEW_DRAFT, BLANK)) return null;
+    const made = await this.board.createDraft(asked);
+    if (made) this.forget(NEW_DRAFT);
+    return made;
   }
 
   copyOf(key: string, saved: Saved): Copy {
@@ -140,9 +138,9 @@ export default class DraftsService extends Service {
   }
 
   saveable(key: string, saved: Saved): boolean {
-    if (this.saving.includes(key)) return false;
     if (requestOf(this.copyOf(key, saved)) === null) return false;
-    return key === NEW_DRAFT || this.unsaved(key, saved);
+    if (key !== NEW_DRAFT) return this.unsaved(key, saved);
+    return !this.threads.inFlight.some((one) => one.kind === 'create-draft');
   }
 
   unsaved(key: string, saved: Saved): boolean {

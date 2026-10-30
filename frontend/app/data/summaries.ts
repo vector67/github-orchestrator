@@ -127,10 +127,12 @@ function read(one: Thread): boolean {
 const NO_OPERATIONS: Operations = {};
 
 function operationsOf(thread: Thread, operations: Operations): Operation[] {
-  return (thread.operations ?? []).flatMap((id) => {
-    const one = operations[operationKey({ id, conversation: thread.key })];
-    return one ? [one] : [];
-  }) as unknown as Operation[];
+  return [...(thread.operations ?? []), ...(thread.sent ?? [])].flatMap(
+    (id) => {
+      const one = operations[operationKey({ id, conversation: thread.key })];
+      return one ? [one] : [];
+    },
+  ) as unknown as Operation[];
 }
 
 const readSoFar = new WeakMap<Threads, WeakMap<Operations, Conversation[]>>();

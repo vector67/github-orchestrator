@@ -89,6 +89,7 @@ interface Carrying {
   square: string | null;
   toast?: (gathered: Gathered) => string;
   opensTerminal?: boolean;
+  pending?: boolean;
 }
 
 interface Shade {
@@ -129,6 +130,7 @@ export interface Carried {
   request: Request;
   toast: { text: string; square: string } | null;
   opensTerminal: boolean;
+  pending: boolean;
 }
 
 export const WAKE_CONDITIONS = [
@@ -738,8 +740,9 @@ const CARRIED: Record<Decision | 'edit-draft', Carrying> = {
   ...ENTRIES,
   'edit-draft': {
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
-    doing: 'saving the draft',
-    square: 'ready',
+    doing: 'saving',
+    square: null,
+    pending: true,
   },
 };
 
@@ -979,6 +982,7 @@ export function carriedOut(
             square: carrying.square,
           },
     opensTerminal: Boolean(carrying.opensTerminal),
+    pending: Boolean(carrying.pending),
   };
 }
 

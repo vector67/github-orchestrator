@@ -8,7 +8,7 @@ import PrDiff from 'frontend/components/pr-diff';
 import type { FileChange } from 'frontend/data/api';
 import { DIFF_FAILED, DIFF_LOADING } from 'frontend/data/diff-rows';
 import { treeOf, type TreeRow } from 'frontend/data/file-tree';
-import { draftLocked } from 'frontend/data/panel';
+import { draftLocked, type DraftView } from 'frontend/data/panel';
 import {
   LINES_GONE,
   anchoredAt,
@@ -33,9 +33,7 @@ import autocomplete from 'frontend/modifiers/autocomplete';
 export interface DraftComposerSignature {
   Args: {
     key: string | null;
-    draft:
-      | (Saved & { editable: boolean; enrolled: boolean; posting: boolean })
-      | null;
+    draft: DraftView | null;
   };
   Blocks: { default: [] };
 }
@@ -104,6 +102,8 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
   }
 
   get note(): string {
+    const refused = this.args.draft?.refused;
+    if (refused && !this.locked) return refused;
     if (this.going) return GOING_NOTE;
     if (this.locked) return SAVING_NOTE;
     if (!this.lines) return PICK_A_LINE;
@@ -190,16 +190,24 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
 
   save = async (event: Event) => {
     event.preventDefault();
-    const made = await this.drafts.save(this.key, this.saved);
-    if (made && this.creating) {
-      await this.router.transitionTo('conversations.detail', made);
+    if (!this.creating) {
+      this.drafts.edit(this.key, this.saved);
+      return;
     }
+    const made = await this.drafts.create();
+    if (made) await this.router.transitionTo('conversations.detail', made);
   };
 
   <template>
     <div id="panel-talk">
       {{yield}}
-      <form class="draft-composer" data-test-composer {{on "submit" this.save}}>
+      <form
+        class="draft-composer"
+        data-pending={{if @draft.pending "true"}}
+        data-refused={{if @draft.refused "true"}}
+        data-test-composer
+        {{on "submit" this.save}}
+      >
         <textarea
           aria-label="the comment"
           data-test-draft-body

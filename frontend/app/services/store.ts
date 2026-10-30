@@ -28,6 +28,7 @@ import type {
   MentionableList,
   Mentions,
   Operation,
+  OperationKind,
   Outcome,
   MovedAside,
   Person,
@@ -86,6 +87,7 @@ import {
   type Unheld,
 } from 'frontend/data/refusal';
 import { reportError } from 'frontend/data/report';
+import { tried, type Tried } from 'frontend/data/tried';
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
@@ -189,6 +191,7 @@ export interface PrEntity {
   place: Place | null;
   unreadable: string[];
   in_flight: string[];
+  sent: string[];
   diffs: Partial<Record<DiffSource, Commits>>;
   history: Partial<Record<DiffSource, PullRequestCommits>>;
   read: ReadMark[] | null;
@@ -433,6 +436,7 @@ export default class StoreService extends Service {
   private restarting: Restarting | null = null;
 
   private joins = 0;
+  private sends = 0;
   private entries: Record<string, Entered> = recalledEntries();
   private tags: Record<string, string | null> = {};
   private asking: Record<string, Promise<Read>> = {};
@@ -598,7 +602,11 @@ export default class StoreService extends Service {
   inFlight(repo: string, number: number): Operation[] {
     const key = keyOf(repo, number);
     const held = this.operations[key] ?? {};
-    return (this.prs[key]?.in_flight ?? []).flatMap((id) => {
+    const pr = this.prs[key];
+    return [
+      ...(pr?.in_flight ?? []),
+      ...(pr?.sent ?? []).map((id) => operationKey({ id, conversation: null })),
+    ].flatMap((id) => {
       const one = held[id];
       return one ? [one as unknown as Operation] : [];
     });
@@ -1083,23 +1091,42 @@ export default class StoreService extends Service {
     verb: string,
     etag: string,
     body: Record<string, unknown>,
-  ): Promise<() => void> {
-    const outcome = await write<Outcome>(
-      this.here.api(`${under(key)}/operations:${verb}`),
-      etag,
-      body,
+    pending: boolean,
+  ): Promise<Tried<() => void>> {
+    const local = pending
+      ? this.hold(pr, this.sending(key, verb, body['body']))
+      : null;
+    const written = await tried(
+      'write',
+      write<Outcome>(
+        this.here.api(`${under(key)}/operations:${verb}`),
+        etag,
+        body,
+      ),
     );
-    return () => this.takeOutcome(pr, outcome);
+    if (!written.done) {
+      if (local) this.refuse(pr, local, written.why, written.code);
+      return written;
+    }
+    return {
+      done: true,
+      body: () => this.takeOutcome(pr, written.body, local),
+    };
   }
 
   async createDraft(pr: Numbered, draft: unknown): Promise<string | null> {
-    const made = await write<Operation>(
-      this.here.api('/api/operations:create-draft'),
-      null,
-      draft,
-    );
-    this.takeAnswer(pr, made);
-    return made.conversation;
+    const local = this.hold(pr, this.sending(null, 'create-draft', null));
+    try {
+      const made = await write<Operation>(
+        this.here.api('/api/operations:create-draft'),
+        null,
+        draft,
+      );
+      this.takeAnswer(pr, made);
+      return made.conversation;
+    } finally {
+      this.drop(pr, local);
+    }
   }
 
   async sendReview(pr: Numbered, review: unknown): Promise<Sent> {
@@ -1347,11 +1374,99 @@ export default class StoreService extends Service {
     };
   }
 
+  private sending(
+    conversation: string | null,
+    kind: string,
+    typed: unknown,
+  ): StoredOperation {
+    this.sends += 1;
+    return {
+      id: `sent-${this.sends}`,
+      conversation,
+      kind: kind as OperationKind,
+      state: 'sent',
+      reason: null,
+      reason_code: null,
+      body: typeof typed === 'string' ? typed : null,
+    };
+  }
+
+  private hold(pr: Numbered, one: StoredOperation): StoredOperation {
+    for (const id of this.sentOn(pr, one.conversation)) {
+      this.drop(pr, { ...one, id });
+    }
+    this.mergeOperations(keyOf(pr.repo, pr.number), [one]);
+    this.markSent(pr, one.conversation, [one.id]);
+    return one;
+  }
+
+  private drop(pr: Numbered, one: StoredOperation): void {
+    const key = keyOf(pr.repo, pr.number);
+    const gone = operationKey(one);
+    this.operations = {
+      ...this.operations,
+      [key]: Object.fromEntries(
+        Object.entries(this.operations[key] ?? {}).filter(
+          ([held]) => held !== gone,
+        ),
+      ),
+    };
+    this.markSent(
+      pr,
+      one.conversation,
+      this.sentOn(pr, one.conversation).filter((id) => id !== one.id),
+    );
+  }
+
+  private sentOn(pr: Numbered, conversation: string | null): string[] {
+    const key = keyOf(pr.repo, pr.number);
+    const on =
+      conversation === null ? this.prs[key] : this.threads[key]?.[conversation];
+    return on?.sent ?? [];
+  }
+
+  private refuse(
+    pr: Numbered,
+    one: StoredOperation,
+    reason: string,
+    code: string | null,
+  ): void {
+    this.mergeOperations(keyOf(pr.repo, pr.number), [
+      {
+        ...one,
+        state: 'refused',
+        reason,
+        reason_code: code as StoredOperation['reason_code'],
+      },
+    ]);
+  }
+
+  private markSent(
+    { repo, number }: Numbered,
+    conversation: string | null,
+    sent: string[],
+  ): void {
+    if (conversation === null) {
+      this.changePr(repo, number, (held) => ({ ...held, sent }));
+      return;
+    }
+    const key = keyOf(repo, number);
+    const thread = this.threads[key]?.[conversation];
+    if (!thread) return;
+    this.threads = {
+      ...this.threads,
+      [key]: { ...this.threads[key], [conversation]: { ...thread, sent } },
+    };
+    this.place(repo, number);
+  }
+
   private takeOutcome(
     pr: Numbered,
     { operation, conversation }: Outcome,
+    local: StoredOperation | null,
   ): void {
     const { repo, number } = pr;
+    if (local) this.drop(pr, local);
     this.takeAnswer(pr, operation);
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};
@@ -1574,6 +1689,7 @@ export default class StoreService extends Service {
       place: null,
       unreadable: [],
       in_flight: [],
+      sent: [],
       diffs: {},
       history: {},
       read: null,

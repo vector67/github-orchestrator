@@ -1436,6 +1436,9 @@ export class FakeBoard {
         conversation: key,
         kind: verb === 'fix' ? 'first' : (verb as OperationKind),
         state: 'pending',
+        ...(verb === 'edit-draft'
+          ? { body: (body as { body: string }).body }
+          : {}),
       }),
       conversation: asked,
     });

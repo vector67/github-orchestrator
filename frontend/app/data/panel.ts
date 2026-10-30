@@ -4,6 +4,7 @@ import type {
   Conversation,
   Commits,
   DiffSide,
+  DraftOperation,
   Operation,
   OperationKind,
   Proposal,
@@ -27,6 +28,7 @@ import {
   phaseOf,
   REOPENED_HINT,
   RUN_KINDS,
+  sent,
   type Phase,
 } from 'frontend/data/thread';
 import { inFlight, offered, type Offer } from 'frontend/data/decisions';
@@ -137,6 +139,8 @@ export interface DraftView {
   editable: boolean;
   enrolled: boolean;
   posting: boolean;
+  pending: string | null;
+  refused: string | null;
 }
 
 export interface Panel {
@@ -339,8 +343,13 @@ export function draftOf(
 ): DraftView | null {
   if (!composing(conversation) || !details) return null;
   const { path, line, start_line, start_side, side } = conversation.anchor;
+  const edit = details.operations.findLast(
+    (one): one is DraftOperation => one.kind === 'edit-draft',
+  );
+  const saving =
+    edit !== undefined && outstanding(conversation)?.id === edit.id;
   return {
-    body: details.comments[0]?.body ?? '',
+    body: (saving && edit.body) || (details.comments[0]?.body ?? ''),
     path: path ?? '',
     line,
     start_line,
@@ -349,6 +358,8 @@ export function draftOf(
     editable: !busy(conversation),
     enrolled: conversation.state === 'enrolled',
     posting: outstanding(conversation)?.kind === 'post-now',
+    pending: saving && sent(edit) ? inFlight(edit.kind) : null,
+    refused: edit?.state === 'refused' ? edit.reason : null,
   };
 }
 

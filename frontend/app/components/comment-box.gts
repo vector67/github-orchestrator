@@ -74,13 +74,14 @@ export default class CommentBox extends Component<CommentBoxSignature> {
 
   save = async (event: Event) => {
     event.preventDefault();
-    if (await this.drafts.save(this.args.draft, this.args.saved)) {
-      this.args.close();
-    }
+    const went = this.creating
+      ? await this.drafts.create()
+      : this.drafts.edit(this.args.draft, this.args.saved);
+    if (went) this.args.close();
   };
 
   add = async () => {
-    const made = await this.drafts.save(this.args.draft, this.args.saved);
+    const made = await this.drafts.create();
     if (!made) return;
     this.args.close();
     await this.board.decide(made, 'enrol');

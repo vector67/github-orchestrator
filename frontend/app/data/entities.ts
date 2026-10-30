@@ -2,6 +2,7 @@ import type {
   Comment,
   CommentSummary,
   Conversation,
+  OperationState,
   OperationSummary,
   OutputLine,
   ThreadRow,
@@ -13,6 +14,7 @@ export type Thread = ThreadRow &
   Partial<Omit<Conversation, keyof ThreadRow | 'comments' | 'operations'>> & {
     comments?: StoredComment[];
     operations?: string[];
+    sent?: string[];
     read?: string;
     provisional?: boolean;
   };
@@ -20,8 +22,14 @@ export type Thread = ThreadRow &
 export type Arriving = ThreadRow &
   Partial<Omit<Conversation, keyof ThreadRow>> & { provisional?: boolean };
 
-export type StoredOperation = { id: string } & Partial<OperationSummary> & {
+export type HeldState = OperationState | 'sent';
+
+export type StoredOperation = { id: string } & Partial<
+  Omit<OperationSummary, 'state'>
+> & {
     conversation: string | null;
+    state?: HeldState;
+    body?: string | null;
   };
 
 export interface HeardLine extends OutputLine {

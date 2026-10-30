@@ -119,8 +119,16 @@ export function standingOf(conversation: Conversation): Standing {
   return conversation.state === 'enrolled' ? 'pending' : 'local';
 }
 
+const SENT = 'sent';
+
+const OUTSTANDING: string[] = [SENT, 'pending', 'running'];
+
+export function sent(operation: { state: string }): boolean {
+  return operation.state === SENT;
+}
+
 function inFlight(operation: OperationSummary): boolean {
-  return operation.state === 'pending' || operation.state === 'running';
+  return OUTSTANDING.includes(operation.state);
 }
 
 export function newestOf(

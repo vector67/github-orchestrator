@@ -21,7 +21,7 @@ async function refusalOf(answer: Response): Promise<Refusal> {
 
 interface Asking {
   path: string;
-  stop: AbortController;
+  stop: AbortController | null;
 }
 
 const asking = new Set<Asking>();
@@ -32,7 +32,7 @@ export function pending(): string[] {
 
 export function abandonUnder(prefix: string): void {
   asking.forEach((one) => {
-    if (one.path.startsWith(`${prefix}/`)) one.stop.abort();
+    if (one.path.startsWith(`${prefix}/`)) one.stop?.abort();
   });
 }
 
@@ -42,13 +42,14 @@ export async function read<T>(
 ): Promise<Read<T>> {
   const headers: Record<string, string> = { Accept: JSON_TYPE };
   if (tag) headers['If-None-Match'] = tag;
-  const asked: Asking = { path, stop: new AbortController() };
+  const stop = new AbortController();
+  const asked: Asking = { path, stop };
   asking.add(asked);
   try {
     const answer = await fetch(path, {
       headers,
       cache: 'no-store',
-      signal: asked.stop.signal,
+      signal: stop.signal,
     });
     if (answer.status === 304) return { changed: false };
     if (!answer.ok) throw await refusalOf(answer);
@@ -58,7 +59,7 @@ export async function read<T>(
       tag: answer.headers.get('ETag'),
     };
   } catch (trouble) {
-    if (asked.stop.signal.aborted) throw new Abandoned(`${path} was left`);
+    if (stop.signal.aborted) throw new Abandoned(`${path} was left`);
     throw trouble;
   } finally {
     asking.delete(asked);
@@ -103,16 +104,22 @@ async function sent<T>(
     'Content-Type': JSON_TYPE,
   };
   if (ifMatch) headers['If-Match'] = ifMatch;
-  const answer = await fetch(path, {
-    method,
-    headers,
-    body: JSON.stringify(body),
-  });
-  if (!answer.ok) throw await refusalOf(answer);
-  return {
-    body: (await answer.json()) as T,
-    location: answer.headers.get('Location'),
-  };
+  const asked: Asking = { path, stop: null };
+  asking.add(asked);
+  try {
+    const answer = await fetch(path, {
+      method,
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (!answer.ok) throw await refusalOf(answer);
+    return {
+      body: (await answer.json()) as T,
+      location: answer.headers.get('Location'),
+    };
+  } finally {
+    asking.delete(asked);
+  }
 }
 
 export async function handed(path: string, body?: unknown): Promise<void> {

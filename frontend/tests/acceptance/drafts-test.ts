@@ -8,6 +8,7 @@ import {
   findAll,
   triggerEvent,
   visit,
+  waitFor,
 } from '@ember/test-helpers';
 import type { Conversation, DiffLine, OperationKind } from 'frontend/data/api';
 import {
@@ -346,9 +347,11 @@ module('Acceptance | drafts', function (hooks) {
     await click(`${row('+11')} [data-test-new]`);
     await click('[data-test-draft-save]');
 
+    assert.dom('[data-test-composer]').hasAttribute('data-refused');
     assert
-      .dom('[data-test-toast]')
+      .dom('[data-test-draft-note]')
       .containsText("That line is not in the pull request's diff");
+    assert.dom('[data-test-toast]').doesNotExist();
     assert.dom('[data-test-draft-anchor]').hasText('foo.py +11');
     assert.deepEqual(selected(), ['+11']);
   });
@@ -405,6 +408,24 @@ module('Acceptance | drafts', function (hooks) {
     await clock().tick(SLOW);
 
     assert.dom('[data-test-draft-body]').hasValue('this leaks the file handle');
+  });
+
+  test('a saved edit marks the composer pending, its words held, until the board answers', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await fillIn('[data-test-draft-body]', 'this leaks the file handle');
+    const release = board().hold(/operations:edit-draft$/);
+
+    const saving = click('[data-test-draft-save]');
+    await waitFor('[data-test-composer][data-pending]');
+
+    assert.dom('[data-test-draft-body]').isDisabled();
+    assert.dom('[data-test-draft-body]').hasValue('this leaks the file handle');
+    assert.dom('[data-test-draft-save]').doesNotExist();
+
+    release();
+    await saving;
+
+    assert.dom('[data-test-composer]').doesNotHaveAttribute('data-pending');
   });
 
   test('a draft on its way to GitHub is not changed, and says why', async function (assert) {
