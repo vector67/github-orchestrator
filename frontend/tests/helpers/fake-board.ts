@@ -769,6 +769,8 @@ export class FakeBoard {
   mentions: Mentions = { searched_at: null, mentions: [] };
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
+  sessionFoundOnCheck: TerminalSession | null = null;
+  sessionGoneTo: Conversation | null = null;
   opensOutside = false;
   opensLater = false;
   sockets: FakeSocket[] = [];
@@ -1433,6 +1435,7 @@ export class FakeBoard {
       this.refusal = null;
       return this.json(refusal.status, { errors: [refusal] });
     }
+    if (verb === 'check-session') return this.checkSession(key);
     const id = `op_${this.posted.length}`;
     if (verb === 'start-session' || verb === 'open-shell') {
       this.drain({
@@ -1734,6 +1737,28 @@ export class FakeBoard {
       this.startSession(['fake', body.keys], '/Users/me/repositories/o/r');
     }
     return this.json(200, { sessions: this.terminalSessions });
+  }
+
+  private checkSession(key: string): Response {
+    if (this.sessionFoundOnCheck) {
+      this.terminalSessions = [
+        ...this.terminalSessions,
+        this.sessionFoundOnCheck,
+      ];
+    }
+    const directory = this.proposals[key]?.[0]?.directory;
+    const running = this.terminalSessions.find(
+      (one) => one.worktree === directory,
+    );
+    const before = this.conversations.find((one) => one.key === key)!;
+    const after = running ? before : (this.sessionGoneTo ?? before);
+    this.conversations = this.conversations.map((one) =>
+      one.key === key ? after : one,
+    );
+    return this.json(200, {
+      session: running?.id ?? null,
+      conversation: after,
+    });
   }
 
   private askTheAgent(

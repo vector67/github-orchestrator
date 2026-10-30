@@ -198,6 +198,25 @@
     }
    }
   },
+  "/api/conversations/{key}/operations:check-session": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/SessionCheck"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/operations:confirm": {
    "post": {
     "202": {
@@ -6425,6 +6444,28 @@
    },
    "required": [
     "verdict"
+   ],
+   "type": "object"
+  },
+  "SessionCheck": {
+   "properties": {
+    "conversation": {
+     "$ref": "#/components/schemas/Conversation"
+    },
+    "session": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "session",
+    "conversation"
    ],
    "type": "object"
   },

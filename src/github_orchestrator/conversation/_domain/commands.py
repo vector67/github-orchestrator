@@ -105,6 +105,11 @@ class Fail:
 
 
 @dataclass(frozen=True)
+class SessionGone:
+    pass
+
+
+@dataclass(frozen=True)
 class SetCommitVerdict:
     verdict: CommitVerdict
     reason: str
@@ -214,6 +219,7 @@ Command = (
     | ReportTicket
     | ReportFiled
     | Fail
+    | SessionGone
     | SetCommitVerdict
     | Approve
     | Rework

@@ -48,6 +48,7 @@ import type {
   SetupRepoChoice,
   SetupRepoChoices,
   SetupRequest,
+  SessionCheck,
   TerminalSession,
   TerminalSessionList,
   Tour,
@@ -1173,6 +1174,21 @@ export default class StoreService extends Service {
     return this.listed(pr, taken, local);
   }
 
+  async checkSession(pr: Numbered, key: string): Promise<Tried<string | null>> {
+    const checked = await tried(
+      'session',
+      posted<SessionCheck>(
+        this.here.api(`${under(key)}/operations:check-session`),
+        null,
+        {},
+      ),
+    );
+    if (!checked.done) return checked;
+    const { session, conversation } = checked.body.body;
+    this.takeThread(pr, conversation);
+    return { done: true, body: session };
+  }
+
   async askTheAgent(
     pr: Numbered,
     prompt: string,
@@ -1720,6 +1736,13 @@ export default class StoreService extends Service {
       this.drop(pr, local);
     }
     this.takeAnswer(pr, operation);
+    this.takeThread(pr, conversation);
+  }
+
+  private takeThread(
+    { repo, number }: Numbered,
+    conversation: Conversation,
+  ): void {
     const key = keyOf(repo, number);
     const held = this.threads[key] ?? {};
     const taken = threadMerged(held[conversation.key], conversation);

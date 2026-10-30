@@ -76,6 +76,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SessionGone,
     SetCommitVerdict,
     StartSession,
     StepDone,
@@ -442,6 +443,9 @@ class _Editable:
 
     def fail(self, reason: str) -> Conversation | Denied:
         return self._answer(Fail(reason=reason))
+
+    def session_gone(self) -> Conversation | Denied:
+        return self._answer(SessionGone())
 
     def set_commit_verdict(self, verdict: CommitVerdict,
                            reason: str) -> Conversation | Denied:

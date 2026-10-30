@@ -73,6 +73,7 @@ from github_orchestrator.board_api._contract import (
     ResolveRequest,
     ReviewedCommits,
     SendReviewRequest,
+    SessionCheck,
     Sha,
     Stack,
     StartSessionRequest,
@@ -1218,6 +1219,33 @@ def start_session(key: ThreadKey, board: Serving, if_match: IfMatch,
             steer=asked.steer or "",
             pointed=[(line.file, line.line, line.text) for line in asked.pointed],
             include=asked.include))
+
+
+@writes.post("/conversations/{key}/operations:check-session", response_model=SessionCheck,
+             operation_id="checkSession",
+             summary="Look for the session a thread in session expects, and put "
+                     "the thread back where it was when there is none.",
+             responses={**ONE_THREAD, 409: {
+                 "description": "The thread has no session open.",
+                 "model": Errors}})
+def check_session(key: ThreadKey, board: Serving) -> SessionCheck:
+    """A steered session can end without telling the board, and the thread
+    then waits in session for a report that never comes. The check answers
+    the session still running in the thread's worktree; when none is, the
+    thread goes back to the state it was in before the session opened.
+    """
+    conversation = _thread(board, key)
+    worktree = board.git.workspace(conversation.key, conversation.fix.base_sha).path
+    running = next((session.id for session in board.terminals.listed()
+                    if session.worktree == worktree), None)
+    if running is None:
+        with board.conversations.editing(conversation.key) as editable:
+            put_back = editable.session_gone()
+        if isinstance(put_back, Denied):
+            raise _denied(put_back)
+        conversation = put_back
+    account = board.conversations.facts().account
+    return SessionCheck(session=running, conversation=conversation_of(conversation, account))
 
 
 @writes.post("/conversations/{key}/operations:open-shell", status_code=202,

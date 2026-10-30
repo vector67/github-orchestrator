@@ -677,7 +677,7 @@ ROLE_MEMBERS = {
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "set_commit_verdict"}),
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "session_gone", "set_commit_verdict"}),
 }
 
 

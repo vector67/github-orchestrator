@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ from github_orchestrator.conversation import (
     Denied,
     ErrorCode,
     OperationKind,
+    OperationState,
 )
 from github_orchestrator.domain import Sha
 from github_orchestrator.notifications.fake import FakeNotifications
@@ -303,6 +305,67 @@ def test_a_session_the_operator_gives_up_on_settles_declined(bench):
 
     assert not isinstance(outcome, Denied), outcome
     assert bench.stored().fix.is_declined
+
+
+def _session_gone(bench):
+    with bench.threads.editing(KEY) as editable:
+        return editable.session_gone()
+
+
+def _session_on_declined(bench):
+    _declined(bench)
+    bench.world.pr_processes.open(THE_PR, Path(WORKTREE))
+    with bench.threads.editing(KEY) as editable:
+        editable.start_session()
+    drain(bench.threads)
+
+
+def test_a_session_found_gone_puts_a_declined_fix_back_to_declined(bench):
+    _session_on_declined(bench)
+
+    outcome = _session_gone(bench)
+
+    assert not isinstance(outcome, Denied), outcome
+    assert bench.stored().fix.is_declined
+
+
+def test_a_session_found_gone_settles_its_operation_refused_saying_so(bench):
+    _in_session(bench)
+
+    _session_gone(bench)
+
+    [session] = [operation for operation in bench.stored().operations
+                 if operation.kind == OperationKind.START_SESSION]
+    assert session.state == OperationState.REFUSED
+    assert session.reason == "the session ended without reporting back"
+
+
+def _from_before_sessions_were_remembered(bench):
+    records = bench.world.thread_records.of(THE_PR)
+    document = json.loads(records.load("json", KEY))
+    del document["session_from"]
+    records.save("json", KEY, json.dumps(document).encode())
+
+
+def test_a_session_found_gone_on_a_record_that_never_said_where_it_came_from_lands_on_its_commit(
+        bench):
+    _in_session(bench)
+    _from_before_sessions_were_remembered(bench)
+
+    _session_gone(bench)
+
+    assert bench.stored().fix.is_proposed
+
+
+def test_a_session_found_gone_with_no_commit_and_no_record_of_where_it_came_from_has_failed(bench):
+    _session_on_declined(bench)
+    _from_before_sessions_were_remembered(bench)
+
+    _session_gone(bench)
+
+    fix = bench.stored().fix
+    assert fix.has_failed
+    assert fix.reason == "the session ended without reporting back"
 
 
 @pytest.mark.parametrize("state", ["proposed", "landed"])

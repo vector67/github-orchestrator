@@ -27,6 +27,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
     Retry,
     Rework,
+    SessionGone,
     SetCommitVerdict,
     StartSession,
     StepDone,
@@ -287,6 +288,13 @@ def _a_session_opening(conversation: Conversation,
     if conversation.fix.state != IN_SESSION:
         return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
                        f"no session is opening on {_a(conversation.fix.state)} fix")
+    return None
+
+
+def _a_session_open(conversation: Conversation, command: SessionGone) -> Refused | None:
+    if conversation.fix.state != IN_SESSION:
+        return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
+                       f"no session is open on {_a(conversation.fix.state)} fix")
     return None
 
 
@@ -794,6 +802,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Fail: (_running_only,),
     SetCommitVerdict: (_a_commit_checked,),
     SessionRefused: (_a_session_opening,),
+    SessionGone: (_a_session_open,),
     RunStarted: (_queued_for_a_run,),
     RunExited: (_running_only,),
     RunTimedOut: (_running_only,),

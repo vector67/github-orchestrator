@@ -322,6 +322,48 @@ module('Acceptance | terminal', function (hooks) {
       .hasAttribute('aria-current', 'true');
   });
 
+  test('a Session open conversation whose session is gone says so, checks, and puts the comment back where it was', async function (assert) {
+    board().conversations = [board().threadIn('session', { key: 'k1' })];
+    board().proposals['k1'] = [proposal({ directory: '/wt/thread-k1' })];
+    board().terminalSessions = [SHELL];
+    board().sessionGoneTo = board().threadIn('proposed', { key: 'k1' });
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-go-to-session]');
+
+    assert.deepEqual(
+      board()
+        .posted.filter((one) => one.verb === 'check-session')
+        .map((one) => one.key),
+      ['k1'],
+    );
+    assert.deepEqual(texts('[data-test-toast]'), [
+      'The session this comment expected is not in the Terminal tab; checking what happened',
+      'No session was running, so the comment is back where it was before the session opened',
+    ]);
+    await visit('/pr/o/r/7/conversations/k1');
+    assert.dom('[data-test-go-to-session]').doesNotExist();
+  });
+
+  test('a session the page missed but the board still runs is opened once the check finds it', async function (assert) {
+    board().conversations = [board().threadIn('session', { key: 'k1' })];
+    board().proposals['k1'] = [proposal({ directory: '/wt/thread-k1' })];
+    board().terminalSessions = [SHELL];
+    board().sessionFoundOnCheck = {
+      id: 'claude-k1',
+      argv: ['claude'],
+      worktree: '/wt/thread-k1',
+    };
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-go-to-session]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    assert
+      .dom('[data-test-session="claude-k1"]')
+      .hasAttribute('aria-current', 'true');
+  });
+
   test('on the hub a Terminal tab whose hub stops answering says so', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');
