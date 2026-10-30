@@ -38,6 +38,7 @@ TAKE_THE_TERMINAL = ("import fcntl, os, sys, termios; fcntl.ioctl(0, termios.TIO
 RECORD = ".json"
 SOCKET = ".sock"
 LOG = ".log"
+KEPT = "kept"
 
 
 class _Held:
@@ -199,11 +200,12 @@ class _Held:
     def _hang_up_when_told(self, number: int, frame: object) -> None:
         threading.Thread(target=self._hang_up, daemon=True).start()
 
-    def serve(self, first_connection_seconds: float) -> None:
+    def serve(self, first_connection_seconds: float | None) -> None:
         threading.Thread(target=self._pump, daemon=True).start()
-        waiting = threading.Timer(first_connection_seconds, self._hang_up_unless_connected)
-        waiting.daemon = True
-        waiting.start()
+        if first_connection_seconds is not None:
+            waiting = threading.Timer(first_connection_seconds, self._hang_up_unless_connected)
+            waiting.daemon = True
+            waiting.start()
         self._server.settimeout(ACCEPT_SECONDS)
         while True:
             with self._changed:
@@ -287,7 +289,7 @@ def main(arguments: list[str]) -> int:
     signal.signal(signal.SIGTERM, held._hang_up_when_told)
     _detached(Path(directory), session)
     os.close(telling)
-    held.serve(float(wait))
+    held.serve(None if wait == KEPT else float(wait))
     (Path(directory) / f"{session}{LOG}").unlink(missing_ok=True)
     os._exit(0)
 

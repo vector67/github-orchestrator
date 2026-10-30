@@ -347,6 +347,20 @@ def test_a_session_opens_in_the_threads_worktree_running_claude(world):
     assert session.argv[0] == "claude"
 
 
+def test_a_threads_session_and_shell_are_kept_until_a_page_claims_them(world):
+    world.runs.open_session(_thread("/tmp/wt"), None)
+    world.runs.open_shell(THE_PR, "/tmp/wt")
+
+    assert [session.kept for session in world.fake.pr_processes.sessions[THE_PR]] == [True, True]
+
+
+def test_a_rebase_or_question_session_ends_when_no_page_claims_it(world):
+    world.runs.rebase_in_session(THE_PR, "/tmp/wt")
+    world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?")
+
+    assert [session.kept for session in world.fake.pr_processes.sessions[THE_PR]] == [False, False]
+
+
 def test_a_session_that_will_not_start_answers_the_reason(world):
     world.fake.pr_processes.refusal = "[Errno 2] No such file or directory: 'claude'"
 

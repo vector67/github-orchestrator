@@ -115,7 +115,7 @@ def command_argv(command: str) -> list[str]:
 
 def open_session_in(pr_processes: PrProcesses, pr: Pr, worktree: str, command: list[str],
                     prompt: str) -> str | None:
-    return pr_processes.split(pr, worktree, [*command, prompt])
+    return pr_processes.split_kept(pr, worktree, [*command, prompt])
 
 
 class AgentRun:
@@ -396,7 +396,7 @@ class AgentRuns:
         return self._pr_processes.split(pr, worktree, [*self._command, *self._lines.rebase_session()])
 
     def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
-        return open_session_in(self._pr_processes, pr, worktree, [*self._command, "--"], prompt)
+        return self._pr_processes.split(pr, worktree, [*self._command, "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, prompt: str) -> AgentRun | str:
         return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt)
@@ -418,7 +418,7 @@ class AgentRuns:
                         rework_prompt(self._commands, fix, steer, self._workers))
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
-        return self._pr_processes.split(pr, worktree, shell_argv())
+        return self._pr_processes.split_kept(pr, worktree, shell_argv())
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in(iter_lines_reverse(self._runs_log, max_bytes=SEED_SCAN_BYTES),

@@ -23,7 +23,7 @@ from github_orchestrator.terminal_sessions._frames import (
     framed,
     sized,
 )
-from github_orchestrator.terminal_sessions._holder import LOG, RECORD, SOCKET
+from github_orchestrator.terminal_sessions._holder import KEPT, LOG, RECORD, SOCKET
 from github_orchestrator.terminal_sessions.interface import Session, TerminalSessions
 
 log = logging.getLogger(__name__)
@@ -108,10 +108,16 @@ class PtySessions:
         self._first_connection_seconds = first_connection_seconds
 
     def start(self, worktree: str, argv: list[str]) -> str:
+        return self._started(str(self._first_connection_seconds), worktree, argv)
+
+    def start_kept(self, worktree: str, argv: list[str]) -> str:
+        return self._started(KEPT, worktree, argv)
+
+    def _started(self, wait: str, worktree: str, argv: list[str]) -> str:
         session = secrets.token_hex(6)
         holder = self._popen(
             [sys.executable, "-m", HOLDER, str(self._directory), session,
-             str(self._first_connection_seconds), worktree, *argv],
+             wait, worktree, *argv],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             env={**os.environ, **self._environment}, cwd="/", close_fds=True)
         _, trouble = holder.communicate()

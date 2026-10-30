@@ -584,7 +584,7 @@ def test_working_copies_offer_worktrees_branch_trouble_and_a_checkout_per_pr():
 
 PR_PROCESSES_MEMBERS = frozenset({
     "open", "revive", "manager", "stop_managers", "manager_path", "detach", "close", "split",
-    "close_other_repos",
+    "split_kept", "close_other_repos",
 })
 
 
@@ -598,7 +598,7 @@ def test_pr_processes_offer_only_manager_and_session_operations():
     )
 
 
-TERMINAL_SESSIONS_MEMBERS = frozenset({"start", "listed", "attach", "hang_up"})
+TERMINAL_SESSIONS_MEMBERS = frozenset({"start", "start_kept", "listed", "attach", "hang_up"})
 TERMINALS_MEMBERS = frozenset({"of", "everywhere"})
 
 

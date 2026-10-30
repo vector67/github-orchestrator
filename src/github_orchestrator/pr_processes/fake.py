@@ -20,6 +20,7 @@ class Manager:
 class Session:
     worktree: str
     argv: list[str]
+    kept: bool = False
 
 
 @dataclass
@@ -72,9 +73,15 @@ class FakePrProcesses:
         return True
 
     def split(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
+        return self._split(pr, Session(worktree, list(argv)))
+
+    def split_kept(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
+        return self._split(pr, Session(worktree, list(argv), kept=True))
+
+    def _split(self, pr: Pr, session: Session) -> str | None:
         if self.refusal is not None:
             return self.refusal
-        self.sessions.setdefault(pr, []).append(Session(worktree, list(argv)))
+        self.sessions.setdefault(pr, []).append(session)
         return None
 
     def file_name(self) -> str:

@@ -143,8 +143,15 @@ class BackgroundPrProcesses:
         return True
 
     def split(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
+        return self._split(pr, worktree, argv, self._terminals.of(pr).start)
+
+    def split_kept(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
+        return self._split(pr, worktree, argv, self._terminals.of(pr).start_kept)
+
+    def _split(self, pr: Pr, worktree: str, argv: list[str],
+               start: Callable[[str, list[str]], str]) -> str | None:
         try:
-            self._terminals.of(pr).start(worktree, argv)
+            start(worktree, argv)
         except OSError as exc:
             log.warning("Could not start a terminal session for %s in %s: %s", pr, worktree, exc)
             return str(exc)
