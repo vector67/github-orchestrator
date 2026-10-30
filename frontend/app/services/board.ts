@@ -2,7 +2,7 @@ import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type { DraftRequest } from 'frontend/services/drafts';
-import { MOVED, tried } from 'frontend/data/tried';
+import { MOVED } from 'frontend/data/tried';
 import { after, durationOf, flip } from 'frontend/motion';
 import {
   carriedOut,
@@ -130,15 +130,8 @@ export default class BoardService extends Service {
   }
 
   private async created(draft: DraftRequest): Promise<string | null> {
-    const made = await tried(
-      'write',
-      this.store.createDraft(this.here.at, draft),
-    );
-    if (!made.done) {
-      this.toasts.say(made.why, REFUSED);
-      return null;
-    }
-    await this.loader.refreshList();
-    return made.body;
+    const made = await this.store.createDraft(this.here.at, draft);
+    if (made) await this.loader.refreshList();
+    return made;
   }
 }

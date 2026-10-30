@@ -1076,13 +1076,30 @@ export default class StoreService extends Service {
     this.takeSessions(pr, body);
   }
 
-  async askTheAgent(pr: Numbered, prompt: string): Promise<void> {
-    const { body } = await posted<TerminalSessionList>(
-      this.here.api('/api/terminal/questions'),
-      null,
-      { prompt },
+  async askTheAgent(
+    pr: Numbered,
+    prompt: string,
+    about: string | null,
+  ): Promise<Tried<void>> {
+    const local =
+      about === null
+        ? null
+        : this.hold(pr, this.sending(about, 'ask-the-agent', null));
+    const asked = await tried(
+      'terminal',
+      posted<TerminalSessionList>(
+        `${this.here.prefixOf(pr)}/api/terminal/questions`,
+        null,
+        { prompt },
+      ),
     );
-    this.takeSessions(pr, body);
+    if (!asked.done) {
+      if (local) this.refuse(pr, local, asked.why, asked.code);
+      return asked;
+    }
+    if (local) this.drop(pr, local);
+    this.takeSessions(pr, asked.body.body);
+    return { done: true, body: undefined };
   }
 
   async decide(
@@ -1116,17 +1133,21 @@ export default class StoreService extends Service {
 
   async createDraft(pr: Numbered, draft: unknown): Promise<string | null> {
     const local = this.hold(pr, this.sending(null, 'create-draft', null));
-    try {
-      const made = await write<Operation>(
-        this.here.api('/api/operations:create-draft'),
+    const made = await tried(
+      'write',
+      write<Operation>(
+        `${this.here.prefixOf(pr)}/api/operations:create-draft`,
         null,
         draft,
-      );
-      this.takeAnswer(pr, made);
-      return made.conversation;
-    } finally {
-      this.drop(pr, local);
+      ),
+    );
+    if (!made.done) {
+      this.refuse(pr, local, made.why, made.code);
+      return null;
     }
+    this.drop(pr, local);
+    this.takeAnswer(pr, made.body);
+    return made.body.conversation;
   }
 
   async sendReview(pr: Numbered, review: unknown): Promise<void> {

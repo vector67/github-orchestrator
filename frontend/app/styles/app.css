@@ -2264,7 +2264,7 @@ button.expander:focus-visible {
   pointer-events: none;
 }
 
-.inline-card[data-pending] {
+:is(.inline-card, .comment-box)[data-pending] {
   border-style: dashed;
 }
 
@@ -2287,6 +2287,7 @@ button.expander:focus-visible {
   width: 12px;
   height: 12px;
   box-sizing: border-box;
+  margin-inline-end: 6px;
   vertical-align: -1px;
   border: 2px solid currentcolor;
   border-right-color: transparent;

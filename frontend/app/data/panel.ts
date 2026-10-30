@@ -147,6 +147,7 @@ export interface DraftView {
   enrolled: boolean;
   posting: boolean;
   pending: string | null;
+  ring: boolean;
   refused: string | null;
   retype: boolean;
 }

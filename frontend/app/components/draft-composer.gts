@@ -101,11 +101,21 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
     return draft.posting || (draft.enrolled && this.review.inFlight);
   }
 
+  get pending(): string | null {
+    if (this.creating) return this.drafts.making.pending;
+    return this.args.draft?.pending ?? null;
+  }
+
+  get refused(): string | null {
+    if (this.creating) return this.drafts.making.refused;
+    return this.args.draft?.refused ?? null;
+  }
+
   get note(): string {
-    const refused = this.args.draft?.refused;
+    const refused = this.refused;
     if (refused && !this.locked) return refused;
     if (this.going) return GOING_NOTE;
-    if (this.args.draft?.pending) return this.args.draft.pending;
+    if (this.pending) return this.pending;
     if (this.locked) return SAVING_NOTE;
     if (!this.lines) return PICK_A_LINE;
     return this.args.draft?.enrolled ? ENROLLED_NOTE : DRAFT_NOTE;
@@ -204,8 +214,8 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
       {{yield}}
       <form
         class="draft-composer"
-        data-pending={{if @draft.pending "true"}}
-        data-refused={{if @draft.refused "true"}}
+        data-pending={{if this.pending "true"}}
+        data-refused={{if this.refused "true"}}
         data-test-composer
         {{on "submit" this.save}}
       >

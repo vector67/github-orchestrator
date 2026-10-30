@@ -10,7 +10,7 @@ import {
   schemeOf,
   type NamedTheme,
 } from 'frontend/data/terminal-themes';
-import { tried } from 'frontend/data/tried';
+import { tried, type Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
@@ -164,28 +164,36 @@ export default class TerminalService extends Service {
 
   open(keys: string, line: string): Promise<boolean> {
     return waitForPromise(
-      this.opened((pr) => this.store.openSession(pr, keys), line),
+      this.opened(
+        (pr) => tried('terminal', this.store.openSession(pr, keys)),
+        line,
+        true,
+      ),
     );
   }
 
-  ask(prompt: string): Promise<boolean> {
+  ask(prompt: string, about: string | null): Promise<boolean> {
     return waitForPromise(
       this.opened(
-        (pr) => this.store.askTheAgent(pr, prompt),
+        (pr) => this.store.askTheAgent(pr, prompt, about),
         'The question for the agent',
+        about === null,
       ),
     );
   }
 
   private async opened(
-    start: (pr: Numbered) => Promise<void>,
+    start: (pr: Numbered) => Promise<Tried<unknown>>,
     line: string,
+    toastRefusal: boolean,
   ): Promise<boolean> {
     const pr = this.here.pr;
     if (pr === null) return false;
-    const answer = await tried('terminal', start(pr));
+    const answer = await start(pr);
     if (!answer.done) {
-      this.toasts.say(`${line} did not open: ${answer.why}`, 'failed');
+      if (toastRefusal) {
+        this.toasts.say(`${line} did not open: ${answer.why}`, 'failed');
+      }
       return false;
     }
     this.reach = 'answering';

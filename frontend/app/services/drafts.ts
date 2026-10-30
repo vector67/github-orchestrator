@@ -1,6 +1,8 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import type { DiffSide } from 'frontend/data/api';
+import { inFlight } from 'frontend/data/decisions';
+import { sent } from 'frontend/data/thread';
 import type { Lines } from 'frontend/data/selection';
 import type BoardService from 'frontend/services/board';
 import type ThreadsService from 'frontend/services/threads';
@@ -137,10 +139,20 @@ export default class DraftsService extends Service {
     };
   }
 
+  get making(): { pending: string | null; refused: string | null } {
+    const made = this.threads.inFlight.findLast(
+      (one) => one.kind === 'create-draft',
+    );
+    return {
+      pending: made && sent(made) ? inFlight(made.kind) : null,
+      refused: made?.state === 'refused' ? made.reason : null,
+    };
+  }
+
   saveable(key: string, saved: Saved): boolean {
     if (requestOf(this.copyOf(key, saved)) === null) return false;
     if (key !== NEW_DRAFT) return this.unsaved(key, saved);
-    return !this.threads.inFlight.some((one) => one.kind === 'create-draft');
+    return this.making.pending === null;
   }
 
   unsaved(key: string, saved: Saved): boolean {

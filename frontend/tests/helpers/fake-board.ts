@@ -1675,6 +1675,11 @@ export class FakeBoard {
       ifMatch: headers.get('If-Match'),
       body,
     });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
     this.startSession(['fake', body.prompt], '/Users/me/repositories/o/r');
     return this.json(200, { sessions: this.terminalSessions });
   }

@@ -54,6 +54,8 @@ text.
 
 ### 2. Thread writes: reply, enrol, discard, leave out, send review
 
+**Done** in 669a6d3c, 5296c42e and the commit that adds this line.
+
 Decisions 2, 5 (send review), 6 (reply text), 7. `reply-box.gts`,
 `inline-card.gts` (Add to review, Discard, Ask the agent's thread side),
 `review-dialog.gts` (Add, Leave out, Send), `comment-box.gts` (Add to review on

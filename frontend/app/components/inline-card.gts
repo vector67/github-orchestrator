@@ -9,6 +9,7 @@ import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import { modifier } from 'ember-modifier';
 import CommentBody from 'frontend/components/comment-body';
+import PendingRing from 'frontend/components/pending-ring';
 import Waiting from 'frontend/components/waiting';
 import { collapse } from 'frontend/motion';
 import type { Inline } from 'frontend/data/inline';
@@ -33,7 +34,6 @@ export default class InlineCard extends Component<InlineCardSignature> {
   @tracked private resolutionSeen: boolean;
   @tracked asking = false;
   @tracked question = '';
-  @tracked private sending = false;
 
   constructor(owner: Owner, args: InlineCardSignature['Args']) {
     super(owner, args);
@@ -123,7 +123,11 @@ export default class InlineCard extends Component<InlineCardSignature> {
             class="standing"
             data-standing={{@item.standing}}
             data-test-standing
-          >{{if @item.pending @item.pending this.standing}}</span>
+          >{{#if @item.ring}}<PendingRing />{{/if}}{{if
+              @item.pending
+              @item.pending
+              this.standing
+            }}</span>
           {{#if @item.fold}}
             <span
               class="card-tag"
@@ -254,7 +258,7 @@ export default class InlineCard extends Component<InlineCardSignature> {
   };
 
   get unaskable(): boolean {
-    return this.sending || this.question.trim() === '';
+    return this.args.item.pending !== null || this.question.trim() === '';
   }
 
   startAsking = () => {
@@ -274,14 +278,10 @@ export default class InlineCard extends Component<InlineCardSignature> {
     event.preventDefault();
     const { lines, entries } = this.args.item;
     const draft = entries.map((entry) => entry.body).join('\n\n');
-    this.sending = true;
-    try {
-      if (await this.terminal.ask(questionAbout(lines, this.question, draft))) {
-        this.stopAsking();
-        void this.router.transitionTo('terminal');
-      }
-    } finally {
-      this.sending = false;
+    const prompt = questionAbout(lines, this.question, draft);
+    if (await this.terminal.ask(prompt, this.args.item.key)) {
+      this.stopAsking();
+      void this.router.transitionTo('terminal');
     }
   };
 }

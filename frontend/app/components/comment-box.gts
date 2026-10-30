@@ -57,6 +57,14 @@ export default class CommentBox extends Component<CommentBoxSignature> {
     return !this.drafts.saveable(this.args.draft, this.args.saved);
   }
 
+  get pending(): string | null {
+    return this.creating ? this.drafts.making.pending : null;
+  }
+
+  get refused(): string | null {
+    return this.creating ? this.drafts.making.refused : null;
+  }
+
   focus = (element: HTMLElement) => {
     element.focus();
   };
@@ -106,7 +114,7 @@ export default class CommentBox extends Component<CommentBoxSignature> {
     );
     this.sending = true;
     try {
-      if (await this.terminal.ask(prompt)) {
+      if (await this.terminal.ask(prompt, null)) {
         void this.router.transitionTo('terminal');
       }
     } finally {
@@ -115,8 +123,21 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   };
 
   <template>
-    <form class="comment-box" data-test-comment-box {{on "submit" this.save}}>
-      <span class="commenting" data-test-commenting>{{this.commenting}}</span>
+    <form
+      class="comment-box"
+      data-pending={{if this.pending "true"}}
+      data-refused={{if this.refused "true"}}
+      data-test-comment-box
+      {{on "submit" this.save}}
+    >
+      <span class="commenting" data-test-commenting>{{if
+          this.pending
+          this.pending
+          this.commenting
+        }}</span>
+      {{#if this.refused}}
+        <p class="refusal" data-test-refusal>{{this.refused}}</p>
+      {{/if}}
       <textarea
         aria-label="the comment"
         rows="4"

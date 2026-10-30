@@ -92,6 +92,7 @@ interface Carrying {
   toast?: (gathered: Gathered) => string;
   opensTerminal?: boolean;
   pending?: boolean;
+  ring?: boolean;
 }
 
 interface Shade {
@@ -742,8 +743,15 @@ const ENTRIES = {
 
 export type Decision = keyof typeof ENTRIES;
 
-const CARRIED: Record<Decision | 'edit-draft' | 'send-review', Carrying> = {
+const CARRIED: Record<
+  Decision | 'edit-draft' | 'create-draft' | 'send-review' | 'ask-the-agent',
+  Carrying
+> = {
   ...ENTRIES,
+  'create-draft': {
+    doing: 'saving the draft',
+    square: null,
+  },
   'edit-draft': {
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
     doing: 'saving',
@@ -753,38 +761,48 @@ const CARRIED: Record<Decision | 'edit-draft' | 'send-review', Carrying> = {
   'send-review': {
     doing: 'sending the review',
     square: null,
+    ring: true,
+  },
+  'ask-the-agent': {
+    doing: 'asking the agent',
+    square: null,
+    ring: true,
   },
 };
 
-const DRAFT_WRITES: string[] = [
+const REFUSED_ON_A_DRAFT: string[] = [
   'edit-draft',
   'enrol',
   'discard',
   'withdraw-from-review',
+  'ask-the-agent',
 ];
 
-export interface Written {
+export interface Writing {
   pending: string | null;
+  ring: boolean;
   refused: string | null;
   retype: boolean;
+}
+
+function carryingOf(kind: string): Carrying | undefined {
+  return (CARRIED as Record<string, Carrying | undefined>)[kind];
 }
 
 export function writtenOn(
   conversation: Conversation,
   reviewSending: boolean,
-): Written {
+): Writing {
   const going = outstanding(conversation);
   const write = conversation.operations.findLast((one) =>
-    DRAFT_WRITES.includes(one.kind),
+    REFUSED_ON_A_DRAFT.includes(one.kind),
   );
   const goingOut = conversation.state === 'enrolled' && reviewSending;
+  const waiting =
+    going && sent(going) ? going.kind : goingOut ? 'send-review' : null;
   return {
-    pending:
-      going && sent(going)
-        ? inFlight(going.kind)
-        : goingOut
-          ? inFlight('send-review')
-          : null,
+    pending: waiting === null ? null : inFlight(waiting),
+    ring: waiting !== null && Boolean(carryingOf(waiting)?.ring),
     refused: write?.state === 'refused' ? write.reason : null,
     retype: write?.kind === 'edit-draft',
   };
@@ -1035,8 +1053,5 @@ export function laterAsks(): DialogSpec {
 }
 
 export function inFlight(kind: string): string {
-  const carrying: Carrying | undefined = (
-    CARRIED as Record<string, Carrying | undefined>
-  )[kind];
-  return `${carrying?.doing ?? kind}…`;
+  return `${carryingOf(kind)?.doing ?? kind}…`;
 }

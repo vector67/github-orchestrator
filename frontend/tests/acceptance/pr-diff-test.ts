@@ -705,6 +705,52 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-comment-box]').doesNotExist();
     });
 
+    test('Add to review in the comment box shows the box pending, its buttons held, until the draft is made', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'return the rows');
+      const release = board().hold(/operations:create-draft$/);
+
+      const adding = click('[data-test-box-add]');
+      await waitFor('[data-test-comment-box][data-pending]');
+
+      assert.dom('[data-test-commenting]').hasText('saving the draft…');
+      assert.dom('[data-test-box-add]').isDisabled();
+      assert.dom('[data-test-box-save]').isDisabled();
+
+      release();
+      await adding;
+
+      assert.dom('[data-test-comment-box]').doesNotExist();
+    });
+
+    test('a refused new draft keeps the box open with what was typed and says why on it, with no toast', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'return the rows');
+      board().refusal = {
+        status: 400,
+        code: 'anchor-not-in-diff',
+        detail: 'src/widgets/changes.py:20 is not a line of the diff',
+      };
+
+      await click('[data-test-box-add]');
+
+      assert.dom('[data-test-comment-box]').hasAttribute('data-refused');
+      assert
+        .dom('[data-test-comment-box] [data-test-refusal]')
+        .includesText("That line is not in the pull request's diff");
+      assert
+        .dom('[data-test-comment-box] textarea')
+        .hasValue('return the rows');
+      assert.dom('[data-test-box-add]').isNotDisabled();
+      assert.dom('[data-test-toast]').doesNotExist();
+      assert.deepEqual(
+        board().posted.map((one) => one.verb),
+        ['create-draft'],
+      );
+    });
+
     test('the comment box asks the agent what was typed about the selected lines, in a new terminal session', async function (assert) {
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
       await click(`${row('+20')} [data-test-add]`);
@@ -1329,7 +1375,7 @@ module('Acceptance | pr diff', function (hooks) {
       assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
     });
 
-    test('a draft’s card’s Ask is disabled while its question is in flight', async function (assert) {
+    test('a draft’s card shows its question pending with the ring, its Ask held, until the session opens', async function (assert) {
       await visit('/pr/o/r/7/diff');
       await click('[data-test-card="d1"] [data-test-card-ask]');
       await fillIn(
@@ -1339,12 +1385,44 @@ module('Acceptance | pr diff', function (hooks) {
       const release = board().hold(/\/api\/terminal\/questions$/);
 
       const asking = click('[data-test-card="d1"] [data-test-ask-send]');
-      await waitFor('[data-test-card="d1"] [data-test-ask-send][disabled]');
+      await waitFor('[data-test-card="d1"][data-pending]');
 
+      assert
+        .dom('[data-test-card="d1"] [data-test-standing]')
+        .hasText('asking the agent…');
+      assert.dom('[data-test-card="d1"] [data-test-ring]').exists();
       assert.dom('[data-test-card="d1"] [data-test-ask-send]').isDisabled();
 
       release();
       await asking;
+
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    });
+
+    test('a refused question leaves the card with its question and says why on it, with no toast', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-ask]');
+      await fillIn(
+        '[data-test-card="d1"] [data-test-ask] textarea',
+        'should this be a generator?',
+      );
+      board().refusal = {
+        status: 409,
+        code: 'agents-disabled',
+        detail: 'agents are off',
+      };
+
+      await click('[data-test-card="d1"] [data-test-ask-send]');
+
+      assert.dom('[data-test-card="d1"]').hasAttribute('data-refused');
+      assert
+        .dom('[data-test-card="d1"] [data-test-refusal]')
+        .includesText('Agents are switched off on this board');
+      assert
+        .dom('[data-test-card="d1"] [data-test-ask] textarea')
+        .hasValue('should this be a generator?');
+      assert.dom('[data-test-toast]').doesNotExist();
+      assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
     });
 
     test('once the board answers a discard, the draft’s card is gone and nothing is left in flight', async function (assert) {
