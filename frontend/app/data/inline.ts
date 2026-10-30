@@ -26,6 +26,8 @@ export interface Inline {
   draft: DraftView | null;
   locked: boolean;
   standing: Standing;
+  pending: string | null;
+  refused: string | null;
 }
 
 export interface Inlined {
@@ -59,15 +61,22 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
   if (conversation.kind === 'draft') {
     const draft = draftOf(conversation, details);
     if (!draft) return null;
+    const [opener, ...rest] = transcriptOf(
+      conversation,
+      details.comments,
+      context,
+    );
     return {
       key: conversation.key,
       path,
       lines: anchoredLines(conversation, line),
       fold: null,
-      entries: transcriptOf(conversation, details.comments, context),
+      entries: opener ? [{ ...opener, body: draft.body }, ...rest] : [],
       draft,
       locked: draftLocked(draft, seeing.reviewSending),
       standing: standingOf(conversation),
+      pending: draft.pending,
+      refused: draft.refused,
     };
   }
   return {
@@ -79,6 +88,8 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
     draft: null,
     locked: true,
     standing: standingOf(conversation),
+    pending: null,
+    refused: null,
   };
 }
 

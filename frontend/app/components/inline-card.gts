@@ -9,6 +9,7 @@ import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import { modifier } from 'ember-modifier';
 import CommentBody from 'frontend/components/comment-body';
+import Waiting from 'frontend/components/waiting';
 import { collapse } from 'frontend/motion';
 import type { Inline } from 'frontend/data/inline';
 import { questionAbout } from 'frontend/data/selection';
@@ -84,6 +85,9 @@ export default class InlineCard extends Component<InlineCardSignature> {
     <article
       class="inline-card"
       data-standing={{@item.standing}}
+      data-pending={{if @item.pending "true"}}
+      data-refused={{if @item.refused "true"}}
+      data-decided={{if (this.board.isDecided @item.key) "true"}}
       data-test-card={{@item.key}}
       {{this.holds}}
     >
@@ -115,7 +119,7 @@ export default class InlineCard extends Component<InlineCardSignature> {
             class="standing"
             data-standing={{@item.standing}}
             data-test-standing
-          >{{this.standing}}</span>
+          >{{if @item.pending @item.pending this.standing}}</span>
           {{#if @item.fold}}
             <span
               class="card-tag"
@@ -160,6 +164,19 @@ export default class InlineCard extends Component<InlineCardSignature> {
           >On the board</LinkTo>
         </div>
         <div class="card-body" {{this.holdsBody}}>
+          {{#if @item.refused}}
+            <p class="refusal" data-test-refusal>
+              {{@item.refused}}
+              {{#if this.editable}}
+                <button
+                  type="button"
+                  class="card-edit"
+                  data-test-edit-again
+                  {{on "click" (fn this.edit @item)}}
+                >Edit again</button>
+              {{/if}}
+            </p>
+          {{/if}}
           {{#each @item.entries key="@index" as |entry|}}
             <div class="inline-comment">
               <div class="comment-head">
@@ -169,6 +186,9 @@ export default class InlineCard extends Component<InlineCardSignature> {
               <CommentBody @body={{entry.body}} />
             </div>
           {{/each}}
+          {{#if @item.pending}}
+            <Waiting @on="/api/conversations/{{@item.key}}/operations:" />
+          {{/if}}
           {{#if this.asking}}
             <form class="comment-box" data-test-ask {{on "submit" this.ask}}>
               <textarea

@@ -823,6 +823,10 @@ module('Acceptance | pr diff', function (hooks) {
       };
     }
 
+    hooks.afterEach(function () {
+      document.documentElement.setAttribute('data-still', '');
+    });
+
     hooks.beforeEach(function () {
       board().conversations = [
         thread({ key: 'k1', anchor: anchored(20) }),
@@ -1064,6 +1068,83 @@ module('Acceptance | pr diff', function (hooks) {
         ],
       );
       assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
+    });
+
+    test('Save draft closes the box at once and the card shows the new words saving until the board answers, then flashes', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-edit]');
+      await fillIn('[data-test-comment-box] textarea', 'return them');
+      document.documentElement.removeAttribute('data-still');
+      const release = board().hold(/operations:edit-draft$/);
+
+      const saving = click('[data-test-box-save]');
+      await waitFor('[data-test-card="d1"][data-pending]');
+
+      assert.dom('[data-test-comment-box]').doesNotExist();
+      assert
+        .dom('[data-test-card="d1"] [data-test-entry-body]')
+        .hasText('return them');
+      assert
+        .dom('[data-test-card="d1"] [data-test-standing]')
+        .hasText('saving…');
+      assert.dom('[data-test-card="d1"] [data-test-card-edit]').doesNotExist();
+      assert
+        .dom('[data-test-card="d1"] [data-test-card-decide]')
+        .doesNotExist();
+
+      release();
+      await saving;
+
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+      assert.dom('[data-test-card="d1"]').hasAttribute('data-decided');
+      assert.dom('[data-test-toast]').doesNotExist();
+    });
+
+    test('a refused draft edit shows the old words, the refusal and Edit again, which reopens the box with what was typed', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-edit]');
+      await fillIn('[data-test-comment-box] textarea', 'return them');
+      board().refusal = {
+        status: 409,
+        code: 'anchor-not-in-diff',
+        detail:
+          "src/widgets/changes.py:20 is not a line of the pull request's diff",
+      };
+
+      await click('[data-test-box-save]');
+
+      assert.dom('[data-test-card="d1"]').hasAttribute('data-refused');
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+      assert
+        .dom('[data-test-card="d1"] [data-test-entry-body]')
+        .hasText('return the rows');
+      assert
+        .dom('[data-test-card="d1"] [data-test-refusal]')
+        .includesText("That line is not in the pull request's diff");
+      assert.dom('[data-test-toast]').doesNotExist();
+
+      await click('[data-test-card="d1"] [data-test-edit-again]');
+
+      assert.dom('[data-test-comment-box] textarea').hasValue('return them');
+    });
+
+    test('a draft edit the board has not answered after ten seconds names the write it waits on', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-edit]');
+      await fillIn('[data-test-comment-box] textarea', 'return them');
+      const release = board().hold(/operations:edit-draft$/);
+
+      const saving = click('[data-test-box-save]');
+      await waitFor('[data-test-card="d1"][data-pending]');
+      void clock().tick(10_000);
+      await waitFor('[data-test-card="d1"] [data-test-waiting]');
+
+      assert
+        .dom('[data-test-card="d1"] [data-test-waiting]')
+        .includesText('/api/conversations/d1/operations:edit-draft');
+
+      release();
+      await saving;
     });
 
     test('Edit on a draft whose lines left the diff opens the box saying so, and selecting lines anchors it again', async function (assert) {

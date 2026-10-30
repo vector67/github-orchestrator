@@ -39,6 +39,8 @@ is judged. Decision numbers (1–11) are the spec's. Issue #227.
 
 ### 1. The foundation and the draft edit
 
+**Done** in 204b8b69, 0155bdc1 and the commit that adds this line.
+
 Decisions 1, 2, 3, 4 (CSS and tokens only), 6, 7, 8, 9. The store's local
 operation (`sent`, `refused`, replacement by `takeOutcome`), `thread.ts`
 treating `sent` as `pending`, the `data-pending` and `data-refused` CSS block,
