@@ -8,11 +8,13 @@ from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.settings.fake import Settings
+from github_orchestrator.terminal_sessions import Terminals
+from github_orchestrator.terminal_sessions.fake import FakeTerminals
 from github_orchestrator.wiring import WorkingCopiesWiring, wire
 from github_orchestrator.working_copies import PrCheckout, WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
-from tests.conftest import fake_github, fake_notifications
+from tests.conftest import fake_github, fake_notifications, fake_provider
 
 REPO = "owner/name"
 PR = 7
@@ -26,10 +28,12 @@ def clone_of(pr: Pr, repo_dir: Path, new_worktree_command: str = "") -> dict[Rep
 
 def real_working_copies(settings: Settings, github: FakeGitHub | None = None,
                         notifications: FakeNotifications | None = None,
-                        clones: Mapping[Repo, Clone] | None = None) -> WorkingCopies:
+                        clones: Mapping[Repo, Clone] | None = None,
+                        terminals: FakeTerminals | None = None) -> WorkingCopies:
     working_copies: WorkingCopies = wire(
         fake_github(github or FakeGitHub()),
         fake_notifications(notifications or FakeNotifications()),
+        fake_provider(Terminals, terminals or FakeTerminals()),
         WorkingCopiesWiring(
             mismatched_dir=settings.mismatched_dir,
             worktree_conflicts_dir=settings.worktree_conflicts_dir,
@@ -43,11 +47,13 @@ def real_working_copies(settings: Settings, github: FakeGitHub | None = None,
 
 
 def copies_for(settings: Settings, pr: Pr, repo_dir: Path,
-               branch: str = "main", new_worktree_command: str = "") -> WorkingCopies:
+               branch: str = "main", new_worktree_command: str = "",
+               terminals: FakeTerminals | None = None) -> WorkingCopies:
     github = FakeGitHub()
     github.add_pr(pr, PullRequestState(branch=branch))
     return real_working_copies(settings, github,
-                               clones=clone_of(pr, repo_dir, new_worktree_command))
+                               clones=clone_of(pr, repo_dir, new_worktree_command),
+                               terminals=terminals)
 
 
 def found_checkout(settings: Settings, pr: Pr, repo_dir: Path) -> PrCheckout:

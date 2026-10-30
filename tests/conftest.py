@@ -51,6 +51,8 @@ from github_orchestrator.notifications import (
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import Settings, fake_settings
+from github_orchestrator.terminal_sessions import Terminals
+from github_orchestrator.terminal_sessions.fake import FakeTerminals
 from github_orchestrator.wiring import (
     ClocksWiring,
     MentionsProvider,
@@ -324,6 +326,7 @@ def build_container(settings: Settings, *fakes: Part,
         switches_wiring(settings),
         pr_event_queue_wiring(settings),
         fake_notifications(FakeNotifications()),
+        fake_provider(Terminals, FakeTerminals()),
         working_copies_wiring(settings),
         thread_records_wiring(settings),
         change_detection_wiring(settings),

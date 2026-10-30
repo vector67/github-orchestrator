@@ -2,8 +2,9 @@ import logging
 import os
 import subprocess
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 from github_orchestrator.domain import Pr, Sha
 from github_orchestrator.working_copies._layout import (
@@ -95,7 +96,15 @@ def _named_by_bare_key(name: str) -> bool:
     return not (quoted.strip(".") and thread_slug(unquote(quoted)) == name)
 
 
-def rename_bare_workspaces(pr_worktree: str, worktrees_dir: Path, pr: Pr) -> None:
+def bare_key_worktree(worktrees_dir: Path, pr: Pr, key: str) -> Path | None:
+    bare = quote(key, safe="")
+    if not _named_by_bare_key(bare):
+        return None
+    return pr_worktrees(worktrees_dir, pr) / bare
+
+
+def rename_bare_workspaces(pr_worktree: str, worktrees_dir: Path, pr: Pr,
+                           in_session: Callable[[str], bool]) -> None:
     prefix = thread_branch_prefix(pr)
     for branch in thread_branches(Path(pr_worktree), pr) or []:
         bare = branch.removeprefix(prefix)
@@ -103,9 +112,14 @@ def rename_bare_workspaces(pr_worktree: str, worktrees_dir: Path, pr: Pr) -> Non
         if not key.strip(".") or not _named_by_bare_key(bare):
             continue
         old = pr_worktrees(worktrees_dir, pr) / bare
-        if old.exists():
-            moved = run_git(pr_worktree, "worktree", "move", str(old),
-                            str(thread_worktree(worktrees_dir, pr, key)))
+        new = thread_worktree(worktrees_dir, pr, key)
+        if old.exists() and new.exists():
+            log.error("Left %s under its old name: %s is already there", old, new)
+            continue
+        if old.exists() and in_session(str(old)):
+            log.info("Left %s under its old name: a terminal session is in it", old)
+        elif old.exists():
+            moved = run_git(pr_worktree, "worktree", "move", str(old), str(new))
             if moved.returncode != 0:
                 log.error("Could not move %s to its new name: %s", old, git_diagnostic(moved))
                 continue
