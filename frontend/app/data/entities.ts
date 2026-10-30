@@ -16,11 +16,9 @@ export type Thread = ThreadRow &
     operations?: string[];
     sent?: string[];
     read?: string;
-    provisional?: boolean;
   };
 
-export type Arriving = ThreadRow &
-  Partial<Omit<Conversation, keyof ThreadRow>> & { provisional?: boolean };
+export type Arriving = ThreadRow & Partial<Omit<Conversation, keyof ThreadRow>>;
 
 export type HeldState = OperationState | 'sent';
 

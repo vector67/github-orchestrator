@@ -1137,7 +1137,7 @@ button.copy-directory {
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  width: min(560px, calc(100vw - 48px));
+  width: min(760px, calc(100vw - 48px));
   max-height: calc(100vh - 96px);
   overflow-y: auto;
   padding: 20px 22px;

@@ -1321,6 +1321,7 @@ export default class StoreService extends Service {
       'git',
       () => posted<GitRun>(path, null, { keys }),
       'manager git',
+      keys,
     );
     if (!taken.done) return taken;
     this.drop(pr, local);
@@ -1551,10 +1552,7 @@ export default class StoreService extends Service {
         ];
     const taken = new Map<string, Merged>();
     for (const [thread, one] of named) {
-      taken.set(
-        thread,
-        threadMerged(held[thread], { ...one, provisional: false }),
-      );
+      taken.set(thread, threadMerged(held[thread], one));
     }
     this.threads = {
       ...this.threads,

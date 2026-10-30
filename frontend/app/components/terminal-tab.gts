@@ -5,7 +5,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import PendingRing from 'frontend/components/pending-ring';
 import showsSession from 'frontend/modifiers/shows-session';
-import type { Opening, Pressing } from 'frontend/data/decisions';
+import type { Pressed, Pressing } from 'frontend/data/decisions';
 import type { Session } from 'frontend/data/terminal';
 import type DashboardService from 'frontend/services/dashboard';
 import type TerminalService from 'frontend/services/terminal';
@@ -80,7 +80,7 @@ export default class TerminalTab extends Component {
     return this.terminal.pressing?.session ?? null;
   }
 
-  get drained(): Opening | null {
+  get drained(): Pressed | null {
     const opening = this.terminal.opening;
     return opening?.pending || opening?.refused ? opening : null;
   }

@@ -21,7 +21,7 @@ import { edgeOf } from 'frontend/data/dashboard';
 import {
   openingOf,
   pressingOf,
-  type Opening,
+  type Pressed,
   type Pressing,
   type Pressings,
 } from 'frontend/data/decisions';
@@ -117,7 +117,7 @@ export interface Summaries {
   mismatches: string | null;
   openMentions: string[];
   pressing: Pressings;
-  opening: Opening;
+  opening: Pressed;
 }
 
 type Threads = Record<string, Thread>;
@@ -153,7 +153,7 @@ function pressedOn(
     (pr?.sent ?? []).flatMap((id) => {
       const one = operations[operationKey({ id, conversation: null })];
       return one ? [one] : [];
-    }) as unknown as Operation[],
+    }),
   );
 }
 

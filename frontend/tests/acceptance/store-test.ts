@@ -341,7 +341,7 @@ module('Acceptance | one store', function (hooks) {
     await waitUntil(
       () =>
         board().posted.length > before &&
-        document.querySelector('#c-k1[data-provisional]') !== null,
+        document.querySelector('#c-k1:not([data-pending])') !== null,
     );
   }
 
@@ -397,7 +397,6 @@ module('Acceptance | one store', function (hooks) {
     await clock().tick(LIST);
 
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'done');
-    assert.dom('#c-k1').hasAttribute('data-provisional');
     assert.strictEqual(badge(), null);
 
     board().conversations = [
@@ -406,7 +405,6 @@ module('Acceptance | one store', function (hooks) {
     await clock().tick(LIST);
 
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'ready');
-    assert.dom('#c-k1').doesNotHaveAttribute('data-provisional');
     assert.strictEqual(badge(), '1 ready');
   });
 
@@ -427,7 +425,6 @@ module('Acceptance | one store', function (hooks) {
     await clock().tick(LIST);
 
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'done');
-    assert.dom('#c-k1').doesNotHaveAttribute('data-provisional');
   });
 
   test('on hold the projection stays through every poll until the server’s copy says otherwise', async function (assert) {
@@ -485,7 +482,6 @@ module('Acceptance | one store', function (hooks) {
       .dom('[data-test-your-move]')
       .hasAttribute('data-move', 'human-comments');
     assert.strictEqual(railRow()?.getAttribute('data-group'), 'ready');
-    assert.dom('#c-k1').doesNotHaveAttribute('data-provisional');
   });
 
   test('a full read older than the hub row already held fills in what the row lacks, so the badge counts it', async function (assert) {

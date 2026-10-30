@@ -25,7 +25,6 @@ const RailRow: TOC<RailRowSignature> = <template>
     aria-selected={{selectedWord @row @selectedId}}
     data-group={{@row.group}}
     data-square={{@row.square}}
-    data-provisional={{if @row.provisional "true"}}
     data-pending={{if @row.pending "true"}}
     ...attributes
   >

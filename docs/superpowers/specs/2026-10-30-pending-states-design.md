@@ -15,17 +15,19 @@ wait.
     `takeOutcome` replaces the local operation by id. A refusal turns it to
     `refused` with the reason. Component flags (`sending`, `saving`, `acting`,
     `summarising`, `checking`, `writing`, `moving`, `going`, …) and
-    `board.acting` go.
+    `board.acting` go. **Done** (steps 1–7, `204b8b69` to `a3b66bb4`).
 
 02. **What derives from it.** `thread.ts` `outstanding()` and `busy()` treat
     `sent` like `pending`, so rows, panels, cards and the composer lock follow.
     The word is `decisions.inFlight(kind)`; verbs without one get one there.
+    **Done** (steps 1–7; `0703b15e` derives the word, ring and refusal of
+    every write in one place, `pressedBy`).
 
 03. **The look.** One attribute, `data-pending`, on the element that stands for
     the entity, and one CSS block: opacity .6, a dashed edge where the element
     has an edge, its controls held, and one word in the element's meta or chip
     slot (or on the pressed button). Success drops the attribute and runs the
-    existing `[data-decided]` flash.
+    existing `[data-decided]` flash. **Done** (steps 1–7).
 
 04. **The spinner.** On the long waits below, a 12 px ring in `currentcolor`
     sits before the word **from the moment the write is sent**: no delay. It
@@ -34,36 +36,39 @@ wait.
     to origin, the git palette's push, pull and rebase, setup Check, setup Start
     watching and Move aside, send review, close PR, ready for review, opening a
     terminal session or asking the agent, harvest Prepare. Other writes get no
-    ring.
+    ring. **Done** (steps 1, 2 and 4–7; the git commands' ring rule moved
+    beside the others in `decisions.ts` in the commit that records this).
 
 05. **Lasting until the fact.** For send review, close PR, ready for review and
     a session the drain opens, `data-pending` lasts until the server fact flips
     (the operation settles, the dashboard shows the PR closed or ready, the
-    session is listed), not until the 202.
+    session is listed), not until the 202. **Done** (steps 2, 4 and 6).
 
 06. **Shown early.** Only what the user typed or ticked: a draft's body, a
     reply's text, the mark-read checkbox. Columns, chips and phases wait for
-    the server.
+    the server. **Done** (steps 1, 2 and 5).
 
 07. **Refusal.** The element returns to its last confirmed values and carries a
     red line (`data-refused`) with the refusal's detail and a way back in
     ("Edit again" reopens the box with the typed copy, which `drafts.copies`
     and `composer.words` already keep). Toasts stay only where the element has
-    left the page (close, dismiss).
+    left the page (close, dismiss). **Done** (steps 1–7).
 
 08. **Waiting covers writes.** `http.sent()` registers in `asking`, so the
     existing `Waiting` note names a stuck write after ten seconds, as it does a
-    read.
+    read. **Done** (step 1).
 
 09. **The draft edit.** Save closes the box at once; the card shows the new
     text with `data-pending` and "Saving"; confirmed flashes; refused shows the
-    old text, the red line and "Edit again".
+    old text, the red line and "Edit again". **Done** (step 1).
 
 10. **Kept as they are.** Reads (the "Loading …" lines and `Waiting`), server
     agent states (queued and working banners, row squares, the live dot), the
     setup page's own page states beyond its buttons, `markSeen` and `sawTour`.
+    **Done** (no step changed them).
 
 11. **Removed.** The unstyled `provisional` flag (`store.ts`, `rail-row.gts`).
+    **Done** (`1aa53b1d`).
 
 Set aside: a grey veil (covers the text just written), a spinner on every
 write (they answer in about 0.2 s, so it would flicker), a flag per component

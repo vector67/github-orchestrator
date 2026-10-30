@@ -381,7 +381,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
           <textarea
             aria-label="your reply"
             data-test-dialog-body
-            rows="3"
+            rows="8"
             placeholder={{this.placeholder}}
             value={{this.typed}}
             {{on "input" this.type}}

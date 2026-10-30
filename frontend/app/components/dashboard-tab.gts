@@ -83,7 +83,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
-    running: () => Boolean(this.summaries?.pressing.git.pressed),
+    pressing: () => this.summaries?.pressing.git ?? null,
     openInTerminal: async (keys, line) => {
       if (await this.terminal.open(keys, line)) {
         void this.router.transitionTo('terminal');

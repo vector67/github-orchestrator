@@ -126,6 +126,8 @@ word from the click.
 
 ### 8. Clean-up
 
+**Done** in 1aa53b1d, 0703b15e and the commit that adds this line.
+
 Decision 11. Drop `provisional`. Search the front end for any pending flag
 left from the thirteen the spec names and either move it onto the store or
 name the constraint that holds it.
