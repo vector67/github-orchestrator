@@ -24,10 +24,22 @@ def _repo_dir(base: Path, repo: Repo) -> Path:
     return Path(base) / repo.owner / repo.name
 
 
-def _slug(key: str) -> str:
+def _uppercase_letters(key: str) -> str:
+    letters = "".join("1" if c.isupper() else "0" for c in key if c.isalpha())
+    return format(int(letters or "0", 2), "x")
+
+
+def _disk_name(key: str) -> str:
     if not key or key.strip(".") == "":
         raise ValueError(f"invalid thread key {key!r}")
-    return quote(key, safe="")
+    return f"{quote(key, safe='')}-{_uppercase_letters(key)}"
+
+
+def _key_on_disk(name: str) -> str:
+    quoted, _, _ = name.rpartition("-")
+    if quoted and quoted.strip(".") and _disk_name(unquote(quoted)) == name:
+        return unquote(quoted)
+    return unquote(name)
 
 
 def _suffix(kind: str) -> str:
@@ -82,7 +94,7 @@ class DiskPrRecords:
 
     def _named(self, kind: str, key: str) -> builtins.list[Path]:
         suffix = _suffix(kind)
-        direct = self._dir / f"{_slug(key)}{suffix}"
+        direct = self._dir / f"{_disk_name(key)}{suffix}"
         try:
             direct.lstat()
             return [direct]
@@ -93,10 +105,14 @@ class DiskPrRecords:
         if not self._dir.exists():
             return []
         return sorted(path for path in self._dir.glob(f"*{suffix}")
-                      if unquote(path.stem) == key)
+                      if _key_on_disk(path.stem) == key)
 
     def save(self, kind: str, key: str, document: bytes) -> None:
-        _write_atomically(self._dir / f"{_slug(key)}{_suffix(kind)}", document)
+        saved = self._dir / f"{_disk_name(key)}{_suffix(kind)}"
+        _write_atomically(saved, document)
+        for path in self._dir.glob(f"*{_suffix(kind)}"):
+            if path.name != saved.name and _key_on_disk(path.stem) == key:
+                path.unlink(missing_ok=True)
 
     def load(self, kind: str, key: str) -> bytes | None:
         named = self._named(kind, key)
@@ -117,15 +133,15 @@ class DiskPrRecords:
         listed: dict[str, bytes | None] = {}
         for _, _, path in sorted(found):
             try:
-                listed[unquote(path.stem)] = _read(path)
+                listed[_key_on_disk(path.stem)] = _read(path)
             except UnreadableThread as exc:
                 log.warning("Standing in for the unreadable %s: %s", path, exc)
-                listed[unquote(path.stem)] = None
+                listed[_key_on_disk(path.stem)] = None
         return listed
 
     @contextmanager
     def lock(self, name: str) -> Iterator[None]:
-        with locked(self._dir / f"{_slug(name)}.lock"):
+        with locked(self._dir / f"{_disk_name(name)}.lock"):
             yield
 
     def delete(self, kind: str, key: str) -> None:
@@ -133,7 +149,7 @@ class DiskPrRecords:
         if not self._dir.exists():
             return
         for path in self._dir.glob(f"*{suffix}"):
-            if unquote(path.stem) == key:
+            if _key_on_disk(path.stem) == key:
                 path.unlink(missing_ok=True)
 
 

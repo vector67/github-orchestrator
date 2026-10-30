@@ -57,7 +57,7 @@ def _poll(settings, **changes):
 def test_a_poll_writes_the_thread_cursor_beside_the_prs_thread_records(settings):
     _poll(settings)
 
-    written = (thread_dir(settings.threads_dir, THE_PR) / "poll.cursor").read_text()
+    written = (thread_dir(settings.threads_dir, THE_PR) / "poll-0.cursor").read_text()
 
     assert written.startswith('{"PRRT_one": {"comments": [[7, "')
     assert written.endswith('"]], "is_resolved": false, "line": 3}}')

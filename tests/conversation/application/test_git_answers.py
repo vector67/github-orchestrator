@@ -76,7 +76,7 @@ def test_a_fix_changed_after_review_asks_for_a_fresh_report(settings):
 
 def test_a_fix_whose_branch_is_gone_says_what_git_said(settings):
     here, threads, _, _ = _proposed(settings)
-    branch = f"orchestrator/thread/{THE_PR.number}/{KEY}"
+    branch = f"orchestrator/thread/{THE_PR.number}/{KEY}-f"
     here.working_copies.branches.pop(branch)
 
     refused = _approve(threads)

@@ -47,8 +47,8 @@ def test_each_kind_of_document_is_the_file_the_board_has_always_kept(tmp_path):
     assert thread_intent_file(tmp_path, THE_PR, KEY).read_bytes() == b"intent"
     assert thread_reply_file(tmp_path, THE_PR, KEY).read_bytes() == b"reply"
     assert thread_action_file(tmp_path, THE_PR, KEY).read_bytes() == b"action"
-    assert (thread_dir(tmp_path, THE_PR) / f"{KEY}.review").read_bytes() == b"review"
-    assert (thread_dir(tmp_path, THE_PR) / "poll.cursor").read_bytes() == b"{}"
+    assert (thread_dir(tmp_path, THE_PR) / f"{KEY}-f3.review").read_bytes() == b"review"
+    assert (thread_dir(tmp_path, THE_PR) / "poll-0.cursor").read_bytes() == b"{}"
 
 
 def test_the_files_already_on_disk_load_by_their_kind_and_key(tmp_path):
@@ -150,7 +150,7 @@ def test_a_document_is_saved_under_its_pr_and_named_by_its_encoded_key(tmp_path)
     _records(tmp_path).save("json", "MDI0OlB1bGx/UmV2aWV3=", b"{}")
 
     assert [p.name for p in (tmp_path / "owner" / "name" / "5").iterdir()] == [
-        "MDI0OlB1bGx%2FUmV2aWV3%3D.json"]
+        "MDI0OlB1bGx%2FUmV2aWV3%3D-7aab.json"]
 
 
 def test_two_keys_that_differ_only_by_an_encoded_slash_are_two_documents(tmp_path):
@@ -158,6 +158,32 @@ def test_two_keys_that_differ_only_by_an_encoded_slash_are_two_documents(tmp_pat
     _records(tmp_path).save("json", "a%2Fb", b"percent")
 
     assert _records(tmp_path).list("json") == {"a/b": b"slash", "a%2Fb": b"percent"}
+
+
+def test_two_keys_that_differ_only_by_case_are_two_documents(tmp_path):
+    _records(tmp_path).save("json", "PRRT_abcR", b"upper")
+    _records(tmp_path).save("json", "PRRT_abcr", b"lower")
+
+    assert _records(tmp_path).list("json") == {"PRRT_abcR": b"upper", "PRRT_abcr": b"lower"}
+    names = [p.name.lower() for p in thread_dir(tmp_path, THE_PR).iterdir()]
+    assert len(set(names)) == 2
+
+
+def test_a_document_named_by_its_bare_key_loads_and_is_renamed_when_saved(tmp_path):
+    bare = _write(thread_dir(tmp_path, THE_PR) / "PRRT_abcR.json", b"old")
+    records = _records(tmp_path)
+
+    assert records.load("json", "PRRT_abcR") == b"old"
+    records.save("json", "PRRT_abcR", b"new")
+
+    assert not bare.exists()
+    assert records.list("json") == {"PRRT_abcR": b"new"}
+
+
+def test_a_document_named_by_its_bare_key_is_not_the_document_of_its_case_twin(tmp_path):
+    _write(thread_dir(tmp_path, THE_PR) / "PRRT_abcR.json", b"old")
+
+    assert _records(tmp_path).load("json", "PRRT_abcr") is None
 
 
 def test_a_key_that_merely_starts_with_dots_is_a_document_of_its_own(tmp_path):

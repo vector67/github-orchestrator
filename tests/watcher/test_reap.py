@@ -194,7 +194,7 @@ def test_a_thread_branch_that_will_not_go_keeps_the_state_and_the_records(settin
 
     assert "0 torn down" in capsys.readouterr().out
     assert _tracked(settings)
-    assert (thread_dir(settings.threads_dir, THE_PR) / "PRRT_123.json").exists()
+    assert (thread_dir(settings.threads_dir, THE_PR) / "PRRT_123-f.json").exists()
 
 
 def test_a_worktree_that_will_not_go_keeps_the_state_for_a_retry(settings, capsys):

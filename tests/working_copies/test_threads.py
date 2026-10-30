@@ -107,7 +107,7 @@ def test_a_workspace_is_cut_off_the_pr_head_on_its_own_branch(
     wt, branch = cut.path, cut.branch
     assert wt == str(thread_worktree(worktrees_dir, THE_PR, THREAD_KEY))
     assert (Path(wt) / "f").read_text() == "base\n"
-    assert branch == f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    assert branch == f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
     assert str(cut.base_sha) == head
     verify = _git(pr_worktree, "rev-parse", "--verify", branch)
     assert verify.returncode == 0
@@ -126,6 +126,15 @@ def test_a_workspace_cut_over_a_stale_one_starts_clean(git, pr_worktree):
     assert not (Path(wt) / "leftover").exists()
     listing = _git(pr_worktree, "worktree", "list", "--porcelain").stdout
     assert listing.count(wt) == 1
+
+
+def test_two_keys_that_differ_only_by_case_are_cut_two_workspaces(git, pr_worktree):
+    upper = _cut(git, pr_worktree, key="PRRT_abcR")
+    lower = _cut(git, pr_worktree, key="PRRT_abcr")
+
+    assert upper.path.lower() != lower.path.lower()
+    assert upper.branch.lower() != lower.branch.lower()
+    assert Path(upper.path).is_dir() and Path(lower.path).is_dir()
 
 
 def test_the_new_worktree_command_initialises_a_workspace_it_just_cut(settings, pr_worktree):
@@ -148,7 +157,7 @@ def test_a_cut_that_failed_leaves_a_branch_the_next_cut_clears(
     git, pr_worktree, worktrees_dir
 ):
     head = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
-    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}"
+    branch = f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
 
     worktrees_dir.mkdir(parents=True)
     blocker = worktrees_dir / "acme"
@@ -242,10 +251,14 @@ def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
     assert _git(pr_worktree, "rev-parse", "--verify", cut.branch).returncode != 0
 
 
-def test_dropping_a_fix_that_never_had_a_workspace_runs_no_git(
+def test_dropping_a_fix_that_never_had_a_workspace_removes_no_worktree_and_deletes_no_branch(
     git, pr_worktree, monkeypatch
 ):
-    _never_git(monkeypatch, "no worktree to remove and no branch to delete")
+    def refuse_removals(cwd, args):
+        if args[:2] in (("worktree", "remove"), ("branch", "-D"), ("branch", "-d")):
+            pytest.fail("no worktree to remove and no branch to delete")
+
+    _git_answers(monkeypatch, refuse_removals)
 
     _held(git, pr_worktree).drop()
 
@@ -287,7 +300,11 @@ def _move_the_pr_head(pr_worktree, text):
 def test_a_pick_whose_revs_are_not_commits_never_reaches_git(
     git, monkeypatch, base_sha, thread_sha,
 ):
-    _never_git(monkeypatch, "git was handed a rev that is not a commit")
+    def refuse_the_revs(cwd, args):
+        if {base_sha, thread_sha} & {part for arg in args for part in (arg, *arg.split(".."))}:
+            pytest.fail("git was handed a rev that is not a commit")
+
+    _git_answers(monkeypatch, refuse_the_revs)
     workspace = _held(git, "/tmp/prwork", base_sha)
 
     refused = workspace.pick(thread_sha)
@@ -549,6 +566,21 @@ def test_an_abbreviated_thread_sha_names_the_same_commit_and_lands(
 
     assert picked.landed_sha is not None
     assert str(picked.landed_sha) == _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
+
+
+def test_a_fix_cut_under_its_bare_key_still_lands_once_the_names_carry_its_case(
+    settings, git, pr_worktree, worktrees_dir
+):
+    cut, sha = _fix_in_a_workspace(git, pr_worktree)
+    bare = thread_worktree(worktrees_dir, THE_PR, THREAD_KEY).with_name(THREAD_KEY)
+    _git(pr_worktree, "worktree", "move", cut.path, str(bare))
+    _git(pr_worktree, "branch", "-m", cut.branch, f"orchestrator/thread/{PR}/{THREAD_KEY}")
+    upgraded = copies_for(settings, THE_PR, pr_worktree)
+
+    picked = _held(upgraded, pr_worktree, cut.base_sha).pick(sha)
+
+    assert picked.landed_sha is not None, picked
+    assert Path(cut.path).is_dir() and not bare.exists()
 
 
 def test_an_abbreviated_thread_sha_the_tip_moved_past_is_still_refused(

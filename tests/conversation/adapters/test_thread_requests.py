@@ -86,7 +86,7 @@ def test_a_queued_thread_asks_for_its_fix_with_the_whole_thread(settings):
     assert isinstance(work, FixingThread)
     fix = work.fix
     assert (fix.pr, fix.key, fix.worktree) == (
-        THE_PR, KEY, f"/fake/thread-worktrees/{THE_PR.repo.owner}/{THE_PR.repo.name}/{THE_PR.number}/{KEY}")
+        THE_PR, KEY, f"/fake/thread-worktrees/{THE_PR.repo.owner}/{THE_PR.repo.name}/{THE_PR.number}/{KEY}-f")
     assert (fix.author, fix.path, fix.line, fix.body) == ("reviewer", "src/foo.py", 4,
                                                           "rename this")
     assert fix.comments == (

@@ -8,10 +8,15 @@ def repo_dir(base: Path, repo: Repo) -> Path:
     return Path(base) / repo.owner / repo.name
 
 
+def _uppercase_letters(key: str) -> str:
+    letters = "".join("1" if c.isupper() else "0" for c in key if c.isalpha())
+    return format(int(letters or "0", 2), "x")
+
+
 def thread_slug(key: str) -> str:
     if not key or key.strip(".") == "":
         raise ValueError(f"invalid thread key {key!r}")
-    return quote(key, safe="")
+    return f"{quote(key, safe='')}-{_uppercase_letters(key)}"
 
 
 def pr_worktrees(thread_worktrees_dir: Path, pr: Pr) -> Path:
