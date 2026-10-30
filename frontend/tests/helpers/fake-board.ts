@@ -1430,18 +1430,34 @@ export class FakeBoard {
         ],
       });
     }
+    const kind = verb === 'fix' ? 'first' : (verb as OperationKind);
+    const listed = verb === 'reply' ? this.listReply(asked, id) : asked;
     return this.json(202, {
       operation: operation({
         id,
         conversation: key,
-        kind: verb === 'fix' ? 'first' : (verb as OperationKind),
+        kind,
         state: 'pending',
         ...(verb === 'edit-draft' || verb === 'reply'
           ? { body: (body as { body: string }).body }
           : {}),
       }),
-      conversation: asked,
+      conversation: listed,
     });
+  }
+
+  private listReply(asked: Conversation, id: string): Conversation {
+    const listed = {
+      ...asked,
+      operations: [
+        ...asked.operations,
+        summary({ id, kind: 'reply', state: 'running' }),
+      ],
+    };
+    this.conversations = this.conversations.map((one) =>
+      one.key === asked.key ? listed : one,
+    );
+    return listed;
   }
 
   private summarise(url: string, verb: string, headers: Headers): Response {

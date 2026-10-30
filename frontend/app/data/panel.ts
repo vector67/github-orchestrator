@@ -6,6 +6,7 @@ import type {
   DiffSide,
   DraftOperation,
   Operation,
+  ReplyOperation,
   OperationKind,
   Proposal,
   ProposalKind,
@@ -29,6 +30,7 @@ import {
   REOPENED_HINT,
   RUN_KINDS,
   sent,
+  unsettled,
   type Phase,
 } from 'frontend/data/thread';
 import {
@@ -544,14 +546,34 @@ export function transcriptOf(
   }));
 }
 
+function arrived(
+  reply: ReplyOperation,
+  comments: Comment[],
+  viewer: string,
+): boolean {
+  return comments.some(
+    (one) =>
+      one.id === reply.posted_comment ||
+      (one.author === viewer &&
+        reply.requested_at !== null &&
+        one.created_at !== null &&
+        one.created_at >= reply.requested_at),
+  );
+}
+
 function replyingOf(
-  conversation: Conversation,
   operations: Operation[],
+  comments: Comment[],
   context: Context,
 ): TranscriptEntry[] {
-  const going = outstanding(conversation);
-  const reply = operations.find((one) => one.id === going?.id);
-  if (reply?.kind !== 'reply' || !reply.body) return [];
+  const reply = operations.findLast(
+    (one): one is ReplyOperation => one.kind === 'reply',
+  );
+  if (!reply?.body) return [];
+  const arriving =
+    unsettled(reply) ||
+    (reply.state === 'applied' && !arrived(reply, comments, context.viewer));
+  if (!arriving) return [];
   return [
     {
       author: context.viewer,
@@ -1000,7 +1022,7 @@ export function panelOf(
       ? []
       : [
           ...transcriptOf(conversation, comments, context),
-          ...replyingOf(conversation, operations, context),
+          ...replyingOf(operations, comments, context),
         ],
     reply,
     reply_action:

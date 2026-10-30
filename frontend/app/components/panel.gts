@@ -11,6 +11,7 @@ import PanelHeader from 'frontend/components/panel-header';
 import ReplyBoxComponent from 'frontend/components/reply-box';
 import Waiting from 'frontend/components/waiting';
 import type { Panel } from 'frontend/data/panel';
+import didChange from 'frontend/modifiers/did-change';
 
 export interface PanelSignature {
   Element: HTMLElement;
@@ -27,6 +28,10 @@ function replies(panel: Panel) {
 
 function reviewing(panel: Panel) {
   return panel.role === 'reviewer';
+}
+
+function reveal(entry: HTMLElement, pending?: unknown) {
+  if (pending) entry.scrollIntoView({ block: 'nearest' });
 }
 
 const PanelView: TOC<PanelSignature> = <template>
@@ -52,6 +57,7 @@ const PanelView: TOC<PanelSignature> = <template>
                   data-marked={{if entry.highlighted "1"}}
                   data-pending={{if entry.pending "true"}}
                   data-test-entry
+                  {{didChange reveal entry.pending}}
                 >
                   <div class="entry-head">
                     <span class="entry-who" data-test-entry-who>{{if

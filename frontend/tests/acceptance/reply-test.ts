@@ -3,15 +3,34 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   fillIn,
+  findAll,
+  settled,
   triggerKeyEvent,
   visit,
   waitFor,
+  waitUntil,
 } from '@ember/test-helpers';
 import {
   comment,
+  operation,
   setupFakeBoard,
+  summary,
   thread,
 } from 'frontend/tests/helpers/fake-board';
+import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
+
+const LIST = 5000;
+
+function entries(): [string, string][] {
+  return findAll('[data-test-entry]').map((entry) => [
+    entry
+      .querySelector('[data-test-entry-meta]')
+      ?.textContent?.includes('replying…')
+      ? 'replying…'
+      : '',
+    entry.querySelector('[data-test-entry-body]')?.textContent?.trim() ?? '',
+  ]);
+}
 
 const OPEN = '[data-test-reply-open]';
 
@@ -39,6 +58,7 @@ const EMOJIS = {
 module('Acceptance | reply', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
+  const clock = setupFakeClock(hooks);
 
   hooks.beforeEach(function () {
     board().conversations = [thread({ key: 'k1' }), thread({ key: 'k2' })];
@@ -319,6 +339,97 @@ module('Acceptance | reply', function (hooks) {
 
     assert.dom('[data-test-entry][data-pending]').doesNotExist();
     assert.dom('[data-test-toast]').doesNotExist();
+  });
+
+  test('a pending reply on a long thread is scrolled into view', async function (assert) {
+    board().comments['k1'] = [1, 2, 3, 4, 5].map((id) =>
+      comment({ id, body: `point ${id}\n\nmore about it\n\nand more` }),
+    );
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'good catch');
+    const release = board().hold(/operations:reply$/);
+
+    const posting = click('[data-test-reply-send]');
+    await waitFor('[data-test-entry][data-pending]');
+
+    const box = document
+      .querySelector('#panel-thread')!
+      .getBoundingClientRect();
+    const reply = document
+      .querySelector('[data-test-entry][data-pending]')!
+      .getBoundingClientRect();
+    assert.true(box.height < 400, 'the thread scrolls');
+    assert.true(reply.top >= box.top, 'the reply starts inside it');
+    assert.true(reply.bottom <= box.bottom + 1, 'the reply ends inside it');
+
+    release();
+    await posting;
+  });
+
+  test('a reply the board has taken stays in the thread, outstanding, until its posted comment arrives', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'good catch');
+    await click('[data-test-reply-send]');
+    const [posted] = board().posted;
+    const id = `op_${board().posted.indexOf(posted!) + 1}`;
+
+    assert.deepEqual(
+      entries(),
+      [
+        ['', 'please rename'],
+        ['replying…', 'good catch'],
+      ],
+      'right after the answer',
+    );
+
+    board().operations['k1'] = [
+      operation({
+        id,
+        conversation: 'k1',
+        kind: 'reply',
+        state: 'applied',
+        body: 'good catch',
+        posted_comment: 99,
+      }),
+    ];
+    board().comments['k1'] = [
+      comment(),
+      comment({ id: 99, author: 'octocat', body: 'good catch' }),
+    ];
+    board().conversations = board().conversations.map((one) =>
+      one.key === 'k1'
+        ? {
+            ...one,
+            etag: '"k1-v2"',
+            operations: [summary({ id, kind: 'reply', state: 'applied' })],
+          }
+        : one,
+    );
+    const release = board().hold(/conversations\/k1\/comments$/);
+    void clock().tick(LIST);
+    await waitUntil(
+      () => board().askedFor(/conversations\/k1\/comments$/).length > 1,
+    );
+
+    assert.deepEqual(
+      entries(),
+      [
+        ['', 'please rename'],
+        ['replying…', 'good catch'],
+      ],
+      'while the comment is on its way',
+    );
+
+    release();
+    await settled();
+
+    assert.deepEqual(
+      entries().map(([, body]) => body),
+      ['please rename', 'good catch'],
+    );
+    assert.dom('[data-test-entry-meta]').doesNotIncludeText('replying…');
   });
 
   test('a refused reply leaves the thread as it was and says why, and Edit again reopens the box with the words', async function (assert) {
