@@ -31,7 +31,12 @@ import {
   sent,
   type Phase,
 } from 'frontend/data/thread';
-import { inFlight, offered, type Offer } from 'frontend/data/decisions';
+import {
+  inFlight,
+  offered,
+  writtenOn,
+  type Offer,
+} from 'frontend/data/decisions';
 import type { PrEntity } from 'frontend/services/store';
 
 export interface TranscriptEntry {
@@ -336,13 +341,6 @@ const UNREPLIED = ['draft', 'enrolled', 'done'];
 
 const COMPOSED = ['draft', 'enrolled'];
 
-const DRAFT_WRITES: string[] = [
-  'edit-draft',
-  'enrol',
-  'discard',
-  'withdraw-from-review',
-];
-
 function composing(conversation: Conversation): boolean {
   return conversation.kind === 'draft' && COMPOSED.includes(conversation.state);
 }
@@ -350,16 +348,17 @@ function composing(conversation: Conversation): boolean {
 export function draftOf(
   conversation: Conversation,
   details: Details | null,
+  reviewSending: boolean,
 ): DraftView | null {
   if (!composing(conversation) || !details) return null;
   const { path, line, start_line, start_side, side } = conversation.anchor;
-  const write = details.operations.findLast((one): one is DraftOperation =>
-    DRAFT_WRITES.includes(one.kind),
+  const edit = details.operations.findLast(
+    (one): one is DraftOperation => one.kind === 'edit-draft',
   );
   const saving =
-    write?.kind === 'edit-draft' && outstanding(conversation)?.id === write.id;
+    edit !== undefined && outstanding(conversation)?.id === edit.id;
   return {
-    body: (saving && write.body) || (details.comments[0]?.body ?? ''),
+    body: (saving && edit.body) || (details.comments[0]?.body ?? ''),
     path: path ?? '',
     line,
     start_line,
@@ -368,9 +367,7 @@ export function draftOf(
     editable: !busy(conversation),
     enrolled: conversation.state === 'enrolled',
     posting: outstanding(conversation)?.kind === 'post-now',
-    pending: write && sent(write) ? inFlight(write.kind) : null,
-    refused: write?.state === 'refused' ? write.reason : null,
-    retype: write?.kind === 'edit-draft',
+    ...writtenOn(conversation, reviewSending),
   };
 }
 
@@ -997,7 +994,7 @@ export function panelOf(
     anchor: anchorOf(conversation),
     code: codeOf(conversation, context),
     loading: details === null,
-    draft: draftOf(conversation, details),
+    draft: draftOf(conversation, details, context.reviewSending),
     transcript: composing(conversation)
       ? []
       : [

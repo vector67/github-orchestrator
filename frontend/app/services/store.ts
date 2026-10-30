@@ -244,11 +244,6 @@ interface Restarting {
   operation: string | null;
 }
 
-export interface Sent {
-  id: string;
-  location: string;
-}
-
 type ByKey<T> = Record<string, Record<string, T>>;
 
 const SHELVED_WALL = 'hub-pull-requests';
@@ -593,20 +588,15 @@ export default class StoreService extends Service {
     return detailsOf(this.threads[key]?.[thread], this.operations[key]);
   }
 
-  operation(repo: string, number: number, id: string): Operation | undefined {
-    return Object.values(this.operations[keyOf(repo, number)] ?? {}).find(
-      (one) => one.id === id,
-    ) as unknown as Operation | undefined;
-  }
-
   inFlight(repo: string, number: number): Operation[] {
     const key = keyOf(repo, number);
     const held = this.operations[key] ?? {};
     const pr = this.prs[key];
-    return [
+    const listed = new Set([
       ...(pr?.in_flight ?? []),
       ...(pr?.sent ?? []).map((id) => operationKey({ id, conversation: null })),
-    ].flatMap((id) => {
+    ]);
+    return [...listed].flatMap((id) => {
       const one = held[id];
       return one ? [one as unknown as Operation] : [];
     });
@@ -1055,9 +1045,19 @@ export default class StoreService extends Service {
     });
   }
 
-  async readOperation(pr: Numbered, path: string): Promise<void> {
-    const going = await fetched<Operation>(path);
+  async readOperation(pr: Numbered, id: string): Promise<Operation> {
+    const going = await fetched<Operation>(
+      `${this.here.prefixOf(pr)}/api/operations/${encodeURIComponent(id)}`,
+    );
     this.takeAnswer(pr, going);
+    if (going.state === 'applied') {
+      this.markSent(
+        pr,
+        null,
+        this.sentOn(pr, null).filter((one) => one !== going.id),
+      );
+    }
+    return going;
   }
 
   async readSessions(pr: Numbered): Promise<void> {
@@ -1129,19 +1129,24 @@ export default class StoreService extends Service {
     }
   }
 
-  async sendReview(pr: Numbered, review: unknown): Promise<Sent> {
-    const prefix = this.here.prefix;
-    const { body, location } = await posted<Operation>(
-      `${prefix}/api/operations:send-review`,
-      null,
-      review,
+  async sendReview(pr: Numbered, review: unknown): Promise<void> {
+    const local = this.hold(pr, this.sending(null, 'send-review', null));
+    const answer = await tried(
+      'review',
+      posted<Operation>(
+        `${this.here.prefixOf(pr)}/api/operations:send-review`,
+        null,
+        review,
+      ),
     );
-    this.takeAnswer(pr, body);
-    return {
-      id: body.id,
-      location:
-        location ?? `${prefix}/api/operations/${encodeURIComponent(body.id)}`,
-    };
+    if (!answer.done) {
+      this.refuse(pr, local, answer.why, answer.code);
+      return;
+    }
+    const going = answer.body.body;
+    this.drop(pr, local);
+    this.takeAnswer(pr, going);
+    this.markSent(pr, null, [...this.sentOn(pr, null), going.id]);
   }
 
   hand(path: string, body?: unknown): Promise<void> {
@@ -1388,15 +1393,23 @@ export default class StoreService extends Service {
       reason: null,
       reason_code: null,
       body: typeof typed === 'string' ? typed : null,
+      local: true,
     };
   }
 
   private hold(pr: Numbered, one: StoredOperation): StoredOperation {
+    const key = keyOf(pr.repo, pr.number);
     for (const id of this.sentOn(pr, one.conversation)) {
-      this.drop(pr, { ...one, id });
+      const was = this.operations[key]?.[operationKey({ ...one, id })];
+      if (one.conversation !== null || was?.kind === one.kind) {
+        this.drop(pr, { ...one, id });
+      }
     }
-    this.mergeOperations(keyOf(pr.repo, pr.number), [one]);
-    this.markSent(pr, one.conversation, [one.id]);
+    this.mergeOperations(key, [one]);
+    this.markSent(pr, one.conversation, [
+      ...this.sentOn(pr, one.conversation),
+      one.id,
+    ]);
     return one;
   }
 

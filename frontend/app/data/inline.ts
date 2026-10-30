@@ -39,7 +39,6 @@ export interface Inlined {
 export interface Seeing {
   details: (key: string) => Details | undefined;
   context: (key: string) => Context;
-  reviewSending: boolean;
   role: Role;
 }
 
@@ -60,7 +59,7 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
   if (!path || line === null || !details) return null;
   const context = seeing.context(conversation.key);
   if (conversation.kind === 'draft') {
-    const draft = draftOf(conversation, details);
+    const draft = draftOf(conversation, details, context.reviewSending);
     if (!draft) return null;
     const [opener, ...rest] = transcriptOf(
       conversation,
@@ -74,7 +73,7 @@ function inlined(conversation: Conversation, seeing: Seeing): Inline | null {
       fold: null,
       entries: opener ? [{ ...opener, body: draft.body }, ...rest] : [],
       draft,
-      locked: draftLocked(draft, seeing.reviewSending),
+      locked: draftLocked(draft, context.reviewSending),
       standing: standingOf(conversation),
       pending: draft.pending,
       refused: draft.refused,

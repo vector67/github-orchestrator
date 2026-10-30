@@ -13,6 +13,7 @@ import {
 } from 'frontend/data/groups';
 import type { Context, Details, Fix } from 'frontend/data/panel';
 import type { Numbered } from 'frontend/data/wall';
+import { reviewSending } from 'frontend/data/review';
 import { rowOf, type Row, type Seen } from 'frontend/data/rows';
 import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
@@ -55,6 +56,7 @@ function unreadableRow(key: string): Row {
     standing_label: '',
     alert: '',
     provisional: false,
+    pending: false,
   };
 }
 
@@ -152,6 +154,7 @@ export default class ThreadsService extends Service {
       viewer: this.store.viewer ?? '',
       names: this.store.names,
       inFlight: this.inFlightFor(key),
+      reviewSending: reviewSending(this.inFlight),
     };
   }
 

@@ -18,6 +18,7 @@ import {
   comment,
   context,
   heldPr,
+  operation,
   prDiff,
   removed,
   setupFakeBoard,
@@ -1190,6 +1191,25 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-card="d1"]').exists();
       assert.dom('[data-test-card="d1"] [data-test-card-edit]').doesNotExist();
       assert.dom('[data-test-card="d2"] [data-test-card-edit]').exists();
+    });
+
+    test('a card in the review is pending while the review goes out, and a local draft’s is not', async function (assert) {
+      board().inFlight = [
+        operation({
+          id: 'r1',
+          conversation: null,
+          kind: 'send-review',
+          state: 'pending',
+        }),
+      ];
+
+      await visit('/pr/o/r/7/diff');
+
+      assert.dom('[data-test-card="d2"]').hasAttribute('data-pending');
+      assert
+        .dom('[data-test-card="d2"] [data-test-standing]')
+        .hasText('sending the review…');
+      assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
     });
 
     test('a local draft’s card adds it to the review or discards it; one in the review offers neither', async function (assert) {

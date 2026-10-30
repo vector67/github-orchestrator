@@ -4,8 +4,13 @@ import { waitForPromise } from '@ember/test-waiters';
 import type RouterService from '@ember/routing/router-service';
 import type { Operation, ReviewVerdict } from 'frontend/data/api';
 import { reportError } from 'frontend/data/report';
-import { reviewOf, type Review } from 'frontend/data/review';
-import { tried } from 'frontend/data/tried';
+import {
+  reviewGoing,
+  reviewOf,
+  reviewSending,
+  type Review,
+} from 'frontend/data/review';
+import { sent } from 'frontend/data/thread';
 import type BoardService from 'frontend/services/board';
 import type PollService from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
@@ -14,16 +19,10 @@ import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
 import type ToastsService from 'frontend/services/toasts';
 
-const SETTLED = ['applied', 'refused', 'requeued'];
-
 class PerPr {
   @tracked open = false;
   @tracked verdict: ReviewVerdict = 'COMMENT';
   @tracked body = '';
-  @tracked going: string | null = null;
-  @tracked trouble: string | null = null;
-
-  location: string | null = null;
 
   constructor(readonly scope: PrScope) {}
 }
@@ -64,7 +63,13 @@ export default class ReviewService extends Service {
   }
 
   get trouble(): string | null {
-    return this.pr.trouble;
+    const going = this.going;
+    if (going?.state !== 'refused') return null;
+    if ((going as { local?: boolean }).local) return going.reason;
+    return (
+      `GitHub refused the review: ${going.reason ?? going.reason_code ?? ''}. ` +
+      'Every draft is still in it.'
+    );
   }
 
   get review(): Review {
@@ -72,6 +77,7 @@ export default class ReviewService extends Service {
       this.threads.conversations,
       this.threads.details,
       this.store.viewer ?? '',
+      this.inFlight,
     );
   }
 
@@ -80,15 +86,11 @@ export default class ReviewService extends Service {
   }
 
   private get going(): Operation | undefined {
-    const id = this.pr.going;
-    const pr = this.here.pr;
-    if (id === null || pr === null) return undefined;
-    return this.store.operation(pr.repo, pr.number, id);
+    return reviewGoing(this.threads.inFlight);
   }
 
   get inFlight(): boolean {
-    const going = this.going;
-    return going !== undefined && !SETTLED.includes(going.state);
+    return reviewSending(this.threads.inFlight);
   }
 
   get unsendable(): boolean {
@@ -115,45 +117,29 @@ export default class ReviewService extends Service {
     const pr = this.pr;
     const at = this.here.pr;
     if (this.unsendable || at === null) return;
-    pr.trouble = null;
-    const answer = await tried(
-      'review',
-      this.store.sendReview(at, {
-        verdict: pr.verdict,
-        body: pr.body.trim() || null,
-      }),
-    );
-    if (!answer.done) {
-      if (!pr.scope.left) pr.trouble = answer.why;
-      return;
-    }
-    pr.going = answer.body.id;
-    pr.location = answer.body.location;
+    await this.store.sendReview(at, {
+      verdict: pr.verdict,
+      body: pr.body.trim() || null,
+    });
   }
 
   async follow(): Promise<void> {
     const pr = this.pr;
     const at = this.here.pr;
-    if (!this.inFlight || !pr.location || at === null) return;
+    const going = this.going;
+    if (!this.inFlight || at === null || !going || sent(going)) return;
+    let now: Operation;
     try {
-      await this.store.readOperation(at, pr.location);
+      now = await this.store.readOperation(at, going.id);
     } catch (trouble) {
       void reportError('review', trouble);
       return;
     }
-    const going = this.going;
-    if (pr.scope.left || !going) return;
-    if (going.state === 'applied') {
-      pr.body = '';
-      pr.going = null;
-      pr.open = false;
-      this.toasts.say('Sent: your review is on GitHub.', 'done');
-      await this.loader.refreshList();
-    } else if (SETTLED.includes(going.state)) {
-      pr.trouble =
-        `GitHub refused the review: ${going.reason ?? going.reason_code ?? ''}. ` +
-        'Every draft is still in it.';
-    }
+    if (pr.scope.left || now.state !== 'applied') return;
+    pr.body = '';
+    pr.open = false;
+    this.toasts.say('Sent: your review is on GitHub.', 'done');
+    await this.loader.refreshList();
   }
 
   add = (key: string): void => {

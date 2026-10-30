@@ -6,6 +6,7 @@ import {
   fillIn,
   triggerKeyEvent,
   visit,
+  waitFor,
 } from '@ember/test-helpers';
 import type { Conversation } from 'frontend/data/api';
 import {
@@ -202,8 +203,60 @@ module('Acceptance | send review', function (hooks) {
       verdict: 'REQUEST_CHANGES',
       body: 'two leaks',
     });
-    assert.dom('[data-test-review-state]').hasText('Sending your review…');
+    assert.dom('[data-test-review-send]').hasText('sending the review…');
+    assert.dom('[data-test-review-send] [data-test-ring]').exists();
     assert.dom('[data-test-review-send]').isDisabled();
+  });
+
+  test('Send review shows its ring and word from the click, and the drafts going out stay pending until GitHub has the review', async function (assert) {
+    await opened();
+    await fillIn('[data-test-review-body]', 'two leaks');
+    const release = board().hold(/operations:send-review$/);
+
+    const sending = click('[data-test-review-send]');
+    await waitFor('[data-test-review-send] [data-test-ring]');
+
+    assert.dom('[data-test-review-send]').hasText('sending the review…');
+    assert.dom('[data-test-review-send]').isDisabled();
+    assert.dom('#c-draft_a').hasAttribute('data-pending');
+    assert.dom('#c-draft_a [data-test-meta]').hasText('sending the review…');
+    assert
+      .dom('[data-test-review-draft="draft_a"]')
+      .hasAttribute('data-pending');
+    assert.dom('#c-draft_c').doesNotHaveAttribute('data-pending');
+
+    release();
+    await sending;
+    const id = Object.keys(board().reviews)[0]!;
+
+    assert.dom('#c-draft_a').hasAttribute('data-pending');
+    assert.dom('[data-test-review-send] [data-test-ring]').exists();
+
+    board().reviews[id] = operation({
+      id,
+      conversation: null,
+      kind: 'send-review',
+      state: 'applied',
+    });
+    await clock().tick(SLOW);
+
+    assert.dom('#c-draft_a').doesNotHaveAttribute('data-pending');
+  });
+
+  test('a refused review carries the red line in the modal', async function (assert) {
+    await opened();
+    await fillIn('[data-test-review-body]', 'two leaks');
+    board().refusal = {
+      status: 409,
+      code: 'review-in-flight',
+      detail: 'a review is already going out',
+    };
+
+    await click('[data-test-review-send]');
+
+    assert.dom('[data-test-review-trouble]').hasAttribute('data-refused');
+    assert.dom('[data-test-review-send]').hasText('Send review');
+    assert.dom('#c-draft_a').doesNotHaveAttribute('data-pending');
   });
 
   test('the review is followed at its location until GitHub has it', async function (assert) {
@@ -299,6 +352,53 @@ module('Acceptance | send review', function (hooks) {
     assert.strictEqual(asked?.ifMatch, '"draft_b-v1"');
   });
 
+  test('Leave out shows the draft pending in the modal, its buttons held, until the board answers', async function (assert) {
+    await opened();
+    const release = board().hold(/operations:withdraw-from-review$/);
+
+    const leaving = click(
+      '[data-test-review-draft="draft_b"] [data-test-leave-out]',
+    );
+    await waitFor('[data-test-review-draft="draft_b"][data-pending]');
+
+    assert
+      .dom('[data-test-review-draft="draft_b"] [data-test-review-doing]')
+      .hasText('leaving it out of your review…');
+    assert
+      .dom('[data-test-review-draft="draft_b"] [data-test-leave-out]')
+      .doesNotExist();
+
+    release();
+    await leaving;
+
+    assert
+      .dom('[data-test-review-draft="draft_b"]')
+      .doesNotHaveAttribute('data-pending');
+  });
+
+  test('a refused Add to review in the modal says why on the draft, with no toast', async function (assert) {
+    board().comments['draft_c'] = [
+      comment({ id: null, author: 'octocat', body: 'a half thought' }),
+    ];
+    await opened();
+    board().refusal = {
+      status: 409,
+      code: 'anchor-not-in-diff',
+      detail: 'src/foo.py:42 is not a line of the diff',
+    };
+
+    await click('[data-test-review-unadded="draft_c"] [data-test-add]');
+
+    assert
+      .dom('[data-test-review-unadded="draft_c"]')
+      .hasAttribute('data-refused');
+    assert
+      .dom('[data-test-review-unadded="draft_c"] [data-test-refusal]')
+      .includesText("That line is not in the pull request's diff");
+    assert.dom('[data-test-review-unadded="draft_c"] [data-test-add]').exists();
+    assert.dom('[data-test-toast]').doesNotExist();
+  });
+
   test('the drafts not added are listed apart, where they sit and what they say, and each can be added', async function (assert) {
     board().comments['draft_c'] = [
       comment({ id: null, author: 'octocat', body: 'a half thought' }),
@@ -350,7 +450,8 @@ module('Acceptance | send review', function (hooks) {
     await fillIn('[data-test-review-body]', 'two leaks');
     await click('[data-test-review-send]');
 
-    await click('[data-test-review-draft="draft_a"] [data-test-edit]');
+    await click('[data-test-review-close]');
+    await click('#c-draft_a');
 
     assert.dom('[data-test-draft-body]').isDisabled();
     assert

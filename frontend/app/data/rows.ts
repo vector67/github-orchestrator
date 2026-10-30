@@ -23,7 +23,7 @@ import {
   type Phase,
   type Standing,
 } from 'frontend/data/thread';
-import { inFlight } from 'frontend/data/decisions';
+import { inFlight, writtenOn } from 'frontend/data/decisions';
 
 export interface Row {
   id: string;
@@ -40,6 +40,7 @@ export interface Row {
   standing_label: string;
   alert: string;
   provisional: boolean;
+  pending: boolean;
 }
 
 export interface Seen {
@@ -47,6 +48,7 @@ export interface Seen {
   viewer: string;
   names: Record<string, string | null>;
   inFlight?: Operation | undefined;
+  reviewSending: boolean;
 }
 
 export const KIND_LABELS: Record<string, string> = {
@@ -238,6 +240,7 @@ export function rowOf(
   const standing = draftStanding(conversation);
   const { done, total } = counted(steps);
   const phase = phaseOf(conversation);
+  const { pending } = writtenOn(conversation, seen.reviewSending);
   return {
     id: conversation.key,
     group: groupOf(conversation, seen.role),
@@ -245,7 +248,7 @@ export function rowOf(
     square: squareOf(conversation),
     gist: gistOf(conversation, seen),
     reference: referenceOf(conversation),
-    meta: metaOf(conversation, seen, steps),
+    meta: pending ?? metaOf(conversation, seen, steps),
     steps,
     steps_text: total ? `${done} / ${total} changes` : phase,
     steps_hint: total ? '' : `${phase}: ${PHASE_HINTS[phase]}`,
@@ -253,5 +256,6 @@ export function rowOf(
     standing_label: standing ? STANDING_LABELS[standing] : '',
     alert: alertOf(conversation),
     provisional: conversation.provisional === true,
+    pending: pending !== null,
   };
 }

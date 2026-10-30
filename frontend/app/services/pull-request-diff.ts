@@ -578,7 +578,6 @@ export default class PullRequestDiffService extends Service {
     return inlineOf(this.threads.conversations, {
       details: (key) => this.threads.details(key) ?? undefined,
       context: (key) => this.threads.contextFor(key, role),
-      reviewSending: this.review.inFlight,
       role,
     });
   }

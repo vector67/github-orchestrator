@@ -127,7 +127,7 @@ export function sent(operation: { state: string }): boolean {
   return operation.state === SENT;
 }
 
-function inFlight(operation: OperationSummary): boolean {
+export function unsettled(operation: { state: string }): boolean {
   return OUTSTANDING.includes(operation.state);
 }
 
@@ -141,7 +141,7 @@ export function newestOf(
 export function outstanding(
   conversation: Conversation,
 ): OperationSummary | undefined {
-  return conversation.operations.findLast(inFlight);
+  return conversation.operations.findLast(unsettled);
 }
 
 export function atWork(thread: { state: ConversationState }): boolean {

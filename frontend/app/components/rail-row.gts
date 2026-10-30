@@ -26,6 +26,7 @@ const RailRow: TOC<RailRowSignature> = <template>
     data-group={{@row.group}}
     data-square={{@row.square}}
     data-provisional={{if @row.provisional "true"}}
+    data-pending={{if @row.pending "true"}}
     ...attributes
   >
     <span class="rail-row-text">

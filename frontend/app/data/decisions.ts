@@ -8,9 +8,11 @@ import type { Role } from 'frontend/data/groups';
 import {
   busy,
   newestOf,
+  outstanding,
   phaseOf,
   proposalWaiting,
   RUN_KINDS,
+  sent,
   type Phase,
 } from 'frontend/data/thread';
 import type { DraftRequest } from 'frontend/services/drafts';
@@ -740,7 +742,7 @@ const ENTRIES = {
 
 export type Decision = keyof typeof ENTRIES;
 
-const CARRIED: Record<Decision | 'edit-draft', Carrying> = {
+const CARRIED: Record<Decision | 'edit-draft' | 'send-review', Carrying> = {
   ...ENTRIES,
   'edit-draft': {
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
@@ -748,7 +750,45 @@ const CARRIED: Record<Decision | 'edit-draft', Carrying> = {
     square: null,
     pending: true,
   },
+  'send-review': {
+    doing: 'sending the review',
+    square: null,
+  },
 };
+
+const DRAFT_WRITES: string[] = [
+  'edit-draft',
+  'enrol',
+  'discard',
+  'withdraw-from-review',
+];
+
+export interface Written {
+  pending: string | null;
+  refused: string | null;
+  retype: boolean;
+}
+
+export function writtenOn(
+  conversation: Conversation,
+  reviewSending: boolean,
+): Written {
+  const going = outstanding(conversation);
+  const write = conversation.operations.findLast((one) =>
+    DRAFT_WRITES.includes(one.kind),
+  );
+  const goingOut = conversation.state === 'enrolled' && reviewSending;
+  return {
+    pending:
+      going && sent(going)
+        ? inFlight(going.kind)
+        : goingOut
+          ? inFlight('send-review')
+          : null,
+    refused: write?.state === 'refused' ? write.reason : null,
+    retype: write?.kind === 'edit-draft',
+  };
+}
 
 const LANDING_AGAIN: Decision[] = [
   'approve',

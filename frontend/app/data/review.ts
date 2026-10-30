@@ -1,10 +1,14 @@
-import type { Conversation } from 'frontend/data/api';
+import type { Conversation, Operation } from 'frontend/data/api';
+import { writtenOn } from 'frontend/data/decisions';
 import type { Details } from 'frontend/data/panel';
+import { unsettled } from 'frontend/data/thread';
 
 export interface Outgoing {
   key: string;
   where: string;
   body: string;
+  pending: string | null;
+  refused: string | null;
 }
 
 export interface Review {
@@ -22,12 +26,27 @@ function whereOf(conversation: Conversation): string {
 function outgoing(
   conversations: Conversation[],
   details: (key: string) => Details | null,
+  sending: boolean,
 ): Outgoing[] {
-  return conversations.map((one) => ({
-    key: one.key,
-    where: whereOf(one),
-    body: details(one.key)?.comments[0]?.body ?? '',
-  }));
+  return conversations.map((one) => {
+    const { pending, refused } = writtenOn(one, sending);
+    return {
+      key: one.key,
+      where: whereOf(one),
+      body: details(one.key)?.comments[0]?.body ?? '',
+      pending,
+      refused,
+    };
+  });
+}
+
+export function reviewGoing(inFlight: Operation[]): Operation | undefined {
+  return inFlight.findLast((one) => one.kind === 'send-review');
+}
+
+export function reviewSending(inFlight: Operation[]): boolean {
+  const going = reviewGoing(inFlight);
+  return going !== undefined && unsettled(going);
 }
 
 function pendingOnGitHub(conversation: Conversation): boolean {
@@ -38,15 +57,20 @@ export function reviewOf(
   conversations: Conversation[],
   details: (key: string) => Details | null,
   viewer: string,
+  sending: boolean,
 ): Review {
   const inState = (state: string) =>
     conversations.filter((one) => one.state === state);
   return {
-    enrolled: outgoing(inState('enrolled'), details),
-    pendingOnGitHub: outgoing(conversations.filter(pendingOnGitHub), details),
+    enrolled: outgoing(inState('enrolled'), details, sending),
+    pendingOnGitHub: outgoing(
+      conversations.filter(pendingOnGitHub),
+      details,
+      sending,
+    ),
     unanswered: inState('waiting').filter(
       (one) => one.comments[0]?.author === viewer && !pendingOnGitHub(one),
     ).length,
-    unadded: outgoing(inState('draft'), details),
+    unadded: outgoing(inState('draft'), details, sending),
   };
 }

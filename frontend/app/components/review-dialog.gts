@@ -2,7 +2,9 @@ import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import PendingRing from 'frontend/components/pending-ring';
 import type { ReviewVerdict } from 'frontend/data/api';
+import { inFlight } from 'frontend/data/decisions';
 import modal from 'frontend/modifiers/modal';
 import type ReviewService from 'frontend/services/review';
 import autocomplete from 'frontend/modifiers/autocomplete';
@@ -25,6 +27,8 @@ export default class ReviewDialog extends Component {
   @service declare review: ReviewService;
 
   readonly verdicts = VERDICTS;
+
+  readonly sendingWord = inFlight('send-review');
 
   get leftOpen(): string {
     const { unanswered, unadded } = this.review.review;
@@ -113,23 +117,38 @@ export default class ReviewDialog extends Component {
           <p class="dialog-kicker">Going out with it</p>
           <ul class="review-drafts">
             {{#each this.review.review.enrolled key="key" as |one|}}
-              <li class="review-draft" data-test-review-draft={{one.key}}>
+              <li
+                class="review-draft"
+                data-pending={{if one.pending "true"}}
+                data-refused={{if one.refused "true"}}
+                data-test-review-draft={{one.key}}
+              >
                 <span class="review-where">{{one.where}}</span>
                 <span class="review-words">{{one.body}}</span>
-                <span class="review-draft-tools">
-                  <button
-                    type="button"
-                    class="ghost"
-                    data-test-edit
-                    {{on "click" (fn this.review.edit one.key)}}
-                  >Edit</button>
-                  <button
-                    type="button"
-                    class="ghost"
-                    data-test-leave-out
-                    {{on "click" (fn this.review.leaveOut one.key)}}
-                  >Leave out</button>
-                </span>
+                {{#if one.pending}}
+                  <span
+                    class="review-draft-tools note"
+                    data-test-review-doing
+                  >{{one.pending}}</span>
+                {{else}}
+                  <span class="review-draft-tools">
+                    <button
+                      type="button"
+                      class="ghost"
+                      data-test-edit
+                      {{on "click" (fn this.review.edit one.key)}}
+                    >Edit</button>
+                    <button
+                      type="button"
+                      class="ghost"
+                      data-test-leave-out
+                      {{on "click" (fn this.review.leaveOut one.key)}}
+                    >Leave out</button>
+                  </span>
+                {{/if}}
+                {{#if one.refused}}
+                  <p class="refusal" data-test-refusal>{{one.refused}}</p>
+                {{/if}}
               </li>
             {{/each}}
             {{#each this.review.review.pendingOnGitHub key="key" as |one|}}
@@ -151,17 +170,32 @@ export default class ReviewDialog extends Component {
           <p class="dialog-kicker">Local drafts, not in the review</p>
           <ul class="review-drafts">
             {{#each this.review.review.unadded key="key" as |one|}}
-              <li class="review-draft" data-test-review-unadded={{one.key}}>
+              <li
+                class="review-draft"
+                data-pending={{if one.pending "true"}}
+                data-refused={{if one.refused "true"}}
+                data-test-review-unadded={{one.key}}
+              >
                 <span class="review-where">{{one.where}}</span>
                 <span class="review-words">{{one.body}}</span>
-                <span class="review-draft-tools">
-                  <button
-                    type="button"
-                    class="ghost"
-                    data-test-add
-                    {{on "click" (fn this.review.add one.key)}}
-                  >Add to review</button>
-                </span>
+                {{#if one.pending}}
+                  <span
+                    class="review-draft-tools note"
+                    data-test-review-doing
+                  >{{one.pending}}</span>
+                {{else}}
+                  <span class="review-draft-tools">
+                    <button
+                      type="button"
+                      class="ghost"
+                      data-test-add
+                      {{on "click" (fn this.review.add one.key)}}
+                    >Add to review</button>
+                  </span>
+                {{/if}}
+                {{#if one.refused}}
+                  <p class="refusal" data-test-refusal>{{one.refused}}</p>
+                {{/if}}
               </li>
             {{/each}}
           </ul>
@@ -171,11 +205,8 @@ export default class ReviewDialog extends Component {
         {{/if}}
         <p class="note" data-test-review-public>Sending posts the review to
           GitHub now; the board cannot take it back.</p>
-        {{#if this.review.inFlight}}
-          <p class="note" data-test-review-state>Sending your review…</p>
-        {{/if}}
         {{#if this.review.trouble}}
-          <p class="land-error" data-test-review-trouble>
+          <p class="refusal" data-refused="true" data-test-review-trouble>
             {{this.review.trouble}}
           </p>
         {{/if}}
@@ -183,9 +214,17 @@ export default class ReviewDialog extends Component {
           <button
             type="submit"
             class="primary"
+            data-pending={{if this.review.inFlight "true"}}
             data-test-review-send
             disabled={{this.review.unsendable}}
-          >Send review</button>
+          >
+            {{#if this.review.inFlight}}
+              <PendingRing />
+              {{this.sendingWord}}
+            {{else}}
+              Send review
+            {{/if}}
+          </button>
           <button
             type="button"
             class="ghost"

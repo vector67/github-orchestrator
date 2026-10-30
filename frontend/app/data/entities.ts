@@ -30,6 +30,7 @@ export type StoredOperation = { id: string } & Partial<
     conversation: string | null;
     state?: HeldState;
     body?: string | null;
+    local?: boolean;
   };
 
 export interface HeardLine extends OutputLine {
