@@ -47,6 +47,7 @@ from github_orchestrator.board_api.interface import (
     KeptReviews,
     ManagerPanels,
     ManagerStanding,
+    Mentionable,
     MentionsList,
     ServerApp,
     SetupDesk,
@@ -397,6 +398,10 @@ class GitHubProvider(Provider):
     @provide
     def emojis(self, client: GhCliGitHub) -> Emojis:
         return FetchedEmojis(client.emojis)
+
+    @provide
+    def mentionable(self, client: GhCliGitHub) -> Mentionable:
+        return FetchedMentionable(client.assignees)
 
 
 @dataclass(frozen=True)
@@ -1053,7 +1058,7 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   harvest: HarvestSetup, told: Told, mentions: MentionsList,
+                   mentionable: Mentionable, harvest: HarvestSetup, told: Told, mentions: MentionsList,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -1063,7 +1068,7 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         emojis=emojis, harvest=harvest,
+                         emojis=emojis, mentionable=mentionable, harvest=harvest,
                          told=told, holdings=holdings, mentions=mentions,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1188,6 +1193,17 @@ class FetchedEmojis:
     def named(self) -> dict[str, str]:
         self._fetching.join()
         return self._named
+
+
+class FetchedMentionable:
+    def __init__(self, assignees: Callable[[Repo], list[str]]) -> None:
+        self._assignees = assignees
+        self._asked: dict[Repo, list[str]] = {}
+
+    def of(self, repo: Repo) -> list[str]:
+        if repo not in self._asked:
+            self._asked[repo] = self._assignees(repo)
+        return self._asked[repo]
 
 
 class EveryTerminal:
@@ -1566,6 +1582,10 @@ class PreviewHubProvider(Provider):
     @provide
     def emojis(self, access: Access) -> Emojis:
         return FetchedEmojis(access.emojis)
+
+    @provide
+    def mentionable(self, access: Access) -> Mentionable:
+        return FetchedMentionable(access.assignees)
 
     @provide
     def watcher_health(self) -> WatcherHealth:

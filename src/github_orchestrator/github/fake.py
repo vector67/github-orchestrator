@@ -98,6 +98,7 @@ class FakeGitHub:
         self.prs: dict[Pr, FakePullRequest] = {}
         self.reactions: dict[int, list[str]] = {}
         self.emojis_named: dict[str, str] = {}
+        self.assignable: dict[Repo, list[str]] = {}
         self._ids = itertools.count(9001)
 
     def add_pr(self, pr: Pr,
@@ -141,6 +142,9 @@ class FakeGitHub:
 
     def emojis(self) -> dict[str, str]:
         return self.emojis_named
+
+    def assignees(self, repo: Repo) -> list[str]:
+        return self.assignable.get(repo, [])
 
     def repos_of(self, account: str) -> list[Listed] | str:
         refused = self.check_login(account)

@@ -214,6 +214,14 @@ class FakeEmojis:
 
 
 @dataclass
+class FakeMentionable:
+    listed: dict[Repo, list[str]] = field(default_factory=dict)
+
+    def of(self, repo: Repo) -> list[str]:
+        return self.listed.get(repo, [])
+
+
+@dataclass
 class FakeHarvestSetup:
     answer: Path | str = Path("/nonexistent/harvest-extension")
     prepared: int = 0

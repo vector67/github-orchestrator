@@ -25,6 +25,7 @@ import type {
   ManagerChanges,
   ManagerFlags,
   ManagerStanding,
+  MentionableList,
   Mentions,
   Operation,
   Outcome,
@@ -91,6 +92,7 @@ import {
   enteredAt,
   filesOf,
   heldOf,
+  mentionableOf,
   outstandingOf,
   placeOf,
   prHeaderOf,
@@ -426,6 +428,8 @@ export default class StoreService extends Service {
   @tracked movedTo: string | null = null;
   @tracked tour: Tour | null = null;
   @tracked emojis: Emoji[] = [];
+  @tracked private assignable: Record<string, string[]> = {};
+  private assignableAsked = new Set<string>();
   private restarting: Restarting | null = null;
 
   private joins = 0;
@@ -843,6 +847,30 @@ export default class StoreService extends Service {
     } catch (trouble) {
       void reportError('emojis', trouble);
     }
+  }
+
+  mentionable(pr: Numbered): Person[] {
+    const key = keyOf(pr.repo, pr.number);
+    return mentionableOf(
+      this.prs[key],
+      this.threads[key],
+      this.assignable[pr.repo] ?? [],
+      this.names,
+    );
+  }
+
+  readMentionable(pr: Numbered): void {
+    if (this.assignableAsked.has(pr.repo)) return;
+    this.assignableAsked.add(pr.repo);
+    const at = `${this.here.prefixOf(pr)}/api/mentionable`;
+    void waitForPromise(
+      fetched<MentionableList>(at).then(
+        ({ logins }) => {
+          this.assignable = { ...this.assignable, [pr.repo]: logins };
+        },
+        (trouble: unknown) => reportError('mentionable', trouble),
+      ),
+    );
   }
 
   async prepareHarvestExtension(): Promise<HarvestExtensionFolder | string> {

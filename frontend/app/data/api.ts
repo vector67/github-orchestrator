@@ -520,6 +520,10 @@ export interface MentionFact {
   answered: boolean;
 }
 
+export interface MentionableList {
+  logins: string[];
+}
+
 export interface Mentions {
   searched_at: string | null;
   mentions: OutstandingMention[];

@@ -50,6 +50,7 @@ from github_orchestrator.board_api._contract import (
     GitRun,
     Health,
     ManagerChanges,
+    MentionableList,
     Operation,
     OperationList,
     Outcome,
@@ -133,6 +134,7 @@ from github_orchestrator.board_api.interface import (
 from github_orchestrator.board_api.interface import (
     ManagerPanel,
     ManagerStanding,
+    Mentionable,
     ResetToOrigin,
     Shelf,
 )
@@ -187,6 +189,7 @@ class Board:
     summaries: PrSummaries
     lane: SummaryLane
     shelf: Shelf
+    mentionable: Mentionable
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
     prefix: str = ""
@@ -398,6 +401,17 @@ def list_people(request: Request, board: Serving) -> Response:
     return etag.answered(request,
                          PersonList(people_of(board.conversations.all(),
                                               board.first_names_only)))
+
+
+@reads.get("/mentionable", response_model=MentionableList, tags=["people"],
+           operation_id="listMentionable",
+           summary="Everyone the repository can assign, to offer after an @.",
+           responses=etag.TAGGED)
+def list_mentionable(request: Request, board: Serving) -> Response:
+    """Asked of GitHub the first time any board of the repository is asked,
+    and kept until the server restarts.
+    """
+    return etag.answered(request, MentionableList(logins=board.mentionable.of(board.pr.repo)))
 
 
 @reads.get("/people/{login}", tags=["people"], operation_id="readPerson",

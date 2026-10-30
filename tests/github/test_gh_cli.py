@@ -554,6 +554,13 @@ def test_emojis_github_will_not_list_are_none(answer):
     assert real_github(gh=gh).emojis() == {}
 
 
+@pytest.mark.parametrize("answer", [Failure("gh: Something went wrong (HTTP 502)"), Timeout()])
+def test_assignees_github_will_not_list_are_none(answer):
+    gh = ScriptedGh().answer(f"GET repos/{REPO}/assignees?per_page=100", answer)
+
+    assert real_github(gh=gh).assignees(Repo.parse(REPO)) == []
+
+
 def test_a_clone_without_gh_installed_says_gh_is_not_on_path(tmp_path):
     gh = ScriptedGh()
     gh.installed = False

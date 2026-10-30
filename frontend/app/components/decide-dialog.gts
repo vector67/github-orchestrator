@@ -14,7 +14,7 @@ import { modifier } from 'ember-modifier';
 import modal, { focusFirstField } from 'frontend/modifiers/modal';
 import type DialogDraftsService from 'frontend/services/dialog-drafts';
 import type { Held } from 'frontend/services/dialog-drafts';
-import emojiComplete from 'frontend/modifiers/emoji-complete';
+import autocomplete from 'frontend/modifiers/autocomplete';
 
 const focused = modifier((element: HTMLElement) => {
   element.focus();
@@ -385,7 +385,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
             placeholder={{this.placeholder}}
             value={{this.typed}}
             {{on "input" this.type}}
-            {{emojiComplete}}
+            {{autocomplete}}
           ></textarea>
         {{/if}}
         {{#if this.offersGithubTicks}}

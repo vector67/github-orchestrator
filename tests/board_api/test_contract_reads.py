@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from github_orchestrator.agent_runs.fake import FilingTicket, HeldVerdicts, Outcome
+from github_orchestrator.board_api.fake import FakeMentionable
 from github_orchestrator.conversation import Classification
 from github_orchestrator.github import CommentKind
 from github_orchestrator.github.fake import FakeGitHub
@@ -25,6 +26,7 @@ from tests.board_api.support import (
     board_for,
     board_on,
     branched_from_main,
+    client_for,
     client_of,
     disk_board,
     fake_threads,
@@ -124,6 +126,14 @@ def test_a_board_set_to_first_names_names_everyone_by_the_first_word_of_their_na
         {"login": "reviewer", "name": None}]
     assert client.get("/api/people/ada").json() == {"login": "ada", "name": "Ada"}
     assert client.get("/api/viewer").json() == {"login": "octocat", "name": "Octo"}
+
+
+def test_the_mentionable_are_everyone_github_lets_the_repo_assign():
+    mentionable = FakeMentionable({THE_PR.repo: ["hubot", "octocat"]})
+
+    answer = client_for(mentionable=mentionable).get("/api/mentionable")
+
+    assert answer.json() == {"logins": ["hubot", "octocat"]}
 
 
 def test_one_person_is_read_by_login():

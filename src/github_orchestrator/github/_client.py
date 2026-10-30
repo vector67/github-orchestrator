@@ -78,6 +78,13 @@ class GhCliGitHub:
             return {}
         return named
 
+    def assignees(self, repo: Repo) -> list[str]:
+        try:
+            found = self._gh.api(f"repos/{repo}/assignees?per_page=100", paginate=True)
+        except (GhError, subprocess.TimeoutExpired):
+            return []
+        return [one["login"] for one in found]
+
     def repos_of(self, account: str) -> list[Listed] | str:
         gh = self._gh_as(account)
         try:

@@ -2044,6 +2044,12 @@ class EmojiList(BaseModel):
                                             "be asked.")
 
 
+class MentionableList(BaseModel):
+    logins: list[str] = Field(description="Everyone GitHub lets the pull request's repository "
+                                          "assign, in the order it lists them. Empty when "
+                                          "GitHub could not be asked.")
+
+
 class OutstandingMention(BaseModel):
     """A comment naming you that the board has not closed since it was written."""
 

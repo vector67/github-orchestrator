@@ -349,6 +349,10 @@ class Emojis(Protocol):
     def named(self) -> dict[str, str]: ...
 
 
+class Mentionable(Protocol):
+    def of(self, repo: Repo) -> list[str]: ...
+
+
 class HarvestSetup(Protocol):
     def prepare(self) -> Path | str: ...
 

@@ -6,7 +6,7 @@ import type { ReplyBox } from 'frontend/data/panel';
 import didInsert from 'frontend/modifiers/did-insert';
 import type BoardService from 'frontend/services/board';
 import type ComposerService from 'frontend/services/composer';
-import emojiComplete from 'frontend/modifiers/emoji-complete';
+import autocomplete from 'frontend/modifiers/autocomplete';
 
 export interface ReplyBoxSignature {
   Element: HTMLElement;
@@ -99,7 +99,7 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
           value={{this.composer.words}}
           {{on "input" this.type}}
           {{didInsert this.focus}}
-          {{emojiComplete}}
+          {{autocomplete}}
         ></textarea>
         <div class="reply-foot">
           <button

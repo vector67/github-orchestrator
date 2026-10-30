@@ -858,6 +858,14 @@
     }
    }
   },
+  "/api/mentionable": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/MentionableList"
+    },
+    "304": null
+   }
+  },
   "/api/mentions": {
    "get": {
     "200": {
@@ -4408,6 +4416,20 @@
     "author",
     "at",
     "answered"
+   ],
+   "type": "object"
+  },
+  "MentionableList": {
+   "properties": {
+    "logins": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "logins"
    ],
    "type": "object"
   },

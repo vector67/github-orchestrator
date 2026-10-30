@@ -27,6 +27,7 @@ from github_orchestrator.board_api.fake import (
     FakeHarvestSetup,
     FakeHoldings,
     FakeManagerPanel,
+    FakeMentionable,
     FakeMentionsList,
     FakeSetupDesk,
     FakeTold,
@@ -39,6 +40,7 @@ from github_orchestrator.board_api.interface import (
     Held,
     Holdings,
     ManagerPanels,
+    Mentionable,
     MentionsList,
     ServerApp,
     SetupDesk,
@@ -138,6 +140,7 @@ class Serving(TypedDict, total=False):
     pr: Pr
     summaries: list[Part]
     records: ThreadRecords
+    mentionable: Mentionable
 
 
 class NoHeads:
@@ -188,7 +191,7 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
               **serving: Unpack[Serving]) -> ASGIApp:
     server: ServerApp = wire(
         fake_provider(Told, holding(serving.get("pr", THE_PR))),
-        *_hub_parts(records=serving.get("records")),
+        *_hub_parts(records=serving.get("records"), mentionable=serving.get("mentionable")),
         fake_provider(ConversationManagerFactory, conversation_managers),
         fake_provider(WorkingCopies, working_copies),
         fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
@@ -257,9 +260,11 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                holdings: Holdings | None = None,
                harvest: HarvestSetup | None = None,
                records: ThreadRecords | None = None,
-               mentions: MentionsList | None = None) -> list[Part]:
+               mentions: MentionsList | None = None,
+               mentionable: Mentionable | None = None) -> list[Part]:
     return [
         fake_provider(MentionsList, mentions or FakeMentionsList()),
+        fake_provider(Mentionable, mentionable or FakeMentionable()),
         fake_provider(ThreadRecords, records or FakeThreadRecords()),
         fake_provider(Holdings, holdings or FakeHoldings()),
         fake_provider(Releases, releases or NoReleaseYet()),

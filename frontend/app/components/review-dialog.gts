@@ -5,7 +5,7 @@ import { fn } from '@ember/helper';
 import type { ReviewVerdict } from 'frontend/data/api';
 import modal from 'frontend/modifiers/modal';
 import type ReviewService from 'frontend/services/review';
-import emojiComplete from 'frontend/modifiers/emoji-complete';
+import autocomplete from 'frontend/modifiers/autocomplete';
 
 const VERDICTS: { value: ReviewVerdict; label: string }[] = [
   { value: 'COMMENT', label: 'Comment' },
@@ -106,7 +106,7 @@ export default class ReviewDialog extends Component {
           placeholder="What the author should know first…"
           value={{this.review.body}}
           {{on "input" this.type}}
-          {{emojiComplete}}
+          {{autocomplete}}
         ></textarea>
         <p class="note">{{this.summaryNote}}</p>
         {{#if this.goesOut}}

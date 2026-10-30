@@ -591,6 +591,12 @@ def test_the_emojis_are_every_name_github_knows_with_its_picture(world, github):
     assert github.emojis() == world.emojis_named
 
 
+def test_the_assignees_are_everyone_github_lets_the_repo_assign(world, github):
+    world.assignable[Repo.parse(REPO)] = ["octocat", "hubot"]
+
+    assert github.assignees(Repo.parse(REPO)) == ["octocat", "hubot"]
+
+
 def test_the_repos_an_account_lists_come_newest_push_first_with_what_it_may_do_there(
         world, github):
     world.listed = [Repo.parse("acme/gadgets"), Repo.parse(REPO), Repo.parse("octocat/spoon-knife")]

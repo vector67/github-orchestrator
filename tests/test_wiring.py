@@ -5,9 +5,11 @@ from pathlib import Path
 
 from dishka import Provider, Scope, from_context, provide
 
+from github_orchestrator.domain import Repo
 from github_orchestrator.wiring import (
     SUMMARISE,
     FetchedEmojis,
+    FetchedMentionable,
     Wiring,
     utility_clamp,
     wire,
@@ -101,3 +103,18 @@ def test_the_emojis_are_asked_of_github_as_soon_as_they_are_made():
 
 def test_the_emojis_are_the_ones_github_listed():
     assert FetchedEmojis(lambda: {"shipit": SHIPIT}).named() == {"shipit": SHIPIT}
+
+
+def test_the_mentionable_are_asked_of_github_once_for_each_repo():
+    asked: list[Repo] = []
+
+    def assignees(repo: Repo) -> list[str]:
+        asked.append(repo)
+        return [f"{repo.owner}-bot"]
+
+    mentionable = FetchedMentionable(assignees)
+    widgets, gadgets = Repo("acme", "widgets"), Repo("acme", "gadgets")
+
+    answers = [mentionable.of(widgets), mentionable.of(widgets), mentionable.of(gadgets)]
+
+    assert (answers, asked) == ([["acme-bot"]] * 3, [widgets, gadgets])

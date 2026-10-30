@@ -17,7 +17,7 @@ import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
 import type BoardService from 'frontend/services/board';
 import type DraftsService from 'frontend/services/drafts';
 import type TerminalService from 'frontend/services/terminal';
-import emojiComplete from 'frontend/modifiers/emoji-complete';
+import autocomplete from 'frontend/modifiers/autocomplete';
 
 export interface CommentBoxSignature {
   Args: {
@@ -124,7 +124,7 @@ export default class CommentBox extends Component<CommentBoxSignature> {
         {{didChange this.focus}}
         {{on "input" this.type}}
         {{on "keydown" this.press}}
-        {{emojiComplete}}
+        {{autocomplete}}
       ></textarea>
       <div class="box-foot">
         <button

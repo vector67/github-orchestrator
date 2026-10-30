@@ -666,7 +666,7 @@ module('Acceptance | pr diff', function (hooks) {
         key: 'Escape',
       });
 
-      assert.dom('[data-test-emoji-suggestions]').doesNotExist();
+      assert.dom('[data-test-suggestions]').doesNotExist();
       assert.dom('[data-test-comment-box] textarea').hasValue('ship it :tad');
     });
 

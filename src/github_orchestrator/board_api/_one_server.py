@@ -19,6 +19,7 @@ from github_orchestrator.board_api.interface import (
     HarvestSetup,
     Holdings,
     ManagerPanels,
+    Mentionable,
     MentionsList,
     ReleaseRecord,
     SetupDesk,
@@ -81,7 +82,8 @@ class OneServer:
                  ledger: Ledger, pulse: WatcherPulse, clock: UtcClock,
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
-                 tour: TourMarker, emojis: Emojis, harvest: HarvestSetup, told: Told,
+                 tour: TourMarker, emojis: Emojis, mentionable: Mentionable,
+                 harvest: HarvestSetup, told: Told,
                  holdings: Holdings, mentions: MentionsList,
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
@@ -100,6 +102,7 @@ class OneServer:
         self._releases = releases
         self._tour = tour
         self._emojis = emojis
+        self._mentionable = mentionable
         self._harvest = harvest
         self._told = told
         self._holdings = holdings
@@ -137,7 +140,7 @@ class OneServer:
                 terminals=self._terminals.of(pr),
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
                 clock=self._clock, summaries=self._summaries, lane=self._lane,
-                shelf=self._shelves.of(pr),
+                shelf=self._shelves.of(pr), mentionable=self._mentionable,
                 prefix=pr_page(pr)))
 
         return _Routed(hub_app(desk, port), _Boards(self._told, board))

@@ -1,11 +1,15 @@
 import Modifier from 'ember-modifier';
 import { registerDestructor } from '@ember/destroyable';
 import { service } from '@ember/service';
-import type { Emoji } from 'frontend/data/api';
+import type { Emoji, Person } from 'frontend/data/api';
 import { emojiNamed, glyphOf, typedAs } from 'frontend/data/emoji';
+import { peopleNamed } from 'frontend/data/mention';
+import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
 
-const TYPED = /(?:^|\s):([\w+-]+)$/;
+const EMOJI_TYPED = /(?:^|\s):([\w+-]+)$/;
+
+const PERSON_TYPED = /(?:^|\s)@([\w-]*)$/;
 
 const MIRRORED = [
   'boxSizing',
@@ -29,24 +33,77 @@ const MIRRORED = [
   'wordSpacing',
 ] as const;
 
+interface Suggestion {
+  shown: (Node | string)[];
+  put: string;
+}
+
 interface Typed {
   start: number;
   end: number;
-  offered: Emoji[];
+  offered: Suggestion[];
   at: number;
+}
+
+interface Sources {
+  emojis: () => Emoji[];
+  people: () => Person[];
+}
+
+function pictured(emoji: Emoji): HTMLElement {
+  const glyph = glyphOf(emoji);
+  if (glyph) {
+    const drawn = document.createElement('span');
+    drawn.className = 'emoji-glyph';
+    drawn.textContent = glyph;
+    return drawn;
+  }
+  const picture = document.createElement('img');
+  picture.className = 'emoji-glyph';
+  picture.src = emoji.picture;
+  picture.alt = '';
+  return picture;
+}
+
+function named(person: Person): (Node | string)[] {
+  if (!person.name) return [`@${person.login}`];
+  const name = document.createElement('span');
+  name.className = 'suggestion-name';
+  name.textContent = person.name;
+  return [`@${person.login} `, name];
+}
+
+function offeredFor(
+  before: string,
+  sources: Sources,
+): { typed: string; offered: Suggestion[] } | null {
+  const emoji = EMOJI_TYPED.exec(before)?.[1];
+  if (emoji) {
+    const offered = emojiNamed(sources.emojis(), emoji).map((one) => ({
+      shown: [pictured(one), ` :${one.name}:`],
+      put: typedAs(one),
+    }));
+    return { typed: emoji, offered };
+  }
+  const person = PERSON_TYPED.exec(before)?.[1];
+  if (person === undefined) return null;
+  const offered = peopleNamed(sources.people(), person).map((one) => ({
+    shown: named(one),
+    put: `@${one.login} `,
+  }));
+  return { typed: person, offered };
 }
 
 function typedAtCaret(
   field: HTMLTextAreaElement,
-  emojis: Emoji[],
+  sources: Sources,
 ): Typed | null {
   const end = field.selectionEnd;
   if (field.selectionStart !== end) return null;
-  const match = TYPED.exec(field.value.slice(0, end));
-  if (!match?.[1]) return null;
-  const offered = emojiNamed(emojis, match[1]);
-  if (!offered.length) return null;
-  return { start: end - match[1].length - 1, end, offered, at: 0 };
+  const found = offeredFor(field.value.slice(0, end), sources);
+  if (!found?.offered.length) return null;
+  const start = end - found.typed.length - 1;
+  return { start, end, offered: found.offered, at: 0 };
 }
 
 function caretBelow(
@@ -72,30 +129,12 @@ function caretBelow(
   return { left, top };
 }
 
-function pictured(emoji: Emoji): HTMLElement {
-  const glyph = glyphOf(emoji);
-  if (glyph) {
-    const drawn = document.createElement('span');
-    drawn.className = 'emoji-glyph';
-    drawn.textContent = glyph;
-    return drawn;
-  }
-  const picture = document.createElement('img');
-  picture.className = 'emoji-glyph';
-  picture.src = emoji.picture;
-  picture.alt = '';
-  return picture;
-}
-
-function completing(
-  field: HTMLTextAreaElement,
-  emojis: () => Emoji[],
-): () => void {
+function completing(field: HTMLTextAreaElement, sources: Sources): () => void {
   let typed: Typed | null = null;
   const list = document.createElement('ul');
-  list.className = 'emoji-suggestions';
+  list.className = 'suggestions';
   list.setAttribute('role', 'listbox');
-  list.dataset['testEmojiSuggestions'] = '';
+  list.dataset['testSuggestions'] = '';
 
   const close = () => {
     typed = null;
@@ -104,15 +143,15 @@ function completing(
 
   const draw = (shown: Typed) => {
     list.replaceChildren(
-      ...shown.offered.map((emoji, index) => {
+      ...shown.offered.map((suggestion, index) => {
         const option = document.createElement('li');
-        option.className = 'emoji-option';
+        option.className = 'suggestion';
         option.setAttribute('role', 'option');
         option.setAttribute('aria-selected', String(index === shown.at));
-        option.dataset['testEmojiOption'] = '';
-        option.append(pictured(emoji), ` :${emoji.name}:`);
+        option.dataset['testSuggestion'] = '';
+        option.append(...suggestion.shown);
         option.addEventListener('mousedown', (event) => event.preventDefault());
-        option.addEventListener('click', () => put(shown, emoji));
+        option.addEventListener('click', () => put(shown, suggestion));
         return option;
       }),
     );
@@ -122,15 +161,15 @@ function completing(
     if (!list.isConnected) field.after(list);
   };
 
-  const put = (shown: Typed, emoji: Emoji) => {
+  const put = (shown: Typed, suggestion: Suggestion) => {
     close();
     field.focus();
     field.setSelectionRange(shown.start, shown.end);
-    document.execCommand('insertText', false, typedAs(emoji));
+    document.execCommand('insertText', false, suggestion.put);
   };
 
   const look = () => {
-    typed = typedAtCaret(field, emojis());
+    typed = typedAtCaret(field, sources);
     if (typed) draw(typed);
     else close();
   };
@@ -171,21 +210,27 @@ function completing(
   };
 }
 
-interface EmojiCompleteSignature {
+interface AutocompleteSignature {
   Element: HTMLTextAreaElement;
 }
 
-export default class EmojiComplete extends Modifier<EmojiCompleteSignature> {
+export default class Autocomplete extends Modifier<AutocompleteSignature> {
   @service declare store: StoreService;
+  @service declare here: HereService;
 
   private completing = false;
 
   modify(field: HTMLTextAreaElement): void {
     if (this.completing) return;
     this.completing = true;
+    const pr = this.here.at;
+    if (this.here.pr) this.store.readMentionable(pr);
     registerDestructor(
       this,
-      completing(field, () => this.store.emojis),
+      completing(field, {
+        emojis: () => this.store.emojis,
+        people: () => (this.here.pr ? this.store.mentionable(pr) : []),
+      }),
     );
   }
 }

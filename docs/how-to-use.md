@@ -665,6 +665,13 @@ closes the list. An emoji with a Unicode character goes in as that character;
 one of GitHub's own, such as `:shipit:`, goes in as its name. The page draws a
 comment's `:name:` as the character, or as GitHub's picture for its own.
 
+The same boxes complete people after `@`. The list starts with the pull
+request's own people (its author, the reviewers still asked or asking for
+changes, and everyone who has commented), then everyone else GitHub lets the
+repository assign, asked of GitHub once per repository until the server
+restarts. What you type after `@` narrows it by login or display name, and the
+chosen login goes in with a space after it.
+
 ### The Runs page
 
 `/runs` on the hub, the **Runs** link in the top bar, shows the watcher's

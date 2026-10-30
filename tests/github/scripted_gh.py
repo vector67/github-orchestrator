@@ -358,6 +358,7 @@ class _World:
             ("GET", r"user/repos\?.*", self._listed),
             ("GET", r"emojis", self._emojis),
             ("GET", r"repos/([^/]+/[^/]+)", self._repo),
+            ("GET", r"repos/([^/]+/[^/]+)/assignees\?per_page=100", self._assignees),
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._pull),
             ("PATCH", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._close),
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)/reviews/(\d+)/comments",
@@ -399,6 +400,9 @@ class _World:
 
     def _emojis(self, request: GhRequest) -> Any:
         return self.world.emojis_named
+
+    def _assignees(self, request: GhRequest, repo: str) -> Any:
+        return [{"login": login} for login in self.world.assignable.get(Repo.parse(repo), [])]
 
     def _listed(self, request: GhRequest) -> Any:
         return [self._repo_answer(repo) for repo in self.world.listed]

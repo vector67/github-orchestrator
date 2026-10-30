@@ -6,6 +6,7 @@ import type {
   Diff,
   ManagerFlags,
   Operation,
+  Person,
   PrFacts,
   PullRequestCommit,
   PullRequestCommits,
@@ -1468,4 +1469,24 @@ export function timelineOf(
     timeline,
   });
   return timeline;
+}
+
+export function mentionableOf(
+  pr: PrEntity | undefined,
+  threads: Record<string, Thread> | undefined,
+  assignable: string[],
+  names: Record<string, string | null>,
+): Person[] {
+  const onThePr = [
+    pr?.author,
+    ...(pr?.facts?.pending_reviewers ?? []),
+    ...(pr?.facts?.changes_requested_by ?? []),
+    ...Object.values(threads ?? {}).flatMap((thread) =>
+      (thread.comments ?? []).map((one) => one.author),
+    ),
+  ];
+  const logins = new Set([...onThePr, ...assignable]);
+  return [...logins]
+    .filter((login): login is string => !!login)
+    .map((login) => ({ login, name: names[login] ?? null }));
 }

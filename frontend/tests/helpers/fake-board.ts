@@ -701,6 +701,7 @@ export class FakeBoard {
   pullRequest: PullRequest = { ...PULL_REQUEST };
   viewer: Person = { login: 'octocat', name: 'Octo Cat' };
   people: Person[] = [{ login: 'anna', name: 'Anna Example' }];
+  mentionable: string[] = [];
   conversations: Conversation[] = [];
   projections: Record<string, Conversation> = {};
   unreadable: string[] = [];
@@ -1252,6 +1253,7 @@ export class FakeBoard {
     }
     if (path === '/api/viewer') return this.viewer;
     if (path === '/api/people') return this.people;
+    if (path === '/api/mentionable') return { logins: this.mentionable };
     if (path === '/api/operations') return this.inFlight;
     if (path === '/api/summary') return this.summary;
     const review = /^\/api\/operations\/([^/]+)$/.exec(path);

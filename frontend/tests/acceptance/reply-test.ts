@@ -13,9 +13,9 @@ const CLOSE = '[data-test-reply-close]';
 
 const BOX = '[data-test-reply]';
 
-const SUGGESTIONS = '[data-test-emoji-suggestions]';
+const SUGGESTIONS = '[data-test-suggestions]';
 
-const OPTION = '[data-test-emoji-option]';
+const OPTION = '[data-test-suggestion]';
 
 const PICTURES = 'https://github.githubassets.com/images/icons/emoji';
 
@@ -243,6 +243,50 @@ module('Acceptance | reply', function (hooks) {
     await click(OPEN);
 
     await fillIn(BOX, 'see https:thu');
+
+    assert.dom(SUGGESTIONS).doesNotExist();
+  });
+
+  test('an at sign offers the pull request people first, then the rest of the repository', async function (assert) {
+    board().mentionable = ['erin', 'anna', 'bob'];
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'cc @');
+
+    assert.deepEqual(
+      [...document.querySelectorAll(OPTION)].map((one) => one.textContent),
+      ['@dave', '@carol', '@anna Anna Example', '@erin', '@bob'],
+    );
+    assert.dom(OPTION).hasAttribute('aria-selected', 'true');
+  });
+
+  test('letters after the at narrow the people by login or name', async function (assert) {
+    board().mentionable = ['erin', 'bob'];
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'cc @exa');
+
+    assert.dom(OPTION).exists({ count: 1 }).hasText('@anna Anna Example');
+  });
+
+  test('tab puts the login in place of the at and its letters, with a space after', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'cc @car');
+
+    await triggerKeyEvent(BOX, 'keydown', 'Tab');
+
+    assert.dom(BOX).hasValue('cc @carol ').isFocused();
+    assert.dom(SUGGESTIONS).doesNotExist();
+  });
+
+  test('an at inside a word offers nobody', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'mail me@car');
 
     assert.dom(SUGGESTIONS).doesNotExist();
   });
