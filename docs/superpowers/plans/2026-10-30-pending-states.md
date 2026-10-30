@@ -114,6 +114,8 @@ session is listed or the request is refused.
 
 ### 7. Summary and setup
 
+**Done** in the commit that adds this line.
+
 Decisions 3, 4, 10. `summary-tab.gts` (`summarising`) and the setup page's
 Check, Start watching and Move aside buttons (`checking`, `writing`,
 `moving`). Setup's buttons get the ring; the summary strip's own running state

@@ -1,10 +1,10 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
 import { pulses } from 'frontend/motion';
 import { elapsedOf, exitWordOf, relativeOf } from 'frontend/data/dashboard';
+import type { Pressing } from 'frontend/data/decisions';
 import { summaryOf } from 'frontend/data/markdown';
 import diagrams from 'frontend/modifiers/diagrams';
 import drawn from 'frontend/modifiers/drawn';
@@ -23,9 +23,6 @@ export default class SummaryTab extends Component {
   @service declare hub: HubService;
   @service declare store: StoreService;
   @service declare theme: ThemeService;
-
-  @tracked said: string | null = null;
-  @tracked summarising = false;
 
   get tab(): Tab | null {
     const { repo, number } = this.here.at;
@@ -53,6 +50,11 @@ export default class SummaryTab extends Component {
     return elapsedOf(this.tab?.since ?? null, this.hub.now);
   }
 
+  get pressing(): Pressing | null {
+    const { repo, number } = this.here.at;
+    return this.store.summary(repo, number)?.pressing.summary ?? null;
+  }
+
   get githubApi(): string {
     const calls = this.tab?.calls;
     return calls
@@ -61,25 +63,14 @@ export default class SummaryTab extends Component {
   }
 
   run = (): void => {
-    this.said = null;
-    void waitForPromise(this.ask(this.store.summarise(this.here.at)));
+    void waitForPromise(this.store.summarise(this.here.at, 'summarise'));
   };
 
   runWithGithubApi = (): void => {
-    this.said = null;
     void waitForPromise(
-      this.ask(this.store.summariseWithGithubApi(this.here.at)),
+      this.store.summarise(this.here.at, 'summarise-with-github-api'),
     );
   };
-
-  private async ask(asking: Promise<string | null>): Promise<void> {
-    this.summarising = true;
-    try {
-      this.said = await asking;
-    } finally {
-      this.summarising = false;
-    }
-  }
 
   <template>
     <div id="summary-tab" data-test-summary-tab>
@@ -124,6 +115,7 @@ export default class SummaryTab extends Component {
         <div
           class="summary-strip"
           data-state={{this.tab.state}}
+          data-pending={{if this.pressing.pressed "true"}}
           data-test-summary-strip
         >
           {{#if (is this.tab.state "none-yet-reviewer")}}
@@ -134,9 +126,13 @@ export default class SummaryTab extends Component {
               type="button"
               class="btn"
               data-test-summary-run
-              disabled={{this.summarising}}
+              disabled={{if this.pressing.pressed true}}
               {{on "click" this.run}}
-            >Summarise</button>
+            >{{if
+                this.pressing.pressed
+                this.pressing.doing
+                "Summarise"
+              }}</button>
           {{else if (is this.tab.state "running")}}
             {{#if this.tab.markdown}}
               <span><code>{{this.tab.sha}}</code>
@@ -164,9 +160,13 @@ export default class SummaryTab extends Component {
               type="button"
               class="btn"
               data-test-summary-github-api
-              disabled={{this.summarising}}
+              disabled={{if this.pressing.pressed true}}
               {{on "click" this.runWithGithubApi}}
-            >{{this.githubApi}}</button>
+            >{{if
+                this.pressing.pressed
+                this.pressing.doing
+                this.githubApi
+              }}</button>
           {{else if (is this.tab.state "failed")}}
             <span>{{exitWordOf this.tab.exitStatus}}
               ·
@@ -176,9 +176,9 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
-                disabled={{this.summarising}}
+                disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >Rerun</button>
+              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
             </span>
           {{else if (is this.tab.state "stale")}}
             <span>Written for
@@ -194,9 +194,9 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
-                disabled={{this.summarising}}
+                disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >Rerun</button>
+              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
             </span>
           {{else}}
             <span><code>{{this.tab.sha}}</code></span>
@@ -209,13 +209,17 @@ export default class SummaryTab extends Component {
                 type="button"
                 class="btn"
                 data-test-summary-run
-                disabled={{this.summarising}}
+                disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >Rerun</button>
+              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
             </span>
           {{/if}}
-          {{#if this.said}}
-            <span class="said" data-test-summary-said>{{this.said}}</span>
+          {{#if this.pressing.refused}}
+            <span
+              class="said"
+              data-refused="true"
+              data-test-summary-said
+            >{{this.pressing.refused}}</span>
           {{/if}}
         </div>
         {{#if this.tab.markdown}}

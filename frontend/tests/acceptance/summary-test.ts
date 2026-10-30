@@ -206,7 +206,7 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom('[data-test-summary-markdown] h1').hasText('What it asks');
   });
 
-  test('Rerun is disabled while its request is in flight, so a second click starts no second run', async function (assert) {
+  test('Rerun shows the strip pending with the word and no ring from the click until the run is listed, its buttons held', async function (assert) {
     asReviewer();
     board().summary = prSummary({
       head_sha: 'c0ffee1',
@@ -218,15 +218,28 @@ module('Acceptance | summary tab', function (hooks) {
     const release = board().hold(/operations:summarise$/);
 
     const running = click('[data-test-summary-run]');
-    await waitFor('[data-test-summary-run][disabled]');
+    await waitFor('[data-test-summary-strip][data-pending]');
 
-    assert.dom('[data-test-summary-run]').isDisabled();
+    assert.dom('[data-test-summary-run]').hasText('Summarising…').isDisabled();
+    assert.dom('[data-test-summary-strip] [data-test-ring]').doesNotExist();
+    assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'ready');
 
     release();
     await running;
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .doesNotHaveAttribute('data-pending');
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasAttribute('data-state', 'running');
+    assert.deepEqual(
+      board().posted.map(({ verb }) => verb),
+      ['summarise'],
+    );
   });
 
-  test('Use the GitHub API is disabled while its request is in flight', async function (assert) {
+  test('Use the GitHub API shows the strip pending with its word from the click', async function (assert) {
     asReviewer();
     board().summary = prSummary({
       head_sha: 'abc1234',
@@ -240,9 +253,13 @@ module('Acceptance | summary tab', function (hooks) {
     const release = board().hold(/operations:summarise-with-github-api$/);
 
     const running = click('[data-test-summary-github-api]');
-    await waitFor('[data-test-summary-github-api][disabled]');
+    await waitFor('[data-test-summary-strip][data-pending]');
 
-    assert.dom('[data-test-summary-github-api]').isDisabled();
+    assert
+      .dom('[data-test-summary-github-api]')
+      .hasText('Summarising over the GitHub API…')
+      .isDisabled();
+    assert.dom('[data-test-summary-strip] [data-test-ring]').doesNotExist();
 
     release();
     await running;
@@ -577,7 +594,12 @@ module('Acceptance | summary tab', function (hooks) {
       .hasAttribute('data-state', 'none-yet-author');
     assert
       .dom('[data-test-summary-said]')
+      .hasAttribute('data-refused')
       .hasText('another summary is running');
+    assert
+      .dom('[data-test-summary-strip]')
+      .doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-summary-run]').hasText('Summarise').isNotDisabled();
   });
 
   test('a summary that moved before the click is read again, and the strip says so', async function (assert) {

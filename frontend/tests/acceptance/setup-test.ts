@@ -1,6 +1,13 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, currentURL, fillIn, findAll, visit } from '@ember/test-helpers';
+import {
+  click,
+  currentURL,
+  fillIn,
+  findAll,
+  visit,
+  waitFor,
+} from '@ember/test-helpers';
 import { heldPr, setupFakeBoard } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 import {
@@ -173,12 +180,39 @@ module('Acceptance | setup', function (hooks) {
     assert.dom('[data-test-setup-model]').hasValue('gpt-6-luna');
   });
 
+  test('Check shows the account pending with the ring and the word from the moment it asks, with no repos listed until it answers', async function (assert) {
+    inSetup();
+    const release = board().hold(/\/api\/setup\/accounts\/octocat$/);
+
+    const visiting = visit('/setup');
+    await waitFor('[data-test-setup-account][data-pending]');
+
+    assert
+      .dom('[data-test-setup-check]')
+      .hasText('Checking the account…')
+      .isDisabled();
+    assert.dom('[data-test-setup-check] [data-test-ring]').exists();
+    assert.dom('[data-test-setup-repos]').doesNotExist();
+
+    release();
+    await visiting;
+
+    assert
+      .dom('[data-test-setup-account]')
+      .doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-setup-check]').hasText('Check').isNotDisabled();
+    assert.deepEqual(listed(), ['acme/widgets', 'acme/gadgets']);
+  });
+
   test('an account gh holds no token for says to log in, then checks again', async function (assert) {
     const setup = inSetup();
     setup.read = setupRead({ active_account: 'someone' });
     await visit('/setup');
 
-    assert.dom('[data-test-setup-login-trouble]').includesText('gh auth login');
+    assert
+      .dom('[data-test-setup-login-trouble]')
+      .hasAttribute('data-refused')
+      .includesText('gh auth login');
     assert.dom('[data-test-setup-repos]').doesNotExist();
 
     setup.tokens['someone'] = ['repo'];
@@ -242,6 +276,30 @@ module('Acceptance | setup', function (hooks) {
     assert.dom('[data-test-wall-row="acme/widgets#7"]').exists();
   });
 
+  test('Start watching holds the choices with the ring and the word on the button until the board takes the write', async function (assert) {
+    inSetup();
+    await visit('/setup');
+    await pick('acme/widgets');
+    const release = board().hold(/\/api\/setup$/);
+
+    const starting = click('[data-test-setup-start]');
+    await waitFor('[data-test-setup-choices][data-pending]');
+
+    assert
+      .dom('[data-test-setup-start]')
+      .hasText('Checking each repo and clone with GitHub…')
+      .isDisabled();
+    assert.dom('[data-test-setup-start] [data-test-ring]').exists();
+    assert.dom('[data-test-setup-progress]').doesNotExist();
+
+    release();
+    await starting;
+
+    assert
+      .dom('[data-test-clone-progress="acme/widgets"]')
+      .hasAttribute('data-test-clone-state', 'waiting');
+  });
+
   test('a write refused field by field shows each reason beside its field and writes nothing more', async function (assert) {
     const setup = inSetup();
     setup.refusals = [
@@ -275,8 +333,15 @@ module('Acceptance | setup', function (hooks) {
     assert
       .dom('[data-test-clone="acme/widgets"] [data-test-refused="local_path"]')
       .includesText('not a clone');
-    assert.dom('[data-test-setup-trouble]').includesText('8730-8829');
+    assert
+      .dom('[data-test-setup-trouble]')
+      .hasAttribute('data-refused')
+      .includesText('8730-8829');
     assert.dom('[data-test-setup-progress]').doesNotExist();
+    assert
+      .dom('[data-test-setup-choices]')
+      .doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-setup-start]').hasText('Start watching');
   });
 
   test('a write against a config changed since the page read it asks to save again', async function (assert) {
@@ -336,6 +401,48 @@ module('Acceptance | setup', function (hooks) {
 
     assert.dom('[data-test-setup-broken]').doesNotExist();
     assert.dom('[data-test-setup-login]').hasValue('octocat');
+  });
+
+  test('Move aside shows the broken config pending with the ring and the word until the board has moved it', async function (assert) {
+    const setup = inSetup();
+    board().state = 'broken';
+    setup.read = setupRead({ state: 'broken', problem: 'config.toml: bad' });
+    await visit('/setup');
+    const release = board().hold(/\/api\/setup:move-aside$/);
+
+    const moving = click('[data-test-setup-move-aside]');
+    await waitFor('[data-test-setup-broken][data-pending]');
+
+    assert
+      .dom('[data-test-setup-move-aside]')
+      .hasText('Moving it aside…')
+      .isDisabled();
+    assert.dom('[data-test-setup-move-aside] [data-test-ring]').exists();
+
+    release();
+    await moving;
+
+    assert.dom('[data-test-setup-broken]').doesNotHaveAttribute('data-pending');
+    assert.dom('[data-test-setup-moved]').includesText('broken-20261009');
+  });
+
+  test('a Move aside that never reaches the board says so on the broken config, and can be pressed again', async function (assert) {
+    const setup = inSetup();
+    board().state = 'broken';
+    setup.read = setupRead({ state: 'broken', problem: 'config.toml: bad' });
+    await visit('/setup');
+    board().broken = /\/api\/setup:move-aside$/;
+
+    await click('[data-test-setup-move-aside]');
+
+    assert
+      .dom('[data-test-setup-trouble]')
+      .hasAttribute('data-refused')
+      .hasText('the board server is not answering');
+    assert
+      .dom('[data-test-setup-move-aside]')
+      .hasText('Move it aside and start again')
+      .isNotDisabled();
   });
 
   test('on a watching hub the top bar opens setup with the watched repos picked, and reading it writes nothing', async function (assert) {

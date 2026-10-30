@@ -743,7 +743,14 @@ const ENTRIES = {
 export type Decision = keyof typeof ENTRIES;
 
 export type Slot =
-  'controls' | 'fetch' | 'reset' | 'read' | 'git' | 'session' | 'ask';
+  | 'controls'
+  | 'fetch'
+  | 'reset'
+  | 'read'
+  | 'git'
+  | 'session'
+  | 'ask'
+  | 'summary';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -835,9 +842,17 @@ const PR_WRITES = {
     slot: 'ask',
     ring: true,
   },
+  summarise: { doing: 'summarising', square: null, slot: 'summary' },
+  'summarise-with-github-api': {
+    doing: 'summarising over the GitHub API',
+    square: null,
+    slot: 'summary',
+  },
 } satisfies Record<string, PrWrite>;
 
 export type PrVerb = keyof typeof PR_WRITES;
+
+export type SetupWrite = 'check-account' | 'write-setup' | 'move-aside';
 
 const SLOTS: Slot[] = [
   'controls',
@@ -847,6 +862,7 @@ const SLOTS: Slot[] = [
   'git',
   'session',
   'ask',
+  'summary',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {
@@ -926,7 +942,8 @@ const CARRIED: Record<
   | 'edit-draft'
   | 'create-draft'
   | 'send-review'
-  | 'prepare-harvest-extension',
+  | 'prepare-harvest-extension'
+  | SetupWrite,
   Carrying
 > = {
   ...ENTRIES,
@@ -947,6 +964,21 @@ const CARRIED: Record<
   },
   'prepare-harvest-extension': {
     doing: 'setting up the extension',
+    square: null,
+    ring: true,
+  },
+  'check-account': {
+    doing: 'checking the account',
+    square: null,
+    ring: true,
+  },
+  'write-setup': {
+    doing: 'checking each repo and clone with GitHub',
+    square: null,
+    ring: true,
+  },
+  'move-aside': {
+    doing: 'moving it aside',
     square: null,
     ring: true,
   },
