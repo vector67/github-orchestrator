@@ -95,6 +95,7 @@ export interface AcceptView {
   lead: string | null;
   files: FileStat[];
   reply_kicker: string;
+  replying_to: TranscriptEntry | null;
   resolvable: boolean;
   message: string | null;
 }
@@ -870,6 +871,7 @@ function acceptOf(
   plan: PlanStep[],
   files: FileStat[],
   reviewer: string,
+  comments: Comment[],
   context: Context,
 ): AcceptView {
   const first = firstName(reviewer);
@@ -882,6 +884,10 @@ function acceptOf(
       `${first || 'the reviewer'} hears about it.`,
     files,
     reply_kicker: first ? `Reply to ${first} on GitHub` : 'Reply on GitHub',
+    replying_to:
+      transcriptOf(conversation, comments, context).findLast(
+        (one) => one.author !== context.viewer,
+      ) ?? null,
     resolvable: conversation.kind === 'review' && !conversation.github_removed,
     message: proposal?.commit_message ?? null,
   };
@@ -1101,7 +1107,7 @@ export function panelOf(
     fold: foldOf(shown, proposal, settled, files),
     fold_placeholder: FOLD_PLACEHOLDERS[phase] ?? '',
     accept: decides('approve')
-      ? acceptOf(shown, proposal, plan, files, reviewer, context)
+      ? acceptOf(shown, proposal, plan, files, reviewer, comments, context)
       : null,
     rework: decides('rework')
       ? { ...REWORK, reviewers: repliersOf(comments, context) }
