@@ -1024,7 +1024,7 @@ def _draft_posted(conversation: Conversation,
         conversation, comment_type=KIND_REVIEW,
         github_node_id=command.github_node_id, state=WAITING_ON_REVIEWER,
         comment_id=comment.id, comments=(comment,),
-        comment_created_at=comment.created_at,
+        comment_created_at=comment.created_at, original_commit=command.made_on,
         panel_reply_ids=(conversation.panel_reply_ids
                          + ((comment.id,) if comment.id is not None else ()))))
 
