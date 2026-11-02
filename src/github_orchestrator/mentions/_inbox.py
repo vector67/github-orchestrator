@@ -49,7 +49,8 @@ class GitHubMentionsInbox:
         start = self._start_line.mentions_start(began)
         started = self._started(began, start)
         try:
-            mentions = [entry for pr in self._pull_requests.mentioned_since(self._repos, start)
+            mentions = [entry for pr in self._configured(
+                            self._pull_requests.mentioned_since(self._repos, start))
                         for entry in self._outstanding(
                             pr, max(start, _moment(started[str(pr.repo)])))]
         except _Unread as unread:
@@ -58,6 +59,17 @@ class GitHubMentionsInbox:
         write_listing(self._path, began, started, mentions)
         if not mentions:
             self._start_line.move_mentions_start(began)
+
+    def _configured(self, found: list[Pr]) -> list[Pr]:
+        spelled = {str(repo).casefold(): repo for repo in self._repos}
+        configured = []
+        for pr in found:
+            repo = spelled.get(str(pr.repo).casefold())
+            if repo is None:
+                log.warning("mention in %s skipped: no configured repo is %s", pr, pr.repo)
+            else:
+                configured.append(replace(pr, repo=repo))
+        return configured
 
     def _started(self, began: datetime, start: datetime) -> dict[str, str]:
         before = started_before(self._path)

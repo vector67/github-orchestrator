@@ -9,7 +9,7 @@ from github_orchestrator.board_api.interface import (
 )
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import ConversationState
-from github_orchestrator.domain import Repo
+from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -240,3 +240,21 @@ def test_a_pr_body_mention_links_to_the_pr(tmp_path):
 def test_the_board_reads_no_mentions_before_the_first_search(tmp_path):
     assert _here(tmp_path).container.get(MentionsList).listed() == MentionsListing(
         searched_at=None, mentions=())
+
+
+def test_a_mention_github_spells_in_another_case_is_listed_under_the_configured_repo(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.github.mentioned_since = lambda repos, since: [Pr(Repo.parse("Acme/Widgets"), 7)]
+
+    assert [(listed["repo"], listed["thread"]) for listed in _searched(here)["mentions"]] == [
+        (REPO, "IC_1")]
+
+
+def test_a_mention_in_a_repo_the_config_does_not_name_is_skipped(tmp_path):
+    here = _here(tmp_path, "acme/gadgets")
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.github.mentioned_since = lambda repos, since: [
+        Pr(Repo.parse("acme/gadgets-renamed"), 3), THE_PR]
+
+    assert _listed_threads(here) == ["IC_1"]
