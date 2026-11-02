@@ -35,9 +35,23 @@ def test_setup_where_nothing_opens_a_browser_still_prints_where_to_go(machine, r
     assert "If your browser didn't open, go to http://127.0.0.1:8720/setup" in ran.out
 
 
+def test_setup_opens_nothing_when_another_instance_s_hub_answers_on_its_port(machine, run_cli):
+    machine.config_path.unlink()
+    machine.answering_hubs.add(HUB)
+    machine.hub_pid = 99
+
+    ran = run_cli("setup")
+
+    assert ran.code == 1
+    assert machine.desktop.opened == []
+    assert (f"Another hub answers at {HUB} (pid 99), not this instance's server, so its page "
+            f"is not this instance's. Set hub_port in {machine.config_path} to a free port, "
+            "then run this again.") in ran.out
+
+
 def test_setup_starts_a_watcher_that_is_not_running_before_opening_the_page(machine, run_cli):
     machine.config_path.unlink()
-    machine.while_asleep.append(lambda: machine.answering_hubs.add(HUB))
+    machine.while_asleep.append(lambda: machine.serving(HUB))
 
     ran = run_cli("setup")
 

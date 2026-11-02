@@ -2,7 +2,7 @@ import os
 import sys
 from collections.abc import Mapping
 
-from github_orchestrator.cli._config import Run
+from github_orchestrator.cli._config import Run, ServerControl
 from github_orchestrator.cli._hub import HealthBody, HubHealth
 from github_orchestrator.cli._service import Service
 from github_orchestrator.desktop import Desktop
@@ -37,11 +37,16 @@ def hub_line(hub_url: str, answer: HealthBody) -> str:
 
 
 def open_board(service: Service, hub_url: str, hub_health: HubHealth, sleep: Sleep,
-               desktop: Desktop, *, graphical: bool, page: str = "") -> None:
-    if service.running():
-        await_hub(hub_url, hub_health, sleep)
-    else:
+               desktop: Desktop, server: ServerControl, config_location: str, *,
+               graphical: bool, page: str = "") -> None:
+    if not service.running():
         start(service, hub_url, hub_health, sleep)
+    answering = await_hub(hub_url, hub_health, sleep).get("pid")
+    if answering != server.pid():
+        print(f"Another hub answers at {hub_url} (pid {answering}), not this instance's server, "
+              f"so its page is not this instance's. Set hub_port in {config_location} to a free "
+              "port, then run this again.")
+        sys.exit(1)
     url = f"{hub_url}{page}"
     if graphical:
         print(f"Opening {url}", flush=True)
