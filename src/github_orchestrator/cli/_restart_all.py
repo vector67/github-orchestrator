@@ -21,6 +21,7 @@ from github_orchestrator.domain import HubState, LocalClock, Pr, Sleep
 from github_orchestrator.pr_event_queue import Queues
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.settings import ConfigFile
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.watcher import WatcherHealth
 
 LOCK_POLL_SECONDS = 2.0
@@ -41,6 +42,7 @@ class Instance:
     server_log: Path
     hub_url: str
     hub_health: HubHealth
+    migration: NameMigration
 
 
 class OtherInstances(Protocol):

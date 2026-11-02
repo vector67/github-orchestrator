@@ -181,6 +181,14 @@ def test_a_current_skill_is_left_as_it_is(tmp_path):
 
 
 @_REPLAYED
+@_ON_A_MAC
+def test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration(tmp_path):
+    _, calls = _installed(tmp_path, "-y", state="current")
+
+    assert "start --from-installer --force" in calls
+
+
+@_REPLAYED
 def test_help_lists_the_agent_flag_and_its_environment_twin():
     shown = _sh("--help")
 

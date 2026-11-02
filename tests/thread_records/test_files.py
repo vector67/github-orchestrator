@@ -9,6 +9,7 @@ import pytest
 from github_orchestrator.thread_records import UnreadableThread
 from tests.builders import a_pr
 from tests.disk_layout import (
+    disk_name,
     review_lock_file,
     thread_action_file,
     thread_dir,
@@ -53,7 +54,7 @@ def test_each_kind_of_document_is_the_file_the_board_has_always_kept(tmp_path):
 
 def test_the_files_already_on_disk_load_by_their_kind_and_key(tmp_path):
     _write(thread_file(tmp_path, THE_PR, KEY), b'{"version": 2}')
-    _write(thread_dir(tmp_path, THE_PR) / "poll.cursor", b"{}")
+    _write(thread_dir(tmp_path, THE_PR) / f"{disk_name('poll')}.cursor", b"{}")
 
     records = _records(tmp_path)
 
@@ -169,23 +170,6 @@ def test_two_keys_that_differ_only_by_case_are_two_documents(tmp_path):
     assert len(set(names)) == 2
 
 
-def test_a_document_named_by_its_bare_key_loads_and_is_renamed_when_saved(tmp_path):
-    bare = _write(thread_dir(tmp_path, THE_PR) / "PRRT_abcR.json", b"old")
-    records = _records(tmp_path)
-
-    assert records.load("json", "PRRT_abcR") == b"old"
-    records.save("json", "PRRT_abcR", b"new")
-
-    assert not bare.exists()
-    assert records.list("json") == {"PRRT_abcR": b"new"}
-
-
-def test_a_document_named_by_its_bare_key_is_not_the_document_of_its_case_twin(tmp_path):
-    _write(thread_dir(tmp_path, THE_PR) / "PRRT_abcR.json", b"old")
-
-    assert _records(tmp_path).load("json", "PRRT_abcr") is None
-
-
 def test_a_key_that_merely_starts_with_dots_is_a_document_of_its_own(tmp_path):
     _records(tmp_path).save("json", "..PRRT_kwDO", b"mine")
 
@@ -203,31 +187,6 @@ def test_a_key_that_names_no_file_of_its_own_is_refused(tmp_path, key):
 def test_a_kind_that_names_no_file_suffix_is_refused(tmp_path, kind):
     with pytest.raises(ValueError):
         _records(tmp_path).save(kind, KEY, b"{}")
-
-
-STRAY_NAMES = ("PRRT%zz",)
-
-
-@pytest.mark.parametrize("stem", STRAY_NAMES)
-def test_a_file_no_writer_of_ours_named_is_read_where_it_lies(tmp_path, stem):
-    _write(thread_dir(tmp_path, THE_PR) / f"{stem}.intent", b"approve")
-    records = _records(tmp_path)
-
-    key, = records.list("intent")
-
-    assert records.load("intent", key) == b"approve"
-
-
-@pytest.mark.parametrize("stem", STRAY_NAMES)
-def test_a_file_no_writer_of_ours_named_is_deleted_where_it_lies(tmp_path, stem):
-    stray = _write(thread_dir(tmp_path, THE_PR) / f"{stem}.intent", b"approve")
-    records = _records(tmp_path)
-
-    key, = records.list("intent")
-    records.delete("intent", key)
-
-    assert not stray.exists()
-    assert records.list("intent") == {}
 
 
 def test_a_save_that_dies_mid_write_keeps_the_document_that_was_there(

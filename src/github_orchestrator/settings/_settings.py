@@ -111,6 +111,14 @@ class Settings:
         return self.data_dir / "restart-all.lock"
 
     @property
+    def layout_marker(self) -> Path:
+        return self.data_dir / "layout.json"
+
+    @property
+    def layout_lock(self) -> Path:
+        return self.data_dir / "layout.lock"
+
+    @property
     def restarts_held(self) -> Path:
         return self.data_dir / "restarts-held"
 

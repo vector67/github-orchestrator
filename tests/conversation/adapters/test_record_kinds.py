@@ -19,6 +19,7 @@ from tests.conversation.support import (
     world,
 )
 from tests.disk_layout import (
+    disk_name,
     thread_action_file,
     thread_dir,
     thread_file,
@@ -132,16 +133,6 @@ def test_a_reply_whose_file_will_not_open_asks_nothing(tmp_path, threads):
     assert conversation.operations == known
 
 
-@pytest.mark.parametrize("stem", ["PRRT%zz", "PRRT%"])
-def test_a_decision_no_writer_of_ours_named_is_cleared_where_it_lies(tmp_path, here, stem):
-    stray = thread_dir(tmp_path, THE_PR) / f"{stem}.intent"
-    _left(stray, "approve")
-
-    drain(here.threads())
-
-    assert not stray.exists()
-
-
 def test_an_action_whose_bytes_will_not_decode_is_no_last_action(tmp_path, threads):
     _left(thread_action_file(tmp_path, THE_PR, KEY), b"\xff")
 
@@ -157,14 +148,14 @@ def _arrived(threads) -> list[int | None]:
 @pytest.mark.parametrize("text", ["{", "[1, 2]"])
 def test_a_cursor_that_holds_no_object_is_a_pr_never_polled(tmp_path, here, text):
     on_github(here.github, KEY, said(101, "rename it"))
-    _left(thread_dir(tmp_path, THE_PR) / "poll.cursor", text)
+    _left(thread_dir(tmp_path, THE_PR) / f"{disk_name('poll')}.cursor", text)
 
     assert _arrived(here.threads()) == []
 
 
 def test_a_cursor_that_reads_announces_what_arrived_since(tmp_path, here):
     on_github(here.github, KEY, said(101, "rename it"))
-    _left(thread_dir(tmp_path, THE_PR) / "poll.cursor", "{}")
+    _left(thread_dir(tmp_path, THE_PR) / f"{disk_name('poll')}.cursor", "{}")
 
     assert _arrived(here.threads()) == [101]
 
@@ -172,9 +163,9 @@ def test_a_cursor_that_reads_announces_what_arrived_since(tmp_path, here):
 @pytest.mark.parametrize("text", ["{not json", "[1, 2]"])
 def test_a_review_that_will_not_read_is_passed_over(tmp_path, here, text):
     base = thread_dir(tmp_path, THE_PR)
-    _left(base / "op_good.review", json.dumps(
+    _left(base / f"{disk_name('op_good')}.review", json.dumps(
         {"id": "op_good", "verdict": "APPROVE", "state": "pending"}))
-    _left(base / "op_bad.review", text)
+    _left(base / f"{disk_name('op_bad')}.review", text)
 
     assert [review.id for review in here.threads().reviews()] == ["op_good"]
 

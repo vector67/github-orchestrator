@@ -8,6 +8,7 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     DismissUntil,
     FieldRefusal,
+    FolderInUse,
     Held,
     ManagerStanding,
     MentionsListing,
@@ -229,6 +230,23 @@ class FakeHarvestSetup:
     def prepare(self) -> Path | str:
         self.prepared += 1
         return self.answer
+
+
+class FakeNamesMigration:
+    def __init__(self, in_the_way: list[FolderInUse] | None = None) -> None:
+        self.held = list(in_the_way or [])
+        self.closed = 0
+
+    def migrated(self) -> bool:
+        return not self.held
+
+    def in_the_way(self) -> list[FolderInUse]:
+        return list(self.held)
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]:
+        self.closed += 1
+        self.held = []
+        return []
 
 
 @dataclass

@@ -30,6 +30,18 @@ def test_update_installs_the_newest_release_and_restarts_every_instance(machine,
     assert ran.out.splitlines()[0].endswith(f", newest {NEWER}.")
 
 
+def test_update_with_force_has_the_restart_close_the_sessions_in_the_migration_s_way(
+    machine, run_cli,
+):
+    machine.releases_api.publish(NEWER)
+
+    ran = run_cli("update", "--force")
+
+    assert ran.code == 0, ran.out + ran.err
+    assert [call.cmd[1:] for call in machine.system.calls if call.cmd[0] == machine.python] == [
+        ["-m", "github_orchestrator.cli", "start", "--from-installer", "--force"]]
+
+
 def test_update_with_nothing_newer_says_so_and_installs_nothing(machine, run_cli):
     machine.releases_api.publish(OLDER)
 

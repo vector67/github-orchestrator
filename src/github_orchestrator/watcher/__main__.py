@@ -6,10 +6,16 @@ from pathlib import Path
 
 from github_orchestrator.domain import HubState
 from github_orchestrator.settings import ConfigFile, Logs, Process
+from github_orchestrator.thread_names import HeldFolder, NameMigration
 from github_orchestrator.watcher import Watcher
 from github_orchestrator.wiring import make_container
 
 log = logging.getLogger(__name__)
+
+
+def in_the_way(held: list[HeldFolder]) -> str:
+    return "; ".join(f"a terminal session is in {one.folder}, the folder of {one.pr}'s thread "
+                     f"{one.thread}" for one in held)
 
 
 def main() -> None:
@@ -56,9 +62,19 @@ def main() -> None:
         print("Another watcher instance is running, skipping")
         sys.exit(0)
 
+    migration = container.get(NameMigration)
+    held = migration.migrate() if not args.dry_run and state is HubState.WATCHING else []
+    if held:
+        log.warning("waiting to migrate thread names: %s", in_the_way(held))
+    if held and not args.loop:
+        print(f"The thread names cannot migrate yet: {in_the_way(held)}", file=sys.stderr)
+        sys.exit(1)
+
     if args.loop:
         try:
             if state is HubState.WATCHING:
+                if held:
+                    watcher.wait_to_migrate(lambda: bool(migration.migrate()))
                 watcher.run_forever()
             else:
                 watcher.wait_in(state, config_file.state)

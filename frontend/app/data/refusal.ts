@@ -24,7 +24,12 @@ export class Refusal extends Error {
 
 export class Abandoned extends Error {}
 
-const UNHELD = ['watcher-starting', 'watcher-failing', 'not-watching'] as const;
+const UNHELD = [
+  'watcher-starting',
+  'watcher-failing',
+  'not-watching',
+  'waiting-to-migrate',
+] as const;
 
 export type Unheld = (typeof UNHELD)[number];
 

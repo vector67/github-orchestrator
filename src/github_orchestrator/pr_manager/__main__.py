@@ -7,6 +7,7 @@ from pathlib import Path
 from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.pr_manager import ManagedPr, PrManager
 from github_orchestrator.settings import ConfigFile, Logs, Process
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.wiring import make_container
 
 log = logging.getLogger(__name__)
@@ -25,6 +26,11 @@ def main() -> None:
     if problem is not None:
         log.error("agent manager for %s not started: %s", pr, problem)
         print(problem, file=sys.stderr)
+        sys.exit(2)
+    held = container.get(NameMigration).migrate()
+    if held:
+        log.error("agent manager for %s not started: the thread names have not migrated, as "
+                  "terminal sessions are in %s", pr, ", ".join(one.folder for one in held))
         sys.exit(2)
     container.get(PrManager).run()
 

@@ -42,6 +42,7 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     Dashboards,
     Emojis,
+    FolderInUse,
     HarvestSetup,
     Holdings,
     KeptReviews,
@@ -49,6 +50,7 @@ from github_orchestrator.board_api.interface import (
     ManagerStanding,
     Mentionable,
     MentionsList,
+    NamesMigration,
     ServerApp,
     SetupDesk,
     Shelves,
@@ -182,6 +184,9 @@ from github_orchestrator.settings._switches import (
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
 from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
+from github_orchestrator.thread_names import HeldFolder, NameMigration
+from github_orchestrator.thread_names._gate import LockedNameMigration
+from github_orchestrator.thread_names._pass import ThreadNames
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
 from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
@@ -557,17 +562,12 @@ class WorkingCopiesProvider(Provider):
 
     @provide
     def working_copies(self, wiring: WorkingCopiesWiring, pull_requests: PullRequests,
-                       worktrees: Worktrees, terminals: Terminals) -> WorkingCopies:
-        def in_session(worktree: str) -> bool:
-            return any(session.worktree == worktree for sessions in terminals.everywhere()
-                       for session in sessions.listed())
-
+                       worktrees: Worktrees) -> WorkingCopies:
         return GitWorkingCopies(pull_requests, worktrees,
                                 wiring.mismatched_dir, wiring.worktree_conflicts_dir,
                                 wiring.thread_worktrees_dir, wiring.clones,
                                 grace_seconds=wiring.grace_seconds,
-                                run_idle_seconds=wiring.run_idle_seconds,
-                                in_session=in_session)
+                                run_idle_seconds=wiring.run_idle_seconds)
 
 
 def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
@@ -595,6 +595,59 @@ class ThreadRecordsProvider(Provider):
     @provide
     def thread_records(self, wiring: ThreadRecordsWiring) -> ThreadRecords:
         return DiskThreadRecords(wiring.threads_dir)
+
+
+def _in_use(held: list[HeldFolder]) -> list[FolderInUse]:
+    return [FolderInUse(one.pr, one.thread, one.folder) for one in held]
+
+
+class BoardNamesMigration:
+    def __init__(self, migration: NameMigration) -> None:
+        self._migration = migration
+
+    def migrated(self) -> bool:
+        return self._migration.migrated()
+
+    def in_the_way(self) -> list[FolderInUse]:
+        return _in_use(self._migration.held())
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]:
+        self._migration.close_sessions()
+        return _in_use(self._migration.migrate())
+
+
+@dataclass(frozen=True)
+class ThreadNamesWiring(Wiring):
+    marker: Path
+    lock: Path
+    version: str | None
+    threads_dir: Path
+    thread_worktrees_dir: Path
+    clones: Mapping[Repo, Path] | None
+
+
+@wires(ThreadNamesWiring)
+class ThreadNamesProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=ThreadNamesWiring, scope=Scope.APP)
+
+    @provide
+    def name_migration(self, wiring: ThreadNamesWiring, terminals: Terminals) -> NameMigration:
+        names = None if wiring.clones is None else ThreadNames(
+            wiring.threads_dir, wiring.thread_worktrees_dir, wiring.clones)
+        return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, names,
+                                   terminals)
+
+    @provide
+    def names_migration(self, migration: NameMigration) -> NamesMigration:
+        return BoardNamesMigration(migration)
+
+
+def thread_names_wiring(settings: Settings, version: str | None) -> ThreadNamesWiring:
+    clones = None if settings.problem is not None else {
+        repo: clone.path for repo, clone in settings.repos.items()}
+    return ThreadNamesWiring(settings.layout_marker, settings.layout_lock, version,
+                             settings.threads_dir, settings.thread_worktrees_dir, clones)
 
 
 @dataclass(frozen=True)
@@ -1067,7 +1120,8 @@ class ServerAppProvider(Provider):
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
-                   lane: SummaryLane, shelves: ThreadRecords) -> ServerApp:
+                   lane: SummaryLane, shelves: ThreadRecords,
+                   migration: NamesMigration) -> ServerApp:
         from github_orchestrator.board_api._one_server import OneServer
         return OneServer(app_root=wiring.app_root, font_dir=wiring.font_dir,
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
@@ -1078,7 +1132,7 @@ class ServerAppProvider(Provider):
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
                          summaries=summaries, lane=lane, shelves=shelves,
-                         check_presence=wiring.check_presence,
+                         migration=migration, check_presence=wiring.check_presence,
                          first_names_only=wiring.first_names_only,
                          heartbeat_seconds=wiring.heartbeat_seconds,
                          check_seconds=wiring.check_seconds)
@@ -1281,7 +1335,7 @@ class ContainerInstances:
                         container.get(InstanceChecks), container.get(ConfigFile),
                         container.get(Settings).data_dir, container.get(ServerControl),
                         container.get(Logs).path(Process.SERVER), container.get(CliConfig).hub_url,
-                        container.get(HubHealth))
+                        container.get(HubHealth), container.get(NameMigration))
 
 
 @dataclass(frozen=True)
@@ -1614,6 +1668,25 @@ class PreviewHubProvider(Provider):
                               token=None, address=API)
 
 
+class NothingToMigrate:
+    def migrated(self) -> bool:
+        return True
+
+    def in_the_way(self) -> list[FolderInUse]:
+        return []
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]:
+        return []
+
+
+class PreviewNamesProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def names_migration(self) -> NamesMigration:
+        return NothingToMigrate()
+
+
 def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                       repo: Repo, local_path: Path, github: PreviewGitHub, desktop: Desktop,
                       agent_runs: PreviewAgentRuns, pr_processes: PrProcesses,
@@ -1637,6 +1710,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         replace(summary_lane_wiring(settings, ()), agents_enabled=False),
         conversation_wiring(settings),
         MentionsProvider,
+        PreviewNamesProvider,
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
         ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
@@ -1681,6 +1755,7 @@ def make_container(env: Mapping[str, str], home: Path,
         notifications_wiring(settings),
         working_copies_wiring(settings),
         thread_records_wiring(settings),
+        thread_names_wiring(settings, installed_version()),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
         summary_lane_wiring(settings, clamp),

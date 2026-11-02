@@ -10,6 +10,7 @@ from starlette.types import ASGIApp
 
 from github_orchestrator.board_api.interface import ServerApp
 from github_orchestrator.settings import Logs, Process
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.wiring import make_container
 
 log = logging.getLogger(__name__)
@@ -36,5 +37,6 @@ class Worker:
         container.get(Logs).configure_logging(Process.SERVER)
         threading.Thread(target=_leave_once_orphaned, args=(self.pid, self.orphan_check_seconds), daemon=True,
                          name="orphan-check").start()
+        container.get(NameMigration).migrate()
         server: ServerApp = container.get(ServerApp)
         return server.app(self.port, self.pid)
