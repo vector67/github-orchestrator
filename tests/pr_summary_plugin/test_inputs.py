@@ -192,11 +192,30 @@ def test_implementation_also_gets_the_unchanged_production_code_with_its_comment
                 (into / path).parent.mkdir(parents=True, exist_ok=True)
                 (into / path).write_text(text)
 
-    write_surroundings(tmp_path, [ChangedFile("src/toolbar.py", None, "modified", 2)], Settings(), export)
+    write_surroundings([tmp_path], [ChangedFile("src/toolbar.py", None, "modified", 2)], Settings(), export)
 
     repo = tmp_path / "repo"
     assert [str(path.relative_to(repo)) for path in repo.rglob("*") if path.is_file()] == ["src/flags.py"]
     assert (repo / "src/flags.py").read_text() == head["src/flags.py"]
+
+
+def test_every_reader_shares_one_export_of_the_unchanged_code(tmp_path: Path) -> None:
+    exports: list[Path] = []
+
+    def export(into: Path, keep: Callable[[str], bool]) -> None:
+        exports.append(into)
+        (into / "src").mkdir(parents=True)
+        (into / "src/flags.py").write_text("exports = True\n")
+
+    implementation, primer = tmp_path / "implementation", tmp_path / "primer"
+    implementation.mkdir()
+    primer.mkdir()
+
+    write_surroundings([implementation, primer], [], Settings(), export)
+
+    assert len(exports) == 1
+    assert (primer / "repo/src/flags.py").read_text() == "exports = True\n"
+    assert (primer / "repo/src/flags.py").stat().st_ino == (implementation / "repo/src/flags.py").stat().st_ino
 
 
 def test_a_renamed_file_diffs_against_its_previous_path(tmp_path: Path) -> None:

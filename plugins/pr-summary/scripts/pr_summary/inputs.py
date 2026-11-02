@@ -1,4 +1,6 @@
 import difflib
+import os
+import shutil
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -225,9 +227,12 @@ def write_inputs(
     return manifest
 
 
-def write_surroundings(folder: Path, files: list[ChangedFile], settings: Settings, export: Export) -> None:
+def write_surroundings(folders: list[Path], files: list[ChangedFile], settings: Settings, export: Export) -> None:
     changed = {changed.path for changed in files}
-    export(folder / "repo", lambda path: path not in changed and kind_of(path, settings) == "production")
+    exported, *sharing = [folder / "repo" for folder in folders]
+    export(exported, lambda path: path not in changed and kind_of(path, settings) == "production")
+    for repo in sharing:
+        shutil.copytree(exported, repo, copy_function=os.link)
 
 
 def _earlier_lines(earlier_pr: EarlierPr, authors: frozenset[str], settings: Settings) -> list[str]:

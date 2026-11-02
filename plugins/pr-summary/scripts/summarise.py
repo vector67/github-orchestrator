@@ -100,8 +100,7 @@ def main() -> None:
     if arguments.earlier_primer:
         shutil.copy(arguments.earlier_primer, manifest["primer"] / "earlier_primer.json")
     if clone is not None:
-        for reader in ("implementation", "primer"):
-            write_surroundings(manifest[reader], files, settings, functools.partial(clone.export, pr.head_sha))
+        write_surroundings([manifest["implementation"], manifest["primer"]], files, settings, functools.partial(clone.export, pr.head_sha))
     if arguments.prepare_only:
         print(f"Working files: {out}")
         return
