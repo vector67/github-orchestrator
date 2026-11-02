@@ -56,11 +56,16 @@ that a silent run's last words are kept.
 07. **Actions.** Two: **Answer in a session** and **Drop…**. Send back for
     rework, approve and the rest are not offered on a question.
 
-08. **Answering.** Answer opens a live session in the thread's worktree that
-    continues the agent's last conversation there (`claude --continue`, as the
-    PR carry-on run already does headless; Codex `resume`). The session and the
-    fix run must use the same agent config directory, or there is nothing to
-    continue. While it is open the bar shows "Go to the session".
+08. **Answering.** Every fix run stores the id of the agent session it ran in
+    on the thread (Claude's `session_id` from its stream, Codex's thread id).
+    Answer opens a live session in the thread's worktree that resumes that id
+    (`claude --resume <id>`, Codex `resume <id>`), never "the newest
+    conversation in the directory", which a reply re-run or another session in
+    the same worktree would change. A session that runs inside the answer
+    (item 09) stores its own id the same way. The session and the fix run must
+    use the same agent config directory, or there is nothing to resume.
+    Unproven until tried: an interactive resume of a finished headless run's
+    id. While it is open the bar shows "Go to the session".
 
 09. **When the session ends.** Reported `ready`, `reply`, `ticket` or `ask`:
     that report applies (a new `ask` replaces the question). Ended with no
@@ -78,7 +83,7 @@ that a silent run's last words are kept.
       discarded.
 
 11. **A reviewer reply while asking.** With no session open it re-runs the
-    agent: a headless continue of the same conversation with the reply. The
+    agent: a headless resume of the stored session id with the reply. The
     run reports, asks again, or ends silent, which goes back to `asking`.
 
 12. **A reviewer reply during the answer session.** Nothing is typed into the
