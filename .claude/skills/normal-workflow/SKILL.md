@@ -5,17 +5,26 @@ description: Use for any change to this repository — the branch, worktree, tes
 
 # Normal workflow
 
+The change lands on a target branch: `main`, unless the caller names another,
+such as a release's `release-X.Y.Z`. A change that lands on another target is
+merged into `main` straight after, so `main` never lacks a fix the release has.
+
 1. Open a GitHub issue for the task with `gh issue create`, unless the task already
    came from one (as through `next-issue`): a title naming the change, and a body
    that starts with 🤖 and restates the ask. Note its number for the last step.
+
 2. Cut an isolated workspace through the `using-git-worktrees` skill — never edit
-   or commit on `main`. It prefers the harness's own worktree tool, which puts the
+   or commit on `main` or the target. It prefers the harness's own worktree tool, which puts the
    tree under `.claude/worktrees/<branch>`; drop to `git worktree add` only where
    that skill says to. A worktree under `.claude/` is gitignored, so it cannot
    show up as untracked clutter in `git status` the way a sibling `../gho-<slug>`
    does. The harness branches the tree from `origin/main`, which lags the local
    `main` that sessions merge into without pushing, so run
-   `git merge --ff-only main` in the new tree before the first edit.
+   `git merge --ff-only main` in the new tree before the first edit. For another
+   target, cut the tree from the target instead:
+   `git worktree add .claude/worktrees/<name> -b <name> <target>`, then
+   `EnterWorktree` with its `path`.
+
 3. Do the work you have been instructed to do. If the work is a refactor, load the
    `refactor` skill first. Run `make lint-python` and `make test-python` before
    each commit, and the full `make lint` and `make test` when anything under
@@ -27,29 +36,40 @@ description: Use for any change to this repository — the branch, worktree, tes
    you have run it as the system runs it, or in a subagent given the same prompt
    and inputs, and seen the requested behaviour change in its output: lint and
    tests never run a prompt.
+
 4. Commit with a lowercase imperative subject and no prefix, no co-author trailer.
-5. Check the branch for private information before it reaches `main`: the repo is
-   public, and whatever merges is pushed. Read `git diff main...<branch>` and
-   `git log main..<branch>` for anything CLAUDE.md's public rule forbids — the
+
+5. Check the branch for private information before it reaches the target: the
+   repo is public, and whatever merges is pushed. Read `git diff <target>...<branch>`
+   and `git log <target>..<branch>` for anything CLAUDE.md's public rule forbids — the
    employer, clients, colleagues, ticket keys, home or temp paths, real emails,
    secrets, private claude.ai links, real node ids, PRs or comments copied from
    work — and fix each finding in the worktree. `git rev-list --max-parents=0 <branch>`
    must print only `d9021cb5977b00acf1e6aa9a3b2f8387b8e7c510`: a branch cut before the public commit
    carries the old history, and merging it publishes that history.
-6. Merge into `main` only a tree that has already passed. In the worktree, first
-   read `git diff --stat main...<branch>` and the pass count each check printed:
+
+6. Merge into the target only a tree that has already passed. In the worktree, first
+   read `git diff --stat <target>...<branch>` and the pass count each check printed:
    a deletion you did not intend, or a count that fell in a commit that only adds
    tests, is a failed check even though every run was green. A count that fell
    because tests went with the API they covered passes only when the commit
    message names each deleted test and what made it impossible. Then catch up with
-   `main`, which other sessions commit to too:
-   `git merge main -m "merge main into the <thing>"`, rerun
+   the target, which other sessions commit to too:
+   `git merge <target> -m "merge <target> into the <thing>"`, rerun
    `make lint` and `make test`, and commit any fix in the worktree. A worktree
    session cannot reach the main checkout: the isolation guard refuses
    `git -C <main checkout>`. Leave with `ExitWorktree` and `action: "keep"`, then
    `git merge --ff-only <branch>` — `EnterWorktree` names the branch
    `worktree-<name>`. When `--ff-only` refuses, `main` moved again: re-enter the
    worktree with `EnterWorktree` and its `path`, and catch up again.
+
+   For another target, nothing checks it out, so land the branch from the main
+   checkout with `git fetch . <branch>:<target>`, which like `--ff-only` refuses
+   anything but a fast-forward. Then merge it into `main` the same way: re-enter
+   the worktree, `git merge main -m "merge <target> into main"`, rerun
+   `make lint` and `make test`, leave, and `git merge --ff-only <branch>`. That
+   merge stays off the target, so the release never picks up what `main` gained.
+
 7. `make restart-all` — always, even for a one-line change. It syncs, rebuilds the
    front end and restarts the watcher and the agent managers, so what you merged is
    what is running. Skip it and the board keeps serving the old build. "Managers
@@ -61,9 +81,11 @@ description: Use for any change to this repository — the branch, worktree, tes
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
    fresh agent diagnose it from what the change produced.
+
 8. Remove the workspace the way the `using-git-worktrees` skill made it, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once
    `git branch --merged main` lists it).
+
 9. Close the issue with `gh issue close <n>` once the merge has passed step 7,
    unless a pushed `Closes #<n>` already closed it. Prove it with
    `gh issue view <n> --json state`. A merge that delivers only a spec or a plan
