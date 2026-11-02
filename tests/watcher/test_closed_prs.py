@@ -118,6 +118,18 @@ def test_an_open_pr_i_am_not_engaged_in_is_torn_down_as_no_longer_relevant(setti
     assert event == closed(merged=False, no_longer_relevant=True)
 
 
+def test_an_open_pr_i_took_over_is_kept_once_my_review_request_is_withdrawn(settings, capsys):
+    _polled(settings, REPO, 64)
+    disk_change_detection(settings.state_dir).take_over(a_pr(64, REPO))
+    github = _github(settings, (REPO, 64, "OPEN", False, False))
+
+    out = _cycle(settings, capsys, github)
+
+    assert "0 torn down" in out
+    assert disk_change_detection(settings.state_dir).closing(a_pr(64, REPO)) is False
+    assert _closed(settings, REPO, 64) == []
+
+
 def test_a_closed_pr_is_queued_for_teardown(settings, capsys):
     _polled(settings, REPO, 59)
     github = _github(settings, (REPO, 59, "CLOSED", False, False))

@@ -140,7 +140,7 @@ def _hub(run_cli):
 
 
 def test_status_gives_the_address_of_the_hub_a_live_watcher_serves(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _beat(machine, 42)
     with _lock(machine):
         assert _hub(run_cli) == "Hub: http://127.0.0.1:8720, watching 1 repo"
@@ -148,32 +148,32 @@ def test_status_gives_the_address_of_the_hub_a_live_watcher_serves(machine, run_
 
 def test_status_gives_the_hub_on_the_port_the_config_names(machine, run_cli):
     machine.configure("hub_port = 9100\n")
-    machine.answering_hubs.add("http://127.0.0.1:9100")
+    machine.serving("http://127.0.0.1:9100")
     _beat(machine, 42)
     with _lock(machine):
         assert _hub(run_cli) == "Hub: http://127.0.0.1:9100, watching 1 repo"
 
 
 def test_a_hub_that_answers_is_up_while_its_watcher_fails_every_cycle(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _fail(machine, "gh: not logged in", times=40)
     assert _hub(run_cli) == "Hub: http://127.0.0.1:8720, watching 1 repo"
 
 
 def test_a_hub_that_answers_is_up_whatever_the_watcher_lock_says(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _beat(machine, 90)
     assert _hub(run_cli) == "Hub: http://127.0.0.1:8720, watching 1 repo"
 
 
 def test_a_hub_that_answers_has_its_watcher_running_whatever_the_lock_says(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _beat(machine, 42)
     assert _health(run_cli) == "Watcher: alive, last polled 42s ago"
 
 
 def test_status_first_names_the_version_the_hub_runs_and_the_instance(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     assert run_cli("status").out.splitlines()[0] == "github-orchestrator 0.4.0 (default instance)"
 
@@ -186,7 +186,7 @@ def test_status_names_this_command_s_version_when_no_hub_answers(machine, run_cl
 def test_status_names_another_instance_by_its_name(machine, run_cli):
     machine.instance = "work"
     machine.configure()
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     assert run_cli("status").out.splitlines()[0] == "github-orchestrator 0.4.0 (instance work)"
 
@@ -194,7 +194,7 @@ def test_status_names_another_instance_by_its_name(machine, run_cli):
 def test_status_says_a_hub_in_setup_and_what_its_config_lacks(machine, run_cli):
     machine.config_path.write_text("")
     machine.hub_state = "setup"
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     hub = _hub(run_cli)
 
@@ -205,7 +205,7 @@ def test_status_says_a_hub_in_setup_and_what_its_config_lacks(machine, run_cli):
 def test_status_says_a_hub_whose_config_does_not_parse_is_broken(machine, run_cli):
     machine.configure("claud_enabled = false\n")
     machine.hub_state = "broken"
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     hub = _hub(run_cli)
 
@@ -217,6 +217,19 @@ def test_a_running_watcher_whose_hub_does_not_answer_says_so(machine, run_cli):
     _beat(machine, 42)
     with _lock(machine):
         assert _hub(run_cli) == "Hub: http://127.0.0.1:8720 — not answering"
+
+
+def test_a_hub_this_instance_s_server_does_not_run_is_named_as_another_one(machine, run_cli):
+    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.hub_pid = 99
+
+    ran = run_cli("status")
+
+    assert _hub(run_cli) == (
+        "Hub: http://127.0.0.1:8720 — another hub answers there (pid 99), not this instance's "
+        f"server; set hub_port in {machine.config_path} to a free port")
+    assert _health(run_cli) == "Watcher: not running, no poll recorded yet"
+    assert ran.code == 1
 
 
 def test_the_hub_is_down_while_the_watcher_is_not_running(machine, run_cli):
@@ -270,13 +283,13 @@ def test_a_linux_watcher_is_resident_so_its_lock_says_whether_it_runs(machine, r
 def test_a_watcher_whose_hub_is_in_setup_polls_nothing(machine, run_cli):
     machine.config_path.write_text("")
     machine.hub_state = "setup"
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     assert _health(run_cli) == "Watcher: running, polling nothing until the config is complete"
 
 
 def test_status_exits_0_while_the_hub_watches_and_the_watcher_polls(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _beat(machine, 42)
 
     assert run_cli("status").code == 0
@@ -291,20 +304,20 @@ def test_status_exits_1_when_no_hub_answers(machine, run_cli):
 def test_status_exits_1_while_the_hub_is_in_setup(machine, run_cli):
     machine.config_path.write_text("")
     machine.hub_state = "setup"
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     assert run_cli("status").code == 1
 
 
 def test_status_exits_1_while_every_cycle_fails(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _fail(machine, "gh: not logged in", times=4)
 
     assert run_cli("status").code == 1
 
 
 def test_status_exits_1_when_the_watcher_stopped_polling(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     _beat(machine, 720)
 
     assert run_cli("status").code == 1
@@ -315,7 +328,7 @@ UPDATE = "Update available: 0.6.0. Run github-orchestrator update."
 
 def test_status_says_an_update_is_available_when_the_hub_has_seen_a_newer_release(
         machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     machine.newest_release = {"version": "0.6.0", "checked_at": "2026-09-24T08:00:00+00:00",
                               "newer": True}
 
@@ -324,7 +337,7 @@ def test_status_says_an_update_is_available_when_the_hub_has_seen_a_newer_releas
 
 
 def test_status_says_nothing_of_a_release_that_is_not_newer(machine, run_cli):
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     machine.newest_release = {"version": "0.4.0", "checked_at": "2026-09-24T08:00:00+00:00",
                               "newer": False}
 
@@ -333,7 +346,7 @@ def test_status_says_nothing_of_a_release_that_is_not_newer(machine, run_cli):
 
 def test_with_the_daily_check_off_status_asks_github_itself(machine, run_cli):
     machine.configure("check_for_updates = false\n")
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     machine.releases_api.publish("0.6.0")
 
     assert run_cli("status").out.splitlines()[1] == UPDATE
@@ -342,6 +355,6 @@ def test_with_the_daily_check_off_status_asks_github_itself(machine, run_cli):
 def test_with_the_daily_check_off_and_github_unreachable_status_says_nothing_of_updates(
         machine, run_cli):
     machine.configure("check_for_updates = false\n")
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
 
     assert "Update available" not in run_cli("status").out
