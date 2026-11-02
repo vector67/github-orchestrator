@@ -164,7 +164,8 @@ class OperatorCli:
 
     def _open(self, page: str) -> None:
         open_board(self._service, self._config.hub_url, self._hub_health, self._sleep,
-                   self._desktop, graphical=self._config.graphical, page=page)
+                   self._desktop, self._server, self._config_file.location(),
+                   graphical=self._config.graphical, page=page)
 
     def _dispatch(self, argv: list[str]) -> None:
         config = self._config

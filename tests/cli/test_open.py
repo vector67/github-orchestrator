@@ -15,7 +15,7 @@ def test_open_opens_the_board_of_a_running_watcher_and_prints_where_it_is(
 
 
 def test_open_starts_a_watcher_that_is_not_running_and_waits_for_its_hub(machine, run_cli):
-    machine.while_asleep.append(lambda: machine.answering_hubs.add(HUB))
+    machine.while_asleep.append(lambda: machine.serving(HUB))
 
     ran = run_cli("open")
 
@@ -45,7 +45,7 @@ def test_open_on_a_linux_without_a_graphical_session_only_prints_the_address(mac
     machine.platform = "linux"
     machine.graphical = False
     machine.system.units["github-orchestrator.service"] = "active"
-    machine.answering_hubs.add(HUB)
+    machine.serving(HUB)
 
     ran = run_cli("open")
 
