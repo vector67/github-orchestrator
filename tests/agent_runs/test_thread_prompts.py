@@ -163,6 +163,18 @@ def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_wor
     assert session.kept
 
 
+def test_a_reply_while_asking_continues_the_agent_s_conversation_with_the_reply(
+        runs, claude, worktree):
+    reply = FixComment("reviewer", "Use clock_timestamp() in production too.",
+                       "2026-08-28T12:00:00Z")
+
+    prompt = _ran(runs, claude, runs.carry_on_thread(_fix(worktree, replies=(reply,))))
+
+    assert "--continue" in claude.spawned[-1].argv
+    assert "reviewer: Use clock_timestamp() in production too." in prompt
+    assert {verb for verb, _ in invocations(prompt)} == {"ready", "ask"}
+
+
 SKIPPED_AS = "risky|acknowledgement|needs-human"
 REPLIED_AS = "unclear|out-of-scope|already-done|question"
 

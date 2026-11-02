@@ -207,6 +207,9 @@ UNREPORTED = ("ended without reporting a filed ticket; look for it in the tracke
 REOPENED_BY_A_REPLY = (WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE, CONFIRMED, REMOVED,
                        DEFERRED, REJECTED, RESOLVED)
 
+REPLIED_WHILE_ASKING = ("A new reply arrived on the thread while you waited for the "
+                        "author to answer your question.")
+
 FOLLOW_UP_NOTE = ("A new reply arrived on the thread while the last attempt "
                   "was being made. Change the attempt so it answers the "
                   "replies below as well.")
@@ -619,9 +622,23 @@ def _proposed_by_exit(conversation: Conversation, head: Sha, note: str,
                               tests_note=note, reason=None, last_words=command.last_words))
 
 
+def _carried_on_with_the_reply(conversation: Conversation) -> Accepted:
+    brief = Brief(note=REPLIED_WHILE_ASKING, include=_repliers(conversation))
+    return Accepted(with_fix(conversation, state=QUEUED, started_at=None, decision_error=None,
+                             run=Run(kind=OperationKind.REWORK, brief=brief, resumes=True)))
+
+
+def _still_asking(conversation: Conversation) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(conversation, state=ASKING, started_at=None,
+                             attempts=max(fix.attempts - 1, 0)))
+
+
 def _run_exited(conversation: Conversation, command: RunExited) -> Accepted:
     fix = conversation.fix
     head = command.head
+    if fix.run.resumes and fix.question is not None:
+        return _still_asking(conversation)
     if fix.run.is_rebase:
         if head is not None and head != fix.run.onto and command.descends:
             return _proposed_by_exit(
@@ -1176,6 +1193,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _land(conversation, command)
         case Approve():
             return _approve(conversation, command)
+        case First() if conversation.fix.is_asking:
+            return _carried_on_with_the_reply(conversation)
         case First():
             return _first(conversation)
         case Rebase():

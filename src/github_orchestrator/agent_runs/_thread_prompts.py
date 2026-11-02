@@ -502,6 +502,23 @@ def _included_replies(wanted: tuple[FixComment, ...]) -> list[str]:
     ]
 
 
+def carry_on_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
+    return "\n".join([
+        "While you waited for the author to answer your question, a new reply arrived "
+        "on the thread:",
+        "",
+        *(f"{comment.author_name or comment.author}: {comment.body}"
+          for comment in fix.replies),
+        "",
+        "If it settles your question, carry on from where you stopped and report as "
+        "before:",
+        _ready(commands, fix, FULL_SHA, "<one line: what changed>"),
+        "",
+        "If it does not, ask again, saying what the reply changed:",
+        _ask(commands, fix),
+    ])
+
+
 def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
                   workers: int) -> str:
     pr = fix.pr

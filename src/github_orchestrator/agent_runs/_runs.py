@@ -50,6 +50,7 @@ from github_orchestrator.agent_runs._summary_prompts import (
 )
 from github_orchestrator.agent_runs._tail import iter_lines_reverse
 from github_orchestrator.agent_runs._thread_prompts import (
+    carry_on_prompt,
     filing_prompt,
     fix_rebase_prompt,
     rework_prompt,
@@ -415,6 +416,10 @@ class AgentRuns:
 
     def file_ticket(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, filing_prompt(self._commands, fix))
+
+    def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
+        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}",
+                           carry_on_prompt(self._commands, fix), continuing=True)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,

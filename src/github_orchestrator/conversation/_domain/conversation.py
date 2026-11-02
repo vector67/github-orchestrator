@@ -312,6 +312,7 @@ class Run:
     onto: Sha | None = None
     conflict: str | None = None
     brief: Brief | None = None
+    resumes: bool = False
 
     @property
     def is_rebase(self) -> bool:

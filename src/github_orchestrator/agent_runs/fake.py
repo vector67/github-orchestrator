@@ -105,6 +105,11 @@ class Reworking:
 
 
 @dataclass(frozen=True)
+class CarryingOnThread:
+    fix: ThreadFix
+
+
+@dataclass(frozen=True)
 class FilingTicket:
     fix: ThreadFix
 
@@ -116,7 +121,7 @@ class Session:
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
-        | Reworking | FilingTicket)
+        | Reworking | CarryingOnThread | FilingTicket)
 
 
 @dataclass(frozen=True)
@@ -350,6 +355,9 @@ class FakeAgentRuns:
 
     def rework(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, Reworking(fix))
+
+    def carry_on_thread(self, fix: ThreadFix) -> FakeRun | str:
+        return self._fix_thread(fix, CarryingOnThread(fix))
 
     def file_ticket(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, FilingTicket(fix))

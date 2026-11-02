@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
+from github_orchestrator.agent_runs.fake import CarryingOnThread, FakeAgentRuns, Outcome
 from github_orchestrator.conversation import Conversation, ConversationState, Denied
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -290,6 +290,56 @@ def test_a_question_cannot_be_approved_or_sent_back(bench):
     with bench.threads.editing(KEY) as editable:
         assert isinstance(editable.approve(), Denied)
         assert isinstance(editable.rework(note="try again"), Denied)
+
+
+REPLY = "Use clock_timestamp() in production as well."
+
+
+def _reviewer_replies(bench):
+    on_github(bench.world.github, KEY, said(1, "use one helper for both bounds"),
+              said(2, REPLY))
+    hear(bench.threads)
+
+
+def test_a_reply_while_the_agent_asks_carries_its_conversation_on_with_the_reply(bench):
+    start_run(bench.world, bench.threads)
+    bench.ask()
+    drain(bench.threads)
+    bench.agent_runs.script(Outcome(finishes=False))
+
+    _reviewer_replies(bench)
+    drain(bench.threads)
+
+    assert bench.stored().standing is ConversationState.REWORK
+    resumed = bench.agent_runs.started[-1].work
+    assert isinstance(resumed, CarryingOnThread)
+    assert [reply.body for reply in resumed.fix.replies] == [REPLY]
+
+
+def test_a_carried_on_run_that_ends_without_reporting_asks_the_same_question(bench):
+    start_run(bench.world, bench.threads)
+    bench.ask()
+    drain(bench.threads)
+    _reviewer_replies(bench)
+    drain(bench.threads)
+
+    drain(bench.threads)
+
+    fix = bench.stored().fix
+    assert fix.is_asking
+    assert fix.question.text == QUESTION
+
+
+def test_a_reply_during_an_answer_session_starts_no_run(bench):
+    _asked(bench)
+    _answer(bench)
+    started = len(bench.agent_runs.started)
+
+    _reviewer_replies(bench)
+    drain(bench.threads)
+
+    assert bench.stored().standing is ConversationState.IN_SESSION
+    assert len(bench.agent_runs.started) == started
 
 
 LAST_WORDS = "Every test in the file now fails. Shall I change production, or widen the bound?"

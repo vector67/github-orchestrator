@@ -85,7 +85,9 @@ class ThreadAgents:
         asked = self._asked(conversation, _worktree_of(worktree),
                             skipped=bool(conversation.fix.classification),
                             brief=conversation.fix.run.brief)
-        if kind == OperationKind.REBASE:
+        if conversation.fix.run.resumes:
+            run = self.thread_work.carry_on_thread(asked)
+        elif kind == OperationKind.REBASE:
             run = self.thread_work.rebase_fix(asked, None if onto is None else str(onto))
         elif kind == OperationKind.REWORK:
             run = self.thread_work.rework(asked)
