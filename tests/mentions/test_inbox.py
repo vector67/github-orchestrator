@@ -1,8 +1,13 @@
 import json
+import shutil
 import tomllib
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from github_orchestrator.board_api.interface import (
+    NO_MENTIONS_LISTED,
     ListedMention,
     MentionsList,
     MentionsListing,
@@ -297,5 +302,55 @@ def test_a_listing_whose_start_has_no_time_zone_still_lists_the_mention(tmp_path
         "searched_at": "2026-10-22T09:00:00+00:00", "started": {REPO: "2026-10-21T09:00:00"},
         "mentions": []}))
     _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def _entry(**changed):
+    return {"repo": REPO, "number": 7, "thread": "IC_1", "comment_id": 1, "kind": "issue",
+            "author": "anna", "at": "2026-10-22T10:00:00Z", "body": "@octocat ping",
+            "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "card": False,
+            **changed}
+
+
+@pytest.mark.parametrize("on_disk", [
+    "", '{"searched_at": "2026-10-23T09:00:00+00:00", "ment', "{not json", "[]",
+    json.dumps({"mentions": []}), json.dumps({"searched_at": SEARCHED}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [{"repo": REPO}]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": ["IC_1"]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [_entry(number="7")]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [_entry(repo="widgets")]}),
+])
+def test_the_board_reads_a_damaged_listing_as_no_mentions_listed(tmp_path, on_disk):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(on_disk)
+
+    assert here.container.get(MentionsList).listed() == NO_MENTIONS_LISTED
+
+
+def test_the_board_reads_a_folder_where_the_listing_belongs_as_no_mentions_listed(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").mkdir()
+
+    assert here.container.get(MentionsList).listed() == NO_MENTIONS_LISTED
+
+
+def test_a_listing_whose_started_is_not_a_table_starts_afresh(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(json.dumps({
+        "searched_at": "2026-10-22T09:00:00+00:00", "started": [REPO], "mentions": []}))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def test_the_first_search_writes_its_listing_where_no_data_folder_is_yet(tmp_path):
+    settings = replace(fake_settings(tmp_path / "data", repos=(RepoEntry(Repo.parse(REPO),
+                                                                         str(tmp_path)),)),
+                       config_path=tmp_path / "config.toml")
+    settings.config_path.write_text(f'mentions_start = "{START.isoformat()}"\n')
+    here = world(settings, clock=at(SEARCHED))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    shutil.rmtree(settings.data_dir, ignore_errors=True)
 
     assert _listed_threads(here) == ["IC_1"]

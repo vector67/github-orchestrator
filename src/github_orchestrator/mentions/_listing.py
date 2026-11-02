@@ -27,11 +27,12 @@ def started_before(path: Path) -> dict[str, str] | None:
         started: dict[str, str] = json.loads(path.read_text())["started"]
     except (OSError, ValueError, KeyError, TypeError):
         return None
-    return started
+    return started if isinstance(started, dict) else None
 
 
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
                   mentions: Sequence[Mapping[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     writing = path.with_name(f"{path.name}.writing")
     writing.write_text(json.dumps({"searched_at": searched_at.isoformat(),
                                    "started": dict(started), "mentions": list(mentions)}))
@@ -47,9 +48,21 @@ class ListingFile:
             document = json.loads(self._path.read_text())
         except FileNotFoundError:
             return NO_MENTIONS_LISTED
-        return MentionsListing(searched_at=document["searched_at"], mentions=tuple(
-            ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
-                          thread=entry["thread"], comment_id=entry["comment_id"],
-                          kind=entry["kind"], author=entry["author"], at=entry["at"],
-                          body=entry["body"], url=entry["url"], card=entry["card"])
-            for entry in document["mentions"]))
+        except (OSError, ValueError) as damaged:
+            log.warning("%s will not read, so no mentions are listed: %s", self._path, damaged)
+            return NO_MENTIONS_LISTED
+        try:
+            return MentionsListing(searched_at=document["searched_at"], mentions=tuple(
+                _listed_mention(entry) for entry in document["mentions"]))
+        except (KeyError, TypeError, ValueError) as damaged:
+            log.warning("%s is damaged, so no mentions are listed: %r", self._path, damaged)
+            return NO_MENTIONS_LISTED
+
+
+def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
+    if type(entry["number"]) is not int:
+        raise TypeError(f"the PR number {entry['number']!r} is not a number")
+    return ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
+                         thread=entry["thread"], comment_id=entry["comment_id"],
+                         kind=entry["kind"], author=entry["author"], at=entry["at"],
+                         body=entry["body"], url=entry["url"], card=entry["card"])
