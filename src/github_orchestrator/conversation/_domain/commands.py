@@ -171,6 +171,11 @@ class Stop:
 
 
 @dataclass(frozen=True)
+class DropQuestion:
+    pass
+
+
+@dataclass(frozen=True)
 class Resolve:
     reply: str = ""
     delete_comment: bool = False
@@ -235,6 +240,7 @@ Command = (
     | Retry
     | WriteFix
     | Stop
+    | DropQuestion
     | Resolve
     | Reply
     | EditDraft

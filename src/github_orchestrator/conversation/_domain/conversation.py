@@ -20,6 +20,7 @@ class OperationKind(StrEnum):
     OPEN_SHELL = "open-shell"
     APPROVE = "approve"
     STOP = "stop"
+    DROP_QUESTION = "drop-question"
     RESOLVE = "resolve"
     REJECT = "reject"
     DEFER = "defer"
@@ -242,6 +243,7 @@ class Question:
     text: str
     context: str = ""
     options: tuple[str, ...] = ()
+    head: Sha | None = None
 
 
 @dataclass(frozen=True)
@@ -510,6 +512,7 @@ class Proposal:
     confidence_note: str | None
     tests: str | None
     tests_note: str | None
+    last_words: str | None
 
 
 @dataclass(frozen=True)
@@ -622,7 +625,7 @@ class Conversation:
             base_sha=fix.base_sha, thread_sha=fix.thread_sha, commits=fix.commits,
             summary=fix.summary, agent_note=fix.agent_note,
             confidence=fix.confidence, confidence_note=fix.confidence_note,
-            tests=fix.tests, tests_note=fix.tests_note)
+            tests=fix.tests, tests_note=fix.tests_note, last_words=fix.last_words)
 
     @property
     def posted_by_board(self) -> frozenset[int]:

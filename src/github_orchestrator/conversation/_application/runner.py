@@ -36,6 +36,7 @@ from github_orchestrator.conversation._domain.effects import (
     PostReply,
     Push,
     React,
+    ResetWorkspace,
     ResolveThread,
     StartRun,
     StopRun,
@@ -267,6 +268,11 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             if cut.workspace is None:
                 raise WorkspaceRefused(cut.failure)
             return WorkspaceCut(base_sha=cut.workspace.base_sha)
+        case OpenSession(answers=True):
+            refused = ports.agents.answer_in_session(
+                thread_workspace(ports, conversation).path, conversation)
+            return (None if refused is None
+                    else SessionRefused(reason=refused, back_to=effect.back_to))
         case OpenSession():
             refused = ports.agents.open_session(thread_workspace(ports, conversation).path,
                                                 conversation, effect.steer, effect.skipped,
@@ -310,6 +316,11 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return ReactionPosted()
         case DropWorkspace():
             failure = thread_workspace(ports, conversation).drop()
+            if failure is not None:
+                raise WorkspaceRefused(failure)
+            return None
+        case ResetWorkspace():
+            failure = thread_workspace(ports, conversation).reset(effect.to)
             if failure is not None:
                 raise WorkspaceRefused(failure)
             return None

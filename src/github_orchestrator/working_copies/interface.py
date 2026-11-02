@@ -138,6 +138,8 @@ class ThreadWorkspace(Protocol):
 
     def drop(self) -> str | None: ...
 
+    def reset(self, to: Sha) -> str | None: ...
+
 
 @dataclass(frozen=True)
 class BaseStanding:

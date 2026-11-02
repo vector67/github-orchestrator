@@ -199,6 +199,7 @@ def test_the_collection_answers_a_threads_stored_facts():
         "unread": False,
         "record_state": "open",
         "commit_check": None,
+        "question": None,
     }
     assert thread["etag"].startswith('"')
 
@@ -639,6 +640,7 @@ def test_the_proposals_read_carries_what_the_run_left_behind():
         "tests": "passed",
         "tests_note": "ran the unit suite",
         "commit_message": "Rename the helper\n\nIt said the wrong thing.\n",
+        "last_words": None,
     }]
     assert answer.headers["ETag"]
 

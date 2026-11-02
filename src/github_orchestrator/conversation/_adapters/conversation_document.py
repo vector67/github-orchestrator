@@ -140,14 +140,14 @@ def _question_document(question: Question | None) -> Document | None:
     if question is None:
         return None
     return {"text": question.text, "context": question.context,
-            "options": list(question.options)}
+            "options": list(question.options), "head": _hex(question.head)}
 
 
 def _question(document: Document | None) -> Question | None:
     if document is None:
         return None
     return Question(text=document["text"], context=document["context"],
-                    options=tuple(document["options"]))
+                    options=tuple(document["options"]), head=_sha(document.get("head")))
 
 
 def encode(conversation: Conversation) -> Document:

@@ -9,6 +9,7 @@ from github_orchestrator.conversation._domain.commands import (
     DeclarePlan,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     Fail,
@@ -112,6 +113,7 @@ from github_orchestrator.conversation._domain.effects import (
     PostReply,
     Push,
     React,
+    ResetWorkspace,
     ResolveThread,
     StartRun,
     StopRun,
@@ -520,7 +522,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
     reported = Sha.parse(command.sha)
     return Accepted(with_fix(
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.COMMIT, reply=None,
-        ticket=None, classification=None, thread_sha=reported, tests=command.tests,
+        ticket=None, classification=None, question=None, thread_sha=reported, tests=command.tests,
         tests_note=command.tests_note, agent_note=command.agent_note,
         summary=command.summary,
         confidence=(None if command.confidence is None
@@ -531,7 +533,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
 
 
 NO_COMMIT: dict[str, Any] = {
-    "thread_sha": None, "tests": None, "tests_note": None, "agent_note": None,
+    "question": None, "thread_sha": None, "tests": None, "tests_note": None, "agent_note": None,
     "summary": None, "confidence": None, "confidence_note": None, "reason": None,
 }
 
@@ -569,7 +571,7 @@ def _report_declined(conversation: Conversation, command: ReportDeclined,
                      at: str | None) -> Accepted:
     landed = replace(conversation, state=_landed_by_a_decline(conversation, command.classification))
     return Accepted(with_fix(_decidable(landed, at),
-                              state=DECLINED,
+                              state=DECLINED, question=None,
                               classification=command.classification,
                               reason=command.reason,
                               plan=(), summary=None, confidence=None,
@@ -811,8 +813,17 @@ def _first(conversation: Conversation) -> Accepted:
                   decision_error=None, reply_note=None, pending_reply=""))
 
 
+def _answer_in_session(conversation: Conversation) -> Accepted:
+    return Accepted(
+        with_fix(conversation, state=IN_SESSION, session_from=ASKING, attempts=0,
+                 decision_error=None),
+        (CutWorkspace(), OpenSession(back_to=ASKING, answers=True)))
+
+
 def _start_session(conversation: Conversation, command: StartSession) -> Accepted:
     fix = conversation.fix
+    if fix.is_asking:
+        return _answer_in_session(conversation)
     brief = (Brief(note=command.steer, pointed=command.pointed, include=command.include)
              if command.pointed or command.include else fix.run.brief)
     return Accepted(
@@ -839,6 +850,20 @@ def _retry(conversation: Conversation) -> Accepted:
         return _first(conversation)
     return Accepted(with_fix(conversation, state=QUEUED, attempts=0,
                               started_at=None, decision_error=None))
+
+
+QUESTION_DROPPED = "question dropped"
+
+
+def _drop_question(conversation: Conversation, at: str | None) -> Accepted:
+    fix = conversation.fix
+    dropped = with_fix(_decidable(conversation, at), question=None, decision_error=None)
+    if fix.thread_sha is not None or fix.kind != ProposalKind.COMMIT:
+        back_to = fix.thread_sha or fix.base_sha
+        return Accepted(with_fix(dropped, state=PROPOSED),
+                        () if back_to is None else (ResetWorkspace(to=back_to),))
+    failed = with_fix(dropped, state=FAILED, reason=QUESTION_DROPPED)
+    return Accepted(failed, () if fix.base_sha is None else (ResetWorkspace(to=fix.base_sha),))
 
 
 def _landing_withdrawn(conversation: Conversation, reason: str = WITHDRAWN) -> Accepted:
@@ -1197,6 +1222,8 @@ def _dispatch(conversation: Conversation, command: Change,
                                   defer_note=""))
         case Stop():
             return _stop(conversation)
+        case DropQuestion():
+            return _drop_question(conversation, at)
         case Resolve():
             return _closing(conversation, command)
         case Reject():

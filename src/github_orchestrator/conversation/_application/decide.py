@@ -10,6 +10,7 @@ from github_orchestrator.conversation._domain.commands import (
     Confirm,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     OpenShell,
@@ -199,6 +200,8 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
             return WriteFix()
         case "stop":
             return Stop()
+        case "drop-question":
+            return DropQuestion()
         case "reject":
             return Reject(reply=payload,
                           delete_comment=intent.delete_comment,

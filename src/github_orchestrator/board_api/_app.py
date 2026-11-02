@@ -1248,6 +1248,23 @@ def check_session(key: ThreadKey, board: Serving) -> SessionCheck:
     return SessionCheck(session=running, conversation=conversation_of(conversation, account))
 
 
+@writes.post("/conversations/{key}/operations:drop-question", status_code=202,
+             response_model=Outcome, operation_id="dropQuestion",
+             summary="Give up the agent's question on this thread.",
+             responses={**ACCEPTED, 409: {
+                 "description": "No agent is asking anything on this thread.",
+                 "model": Errors}})
+def drop_question(key: ThreadKey, board: Serving, if_match: IfMatch) -> Response:
+    """The thread goes back to the proposal the agent was asked to rework, and
+    its worktree is reset to that proposal, dropping whatever the agent did
+    since. A first run that asked has no proposal to go back to, so it fails.
+    To keep the work and come back to the question later, `:defer`; to close
+    the thread, `:reject`.
+    """
+    return _queued(board, _thread(board, key), if_match,
+                   lambda editable: editable.drop_question())
+
+
 @writes.post("/conversations/{key}/operations:open-shell", status_code=202,
              response_model=Outcome, operation_id="openShell",
              summary="Open a login shell in this thread's own worktree.",

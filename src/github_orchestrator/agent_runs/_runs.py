@@ -420,6 +420,10 @@ class AgentRuns:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
                         rework_prompt(self._commands, fix, steer, self._workers))
 
+    def answer_in_session(self, fix: ThreadFix) -> str | None:
+        return self._pr_processes.split_kept(fix.pr, fix.worktree,
+                                             [*self._command, *self._lines.answering()])
+
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split_kept(pr, worktree, shell_argv())
 

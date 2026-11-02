@@ -154,6 +154,15 @@ def test_every_prompt_that_asks_for_a_fix_offers_a_question_when_the_brief_canno
         assert "do not ask questions" not in prompt
 
 
+def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_worktree(
+        world, runs, worktree):
+    assert runs.answer_in_session(_fix(worktree)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert (session.worktree, session.argv) == (worktree, ["claude", "--continue"])
+    assert session.kept
+
+
 SKIPPED_AS = "risky|acknowledgement|needs-human"
 REPLIED_AS = "unclear|out-of-scope|already-done|question"
 

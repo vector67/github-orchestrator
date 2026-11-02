@@ -240,6 +240,28 @@ def test_dropping_a_workspace_removes_its_checkout_and_its_branch(
     assert _git(pr_worktree, "rev-parse", "--verify", branch).returncode != 0
 
 
+def test_resetting_a_workspace_puts_it_back_at_a_commit_without_the_edits_since(
+    git, pr_worktree
+):
+    cut = _cut(git, pr_worktree)
+    wt = Path(cut.path)
+    _git(wt, "config", "user.email", "t@example.com")
+    _git(wt, "config", "user.name", "T")
+    (wt / "f").write_text("proposed\n")
+    _git(wt, "commit", "-qam", "the proposal")
+    proposed = _git(wt, "rev-parse", "HEAD").stdout.strip()
+    (wt / "f").write_text("after the proposal\n")
+    _git(wt, "commit", "-qam", "past the proposal")
+    (wt / "f").write_text("uncommitted\n")
+    (wt / "new").write_text("untracked\n")
+
+    assert cut.reset(Sha(proposed)) is None
+
+    assert _git(wt, "rev-parse", "HEAD").stdout.strip() == proposed
+    assert (wt / "f").read_text() == "proposed\n"
+    assert not (wt / "new").exists()
+
+
 def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
     git, pr_worktree, worktrees_dir
 ):

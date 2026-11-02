@@ -119,5 +119,10 @@ class ThreadAgents:
         return self.thread_work.open_session(
             self._asked(conversation, _worktree_of(worktree), skipped, brief), steer)
 
+    def answer_in_session(self, worktree: str | None,
+                          conversation: Conversation) -> str | None:
+        return self.thread_work.answer_in_session(
+            self._asked(conversation, _worktree_of(worktree), False, None))
+
     def open_shell(self, worktree: str | None) -> str | None:
         return self.thread_work.open_shell(self.pr, _worktree_of(worktree))

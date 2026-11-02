@@ -262,6 +262,17 @@ def restore_head(pr_worktree: str, base: str, mode: str = "--hard") -> str | Non
     return None if reset.returncode == 0 else git_diagnostic(reset)
 
 
+def reset_checkout(worktree: str, to: str) -> str | None:
+    failure = restore_head(worktree, to)
+    if failure is not None:
+        return failure
+    try:
+        cleaned = run_git(worktree, "clean", "-fd")
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return str(e)
+    return None if cleaned.returncode == 0 else git_diagnostic(cleaned)
+
+
 def _aborted_timeout_reason(pr_worktree: str) -> str:
     try:
         abort = run_git(pr_worktree, "cherry-pick", "--abort")

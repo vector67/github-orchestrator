@@ -260,6 +260,7 @@ class FakeAgentRuns:
     outcomes: list[Outcome] = field(default_factory=list)
     started: list[Started] = field(default_factory=list)
     sessions: list[Session] = field(default_factory=list)
+    answering: list[ThreadFix] = field(default_factory=list)
     pr_runs: dict[Pr, FakeRun] = field(default_factory=dict)
     gists: list[str | tuple[str, ...] | None] = field(default_factory=list)
     asked: list[Asked] = field(default_factory=list)
@@ -358,6 +359,12 @@ class FakeAgentRuns:
                                   f"session on {fix.key}")
         if refused is None:
             self.sessions.append(Session(fix, steer))
+        return refused
+
+    def answer_in_session(self, fix: ThreadFix) -> str | None:
+        refused = self.pr_processes.split_kept(fix.pr, fix.worktree, ["claude", "--continue"])
+        if refused is None:
+            self.answering.append(fix)
         return refused
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:

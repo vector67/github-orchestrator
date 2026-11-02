@@ -10,6 +10,7 @@ from github_orchestrator.conversation._domain.commands import (
     DeclarePlan,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     Fail,
@@ -673,7 +674,7 @@ def _a_fix_to_turn_down(conversation: Conversation, command: Reject) -> Refused 
         return _refuse_decision(
             conversation, ErrorCode.WORK_IN_FLIGHT,
             f"{_a(fix.state)} fix is still in flight; stop it first")
-    if fix.state not in IDLE_FIX:
+    if fix.state not in (*IDLE_FIX, ASKING):
         return _refuse_decision(
             conversation, ErrorCode.NO_PROPOSAL,
             f"{_a(fix.state)} fix left nothing to turn down")
@@ -820,11 +821,12 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Rework: (_agents_enabled_for_a_rework, _open_to("sends nothing back"),
              _a_fix_in((PROPOSED, DECLINED, FAILED), "is not yours to send back"), _a_brief),
     StartSession: (_agents_enabled_for_a_session, _open_to("opens no session"),
-                   _a_fix_in((PROPOSED, DECLINED, FAILED), "is not waiting for anyone")),
+                   _a_fix_in((PROPOSED, ASKING, DECLINED, FAILED), "is not waiting for anyone")),
     OpenShell: (_open_to("opens no shell"),),
     Retry: (_open_to("retries nothing"), _a_fix_in((ABSENT, DECLINED, FAILED), "is not failed")),
     WriteFix: (_open_to_a_fix, _a_fix_in((ABSENT,), "has a fix already")),
     Stop: (_not_closed_to_stop, _in_flight_to_stop, _not_pushed_to_stop),
+    DropQuestion: (_open_to("drops nothing"), _a_fix_in((ASKING,), "asks nothing to drop")),
     Resolve: (_still_open_to_resolve, _the_operators_to_resolve,
               _a_comment_to_answer_on_resolving, _a_thread_left_to_resolve,
               _yours_to_delete),
@@ -855,6 +857,7 @@ _REFUSED_ON_A_DRAFT: dict[type, ErrorCode] = {
     Approve: ErrorCode.NO_PROPOSAL,
     Land: ErrorCode.NO_PROPOSAL,
     Stop: ErrorCode.NOTHING_IN_FLIGHT,
+    DropQuestion: ErrorCode.NO_PROPOSAL,
     Resolve: ErrorCode.STILL_A_DRAFT,
     Reject: ErrorCode.NO_PROPOSAL,
     Defer: ErrorCode.STILL_A_DRAFT,

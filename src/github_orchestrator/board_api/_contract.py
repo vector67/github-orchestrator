@@ -541,6 +541,24 @@ class CommitCheck(BaseModel):
                     "and what it leaves undone. Empty when the model gave none.")
 
 
+class Question(BaseModel):
+    """What an agent stopped to ask, rather than finish a fix it could not
+    finish as asked. Nothing in it can be approved: the thread waits on the
+    viewer to answer it in a session, or drop it."""
+
+    text: str = Field(description="The one thing the viewer must decide.")
+    context: str = Field(
+        description="Why the agent stopped: what it tried and what broke, as "
+                    "markdown.")
+    options: list[str] = Field(
+        description="The ways forward the agent narrowed it to. Empty where it "
+                    "had not narrowed it down.")
+    head: Sha | None = Field(
+        description="The pull request's head when the agent asked, so the board "
+                    "can say how far the branch has moved since. Null where the "
+                    "board did not know it.")
+
+
 class Conversation(BaseModel):
     """One comment thread, or one draft. Stored facts, plus its state, plus
     its comments and operations as summaries so a card can be drawn and read
@@ -610,6 +628,9 @@ class Conversation(BaseModel):
                     "Null until a check has come back. A `not-addressed` check "
                     "holds the thread in the viewer's move while that reply is "
                     "the newest comment.")
+    question: Question | None = Field(
+        description="What the agent stopped to ask, while it waits on an answer. "
+                    "Null on every thread no agent is asking about.")
 
 
 class ConversationList(BaseModel):
@@ -814,6 +835,13 @@ class DeferOperation(OperationEnvelope):
         description="The operator's private note. Nothing is posted.")
 
 
+class DropQuestionOperation(OperationEnvelope):
+    """Giving up an agent's question: the thread goes back to the proposal "
+    before it, with the worktree reset to it, or fails where there was none."""
+
+    kind: Literal[OperationKind.DROP_QUESTION]
+
+
 class UnparkOperation(OperationEnvelope):
     """Bringing a parked thread back."""
 
@@ -898,6 +926,7 @@ class PostedOperation(OperationEnvelope):
 Operation = Annotated[
     FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation
     | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
+    | DropQuestionOperation
     | ReplyOperation
     | DraftOperation | ReviewOperation | PostedOperation,
     Field(discriminator="kind",
@@ -1191,6 +1220,10 @@ class Proposal(BaseModel):
         description="The message of the commit the agent left, which is the "
                     "one an approve lands with unless it is given another. "
                     "Null where git cannot read it.")
+    last_words: str | None = Field(
+        description="The last thing the agent said, where its run stopped "
+                    "without reporting and the board proposed the commit it "
+                    "found. Null on every proposal an agent reported.")
 
 
 class ProposalList(RootModel[list[Proposal]]):

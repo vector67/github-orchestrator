@@ -35,7 +35,7 @@ PLACE = "place"
 
 DECISIONS = (APPROVE, REWORK, SESSION, "shell", "resolve", "retry", "fix", "reject",
              "defer", "unpark", "confirm", "place", "not_fixed", "stop", "reply", EDIT_DRAFT,
-             "enrol", "withdraw-from-review", "discard", "post-now")
+             "enrol", "withdraw-from-review", "discard", "post-now", "drop-question")
 
 WORDS_ONLY = (REWORK, "not_fixed", "reply", EDIT_DRAFT)
 

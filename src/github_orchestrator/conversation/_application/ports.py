@@ -168,6 +168,9 @@ class Agents(Protocol):
                      conversation: Conversation, steer: str | None,
                      skipped: bool, brief: Brief | None) -> str | None: ...
 
+    def answer_in_session(self, worktree: str | None,
+                          conversation: Conversation) -> str | None: ...
+
     def open_shell(self, worktree: str | None) -> str | None: ...
 
 

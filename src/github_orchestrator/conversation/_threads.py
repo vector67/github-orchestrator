@@ -62,6 +62,7 @@ from github_orchestrator.conversation._domain.commands import (
     DeclarePlan,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     Fail,
@@ -362,6 +363,9 @@ class _Editable:
     def stop(self) -> Conversation | Denied:
         return self._ask(Stop())
 
+    def drop_question(self) -> Conversation | Denied:
+        return self._ask(DropQuestion())
+
     def resolve(self, *, reply: str = "", delete_comment: bool = False,
                 resolve: bool = False,
                 thumbs_up: bool = True) -> Conversation | Denied:
@@ -445,8 +449,9 @@ class _Editable:
 
     def ask(self, question: str, context: str,
             options: Sequence[str] = ()) -> Conversation | Denied:
+        head = Sha.parse(self._pr.ports.pull_requests.head_sha())
         return self._answer(ReportAsk(Question(text=question, context=context,
-                                               options=tuple(options))))
+                                               options=tuple(options), head=head)))
 
     def fail(self, reason: str) -> Conversation | Denied:
         return self._answer(Fail(reason=reason))
