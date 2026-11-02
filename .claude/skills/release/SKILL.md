@@ -82,11 +82,16 @@ the range is `LAST..REL`.
     since it drives the running board.
 
 05. Triage every finding. A finding is confirmed when it is reproduced or read in
-    the code, and when it breaks behaviour, the upgrade path or the docs, or leaks
-    private information. Rank findings by how much they hurt in the release as it
-    ships, never by which commit introduced them: an old bug weighs the same as a
-    new one. Fix each confirmed one through `normal-workflow` targeting
-    `REL`, and push `REL` and then `main` with `push-properly`. File every other
+    the code, when its trigger is shown reachable in real use (how a user gets there,
+    its window, how likely it is and what it costs; a failing test on a state an
+    agent built by hand is not enough), and when it breaks behaviour, the upgrade
+    path or the docs, or leaks private information. Rank findings by how much they
+    hurt in the release as it ships, never by which commit introduced them: an old
+    bug weighs the same as a new one. Put the confirmed findings in front of the
+    user on a decision page whose picks reach Claude (fix before the release, fix in
+    the next patch, fix later, dismiss, or fixed already), and fix nothing until they
+    have picked. Fix each one picked for the release through `normal-workflow`
+    targeting `REL`, and push `REL` and then `main` with `push-properly`. File every other
     finding as a GitHub issue whose body starts with 🤖, and keep the links for
     step 9.
 

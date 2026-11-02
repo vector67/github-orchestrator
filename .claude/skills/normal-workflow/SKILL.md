@@ -22,8 +22,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    `main` that sessions merge into without pushing, so run
    `git merge --ff-only main` in the new tree before the first edit. For another
    target, cut the tree from the target instead:
-   `git worktree add .claude/worktrees/<name> -b <name> <target>`, then
-   `EnterWorktree` with its `path`.
+   `git worktree add <main checkout>/.claude/worktrees/<name> -b <name> <target>`,
+   then `EnterWorktree` with its `path`. Give the absolute path: Bash keeps its
+   working directory between calls, so a relative path run from inside another
+   worktree nests the new tree in that one.
 
 3. Do the work you have been instructed to do. If the work is a refactor, load the
    `refactor` skill first. Run `make lint-python` and `make test-python` before
@@ -38,6 +40,9 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    tests never run a prompt.
 
 4. Commit with a lowercase imperative subject and no prefix, no co-author trailer.
+   Write `Closes #<n>` only when the commit fixes the whole issue, and `Refs #<n>`
+   for part of it: a pushed `Closes` closes the issue either way. File what is left
+   as its own issue before the push, with the same release pick as the original.
 
 5. Check the branch for private information before it reaches the target: the
    repo is public, and whatever merges is pushed. Read `git diff <target>...<branch>`
@@ -84,7 +89,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
 
 8. Remove the workspace the way the `using-git-worktrees` skill made it, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once
-   `git branch --merged main` lists it).
+   `git branch --merged main` lists it). A tree the Agent tool cut for a subagent
+   stays locked as `claude agent <id> (pid N …)` after the agent ends. When
+   `ps -p N` shows that pid is this session, the tree is clean and its branch is
+   merged, run `git worktree unlock <path>` and remove it without asking.
 
 9. Close the issue with `gh issue close <n>` once the merge has passed step 7,
    unless a pushed `Closes #<n>` already closed it. Prove it with
