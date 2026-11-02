@@ -45,9 +45,9 @@ class Board:
     def commit(self, files, message):
         return self.here.working_copies.commit(WORKTREE, files, message)
 
-    def thread(self, *comments, made_on=None):
+    def thread(self, *comments, made_on=None, key=KEY):
         self.here.github.add_thread(THE_PR, Thread(
-            key=KEY, kind=CommentKind.REVIEW, path="helpers.py", line=1, comments=comments,
+            key=key, kind=CommentKind.REVIEW, path="helpers.py", line=1, comments=comments,
             anchor=ThreadAnchor(original_commit=made_on)))
         polled = self.manager.poll(self.state)
         polled.commit()
@@ -381,6 +381,21 @@ def test_a_thread_in_my_move_is_not_checked_for_fixes(settings):
     refused = _check_for_fixes(board, base)
 
     assert isinstance(refused, Denied)
+
+
+def test_checking_a_pr_for_fixes_asks_about_every_thread_waiting_on_the_author_alone(
+        settings):
+    board, base, head = _waiting_on_the_author(settings)
+    board.thread(_said(3, ME, "add a test"), made_on=base, key="PRRT_two").tick_after()
+    board.agent_runs.give("their-move", key="PRRT_two")
+    board.thread(_said(4, ME, "drop the print"), made_on=base, key="PRRT_three").tick_after()
+    board.agent_runs.give("my-move", key="PRRT_three")
+
+    board.manager.check_for_fixes(Sha(head))
+
+    assert sorted(asked.key for asked in board.agent_runs.fix_checks_asked()) == [
+        KEY, "PRRT_two"]
+    assert board.manager.get("PRRT_three").operations == ()
 
 
 def test_a_thread_that_names_no_commit_it_was_made_on_is_not_checked_for_fixes(settings):

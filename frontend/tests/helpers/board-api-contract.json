@@ -198,6 +198,23 @@
     }
    }
   },
+  "/api/conversations/{key}/operations:check-for-fixes": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/operations:check-session": {
    "post": {
     "200": {
@@ -1220,6 +1237,14 @@
   "/api/pull-request/operations:cancel-reset-to-origin": {
    "post": {
     "204": null
+   }
+  },
+  "/api/pull-request/operations:check-for-fixes": {
+   "post": {
+    "204": null,
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
    }
   },
   "/api/pull-request/operations:queue-reset-to-origin": {

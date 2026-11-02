@@ -5,6 +5,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ASSUMED_DONE,
     OPEN,
     ROLE_REVIEWER,
+    WAITING_ON_REVIEWER,
     CommitCheck,
     CommitVerdict,
     Conversation,
@@ -15,6 +16,7 @@ from github_orchestrator.conversation._domain.verdict import (
     newest_said,
     retry_due,
 )
+from github_orchestrator.domain import Sha
 
 MAX_CANDIDATES = 5
 
@@ -57,6 +59,17 @@ def commit_check_due(conversation: Conversation, viewer: str, now: str | None) -
         return False
     return conversation.commit_check_asked_for != reference.on or retry_due(
         conversation.commit_check_asks, conversation.commit_check_asked_at, now)
+
+
+def not_checkable_for_fixes(conversation: Conversation, viewer: str) -> str | None:
+    comments = conversation.comments
+    if (conversation.role != ROLE_REVIEWER or conversation.state != WAITING_ON_REVIEWER
+            or not comments or comments[-1].author != viewer):
+        return "only a thread waiting on the author since your comment is checked for fixes"
+    if Sha.parse(conversation.original_commit or "") is None:
+        return ("the thread names no commit it was made on, so there is nothing to check "
+                "it against")
+    return None
 
 
 def with_a_check_ask(conversation: Conversation, on: str, at: str | None) -> Conversation:

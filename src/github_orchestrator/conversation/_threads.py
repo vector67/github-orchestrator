@@ -87,6 +87,9 @@ from github_orchestrator.conversation._domain.commands import (
     WriteFix,
     report_without_code,
 )
+from github_orchestrator.conversation._domain.commit_check import (
+    not_checkable_for_fixes,
+)
 from github_orchestrator.conversation._domain.conversation import (
     ASSUMED_DONE,
     CONFIRMED,
@@ -693,6 +696,14 @@ class _ConversationManager:
 
     def recheck(self, conversation: Conversation) -> None:
         self._pr.modules.presence.check_later(self._pr.pr, conversation.key, self._pr.ports)
+
+    def check_for_fixes(self, head: Sha) -> None:
+        viewer = self._pr.ports.config.gh_account
+        for conversation in self._pr.ports.records.list():
+            if not conversation.is_unreadable and not_checkable_for_fixes(
+                    conversation, viewer) is None:
+                with self.editing(conversation.key) as editable:
+                    editable.check_for_fixes(head)
 
 
 def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> None:

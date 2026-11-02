@@ -37,6 +37,9 @@ from github_orchestrator.conversation._domain.commands import (
     WithdrawFromReview,
     WriteFix,
 )
+from github_orchestrator.conversation._domain.commit_check import (
+    not_checkable_for_fixes,
+)
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     ANSWER,
@@ -789,17 +792,8 @@ def _a_commit_checked(conversation: Conversation, command: SetCommitVerdict) -> 
 
 def _waiting_on_the_author(conversation: Conversation,
                            command: CheckForFixes) -> Refused | None:
-    comments = conversation.comments
-    if (conversation.role != ROLE_REVIEWER or conversation.state != WAITING_ON_REVIEWER
-            or not comments or comments[-1].author != command.viewer):
-        return Refused(conversation, ErrorCode.NOT_PARKED,
-                       "only a thread waiting on the author since your comment is checked "
-                       "for fixes")
-    if Sha.parse(conversation.original_commit or "") is None:
-        return Refused(conversation, ErrorCode.NOT_PARKED,
-                       "the thread names no commit it was made on, so there is nothing "
-                       "to check it against")
-    return None
+    why = not_checkable_for_fixes(conversation, command.viewer)
+    return None if why is None else Refused(conversation, ErrorCode.NOT_PARKED, why)
 
 
 RULES: dict[type, tuple[Rule, ...]] = {

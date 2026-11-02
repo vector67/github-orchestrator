@@ -1,0 +1,60 @@
+from github_orchestrator.agent_runs.fake import HeldVerdicts
+from github_orchestrator.github.fake import ThreadAnchor
+from github_orchestrator.notifications.fake import FakeNotifications
+from github_orchestrator.pr_processes.fake import FakePrProcesses
+from tests.board_api.support import (
+    KEY,
+    board_on,
+    branched_from_main,
+    client_of,
+    fake_threads,
+    heard_on,
+)
+from tests.conversation.support import said
+
+CHECK_THE_PR = "/api/pull-request/operations:check-for-fixes"
+
+
+def check_the_thread(key=KEY):
+    return f"/api/conversations/{key}/operations:check-for-fixes"
+
+
+def waiting(verdict="their-move"):
+    copies, base, head = branched_from_main()
+    agent_runs = HeldVerdicts(FakePrProcesses())
+    board = board_on(fake_threads(working_copies=copies, agent_runs=agent_runs),
+                     is_author=False, branch="feature")
+    heard_on(board, KEY, said(1, "call check() before write()", author="octocat"),
+             path="src/foo.py", line=1, anchor=ThreadAnchor(original_commit=base))
+    board.threads.tick(FakeNotifications(), on_hold=False)
+    agent_runs.give(verdict)
+    return board, agent_runs, base, head
+
+
+def test_checking_a_thread_for_fixes_asks_about_the_changes_up_to_origins_head():
+    board, agent_runs, base, head = waiting()
+
+    answer = client_of(board).post(check_the_thread())
+
+    assert answer.status_code == 204
+    assert [(asked.key, asked.base, asked.head)
+            for asked in agent_runs.fix_checks_asked()] == [(KEY, base, head)]
+
+
+def test_a_thread_not_waiting_on_the_author_is_refused_a_check_for_fixes():
+    board, agent_runs, _, _ = waiting("my-move")
+
+    answer = client_of(board).post(check_the_thread())
+
+    assert (answer.status_code, answer.json()["errors"][0]["code"]) == (409, "not-parked")
+    assert agent_runs.fix_checks_asked() == []
+
+
+def test_checking_the_pull_request_for_fixes_asks_about_each_waiting_thread():
+    board, agent_runs, base, head = waiting()
+
+    answer = client_of(board).post(CHECK_THE_PR)
+
+    assert answer.status_code == 204
+    assert [(asked.key, asked.base, asked.head)
+            for asked in agent_runs.fix_checks_asked()] == [(KEY, base, head)]
