@@ -7,6 +7,7 @@ from pathlib import Path
 from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.pr_manager import ManagedPr, PrManager
 from github_orchestrator.settings import ConfigFile, Logs, Process
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.wiring import make_container
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ def main() -> None:
         log.error("agent manager for %s not started: %s", pr, problem)
         print(problem, file=sys.stderr)
         sys.exit(2)
+    container.get(NameMigration).migrate()
     container.get(PrManager).run()
 
 

@@ -6,7 +6,7 @@ import pytest
 from github_orchestrator.pr_manager import ManagedPr
 from github_orchestrator.pr_manager import __main__ as manager_main
 from github_orchestrator.settings import Process
-from github_orchestrator.settings.fake import FakeLogs
+from github_orchestrator.settings.fake import FakeLogs, fake_settings
 from tests.builders import a_pr
 from tests.pr_manager.scripted_terminal import ScriptEnded
 from tests.pr_manager.support import manager_over
@@ -52,6 +52,14 @@ def test_main_logs_to_the_pr_managers_log_naming_its_pr(monkeypatch, tmp_path):
     _, _, logs = _prepared(monkeypatch, tmp_path)
     _main()
     assert logs.configured == [(Process.PR_MANAGER, "o/n#1")]
+
+
+def test_main_migrates_thread_names_before_the_manager_runs(monkeypatch, tmp_path):
+    _prepared(monkeypatch, tmp_path)
+
+    assert isinstance(_main(), ScriptEnded)
+
+    assert fake_settings(tmp_path).layout_marker.exists()
 
 
 def test_a_broken_config_exits_before_the_manager_runs(monkeypatch, tmp_path, capsys):
