@@ -1189,6 +1189,13 @@ export default class StoreService extends Service {
     return { done: true, body: session };
   }
 
+  checkForFixes(key: string): Promise<Tried<void>> {
+    return tried(
+      'write',
+      handed(this.here.api(`${under(key)}/operations:check-for-fixes`)),
+    );
+  }
+
   async askTheAgent(
     pr: Numbered,
     prompt: string,
