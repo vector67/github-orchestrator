@@ -118,3 +118,11 @@ def test_the_mentionable_are_asked_of_github_once_for_each_repo():
     answers = [mentionable.of(widgets), mentionable.of(widgets), mentionable.of(gadgets)]
 
     assert (answers, asked) == ([["acme-bot"]] * 3, [widgets, gadgets])
+
+
+def test_a_repo_github_answered_no_one_for_is_asked_again():
+    answers = [[], ["octocat"]]
+    mentionable = FetchedMentionable(lambda repo: answers.pop(0))
+    widgets = Repo("acme", "widgets")
+
+    assert [mentionable.of(widgets), mentionable.of(widgets)] == [[], ["octocat"]]

@@ -1206,9 +1206,12 @@ class FetchedMentionable:
         self._asked: dict[Repo, list[str]] = {}
 
     def of(self, repo: Repo) -> list[str]:
-        if repo not in self._asked:
-            self._asked[repo] = self._assignees(repo)
-        return self._asked[repo]
+        if repo in self._asked:
+            return self._asked[repo]
+        logins = self._assignees(repo)
+        if logins:
+            self._asked[repo] = logins
+        return logins
 
 
 class EveryTerminal:
