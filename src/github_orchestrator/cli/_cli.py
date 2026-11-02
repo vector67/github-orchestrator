@@ -20,6 +20,7 @@ from github_orchestrator.cli._migrate import (
     move_old_config,
     old_config,
 )
+from github_orchestrator.cli._names_migration import clear_the_way
 from github_orchestrator.cli._parser import commands_of
 from github_orchestrator.cli._restart_all import (
     Instance,
@@ -56,6 +57,7 @@ from github_orchestrator.settings import (
     Logs,
     Process,
 )
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.watcher import Releases, WatcherHealth
 
 
@@ -68,7 +70,8 @@ class OperatorCli:
                  watcher_health: WatcherHealth, hub_health: HubHealth, holds: Holds,
                  dismissals: Dismissals, others: OtherInstances,
                  terminals: OpenTerminals, service: Service, checks: InstanceChecks,
-                 machine: MachineChecks, releases: Releases, server: ServerControl) -> None:
+                 machine: MachineChecks, releases: Releases, server: ServerControl,
+                 migration: NameMigration) -> None:
         self._config = config
         self._run = run
         self._sleep = sleep
@@ -94,6 +97,7 @@ class OperatorCli:
         self._machine = machine
         self._releases = releases
         self._server = server
+        self._migration = migration
 
     def main(self, argv: list[str]) -> int:
         self._argv = argv
@@ -109,7 +113,8 @@ class OperatorCli:
         return Instance(self._config.instance, self._pr_processes,
                         self._queues, self._watcher_health, self._terminals, self._service,
                         self._checks, self._config_file, self._config.data_dir, self._server,
-                        self._logs.path(Process.SERVER), self._config.hub_url, self._hub_health)
+                        self._logs.path(Process.SERVER), self._config.hub_url, self._hub_health,
+                        self._migration)
 
     def _every_instance(self) -> list[Instance]:
         return [self._this_instance(), *self._others.load()]
@@ -117,7 +122,7 @@ class OperatorCli:
     def _start(self, args: argparse.Namespace) -> None:
         config = self._config
         if args.from_installer:
-            self._start_from_installer()
+            self._start_from_installer(force=args.force)
             return
         migrate(self._config_file, self._run, "Migrating the config")
         if args.foreground:
@@ -125,7 +130,7 @@ class OperatorCli:
         else:
             start(self._service, config.hub_url, self._hub_health, self._sleep)
 
-    def _start_from_installer(self) -> None:
+    def _start_from_installer(self, *, force: bool) -> None:
         config = self._config
         moved = self._moved_old_config()
         if moved:
@@ -140,6 +145,8 @@ class OperatorCli:
                 print(line)
         for instance in instances:
             stop_managers_and_server(instance)
+        for instance in instances:
+            clear_the_way(instance, self._read_line, force=force)
         for instance in instances:
             named = "the default instance" if instance.name is None else instance.name
             print(f"==> Starting the watcher for {named}", flush=True)
@@ -224,7 +231,7 @@ class OperatorCli:
                 self._every_instance() if a.all else [self._this_instance()],
                 force=a.force),
             "update": lambda a: update(config, self._run, self._which, self._releases,
-                                       version=a.version, check=a.check),
+                                       version=a.version, check=a.check, force=a.force),
             "uninstall": lambda a: uninstall(config, self._run, self._which, self._read_line,
                                              self._every_instance(), yes=a.yes),
             "undismiss": lambda a: undismiss(Pr(a.repo, a.pr),

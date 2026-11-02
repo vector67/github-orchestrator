@@ -1314,7 +1314,7 @@ class ContainerInstances:
                         container.get(InstanceChecks), container.get(ConfigFile),
                         container.get(Settings).data_dir, container.get(ServerControl),
                         container.get(Logs).path(Process.SERVER), container.get(CliConfig).hub_url,
-                        container.get(HubHealth))
+                        container.get(HubHealth), container.get(NameMigration))
 
 
 @dataclass(frozen=True)
