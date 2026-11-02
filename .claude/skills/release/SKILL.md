@@ -83,7 +83,9 @@ the range is `LAST..REL`.
 
 05. Triage every finding. A finding is confirmed when it is reproduced or read in
     the code, and when it breaks behaviour, the upgrade path or the docs, or leaks
-    private information. Fix each confirmed one through `normal-workflow` targeting
+    private information. Rank findings by how much they hurt in the release as it
+    ships, never by which commit introduced them: an old bug weighs the same as a
+    new one. Fix each confirmed one through `normal-workflow` targeting
     `REL`, and push `REL` and then `main` with `push-properly`. File every other
     finding as a GitHub issue whose body starts with 🤖, and keep the links for
     step 9.
@@ -108,7 +110,10 @@ the range is `LAST..REL`.
     `gh run watch <id> --exit-status`, run in the background. Every job must pass.
     When one fails, read `gh run view <id> --log-failed`, fix the cause through
     `normal-workflow` targeting `REL`, push with `push-properly`, and run this step
-    again. `update-command` skips with a notice while the last release predates
+    again. A job GitHub never gave a runner ("The job was not acquired by Runner")
+    ran no code: rerun it with `gh run rerun <id> --failed` and keep `SHA`. A watch
+    on a rerun can exit before the rerun ends, so confirm the run's `status` is
+    `completed` before reading its conclusion. `update-command` skips with a notice while the last release predates
     `GITHUB_ORCHESTRATOR_RELEASES_API`. Pass that notice on in step 9, since then
     only `update-from-previous` tests `update`, after publishing.
 
@@ -123,7 +128,9 @@ the range is `LAST..REL`.
     Wait for "go". Apply the user's edits to `notes.md` first.
 
 10. On go, tag `SHA` and push the tag:
-    `git tag -a vX.Y.Z -F <notes.md> <SHA>`, then `git push origin vX.Y.Z`.
+    `git tag -a --cleanup=verbatim vX.Y.Z -F <notes.md> <SHA>`, then
+    `git push origin vX.Y.Z`. Without `--cleanup=verbatim` git strips the notes'
+    `##` headings as comments.
     Watch the run: `gh run list --workflow Release --branch vX.Y.Z` gives its id,
     and `gh run watch <id> --exit-status`, run in the background, waits for it.
 
