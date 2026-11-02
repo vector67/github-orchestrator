@@ -216,6 +216,31 @@ def test_a_real_run_still_refuses_a_second_instance(tmp_path, monkeypatch, capsy
     assert not (tmp_path / "watcher.heartbeat").exists()
 
 
+def test_a_watcher_migrates_thread_names_before_its_first_cycle(tmp_path, monkeypatch):
+    github, _ = _prepared(monkeypatch, tmp_path, [])
+    marker = fake_settings(tmp_path).layout_marker
+    searched = github.search
+    migrated_by_then = []
+
+    def search(repo, whose):
+        migrated_by_then.append(marker.exists())
+        return searched(repo, whose)
+
+    github.search = search
+
+    watcher_main.main()
+
+    assert migrated_by_then and all(migrated_by_then)
+
+
+def test_a_dry_run_leaves_the_thread_names_as_they_are(tmp_path, monkeypatch):
+    _prepared(monkeypatch, tmp_path, ["--dry-run"])
+
+    watcher_main.main()
+
+    assert not fake_settings(tmp_path).layout_marker.exists()
+
+
 def test_ctrl_c_ends_a_resident_watcher_without_a_traceback(tmp_path, monkeypatch):
     _prepared(monkeypatch, tmp_path, ["--loop"], error=KeyboardInterrupt())
 

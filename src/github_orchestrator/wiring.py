@@ -182,6 +182,8 @@ from github_orchestrator.settings._switches import (
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
 from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
+from github_orchestrator.thread_names import NameMigration
+from github_orchestrator.thread_names._gate import LockedNameMigration
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
 from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
@@ -595,6 +597,27 @@ class ThreadRecordsProvider(Provider):
     @provide
     def thread_records(self, wiring: ThreadRecordsWiring) -> ThreadRecords:
         return DiskThreadRecords(wiring.threads_dir)
+
+
+@dataclass(frozen=True)
+class ThreadNamesWiring(Wiring):
+    marker: Path
+    lock: Path
+    version: str | None
+
+
+@wires(ThreadNamesWiring)
+class ThreadNamesProvider(Provider):
+    scope = Scope.APP
+    wiring = from_context(provides=ThreadNamesWiring, scope=Scope.APP)
+
+    @provide
+    def name_migration(self, wiring: ThreadNamesWiring) -> NameMigration:
+        return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, lambda: None)
+
+
+def thread_names_wiring(settings: Settings, version: str | None) -> ThreadNamesWiring:
+    return ThreadNamesWiring(settings.layout_marker, settings.layout_lock, version)
 
 
 @dataclass(frozen=True)
@@ -1680,6 +1703,7 @@ def make_container(env: Mapping[str, str], home: Path,
         notifications_wiring(settings),
         working_copies_wiring(settings),
         thread_records_wiring(settings),
+        thread_names_wiring(settings, installed_version()),
         change_detection_wiring(settings),
         pr_summaries_wiring(settings),
         summary_lane_wiring(settings, clamp),
