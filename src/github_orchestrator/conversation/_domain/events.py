@@ -237,6 +237,7 @@ class ReactionFailed:
 @dataclass(frozen=True)
 class DraftPosted:
     comment: Comment
+    made_on: str
     github_node_id: str | None = None
 
 
@@ -250,6 +251,7 @@ class Posted:
     comment: Comment
     github_node_id: str | None
     review: str
+    made_on: str
 
 
 Event = (

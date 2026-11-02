@@ -92,6 +92,16 @@ def test_six_enrolled_drafts_go_out_as_one_review_and_each_is_posted(settings):
     assert review.settled_at == NOW
 
 
+def test_a_draft_sent_in_a_review_records_the_commit_it_was_made_on(settings):
+    here, threads, head = _reviewing(settings)
+    draft = _draft(threads, 1)
+    _request_review(threads)
+
+    drain(threads)
+
+    assert threads.get(draft.key).original_commit == head
+
+
 def test_drafts_go_out_in_the_review_left_pending_on_github_with_its_comments(settings):
     here, threads, _ = _reviewing(settings)
     pending = here.github.start_pending_review(THE_PR, [
