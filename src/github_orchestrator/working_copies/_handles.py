@@ -91,6 +91,8 @@ class Git(Protocol):
 
     def _reset_workspace(self, path: str | None, to: str) -> str | None: ...
 
+    def _workspace_diff(self, path: str | None, since: str) -> tuple[FileDiff, ...] | None: ...
+
 
 def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
@@ -144,6 +146,9 @@ class BoundWorkspace:
 
     def reset(self, to: Sha) -> str | None:
         return self.git._reset_workspace(self.path, str(to))
+
+    def diff_since(self, since: Sha) -> tuple[FileDiff, ...] | None:
+        return self.git._workspace_diff(self.path, str(since))
 
     def drop(self) -> str | None:
         located = self.git._pr_worktree(self.pr)

@@ -588,6 +588,28 @@ def list_proposals(key: ThreadKey, request: Request,
                          proposals_of(board.git, _thread(board, key)))
 
 
+@reads.get("/conversations/{key}/worktree-diff", response_model=Diff, tags=["conversations"],
+           operation_id="readWorktreeDiff",
+           summary="Everything in the thread's worktree past its last proposal.",
+           responses={**ONE_THREAD, 500: DIFF_FAILED})
+def read_worktree_diff(key: ThreadKey, board: Serving) -> Diff:
+    """Committed, uncommitted and untracked alike, from the last proposal's commit,
+    or from the commit the worktree was cut at where nothing was proposed. Read
+    fresh every time: the agent, or a session, may still be changing the worktree,
+    so there is no etag to keep it by.
+    """
+    conversation = _thread(board, key)
+    fix = conversation.fix
+    since = fix.thread_sha or fix.base_sha
+    workspace = board.git.workspace(conversation.key, fix.base_sha)
+    head = workspace.head_sha()
+    files = None if since is None or head is None else workspace.diff_since(since)
+    if since is None or head is None or files is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      board.git.no_worktree() or f"git could not diff thread {key}'s worktree")
+    return diff_of(str(since), str(head), files, lambda path: None)
+
+
 @reads.get("/conversations/{key}/proposals/{proposal_id}",
            response_model=Proposal, tags=["proposals"],
            operation_id="readProposal", summary="One proposal.",

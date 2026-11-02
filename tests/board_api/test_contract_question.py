@@ -1,6 +1,6 @@
 from github_orchestrator.agent_runs.fake import Outcome
 from github_orchestrator.conversation import ConversationState
-from tests.board_api.support import KEY, THE_PR, client_of, heard_on, running
+from tests.board_api.support import KEY, THE_PR, client_of, heard_on, proposed, running
 from tests.board_api.test_contract_writes import (
     asked,
     board,
@@ -35,7 +35,7 @@ def test_a_thread_whose_agent_asked_carries_the_question_and_the_head_it_was_ask
 
     assert read["state"] == "ready"
     assert read["question"] == {"text": QUESTION, "context": CONTEXT, "options": OPTIONS,
-                                "head": HEAD}
+                                "head": HEAD, "last_proposal": None}
 
 
 def test_a_thread_whose_agent_asked_nothing_carries_no_question(ready):
@@ -66,6 +66,56 @@ def test_answering_a_question_opens_a_session(board):
     answering = settled_by(board, "start-session")
 
     assert answering.standing is ConversationState.IN_SESSION
+
+
+def _asking_over_a_proposal(board):
+    proposal = proposed(board)
+    with board.threads.editing(KEY) as editable:
+        editable.rework(note="use clock_timestamp() for both bounds")
+    board.stage.agent_runs.script(Outcome(finishes=False))
+    drain(board.threads)
+    workspace = board.stage.working_copies.thread_checkout(THE_PR, KEY)
+    board.stage.working_copies.commit(workspace, {"g": "committed since\n"}, "past it")
+    board.stage.working_copies.edit(workspace, "f", "uncommitted\n")
+    with board.threads.editing(KEY) as editable:
+        editable.ask(QUESTION, CONTEXT, OPTIONS)
+    return proposal
+
+
+def test_a_question_asked_over_a_proposal_names_the_proposal_s_commits(board):
+    proposal = _asking_over_a_proposal(board)
+
+    question = client_of(board).get(f"/api/conversations/{KEY}").json()["question"]
+
+    assert question["last_proposal"] == {"base": str(proposal.fix.base_sha),
+                                         "head": str(proposal.fix.thread_sha)}
+
+
+def test_a_first_run_s_question_names_no_proposal(board):
+    _asking(board)
+
+    assert client_of(board).get(f"/api/conversations/{KEY}").json()["question"][
+        "last_proposal"] is None
+
+
+def test_the_worktree_diff_holds_everything_past_the_last_proposal(board):
+    proposal = _asking_over_a_proposal(board)
+
+    diff = client_of(board).get(f"/api/conversations/{KEY}/worktree-diff").json()
+
+    assert diff["base"] == str(proposal.fix.thread_sha)
+    assert sorted(file["path"] for file in diff["files"]) == ["f", "g"]
+
+
+def test_a_first_run_s_worktree_diff_holds_everything_it_changed(board):
+    _asking(board)
+    workspace = board.stage.working_copies.thread_checkout(THE_PR, KEY)
+    board.stage.working_copies.edit(workspace, "f", "so far\n")
+
+    diff = client_of(board).get(f"/api/conversations/{KEY}/worktree-diff").json()
+
+    assert diff["base"] == str(board.threads.get(KEY).fix.base_sha)
+    assert [file["path"] for file in diff["files"]] == ["f"]
 
 
 def test_a_proposal_left_by_a_silent_run_carries_its_last_words(board):

@@ -136,8 +136,12 @@ def _question_of(conversation: Conversation) -> contract.Question | None:
     question = conversation.fix.question
     if question is None:
         return None
+    fix = conversation.fix
+    last_proposal = (None if fix.base_sha is None or fix.thread_sha is None
+                     else contract.Commits(base=str(fix.base_sha), head=str(fix.thread_sha)))
     return contract.Question(text=question.text, context=question.context,
-                             options=list(question.options), head=_hex(question.head))
+                             options=list(question.options), head=_hex(question.head),
+                             last_proposal=last_proposal)
 
 
 def conversation_of(conversation: Conversation, account: str) -> contract.Conversation:

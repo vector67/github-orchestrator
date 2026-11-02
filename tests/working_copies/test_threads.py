@@ -262,6 +262,28 @@ def test_resetting_a_workspace_puts_it_back_at_a_commit_without_the_edits_since(
     assert not (wt / "new").exists()
 
 
+def test_a_workspace_diffs_everything_past_a_commit_committed_or_not(git, pr_worktree):
+    cut = _cut(git, pr_worktree)
+    wt = Path(cut.path)
+    _git(wt, "config", "user.email", "t@example.com")
+    _git(wt, "config", "user.name", "T")
+    (wt / "f").write_text("proposed\n")
+    _git(wt, "commit", "-qam", "the proposal")
+    proposed = _git(wt, "rev-parse", "HEAD").stdout.strip()
+    (wt / "g").write_text("committed since\n")
+    _git(wt, "add", "g")
+    _git(wt, "commit", "-qm", "past the proposal")
+    (wt / "f").write_text("uncommitted\n")
+    (wt / "new").write_text("untracked\n")
+
+    files = cut.diff_since(Sha(proposed))
+
+    assert sorted(file.path for file in files) == ["f", "g", "new"]
+    added = {file.path: [line.text for hunk in file.hunks for line in hunk.lines
+                         if line.kind == "added"] for file in files}
+    assert added == {"f": ["uncommitted"], "g": ["committed since"], "new": ["untracked"]}
+
+
 def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
     git, pr_worktree, worktrees_dir
 ):

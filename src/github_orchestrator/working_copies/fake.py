@@ -412,6 +412,16 @@ class FakeWorkingCopies:
         self.checkouts[_key(cut)] = FakeCheckout(branch=cut_branch)
         return base
 
+    def _workspace_diff(self, path: str | None, since: str) -> tuple[FileDiff, ...] | None:
+        checkout = None if path is None else self.checkouts.get(_key(path))
+        old = None if path is None else self._rev_tree(path, since)
+        head = None if path is None else self._head(path)
+        if checkout is None or old is None or head is None:
+            return None
+        new = {**self.commits[head].tree, **checkout.edits}
+        return parse_diff("".join(_unified(name, old.get(name), new.get(name))
+                                  for name in _changed_paths(old, new)))
+
     def _reset_workspace(self, path: str | None, to: str) -> str | None:
         checkout = None if path is None else self.checkouts.get(_key(path))
         sha = self._resolve(to)

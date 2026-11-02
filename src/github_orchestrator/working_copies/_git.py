@@ -261,6 +261,11 @@ class GitWorkingCopies:
                                            clone.new_worktree_command, self._notifications)
         return base
 
+    def _workspace_diff(self, path: str | None, since: str) -> tuple[FileDiff, ...] | None:
+        if not path:
+            return None
+        return _hunks.worktree_files(_threads.diff_since(path, since))
+
     def _reset_workspace(self, path: str | None, to: str) -> str | None:
         if not path:
             return "the thread has no worktree to reset"

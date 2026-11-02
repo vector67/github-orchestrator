@@ -758,6 +758,7 @@ export interface Question {
   context: string;
   options: string[];
   head: string | null;
+  last_proposal: Commits | null;
 }
 
 export interface QuestionRequest {

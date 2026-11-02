@@ -541,6 +541,13 @@ class CommitCheck(BaseModel):
                     "and what it leaves undone. Empty when the model gave none.")
 
 
+class Commits(BaseModel):
+    """Two commits that address a diff: `/diffs/{base}..{head}`."""
+
+    base: Sha
+    head: Sha
+
+
 class Question(BaseModel):
     """What an agent stopped to ask, rather than finish a fix it could not
     finish as asked. Nothing in it can be approved: the thread waits on the
@@ -557,6 +564,11 @@ class Question(BaseModel):
         description="The pull request's head when the agent asked, so the board "
                     "can say how far the branch has moved since. Null where the "
                     "board did not know it.")
+    last_proposal: Commits | None = Field(
+        description="The commits of the proposal the agent was reworking when it "
+                    "asked, whose diff is `/diffs/{base}..{head}`. Null where it "
+                    "asked on its first run. Everything in the worktree past it, "
+                    "committed or not, is `/conversations/{key}/worktree-diff`.")
 
 
 class Conversation(BaseModel):
@@ -1110,13 +1122,6 @@ class ReadMarkRequest(BaseModel):
 class ResetRequest(BaseModel):
     head: Sha = Field(description="The worktree's HEAD the page showed. The reset refuses "
                                   "once the worktree has moved on from it.")
-
-
-class Commits(BaseModel):
-    """Two commits that address a diff: `/diffs/{base}..{head}`."""
-
-    base: Sha
-    head: Sha
 
 
 class PullRequestLine(BaseModel):

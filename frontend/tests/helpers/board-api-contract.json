@@ -699,6 +699,22 @@
     }
    }
   },
+  "/api/conversations/{key}/worktree-diff": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Diff"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/dashboard": {
    "get": {
     "200": {
@@ -6095,6 +6111,16 @@
       }
      ]
     },
+    "last_proposal": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Commits"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "options": {
      "items": {
       "type": "string"
@@ -6109,7 +6135,8 @@
     "text",
     "context",
     "options",
-    "head"
+    "head",
+    "last_proposal"
    ],
    "type": "object"
   },
