@@ -777,6 +777,11 @@ const PR_WRITES = {
     until: (facts) => !facts.draft,
   },
   'take-over': { doing: 'taking it over', square: null, slot: 'controls' },
+  'check-for-fixes': {
+    doing: 'asking for the checks',
+    square: null,
+    slot: 'controls',
+  },
   dismiss: {
     doing: 'dismissing it',
     square: null,

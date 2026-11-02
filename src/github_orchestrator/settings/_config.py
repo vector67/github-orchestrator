@@ -157,7 +157,23 @@ def _read(config_path: Path) -> dict[str, Any]:
             f"{config_path}: hub_port must be a port from 1 to 65535, got {hub_port}"
         )
     _check_tracker(config_path, data.get("tracker", Tracker.NONE), data.get("tracker_project", ""))
+    _check_mentions_start(config_path, data.get("mentions_start", ""))
     return data
+
+
+def _check_mentions_start(config_path: Path, written: str) -> None:
+    if not written:
+        return
+    try:
+        datetime.fromisoformat(written)
+    except ValueError as e:
+        raise ConfigError(f"{config_path}: mentions_start must be a moment such as "
+                          f"\"2026-10-23T09:00:00+00:00\", got {written!r}") from e
+
+
+def _zoned(written: str) -> datetime:
+    moment = datetime.fromisoformat(written)
+    return moment.astimezone() if moment.tzinfo is None else moment
 
 
 _OLD_REPO_KEYS = {"watch_repo": "repo", "local_path": "local_path"}
@@ -418,7 +434,9 @@ def _tidied(data_dir: Path) -> list[Path]:
 
 
 _MENTIONS_START = "mentions_start"
-_MENTIONS_START_LINE = re.compile(rf"^{_MENTIONS_START}\s*=.*$", re.MULTILINE)
+_MENTIONS_START_LINE = re.compile(
+    rf"""^[ \t]*(?:{_MENTIONS_START}|"{_MENTIONS_START}"|'{_MENTIONS_START}')[ \t]*=.*$""",
+    re.MULTILINE)
 
 
 def _mentions_start_line(at: datetime) -> str:
@@ -483,11 +501,7 @@ class TomlConfigFile:
 
     def write(self, values: Mapping[str, str | int | bool], *,
               repos: Mapping[Repo, Clone]) -> None:
-        rendered = self._written(values, repos)
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        writing = self._path.with_name(f"{self._path.name}.writing")
-        writing.write_text(rendered)
-        os.replace(writing, self._path)
+        self._replace(self._written(values, repos))
 
     def _written(self, values: Mapping[str, str | int | bool],
                  repos: Mapping[Repo, Clone]) -> str:
@@ -502,7 +516,7 @@ class TomlConfigFile:
         data = _read(self._path)
         written = data.get(_MENTIONS_START)
         if written:
-            return datetime.fromisoformat(written)
+            return _zoned(written)
         if _MENTIONS_START in data:
             self.move_mentions_start(now)
         else:
@@ -515,9 +529,11 @@ class TomlConfigFile:
 
     def _replace(self, text: str) -> None:
         target = self._path.resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
         writing = target.with_name(f"{target.name}.writing")
         writing.write_text(text)
-        shutil.copymode(target, writing)
+        if target.exists():
+            shutil.copymode(target, writing)
         os.replace(writing, target)
 
     def move_aside(self, now: datetime) -> str:

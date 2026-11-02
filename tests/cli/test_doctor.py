@@ -451,6 +451,16 @@ def test_a_watcher_that_has_not_polled_yet_is_a_warning(machine, run_cli):
     assert _finding(ran.out, "has not finished a poll yet").level == "warn"
 
 
+def test_another_instance_s_hub_on_the_port_does_not_make_this_watcher_running(machine, run_cli):
+    machine.answering_hubs.add(HUB)
+    machine.hub_pid = 99
+
+    ran = run_cli("doctor")
+
+    stopped = _finding(ran.out, "the watcher is not running")
+    assert (stopped.level, stopped.fix) == ("FAIL", "github-orchestrator restart")
+
+
 REPO = "octocat/hello-world"
 
 

@@ -180,6 +180,9 @@ class Summaries(Protocol):
     def check_commit(self, conversation: Conversation, sha: Sha, shown: str, worktree: str,
                      done: Callable[[CommitVerdict, str], None]) -> None: ...
 
+    def check_changes(self, conversation: Conversation, base: Sha, head: Sha, shown: str,
+                      worktree: str, done: Callable[[CommitVerdict, str], None]) -> None: ...
+
 
 class Clock(Protocol):
     def now(self) -> str: ...

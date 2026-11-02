@@ -171,7 +171,8 @@ class OperatorCli:
 
     def _open(self, page: str) -> None:
         open_board(self._service, self._config.hub_url, self._hub_health, self._sleep,
-                   self._desktop, graphical=self._config.graphical, page=page)
+                   self._desktop, self._server, self._config_file.location(),
+                   graphical=self._config.graphical, page=page)
 
     def _dispatch(self, argv: list[str]) -> None:
         config = self._config
@@ -202,7 +203,7 @@ class OperatorCli:
                                        watcher_health=self._watcher_health,
                                        hub_health=self._hub_health,
                                        holds=self._holds, dismissals=self._dismissals,
-                                       releases=self._releases),
+                                       releases=self._releases, server=self._server),
             "config": lambda a: show_config(self._config_file),
             "doctor": lambda a: report([
                 ("This machine", self._machine.findings()),

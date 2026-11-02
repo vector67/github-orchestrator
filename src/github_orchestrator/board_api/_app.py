@@ -1376,6 +1376,55 @@ def confirm_thread(key: ThreadKey, board: Serving, if_match: IfMatch) -> Respons
                    lambda editable: editable.place(domain.ConversationState.DONE))
 
 
+CHECK_REFUSED: dict[int | str, dict[str, Any]] = {
+    500: {"description": "The branch could not be fetched from origin.", "model": Errors}}
+
+
+def _fetched_head(board: Board) -> CommitSha:
+    failed = board.git.fetch(board.conversations.facts().base_branch)
+    if failed is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, failed)
+    head = board.git.origin_head()
+    if head is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      board.git.no_worktree() or "the checkout has no head fetched from origin")
+    return head
+
+
+@writes.post("/conversations/{key}/operations:check-for-fixes", status_code=204,
+             operation_id="checkThreadForFixes",
+             summary="Fetch the branch and ask an agent whether origin's head addresses "
+                     "a comment the author has not answered.",
+             responses={**ONE_THREAD, **CHECK_REFUSED, 409: {
+                 "description": "The thread is not waiting on the author since your "
+                                "comment, or names no commit it was made on.",
+                 "model": Errors}})
+def check_thread_for_fixes(key: ThreadKey, board: Serving) -> Response:
+    """The branch is fetched first. The agent reads the diff from the commit
+    the comment was made on to origin's head and lands the thread in Assumed
+    done when it is addressed and My move when it is partly or not addressed.
+    Asking again at a head already checked, or while a check is out, starts
+    nothing.
+    """
+    head = _fetched_head(board)
+    with board.conversations.editing(_thread(board, key).key) as editable:
+        checked = editable.check_for_fixes(head)
+    if isinstance(checked, Denied):
+        raise _denied(checked)
+    return Response(status_code=204)
+
+
+@writes.post("/pull-request/operations:check-for-fixes", status_code=204,
+             tags=["pull request"], operation_id="checkForFixes", responses=CHECK_REFUSED,
+             summary="Check every thread waiting on the author for fixes.")
+def check_for_fixes(board: Serving) -> Response:
+    """What checking each thread does, for every thread on a pull request you
+    review that is waiting on the author with no reply since your comment.
+    """
+    board.conversations.check_for_fixes(_fetched_head(board))
+    return Response(status_code=204)
+
+
 @writes.post("/conversations/{key}/operations:place", status_code=202,
              response_model=Outcome, operation_id="placeThread",
              summary="Move a thread an agent placed to the outcome the operator "

@@ -66,6 +66,43 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.dom('[data-test-reply-open]').hasText('Reply to Mei');
   });
 
+  test('a thread waiting on the author since your comment offers a check for fixes', async function (assert) {
+    board().conversations = [
+      thread({
+        key: KEY,
+        state: 'waiting',
+        record_state: 'waiting_on_reviewer',
+        comments: [
+          { id: 1, author: 'vector67', created_at: null, review_state: null },
+        ],
+      }),
+    ];
+    board().comments[KEY] = [
+      comment({ author: 'vector67', created_at: null, review_state: null }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    await click('[data-test-check-for-fixes]');
+
+    assert.deepEqual(
+      board().posted.map((one) => [one.key, one.verb]),
+      [[KEY, 'check-for-fixes']],
+    );
+  });
+
+  test('a waiting thread the author has answered offers no check for fixes', async function (assert) {
+    board().conversations = [
+      {
+        ...board().conversations[0]!,
+        state: 'waiting',
+        record_state: 'waiting_on_reviewer',
+      },
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-check-for-fixes]').doesNotExist();
+  });
+
   test('a thread only you have written on offers a plain reply', async function (assert) {
     board().conversations = [thread({ key: KEY })];
     board().comments[KEY] = [

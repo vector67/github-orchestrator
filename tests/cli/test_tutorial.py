@@ -13,7 +13,7 @@ def test_tutorial_opens_the_board_at_its_tour(machine, run_cli, restartable):
 
 def test_tutorial_starts_a_watcher_that_is_not_running_before_opening_the_tour(
         machine, run_cli):
-    machine.while_asleep.append(lambda: machine.answering_hubs.add(HUB))
+    machine.while_asleep.append(lambda: machine.serving(HUB))
 
     ran = run_cli("tutorial")
 

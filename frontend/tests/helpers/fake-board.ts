@@ -1430,7 +1430,9 @@ export class FakeBoard {
     const summarised = SUMMARISE.exec(url);
     if (summarised) return this.summarise(url, summarised[1]!, headers);
     const found =
-      /\/api\/(?:conversations\/([^/]+)\/)?operations:([a-z-]+)$/.exec(url);
+      /\/api\/(?:conversations\/([^/]+)\/|pull-request\/)?operations:([a-z-]+)$/.exec(
+        url,
+      );
     const key = decodeURIComponent(found?.[1] ?? '');
     const verb = found?.[2] ?? '';
     const body: unknown =
@@ -1448,6 +1450,7 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     if (verb === 'check-session') return this.checkSession(key);
+    if (verb === 'check-for-fixes') return respond(null, { status: 204 });
     const id = `op_${this.posted.length}`;
     if (verb === 'start-session' || verb === 'open-shell') {
       this.drain({

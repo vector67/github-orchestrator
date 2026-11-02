@@ -372,3 +372,6 @@ class GitWorkingCopies:
     def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
         return _revisions.named_commit(worktree, sha)
 
+    def _diff_text(self, worktree: str, base: str, head: str) -> str | None:
+        return _revisions.diff_text(worktree, base, head)
+

@@ -20,6 +20,13 @@ CHECK_ANSWERS = {
     CommitVerdict.NOT_ADDRESSED.value: "the commit does not do what the viewer asked",
 }
 
+CHANGES_ANSWERS = {
+    CommitVerdict.ADDRESSED.value: "the changes do what the viewer asked",
+    CommitVerdict.PARTLY.value: "the changes do some of what the viewer asked and "
+                                "leave some undone",
+    CommitVerdict.NOT_ADDRESSED.value: "the changes do not do what the viewer asked",
+}
+
 
 class Gists:
     def __init__(self, summaries: Summaries, enabled: bool, viewer: str,
@@ -48,6 +55,17 @@ class Gists:
         self.summaries.check_commit(
             conversation.key, facts.comments, path=conversation.path, line=conversation.line,
             sha=str(sha), shown=shown, worktree=worktree, answers=CHECK_ANSWERS,
+            done=lambda word, reasoning: done(CommitVerdict(word), reasoning))
+
+    def check_changes(self, conversation: Conversation, base: Sha, head: Sha, shown: str,
+                      worktree: str, done: Callable[[CommitVerdict, str], None]) -> None:
+        if not self.enabled:
+            return
+        facts = facts_of(conversation, self.viewer, self.pr_author())
+        self.summaries.check_changes(
+            conversation.key, facts.comments, path=conversation.path, line=conversation.line,
+            base=str(base), head=str(head), shown=shown, worktree=worktree,
+            answers=CHANGES_ANSWERS,
             done=lambda word, reasoning: done(CommitVerdict(word), reasoning))
 
     def write_gist(self, conversation: Conversation, source: str,

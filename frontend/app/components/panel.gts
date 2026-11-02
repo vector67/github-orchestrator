@@ -1,4 +1,5 @@
 import type { TOC } from '@ember/component/template-only';
+import CheckForFixes from 'frontend/components/check-for-fixes';
 import CodeContext from 'frontend/components/code-context';
 import CommentBody from 'frontend/components/comment-body';
 import CopyDirectory from 'frontend/components/copy-directory';
@@ -113,6 +114,9 @@ const PanelView: TOC<PanelSignature> = <template>
             <p class="work-placeholder" data-test-work-placeholder>
               What the author did lands here
             </p>
+          {{/if}}
+          {{#if @panel.check_for_fixes}}
+            <CheckForFixes @conversation={{@panel.id}} />
           {{/if}}
         {{else}}
           {{#if @panel.fix_label}}

@@ -1,15 +1,20 @@
 import json
+import shutil
 import tomllib
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from github_orchestrator.board_api.interface import (
+    NO_MENTIONS_LISTED,
     ListedMention,
     MentionsList,
     MentionsListing,
 )
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import ConversationState
-from github_orchestrator.domain import Repo
+from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -154,6 +159,18 @@ def test_a_search_finding_a_mention_outstanding_keeps_the_start(tmp_path):
     assert datetime.fromisoformat(_start(here)) == START
 
 
+def test_a_pr_github_says_mentions_me_that_names_another_login_keeps_the_start(tmp_path):
+    here = _here(tmp_path)
+    here.github.add_pr(THE_PR, PullRequestState(author="anna"), mentioned=True,
+                       updated_at="2026-10-22T10:00:00Z")
+    here.github.add_thread(THE_PR, _issue("IC_1", 1, "anna", "@octocat-renamed ping",
+                                          "2026-10-22T10:00:00Z"))
+
+    _searched(here)
+
+    assert datetime.fromisoformat(_start(here)) == START
+
+
 def test_a_repo_added_after_the_last_search_starts_cleared(tmp_path):
     here = _here(tmp_path, "acme/gadgets")
     (here.settings.data_dir / "mentions.json").write_text(json.dumps({
@@ -240,3 +257,112 @@ def test_a_pr_body_mention_links_to_the_pr(tmp_path):
 def test_the_board_reads_no_mentions_before_the_first_search(tmp_path):
     assert _here(tmp_path).container.get(MentionsList).listed() == MentionsListing(
         searched_at=None, mentions=())
+
+
+def test_a_mention_github_spells_in_another_case_is_listed_under_the_configured_repo(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.github.mentioned_since = lambda repos, since: [Pr(Repo.parse("Acme/Widgets"), 7)]
+
+    assert [(listed["repo"], listed["thread"]) for listed in _searched(here)["mentions"]] == [
+        (REPO, "IC_1")]
+
+
+def test_a_mention_in_a_repo_the_config_does_not_name_is_skipped(tmp_path):
+    here = _here(tmp_path, "acme/gadgets")
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.github.mentioned_since = lambda repos, since: [
+        Pr(Repo.parse("acme/gadgets-renamed"), 3), THE_PR]
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def _a_pr_whose_state_will_not_read(here):
+    gone = Pr(Repo.parse(REPO), 99)
+    real_state = here.github.pr_state
+
+    def state(pr):
+        if pr == gone:
+            raise GhError("gh api graphql failed (exit 1): Could not resolve to a PullRequest")
+        return real_state(pr)
+
+    here.github.pr_state = state
+    return gone
+
+
+def test_a_pr_whose_state_will_not_read_is_skipped_and_the_others_listed(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    gone = _a_pr_whose_state_will_not_read(here)
+    here.github.mentioned_since = lambda repos, since: [gone, THE_PR]
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def test_a_pr_whose_state_will_not_read_keeps_the_start(tmp_path):
+    here = _here(tmp_path)
+    gone = _a_pr_whose_state_will_not_read(here)
+    here.github.mentioned_since = lambda repos, since: [gone]
+
+    assert _listed_threads(here) == []
+    assert datetime.fromisoformat(_start(here)) == START
+
+
+def test_a_listing_whose_start_has_no_time_zone_still_lists_the_mention(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(json.dumps({
+        "searched_at": "2026-10-22T09:00:00+00:00", "started": {REPO: "2026-10-21T09:00:00"},
+        "mentions": []}))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def _entry(**changed):
+    return {"repo": REPO, "number": 7, "thread": "IC_1", "comment_id": 1, "kind": "issue",
+            "author": "anna", "at": "2026-10-22T10:00:00Z", "body": "@octocat ping",
+            "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "card": False,
+            **changed}
+
+
+@pytest.mark.parametrize("on_disk", [
+    "", '{"searched_at": "2026-10-23T09:00:00+00:00", "ment', "{not json", "[]",
+    json.dumps({"mentions": []}), json.dumps({"searched_at": SEARCHED}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [{"repo": REPO}]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": ["IC_1"]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [_entry(number="7")]}),
+    json.dumps({"searched_at": SEARCHED, "mentions": [_entry(repo="widgets")]}),
+])
+def test_the_board_reads_a_damaged_listing_as_no_mentions_listed(tmp_path, on_disk):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(on_disk)
+
+    assert here.container.get(MentionsList).listed() == NO_MENTIONS_LISTED
+
+
+def test_the_board_reads_a_folder_where_the_listing_belongs_as_no_mentions_listed(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").mkdir()
+
+    assert here.container.get(MentionsList).listed() == NO_MENTIONS_LISTED
+
+
+def test_a_listing_whose_started_is_not_a_table_starts_afresh(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(json.dumps({
+        "searched_at": "2026-10-22T09:00:00+00:00", "started": [REPO], "mentions": []}))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def test_the_first_search_writes_its_listing_where_no_data_folder_is_yet(tmp_path):
+    settings = replace(fake_settings(tmp_path / "data", repos=(RepoEntry(Repo.parse(REPO),
+                                                                         str(tmp_path)),)),
+                       config_path=tmp_path / "config.toml")
+    settings.config_path.write_text(f'mentions_start = "{START.isoformat()}"\n')
+    here = world(settings, clock=at(SEARCHED))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    shutil.rmtree(settings.data_dir, ignore_errors=True)
+
+    assert _listed_threads(here) == ["IC_1"]

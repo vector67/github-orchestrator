@@ -921,9 +921,13 @@ export default class StoreService extends Service {
     void waitForPromise(
       fetched<MentionableList>(at).then(
         ({ logins }) => {
+          if (logins.length === 0) this.assignableAsked.delete(pr.repo);
           this.assignable = { ...this.assignable, [pr.repo]: logins };
         },
-        (trouble: unknown) => reportError('mentionable', trouble),
+        (trouble: unknown) => {
+          this.assignableAsked.delete(pr.repo);
+          return reportError('mentionable', trouble);
+        },
       ),
     );
   }
@@ -1214,6 +1218,13 @@ export default class StoreService extends Service {
     const { session, conversation } = checked.body.body;
     this.takeThread(pr, conversation);
     return { done: true, body: session };
+  }
+
+  checkForFixes(key: string): Promise<Tried<void>> {
+    return tried(
+      'write',
+      handed(this.here.api(`${under(key)}/operations:check-for-fixes`)),
+    );
   }
 
   async askTheAgent(

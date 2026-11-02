@@ -2,7 +2,11 @@ import sys
 from datetime import datetime, timedelta
 
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.cli._config import CliConfig, print_agents_disabled_notice
+from github_orchestrator.cli._config import (
+    CliConfig,
+    ServerControl,
+    print_agents_disabled_notice,
+)
 from github_orchestrator.cli._hub import HealthBody, HubHealth
 from github_orchestrator.cli._update import UPDATE, newer_release
 from github_orchestrator.domain import HubState, Pr
@@ -68,8 +72,11 @@ def _repos(count: int) -> str:
 
 
 def _hub_line(config: CliConfig, config_file: ConfigFile, answer: HealthBody | None,
-              health: Health) -> str:
+              health: Health, foreign: HealthBody | None) -> str:
     hub_url = config.hub_url
+    if foreign is not None:
+        return (f"Hub: {hub_url} — another hub answers there (pid {foreign.get('pid')}), not "
+                f"this instance's server; set hub_port in {config_file.location()} to a free port")
     if answer is None:
         if not health.alive:
             return f"Hub: {hub_url} — down while the watcher is not running"
@@ -84,14 +91,16 @@ def _hub_line(config: CliConfig, config_file: ConfigFile, answer: HealthBody | N
 
 def status(config: CliConfig, config_file: ConfigFile, *, queues: Queues, change_detection: ChangeDetection,
            watcher_health: WatcherHealth, hub_health: HubHealth, holds: Holds,
-           dismissals: Dismissals, releases: Releases) -> None:
+           dismissals: Dismissals, releases: Releases, server: ServerControl) -> None:
     health = watcher_health.health()
-    answer = hub_health(config.hub_url)
+    reply = hub_health(config.hub_url)
+    ours = reply is None or reply.get("pid") == server.pid()
+    answer = reply if ours else None
     print(_version_line(config, answer))
     newer = newer_release(config, answer, releases)
     if newer is not None:
         print(f"Update available: {newer}. Run {UPDATE}.")
-    print(_hub_line(config, config_file, answer, health))
+    print(_hub_line(config, config_file, answer, health, None if ours else reply))
     watching = answer is not None and answer.get("state") == HubState.WATCHING
     if answer is not None and not watching:
         print("Watcher: running, polling nothing until the config is complete")
