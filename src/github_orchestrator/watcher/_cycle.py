@@ -259,16 +259,16 @@ class PollingWatcher:
                 log.warning("GraphQL returned no PR data for %s; skipping", pr)
                 continue
             if relevance.is_open and (relevance.viewer_did_author or relevance.viewer_reviewed
-                                      or self._mentioned_before(pr)):
+                                      or self._mentioned_or_taken_over(pr)):
                 engaged.append(pr)
             else:
                 ended[pr] = self._change_detection.ended(still_open=relevance.is_open,
                                                          merged=relevance.merged)
         return engaged, ended
 
-    def _mentioned_before(self, pr: Pr) -> bool:
+    def _mentioned_or_taken_over(self, pr: Pr) -> bool:
         facts = self._change_detection.facts(pr)
-        return facts is not None and facts.mentioned
+        return facts is not None and (facts.mentioned or facts.is_author is True)
 
     def _held(self, my_prs: list[Pr], review_prs: list[Pr],
               engaged: list[Pr]) -> dict[Pr, bool]:
