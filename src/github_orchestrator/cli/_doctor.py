@@ -97,7 +97,7 @@ class InstanceChecks:
             *service.findings,
             *self._github(),
             self._hub(answer, server),
-            self._watcher(answer),
+            self._watcher(answer if answer is None or answer.get("pid") == server else None),
         ]
 
     def _github(self) -> list[Finding]:

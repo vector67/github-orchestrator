@@ -195,7 +195,7 @@ class OperatorCli:
                                        watcher_health=self._watcher_health,
                                        hub_health=self._hub_health,
                                        holds=self._holds, dismissals=self._dismissals,
-                                       releases=self._releases),
+                                       releases=self._releases, server=self._server),
             "config": lambda a: show_config(self._config_file),
             "doctor": lambda a: report([
                 ("This machine", self._machine.findings()),

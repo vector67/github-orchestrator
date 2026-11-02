@@ -10,7 +10,7 @@ def test_status_lists_a_healthy_pr_beside_a_state_file_that_will_not_parse(machi
     corrupt = state_file(state_dir, a_pr(2, "org/zzzz"))
     corrupt.parent.mkdir(parents=True)
     corrupt.write_text("not json")
-    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.serving("http://127.0.0.1:8720")
     machine.settings().watcher_heartbeat.write_text(machine.now.isoformat())
 
     ran = run_cli("status")
