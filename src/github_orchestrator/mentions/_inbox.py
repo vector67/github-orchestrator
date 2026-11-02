@@ -128,4 +128,5 @@ def _latest(*moments: str | None) -> str | None:
 
 
 def _moment(iso: str) -> datetime:
-    return datetime.fromisoformat(iso)
+    moment = datetime.fromisoformat(iso)
+    return moment.astimezone() if moment.tzinfo is None else moment
