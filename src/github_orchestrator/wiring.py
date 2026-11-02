@@ -1363,13 +1363,15 @@ def uv_tool_dir(env: Mapping[str, str], home: Path) -> Path:
 
 
 def cli_config(settings: Settings, home: Path, *, platform: str, uid: int,
-               shell_path: str, python: str, graphical: bool, tool_dir: Path) -> CliConfig:
+               shell_path: str, cache_home: str | None, python: str, graphical: bool,
+               tool_dir: Path) -> CliConfig:
     config = settings.config
     runs_on = service_python(python, tool_dir)
     return CliConfig(
         python=runs_on.python,
         python_note=runs_on.note,
-        child_environment=settings.child_environment(),
+        child_environment=settings.child_environment() | (
+            {"XDG_CACHE_HOME": cache_home} if cache_home else {}),
         shell_path=shell_path,
         archive_dir=settings.archive_dir,
         data_dir=settings.data_dir,
@@ -1779,7 +1781,8 @@ def make_container(env: Mapping[str, str], home: Path,
         watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN"),
                        releases_address=env.get("GITHUB_ORCHESTRATOR_RELEASES_API")),
         CliWiring(cli_config(settings, home, platform=sys.platform, uid=os.getuid(),
-                             shell_path=env.get("PATH", ""), python=sys.executable,
+                             shell_path=env.get("PATH", ""), cache_home=env.get("XDG_CACHE_HOME"),
+                             python=sys.executable,
                              tool_dir=uv_tool_dir(env, home),
                              graphical=sys.platform == "darwin" or bool(
                                  env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"))),

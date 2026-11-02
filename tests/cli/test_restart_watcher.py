@@ -159,6 +159,15 @@ def test_the_rewritten_launchagent_needs_no_uv(machine, run_cli, restartable):
     assert _rendered(restartable)["EnvironmentVariables"]["PATH"] == machine.shell_path
 
 
+def test_the_launchagent_carries_the_shells_cache_folder(machine, run_cli, restartable):
+    machine.cache_home = "/elsewhere/cache"
+
+    ran = run_cli("restart-all")
+
+    assert ran.code == 0, ran.out
+    assert _rendered(restartable)["EnvironmentVariables"]["XDG_CACHE_HOME"] == "/elsewhere/cache"
+
+
 def test_a_mac_with_no_launchagent_gets_one_written_and_loaded(machine, run_cli):
     machine.settings().watcher_heartbeat.parent.mkdir(parents=True, exist_ok=True)
     machine.settings().watcher_heartbeat.write_text(machine.now.isoformat())

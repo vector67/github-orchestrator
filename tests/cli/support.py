@@ -109,6 +109,7 @@ class Machine:
     uv: str | None = "/tmp/bin/uv"
     python: str = "/tools/github-orchestrator/bin/python"
     shell_path: str = "/usr/bin:/bin"
+    cache_home: str | None = None
     installed: set[str] = field(default_factory=lambda: {
         "gh", "claude", "git", "node", "npm"})
     answers: list[object] = field(default_factory=list)
@@ -261,7 +262,7 @@ class Machine:
             OtherInstancesWiring(self.environment, self.home, self._other_container),
             CliWiring(cli_config(settings, self.home, platform=self.platform,
                                  uid=self.system.uid, shell_path=self.shell_path,
-                                 python=self.python, graphical=self.graphical,
+                                 cache_home=self.cache_home, python=self.python, graphical=self.graphical,
                                  tool_dir=self.tool_dir),
                       self.system, self.read_line, self.which, self.hub_health),
             clocks=clocks_of(lambda: self.now, sleep=self.sleep))
