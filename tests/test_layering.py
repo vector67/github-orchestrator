@@ -352,8 +352,8 @@ PACKAGES = {
         role="a terminal session is a command on a pty in a worktree it is handed, and knows nothing of who starts or serves it",
     ),
     "thread_names": Package(
-        pinned=frozenset({"NameMigration"}),
-        may_import=(),
+        pinned=frozenset({"HeldFolder", "NameMigration"}),
+        may_import=("terminal_sessions",),
         role="the thread names migration renames every thread's worktree, branch and record file once, under its own lock, and knows nothing of the processes that wait on it",
         imported_by=("wiring", "watcher", "pr_manager", "server"),
     ),

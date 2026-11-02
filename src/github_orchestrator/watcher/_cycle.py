@@ -148,6 +148,14 @@ class PollingWatcher:
             log.info("the config is %s now; stopping so the service starts the watcher again",
                      now)
 
+    def wait_to_migrate(self, still_held: Callable[[], bool]) -> None:
+        log.info("--- watcher keeping the server running alone until the thread names migrate ---")
+        while still_held():
+            self._server.keep_running()
+            self._releases.check_if_due()
+            self._sleep(CONFIG_CHECK_SECONDS)
+        log.info("the thread names migrated; the watcher starts polling")
+
     def _leaving(self) -> bool:
         self._left = self._left or self._setup_files.taken_leave()
         return self._left

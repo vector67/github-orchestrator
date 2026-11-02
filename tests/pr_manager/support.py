@@ -24,6 +24,7 @@ from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings import Logs
 from github_orchestrator.settings.fake import Settings
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.wiring import (
     BrowserFrontProvider,
     ManagerPanelsWiring,
@@ -136,6 +137,7 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
                  working_copies: WorkingCopies | None = None,
                  conversation_managers: ConversationManagerFactory | None = None,
                  logs: Logs | None = None,
+                 name_migration: NameMigration | None = None,
                  run: Any = run_subprocess) -> Manager:
     clock = clock or ManualClock()
     board = board or ServerPanel()
@@ -171,6 +173,8 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
         providers.append(fake_provider(ConversationManagerFactory, conversation_managers))
     if logs is not None:
         providers.append(fake_provider(Logs, logs))
+    if name_migration is not None:
+        providers.append(fake_provider(NameMigration, name_migration))
     sleep = ScriptedSleep(*script, clock=clock)
     container = build_container(settings, *providers,
                                 clocks=clocks_of(clock.now, monotonic=clock.monotonic,

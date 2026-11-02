@@ -3,13 +3,17 @@ import json
 import threading
 
 from github_orchestrator.settings.fake import fake_settings
+from github_orchestrator.terminal_sessions import Terminals
+from github_orchestrator.terminal_sessions.fake import FakeTerminals
 from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.wiring import thread_names_wiring, wire
+from tests.conftest import fake_provider
 
 
 def _migration(tmp_path, version="0.3.0") -> NameMigration:
     migration: NameMigration = wire(
-        thread_names_wiring(fake_settings(tmp_path), version)).get(NameMigration)
+        thread_names_wiring(fake_settings(tmp_path), version),
+        fake_provider(Terminals, FakeTerminals())).get(NameMigration)
     return migration
 
 

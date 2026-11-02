@@ -5,10 +5,12 @@ import pytest
 
 from github_orchestrator.board_api.interface import Told
 from github_orchestrator.desktop.fake import FakeDesktop
-from github_orchestrator.domain import HubState, Repo
+from github_orchestrator.domain import HubState, Pr, Repo
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.settings import Process
 from github_orchestrator.settings.fake import FakeLogs, fake_settings
+from github_orchestrator.thread_names import HeldFolder
+from github_orchestrator.thread_names.fake import FakeNameMigration
 from github_orchestrator.watcher import __main__ as watcher_main
 from tests.settings.support import settings_read_from
 from tests.watcher.support import ServerSpawns, watcher_container
@@ -36,7 +38,7 @@ class Searches(FakeGitHub):
 
 
 def _prepared(monkeypatch, tmp_path, argv, *, config=CONFIGURED, error=None, desktop=None,
-              server=None, sleep=None):
+              server=None, sleep=None, name_migration=None):
     if config is not None:
         (tmp_path / "config.toml").write_text(config)
     settings = settings_read_from(tmp_path / "config.toml", tmp_path)
@@ -47,7 +49,8 @@ def _prepared(monkeypatch, tmp_path, argv, *, config=CONFIGURED, error=None, des
 
     def container(env, home, *, dry_run):
         return watcher_container(settings, github=github, desktop=desktop, logs=logs,
-                                 dry_run=dry_run, server=server, **naps)
+                                 dry_run=dry_run, server=server, name_migration=name_migration,
+                                 **naps)
 
     monkeypatch.setattr("sys.argv", ["watcher", *argv])
     monkeypatch.setattr(watcher_main, "make_container", container)
@@ -231,6 +234,43 @@ def test_a_watcher_migrates_thread_names_before_its_first_cycle(tmp_path, monkey
     watcher_main.main()
 
     assert migrated_by_then and all(migrated_by_then)
+
+
+IN_THE_WAY = HeldFolder(pr=Pr(Repo.parse("octocat/hello-world"), 7), thread="PRRT_a",
+                        folder="/tmp/thread-worktrees/octocat/hello-world/7/PRRT_a")
+
+
+def test_a_resident_watcher_with_a_session_in_the_way_keeps_the_server_running_until_it_migrates(
+    tmp_path, monkeypatch,
+):
+    server = ServerSpawns()
+    migration = FakeNameMigration([IN_THE_WAY], [IN_THE_WAY], [])
+    github, _ = _prepared(monkeypatch, tmp_path, ["--loop"], error=KeyboardInterrupt(),
+                          server=server, sleep=lambda seconds: None, name_migration=migration)
+    searched = github.search
+    served_by_then = []
+
+    def search(repo, whose):
+        served_by_then.append((server.made, migration.tries))
+        return searched(repo, whose)
+
+    github.search = search
+
+    watcher_main.main()
+
+    assert served_by_then[0][0] >= 2 and served_by_then[0][1] == 3
+
+
+def test_one_cycle_with_a_session_in_the_way_fails_naming_it(tmp_path, monkeypatch, capsys):
+    github, _ = _prepared(monkeypatch, tmp_path, [],
+                          name_migration=FakeNameMigration([IN_THE_WAY]))
+
+    with pytest.raises(SystemExit) as excinfo:
+        watcher_main.main()
+
+    assert excinfo.value.code == 1
+    assert IN_THE_WAY.folder in capsys.readouterr().err
+    assert github.searched == []
 
 
 def test_a_dry_run_leaves_the_thread_names_as_they_are(tmp_path, monkeypatch):
