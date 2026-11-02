@@ -102,8 +102,9 @@ that a silent run's last words are kept.
     comment's text. The toast stays until opened or dismissed.
 
 13. **The PR head moves while asking.** Nothing runs. The section heading gains
-    a marker, "PR moved since the question · N new commits". The
-    rebase-under-proposal rule applies once the thread is `proposed` again.
+    a marker, "PR moved since the question · N new commits", counted from the
+    PR head the question was asked on to the PR head now. Rebasing stays where
+    it is today: at approve time, when the pick conflicts.
 
 14. **Notification.** A new `agent_asked` notification, batched like the rest:
     "Agent question on #<n>", the question as the body, opening the thread. The
