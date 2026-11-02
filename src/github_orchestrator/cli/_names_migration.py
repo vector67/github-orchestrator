@@ -21,4 +21,5 @@ def clear_the_way(instance: Instance, read_line: ReadLine, *, force: bool) -> No
         instance.migration.close_sessions()
         print("Closed them; the watcher migrates the thread names as it starts.")
         return
-    print("Left them open. The watcher waits to migrate until they close.")
+    print("Left them open. The watcher waits to migrate until they close, and the board "
+          "offers Close sessions and migrate.")

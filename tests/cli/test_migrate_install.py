@@ -230,7 +230,7 @@ def test_the_installer_s_start_leaves_the_sessions_open_when_told_no_and_says_wh
 
     assert ran.code == 0, ran.out
     assert migration.closed == 0
-    assert "waits to migrate until they close" in ran.out
+    assert "the board offers Close sessions and migrate" in ran.out
 
 
 def test_the_installer_s_start_with_force_closes_the_sessions_without_asking(machine, run_cli):

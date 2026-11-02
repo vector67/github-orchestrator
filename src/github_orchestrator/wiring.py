@@ -42,6 +42,7 @@ from github_orchestrator.board_api.interface import (
     Dashboard,
     Dashboards,
     Emojis,
+    FolderInUse,
     HarvestSetup,
     Holdings,
     KeptReviews,
@@ -49,6 +50,7 @@ from github_orchestrator.board_api.interface import (
     ManagerStanding,
     Mentionable,
     MentionsList,
+    NamesMigration,
     ServerApp,
     SetupDesk,
     Shelves,
@@ -182,7 +184,7 @@ from github_orchestrator.settings._switches import (
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
 from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
-from github_orchestrator.thread_names import NameMigration
+from github_orchestrator.thread_names import HeldFolder, NameMigration
 from github_orchestrator.thread_names._gate import LockedNameMigration
 from github_orchestrator.thread_names._pass import ThreadNames
 from github_orchestrator.thread_records import ThreadRecords
@@ -600,6 +602,25 @@ class ThreadRecordsProvider(Provider):
         return DiskThreadRecords(wiring.threads_dir)
 
 
+def _in_use(held: list[HeldFolder]) -> list[FolderInUse]:
+    return [FolderInUse(one.pr, one.thread, one.folder) for one in held]
+
+
+class BoardNamesMigration:
+    def __init__(self, migration: NameMigration) -> None:
+        self._migration = migration
+
+    def migrated(self) -> bool:
+        return self._migration.migrated()
+
+    def in_the_way(self) -> list[FolderInUse]:
+        return _in_use(self._migration.held())
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]:
+        self._migration.close_sessions()
+        return _in_use(self._migration.migrate())
+
+
 @dataclass(frozen=True)
 class ThreadNamesWiring(Wiring):
     marker: Path
@@ -621,6 +642,10 @@ class ThreadNamesProvider(Provider):
             wiring.threads_dir, wiring.thread_worktrees_dir, wiring.clones)
         return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, names,
                                    terminals)
+
+    @provide
+    def names_migration(self, migration: NameMigration) -> NamesMigration:
+        return BoardNamesMigration(migration)
 
 
 def thread_names_wiring(settings: Settings, version: str | None) -> ThreadNamesWiring:
@@ -1100,7 +1125,8 @@ class ServerAppProvider(Provider):
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
-                   lane: SummaryLane, shelves: ThreadRecords) -> ServerApp:
+                   lane: SummaryLane, shelves: ThreadRecords,
+                   migration: NamesMigration) -> ServerApp:
         from github_orchestrator.board_api._one_server import OneServer
         return OneServer(app_root=wiring.app_root, font_dir=wiring.font_dir,
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
@@ -1111,7 +1137,7 @@ class ServerAppProvider(Provider):
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
                          summaries=summaries, lane=lane, shelves=shelves,
-                         check_presence=wiring.check_presence,
+                         migration=migration, check_presence=wiring.check_presence,
                          first_names_only=wiring.first_names_only,
                          heartbeat_seconds=wiring.heartbeat_seconds,
                          check_seconds=wiring.check_seconds)
@@ -1646,6 +1672,25 @@ class PreviewHubProvider(Provider):
                               token=None, address=API)
 
 
+class NothingToMigrate:
+    def migrated(self) -> bool:
+        return True
+
+    def in_the_way(self) -> list[FolderInUse]:
+        return []
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]:
+        return []
+
+
+class PreviewNamesProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def names_migration(self) -> NamesMigration:
+        return NothingToMigrate()
+
+
 def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                       repo: Repo, local_path: Path, github: PreviewGitHub, desktop: Desktop,
                       agent_runs: PreviewAgentRuns, pr_processes: PrProcesses,
@@ -1669,6 +1714,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         replace(summary_lane_wiring(settings, ()), agents_enabled=False),
         conversation_wiring(settings),
         MentionsProvider,
+        PreviewNamesProvider,
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
         ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),

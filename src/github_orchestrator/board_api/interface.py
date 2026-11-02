@@ -337,6 +337,21 @@ class KeptReviews(Protocol):
     def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None: ...
 
 
+@dataclass(frozen=True)
+class FolderInUse:
+    pr: Pr
+    thread: str
+    folder: str
+
+
+class NamesMigration(Protocol):
+    def migrated(self) -> bool: ...
+
+    def in_the_way(self) -> list[FolderInUse]: ...
+
+    def close_sessions_and_migrate(self) -> list[FolderInUse]: ...
+
+
 class TourMarker(Protocol):
     def due(self) -> bool: ...
 
