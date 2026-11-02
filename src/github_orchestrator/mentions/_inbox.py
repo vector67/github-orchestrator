@@ -54,22 +54,28 @@ class GitHubMentionsInbox:
         start = self._start_line.mentions_start(began)
         started = self._started(began, start)
         mentions: list[dict[str, Any]] = []
-        skipped = False
+        held = False
         try:
             for pr in self._configured(self._pull_requests.mentioned_since(self._repos, start)):
                 try:
                     state = self._pull_requests.pr_state(pr)
                 except Exception:
                     log.exception("mentions in %s skipped: its state will not read", pr)
-                    skipped = True
+                    held = True
                     continue
-                mentions += self._outstanding(pr, state,
-                                              max(start, _moment(started[str(pr.repo)])))
+                outstanding = self._outstanding(pr, state,
+                                                max(start, _moment(started[str(pr.repo)])))
+                if outstanding is None:
+                    log.warning("GitHub says %s mentions you, but it names no gh_account the "
+                                "config gives; did your GitHub login change?", pr)
+                    held = True
+                    continue
+                mentions += outstanding
         except _Unread as unread:
             log.warning("mentions not searched: the threads of %s will not read", unread.pr)
             return
         write_listing(self._path, began, started, mentions)
-        if not mentions and not skipped:
+        if not mentions and not held:
             self._start_line.move_mentions_start(began)
 
     def _configured(self, found: list[Pr]) -> list[Pr]:
@@ -90,11 +96,13 @@ class GitHubMentionsInbox:
         return {str(repo): before.get(str(repo), began.isoformat()) for repo in self._repos}
 
     def _outstanding(self, pr: Pr, state: PullRequestState,
-                     start: datetime) -> list[dict[str, Any]]:
+                     start: datetime) -> list[dict[str, Any]] | None:
         manager = self._conversation_managers.of(pr)
         found = manager.poll(state).mentions
         if found is None:
             raise _Unread(pr)
+        if not found:
+            return None
         dated = [replace(mention, at=_latest(mention.at or state.created_at, mention.edited_at))
                  for mention in found]
         outstanding = []
