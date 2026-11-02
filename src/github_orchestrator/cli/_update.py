@@ -27,7 +27,7 @@ TOOL_PYTHON = "3.12"
 
 
 def update(config: CliConfig, run: Run, which: Which, releases: Releases, *,
-           version: str | None, check: bool) -> None:
+           version: str | None, check: bool, force: bool) -> None:
     found = releases.look_up(version)
     if isinstance(found, str):
         print(found, file=sys.stderr)
@@ -59,7 +59,8 @@ def update(config: CliConfig, run: Run, which: Which, releases: Releases, *,
               f"{str(done.stderr).strip()}", file=sys.stderr)
         sys.exit(1)
     print("==> Restarting every instance on the new version", flush=True)
-    restarted = run([config.python, "-m", "github_orchestrator.cli", "start", "--from-installer"])
+    restarted = run([config.python, "-m", "github_orchestrator.cli", "start", "--from-installer",
+                     *(["--force"] if force else [])])
     if restarted.returncode != 0:
         sys.exit(restarted.returncode)
     print(f"Updated to {found.version}.")

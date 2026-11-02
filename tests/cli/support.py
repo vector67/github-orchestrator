@@ -22,6 +22,8 @@ from github_orchestrator.terminal_sessions.fake import (
     FakeTerminals,
     FakeTerminalSessions,
 )
+from github_orchestrator.thread_names import NameMigration
+from github_orchestrator.thread_names.fake import FakeNameMigration
 from github_orchestrator.wiring import (
     CliWiring,
     OtherInstancesWiring,
@@ -114,6 +116,7 @@ class Machine:
     slept: list[float] = field(default_factory=list)
     while_asleep: list[Callable[[], None]] = field(default_factory=list)
     terminals: FakeTerminals = field(default_factory=FakeTerminals)
+    name_migration: FakeNameMigration = field(default_factory=FakeNameMigration)
     instance: str | None = None
     others: dict[str, "Machine"] = field(default_factory=dict)
     answering_hubs: set[str] = field(default_factory=set)
@@ -247,6 +250,7 @@ class Machine:
             fake_provider(PrProcesses, self.processes()),
             fake_provider(TerminalSessions, FakeTerminalSessions()),
             fake_provider(Terminals, self.terminals),
+            fake_provider(NameMigration, self.name_migration),
             ServerWiring(server_config(settings), python=self.python,
                          environment=settings.child_environment(), spawn=self.spawn_server,
                          kill=self.stop_server),

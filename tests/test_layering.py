@@ -252,7 +252,8 @@ PACKAGES = {
     "cli": Package(
         pinned=frozenset({"Cli"}),
         may_import=("settings", "github", "pr_event_queue", "working_copies", "pr_processes",
-                    "conversation", "change_detection", "watcher", "agent_runs", "desktop"),
+                    "conversation", "change_detection", "watcher", "agent_runs", "desktop",
+                    "thread_names"),
         role="the CLI reads and changes the other modules only through their interfaces, and only its entry points build the container",
         imported_by=("wiring",),
         entries=frozenset({"__main__"}),
@@ -355,7 +356,7 @@ PACKAGES = {
         pinned=frozenset({"HeldFolder", "NameMigration"}),
         may_import=("terminal_sessions",),
         role="the thread names migration renames every thread's worktree, branch and record file once, under its own lock, and knows nothing of the processes that wait on it",
-        imported_by=("wiring", "watcher", "pr_manager", "server"),
+        imported_by=("wiring", "watcher", "pr_manager", "server", "cli"),
     ),
     "thread_records": Package(
         pinned=frozenset({"PrRecords", "ThreadRecords", "UnreadableThread"}),

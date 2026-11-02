@@ -81,6 +81,7 @@ class Commands:
             "--foreground", action="store_true",
             help="Run the watcher in this terminal instead, for a Linux without a user manager.")
         start_parser.add_argument("--from-installer", action="store_true", help=argparse.SUPPRESS)
+        start_parser.add_argument("-f", "--force", action="store_true", help=argparse.SUPPRESS)
 
         stop_parser = command(
             "stop", "Stop this instance's watcher and agent managers.", "stop --all",
@@ -111,6 +112,10 @@ class Commands:
                                    help="Only say whether a newer release exists.")
         update_parser.add_argument("--version", metavar="X",
                                    help="Install release X instead, even an older one.")
+        update_parser.add_argument(
+            "-f", "--force", action="store_true",
+            help="Close any terminal session in a folder the thread names migration moves, "
+                 "without asking.")
 
         command(
             "doctor", "Check the install, the service, GitHub and each repo, and say how to fix "

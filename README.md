@@ -168,7 +168,12 @@ When a newer release is out, the board's top bar shows **Update available** and
 ```bash
 github-orchestrator update           # install the newest release, then restart every instance on it
 github-orchestrator update --check   # only say whether there is one
+github-orchestrator update --force   # close, without asking, any terminal session in a folder the upgrade renames
 ```
+
+An upgrade can rename the folders of review threads' worktrees. A terminal
+session left open in one of them holds that up: `update` names each one and
+asks before closing them; the watcher waits until they close.
 
 ## Uninstall
 
