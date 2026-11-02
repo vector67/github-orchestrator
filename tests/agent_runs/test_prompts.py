@@ -127,6 +127,19 @@ def test_the_check_of_a_commit_against_a_thread(runs, claude, tmp_path):
     assert_pinned("commit-check", _asked(runs, claude))
 
 
+def test_the_check_of_the_changes_since_a_comment_against_a_thread(runs, claude, tmp_path):
+    runs.check_changes(
+        "PRRT_1", [("you", "octocat", "rename this")],
+        path="src/foo.py", line=4, base="abc1234def", head="fed4321cba",
+        shown="diff --git a/src/foo.py b/src/foo.py\n-def old_name():\n+def new_name():",
+        worktree=str(tmp_path),
+        answers={"addressed": "the changes do what was asked",
+                 "not-addressed": "they do not"},
+        done=lambda word, reasoning: None)
+
+    assert_pinned("changes-check", _asked(runs, claude))
+
+
 def test_the_summary_of_a_batch_of_fixes(runs, claude):
     runs.summarize_fixes([([("Ada", "please rename the helper"), ("octocat", "which one?")],
                            "renamed the helper"),

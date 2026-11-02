@@ -57,6 +57,7 @@ from github_orchestrator.conversation._domain.apply import (
 )
 from github_orchestrator.conversation._domain.commands import (
     Approve,
+    CheckForFixes,
     Command,
     Confirm,
     DeclarePlan,
@@ -450,6 +451,9 @@ class _Editable:
     def set_commit_verdict(self, verdict: CommitVerdict,
                            reason: str) -> Conversation | Denied:
         return self._answer(SetCommitVerdict(verdict=verdict, reason=reason))
+
+    def check_for_fixes(self, head: Sha) -> Conversation | Denied:
+        return self._answer(CheckForFixes(viewer=self._pr.ports.config.gh_account, head=head))
 
 
 class _ConversationManager:

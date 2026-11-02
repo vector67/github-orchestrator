@@ -15,7 +15,7 @@ from github_orchestrator.conversation._domain.conversation import (
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
 from github_orchestrator.conversation._domain.thread import FetchedThread
-from github_orchestrator.domain import Location, Mention, Pr, ThreadRow
+from github_orchestrator.domain import Location, Mention, Pr, Sha, ThreadRow
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.notifications import ThreadNews
 
@@ -155,6 +155,8 @@ class EditableConversation(Protocol):
 
     def set_commit_verdict(self, verdict: CommitVerdict,
                            reason: str) -> Conversation | Denied: ...
+
+    def check_for_fixes(self, head: Sha) -> Conversation | Denied: ...
 
 
 class ConversationManager(Protocol):

@@ -108,6 +108,31 @@ def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str |
     )
 
 
+def changes_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str | None,
+                         line: int | None, base: str, head: str, shown: str,
+                         answers: Mapping[str, str]) -> str:
+    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
+                          for label, login, body in comments)
+    where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
+    offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
+    return (
+        "You check a pull request review for one person, the viewer, who is reviewing "
+        "someone else's pull request. The viewer left a review comment on commit "
+        f"{base}, and nobody has replied to it since. The pull request's head is now "
+        f"{head}. The changes between the two are below, as `git diff {base} {head}` "
+        "prints them. You are in a checkout of the pull request and can read any file in "
+        "it to judge the changes. Decide whether the changes do what the viewer asked. "
+        "Each comment is labelled: `you` is the viewer, `PR author` wrote the pull "
+        "request, `colleague` is anyone else, `bot` is a review bot.\n\n"
+        f"Answer on a single line: one of these words, then {SEPARATOR}, then one or two "
+        "sentences saying what the changes do about the viewer's comment and what, if "
+        "anything, they leave undone. Nothing else.\n"
+        f"{offered}\n\n"
+        f"The thread on {where}, oldest comment first:\n\n{thread}\n\n"
+        f"The changes:\n\n{shown}"
+    )
+
+
 def commit_check_in(answer: str, answers: Mapping[str, str]) -> tuple[str, str] | None:
     word, _, reasoning = answer.partition(SEPARATOR)
     found = verdict_in(word, answers)

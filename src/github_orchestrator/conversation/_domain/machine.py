@@ -6,6 +6,7 @@ from github_orchestrator.conversation._domain import operations as history
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
     Approve,
+    CheckForFixes,
     Confirm,
     DeclarePlan,
     Defer,
@@ -786,6 +787,21 @@ def _a_commit_checked(conversation: Conversation, command: SetCommitVerdict) -> 
     return None
 
 
+def _waiting_on_the_author(conversation: Conversation,
+                           command: CheckForFixes) -> Refused | None:
+    comments = conversation.comments
+    if (conversation.role != ROLE_REVIEWER or conversation.state != WAITING_ON_REVIEWER
+            or not comments or comments[-1].author != command.viewer):
+        return Refused(conversation, ErrorCode.NOT_PARKED,
+                       "only a thread waiting on the author since your comment is checked "
+                       "for fixes")
+    if Sha.parse(conversation.original_commit or "") is None:
+        return Refused(conversation, ErrorCode.NOT_PARKED,
+                       "the thread names no commit it was made on, so there is nothing "
+                       "to check it against")
+    return None
+
+
 RULES: dict[type, tuple[Rule, ...]] = {
     GistWritten: (_the_gist_of_this_body,),
     DeclarePlan: (_planning((QUEUED, RUNNING, IN_SESSION), "takes no plan"),),
@@ -801,6 +817,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     Fail: (_running_only,),
     SetCommitVerdict: (_a_commit_checked,),
+    CheckForFixes: (_waiting_on_the_author,),
     SessionRefused: (_a_session_opening,),
     SessionGone: (_a_session_open,),
     RunStarted: (_queued_for_a_run,),

@@ -3,12 +3,14 @@ from datetime import timedelta
 from github_orchestrator.agent_runs.fake import HeldVerdicts
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import CommitVerdict, ConversationState, Denied
+from github_orchestrator.domain import Sha
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
     Thread,
     ThreadComment,
 )
+from github_orchestrator.github.fake import ThreadAnchor
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
@@ -43,9 +45,10 @@ class Board:
     def commit(self, files, message):
         return self.here.working_copies.commit(WORKTREE, files, message)
 
-    def thread(self, *comments):
+    def thread(self, *comments, made_on=None):
         self.here.github.add_thread(THE_PR, Thread(
-            key=KEY, kind=CommentKind.REVIEW, path="helpers.py", line=1, comments=comments))
+            key=KEY, kind=CommentKind.REVIEW, path="helpers.py", line=1, comments=comments,
+            anchor=ThreadAnchor(original_commit=made_on)))
         polled = self.manager.poll(self.state)
         polled.commit()
         if polled.activity is not None:
@@ -287,3 +290,105 @@ def test_a_thread_no_commit_was_checked_on_takes_no_verdict_by_hand(settings):
 
     assert isinstance(refused, Denied)
     assert board.get().commit_check is None
+
+
+def _waiting_on_the_author(settings):
+    board = Board(settings)
+    base = board.here.working_copies.head_of(WORKTREE)
+    board.thread(_said(1, ME, "rename old_name"), made_on=base).tick_after()
+    board.agent_runs.give("their-move")
+    head = board.commit({"helpers.py": "def new_name():\n"}, "Rename the helper")
+    return board, base, head
+
+
+def _check_for_fixes(board, head):
+    with board.manager.editing(KEY) as conversation:
+        return conversation.check_for_fixes(Sha(head))
+
+
+def test_checking_for_fixes_asks_about_the_changes_since_the_comment_in_the_prs_checkout(
+        settings):
+    board, base, head = _waiting_on_the_author(settings)
+
+    _check_for_fixes(board, head)
+
+    [asked] = board.agent_runs.fix_checks_asked()
+    assert (asked.key, asked.base, asked.head, asked.path, asked.line, asked.worktree) == (
+        KEY, base, head, "helpers.py", 1, WORKTREE)
+    assert asked.comments == (("you", ME, "rename old_name"),)
+    assert ("def new_name():" in asked.shown, "def old_name():" in asked.shown) == (True, True)
+
+
+def test_changes_that_address_the_comment_move_the_thread_to_assumed_done(settings):
+    board, base, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+
+    board.agent_runs.give_check("addressed", "old_name is now new_name")
+
+    held = board.get()
+    assert held.standing is ConversationState.ASSUMED_DONE
+    assert (str(held.commit_check.sha), str(held.commit_check.parent),
+            held.commit_check.reasoning) == (head, base, "old_name is now new_name")
+
+
+def test_changes_that_do_not_address_the_comment_move_the_thread_to_my_move(settings):
+    board, _, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+
+    board.agent_runs.give_check("not-addressed", "old_name is still there")
+
+    assert board.get().standing is ConversationState.READY
+
+
+def test_checking_again_at_the_head_already_checked_asks_nothing(settings):
+    board, _, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+    board.agent_runs.give_check("partly", "renamed, but one caller still uses old_name")
+
+    _check_for_fixes(board, head)
+
+    assert len(board.agent_runs.fix_checks_asked()) == 1
+
+
+def test_checking_again_after_a_new_push_asks_about_the_new_head(settings):
+    board, _, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+    board.agent_runs.give_check("partly", "renamed, but one caller still uses old_name")
+    newer = board.commit({"caller.py": "new_name()\n"}, "Rename the caller")
+
+    _check_for_fixes(board, newer)
+
+    assert [asked.head for asked in board.agent_runs.fix_checks_asked()] == [head, newer]
+
+
+def test_a_thread_the_author_has_replied_to_is_not_checked_for_fixes(settings):
+    board, base, head = _waiting_on_the_author(settings)
+    board.thread(_said(1, ME, "rename old_name"),
+                 _said(2, AUTHOR, "will do", "2026-09-01T11:00:00Z"), made_on=base)
+
+    refused = _check_for_fixes(board, head)
+
+    assert isinstance(refused, Denied)
+    assert board.agent_runs.fix_checks_asked() == []
+
+
+def test_a_thread_in_my_move_is_not_checked_for_fixes(settings):
+    board = Board(settings)
+    base = board.here.working_copies.head_of(WORKTREE)
+    board.thread(_said(1, ME, "rename old_name"), made_on=base).tick_after()
+    board.agent_runs.give("my-move")
+
+    refused = _check_for_fixes(board, base)
+
+    assert isinstance(refused, Denied)
+
+
+def test_a_thread_that_names_no_commit_it_was_made_on_is_not_checked_for_fixes(settings):
+    board = Board(settings)
+    head = board.here.working_copies.head_of(WORKTREE)
+    board.thread(_said(1, ME, "rename old_name")).tick_after()
+    board.agent_runs.give("their-move")
+
+    refused = _check_for_fixes(board, head)
+
+    assert isinstance(refused, Denied)

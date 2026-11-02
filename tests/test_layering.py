@@ -561,7 +561,7 @@ WORKING_COPIES_MEMBERS = frozenset({
 })
 PR_CHECKOUT_MEMBERS = frozenset({
     "workspace", "is_clean", "push", "unpick", "fetch", "reset_to_origin", "base_standing", "origin_head", "local_head", "commit_message",
-    "diff_files", "named_commit", "pr_diff", "pr_commits", "has_commit", "blob", "no_worktree",
+    "diff_files", "named_commit", "changes", "pr_diff", "pr_commits", "has_commit", "blob", "no_worktree",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
     "path", "branch", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop",
@@ -677,7 +677,8 @@ ROLE_MEMBERS = {
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "session_gone", "set_commit_verdict"}),
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "session_gone", "set_commit_verdict",
+        "check_for_fixes"}),
 }
 
 

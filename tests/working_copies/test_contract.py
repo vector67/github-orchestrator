@@ -507,6 +507,26 @@ def test_a_hash_the_checkout_does_not_hold_reads_as_no_commit(world, pr_checkout
     assert pr_checkout.named_commit(Sha("abcdef1")) is None
 
 
+def test_the_changes_between_two_commits_read_as_their_diff_and_where_it_is(
+        world, pr_worktree, pr_checkout):
+    base = world.commit(pr_worktree, {"h": "old\n"}, "Add the helper")
+    world.commit(pr_worktree, {"g": "other\n"}, "Add another")
+    head = world.commit(pr_worktree, {"h": "renamed\n"}, "Rename the helper")
+
+    changes = pr_checkout.changes(Sha(base), Sha(head))
+
+    assert changes.worktree == str(pr_worktree)
+    assert ("-old" in changes.shown, "+renamed" in changes.shown,
+            "+other" in changes.shown) == (True, True, True)
+
+
+def test_changes_from_a_commit_the_checkout_does_not_hold_read_as_none(
+        world, pr_worktree, pr_checkout):
+    head = world.head_of(pr_worktree)
+
+    assert pr_checkout.changes(Sha("abcdef1"), Sha(head)) is None
+
+
 def test_a_thread_gets_its_own_worktree_at_the_pr_head(world, pr_worktree, cut):
     checkout = cut.path
 

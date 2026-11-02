@@ -152,6 +152,11 @@ class Summaries(Protocol):
                      worktree: str, answers: Mapping[str, str],
                      done: Callable[[str, str], None]) -> None: ...
 
+    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                      path: str | None, line: int | None, base: str, head: str, shown: str,
+                      worktree: str, answers: Mapping[str, str],
+                      done: Callable[[str, str], None]) -> None: ...
+
 
 class ThreadWork(Protocol):
     def fix(self, fix: ThreadFix) -> Run | str: ...

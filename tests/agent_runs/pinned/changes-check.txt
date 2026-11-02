@@ -1,0 +1,15 @@
+You check a pull request review for one person, the viewer, who is reviewing someone else's pull request. The viewer left a review comment on commit abc1234def, and nobody has replied to it since. The pull request's head is now fed4321cba. The changes between the two are below, as `git diff abc1234def fed4321cba` prints them. You are in a checkout of the pull request and can read any file in it to judge the changes. Decide whether the changes do what the viewer asked. Each comment is labelled: `you` is the viewer, `PR author` wrote the pull request, `colleague` is anyone else, `bot` is a review bot.
+
+Answer on a single line: one of these words, then ||, then one or two sentences saying what the changes do about the viewer's comment and what, if anything, they leave undone. Nothing else.
+- addressed: the changes do what was asked
+- not-addressed: they do not
+
+The thread on src/foo.py:4, oldest comment first:
+
+[you] octocat: rename this
+
+The changes:
+
+diff --git a/src/foo.py b/src/foo.py
+-def old_name():
++def new_name():
