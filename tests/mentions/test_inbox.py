@@ -258,3 +258,34 @@ def test_a_mention_in_a_repo_the_config_does_not_name_is_skipped(tmp_path):
         Pr(Repo.parse("acme/gadgets-renamed"), 3), THE_PR]
 
     assert _listed_threads(here) == ["IC_1"]
+
+
+def _a_pr_whose_state_will_not_read(here):
+    gone = Pr(Repo.parse(REPO), 99)
+    real_state = here.github.pr_state
+
+    def state(pr):
+        if pr == gone:
+            raise GhError("gh api graphql failed (exit 1): Could not resolve to a PullRequest")
+        return real_state(pr)
+
+    here.github.pr_state = state
+    return gone
+
+
+def test_a_pr_whose_state_will_not_read_is_skipped_and_the_others_listed(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    gone = _a_pr_whose_state_will_not_read(here)
+    here.github.mentioned_since = lambda repos, since: [gone, THE_PR]
+
+    assert _listed_threads(here) == ["IC_1"]
+
+
+def test_a_pr_whose_state_will_not_read_keeps_the_start(tmp_path):
+    here = _here(tmp_path)
+    gone = _a_pr_whose_state_will_not_read(here)
+    here.github.mentioned_since = lambda repos, since: [gone]
+
+    assert _listed_threads(here) == []
+    assert datetime.fromisoformat(_start(here)) == START
