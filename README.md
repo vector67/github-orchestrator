@@ -173,7 +173,8 @@ github-orchestrator update --force   # close, without asking, any terminal sessi
 
 An upgrade can rename the folders of review threads' worktrees. A terminal
 session left open in one of them holds that up: `update` names each one and
-asks before closing them; the watcher waits until they close.
+asks before closing them. Until they close the watcher waits, and the board
+lists them with a **Close sessions and migrate** button.
 
 ## Uninstall
 

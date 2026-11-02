@@ -55,6 +55,11 @@ class ErrorCode(StrEnum):
     NOT_WATCHING is the hub serving in setup or broken state, so the watcher
     polls nothing; the detail is what is wrong with the config.
 
+    WAITING_TO_MIGRATE is the hub serving while terminal sessions are in
+    folders the thread names migration moves, so the watcher waits and no
+    pull request's board is served; the thread names migration resource names
+    each one and closes them.
+
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
 
@@ -141,6 +146,7 @@ class ErrorCode(StrEnum):
     WATCHER_STARTING = "watcher-starting"
     WATCHER_FAILING = "watcher-failing"
     NOT_WATCHING = "not-watching"
+    WAITING_TO_MIGRATE = "waiting-to-migrate"
     NOT_FROZEN = "not-frozen"
     TERMINAL_REFUSED = "terminal-refused"
     MANAGER_REFUSED = "manager-refused"
@@ -2085,6 +2091,23 @@ class Mentions(BaseModel):
     mentions: list[OutstandingMention] = Field(description="Every mention found by that "
                                                            "search that its card was not "
                                                            "closed on the board after.")
+
+
+class SessionInTheWay(BaseModel):
+    repo: str = Field(description="The pull request's repository, owner/name.")
+    number: int = Field(description="The pull request's number.")
+    thread: str = Field(description="The review thread whose worktree the folder is.")
+    folder: str = Field(description="The folder a terminal session is in, under its old name.")
+
+
+class ThreadNamesMigration(BaseModel):
+    """Whether the one-time rename of every thread's worktree, branch and
+    record file has run, and the terminal sessions holding it up."""
+
+    migrated: bool = Field(description="Whether the thread names carry their key's case now.")
+    sessions: list[SessionInTheWay] = Field(description="Each folder the migration moves that a "
+                                                        "terminal session is in; empty once "
+                                                        "migrated.")
 
 
 class Tour(BaseModel):

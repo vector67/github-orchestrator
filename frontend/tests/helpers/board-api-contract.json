@@ -1500,6 +1500,20 @@
     }
    }
   },
+  "/api/thread-names-migration": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ThreadNamesMigration"
+    }
+   }
+  },
+  "/api/thread-names-migration:close-sessions-and-migrate": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/ThreadNamesMigration"
+    }
+   }
+  },
   "/api/tour": {
    "get": {
     "200": {
@@ -3490,6 +3504,7 @@
     "watcher-starting",
     "watcher-failing",
     "not-watching",
+    "waiting-to-migrate",
     "not-frozen",
     "terminal-refused",
     "manager-refused",
@@ -6469,6 +6484,29 @@
    ],
    "type": "object"
   },
+  "SessionInTheWay": {
+   "properties": {
+    "folder": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "thread": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "thread",
+    "folder"
+   ],
+   "type": "object"
+  },
   "SessionOperation": {
    "properties": {
     "conversation": {
@@ -7252,6 +7290,24 @@
     "pr-body"
    ],
    "type": "string"
+  },
+  "ThreadNamesMigration": {
+   "properties": {
+    "migrated": {
+     "type": "boolean"
+    },
+    "sessions": {
+     "items": {
+      "$ref": "#/components/schemas/SessionInTheWay"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "migrated",
+    "sessions"
+   ],
+   "type": "object"
   },
   "ThreadRow": {
    "properties": {

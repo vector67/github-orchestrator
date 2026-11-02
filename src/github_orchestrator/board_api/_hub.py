@@ -30,6 +30,8 @@ from github_orchestrator.board_api._contract import (
     NewestRelease,
     OutstandingMention,
     RunLedger,
+    SessionInTheWay,
+    ThreadNamesMigration,
     Tour,
 )
 from github_orchestrator.board_api._errors import (
@@ -44,9 +46,11 @@ from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
     Emojis,
+    FolderInUse,
     HarvestSetup,
     Holdings,
     MentionsList,
+    NamesMigration,
     ReleaseRecord,
     SetupDesk,
     Told,
@@ -97,6 +101,7 @@ class Desk:
     emojis: Emojis
     harvest: HarvestSetup
     mentions: MentionsList
+    migration: NamesMigration
     pid: int
 
 
@@ -144,6 +149,10 @@ def list_pull_requests(request: Request, desk: Serving) -> Response:
 
 def _unheld(desk: Desk) -> Refusal:
     again = {"Retry-After": "1"}
+    if desk.migration.in_the_way():
+        return Refusal(503, ErrorCode.WAITING_TO_MIGRATE,
+                       "terminal sessions are in folders the thread names migration moves",
+                       headers=again)
     state = desk.told.state()
     if state is not None and state is not HubState.WATCHING:
         return Refusal(503, ErrorCode.NOT_WATCHING,
@@ -201,6 +210,30 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            body=mention.body, url=mention.url,
                            on_board=mention.card and mention.pr in held)
         for mention in listing.mentions]))
+
+
+def _migration_read(desk: Desk, held: list[FolderInUse]) -> ThreadNamesMigration:
+    return ThreadNamesMigration(migrated=desk.migration.migrated(), sessions=[
+        SessionInTheWay(repo=str(one.pr.repo), number=one.pr.number, thread=one.thread,
+                        folder=one.folder) for one in held])
+
+
+@reads.get("/thread-names-migration", response_model=ThreadNamesMigration, tags=["hub"],
+           operation_id="readThreadNamesMigration",
+           summary="Whether the thread names migrated, and the terminal sessions in its way.")
+def read_thread_names_migration(desk: Serving) -> ThreadNamesMigration:
+    return _migration_read(desk, desk.migration.in_the_way())
+
+
+@writes.post("/thread-names-migration:close-sessions-and-migrate",
+             response_model=ThreadNamesMigration, operation_id="closeSessionsAndMigrate",
+             summary="Close the terminal sessions in the migration's way, then migrate.")
+def close_sessions_and_migrate(desk: Serving) -> ThreadNamesMigration:
+    """Hangs up the pull requests whose sessions are in folders the migration
+    moves, waits for them to go, and runs the migration; the sessions still
+    in its way come back, none once it ran.
+    """
+    return _migration_read(desk, desk.migration.close_sessions_and_migrate())
 
 
 @reads.get("/tour", response_model=Tour, tags=["hub"], operation_id="readTour",
@@ -307,7 +340,7 @@ def read_nothing(unknown: str) -> Response:
 
 
 def refuse_unheld(owner: Owner, name: Name, number: int, path: str, desk: Serving) -> Response:
-    if not desk.told.held().told:
+    if not desk.told.held().told or not desk.migration.migrated():
         raise _unheld(desk)
     raise Refusal(404, ErrorCode.NOT_FOUND,
                   f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")

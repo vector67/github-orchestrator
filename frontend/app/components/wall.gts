@@ -9,6 +9,7 @@ import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import HubBar from 'frontend/components/hub-bar';
+import MigrationWait from 'frontend/components/migration-wait';
 import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
@@ -249,6 +250,9 @@ export default class Wall extends Component<WallSignature> {
         <p class="wall-stale-note" data-test-wall-stale-note>These rows may be
           out of date.</p>
       {{/if}}
+      {{#if (same this.store.unheld "waiting-to-migrate")}}
+        <MigrationWait />
+      {{/if}}
       <div
         class="wall-body"
         data-test-wall-stale={{this.stale}}
@@ -454,7 +458,9 @@ export default class Wall extends Component<WallSignature> {
                 {{this.store.watcher.last_error}}
               </p>
             </div>
-          {{else if (same this.store.unheld "not-watching")}}
+          {{else if (same this.store.unheld "waiting-to-migrate")}}{{else if
+            (same this.store.unheld "not-watching")
+          }}
             <div class="wall-empty" data-test-wall-unheld="not-watching">
               <p>This hub watches nothing until its config is complete.</p>
               <p class="mono">{{this.store.configProblem}}</p>
