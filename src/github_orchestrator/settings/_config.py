@@ -157,7 +157,23 @@ def _read(config_path: Path) -> dict[str, Any]:
             f"{config_path}: hub_port must be a port from 1 to 65535, got {hub_port}"
         )
     _check_tracker(config_path, data.get("tracker", Tracker.NONE), data.get("tracker_project", ""))
+    _check_mentions_start(config_path, data.get("mentions_start", ""))
     return data
+
+
+def _check_mentions_start(config_path: Path, written: str) -> None:
+    if not written:
+        return
+    try:
+        datetime.fromisoformat(written)
+    except ValueError as e:
+        raise ConfigError(f"{config_path}: mentions_start must be a moment such as "
+                          f"\"2026-10-23T09:00:00+00:00\", got {written!r}") from e
+
+
+def _zoned(written: str) -> datetime:
+    moment = datetime.fromisoformat(written)
+    return moment.astimezone() if moment.tzinfo is None else moment
 
 
 _OLD_REPO_KEYS = {"watch_repo": "repo", "local_path": "local_path"}
@@ -418,7 +434,9 @@ def _tidied(data_dir: Path) -> list[Path]:
 
 
 _MENTIONS_START = "mentions_start"
-_MENTIONS_START_LINE = re.compile(rf"^{_MENTIONS_START}\s*=.*$", re.MULTILINE)
+_MENTIONS_START_LINE = re.compile(
+    rf"""^[ \t]*(?:{_MENTIONS_START}|"{_MENTIONS_START}"|'{_MENTIONS_START}')[ \t]*=.*$""",
+    re.MULTILINE)
 
 
 def _mentions_start_line(at: datetime) -> str:
@@ -502,7 +520,7 @@ class TomlConfigFile:
         data = _read(self._path)
         written = data.get(_MENTIONS_START)
         if written:
-            return datetime.fromisoformat(written)
+            return _zoned(written)
         if _MENTIONS_START in data:
             self.move_mentions_start(now)
         else:

@@ -289,3 +289,13 @@ def test_a_pr_whose_state_will_not_read_keeps_the_start(tmp_path):
 
     assert _listed_threads(here) == []
     assert datetime.fromisoformat(_start(here)) == START
+
+
+def test_a_listing_whose_start_has_no_time_zone_still_lists_the_mention(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(json.dumps({
+        "searched_at": "2026-10-22T09:00:00+00:00", "started": {REPO: "2026-10-21T09:00:00"},
+        "mentions": []}))
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+
+    assert _listed_threads(here) == ["IC_1"]
