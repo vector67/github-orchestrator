@@ -46,6 +46,7 @@ from github_orchestrator.board_api._contract import (
     ErrorCode,
     Errors,
     FileLines,
+    FixChecks,
     GitRequest,
     GitRun,
     Health,
@@ -75,6 +76,7 @@ from github_orchestrator.board_api._contract import (
     SendReviewRequest,
     SessionCheck,
     Sha,
+    SkippedFixCheck,
     Stack,
     StartSessionRequest,
     TerminalRequest,
@@ -1414,15 +1416,28 @@ def check_thread_for_fixes(key: ThreadKey, board: Serving) -> Response:
     return Response(status_code=204)
 
 
-@writes.post("/pull-request/operations:check-for-fixes", status_code=204,
+def _where(conversation: domain.Conversation | None) -> str:
+    if conversation is None:
+        return ""
+    if conversation.path and conversation.line is not None:
+        return f"{conversation.path}:{conversation.line}"
+    return conversation.gist
+
+
+@writes.post("/pull-request/operations:check-for-fixes", response_model=FixChecks,
              tags=["pull request"], operation_id="checkForFixes", responses=CHECK_REFUSED,
              summary="Check every thread waiting on the author for fixes.")
-def check_for_fixes(board: Serving) -> Response:
+def check_for_fixes(board: Serving) -> FixChecks:
     """What checking each thread does, for every thread on a pull request you
     review that is waiting on the author with no reply since your comment.
+    Each other waiting thread comes back as skipped, with why.
     """
-    board.conversations.check_for_fixes(_fetched_head(board))
-    return Response(status_code=204)
+    checks = board.conversations.check_for_fixes(_fetched_head(board))
+    return FixChecks(
+        asked=list(checks.asked),
+        skipped=[SkippedFixCheck(key=key, where=_where(board.conversations.get(key)),
+                                 reason=reason)
+                 for key, reason in checks.skipped])
 
 
 @writes.post("/conversations/{key}/operations:place", status_code=202,

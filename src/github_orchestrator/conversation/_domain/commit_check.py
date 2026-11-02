@@ -63,14 +63,34 @@ def commit_check_due(conversation: Conversation, viewer: str, now: str | None) -
         conversation.commit_check_asks, conversation.commit_check_asked_at, now)
 
 
+@dataclass(frozen=True)
+class FixChecks:
+    asked: tuple[str, ...]
+    skipped: tuple[tuple[str, str], ...]
+
+
+def waiting_on_the_author(conversation: Conversation) -> bool:
+    return conversation.role == ROLE_REVIEWER and conversation.state == WAITING_ON_REVIEWER
+
+
 def not_checkable_for_fixes(conversation: Conversation, viewer: str) -> str | None:
     comments = conversation.comments
-    if (conversation.role != ROLE_REVIEWER or conversation.state != WAITING_ON_REVIEWER
-            or not comments or comments[-1].author != viewer):
-        return "only a thread waiting on the author since your comment is checked for fixes"
+    if not waiting_on_the_author(conversation):
+        return "only a thread waiting on the author is checked for fixes"
+    if not comments or comments[-1].author != viewer:
+        return "someone has replied since your comment"
     if Sha.parse(conversation.original_commit or "") is None:
-        return ("the thread names no commit it was made on, so there is nothing to check "
-                "it against")
+        return "the board does not know which commit your comment was made on"
+    return None
+
+
+def not_checked_again(conversation: Conversation, head: Sha, at: str | None) -> str | None:
+    on, check = newest_said(conversation), conversation.commit_check
+    if check is not None and check.on == on and check.sha == head:
+        return "already checked against this head"
+    if conversation.commit_check_asked_for == on and not retry_due(
+            conversation.commit_check_asks, conversation.commit_check_asked_at, at):
+        return "a check is already running"
     return None
 
 

@@ -2,6 +2,7 @@ import type {
   DashboardStatus,
   DashboardSystem,
   FinishedRun,
+  FixChecks,
   FrozenWorktree,
   PrFacts,
   WallGroup,
@@ -1264,6 +1265,17 @@ export type Dismissal =
 
 export function dismissedSaying(number: number, how: Dismissal): string {
   return `Dismissed #${number} ${how}. Its manager has exited.`;
+}
+
+export function fixChecksSaying(number: number, checks: FixChecks): string {
+  const asked = checks.asked.length
+    ? `Checking ${plural(checks.asked.length, 'thread')} on #${number} for fixes.`
+    : `Checked no thread on #${number} for fixes.`;
+  if (!checks.skipped.length) return asked;
+  const skipped = checks.skipped
+    .map((one) => `${one.where}, ${one.reason}`)
+    .join('; ');
+  return `${asked} Skipped ${checks.skipped.length}: ${skipped}.`;
 }
 
 export interface Absence {

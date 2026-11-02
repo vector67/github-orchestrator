@@ -1080,6 +1080,23 @@ class ReadMarks(BaseModel):
     marks: list[ReadMark]
 
 
+class SkippedFixCheck(BaseModel):
+    key: ThreadKey
+    where: str = Field(
+        description="The file and line the thread is on, or its gist when it is on no line.")
+    reason: str = Field(description="Why the thread was not checked, in the board's words.")
+
+
+class FixChecks(BaseModel):
+    """What a check for fixes across the pull request asked about.
+
+    Every thread waiting on the author is in one list or the other.
+    """
+
+    asked: list[ThreadKey]
+    skipped: list[SkippedFixCheck]
+
+
 class ReadMarkRequest(BaseModel):
     sha: Sha
 

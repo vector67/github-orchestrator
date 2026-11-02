@@ -18,6 +18,7 @@ import type {
   EmojiList,
   FileLines,
   FrozenWorktree,
+  FixChecks,
   GitRun,
   HarvestExtensionFolder,
   Health,
@@ -1347,6 +1348,18 @@ export default class StoreService extends Service {
     );
     if (!taken.done) return taken;
     return { done: true, body: () => this.settle(pr, local, true) };
+  }
+
+  async checkPrForFixes(pr: Numbered, path: string): Promise<Tried<FixChecks>> {
+    const { taken, local } = await this.sendOn(
+      pr,
+      'check-for-fixes',
+      () => posted<FixChecks>(path, null, {}),
+      'check for fixes',
+    );
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    return { done: true, body: taken.body.body };
   }
 
   async runGit(

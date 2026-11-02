@@ -39,6 +39,7 @@ from github_orchestrator.conversation._domain.commands import (
 from github_orchestrator.conversation._domain.commit_check import (
     checked,
     commit_reference,
+    not_checked_again,
     placed_by_check,
     set_by_hand,
     with_a_check_ask,
@@ -181,7 +182,6 @@ from github_orchestrator.conversation._domain.verdict import (
     PLACED_BY_A_VERDICT,
     STATE_OF_VERDICT,
     newest_said,
-    retry_due,
     unread_of,
     verdict_due,
     with_an_ask,
@@ -336,12 +336,9 @@ def _commit_check_due(conversation: Conversation, command: CommitCheckDue,
 
 def _check_for_fixes(conversation: Conversation, command: CheckForFixes,
                      at: str | None) -> Accepted:
-    on, check = newest_said(conversation), conversation.commit_check
+    on = newest_said(conversation)
     base = Sha.parse(conversation.original_commit or "")
-    checked_at_head = check is not None and check.on == on and check.sha == command.head
-    still_out = conversation.commit_check_asked_for == on and not retry_due(
-        conversation.commit_check_asks, conversation.commit_check_asked_at, at)
-    if on is None or base is None or checked_at_head or still_out:
+    if on is None or base is None or not_checked_again(conversation, command.head, at):
         return Accepted(conversation)
     return Accepted(with_a_check_ask(conversation, on, at),
                     (AskFixCheck(on=on, base=base, head=command.head),))

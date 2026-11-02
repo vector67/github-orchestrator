@@ -3,7 +3,11 @@ import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type RouterService from '@ember/routing/router-service';
 import type { DismissUntil, GitRun } from 'frontend/data/api';
-import { dismissedSaying, type Dismissal } from 'frontend/data/dashboard';
+import {
+  dismissedSaying,
+  fixChecksSaying,
+  type Dismissal,
+} from 'frontend/data/dashboard';
 import { capOf, leavesThePage, type PrVerb } from 'frontend/data/decisions';
 import type { Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
@@ -336,17 +340,14 @@ export default class PrControlsService extends Service {
   }
 
   private async checkingForFixes(on: Controlled): Promise<void> {
-    const taken = await this.store.press(
+    const taken = await this.store.checkPrForFixes(
       on.shown,
-      'check-for-fixes',
-      'check for fixes',
       `${this.prefix(on)}/api/pull-request/operations:check-for-fixes`,
     );
     if (!taken.done) return;
-    taken.body();
     this.toasts.say(
-      `Asked an agent to check #${on.number}'s threads waiting on the author for fixes.`,
-      'done',
+      fixChecksSaying(on.number, taken.body),
+      taken.body.asked.length ? 'done' : 'failed',
     );
   }
 

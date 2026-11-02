@@ -1241,7 +1241,9 @@
   },
   "/api/pull-request/operations:check-for-fixes": {
    "post": {
-    "204": null,
+    "200": {
+     "$ref": "#/components/schemas/FixChecks"
+    },
     "500": {
      "$ref": "#/components/schemas/Errors"
     }
@@ -3893,6 +3895,28 @@
     "cost_usd",
     "failed",
     "board_url"
+   ],
+   "type": "object"
+  },
+  "FixChecks": {
+   "properties": {
+    "asked": {
+     "items": {
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "skipped": {
+     "items": {
+      "$ref": "#/components/schemas/SkippedFixCheck"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "asked",
+    "skipped"
    ],
    "type": "object"
   },
@@ -7095,6 +7119,26 @@
     "reviews",
     "comments",
     "threads_resolved"
+   ],
+   "type": "object"
+  },
+  "SkippedFixCheck": {
+   "properties": {
+    "key": {
+     "pattern": "^[A-Za-z0-9_-]+$",
+     "type": "string"
+    },
+    "reason": {
+     "type": "string"
+    },
+    "where": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "key",
+    "where",
+    "reason"
    ],
    "type": "object"
   },

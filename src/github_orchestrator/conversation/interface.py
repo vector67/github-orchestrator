@@ -6,6 +6,7 @@ from typing import ClassVar, Protocol
 
 from github_orchestrator.change_detection import Facts
 from github_orchestrator.conversation._application.asking import Denied
+from github_orchestrator.conversation._domain.commit_check import FixChecks
 from github_orchestrator.conversation._domain.conversation import (
     WAKE_MANUAL,
     Classification,
@@ -198,7 +199,7 @@ class ConversationManager(Protocol):
 
     def recheck(self, conversation: Conversation) -> None: ...
 
-    def check_for_fixes(self, head: Sha) -> None: ...
+    def check_for_fixes(self, head: Sha) -> FixChecks: ...
 
 
 class ConversationManagerFactory(Protocol):

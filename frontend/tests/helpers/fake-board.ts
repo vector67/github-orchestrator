@@ -13,6 +13,7 @@ import type {
   FileChange,
   FileLines,
   FinishedRun,
+  FixChecks,
   GitRun,
   HeldPullRequest,
   Dashboard,
@@ -731,6 +732,7 @@ export class FakeBoard {
   sources: Record<string, string[]> = {};
   inFlight: Operation[] = [];
   reviews: Record<string, Operation> = {};
+  fixChecks: FixChecks = { asked: [], skipped: [] };
   summary: PrSummary = prSummary();
   private managed: Dashboard = dashboard();
   private managerSet = false;
@@ -1450,7 +1452,11 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     if (verb === 'check-session') return this.checkSession(key);
-    if (verb === 'check-for-fixes') return respond(null, { status: 204 });
+    if (verb === 'check-for-fixes') {
+      return key
+        ? respond(null, { status: 204 })
+        : this.json(200, this.fixChecks);
+    }
     const id = `op_${this.posted.length}`;
     if (verb === 'start-session' || verb === 'open-shell') {
       this.drain({

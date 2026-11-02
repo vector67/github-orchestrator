@@ -75,11 +75,27 @@ def test_a_thread_not_waiting_on_the_author_is_refused_a_check_for_fixes():
     assert agent_runs.fix_checks_asked() == []
 
 
+def test_checking_the_pull_request_for_fixes_names_each_waiting_thread_it_skipped_and_why():
+    board, agent_runs, _, _ = waiting()
+    heard_on(board, "PRRT_unanchored", said(2, "drop the print", author="octocat"),
+             path="src/foo.py", line=7)
+    board.threads.tick(FakeNotifications(), on_hold=False)
+    agent_runs.give("their-move", key="PRRT_unanchored")
+
+    answer = client_of(board).post(CHECK_THE_PR)
+
+    assert answer.json() == {
+        "asked": [KEY],
+        "skipped": [{"key": "PRRT_unanchored", "where": "src/foo.py:7",
+                     "reason": "the board does not know which commit your comment "
+                               "was made on"}]}
+
+
 def test_checking_the_pull_request_for_fixes_asks_about_each_waiting_thread():
     board, agent_runs, base, head = waiting()
 
     answer = client_of(board).post(CHECK_THE_PR)
 
-    assert answer.status_code == 204
+    assert answer.status_code == 200
     assert [(asked.key, asked.base, asked.head)
             for asked in agent_runs.fix_checks_asked()] == [(KEY, base, head)]

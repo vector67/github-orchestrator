@@ -406,6 +406,11 @@ export interface FinishedRun {
   board_url: string | null;
 }
 
+export interface FixChecks {
+  asked: string[];
+  skipped: SkippedFixCheck[];
+}
+
 export interface FixOperation {
   id: string;
   conversation: string | null;
@@ -965,6 +970,12 @@ export interface SinceYouActed {
   reviews: number;
   comments: number;
   threads_resolved: number;
+}
+
+export interface SkippedFixCheck {
+  key: string;
+  where: string;
+  reason: string;
 }
 
 export interface Stack {

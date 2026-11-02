@@ -1274,6 +1274,37 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
+  test('Check for fixes names each waiting thread it skipped and why', async function (assert) {
+    onTheHub();
+    board().actAs('reviewer');
+    board().conversations = [
+      thread({
+        key: 'k1',
+        state: 'waiting',
+        record_state: 'waiting_on_reviewer',
+      }),
+    ];
+    board().fixChecks = {
+      asked: ['k1'],
+      skipped: [
+        {
+          key: 'k2',
+          where: 'src/foo.py:7',
+          reason: 'someone has replied since your comment',
+        },
+      ],
+    };
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-control="check-for-fixes"]');
+
+    assert
+      .dom('[data-test-toast]')
+      .hasText(
+        'Checking 1 thread on #7 for fixes. Skipped 1: src/foo.py:7, someone has replied since your comment.',
+      );
+  });
+
   test('no thread waiting on the author offers no Check for fixes', async function (assert) {
     onTheHub();
     board().actAs('reviewer');

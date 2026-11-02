@@ -423,6 +423,33 @@ def test_checking_a_pr_for_fixes_asks_about_every_thread_waiting_on_the_author_a
     assert board.manager.get("PRRT_three").operations == ()
 
 
+def test_checking_a_pr_for_fixes_says_which_waiting_threads_it_skipped_and_why(settings):
+    board, base, head = _waiting_on_the_author(settings)
+    board.thread(_said(3, ME, "add a test"),
+                 _said(5, AUTHOR, "will do", "2026-09-01T11:00:00Z"),
+                 made_on=base, key="PRRT_answered").tick_after()
+    board.agent_runs.give("their-move", key="PRRT_answered")
+    board.thread(_said(4, ME, "drop the print"), key="PRRT_unanchored").tick_after()
+    board.agent_runs.give("their-move", key="PRRT_unanchored")
+
+    checks = board.manager.check_for_fixes(Sha(head))
+
+    assert checks.asked == (KEY,)
+    assert sorted(checks.skipped) == [
+        ("PRRT_answered", "someone has replied since your comment"),
+        ("PRRT_unanchored", "the board does not know which commit your comment was made on"),
+    ]
+
+
+def test_checking_a_pr_again_while_its_checks_are_out_skips_them_and_says_so(settings):
+    board, _, head = _waiting_on_the_author(settings)
+    board.manager.check_for_fixes(Sha(head))
+
+    checks = board.manager.check_for_fixes(Sha(head))
+
+    assert (checks.asked, checks.skipped) == ((), ((KEY, "a check is already running"),))
+
+
 def test_a_thread_that_names_no_commit_it_was_made_on_is_not_checked_for_fixes(settings):
     board = Board(settings)
     head = board.here.working_copies.head_of(WORKTREE)

@@ -88,7 +88,10 @@ from github_orchestrator.conversation._domain.commands import (
     report_without_code,
 )
 from github_orchestrator.conversation._domain.commit_check import (
+    FixChecks,
     not_checkable_for_fixes,
+    not_checked_again,
+    waiting_on_the_author,
 )
 from github_orchestrator.conversation._domain.conversation import (
     ASSUMED_DONE,
@@ -697,13 +700,23 @@ class _ConversationManager:
     def recheck(self, conversation: Conversation) -> None:
         self._pr.modules.presence.check_later(self._pr.pr, conversation.key, self._pr.ports)
 
-    def check_for_fixes(self, head: Sha) -> None:
-        viewer = self._pr.ports.config.gh_account
-        for conversation in self._pr.ports.records.list():
-            if not conversation.is_unreadable and not_checkable_for_fixes(
-                    conversation, viewer) is None:
-                with self.editing(conversation.key) as editable:
-                    editable.check_for_fixes(head)
+    def check_for_fixes(self, head: Sha) -> FixChecks:
+        ports = self._pr.ports
+        viewer, now = ports.config.gh_account, ports.clock.now()
+        asked: list[str] = []
+        skipped: list[tuple[str, str]] = []
+        for conversation in ports.records.list():
+            if conversation.is_unreadable or not waiting_on_the_author(conversation):
+                continue
+            why = (not_checkable_for_fixes(conversation, viewer)
+                   or not_checked_again(conversation, head, now))
+            if why is not None:
+                skipped.append((conversation.key, why))
+                continue
+            with self.editing(conversation.key) as editable:
+                editable.check_for_fixes(head)
+            asked.append(conversation.key)
+        return FixChecks(asked=tuple(asked), skipped=tuple(skipped))
 
 
 def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> None:
