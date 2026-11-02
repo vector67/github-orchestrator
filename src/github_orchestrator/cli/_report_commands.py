@@ -15,6 +15,7 @@ _REQUIRED = {
     "reply": frozenset({"--pr", "--thread-id", "--classification", "--body"}),
     "ticket": frozenset({"--pr", "--thread-id", "--project", "--title", "--body", "--reply"}),
     "ready": frozenset({"--pr", "--thread-id", "--sha", "--tests"}),
+    "ask": frozenset({"--pr", "--thread-id", "--question", "--context"}),
     "fail": frozenset({"--pr", "--thread-id", "--reason"}),
     "filed": frozenset({"--pr", "--thread-id", "--key", "--url"}),
     "draft": frozenset({"--pr", "--path", "--line", "--body-file"}),
@@ -67,6 +68,10 @@ class CliReportCommands:
             ("--sha", sha), ("--tests", "|".join(TEST_OUTCOMES)), ("--tests-note", tests_note),
             ("--note", note), ("--summary", summary), ("--confidence", confidence),
             ("--confidence-note", confidence_note)])
+
+    def ask(self, pr: Pr, key: str, *, question: str, context: str, option: str) -> str:
+        return self._command("ask", pr, key, [("--question", question), ("--context", context),
+                                              ("--option", option)])
 
     def fail(self, pr: Pr, key: str, *, reason: str) -> str:
         return self._command("fail", pr, key, [("--reason", reason)])

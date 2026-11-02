@@ -9,6 +9,7 @@ from github_orchestrator.conversation._adapters.side_words import (
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     ANSWER,
+    ASKING,
     ASSUMED_DONE,
     CONFIRMED,
     DECLINED,
@@ -59,7 +60,7 @@ VERDICTS = frozenset(ThreadVerdict)
 
 COMMIT_VERDICTS = frozenset(CommitVerdict)
 
-FIX_STATES = frozenset({QUEUED, RUNNING, DECLINED, FAILED, PROPOSED,
+FIX_STATES = frozenset({QUEUED, RUNNING, DECLINED, FAILED, PROPOSED, ASKING,
                         IN_SESSION, LANDING, LANDED, ABSENT})
 
 OPERATION_KINDS = frozenset(OperationKind) - {OperationKind.SEND_REVIEW}
@@ -526,6 +527,7 @@ def _migrated(version: int, document: Document) -> Document:
         "ticket_url": document.get("ticket_url"),
         "file_error": document.get("file_error"),
         "session_from": document.get("session_from"),
+        "question": document.get("question"),
         "verdict": _verdict(document),
         "verdict_for": document.get("verdict_for"),
         "verdict_asked_for": document.get("verdict_asked_for"),

@@ -71,6 +71,7 @@ from github_orchestrator.conversation._domain.commands import (
     PostNow,
     Reject,
     Reply,
+    ReportAsk,
     ReportFiled,
     ReportReady,
     Resolve,
@@ -104,6 +105,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     OperationState,
     PointedLine,
+    Question,
     Ticket,
     UnreadableRecord,
 )
@@ -440,6 +442,11 @@ class _Editable:
             return self._answer(ReportFiled(key=filed_key, url=filed_url))
         return self._answer(report_without_code(
             classification, text, _ticket(ticket_project, ticket_title, ticket_body)))
+
+    def ask(self, question: str, context: str,
+            options: Sequence[str] = ()) -> Conversation | Denied:
+        return self._answer(ReportAsk(Question(text=question, context=context,
+                                               options=tuple(options))))
 
     def fail(self, reason: str) -> Conversation | Denied:
         return self._answer(Fail(reason=reason))

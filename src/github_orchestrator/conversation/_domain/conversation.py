@@ -200,6 +200,7 @@ RUNNING = "running"
 DECLINED = "declined"
 FAILED = "failed"
 PROPOSED = "proposed"
+ASKING = "asking"
 IN_SESSION = "in_session"
 LANDING = "landing"
 LANDED = "landed"
@@ -234,6 +235,13 @@ class UnreadableRecord(Exception):
     same way: the key goes in its unreadable array and the board draws
     what it likes for it.
     """
+
+
+@dataclass(frozen=True)
+class Question:
+    text: str
+    context: str = ""
+    options: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -341,10 +349,15 @@ class Fix:
     ticket_url: str | None = None
     file_error: str | None = None
     session_from: str | None = None
+    question: Question | None = None
 
     @property
     def is_proposed(self) -> bool:
         return self.state == PROPOSED
+
+    @property
+    def is_asking(self) -> bool:
+        return self.state == ASKING
 
     @property
     def is_declined(self) -> bool:
@@ -688,6 +701,7 @@ _STATE_OF_FIX = {
     LANDED: ConversationState.DONE,
     ABSENT: ConversationState.READY,
     PROPOSED: ConversationState.READY,
+    ASKING: ConversationState.READY,
     DECLINED: ConversationState.READY,
     FAILED: ConversationState.READY,
 }

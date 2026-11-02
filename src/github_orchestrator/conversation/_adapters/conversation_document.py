@@ -25,6 +25,7 @@ from github_orchestrator.conversation._domain.conversation import (
     OperationState,
     PointedLine,
     ProposalKind,
+    Question,
     ReasonCode,
     Run,
     Step,
@@ -135,6 +136,20 @@ def _ticket(document: Document | None) -> Ticket | None:
     return Ticket(project=document["project"], title=document["title"], body=document["body"])
 
 
+def _question_document(question: Question | None) -> Document | None:
+    if question is None:
+        return None
+    return {"text": question.text, "context": question.context,
+            "options": list(question.options)}
+
+
+def _question(document: Document | None) -> Question | None:
+    if document is None:
+        return None
+    return Question(text=document["text"], context=document["context"],
+                    options=tuple(document["options"]))
+
+
 def encode(conversation: Conversation) -> Document:
     _writable(conversation)
     fix = conversation.fix
@@ -218,6 +233,7 @@ def encode(conversation: Conversation) -> Document:
         "ticket_url": fix.ticket_url,
         "file_error": fix.file_error,
         "session_from": fix.session_from,
+        "question": _question_document(fix.question),
         "verdict": conversation.verdict,
         "verdict_for": conversation.verdict_for,
         "verdict_asked_for": conversation.verdict_asked_for,
@@ -391,6 +407,7 @@ def _decoded(document: Document) -> Conversation:
             ticket_url=document["ticket_url"],
             file_error=document["file_error"],
             session_from=document["session_from"],
+            question=_question(document["question"]),
         ),
         verdict=None if document["verdict"] is None else ThreadVerdict(document["verdict"]),
         verdict_for=document["verdict_for"],

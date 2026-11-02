@@ -144,6 +144,16 @@ def test_the_thread_prompt_is_self_contained(runs, claude, worktree):
     assert "handle-pull-request-feedback-autonomous" not in prompt
 
 
+def test_every_prompt_that_asks_for_a_fix_offers_a_question_when_the_brief_cannot_be_met(
+        world, runs, claude, worktree):
+    for prompt in [*_fixing(runs, claude, worktree), _in_session(world, runs, _fix(worktree))]:
+        ask = _line_with(prompt, "thread ask")
+        assert "--question" in ask and "--context" in ask and "[--option" in ask
+        assert "cannot be met as stated" in prompt
+        assert "goes beyond what the comment and the brief asked for" in prompt
+        assert "do not ask questions" not in prompt
+
+
 SKIPPED_AS = "risky|acknowledgement|needs-human"
 REPLIED_AS = "unclear|out-of-scope|already-done|question"
 

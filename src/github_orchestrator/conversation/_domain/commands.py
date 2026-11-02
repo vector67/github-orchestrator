@@ -6,6 +6,7 @@ from github_orchestrator.conversation._domain.conversation import (
     CommitVerdict,
     ConversationState,
     PointedLine,
+    Question,
     Ticket,
 )
 from github_orchestrator.domain import Location
@@ -91,6 +92,11 @@ def report_without_code(classification: Classification, text: str,
     if classification.asks_a_reply:
         return ReportReply(classification=classification, body=text)
     return ReportDeclined(classification=classification, reason=text)
+
+
+@dataclass(frozen=True)
+class ReportAsk:
+    question: Question
 
 
 @dataclass(frozen=True)
@@ -217,6 +223,7 @@ Command = (
     | ReportDeclined
     | ReportReply
     | ReportTicket
+    | ReportAsk
     | ReportFiled
     | Fail
     | SessionGone

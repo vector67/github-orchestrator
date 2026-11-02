@@ -18,6 +18,7 @@ from github_orchestrator.conversation._domain.commands import (
     PostNow,
     Reject,
     Reply,
+    ReportAsk,
     ReportDeclined,
     ReportFiled,
     ReportReady,
@@ -45,6 +46,7 @@ from github_orchestrator.conversation._domain.commit_check import (
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     ANSWER,
+    ASKING,
     ASSUMED_DONE,
     CONFIRMED,
     DECLINED,
@@ -548,6 +550,13 @@ def _report_ticket(conversation: Conversation, command: ReportTicket,
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.TICKET,
         reply=command.reply, ticket=command.ticket,
         classification=Classification.OUT_OF_SCOPE, **NO_COMMIT))
+
+
+def _report_ask(conversation: Conversation, command: ReportAsk, at: str | None) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(_decidable(conversation, at), state=ASKING,
+                             question=command.question, session_from=None,
+                             attempts=max(fix.attempts - 1, 0), started_at=None))
 
 
 def _landed_by_a_decline(conversation: Conversation, classification: Classification) -> str:
@@ -1114,6 +1123,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _report_reply(conversation, command, at)
         case ReportTicket():
             return _report_ticket(conversation, command, at)
+        case ReportAsk():
+            return _report_ask(conversation, command, at)
         case ReportFiled():
             return _report_filed(conversation, command)
         case Fail() | RunExited() | RunTimedOut() | RunLost() if (
