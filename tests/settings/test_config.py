@@ -475,6 +475,30 @@ def test_writing_where_there_is_no_file_writes_one(tmp_path):
     assert set(repos_read_from(toml_file)) == {Repo("octocat", "hello")}
 
 
+def test_writing_keeps_the_config_private(tmp_path):
+    toml_file = write_config(tmp_path)
+    toml_file.chmod(0o600)
+
+    read_from(toml_file).get(ConfigFile).write(
+        {"gh_account": "someone"}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
+
+    assert stat.S_IMODE(toml_file.stat().st_mode) == 0o600
+
+
+def test_writing_writes_through_a_symlinked_config(tmp_path):
+    dotfiles = tmp_path / "dotfiles"
+    dotfiles.mkdir()
+    kept = write_config(dotfiles)
+    toml_file = tmp_path / "config.toml"
+    toml_file.symlink_to(kept)
+
+    read_from(toml_file).get(ConfigFile).write(
+        {"gh_account": "someone"}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
+
+    assert toml_file.readlink() == kept
+    assert load_config(kept).gh_account == "someone"
+
+
 def test_a_written_value_with_quotes_and_backslashes_reads_back_as_written(tmp_path):
     toml_file = write_config(tmp_path)
     weird = '/tmp/a "quoted" \\ path'

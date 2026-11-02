@@ -501,11 +501,7 @@ class TomlConfigFile:
 
     def write(self, values: Mapping[str, str | int | bool], *,
               repos: Mapping[Repo, Clone]) -> None:
-        rendered = self._written(values, repos)
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        writing = self._path.with_name(f"{self._path.name}.writing")
-        writing.write_text(rendered)
-        os.replace(writing, self._path)
+        self._replace(self._written(values, repos))
 
     def _written(self, values: Mapping[str, str | int | bool],
                  repos: Mapping[Repo, Clone]) -> str:
@@ -533,9 +529,11 @@ class TomlConfigFile:
 
     def _replace(self, text: str) -> None:
         target = self._path.resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
         writing = target.with_name(f"{target.name}.writing")
         writing.write_text(text)
-        shutil.copymode(target, writing)
+        if target.exists():
+            shutil.copymode(target, writing)
         os.replace(writing, target)
 
     def move_aside(self, now: datetime) -> str:
