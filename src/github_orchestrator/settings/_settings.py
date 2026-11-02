@@ -111,6 +111,10 @@ class Settings:
         return self.data_dir / "restart-all.lock"
 
     @property
+    def restarts_held(self) -> Path:
+        return self.data_dir / "restarts-held"
+
+    @property
     def repos(self) -> dict[Repo, Clone]:
         default = self.config.new_worktree_command
         return {

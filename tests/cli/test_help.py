@@ -54,7 +54,7 @@ def test_help_lists_the_commands_in_their_groups(run_cli):
     assert ran.code == 0
     assert _sections(ran.out) == {
         "everyday": ["open", "status", "logs", "runs"],
-        "service": ["start", "stop", "restart", "restart-all"],
+        "service": ["start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts"],
         "maintenance": ["update", "doctor", "config", "uninstall", "setup", "skill"],
         "learning": ["tutorial"],
     }

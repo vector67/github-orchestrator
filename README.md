@@ -129,7 +129,7 @@ fonts, and the environment variables that move the config and data files.
 
 ```text
 everyday     open, status, logs, runs
-service      start, stop, restart, restart-all
+service      start, stop, restart, restart-all, hold-restarts, allow-restarts
 maintenance  update, doctor, config, uninstall, setup, skill
 learning     tutorial
 ```

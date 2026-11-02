@@ -7,7 +7,7 @@ _PROG = "github-orchestrator"
 
 _GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("everyday", ("open", "status", "logs", "runs")),
-    ("service", ("start", "stop", "restart", "restart-all")),
+    ("service", ("start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts")),
     ("maintenance", ("update", "doctor", "config", "uninstall", "setup", "skill")),
     ("learning", ("tutorial",)),
 )
@@ -102,6 +102,14 @@ class Commands:
             "Holding the restart lock, and first waiting for any other restart-all "
             "to finish: for this instance and every other one, stop the agent managers, "
             "rewrite and reload the watcher's service and confirm the managers came back.")
+
+        command(
+            "hold-restarts", "Make every restart skip until allow-restarts.", "hold-restarts",
+            "For a release stress test running the board from a release branch: restart and "
+            "restart-all say why and change nothing while the hold lasts.")
+
+        command("allow-restarts", "Let restarts through again after hold-restarts.",
+                "allow-restarts")
 
         update_parser = command(
             "update", "Install the newest release and restart every instance on it.", "update",

@@ -104,8 +104,25 @@ def _restart_instance(sleep: Sleep, clock: LocalClock, instance: Instance) -> No
                     pr_processes=instance.pr_processes, watcher_health=instance.watcher_health)
 
 
+def hold_restarts(config: CliConfig) -> None:
+    config.restarts_held.parent.mkdir(parents=True, exist_ok=True)
+    config.restarts_held.touch()
+    print("Restarts are held until github-orchestrator allow-restarts.")
+
+
+def allow_restarts(config: CliConfig) -> None:
+    config.restarts_held.unlink(missing_ok=True)
+    print("Restarts are allowed again.")
+
+
 def restart_instances(config: CliConfig, sleep: Sleep, clock: LocalClock, run: Run,
                       instances: list[Instance]) -> None:
+    if config.restarts_held.exists():
+        print("A release stress test is in progress, so this restart is skipped; the release "
+              "restarts every instance when the stress test ends.")
+        print("If no stress test is running, run github-orchestrator allow-restarts "
+              "and restart again.")
+        return
     config.restart_lock.parent.mkdir(parents=True, exist_ok=True)
     with open(config.restart_lock, "a+") as lock:
         _take(lock, sleep)
