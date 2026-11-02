@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
+import CheckForFixes from 'frontend/components/check-for-fixes';
 import DecideDialog from 'frontend/components/decide-dialog';
 import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
@@ -49,6 +50,7 @@ export interface PanelActionsSignature {
     rework?: ReworkView | null;
     fold?: Fold | null;
     draft?: DraftView | null;
+    checksForFixes?: boolean;
   };
 }
 
@@ -260,6 +262,9 @@ export default class PanelActions extends Component<PanelActionsSignature> {
           }}
           <kbd>{{offered.cap}}</kbd></button>
       {{/each}}
+      {{#if @checksForFixes}}
+        <CheckForFixes @conversation={{@conversationId}} />
+      {{/if}}
     </footer>
     {{#if this.composing}}
       {{#if @rework}}

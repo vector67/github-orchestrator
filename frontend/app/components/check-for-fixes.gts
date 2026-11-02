@@ -32,7 +32,8 @@ export default class CheckForFixes extends Component<CheckForFixesSignature> {
   <template>
     <button
       type="button"
-      class="btn"
+      class="decide"
+      data-weight="secondary"
       title="Asks an agent whether the changes since your comment address it: Assumed done if they do, My move if not"
       disabled={{this.asking}}
       data-test-check-for-fixes

@@ -983,6 +983,7 @@ function checksForFixes(conversation: Conversation, context: Context): boolean {
   return (
     context.role === 'reviewer' &&
     conversation.record_state === 'waiting_on_reviewer' &&
+    conversation.commit_check === null &&
     Boolean(conversation.anchor?.original_commit) &&
     conversation.comments.at(-1)?.author === context.viewer
   );

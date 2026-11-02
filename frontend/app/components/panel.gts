@@ -1,5 +1,4 @@
 import type { TOC } from '@ember/component/template-only';
-import CheckForFixes from 'frontend/components/check-for-fixes';
 import CodeContext from 'frontend/components/code-context';
 import CommentBody from 'frontend/components/comment-body';
 import CopyDirectory from 'frontend/components/copy-directory';
@@ -23,7 +22,8 @@ function offersAnything(panel: Panel) {
   return (
     Boolean(panel.actions?.length) ||
     Boolean(panel.reply_action) ||
-    Boolean(panel.footer.refused)
+    Boolean(panel.footer.refused) ||
+    panel.check_for_fixes
   );
 }
 
@@ -114,9 +114,6 @@ const PanelView: TOC<PanelSignature> = <template>
             <p class="work-placeholder" data-test-work-placeholder>
               What the author did lands here
             </p>
-          {{/if}}
-          {{#if @panel.check_for_fixes}}
-            <CheckForFixes @conversation={{@panel.id}} />
           {{/if}}
         {{else}}
           {{#if @panel.fix_label}}
@@ -262,6 +259,7 @@ const PanelView: TOC<PanelSignature> = <template>
         @rework={{@panel.rework}}
         @fold={{@panel.fold}}
         @draft={{@panel.draft}}
+        @checksForFixes={{@panel.check_for_fixes}}
       />
     {{/if}}
   </section>
