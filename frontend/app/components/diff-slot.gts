@@ -175,6 +175,8 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
             />
           </div>
         {{/each}}
+      {{else if this.shown}}
+        <p class="diff-placeholder" data-test-diff-empty>No changes</p>
       {{else if this.isFailed}}
         <p class="land-error">that diff will not render</p>
       {{else if this.loading}}

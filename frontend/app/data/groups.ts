@@ -29,9 +29,9 @@ export const READY_GROUP = 'ready';
 
 const ATTENTION_GROUP = 'attention';
 
-const DECIDED_PHASE: Record<Role, Phase> = {
-  author: 'proposed',
-  reviewer: 'answered',
+const DECIDED_PHASES: Record<Role, Phase[]> = {
+  author: ['proposed', 'asking'],
+  reviewer: ['answered'],
 };
 
 const GROUP_ORDER: Record<Role, string[]> = {
@@ -234,7 +234,7 @@ const REVIEWER_COUNT_LABELS: Record<string, string> = {
 
 export function groupOf(conversation: Conversation, role: Role): string {
   if (conversation.state !== 'ready') return GROUP_OF_STATE[conversation.state];
-  return phaseOf(conversation) === DECIDED_PHASE[role]
+  return DECIDED_PHASES[role].includes(phaseOf(conversation))
     ? READY_GROUP
     : ATTENTION_GROUP;
 }

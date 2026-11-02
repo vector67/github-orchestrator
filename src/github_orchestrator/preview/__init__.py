@@ -201,10 +201,17 @@ TICKET_UNFILED = Card(9000024, "PRRT_ticket_unfiled",
                       "the CLI should report export progress, not only the result",
                       "cli/billing.py", 8)
 
+ASKING = Card(9000025, "PRRT_asking",
+               "stamp both bounds of the export window with the same clock",
+               "billing/window.py", 14)
+STOPPED_SILENT = Card(9000026, "PRRT_stopped_silent",
+                      "a run that stopped without reporting, its last message kept",
+                      "billing/window.py", 30)
+
 AUTHOR_CARDS = (READY, REPLY_PROPOSED, TICKET_PROPOSED, REOPENED, DECLINED, ASSUMED_DONE, FAILED,
                 REMOVED, WORKING, QUEUED, IN_SESSION, REWORKING, REBASING, WAITING, DEFERRED,
                 REJECTED, LANDED, RESOLVED, PUSH_REJECTED, REPLY_REFUSED, TICKET_FILING,
-                TICKET_FILED, TICKET_UNFILED)
+                TICKET_FILED, TICKET_UNFILED, ASKING, STOPPED_SILENT)
 
 PR_AUTHOR = "mei"
 PR_AUTHOR_NAME = "Mei Placeholder"
@@ -578,6 +585,15 @@ class _Seeding:
             sha, tests=tests, tests_note=tests_note, note=agent_note, summary=summary,
             confidence=confidence, confidence_note=confidence_note))
 
+    def stop_silent(self, card: Card, last_words: str) -> None:
+        self.open(card)
+        self.outside.agent_runs.script(RunOutcome(events=(
+            {"type": "result", "subtype": "success", "is_error": False,
+             "result": last_words},)))
+        self.conversations.tick(self.news, on_hold=False)
+        self.commit(card)
+        self.conversations.tick(self.news, on_hold=False)
+
     def push_elsewhere(self) -> None:
         worktree = Path(self.repo.worktree)
         elsewhere = worktree.with_name(f"{worktree.name}-elsewhere")
@@ -658,6 +674,23 @@ def _author_board(seeding: _Seeding) -> None:
     seeding.propose(RESOLVED)
     seeding.ask(RESOLVED, lambda conversation: conversation.resolve(
         reply="Fixed in the last push."))
+    seeding.propose(ASKING, ("Stamp the upper bound",), summary="Stamp the upper bound.")
+    seeding.ask(ASKING, lambda conversation: conversation.rework(
+        note="Use one helper for both bounds, with clock_timestamp()."))
+    seeding.report(ASKING, lambda conversation: conversation.plan((
+        ("Add one _current_db_time helper", "billing/window.py"),
+        ("Run the tests and commit", None))))
+    seeding.report(ASKING, lambda conversation: conversation.step_done((1,)))
+    seeding.report(ASKING, lambda conversation: conversation.ask(
+        "Stamp exports with clock_timestamp() in production too, or keep now() for "
+        "the lower bound?",
+        "Every test in the file fails: the export stamps `now()`, the transaction's "
+        "start, so a `clock_timestamp()` taken before it is always later.",
+        ("Stamp with clock_timestamp() in the export",
+         "Keep now() and widen the lower bound")))
+    seeding.stop_silent(STOPPED_SILENT, "I made the change, but the window test now "
+                                        "fails, so I have not reported it. Shall I widen "
+                                        "the bound, or change the export?")
     seeding.propose(LANDED, ("Spell the units out in the header",),
                     summary="Spell out net and gross in the invoice header row.", tests="passed")
     seeding.ask(LANDED, lambda conversation: conversation.approve(

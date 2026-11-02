@@ -65,6 +65,19 @@ module('Acceptance | agent question', function (hooks) {
     assert.dom('[data-test-meta]').hasText('Agent question');
   });
 
+  test('a question waits under Ready for you', async function (assert) {
+    seed(board());
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(
+      findAll('[data-test-heading]').map((one) =>
+        one.getAttribute('data-test-heading'),
+      ),
+      ['ready'],
+    );
+  });
+
   test('the next move is the agent question', async function (assert) {
     seed(board());
 
@@ -186,6 +199,15 @@ module('Acceptance | agent question', function (hooks) {
     assert
       .dom('[data-test-frame] [data-test-diff]')
       .includesText('return clock_timestamp()');
+  });
+
+  test('a worktree with nothing past the last proposal says so', async function (assert) {
+    seed(board());
+    board().worktreeDiffs[KEY] = { ...board().worktreeDiffs[KEY]!, files: [] };
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-frame] [data-test-diff]').hasText('No changes');
   });
 
   test('a branch that moved since the question says so', async function (assert) {
