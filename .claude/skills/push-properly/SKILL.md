@@ -10,8 +10,9 @@ release's `release-X.Y.Z`. `<pushed>` below is `origin/<target>`, or
 `origin/main` while the target is not on `origin` yet.
 
 1. Push only the target, from the main checkout. Run `git fetch -q origin`, then
-   `git log --oneline <pushed>..<target>`. If it prints nothing, there is nothing
-   to push: say so and stop.
+   `git log --oneline <pushed>..<target>`. If it prints nothing and the target is
+   already on `origin`, there is nothing to push: say so and stop. A target not
+   on `origin` yet is pushed even with no commits of its own.
 
 2. Run `uv run python .claude/skills/push-properly/leak_check.py <pushed>..<target>`.
    It prints one line per hit: kind, where (a file or `commit <sha>`), and the

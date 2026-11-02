@@ -66,7 +66,7 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    For another target, nothing checks it out, so land the branch from the main
    checkout with `git fetch . <branch>:<target>`, which like `--ff-only` refuses
    anything but a fast-forward. Then merge it into `main` the same way: re-enter
-   the worktree, `git merge main -m "merge <target> into main"`, rerun
+   the worktree, `git merge main -m "merge main into the <thing>"`, rerun
    `make lint` and `make test`, leave, and `git merge --ff-only <branch>`. That
    merge stays off the target, so the release never picks up what `main` gained.
 
