@@ -562,17 +562,12 @@ class WorkingCopiesProvider(Provider):
 
     @provide
     def working_copies(self, wiring: WorkingCopiesWiring, pull_requests: PullRequests,
-                       worktrees: Worktrees, terminals: Terminals) -> WorkingCopies:
-        def in_session(worktree: str) -> bool:
-            return any(session.worktree == worktree for sessions in terminals.everywhere()
-                       for session in sessions.listed())
-
+                       worktrees: Worktrees) -> WorkingCopies:
         return GitWorkingCopies(pull_requests, worktrees,
                                 wiring.mismatched_dir, wiring.worktree_conflicts_dir,
                                 wiring.thread_worktrees_dir, wiring.clones,
                                 grace_seconds=wiring.grace_seconds,
-                                run_idle_seconds=wiring.run_idle_seconds,
-                                in_session=in_session)
+                                run_idle_seconds=wiring.run_idle_seconds)
 
 
 def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
