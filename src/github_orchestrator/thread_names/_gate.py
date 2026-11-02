@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class LockedNameMigration:
     def __init__(self, marker: Path, lock: Path, version: str | None,
-                 rename: Callable[[], None]) -> None:
+                 rename: Callable[[], None] | None) -> None:
         self._marker = marker
         self._lock = lock
         self._version = version
@@ -23,7 +23,7 @@ class LockedNameMigration:
         return self._seen
 
     def migrate(self) -> None:
-        if self.migrated():
+        if self._rename is None or self.migrated():
             return
         self._lock.parent.mkdir(parents=True, exist_ok=True)
         with open(self._lock, "a") as held:

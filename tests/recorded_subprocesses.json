@@ -6115,6 +6115,102 @@
     }
    ]
   },
+  "tests.thread_names.test_pass._build_clone": {
+   "[[\"git\", \"-C\", \"<TPL:tests.thread_names.test_pass._build_clone>/clone\", \"add\", \"f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.thread_names.test_pass._build_clone>/clone",
+      "add",
+      "f"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.thread_names.test_pass._build_clone>/clone\", \"commit\", \"-q\", \"-m\", \"base\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.thread_names.test_pass._build_clone>/clone",
+      "commit",
+      "-q",
+      "-m",
+      "base"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/main": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.thread_names.test_pass._build_clone>/clone\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.thread_names.test_pass._build_clone>/clone",
+      "config",
+      "user.email",
+      "t@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.thread_names.test_pass._build_clone>/clone\", \"config\", \"user.name\", \"T\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.thread_names.test_pass._build_clone>/clone",
+      "config",
+      "user.name",
+      "T"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"init\", \"-q\", \"-b\", \"main\", \"<TPL:tests.thread_names.test_pass._build_clone>/clone\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "init",
+      "-q",
+      "-b",
+      "main",
+      "<TPL:tests.thread_names.test_pass._build_clone>/clone"
+     ],
+     "fs": {
+      "clone": {
+       "dir": true
+      },
+      "clone/.git": {
+       "dir": true
+      },
+      "clone/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ]
+  },
   "tests.working_copies.support.build_origin": {
    "[[\"git\", \"-C\", \"<TPL:tests.working_copies.support.build_origin>/repo\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
     {
@@ -40801,6 +40897,1363 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_bare_key_branch_without_a_workspace_is_renamed": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_a\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_a",
+      "orchestrator/thread/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a-1e": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"orchestrator/thread/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "orchestrator/thread/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a-1e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_bare_key_folder_whose_branch_was_already_renamed_moves_to_its_new_name": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_a\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_a",
+      "orchestrator/thread/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a-1e": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a-1e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a-1e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_a\nHEAD 30f547be02f21da51623fc36b1fbdb5d5fdd08d1\nbranch refs/heads/orchestrator/thread/7/PRRT_a-1e\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "thread-worktrees/acme/widgets/7/PRRT_a": null,
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e/f": {
+       "text": "the agent's fix\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": null,
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_bare_key_workspace_moves_to_its_new_name_on_its_renamed_branch": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_a\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_a",
+      "orchestrator/thread/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a-1e": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a-1e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a-1e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_a\nHEAD 30f547be02f21da51623fc36b1fbdb5d5fdd08d1\nbranch refs/heads/orchestrator/thread/7/PRRT_a\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "thread-worktrees/acme/widgets/7/PRRT_a": null,
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a-1e/f": {
+       "text": "the agent's fix\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": null,
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\", \"symbolic-ref\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e",
+      "symbolic-ref",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a-1e\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_locked_workspace_keeps_its_folder_and_its_branch": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_a\nHEAD 30f547be02f21da51623fc36b1fbdb5d5fdd08d1\nbranch refs/heads/orchestrator/thread/7/PRRT_a\nlocked\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"lock\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "lock",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a-1e"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot move a locked working tree;\nuse 'move -f -f' to override or unlock first\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"symbolic-ref\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "symbolic-ref",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_stale_bare_folder_that_is_no_worktree_is_not_moved_into_the_new_name": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_a\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/PRRT_a",
+      "orchestrator/thread/7/PRRT_a-1e"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a-1e": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"rev-parse\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "rev-parse",
+      "orchestrator/thread/7/PRRT_a-1e"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "prune"
+     ],
+     "fs": {
+      "clone/.git/worktrees/PRRT_a/HEAD": null,
+      "clone/.git/worktrees/PRRT_a/commondir": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_workspace_whose_new_branch_name_is_taken_keeps_its_folder_and_its_branch": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"orchestrator/thread/7/PRRT_a-1e\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "orchestrator/thread/7/PRRT_a-1e",
+      "main"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a-1e": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\norchestrator/thread/7/PRRT_a-1e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_a\nHEAD 30f547be02f21da51623fc36b1fbdb5d5fdd08d1\nbranch refs/heads/orchestrator/thread/7/PRRT_a\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"symbolic-ref\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "symbolic-ref",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_a_workspace_whose_new_folder_is_taken_keeps_its_folder_and_its_branch": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/PRRT_a\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/PRRT_a",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/PRRT_a/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_a\n"
+      },
+      "clone/.git/worktrees/PRRT_a/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/PRRT_a\n"
+      },
+      "thread-worktrees/acme/widgets/7/PRRT_a/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/PRRT_a\nHEAD 30f547be02f21da51623fc36b1fbdb5d5fdd08d1\nbranch refs/heads/orchestrator/thread/7/PRRT_a\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"commit\", \"-qam\", \"fix PRRT_a\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "commit",
+      "-qam",
+      "fix PRRT_a"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/PRRT_a": {
+       "text": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "30f547be02f21da51623fc36b1fbdb5d5fdd08d1\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/PRRT_a\", \"symbolic-ref\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/PRRT_a",
+      "symbolic-ref",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/PRRT_a\n"
+    }
+   ]
+  },
+  "tests/thread_names/test_pass.py::test_case_twins_each_keep_their_own_fix": {
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/IC_aB\", \"orchestrator/thread/7/IC_aB-d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/IC_aB",
+      "orchestrator/thread/7/IC_aB-d"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_aB": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_aB-d": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/IC_ab\", \"orchestrator/thread/7/IC_ab-c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "-m",
+      "orchestrator/thread/7/IC_ab",
+      "orchestrator/thread/7/IC_ab-c"
+     ],
+     "fs": {
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n2d53e0429f477a026a7253afb784c12078e9fc03 refs/heads/main\n"
+      },
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_ab-c": {
+       "text": "c6f61bea6354b438c182bbd2574cbc03c6300c95\n"
+      },
+      "clone/.git/worktrees/IC_ab/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/IC_ab-c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"orchestrator/thread/7/IC_aB\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "branch",
+      "orchestrator/thread/7/IC_aB",
+      "main"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_aB": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"for-each-ref\", \"--format=%(refname:short)\", \"refs/heads/orchestrator/thread/\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "refs/heads/orchestrator/thread/"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/IC_aB\norchestrator/thread/7/IC_ab\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"pack-refs\", \"--all\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "pack-refs",
+      "--all"
+     ],
+     "fs": {
+      "clone/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n2d53e0429f477a026a7253afb784c12078e9fc03 refs/heads/main\nc6f61bea6354b438c182bbd2574cbc03c6300c95 refs/heads/orchestrator/thread/7/IC_ab\n"
+      },
+      "clone/.git/refs/heads/main": null,
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_ab": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"rev-parse\", \"orchestrator/thread/7/IC_aB\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "rev-parse",
+      "orchestrator/thread/7/IC_aB"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"rev-parse\", \"orchestrator/thread/7/IC_aB-d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "rev-parse",
+      "orchestrator/thread/7/IC_aB-d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"rev-parse\", \"orchestrator/thread/7/IC_ab-c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "rev-parse",
+      "orchestrator/thread/7/IC_ab-c"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c6f61bea6354b438c182bbd2574cbc03c6300c95\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"add\", \"-q\", \"-b\", \"orchestrator/thread/7/IC_ab\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "orchestrator/thread/7/IC_ab",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab",
+      "HEAD"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_ab": {
+       "text": "2d53e0429f477a026a7253afb784c12078e9fc03\n"
+      },
+      "clone/.git/worktrees/IC_ab/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/IC_ab\n"
+      },
+      "clone/.git/worktrees/IC_ab/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/IC_ab\n"
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab/f": {
+       "text": "base\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/clone\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/main\n\nworktree <TMP>/thread-worktrees/acme/widgets/7/IC_ab\nHEAD 2d53e0429f477a026a7253afb784c12078e9fc03\nbranch refs/heads/orchestrator/thread/7/IC_ab\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/clone\", \"worktree\", \"move\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab-c\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/clone",
+      "worktree",
+      "move",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab-c"
+     ],
+     "fs": {
+      "thread-worktrees/acme/widgets/7/IC_ab": null,
+      "thread-worktrees/acme/widgets/7/IC_ab-c": {
+       "dir": true
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab-c/.git": {
+       "text": "gitdir: <TMP>/clone/.git/worktrees/IC_ab\n"
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab-c/f": {
+       "text": "the agent's fix\n"
+      },
+      "thread-worktrees/acme/widgets/7/IC_ab/.git": null,
+      "thread-worktrees/acme/widgets/7/IC_ab/f": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab\", \"commit\", \"-qam\", \"fix IC_ab\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab",
+      "commit",
+      "-qam",
+      "fix IC_ab"
+     ],
+     "fs": {
+      "clone/.git/refs/heads/orchestrator/thread/7/IC_ab": {
+       "text": "c6f61bea6354b438c182bbd2574cbc03c6300c95\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c6f61bea6354b438c182bbd2574cbc03c6300c95\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/acme/widgets/7/IC_ab-c\", \"symbolic-ref\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/acme/widgets/7/IC_ab-c",
+      "symbolic-ref",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "orchestrator/thread/7/IC_ab-c\n"
     }
    ]
   },

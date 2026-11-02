@@ -184,6 +184,7 @@ from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
 from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.thread_names._gate import LockedNameMigration
+from github_orchestrator.thread_names._pass import rename_thread_names
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
 from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
@@ -604,6 +605,9 @@ class ThreadNamesWiring(Wiring):
     marker: Path
     lock: Path
     version: str | None
+    threads_dir: Path
+    thread_worktrees_dir: Path
+    clones: Mapping[Repo, Path] | None
 
 
 @wires(ThreadNamesWiring)
@@ -613,11 +617,19 @@ class ThreadNamesProvider(Provider):
 
     @provide
     def name_migration(self, wiring: ThreadNamesWiring) -> NameMigration:
-        return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, lambda: None)
+        clones = wiring.clones
+        if clones is None:
+            return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, None)
+        return LockedNameMigration(
+            wiring.marker, wiring.lock, wiring.version,
+            lambda: rename_thread_names(wiring.threads_dir, wiring.thread_worktrees_dir, clones))
 
 
 def thread_names_wiring(settings: Settings, version: str | None) -> ThreadNamesWiring:
-    return ThreadNamesWiring(settings.layout_marker, settings.layout_lock, version)
+    clones = None if settings.problem is not None else {
+        repo: clone.path for repo, clone in settings.repos.items()}
+    return ThreadNamesWiring(settings.layout_marker, settings.layout_lock, version,
+                             settings.threads_dir, settings.thread_worktrees_dir, clones)
 
 
 @dataclass(frozen=True)
