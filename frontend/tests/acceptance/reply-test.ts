@@ -313,6 +313,24 @@ module('Acceptance | reply', function (hooks) {
     assert.dom(OPTION).exists({ count: 1 }).hasText('@erin');
   });
 
+  test('an at sign offers people whose logins are names objects already have', async function (assert) {
+    board().mentionable = ['constructor', 'toString', '__proto__'];
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    const offered = [];
+    for (const typed of ['con', 'tos', '__']) {
+      await fillIn(BOX, `cc @${typed}`);
+      offered.push(findAll(OPTION).map((one) => one.textContent));
+    }
+
+    assert.deepEqual(offered, [
+      ['@constructor'],
+      ['@toString'],
+      ['@__proto__'],
+    ]);
+  });
+
   test('letters after the at narrow the people by login or name', async function (assert) {
     board().mentionable = ['erin', 'bob'];
     await visit('/pr/o/r/7/conversations/k1');
