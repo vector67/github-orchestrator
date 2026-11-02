@@ -121,6 +121,20 @@ def test_the_server_answers_from_its_workers_and_stops_them_when_it_stops(instan
     assert until(lambda: not any(_alive(pid) for pid in children), 15)
 
 
+def test_a_worker_has_migrated_the_thread_names_by_the_time_it_answers(instance, tmp_path):
+    own, port = tmp_path / "own", _free_port()
+    server = subprocess.Popen([sys.executable, "-m", "github_orchestrator.server",
+                               "--port", str(port), "--files-in", str(own)],
+                              env=os.environ.copy(), start_new_session=True)
+    try:
+        assert until(lambda: _health(port) is not None, STARTED_WITHIN_SECONDS)
+
+        assert (instance / "layout.json").exists()
+    finally:
+        server.send_signal(signal.SIGTERM)
+        server.wait(timeout=30)
+
+
 def test_a_worker_has_as_long_to_start_as_its_server_is_waited_for(instance, tmp_path, monkeypatch):
     supervised = []
     monkeypatch.setattr("github_orchestrator.server._supervisor.Multiprocess",

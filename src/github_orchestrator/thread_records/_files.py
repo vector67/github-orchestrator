@@ -1,4 +1,3 @@
-import builtins
 import logging
 import os
 import re
@@ -35,11 +34,11 @@ def _disk_name(key: str) -> str:
     return f"{quote(key, safe='')}-{_uppercase_letters(key)}"
 
 
-def _key_on_disk(name: str) -> str:
+def _key_on_disk(name: str) -> str | None:
     quoted, _, _ = name.rpartition("-")
-    if quoted and quoted.strip(".") and _disk_name(unquote(quoted)) == name:
+    if quoted.strip(".") and _disk_name(unquote(quoted)) == name:
         return unquote(quoted)
-    return unquote(name)
+    return None
 
 
 def _suffix(kind: str) -> str:
@@ -92,33 +91,21 @@ class DiskPrRecords:
     def _dir(self) -> Path:
         return thread_dir(self.threads_dir, self.pr)
 
-    def _named(self, kind: str, key: str) -> builtins.list[Path]:
-        suffix = _suffix(kind)
-        direct = self._dir / f"{_disk_name(key)}{suffix}"
-        try:
-            direct.lstat()
-            return [direct]
-        except FileNotFoundError:
-            pass
-        except OSError as exc:
-            raise UnreadableThread(f"{direct} will not read: {exc}") from exc
-        if not self._dir.exists():
-            return []
-        return sorted(path for path in self._dir.glob(f"*{suffix}")
-                      if _key_on_disk(path.stem) == key)
+    def _named(self, kind: str, key: str) -> Path:
+        return self._dir / f"{_disk_name(key)}{_suffix(kind)}"
 
     def save(self, kind: str, key: str, document: bytes) -> None:
-        saved = self._dir / f"{_disk_name(key)}{_suffix(kind)}"
-        _write_atomically(saved, document)
-        for path in self._dir.glob(f"*{_suffix(kind)}"):
-            if path.name != saved.name and _key_on_disk(path.stem) == key:
-                path.unlink(missing_ok=True)
+        _write_atomically(self._named(kind, key), document)
 
     def load(self, kind: str, key: str) -> bytes | None:
         named = self._named(kind, key)
-        if not named:
+        try:
+            named.lstat()
+        except FileNotFoundError:
             return None
-        return _read(named[0])
+        except OSError as exc:
+            raise UnreadableThread(f"{named} will not read: {exc}") from exc
+        return _read(named)
 
     def list(self, kind: str) -> dict[str, bytes | None]:
         suffix = _suffix(kind)
@@ -132,11 +119,15 @@ class DiskPrRecords:
                 log.warning("Passing over %s: %s", path, exc)
         listed: dict[str, bytes | None] = {}
         for _, _, path in sorted(found):
+            key = _key_on_disk(path.stem)
+            if key is None:
+                log.warning("Passing over %s: it is not named by a thread key", path)
+                continue
             try:
-                listed[_key_on_disk(path.stem)] = _read(path)
+                listed[key] = _read(path)
             except UnreadableThread as exc:
                 log.warning("Standing in for the unreadable %s: %s", path, exc)
-                listed[_key_on_disk(path.stem)] = None
+                listed[key] = None
         return listed
 
     @contextmanager
@@ -145,12 +136,7 @@ class DiskPrRecords:
             yield
 
     def delete(self, kind: str, key: str) -> None:
-        suffix = _suffix(kind)
-        if not self._dir.exists():
-            return
-        for path in self._dir.glob(f"*{suffix}"):
-            if _key_on_disk(path.stem) == key:
-                path.unlink(missing_ok=True)
+        self._named(kind, key).unlink(missing_ok=True)
 
 
 class DiskThreadRecords:

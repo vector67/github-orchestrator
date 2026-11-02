@@ -20,7 +20,7 @@ from tests.conversation.support import (
     without_runs,
     world,
 )
-from tests.disk_layout import thread_dir, thread_file
+from tests.disk_layout import disk_name, thread_dir, thread_file
 from tests.thread_records.support import disk_thread_records, ticking_clock
 
 KEY = "PRRT_kwDO"
@@ -260,7 +260,7 @@ def test_reviews_come_back_in_the_order_they_were_asked_for(tmp_path, here):
     thread_dir(tmp_path, THE_PR).mkdir(parents=True)
     for review in (_review("op_b", "2026-01-02T00:00:00Z"),
                    _review("op_a", "2026-01-01T00:00:00Z", "applied")):
-        thread_dir(tmp_path, THE_PR).joinpath(f"{review['id']}.review").write_text(
+        thread_dir(tmp_path, THE_PR).joinpath(f"{disk_name(review['id'])}.review").write_text(
             json.dumps(review))
 
     reviews = here.threads().reviews()
@@ -270,9 +270,9 @@ def test_reviews_come_back_in_the_order_they_were_asked_for(tmp_path, here):
 
 def test_a_review_in_no_state_work_can_be_in_is_passed_over(tmp_path, here):
     thread_dir(tmp_path, THE_PR).mkdir(parents=True)
-    thread_dir(tmp_path, THE_PR).joinpath("op_good.review").write_text(
+    thread_dir(tmp_path, THE_PR).joinpath(f"{disk_name('op_good')}.review").write_text(
         json.dumps(_review("op_good", None)))
-    thread_dir(tmp_path, THE_PR).joinpath("op_bad.review").write_text(
+    thread_dir(tmp_path, THE_PR).joinpath(f"{disk_name('op_bad')}.review").write_text(
         json.dumps(_review("op_bad", None, "lost")))
 
     assert [review.id for review in here.threads().reviews()] == ["op_good"]

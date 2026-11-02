@@ -21,6 +21,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanels,
     Mentionable,
     MentionsList,
+    NamesMigration,
     ReleaseRecord,
     SetupDesk,
     Shelves,
@@ -42,15 +43,17 @@ _BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]+)/api
 
 
 class _Boards:
-    def __init__(self, told: Told, build: Callable[[Pr], ASGIApp]) -> None:
+    def __init__(self, told: Told, migration: NamesMigration,
+                 build: Callable[[Pr], ASGIApp]) -> None:
         self._told = told
+        self._migration = migration
         self._build = build
         self._built: dict[Pr, ASGIApp] = {}
         self._lock = threading.Lock()
         self.routing = anyio.CapacityLimiter(ROUTING_THREADS)
 
     def of(self, pr: Pr) -> ASGIApp | None:
-        if pr not in self._told.held().managers:
+        if pr not in self._told.held().managers or not self._migration.migrated():
             return None
         with self._lock:
             app = self._built.get(pr)
@@ -88,7 +91,7 @@ class OneServer:
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
                  summaries: PrSummaries, lane: SummaryLane, shelves: Shelves,
-                 check_presence: bool, first_names_only: bool, heartbeat_seconds: float,
+                 migration: NamesMigration, check_presence: bool, first_names_only: bool, heartbeat_seconds: float,
                  check_seconds: float) -> None:
         self._app_root = app_root
         self._fonts = routes.served_fonts(font_dir)
@@ -114,6 +117,7 @@ class OneServer:
         self._summaries = summaries
         self._lane = lane
         self._shelves = shelves
+        self._migration = migration
         self._check_presence = check_presence
         self._first_names_only = first_names_only
         self._heartbeat_seconds = heartbeat_seconds
@@ -127,7 +131,7 @@ class OneServer:
                     version=self._version, problem=self._problem, setup=self._setup,
                     releases=self._releases, tour=self._tour, emojis=self._emojis,
                     harvest=self._harvest, mentions=self._mentions,
-                    pid=pid)
+                    migration=self._migration, pid=pid)
 
         def board(pr: Pr) -> ASGIApp:
             return board_app(Board(
@@ -143,4 +147,4 @@ class OneServer:
                 shelf=self._shelves.of(pr), mentionable=self._mentionable,
                 prefix=pr_page(pr)))
 
-        return _Routed(hub_app(desk, port), _Boards(self._told, board))
+        return _Routed(hub_app(desk, port), _Boards(self._told, self._migration, board))

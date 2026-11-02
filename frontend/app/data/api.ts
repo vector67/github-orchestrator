@@ -330,7 +330,7 @@ export interface EmojiList {
   emojis: Emoji[];
 }
 
-export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'not-frozen' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'summary-refused' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'server-error';
+export type ErrorCode = 'not-found' | 'operation-outstanding' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'waiting-to-migrate' | 'not-frozen' | 'terminal-refused' | 'manager-refused' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'summary-refused' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'server-error';
 
 export interface ErrorDetail {
   status: number;
@@ -847,6 +847,13 @@ export interface SessionCheck {
   conversation: Conversation;
 }
 
+export interface SessionInTheWay {
+  repo: string;
+  number: number;
+  thread: string;
+  folder: string;
+}
+
 export interface SessionOperation {
   id: string;
   conversation: string | null;
@@ -1006,6 +1013,11 @@ export interface ThreadCounts {
 }
 
 export type ThreadKind = 'draft' | 'review' | 'issue' | 'review-summary' | 'pr-body';
+
+export interface ThreadNamesMigration {
+  migrated: boolean;
+  sessions: SessionInTheWay[];
+}
 
 export interface ThreadRow {
   key: string;
