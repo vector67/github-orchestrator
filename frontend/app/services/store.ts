@@ -87,7 +87,7 @@ import {
   read,
   write,
 } from 'frontend/data/http';
-import type { Details, FileStat } from 'frontend/data/panel';
+import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
 import {
   notHeldBy,
   Refusal,
@@ -297,7 +297,12 @@ function keyOf(repo: string, number: number): string {
   return `${repo}#${number}`;
 }
 
+function worktreeDiffOf({ repo, number, key, version }: WorktreeOf): string {
+  return `worktree ${repo}#${number} ${key} ${version}`;
+}
+
 export function commitsOf(commits: DiffRange): string {
+  if (commits.worktree) return worktreeDiffOf(commits.worktree);
   const range = `${commits.base}..${commits.head}`;
   return commits.merged ? `${range}?merged=${commits.merged}` : range;
 }
@@ -976,7 +981,10 @@ export default class StoreService extends Service {
     if (this.diff(commits)) return Promise.resolve('answered');
     const key = commitsOf(commits);
     return this.once(`diff ${key}`, async () => {
-      const path = this.here.api(`/api/diffs/${key}`);
+      const worktree = commits.worktree;
+      const path = worktree
+        ? `${this.here.prefixOf(worktree)}${under(worktree.key)}/worktree-diff`
+        : this.here.api(`/api/diffs/${key}`);
       try {
         this.takeDiff(await fetched<Diff>(path), key);
         return 'answered';

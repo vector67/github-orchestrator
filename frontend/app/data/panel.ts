@@ -66,8 +66,17 @@ export interface LandingFailure {
   standing: string;
 }
 
+export interface WorktreeOf {
+  repo: string;
+  number: number;
+  key: string;
+  version: string;
+}
+
+export type FoldRange = Commits & { worktree?: WorktreeOf };
+
 export interface Fold {
-  commits: Commits;
+  commits: FoldRange;
   title: string;
   pointing_title: string;
 }
@@ -117,6 +126,14 @@ export interface Affordance {
   kind: string;
   label: string;
   weight: string;
+}
+
+export interface QuestionView {
+  heading: string;
+  text: string;
+  options: string[];
+  context: string;
+  moved: string | null;
 }
 
 export interface FixBanner {
@@ -209,8 +226,11 @@ export interface Panel {
   files_label: string;
   notes: Note[];
   fold: Fold | null;
+  last_fold: Fold | null;
   fold_placeholder: string;
   commit_check: CommitCheckView | null;
+  question: QuestionView | null;
+  stopped: string | null;
 }
 
 export interface Details {
@@ -851,6 +871,74 @@ function foldOf(
   };
 }
 
+function movedOf(
+  head: string | null,
+  pullRequest: PrEntity | null,
+): string | null {
+  if (!head || !pullRequest?.head_sha || pullRequest.head_sha === head) {
+    return null;
+  }
+  const commits = pullRequest.history.origin?.commits ?? [];
+  const at = commits.findIndex((one) => one.sha === head);
+  const since = at < 0 ? 0 : commits.length - at - 1;
+  return since
+    ? `PR moved since the question · ${counted(since, 'new commit')}`
+    : 'PR moved since the question';
+}
+
+function questionOf(
+  conversation: Conversation,
+  plan: PlanStep[],
+  context: Context,
+): QuestionView | null {
+  const question = conversation.question;
+  if (!question || phaseOf(conversation) !== 'asking') return null;
+  const done = plan.filter((step) => step.done).length;
+  return {
+    heading: plan.length
+      ? `Agent question · stopped after ${done} of ${plan.length} steps`
+      : 'Agent question',
+    text: question.text,
+    options: question.options,
+    context: question.context,
+    moved: movedOf(question.head, context.pullRequest),
+  };
+}
+
+function questionFoldsOf(
+  conversation: Conversation,
+  context: Context,
+): { fold: Fold; last_fold: Fold | null } | null {
+  const question = conversation.question;
+  const pr = context.pullRequest;
+  if (!question || !pr || phaseOf(conversation) !== 'asking') return null;
+  const last = question.last_proposal;
+  const since = last?.head ?? '';
+  return {
+    fold: {
+      commits: {
+        base: since,
+        head: since,
+        worktree: {
+          repo: pr.repo,
+          number: pr.number,
+          key: conversation.key,
+          version: conversation.etag,
+        },
+      },
+      title: last ? 'Since the last proposal' : 'Changes so far',
+      pointing_title: '',
+    },
+    last_fold: last
+      ? {
+          commits: last,
+          title: `Last proposal · ${short(last.head)}`,
+          pointing_title: '',
+        }
+      : null,
+  };
+}
+
 function repliersOf(comments: Comment[], context: Context): Reviewer[] {
   const seen = new Map<string, string>();
   for (const one of comments.slice(1)) {
@@ -963,7 +1051,10 @@ const NO_FIX = {
   files: [],
   files_label: '',
   fold: null,
+  last_fold: null,
   fold_placeholder: '',
+  question: null,
+  stopped: null,
   accept: null,
   rework: null,
   agent_words: null,
@@ -1081,6 +1172,7 @@ export function panelOf(
   const failure = FAILURES[phase];
   const decides = (decision: string) =>
     actions.some((one) => one.decision === decision);
+  const folds = questionFoldsOf(shown, context);
   return {
     ...top,
     fix_label: fixLabelOf(shown, plan, proposal),
@@ -1104,8 +1196,11 @@ export function panelOf(
       ...draftNotes(shown),
       ...queuedNote(shown),
     ],
-    fold: foldOf(shown, proposal, settled, files),
+    fold: folds?.fold ?? foldOf(shown, proposal, settled, files),
+    last_fold: folds?.last_fold ?? null,
     fold_placeholder: FOLD_PLACEHOLDERS[phase] ?? '',
+    question: questionOf(shown, plan, context),
+    stopped: phase === 'proposed' ? (proposal?.last_words ?? null) : null,
     accept: decides('approve')
       ? acceptOf(shown, proposal, plan, files, reviewer, comments, context)
       : null,

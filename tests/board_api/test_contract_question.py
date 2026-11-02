@@ -38,6 +38,14 @@ def test_a_thread_whose_agent_asked_carries_the_question_and_the_head_it_was_ask
                                 "head": HEAD, "last_proposal": None}
 
 
+def test_the_run_that_asked_has_settled(board):
+    _asking(board)
+
+    [run] = client_of(board).get(f"/api/conversations/{KEY}/operations").json()
+
+    assert (run["kind"], run["state"]) == ("first", "applied")
+
+
 def test_a_thread_whose_agent_asked_nothing_carries_no_question(ready):
     assert client_of(ready).get(f"/api/conversations/{KEY}").json()["question"] is None
 

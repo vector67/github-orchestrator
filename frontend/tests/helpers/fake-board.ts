@@ -92,6 +92,7 @@ export function thread(over: Partial<Conversation> = {}): Conversation {
     unread: false,
     record_state: 'open',
     commit_check: null,
+    question: null,
     ...over,
   };
 }
@@ -169,6 +170,7 @@ const DETAILS: {
   },
   file: {},
   stop: { stopped: null },
+  'drop-question': {},
   unpark: {},
   confirm: {},
   place: {},
@@ -242,6 +244,7 @@ export function proposal(over: Partial<Proposal> = {}): Proposal {
     tests: null,
     tests_note: null,
     commit_message: 'Rename the helper',
+    last_words: null,
     ...over,
   };
 }
@@ -718,6 +721,7 @@ export class FakeBoard {
   operations: Record<string, Operation[]> = {};
   proposals: Record<string, Proposal[]> = {};
   diffs: Record<string, Diff & { merged?: string }> = {};
+  worktreeDiffs: Record<string, Diff> = {};
   anchors: Record<string, DiffAnchors> = {};
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
@@ -1348,6 +1352,7 @@ export class FakeBoard {
     if (rest === '/proposals') {
       return (this.proposals[key] ?? []).map((one) => this.proposed(key, one));
     }
+    if (rest === '/worktree-diff') return this.worktreeDiffs[key];
     return undefined;
   }
 

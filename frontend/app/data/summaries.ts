@@ -26,7 +26,7 @@ import {
   type Pressings,
 } from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
-import type { Details, FileStat } from 'frontend/data/panel';
+import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
 import { levelOf, type Level } from 'frontend/data/wall';
 import {
@@ -57,6 +57,7 @@ export type Move =
   | 'agent-running'
   | 'agent-on-threads'
   | 'address-feedback'
+  | 'agent-question'
   | 'human-comments'
   | 'agent-on-human-comments'
   | 'bot-comments'
@@ -105,6 +106,12 @@ export interface NextMove {
   unresolved: number;
 }
 
+export interface AnswerReply {
+  key: string;
+  comment: number;
+  author: string;
+}
+
 export interface Summaries {
   role: Role | null;
   groups: Record<string, number>;
@@ -118,6 +125,7 @@ export interface Summaries {
   openMentions: string[];
   pressing: Pressings;
   opening: Pressed;
+  answering: AnswerReply[];
 }
 
 type Threads = Record<string, Thread>;
@@ -251,7 +259,11 @@ const GROUPS: Partial<Record<Move, WallGroup | null>> = {
   mentioned: 'waiting-on-others',
 };
 
-const DRAFT_DECISIONS: Move[] = ['human-comments', 'bot-comments'];
+const DRAFT_DECISIONS: Move[] = [
+  'agent-question',
+  'human-comments',
+  'bot-comments',
+];
 
 const YOUR_TURN: Move[] = ['review', 'rereview'];
 
@@ -268,6 +280,7 @@ interface Board {
   drafts: number;
   human: Tally;
   bot: Tally;
+  asking: number;
   openMentions: number;
 }
 
@@ -369,6 +382,7 @@ function agentOf(flags: ManagerFlags | null): Move | null {
 
 function onYourPr(state: Move, board: Board): Move {
   if (state === 'address-feedback') return state;
+  if (board.asking) return 'agent-question';
   if (board.human.toDecide) return 'human-comments';
   if (board.human.agentOn) return 'agent-on-human-comments';
   if (board.bot.toDecide) return 'bot-comments';
@@ -469,13 +483,35 @@ function summarised(
       drafts,
       human,
       bot,
+      asking: all.filter((one) => one.question && one.state === 'ready').length,
       openMentions: openMentions.length,
     }),
     mismatches: mismatchesOf(pr?.mismatches ?? null),
     openMentions,
     pressing: pressedOn(pr, operations),
     opening: openingOf(all.flatMap((one) => operationsOf(one, operations))),
+    answering: answeringOf(all, operations, pr?.author ?? null),
   };
+}
+
+function answeringOf(
+  all: Thread[],
+  operations: Operations,
+  viewer: string | null,
+): AnswerReply[] {
+  return all.flatMap((one) => {
+    if (one.state !== 'in-session' || !one.question) return [];
+    const opened = operationsOf(one, operations).findLast(
+      (operation) => operation.kind === 'start-session',
+    )?.requested_at;
+    if (!opened) return [];
+    const reply = (one.comments ?? []).findLast(
+      (said) => said.author !== viewer && (said.created_at ?? '') > opened,
+    );
+    return reply?.id
+      ? [{ key: one.key, comment: reply.id, author: reply.author }]
+      : [];
+  });
 }
 
 function mismatchesOf(count: number | null): string | null {
@@ -1032,6 +1068,7 @@ export interface Pip {
 
 export interface DiffRange extends Commits {
   merged?: string;
+  worktree?: WorktreeOf;
 }
 
 export function isMerge(commit: PullRequestCommit): boolean {

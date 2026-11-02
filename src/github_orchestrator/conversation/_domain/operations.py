@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
+    ASKING,
     DECLINED,
     DEFERRED,
     FAILED,
@@ -185,6 +186,8 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
             return OperationState.REFUSED, fix.file_error, ReasonCode.FILE_FAILED
         return OperationState.RUNNING, None, None
     if fix.state == LANDED:
+        return OperationState.APPLIED, None, None
+    if fix.state == ASKING:
         return OperationState.APPLIED, None, None
     if fix.state == PROPOSED:
         if operation.kind == OperationKind.APPROVE:

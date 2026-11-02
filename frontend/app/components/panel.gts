@@ -3,11 +3,13 @@ import CodeContext from 'frontend/components/code-context';
 import CommentBody from 'frontend/components/comment-body';
 import CopyDirectory from 'frontend/components/copy-directory';
 import DiffFold from 'frontend/components/diff-fold';
+import DiffSlot from 'frontend/components/diff-slot';
 import DraftComposer from 'frontend/components/draft-composer';
 import FixMeta from 'frontend/components/fix-meta';
 import GoToSession from 'frontend/components/go-to-session';
 import PanelActions from 'frontend/components/panel-actions';
 import PanelHeader from 'frontend/components/panel-header';
+import QuestionMoved from 'frontend/components/question-moved';
 import ReplyBoxComponent from 'frontend/components/reply-box';
 import Waiting from 'frontend/components/waiting';
 import type { Panel } from 'frontend/data/panel';
@@ -115,6 +117,49 @@ const PanelView: TOC<PanelSignature> = <template>
             </p>
           {{/if}}
         {{else}}
+          {{#if @panel.question}}
+            <section class="agent-question" data-test-question>
+              <p class="question-head">
+                <span
+                  class="kicker"
+                  data-test-question-heading
+                >{{@panel.question.heading}}</span>
+                {{#if @panel.question.moved}}
+                  <QuestionMoved @moved={{@panel.question.moved}} />
+                {{/if}}
+              </p>
+              <p
+                class="question-text"
+                data-test-question-text
+              >{{@panel.question.text}}</p>
+              {{#if @panel.question.options}}
+                <ol class="question-options">
+                  {{#each @panel.question.options key="@index" as |option|}}
+                    <li
+                      class="question-option"
+                      data-test-question-option
+                    >{{option}}</li>
+                  {{/each}}
+                </ol>
+              {{/if}}
+              {{#if @panel.question.context}}
+                <div
+                  class="confidence question-context"
+                  data-test-question-context
+                >
+                  <p class="kicker">Why it stopped</p>
+                  <CommentBody @body={{@panel.question.context}} />
+                </div>
+              {{/if}}
+            </section>
+          {{/if}}
+          {{#if @panel.stopped}}
+            <section class="stopped" data-test-stopped>
+              <p class="stopped-kicker">Stopped without reporting · its last
+                message</p>
+              <CommentBody @body={{@panel.stopped}} />
+            </section>
+          {{/if}}
           {{#if @panel.fix_label}}
             <h2 class="fix-label" data-test-fix-label>{{@panel.fix_label}}
               {{#if @panel.fix_directory}}
@@ -232,6 +277,17 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
       <div id="panel-diff">
+        {{#if @panel.last_fold}}
+          <details class="last-proposal" data-test-last-proposal>
+            <summary
+              class="last-proposal-head"
+            >{{@panel.last_fold.title}}</summary>
+            <DiffSlot
+              @conversationId={{@panel.id}}
+              @commits={{@panel.last_fold.commits}}
+            />
+          </details>
+        {{/if}}
         {{#if @panel.fold}}
           <DiffFold
             @conversationId={{@panel.id}}

@@ -4,7 +4,8 @@ import { cached, tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import { service } from '@ember/service';
-import type { Commits, Diff } from 'frontend/data/api';
+import type { Diff } from 'frontend/data/api';
+import type { FoldRange } from 'frontend/data/panel';
 import DiffRows from 'frontend/components/diff-rows';
 import Waiting from 'frontend/components/waiting';
 import {
@@ -25,7 +26,7 @@ export interface DiffSlotSignature {
   Element: HTMLDivElement;
   Args: {
     conversationId: string;
-    commits: Commits;
+    commits: FoldRange;
     pointable?: boolean;
   };
 }
