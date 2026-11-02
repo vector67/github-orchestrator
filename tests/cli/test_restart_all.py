@@ -3,6 +3,8 @@ import json
 import subprocess
 import sys
 
+import pytest
+
 from tests.builders import a_pr
 
 
@@ -105,3 +107,36 @@ def test_a_lock_left_by_a_killed_run_does_not_hold_up_the_next(machine, run_cli,
     assert ran.code == 0
     assert ran.out.startswith("==> Restarting the agent managers\n")
     assert machine.slept == []
+
+
+def test_hold_restarts_says_how_to_let_them_through(machine, run_cli):
+    ran = run_cli("hold-restarts")
+
+    assert ran.code == 0
+    assert ran.out == "Restarts are held until github-orchestrator allow-restarts.\n"
+
+
+@pytest.mark.parametrize("command", ["restart", "restart-all"])
+def test_a_restart_while_restarts_are_held_skips_and_says_why(machine, run_cli, restartable,
+                                                              command):
+    run_cli("hold-restarts")
+
+    ran = run_cli(command)
+
+    assert ran.code == 0
+    assert ran.out == (
+        "A release stress test is in progress, so this restart is skipped; the release "
+        "restarts every instance when the stress test ends.\n"
+        "If no stress test is running, run github-orchestrator allow-restarts and restart again.\n")
+    assert machine.system.calls == []
+
+
+def test_allow_restarts_lets_the_next_restart_run(machine, run_cli, restartable):
+    run_cli("hold-restarts")
+
+    allowed = run_cli("allow-restarts")
+    ran = run_cli("restart-all")
+
+    assert allowed.code == 0
+    assert allowed.out == "Restarts are allowed again.\n"
+    assert ran.out.startswith("==> Restarting the agent managers\n")

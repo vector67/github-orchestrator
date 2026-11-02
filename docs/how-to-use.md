@@ -156,6 +156,13 @@ from the sync through the restart, so a second one waits and then builds what wa
 merged meanwhile. Both are `flock`s, so the system drops them when the holder
 dies, however it dies.
 
+`hold-restarts` makes every `restart` and `restart-all` skip and say why until
+`allow-restarts`. A release's stress test holds them while the board runs from
+the release branch, so a merge into `main` elsewhere cannot swap the board back
+mid-test. The hold is a `restarts-held` file in the data directory and never
+expires; when no stress test is running, `allow-restarts` clears a hold left
+behind.
+
 It ends by confirming the restart: it first waits up to fifteen minutes for the
 watcher to finish a poll since the kill, then up to two minutes more for every
 manager it killed to be running again, saying which it is still waiting for. It exits non-zero if the watcher never polled, naming any

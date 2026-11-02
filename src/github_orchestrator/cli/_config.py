@@ -38,6 +38,7 @@ class CliConfig:
     data_dir: Path
     config_folder: Path
     restart_lock: Path
+    restarts_held: Path
     repos: Mapping[Repo, Clone]
     gh_account: str
     agents_enabled: bool

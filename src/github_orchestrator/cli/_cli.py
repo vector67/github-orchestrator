@@ -25,6 +25,8 @@ from github_orchestrator.cli._parser import commands_of
 from github_orchestrator.cli._restart_all import (
     Instance,
     OtherInstances,
+    allow_restarts,
+    hold_restarts,
     restart_instances,
     stop_managers_and_server,
 )
@@ -179,7 +181,8 @@ class OperatorCli:
         parsers = commands_of(config.version)
         args = parsers.parser.parse_args(argv or ["help"])
         if args.command not in ("help", "config", "setup", "open", "tutorial", "doctor",
-                                "status", "start", "restart", "restart-all", "uninstall",
+                                "status", "start", "restart", "restart-all", "hold-restarts",
+                                "allow-restarts", "uninstall",
                                 "update", "skill"):
             problem = self._config_file.check()
             if problem is not None:
@@ -226,6 +229,8 @@ class OperatorCli:
                                                    [self._this_instance()]),
             "restart-all": lambda a: restart_instances(config, self._sleep, self._clock, self._run,
                                                        self._every_instance()),
+            "hold-restarts": lambda a: hold_restarts(config),
+            "allow-restarts": lambda a: allow_restarts(config),
             "stop": lambda a: stop(
                 self._read_line,
                 self._every_instance() if a.all else [self._this_instance()],
