@@ -195,7 +195,7 @@ def _post_outcome(ports: Ports, conversation: Conversation,
         posted = ports.github.post_review_comment(conversation, head)
     except Exception as exc:
         return DraftPostFailed(_failed(conversation, effect, exc))
-    return DraftPosted(comment=posted.comment, github_node_id=posted.key)
+    return DraftPosted(comment=posted.comment, made_on=head, github_node_id=posted.key)
 
 
 def _gist_recorder(ports: Ports,

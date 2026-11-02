@@ -65,6 +65,6 @@ def _sent(ports: Ports, review: Review) -> Review:
                                       strict=True):
             update.conversation = apply(
                 draft, Posted(comment=one.comment, github_node_id=one.key,
-                              review=review.id), at).conversation
+                              review=review.id, made_on=head), at).conversation
         return replace(review, state=OperationState.APPLIED, settled_at=at, drafts=keys,
                        posted_review=posted.id)

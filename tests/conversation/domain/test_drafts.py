@@ -38,7 +38,7 @@ class Reviewing:
         github = github or FakeGitHub()
         github.add_pr(THE_PR)
         self.here = world(settings, github=github, clock=at(NOW))
-        diff_over(self.here, FILE)
+        self.head = diff_over(self.here, FILE)
         self.threads = self.here.conversation_managers.of(THE_PR)
 
     def draft(self):
@@ -226,6 +226,15 @@ def test_a_posted_draft_is_a_review_thread_under_the_same_key(settings):
     operation = thread.operations[-1]
     assert (operation.kind, operation.state, operation.posted_comment) == (
         OperationKind.POST_NOW, OperationState.APPLIED, comment.id)
+
+
+def test_a_draft_posted_now_records_the_commit_it_was_made_on(settings):
+    reviewing = Reviewing(settings)
+    key = reviewing.draft().key
+
+    thread = reviewing.did("post_now", key)
+
+    assert thread.original_commit == reviewing.head
 
 
 def test_the_posted_comment_is_the_boards_own_so_the_poller_passes_it_over(settings):
