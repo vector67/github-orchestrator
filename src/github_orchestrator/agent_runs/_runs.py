@@ -57,6 +57,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
 )
 from github_orchestrator.agent_runs._transcript import (
     last_thread_in,
+    last_words_after,
     summarize_event,
     tail_display_lines,
 )
@@ -141,6 +142,7 @@ class AgentRun:
         self.last_event_at = now
         self._outcome: dict[str, Any] = {}
         self.last_action: str | None = None
+        self.last_words: str | None = None
         self._stdout_buffer = ""
         self._decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         self._end_recorded = False
@@ -253,6 +255,7 @@ class AgentRun:
         lines = summarize_event(event)
         if lines:
             self.last_action = lines[-1]
+        self.last_words = last_words_after(event, self.last_words)
         self._outcome = outcome_after(event, self._outcome)
 
     def interrupt(self) -> None:

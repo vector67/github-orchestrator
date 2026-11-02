@@ -700,8 +700,10 @@ class _ConversationManager:
 
 def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> None:
     fix = conversation.fix
-    if fix.is_proposed:
-        news.fix_ready(pr, conversation.key, gist=conversation.gist,
+    if fix.is_asking and fix.question is not None:
+        news.agent_asked(pr, question=fix.question.text)
+    elif fix.is_proposed:
+        news.fix_ready(pr, conversation.key, gist=fix.last_words or conversation.gist,
                        comments=[(comment.author, comment.body)
                                  for comment in conversation.comments],
                        fix_summary=fix.summary)

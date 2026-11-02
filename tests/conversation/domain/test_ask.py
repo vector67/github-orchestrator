@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.agent_runs.fake import FakeAgentRuns
+from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.conversation import Conversation, ConversationState, Denied
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -12,6 +12,7 @@ from tests.conversation.support import (
     THE_PR,
     WORKTREE,
     at,
+    commit_fix,
     drain,
     hear,
     on_github,
@@ -133,3 +134,82 @@ def test_a_fix_nobody_is_working_on_asks_nothing(bench, reach):
 
     assert isinstance(outcome, Denied)
     assert bench.stored().fix == before
+
+
+LAST_WORDS = "Every test in the file now fails. Shall I change production, or widen the bound?"
+
+
+def _silent_run(bench, *, words=LAST_WORDS):
+    bench.agent_runs.script(Outcome(events=(
+        {"type": "assistant", "message": {"content": [{"type": "text", "text": "Looking."}]}},
+        {"type": "result", "subtype": "success", "is_error": False, "result": words},
+    )))
+    drain(bench.threads)
+
+
+def test_a_run_that_stops_without_reporting_proposes_its_commit_with_its_last_words(bench):
+    _silent_run(bench)
+    commit_fix(bench.world, KEY)
+
+    drain(bench.threads)
+
+    fix = bench.stored().fix
+    assert fix.is_proposed
+    assert fix.tests == "unverified"
+    assert fix.last_words == LAST_WORDS
+
+
+def test_a_run_that_stops_without_reporting_or_committing_says_what_it_last_said(bench):
+    _silent_run(bench)
+
+    drain(bench.threads)
+
+    assert bench.stored().fix.reason == f"run exited without reporting: {LAST_WORDS}"
+
+
+def test_a_codex_run_that_stops_without_reporting_keeps_its_last_message(bench):
+    bench.agent_runs.script(Outcome(events=(
+        {"type": "item.completed", "item": {"type": "agent_message", "text": LAST_WORDS}},
+        {"type": "turn.completed"},
+    )))
+    drain(bench.threads)
+    commit_fix(bench.world, KEY)
+
+    drain(bench.threads)
+
+    assert bench.stored().fix.last_words == LAST_WORDS
+
+
+def test_a_run_that_asked_tells_you_its_question(bench):
+    start_run(bench.world, bench.threads)
+    bench.ask()
+    news = FakeNotifications()
+
+    bench.threads.tick(news, on_hold=False)
+
+    assert [(posted.title, posted.body) for posted in news.posted] == [
+        (f"Agent question on #{THE_PR.number}", QUESTION)]
+
+
+def test_a_run_that_stopped_without_reporting_announces_its_commit_with_its_last_words(bench):
+    _silent_run(bench)
+    commit_fix(bench.world, KEY)
+    news = FakeNotifications()
+
+    bench.threads.tick(news, on_hold=False)
+
+    [ready] = news.gathered
+    assert ready.gist == LAST_WORDS
+
+
+def test_a_run_that_reports_leaves_no_last_words_behind(bench):
+    _silent_run(bench)
+    commit_fix(bench.world, KEY)
+    drain(bench.threads)
+    with bench.threads.editing(KEY) as editable:
+        editable.rework(note="widen the bound")
+    start_run(bench.world, bench.threads, finishes=False)
+
+    bench.ask()
+
+    assert bench.stored().fix.last_words is None

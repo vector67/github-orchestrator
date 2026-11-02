@@ -23,7 +23,11 @@ from github_orchestrator.agent_runs._summary_prompts import (
     gists_in,
     verdict_in,
 )
-from github_orchestrator.agent_runs._transcript import display_rows, summarize_event
+from github_orchestrator.agent_runs._transcript import (
+    display_rows,
+    last_words_after,
+    summarize_event,
+)
 from github_orchestrator.agent_runs.interface import (
     FinishedRun,
     FixComment,
@@ -183,6 +187,7 @@ class FakeRun:
                  outcome: Outcome, *, in_flight: bool = False) -> None:
         self.event_type = event_type
         self.last_action: str | None = None
+        self.last_words: str | None = None
         self._world = world
         self._pr = pr
         self._outcome = outcome
@@ -237,6 +242,7 @@ class FakeRun:
         lines = summarize_event(event)
         if lines:
             self.last_action = lines[-1]
+        self.last_words = last_words_after(event, self.last_words)
         self._reported = outcome_after(event, self._reported)
 
     def _end(self, exit_code: int) -> None:

@@ -111,7 +111,7 @@ class ThreadAgents:
         if not alive:
             del self.runs[key]
         return RunProgress(alive=alive, elapsed=run.elapsed(),
-                           last_action=run.last_action)
+                           last_action=run.last_action, last_words=run.last_words)
 
     def open_session(self, worktree: str | None,
                      conversation: Conversation, steer: str | None,

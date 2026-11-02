@@ -579,7 +579,7 @@ def _report_declined(conversation: Conversation, command: ReportDeclined,
 def _run_started(conversation: Conversation, command: RunStarted) -> Accepted:
     fix = conversation.fix
     started = with_fix(conversation, state=RUNNING, started_at=command.at,
-                        attempts=fix.attempts + 1)
+                        attempts=fix.attempts + 1, last_words=None)
     return Accepted(started, (StartRun(kind=fix.run.kind, onto=fix.run.onto),))
 
 
@@ -610,11 +610,11 @@ def _fail_or_retry(conversation: Conversation, reason: str, at: str | None,
 
 
 def _proposed_by_exit(conversation: Conversation, head: Sha, note: str,
-                      at: str) -> Accepted:
-    return Accepted(with_fix(_decidable(conversation, at), state=PROPOSED,
+                      command: RunExited) -> Accepted:
+    return Accepted(with_fix(_decidable(conversation, command.at), state=PROPOSED,
                               kind=ProposalKind.COMMIT, reply=None, ticket=None,
                               thread_sha=head, tests="unverified",
-                              tests_note=note, reason=None))
+                              tests_note=note, reason=None, last_words=command.last_words))
 
 
 def _run_exited(conversation: Conversation, command: RunExited) -> Accepted:
@@ -625,15 +625,17 @@ def _run_exited(conversation: Conversation, command: RunExited) -> Accepted:
             return _proposed_by_exit(
                 conversation, head,
                 "run exited without reporting; rebased commit found in worktree",
-                command.at)
-        return _fail_or_retry(conversation, "run exited without rebasing",
+                command)
+        return _fail_or_retry(conversation,
+                              _with_detail("run exited without rebasing", command.last_words),
                               command.at)
     if head is not None and fix.base_sha and head != fix.base_sha:
         return _proposed_by_exit(
             conversation, head,
             "run exited without reporting; commit found in worktree",
-            command.at)
-    return _fail_or_retry(conversation, "run exited without reporting",
+            command)
+    return _fail_or_retry(conversation,
+                          _with_detail("run exited without reporting", command.last_words),
                           command.at)
 
 

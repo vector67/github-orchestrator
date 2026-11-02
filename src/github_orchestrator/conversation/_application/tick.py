@@ -121,7 +121,7 @@ class Runs:
                            "terminated", at=ports.clock.now()))
                 ports.agents.stop_run(key)
             return None
-        return self._settle(pr, key, ports)
+        return self._settle(pr, key, ports, progress.last_words)
 
     def _publish_action(self, pr: Pr, key: str, line: str | None,
                         ports: Ports) -> None:
@@ -135,8 +135,8 @@ class Runs:
             return
         self._published_actions[key] = line
 
-    def _settle(self, pr: Pr, key: str,
-                ports: Ports) -> Conversation | None:
+    def _settle(self, pr: Pr, key: str, ports: Ports,
+                last_words: str | None) -> Conversation | None:
         with ports.records.update(key) as update:
             conversation = update.conversation
             if conversation is None:
@@ -155,7 +155,7 @@ class Runs:
             )
             outcome = run(ports, conversation,
                           RunExited(at=ports.clock.now(), head=head,
-                                    descends=descends))
+                                    descends=descends, last_words=last_words))
             if outcome.conversation != conversation:
                 update.conversation = outcome.conversation
             return outcome.conversation

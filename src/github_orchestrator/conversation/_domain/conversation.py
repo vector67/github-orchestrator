@@ -350,6 +350,7 @@ class Fix:
     file_error: str | None = None
     session_from: str | None = None
     question: Question | None = None
+    last_words: str | None = None
 
     @property
     def is_proposed(self) -> bool:

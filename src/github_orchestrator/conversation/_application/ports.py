@@ -27,6 +27,7 @@ class RunProgress:
     alive: bool
     elapsed: float = 0.0
     last_action: str | None = None
+    last_words: str | None = None
 
 
 @dataclass(frozen=True)

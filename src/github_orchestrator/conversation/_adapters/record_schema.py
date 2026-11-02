@@ -528,6 +528,7 @@ def _migrated(version: int, document: Document) -> Document:
         "file_error": document.get("file_error"),
         "session_from": document.get("session_from"),
         "question": document.get("question"),
+        "last_words": document.get("last_words"),
         "verdict": _verdict(document),
         "verdict_for": document.get("verdict_for"),
         "verdict_asked_for": document.get("verdict_asked_for"),

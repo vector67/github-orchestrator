@@ -124,6 +124,27 @@ def starts_a_run(event: dict[str, Any]) -> bool:
             or event.get("type") == "thread.started")
 
 
+def _said_in(content: object) -> str | None:
+    if not isinstance(content, list):
+        return None
+    said = "\n".join(str(block.get("text", "")) for block in content
+                     if isinstance(block, dict) and block.get("type") == "text")
+    return said.strip() or None
+
+
+def last_words_after(event: dict[str, Any], before: str | None) -> str | None:
+    event_type = event.get("type")
+    item = event.get("item")
+    if event_type == "item.completed" and isinstance(item, dict) and (
+            item.get("type") == "agent_message"):
+        return str(item.get("text") or "").strip() or before
+    if event_type == "assistant":
+        return _said_in(event.get("message", {}).get("content")) or before
+    if event_type == "result" and not event.get("is_error"):
+        return str(event.get("result") or "").strip() or before
+    return before
+
+
 def summarize_event(event: dict[str, Any]) -> list[str]:
     event_type = event.get("type")
     if isinstance(event_type, str) and is_codex_event(event_type):
