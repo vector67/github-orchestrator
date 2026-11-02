@@ -4,9 +4,12 @@ from dataclasses import replace
 import pytest
 
 from github_orchestrator.settings.fake import fake_settings
-from github_orchestrator.thread_names import NameMigration
+from github_orchestrator.terminal_sessions import Terminals
+from github_orchestrator.terminal_sessions.fake import FakeTerminals
+from github_orchestrator.thread_names import HeldFolder, NameMigration
 from github_orchestrator.wiring import thread_names_wiring, wire
 from tests.builders import a_pr
+from tests.conftest import fake_provider
 from tests.disk_layout import disk_name, thread_dir, thread_file, thread_worktree
 
 THE_PR = a_pr(7, "acme/widgets")
@@ -35,9 +38,10 @@ def clone(tmp_path, git_template):
     return tmp_path / "clone"
 
 
-def _migration(settings, clone) -> NameMigration:
+def _migration(settings, clone, terminals=None) -> NameMigration:
     wiring = replace(thread_names_wiring(settings, None), clones={THE_PR.repo: clone})
-    migration: NameMigration = wire(wiring).get(NameMigration)
+    migration: NameMigration = wire(
+        wiring, fake_provider(Terminals, terminals or FakeTerminals())).get(NameMigration)
     return migration
 
 
@@ -117,7 +121,8 @@ def test_a_config_that_names_no_clones_yet_migrates_nothing_and_leaves_no_marker
     folder.mkdir(parents=True)
     (folder / "PRRT_a.json").write_text("old")
     migration: NameMigration = wire(
-        replace(thread_names_wiring(settings, None), clones=None)).get(NameMigration)
+        replace(thread_names_wiring(settings, None), clones=None),
+        fake_provider(Terminals, FakeTerminals())).get(NameMigration)
 
     migration.migrate()
 
@@ -209,3 +214,61 @@ def test_a_stale_bare_folder_that_is_no_worktree_is_not_moved_into_the_new_name(
     assert old.is_dir()
     assert not thread_worktree(settings.thread_worktrees_dir, THE_PR, "PRRT_a").exists()
     assert _git(clone, "rev-parse", _new_branch("PRRT_a")) == fix
+
+
+def _in_session(terminals, worktree, pr=THE_PR):
+    terminals.of(pr).start(str(worktree), ["claude"])
+
+
+def test_a_session_in_a_folder_the_migration_would_move_refuses_it_and_names_that_folder(
+    settings, clone
+):
+    old, _ = _legacy_workspace(settings, clone, "PRRT_a")
+    folder = thread_dir(settings.threads_dir, THE_PR)
+    folder.mkdir(parents=True)
+    (folder / "PRRT_a.json").write_text("record")
+    terminals = FakeTerminals()
+    _in_session(terminals, old / "src")
+    migration = _migration(settings, clone, terminals)
+
+    held = migration.migrate()
+
+    assert held == [HeldFolder(pr=THE_PR, thread="PRRT_a", folder=str(old))]
+    assert _branch_at(old) == PREFIX + "PRRT_a" and (folder / "PRRT_a.json").exists()
+    assert not migration.migrated()
+
+
+def test_the_folders_in_the_way_are_named_without_migrating(settings, clone):
+    old, _ = _legacy_workspace(settings, clone, "PRRT_a")
+    terminals = FakeTerminals()
+    _in_session(terminals, old)
+
+    assert _migration(settings, clone, terminals).held() == [
+        HeldFolder(pr=THE_PR, thread="PRRT_a", folder=str(old))]
+    assert _branch_at(old) == PREFIX + "PRRT_a"
+
+
+def test_a_session_in_a_folder_the_migration_leaves_where_it_is_does_not_refuse_it(
+    settings, clone
+):
+    _legacy_workspace(settings, clone, "PRRT_a")
+    terminals = FakeTerminals()
+    _in_session(terminals, clone)
+
+    assert _migration(settings, clone, terminals).migrate() == []
+    assert thread_worktree(settings.thread_worktrees_dir, THE_PR, "PRRT_a").is_dir()
+
+
+def test_closing_the_sessions_in_the_way_lets_the_migration_through(settings, clone):
+    old, _ = _legacy_workspace(settings, clone, "PRRT_a")
+    terminals = FakeTerminals()
+    _in_session(terminals, old)
+    elsewhere = a_pr(8, "acme/widgets")
+    _in_session(terminals, clone, elsewhere)
+    migration = _migration(settings, clone, terminals)
+
+    migration.close_sessions()
+
+    assert migration.migrate() == []
+    assert thread_worktree(settings.thread_worktrees_dir, THE_PR, "PRRT_a").is_dir()
+    assert terminals.of(THE_PR).listed() == [] and len(terminals.of(elsewhere).listed()) == 1

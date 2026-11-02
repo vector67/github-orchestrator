@@ -184,7 +184,7 @@ from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
 from github_orchestrator.terminal_sessions._pty import PtyTerminals
 from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.thread_names._gate import LockedNameMigration
-from github_orchestrator.thread_names._pass import rename_thread_names
+from github_orchestrator.thread_names._pass import ThreadNames
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
 from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
@@ -616,13 +616,11 @@ class ThreadNamesProvider(Provider):
     wiring = from_context(provides=ThreadNamesWiring, scope=Scope.APP)
 
     @provide
-    def name_migration(self, wiring: ThreadNamesWiring) -> NameMigration:
-        clones = wiring.clones
-        if clones is None:
-            return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, None)
-        return LockedNameMigration(
-            wiring.marker, wiring.lock, wiring.version,
-            lambda: rename_thread_names(wiring.threads_dir, wiring.thread_worktrees_dir, clones))
+    def name_migration(self, wiring: ThreadNamesWiring, terminals: Terminals) -> NameMigration:
+        names = None if wiring.clones is None else ThreadNames(
+            wiring.threads_dir, wiring.thread_worktrees_dir, wiring.clones)
+        return LockedNameMigration(wiring.marker, wiring.lock, wiring.version, names,
+                                   terminals)
 
 
 def thread_names_wiring(settings: Settings, version: str | None) -> ThreadNamesWiring:

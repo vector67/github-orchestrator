@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote, unquote
 
@@ -78,15 +79,28 @@ def _checked_out(clone: Path) -> dict[str, Path]:
     return found
 
 
-def _rename_branches(clone: Path, repo: Repo, worktrees_dir: Path) -> None:
+@dataclass(frozen=True)
+class ThreadRename:
+    clone: Path
+    pr: Pr
+    key: str
+    branch: str
+    target_branch: str
+    folder: Path | None
+    target_folder: Path
+    left: str | None
+
+
+def _planned(clone: Path, repo: Repo, worktrees_dir: Path) -> list[ThreadRename]:
     listed = _git(clone, "for-each-ref", "--format=%(refname:short)", f"refs/heads/{BRANCHES}")
     if listed.returncode != 0:
         log.error("Could not list the thread branches of %s in %s: %s", repo, clone,
                   _said(listed))
-        return
+        return []
     branches = set(listed.stdout.split())
     checked_out = _checked_out(clone)
     ours = worktrees_dir.resolve()
+    planned = []
     for branch in sorted(branches):
         number, _, name = branch.removeprefix(BRANCHES).partition("/")
         key = key_of(name) if number.isdigit() and "/" not in name else None
@@ -95,28 +109,39 @@ def _rename_branches(clone: Path, repo: Repo, worktrees_dir: Path) -> None:
         pr = Pr(repo, int(number))
         target_branch = f"{BRANCHES}{number}/{new_name(key)}"
         target_folder = _pr_folder(worktrees_dir, pr) / new_name(key)
-        if branch != target_branch and target_branch in branches:
-            log.warning("Left %s under its old name: %s is already there", branch, target_branch)
-            continue
         folder = checked_out.get(branch)
-        if (folder is not None and folder.exists() and folder.resolve().is_relative_to(ours)
-                and folder.resolve() != target_folder.resolve()):
-            if target_folder.exists():
-                log.warning("Left %s under its old name: %s is already there", folder,
-                            target_folder)
-                continue
-            moved = _git(clone, "worktree", "move", str(folder), str(target_folder))
-            if moved.returncode != 0:
-                log.warning("Left %s under its old name: %s", folder, _said(moved))
-                continue
-            log.info("Moved %s to %s", folder, target_folder)
-        if branch != target_branch:
-            renamed = _git(clone, "branch", "-m", branch, target_branch)
-            if renamed.returncode != 0:
-                log.error("Could not rename %s to %s: %s", branch, target_branch,
-                          _said(renamed))
-                continue
-            log.info("Renamed %s to %s", branch, target_branch)
+        if (folder is None or not folder.exists() or not folder.resolve().is_relative_to(ours)
+                or folder.resolve() == target_folder.resolve()):
+            folder = None
+        left = None
+        if branch != target_branch and target_branch in branches:
+            left = f"Left {branch} under its old name: {target_branch} is already there"
+        elif folder is not None and target_folder.exists():
+            left = f"Left {folder} under its old name: {target_folder} is already there"
+        if folder is not None or branch != target_branch:
+            planned.append(ThreadRename(clone, pr, key, branch, target_branch, folder,
+                                        target_folder, left))
+    return planned
+
+
+def _rename(thread: ThreadRename) -> None:
+    if thread.left is not None:
+        log.warning("%s", thread.left)
+        return
+    if thread.folder is not None:
+        moved = _git(thread.clone, "worktree", "move", str(thread.folder),
+                     str(thread.target_folder))
+        if moved.returncode != 0:
+            log.warning("Left %s under its old name: %s", thread.folder, _said(moved))
+            return
+        log.info("Moved %s to %s", thread.folder, thread.target_folder)
+    if thread.branch != thread.target_branch:
+        renamed = _git(thread.clone, "branch", "-m", thread.branch, thread.target_branch)
+        if renamed.returncode != 0:
+            log.error("Could not rename %s to %s: %s", thread.branch, thread.target_branch,
+                      _said(renamed))
+            return
+        log.info("Renamed %s to %s", thread.branch, thread.target_branch)
 
 
 def _report_dead_folders(worktrees_dir: Path) -> None:
@@ -127,10 +152,19 @@ def _report_dead_folders(worktrees_dir: Path) -> None:
                         folder)
 
 
-def rename_thread_names(threads_dir: Path, worktrees_dir: Path,
-                        clones: Mapping[Repo, Path]) -> None:
-    _rename_records(threads_dir)
-    for repo, clone in clones.items():
-        if clone.is_dir():
-            _rename_branches(clone, repo, worktrees_dir)
-    _report_dead_folders(worktrees_dir)
+class ThreadNames:
+    def __init__(self, threads_dir: Path, worktrees_dir: Path,
+                 clones: Mapping[Repo, Path]) -> None:
+        self._threads_dir = threads_dir
+        self._worktrees_dir = worktrees_dir
+        self._clones = clones
+
+    def planned(self) -> list[ThreadRename]:
+        return [thread for repo, clone in self._clones.items() if clone.is_dir()
+                for thread in _planned(clone, repo, self._worktrees_dir)]
+
+    def rename(self, planned: list[ThreadRename]) -> None:
+        _rename_records(self._threads_dir)
+        for thread in planned:
+            _rename(thread)
+        _report_dead_folders(self._worktrees_dir)
