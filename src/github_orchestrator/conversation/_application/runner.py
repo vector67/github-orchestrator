@@ -247,14 +247,15 @@ def _ask_fix_check(ports: Ports, conversation: Conversation, effect: AskFixCheck
         return
     ports.summaries.check_changes(
         conversation, effect.base, effect.head, changes.shown, changes.worktree,
-        _check_recorder(ports, conversation.key, effect.on, effect.head, effect.base))
+        _check_recorder(ports, conversation.key, effect.on, effect.head, effect.base,
+                        since_comment=True))
 
 
-def _check_recorder(ports: Ports, key: str, on: str, sha: Sha,
-                    parent: Sha) -> Callable[[CommitVerdict, str], None]:
+def _check_recorder(ports: Ports, key: str, on: str, sha: Sha, parent: Sha, *,
+                    since_comment: bool = False) -> Callable[[CommitVerdict, str], None]:
     def record(verdict: CommitVerdict, reasoning: str) -> None:
         check = CommitCheck(on=on, sha=sha, parent=parent, verdict=verdict,
-                            reasoning=reasoning)
+                            reasoning=reasoning, since_comment=since_comment)
         with ports.records.update(key) as update:
             stored = update.conversation
             if stored is None:

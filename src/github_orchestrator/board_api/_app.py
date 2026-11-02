@@ -1377,10 +1377,13 @@ def confirm_thread(key: ThreadKey, board: Serving, if_match: IfMatch) -> Respons
 
 
 CHECK_REFUSED: dict[int | str, dict[str, Any]] = {
-    500: {"description": "The checkout has no head fetched from origin.", "model": Errors}}
+    500: {"description": "The branch could not be fetched from origin.", "model": Errors}}
 
 
-def _origin_head(board: Board) -> CommitSha:
+def _fetched_head(board: Board) -> CommitSha:
+    failed = board.git.fetch(board.conversations.facts().base_branch)
+    if failed is not None:
+        raise Refusal(500, ErrorCode.GIT_FAILED, failed)
     head = board.git.origin_head()
     if head is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
@@ -1390,18 +1393,20 @@ def _origin_head(board: Board) -> CommitSha:
 
 @writes.post("/conversations/{key}/operations:check-for-fixes", status_code=204,
              operation_id="checkThreadForFixes",
-             summary="Ask an agent whether origin's head addresses a comment the author "
-                     "has not answered.",
+             summary="Fetch the branch and ask an agent whether origin's head addresses "
+                     "a comment the author has not answered.",
              responses={**ONE_THREAD, **CHECK_REFUSED, 409: {
                  "description": "The thread is not waiting on the author since your "
                                 "comment, or names no commit it was made on.",
                  "model": Errors}})
 def check_thread_for_fixes(key: ThreadKey, board: Serving) -> Response:
-    """The agent reads the diff from the commit the comment was made on to
-    origin's head and lands the thread in Assumed done or My move, as a reply
-    naming a commit does. Asking again at a head already checked starts nothing.
+    """The branch is fetched first. The agent reads the diff from the commit
+    the comment was made on to origin's head and lands the thread in Assumed
+    done when it is addressed and My move when it is partly or not addressed.
+    Asking again at a head already checked, or while a check is out, starts
+    nothing.
     """
-    head = _origin_head(board)
+    head = _fetched_head(board)
     with board.conversations.editing(_thread(board, key).key) as editable:
         checked = editable.check_for_fixes(head)
     if isinstance(checked, Denied):
@@ -1416,7 +1421,7 @@ def check_for_fixes(board: Serving) -> Response:
     """What checking each thread does, for every thread on a pull request you
     review that is waiting on the author with no reply since your comment.
     """
-    board.conversations.check_for_fixes(_origin_head(board))
+    board.conversations.check_for_fixes(_fetched_head(board))
     return Response(status_code=204)
 
 

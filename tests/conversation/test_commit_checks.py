@@ -340,25 +340,50 @@ def test_changes_that_do_not_address_the_comment_move_the_thread_to_my_move(sett
     assert board.get().standing is ConversationState.READY
 
 
-def test_checking_again_at_the_head_already_checked_asks_nothing(settings):
+def test_changes_that_partly_address_the_comment_move_the_thread_to_my_move(settings):
     board, _, head = _waiting_on_the_author(settings)
     _check_for_fixes(board, head)
+
     board.agent_runs.give_check("partly", "renamed, but one caller still uses old_name")
 
-    _check_for_fixes(board, head)
+    held = board.get()
+    assert held.standing is ConversationState.READY
+    assert held.commit_check.verdict is CommitVerdict.PARTLY
 
-    assert len(board.agent_runs.fix_checks_asked()) == 1
 
-
-def test_checking_again_after_a_new_push_asks_about_the_new_head(settings):
+def test_checking_again_while_a_check_is_out_asks_nothing(settings):
     board, _, head = _waiting_on_the_author(settings)
     _check_for_fixes(board, head)
-    board.agent_runs.give_check("partly", "renamed, but one caller still uses old_name")
     newer = board.commit({"caller.py": "new_name()\n"}, "Rename the caller")
 
     _check_for_fixes(board, newer)
 
+    assert len(board.agent_runs.fix_checks_asked()) == 1
+
+
+def test_a_check_that_got_no_answer_is_asked_again_after_ten_minutes_about_the_new_head(
+        settings):
+    board, _, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+    newer = board.commit({"caller.py": "new_name()\n"}, "Rename the caller")
+    board.later += timedelta(minutes=10)
+
+    _check_for_fixes(board, newer)
+
     assert [asked.head for asked in board.agent_runs.fix_checks_asked()] == [head, newer]
+
+
+def test_checking_again_at_the_head_already_checked_asks_nothing(settings):
+    board, _, head = _waiting_on_the_author(settings)
+    _check_for_fixes(board, head)
+    board.agent_runs.give_check("addressed", "old_name is now new_name")
+    with board.manager.editing(KEY) as conversation:
+        conversation.place(ConversationState.WAITING)
+    board.later += timedelta(minutes=10)
+
+    _check_for_fixes(board, head)
+
+    assert len(board.agent_runs.fix_checks_asked()) == 1
 
 
 def test_a_thread_the_author_has_replied_to_is_not_checked_for_fixes(settings):

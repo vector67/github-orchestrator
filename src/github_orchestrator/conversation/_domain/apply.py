@@ -181,6 +181,7 @@ from github_orchestrator.conversation._domain.verdict import (
     PLACED_BY_A_VERDICT,
     STATE_OF_VERDICT,
     newest_said,
+    retry_due,
     unread_of,
     verdict_due,
     with_an_ask,
@@ -337,8 +338,10 @@ def _check_for_fixes(conversation: Conversation, command: CheckForFixes,
                      at: str | None) -> Accepted:
     on, check = newest_said(conversation), conversation.commit_check
     base = Sha.parse(conversation.original_commit or "")
-    if on is None or base is None or (check is not None and check.on == on
-                                      and check.sha == command.head):
+    checked_at_head = check is not None and check.on == on and check.sha == command.head
+    still_out = conversation.commit_check_asked_for == on and not retry_due(
+        conversation.commit_check_asks, conversation.commit_check_asked_at, at)
+    if on is None or base is None or checked_at_head or still_out:
         return Accepted(conversation)
     return Accepted(with_a_check_ask(conversation, on, at),
                     (AskFixCheck(on=on, base=base, head=command.head),))

@@ -22,6 +22,8 @@ MAX_CANDIDATES = 5
 
 _STATE_OF_CHECK = {CommitVerdict.NOT_ADDRESSED: OPEN, CommitVerdict.ADDRESSED: ASSUMED_DONE}
 
+_STATE_OF_FIX_CHECK = {**_STATE_OF_CHECK, CommitVerdict.PARTLY: OPEN}
+
 _HASH = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
 
 
@@ -83,7 +85,8 @@ def placed_by_check(conversation: Conversation) -> str | None:
     check = conversation.commit_check
     if check is None or check.on != newest_said(conversation):
         return None
-    return _STATE_OF_CHECK.get(check.verdict)
+    placing = _STATE_OF_FIX_CHECK if check.since_comment else _STATE_OF_CHECK
+    return placing.get(check.verdict)
 
 
 def checked(conversation: Conversation, check: CommitCheck) -> Conversation:

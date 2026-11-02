@@ -41,6 +41,31 @@ def test_checking_a_thread_for_fixes_asks_about_the_changes_up_to_origins_head()
             for asked in agent_runs.fix_checks_asked()] == [(KEY, base, head)]
 
 
+def pushed_since_the_last_fetch(board):
+    copies = board.stage.working_copies
+    return copies.publish("feature", copies.origin["feature"],
+                          {"src/foo.py": "def write():\n    check()\n    write_it()\n"},
+                          "Write after the check")
+
+
+def test_checking_a_thread_for_fixes_fetches_first_so_it_sees_the_newest_push():
+    board, agent_runs, _, _ = waiting()
+    pushed = pushed_since_the_last_fetch(board)
+
+    client_of(board).post(check_the_thread())
+
+    assert [asked.head for asked in agent_runs.fix_checks_asked()] == [pushed]
+
+
+def test_checking_the_pull_request_for_fixes_fetches_first_so_it_sees_the_newest_push():
+    board, agent_runs, _, _ = waiting()
+    pushed = pushed_since_the_last_fetch(board)
+
+    client_of(board).post(CHECK_THE_PR)
+
+    assert [asked.head for asked in agent_runs.fix_checks_asked()] == [pushed]
+
+
 def test_a_thread_not_waiting_on_the_author_is_refused_a_check_for_fixes():
     board, agent_runs, _, _ = waiting("my-move")
 
