@@ -133,6 +133,12 @@ def thread_ready(args: argparse.Namespace, *, conversation_managers: Conversatio
     thread_show(args, conversation_managers=conversation_managers, gist_model=gist_model)
 
 
+def thread_ask(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+               gist_model: str | None) -> None:
+    _report_or_die(args, conversation_managers, lambda conversation: conversation.ask(
+        args.question, args.context, args.option or ()), "asking")
+
+
 def thread_base(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                 gist_model: str | None) -> None:
     _report_or_die(args, conversation_managers,
@@ -346,6 +352,7 @@ THREAD_COMMANDS = {
     "ticket": thread_ticket,
     "filed": thread_filed,
     "ready": thread_ready,
+    "ask": thread_ask,
     "base": thread_base,
     "fail": thread_fail,
     "check": thread_check,
@@ -627,6 +634,19 @@ def add_thread_parsers(
                               help="How sure the agent is of the fix")
     ready_parser.add_argument("--confidence-note", default=None,
                               help="One sentence behind that level")
+
+    ask_parser = thread_sub.add_parser(
+        "ask", help="The brief cannot be met as stated, or the way forward goes beyond "
+                    "what was asked: stop and put a question to the author.")
+    _common(ask_parser)
+    ask_parser.add_argument("--thread-id", required=True)
+    ask_parser.add_argument("--question", required=True,
+                            help="One line: what the author must decide")
+    ask_parser.add_argument("--context", required=True,
+                            help="Markdown: what you tried and what broke")
+    ask_parser.add_argument("--option", action="append", default=None,
+                            help="One concrete way forward; repeat for each, or leave "
+                                 "out when you have not narrowed it down")
 
     base_parser = thread_sub.add_parser(
         "base", help="Move the commit the thread's fix is built on, after rebasing "

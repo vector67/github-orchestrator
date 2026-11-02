@@ -63,6 +63,7 @@ from github_orchestrator.conversation._domain.commands import (
     DeclarePlan,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     Fail,
@@ -72,6 +73,7 @@ from github_orchestrator.conversation._domain.commands import (
     PostNow,
     Reject,
     Reply,
+    ReportAsk,
     ReportFiled,
     ReportReady,
     Resolve,
@@ -111,6 +113,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     OperationState,
     PointedLine,
+    Question,
     Ticket,
     UnreadableRecord,
 )
@@ -367,6 +370,9 @@ class _Editable:
     def stop(self) -> Conversation | Denied:
         return self._ask(Stop())
 
+    def drop_question(self) -> Conversation | Denied:
+        return self._ask(DropQuestion())
+
     def resolve(self, *, reply: str = "", delete_comment: bool = False,
                 resolve: bool = False,
                 thumbs_up: bool = True) -> Conversation | Denied:
@@ -447,6 +453,12 @@ class _Editable:
             return self._answer(ReportFiled(key=filed_key, url=filed_url))
         return self._answer(report_without_code(
             classification, text, _ticket(ticket_project, ticket_title, ticket_body)))
+
+    def ask(self, question: str, context: str,
+            options: Sequence[str] = ()) -> Conversation | Denied:
+        head = Sha.parse(self._pr.ports.pull_requests.head_sha())
+        return self._answer(ReportAsk(Question(text=question, context=context,
+                                               options=tuple(options), head=head)))
 
     def fail(self, reason: str) -> Conversation | Denied:
         return self._answer(Fail(reason=reason))
@@ -721,8 +733,10 @@ class _ConversationManager:
 
 def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> None:
     fix = conversation.fix
-    if fix.is_proposed:
-        news.fix_ready(pr, conversation.key, gist=conversation.gist,
+    if fix.is_asking and fix.question is not None:
+        news.agent_asked(pr, question=fix.question.text)
+    elif fix.is_proposed:
+        news.fix_ready(pr, conversation.key, gist=fix.last_words or conversation.gist,
                        comments=[(comment.author, comment.body)
                                  for comment in conversation.comments],
                        fix_summary=fix.summary)

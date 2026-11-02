@@ -58,6 +58,7 @@ class RunExited:
     at: str
     head: Sha | None = None
     descends: bool = False
+    last_words: str | None = None
 
 
 @dataclass(frozen=True)

@@ -144,6 +144,37 @@ def test_the_thread_prompt_is_self_contained(runs, claude, worktree):
     assert "handle-pull-request-feedback-autonomous" not in prompt
 
 
+def test_every_prompt_that_asks_for_a_fix_offers_a_question_when_the_brief_cannot_be_met(
+        world, runs, claude, worktree):
+    for prompt in [*_fixing(runs, claude, worktree), _in_session(world, runs, _fix(worktree))]:
+        ask = _line_with(prompt, "thread ask")
+        assert "--question" in ask and "--context" in ask and "[--option" in ask
+        assert "cannot be met as stated" in prompt
+        assert "goes beyond what the comment and the brief asked for" in prompt
+        assert "do not ask questions" not in prompt
+
+
+def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_worktree(
+        world, runs, worktree):
+    assert runs.answer_in_session(_fix(worktree)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert (session.worktree, session.argv) == (worktree, ["claude", "--continue"])
+    assert session.kept
+
+
+def test_a_reply_while_asking_continues_the_agent_s_conversation_with_the_reply(
+        runs, claude, worktree):
+    reply = FixComment("reviewer", "Use clock_timestamp() in production too.",
+                       "2026-08-28T12:00:00Z")
+
+    prompt = _ran(runs, claude, runs.carry_on_thread(_fix(worktree, replies=(reply,))))
+
+    assert "--continue" in claude.spawned[-1].argv
+    assert "reviewer: Use clock_timestamp() in production too." in prompt
+    assert {verb for verb, _ in invocations(prompt)} == {"ready", "ask"}
+
+
 SKIPPED_AS = "risky|acknowledgement|needs-human"
 REPLIED_AS = "unclear|out-of-scope|already-done|question"
 

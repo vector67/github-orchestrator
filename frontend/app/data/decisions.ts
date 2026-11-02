@@ -35,6 +35,7 @@ export interface DialogSpec {
   resolving?: boolean;
   thumbsUp?: boolean;
   outcomes?: Outcome[];
+  legend?: string;
   submit: (
     typed: string,
     resolving: boolean,
@@ -46,9 +47,38 @@ export interface DialogSpec {
 export interface Outcome {
   to: string;
   label: string;
+  steps?: string[];
+  worktree?: string;
 }
 
 export const LATER = 'later';
+
+export const REJECTED = 'reject';
+
+function droppedOutcomes(proposed: boolean): Outcome[] {
+  return [
+    {
+      to: 'proposal',
+      label: 'Back to the last proposal',
+      steps: ['asking', proposed ? 'proposed' : 'failed'],
+      worktree: proposed
+        ? 'worktree: everything since that proposal discarded'
+        : 'worktree: no proposal to go back to, so the edits are discarded',
+    },
+    {
+      to: LATER,
+      label: 'Defer',
+      steps: ['asking', 'deferred', 'asking'],
+      worktree: 'edits kept',
+    },
+    {
+      to: REJECTED,
+      label: 'Reject the thread',
+      steps: ['asking', 'rejected'],
+      worktree: 'edits discarded · reply step follows',
+    },
+  ];
+}
 
 function placing(outcomes: Outcome[]): DialogSpec {
   return {
@@ -110,6 +140,7 @@ interface Entry extends Carrying {
   asks: Asks;
   savedFirst?: boolean;
   offeredWhen?: (conversation: Conversation) => boolean;
+  dialogFor?: (conversation: Conversation) => Partial<DialogSpec>;
   forKind?: Partial<Record<ProposalKind, Partial<DialogSpec>>>;
   inPhase?: Partial<Record<Phase, Shade & { dialog?: Partial<DialogSpec> }>>;
   reviewer?: {
@@ -295,6 +326,45 @@ const ENTRIES = {
     square: 'rework',
     opensTerminal: true,
     ring: true,
+  },
+  answer: {
+    key: 'o',
+    label: 'Answer in a session',
+    weight: 'primary',
+    title:
+      'opens a session in the Terminal tab that carries on the agent’s own ' +
+      'conversation, so you answer it where it stopped — nothing reaches the ' +
+      'PR branch until you accept what it proposes',
+    asks: null,
+    request: () => ({ verb: 'start-session', body: {} }),
+    doing: 'opening the session',
+    square: 'rework',
+    opensTerminal: true,
+    ring: true,
+  },
+  drop: {
+    key: 'D',
+    label: 'Drop…',
+    weight: 'secondary',
+    title:
+      'gives up the agent’s question: back to the last proposal, deferred ' +
+      'with its edits kept, or the thread rejected',
+    asks: {
+      question: 'Drop this question',
+      note:
+        'Choose where the thread goes and what happens to its worktree. ' +
+        'Nothing is posted to GitHub unless you reject it with a reply.',
+      reply: false,
+      legend: 'Instead:',
+      outcomes: droppedOutcomes(true),
+      submit: () => 'Drop it',
+    },
+    dialogFor: (conversation) => ({
+      outcomes: droppedOutcomes(Boolean(conversation.question?.last_proposal)),
+    }),
+    request: () => ({ verb: 'drop-question', body: {} }),
+    doing: 'dropping the question',
+    square: 'ready',
   },
   'open-shell': {
     key: 'q',
@@ -1092,6 +1162,7 @@ const ENROLLED: Decision[] = ['withdraw-from-review'];
 
 const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   proposed: LANDING_AGAIN,
+  asking: ['answer', 'drop'],
   'push failed': LANDING_AGAIN,
   'reply failed': LANDING_AGAIN,
   'filing failed': LANDING_AGAIN,
@@ -1234,6 +1305,7 @@ function authorOffer(
       ? {
           ...entry.asks,
           ...forProposal(entry, proposal, phase),
+          ...entry.dialogFor?.(conversation),
           ...dialog,
           resolving: conversation.author_kind === 'bot',
         }
@@ -1310,6 +1382,10 @@ export function carriedOut(
 
 export function laterAsks(): DialogSpec {
   return ENTRIES.defer.asks;
+}
+
+export function rejectAsks(): DialogSpec {
+  return ENTRIES.reject.asks;
 }
 
 export function inFlight(kind: string): string {

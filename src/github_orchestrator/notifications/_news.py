@@ -70,6 +70,9 @@ class News:
     def fix_failed(self, pr: Pr, *, gist: str, author: str, reason: str | None) -> None:
         self._post(pr, Badge.FAILED, f"Fix failed on {pr.short}", f"{gist or author}: {reason}")
 
+    def agent_asked(self, pr: Pr, *, question: str) -> None:
+        self._post(pr, Badge.NEEDS_YOU, f"Agent question on #{pr.number}", question)
+
     def run_failed(self, pr: Pr, kind: str, exit_code: int | None) -> None:
         self._post(pr, Badge.FAILED, f"Run failed on {pr.short}", f"{kind} exited {exit_code}")
 

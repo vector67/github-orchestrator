@@ -50,6 +50,31 @@ def _ready(commands: ReportCommands, fix: ThreadFix, sha: str, note: str) -> str
         confidence_note='"<one sentence: why that level, in your own words>"')
 
 
+def _ask(commands: ReportCommands, fix: ThreadFix) -> str:
+    return commands.ask(fix.pr, fix.key, question='"<one line: what the author must decide>"',
+                        context='"<markdown: what you tried and what broke>"',
+                        option='"<one concrete way forward>"')
+
+
+ASK_ADVICE = (
+    "Stop and ask the author instead of reporting when the brief cannot be met as "
+    "stated, or when the way forward goes beyond what the comment and the brief asked "
+    "for: a production change for a comment on a test, a change to another module, a "
+    "change to a public signature. Anything else, decide yourself and say what you "
+    "decided in `--confidence-note`. `--question` is the one thing the author must "
+    "decide. `--context` says why you stopped: what you tried and what broke. Give "
+    "`--option` once for each way forward, and only when you have narrowed it to "
+    "concrete ones. Leave your work in the worktree as it is, committed or not, and "
+    "stop once you have asked: the author answers in a session on this same "
+    "conversation."
+)
+
+
+def _asking(commands: ReportCommands, fix: ThreadFix) -> list[str]:
+    return ["## If you cannot do what was asked", "", ASK_ADVICE, "",
+            f"    {_ask(commands, fix)}", ""]
+
+
 def _fail(commands: ReportCommands, fix: ThreadFix) -> str:
     return commands.fail(fix.pr, fix.key, reason='"<why>"')
 
@@ -249,14 +274,16 @@ def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int) -> str
     step_cmd = _step(commands, fix)
     ready_cmd = _ready(commands, fix, FULL_SHA, "<one line: what changed>")
     fail_cmd = _fail(commands, fix)
+    asking = "".join(f"{line}\n" for line in _asking(commands, fix))
 
     path, line_text = _anchor(fix)
     parallelism_note = test_parallelism_note(workers)
 
     return f"""You are addressing one PR review thread on {pr} as part of an \
 autonomous feedback pass. Do the work and report the outcome yourself by running \
-exactly one of the report commands below — do not ask questions; nobody is \
-watching this run.
+exactly one of the report commands below. Nobody is watching this run, so a \
+question asked in your last message goes unread: when you need the author, \
+ask through the report command for it.
 
 Work ONLY in `{worktree}` — an isolated git worktree created for this one \
 thread. Every file you read or change, every command you run, and the one \
@@ -353,7 +380,7 @@ Mark each step the moment you finish it, so the board can watch the work go by:
 
 {CONFIDENCE_ADVICE}
 
-## Real failure vs infrastructure failure — opposite handling
+{asking}## Real failure vs infrastructure failure — opposite handling
 
 - Tests RAN and FAILED (your change is wrong) and you cannot trivially fix it:
   revert your changes and report, committing nothing:
@@ -370,7 +397,8 @@ Mark each step the moment you finish it, so the board can watch the work go by:
 
 - Never push — not this branch, not any branch.
 - Never commit to the PR branch. The only commit is the one in this worktree.
-- Exactly one commit when safe; zero commits when you reply, skip or fail.
+- Exactly one commit when safe; zero commits when you reply, skip or fail;
+  as many as you have made when you ask.
 """
 
 
@@ -474,6 +502,23 @@ def _included_replies(wanted: tuple[FixComment, ...]) -> list[str]:
     ]
 
 
+def carry_on_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
+    return "\n".join([
+        "While you waited for the author to answer your question, a new reply arrived "
+        "on the thread:",
+        "",
+        *(f"{comment.author_name or comment.author}: {comment.body}"
+          for comment in fix.replies),
+        "",
+        "If it settles your question, carry on from where you stopped and report as "
+        "before:",
+        _ready(commands, fix, FULL_SHA, "<one line: what changed>"),
+        "",
+        "If it does not, ask again, saying what the reply changed:",
+        _ask(commands, fix),
+    ])
+
+
 def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
                   workers: int) -> str:
     pr = fix.pr
@@ -552,6 +597,8 @@ def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
         "the reply instead:",
         _reply(commands, fix),
         _reply_advice(fix),
+        "",
+        *_asking(commands, fix),
     ]
     if fix.tracker is not None:
         lines += ["", *_out_of_scope(commands, fix)]

@@ -5996,3 +5996,225 @@ img.emoji-glyph {
     display: none;
   }
 }
+
+.agent-question {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.agent-question .question-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+}
+
+.agent-question .question-head .kicker {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.question-moved {
+  padding: 2px 8px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+  background: var(--blue-fill);
+}
+
+.agent-question .question-text {
+  margin: 0;
+  font-size: var(--fs-l);
+  font-weight: var(--fw-strong);
+  line-height: 1.35;
+}
+
+.question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: option;
+}
+
+.question-option {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  font-weight: var(--fw-strong);
+  border: 1px solid var(--hairline);
+  counter-increment: option;
+}
+
+.question-option::before {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-size: var(--fs-xs);
+  line-height: 22px;
+  text-align: center;
+  content: counter(option);
+  border: 1px solid var(--border-strong);
+}
+
+.stopped {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: var(--grey-fill);
+  border-left: 4px solid var(--grey);
+}
+
+.stopped-kicker {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.last-proposal {
+  margin-bottom: 12px;
+  border: 1px solid var(--hairline);
+}
+
+.last-proposal-head {
+  padding: 8px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-s);
+  color: var(--muted);
+  cursor: pointer;
+  background: var(--grey-fill);
+}
+
+.decide-dialog .outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decide-dialog .outcome-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+}
+
+.decide-dialog .state-step {
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+}
+
+.decide-dialog .state-step[data-step="asking"] {
+  padding-left: 10px;
+  box-shadow: inset 4px 0 0 var(--yellow);
+}
+
+.decide-dialog .state-step[data-step="deferred"] {
+  background: var(--grey-fill);
+  border-color: var(--grey);
+}
+
+.decide-dialog .state-step:is([data-step="rejected"], [data-step="failed"]) {
+  color: var(--red-text);
+  background: var(--red-fill);
+  border-color: var(--red);
+}
+
+.decide-dialog .outcome-worktree {
+  color: var(--muted);
+}
+
+.answer-reply {
+  position: fixed;
+  top: 84px;
+  right: 24px;
+  z-index: 16;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  box-sizing: border-box;
+  width: min(380px, calc(100vw - 32px));
+  padding: 14px 16px;
+  color: var(--page);
+  background: var(--text);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 25%);
+}
+
+.answer-reply-text {
+  margin: 0;
+  font-size: var(--fs-m);
+  line-height: 1.4;
+}
+
+.answer-reply-dismiss {
+  padding: 0;
+  font: inherit;
+  font-size: var(--fs-l);
+  line-height: 1;
+  color: var(--page);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.answer-reply-see {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: var(--fs-s);
+  font-weight: var(--fw-strong);
+  color: var(--text);
+  cursor: pointer;
+  background: var(--page);
+  border: 1px solid var(--page);
+}
+
+.reply-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim);
+}
+
+.reply-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  padding: 22px 24px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+}
+
+.reply-dialog-title {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+
+.reply-dialog .transcript-entry[data-marked] {
+  box-shadow:
+    inset 1px 0 0 var(--yellow-text),
+    inset 4px 0 0 var(--yellow),
+    inset 5px 0 0 var(--yellow-text);
+}

@@ -20,6 +20,7 @@ class OperationKind(StrEnum):
     OPEN_SHELL = "open-shell"
     APPROVE = "approve"
     STOP = "stop"
+    DROP_QUESTION = "drop-question"
     RESOLVE = "resolve"
     REJECT = "reject"
     DEFER = "defer"
@@ -201,6 +202,7 @@ RUNNING = "running"
 DECLINED = "declined"
 FAILED = "failed"
 PROPOSED = "proposed"
+ASKING = "asking"
 IN_SESSION = "in_session"
 LANDING = "landing"
 LANDED = "landed"
@@ -235,6 +237,14 @@ class UnreadableRecord(Exception):
     same way: the key goes in its unreadable array and the board draws
     what it likes for it.
     """
+
+
+@dataclass(frozen=True)
+class Question:
+    text: str
+    context: str = ""
+    options: tuple[str, ...] = ()
+    head: Sha | None = None
 
 
 @dataclass(frozen=True)
@@ -303,6 +313,7 @@ class Run:
     onto: Sha | None = None
     conflict: str | None = None
     brief: Brief | None = None
+    resumes: bool = False
 
     @property
     def is_rebase(self) -> bool:
@@ -342,10 +353,16 @@ class Fix:
     ticket_url: str | None = None
     file_error: str | None = None
     session_from: str | None = None
+    question: Question | None = None
+    last_words: str | None = None
 
     @property
     def is_proposed(self) -> bool:
         return self.state == PROPOSED
+
+    @property
+    def is_asking(self) -> bool:
+        return self.state == ASKING
 
     @property
     def is_declined(self) -> bool:
@@ -497,6 +514,7 @@ class Proposal:
     confidence_note: str | None
     tests: str | None
     tests_note: str | None
+    last_words: str | None
 
 
 @dataclass(frozen=True)
@@ -609,7 +627,7 @@ class Conversation:
             base_sha=fix.base_sha, thread_sha=fix.thread_sha, commits=fix.commits,
             summary=fix.summary, agent_note=fix.agent_note,
             confidence=fix.confidence, confidence_note=fix.confidence_note,
-            tests=fix.tests, tests_note=fix.tests_note)
+            tests=fix.tests, tests_note=fix.tests_note, last_words=fix.last_words)
 
     @property
     def posted_by_board(self) -> frozenset[int]:
@@ -689,6 +707,7 @@ _STATE_OF_FIX = {
     LANDED: ConversationState.DONE,
     ABSENT: ConversationState.READY,
     PROPOSED: ConversationState.READY,
+    ASKING: ConversationState.READY,
     DECLINED: ConversationState.READY,
     FAILED: ConversationState.READY,
 }

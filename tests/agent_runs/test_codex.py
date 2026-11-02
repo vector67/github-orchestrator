@@ -154,6 +154,17 @@ def test_a_rework_session_starts_codex_on_the_prompt(runs, world):
     assert len(session.argv) == 2
 
 
+def test_answering_a_question_resumes_codex_s_newest_session_in_the_worktree(runs, world):
+    fix = ThreadFix(pr=THE_PR, key="2313088871", worktree="/tmp/wt", author="reviewer",
+                    path="src/foo.py", line=4, body="rename this")
+
+    assert runs.answer_in_session(fix) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert (session.worktree, session.argv) == ("/tmp/wt", ["codex", "resume", "--last"])
+    assert session.kept
+
+
 def test_a_codex_turn_reads_on_the_board_as_what_it_said_and_ran(runs, world, tmp_path):
     world.script(Outcome(events=A_TURN))
 

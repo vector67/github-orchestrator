@@ -35,10 +35,95 @@ export const RECORDED = {
    "kind": "review",
    "mention": false,
    "operations": [],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
    "state_changed_at": null,
+   "unread": false,
+   "updated_at": "2026-09-12T11:00:00Z"
+  },
+  "asking": {
+   "anchor": {
+    "is_outdated": false,
+    "line": 42,
+    "original_commit": "a1b2c3d",
+    "original_line": 42,
+    "original_start_line": null,
+    "path": "src/foo.py",
+    "side": "RIGHT",
+    "start_line": null,
+    "start_side": null
+   },
+   "author_kind": "human",
+   "comments": [
+    {
+     "author": "anna",
+     "created_at": "2026-09-12T10:00:00Z",
+     "id": 1,
+     "review_state": "CHANGES_REQUESTED"
+    }
+   ],
+   "commit_check": null,
+   "created_at": "2026-09-12T11:00:00.000000Z",
+   "etag": "\"asking\"",
+   "gist": "rename the helper",
+   "github_node_id": "PRRT_a",
+   "github_removed": false,
+   "github_resolved": null,
+   "github_resolved_at": null,
+   "key": "PRRT_a",
+   "kind": "review",
+   "mention": false,
+   "operations": [
+    {
+     "attempts": 1,
+     "attempts_allowed": 3,
+     "id": "PRRT_a.1",
+     "kind": "first",
+     "lands": null,
+     "reason": null,
+     "reason_code": null,
+     "requested_at": "2026-09-12T11:00:00.000000Z",
+     "settled_at": "2026-09-12T11:00:00Z",
+     "state": "applied",
+     "steps_done": null,
+     "steps_total": null,
+     "ticket_key": null
+    },
+    {
+     "attempts": 0,
+     "attempts_allowed": 3,
+     "id": "op_000000000001",
+     "kind": "rework",
+     "lands": null,
+     "reason": null,
+     "reason_code": null,
+     "requested_at": "2026-09-12T11:00:00Z",
+     "settled_at": "2026-09-12T11:00:00Z",
+     "state": "applied",
+     "steps_done": null,
+     "steps_total": null,
+     "ticket_key": null
+    }
+   ],
+   "question": {
+    "context": "Every test in the file failed: production stamps now() inside the test's transaction.",
+    "head": "c0ffee1",
+    "last_proposal": {
+     "base": "0f98b1f7eda33a4e9cfaab09506aa8094044085f",
+     "head": "78b3ba12002f9cab5cbb57fac87d8c703702a196"
+    },
+    "options": [
+     "Change production to clock_timestamp()",
+     "Widen the lower bound"
+    ],
+    "text": "Change production, or widen the lower bound?"
+   },
+   "record_state": "open",
+   "reopened": false,
+   "state": "ready",
+   "state_changed_at": "2026-09-12T11:00:00Z",
    "unread": false,
    "updated_at": "2026-09-12T11:00:00Z"
   },
@@ -91,6 +176,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "assumed_done",
    "reopened": false,
    "state": "assumed-done",
@@ -147,6 +233,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -218,6 +305,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "deferred",
    "reopened": false,
    "state": "deferred",
@@ -289,6 +377,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "discarded",
    "reopened": false,
    "state": "done",
@@ -345,6 +434,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "draft",
    "reopened": false,
    "state": "draft",
@@ -416,6 +506,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "enrolled",
    "reopened": false,
    "state": "enrolled",
@@ -472,6 +563,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -558,6 +650,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "landing",
@@ -644,6 +737,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -721,6 +815,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "done",
@@ -792,6 +887,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "landing",
@@ -848,6 +944,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -919,6 +1016,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -975,6 +1073,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "queued",
@@ -1061,6 +1160,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "landing",
@@ -1132,6 +1232,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "rejected",
    "reopened": false,
    "state": "done",
@@ -1188,6 +1289,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "removed",
    "reopened": false,
    "state": "ready",
@@ -1259,6 +1361,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -1336,6 +1439,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "resolved",
    "reopened": false,
    "state": "done",
@@ -1407,6 +1511,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "rework",
@@ -1478,6 +1583,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "in-session",
@@ -1549,6 +1655,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -1626,6 +1733,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "waiting_on_reviewer",
    "reopened": false,
    "state": "waiting",
@@ -1682,6 +1790,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "working",
@@ -1730,6 +1839,7 @@ export const RECORDED = {
    "kind": "review",
    "mention": false,
    "operations": [],
+   "question": null,
    "record_state": "open",
    "reopened": false,
    "state": "ready",
@@ -1776,6 +1886,7 @@ export const RECORDED = {
    "kind": "review",
    "mention": false,
    "operations": [],
+   "question": null,
    "record_state": "assumed_done",
    "reopened": false,
    "state": "assumed-done",
@@ -1838,6 +1949,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "confirmed",
    "reopened": false,
    "state": "done",
@@ -1900,6 +2012,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "deferred",
    "reopened": false,
    "state": "deferred",
@@ -1971,6 +2084,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "discarded",
    "reopened": false,
    "state": "done",
@@ -2027,6 +2141,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "draft",
    "reopened": false,
    "state": "draft",
@@ -2098,6 +2213,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "enrolled",
    "reopened": false,
    "state": "enrolled",
@@ -2138,6 +2254,7 @@ export const RECORDED = {
    "kind": "review",
    "mention": false,
    "operations": [],
+   "question": null,
    "record_state": "not_mine",
    "reopened": false,
    "state": "not-mine",
@@ -2206,6 +2323,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "resolved",
    "reopened": false,
    "state": "done",
@@ -2274,6 +2392,7 @@ export const RECORDED = {
      "ticket_key": null
     }
    ],
+   "question": null,
    "record_state": "waiting_on_reviewer",
    "reopened": false,
    "state": "waiting",

@@ -27,6 +27,7 @@ class RunProgress:
     alive: bool
     elapsed: float = 0.0
     last_action: str | None = None
+    last_words: str | None = None
 
 
 @dataclass(frozen=True)
@@ -166,6 +167,9 @@ class Agents(Protocol):
     def open_session(self, worktree: str | None,
                      conversation: Conversation, steer: str | None,
                      skipped: bool, brief: Brief | None) -> str | None: ...
+
+    def answer_in_session(self, worktree: str | None,
+                          conversation: Conversation) -> str | None: ...
 
     def open_shell(self, worktree: str | None) -> str | None: ...
 

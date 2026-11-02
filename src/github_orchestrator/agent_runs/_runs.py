@@ -51,6 +51,7 @@ from github_orchestrator.agent_runs._summary_prompts import (
 )
 from github_orchestrator.agent_runs._tail import iter_lines_reverse
 from github_orchestrator.agent_runs._thread_prompts import (
+    carry_on_prompt,
     filing_prompt,
     fix_rebase_prompt,
     rework_prompt,
@@ -58,6 +59,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
 )
 from github_orchestrator.agent_runs._transcript import (
     last_thread_in,
+    last_words_after,
     summarize_event,
     tail_display_lines,
 )
@@ -142,6 +144,7 @@ class AgentRun:
         self.last_event_at = now
         self._outcome: dict[str, Any] = {}
         self.last_action: str | None = None
+        self.last_words: str | None = None
         self._stdout_buffer = ""
         self._decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         self._end_recorded = False
@@ -254,6 +257,7 @@ class AgentRun:
         lines = summarize_event(event)
         if lines:
             self.last_action = lines[-1]
+        self.last_words = last_words_after(event, self.last_words)
         self._outcome = outcome_after(event, self._outcome)
 
     def interrupt(self) -> None:
@@ -414,9 +418,17 @@ class AgentRuns:
     def file_ticket(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, filing_prompt(self._commands, fix))
 
+    def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
+        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}",
+                           carry_on_prompt(self._commands, fix), continuing=True)
+
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
                         rework_prompt(self._commands, fix, steer, self._workers))
+
+    def answer_in_session(self, fix: ThreadFix) -> str | None:
+        return self._pr_processes.split_kept(fix.pr, fix.worktree,
+                                             [*self._command, *self._lines.answering()])
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split_kept(pr, worktree, shell_argv())

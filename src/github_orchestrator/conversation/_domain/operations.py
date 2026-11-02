@@ -7,6 +7,7 @@ from github_orchestrator.conversation._domain.commands import (
     Confirm,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     OpenShell,
@@ -25,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
+    ASKING,
     DECLINED,
     DEFERRED,
     FAILED,
@@ -101,6 +103,7 @@ VERB_KINDS: dict[type, OperationKind] = {
     StartSession: OperationKind.START_SESSION,
     OpenShell: OperationKind.OPEN_SHELL,
     Stop: OperationKind.STOP,
+    DropQuestion: OperationKind.DROP_QUESTION,
     Resolve: OperationKind.RESOLVE,
     Reject: OperationKind.REJECT,
     Defer: OperationKind.DEFER,
@@ -183,6 +186,8 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
             return OperationState.REFUSED, fix.file_error, ReasonCode.FILE_FAILED
         return OperationState.RUNNING, None, None
     if fix.state == LANDED:
+        return OperationState.APPLIED, None, None
+    if fix.state == ASKING:
         return OperationState.APPLIED, None, None
     if fix.state == PROPOSED:
         if operation.kind == OperationKind.APPROVE:

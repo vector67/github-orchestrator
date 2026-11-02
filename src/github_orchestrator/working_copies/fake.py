@@ -220,6 +220,9 @@ class FakeWorkingCopies:
     def edit(self, worktree: Path | str, name: str, text: str) -> None:
         self.checkouts[_key(worktree)].edits[name] = text
 
+    def edits_at(self, worktree: Path | str) -> dict[str, str]:
+        return dict(self.checkouts[_key(worktree)].edits)
+
     def _create_pr_worktree(self, repo_dir: Path, pr: Pr, base_branch: str | None) -> Path:
         branch = self.github.head_branch(pr)
         if branch is None:
@@ -408,6 +411,25 @@ class FakeWorkingCopies:
         self.branches[cut_branch] = base
         self.checkouts[_key(cut)] = FakeCheckout(branch=cut_branch)
         return base
+
+    def _workspace_diff(self, path: str | None, since: str) -> tuple[FileDiff, ...] | None:
+        checkout = None if path is None else self.checkouts.get(_key(path))
+        old = None if path is None else self._rev_tree(path, since)
+        head = None if path is None else self._head(path)
+        if checkout is None or old is None or head is None:
+            return None
+        new = {**self.commits[head].tree, **checkout.edits}
+        return parse_diff("".join(_unified(name, old.get(name), new.get(name))
+                                  for name in _changed_paths(old, new)))
+
+    def _reset_workspace(self, path: str | None, to: str) -> str | None:
+        checkout = None if path is None else self.checkouts.get(_key(path))
+        sha = self._resolve(to)
+        if checkout is None or sha is None:
+            return f"fatal: could not reset {path} to {to}"
+        checkout.edits.clear()
+        self._advance(checkout, sha)
+        return None
 
     def _drop_workspace(self, worktree: str, path: str | None, branch: str | None) -> None:
         if self._drop_error is not None:

@@ -232,7 +232,7 @@ def test_the_previews_dashboard_counts_the_threads_its_board_holds(fixture, requ
     drafts = sum(1 for thread in threads if thread["state"] == "draft")
     proposed = sum(1 for thread in threads
                    if thread["state"] == "ready" and not thread["github_removed"]
-                   and thread["operations"]
+                   and not thread["question"] and thread["operations"]
                    and thread["operations"][-1]["kind"] in RUN_KINDS
                    and thread["operations"][-1]["state"] == "applied")
     assert (counted["proposed"], counted["drafts"]) == (proposed, drafts)

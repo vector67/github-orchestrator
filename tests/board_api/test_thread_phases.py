@@ -144,6 +144,16 @@ def failed():
     return board
 
 
+def asking():
+    board = _proposed()
+    asked(client_of(board), "rework", key=KEY, note="use one helper for both bounds")
+    running(board)
+    return _reported(board, "ask", "Change production, or widen the lower bound?",
+                     "Every test in the file failed: production stamps now() inside the "
+                     "test's transaction.",
+                     ["Change production to clock_timestamp()", "Widen the lower bound"])
+
+
 def stopped():
     return _settled(working(), "stop")
 
@@ -211,7 +221,7 @@ def resolved():
 
 AUTHOR = {
     "queued": queued, "answered": answered, "working": working, "session": session, "rework": rework,
-    "landing": landing, "rebasing": rebasing, "proposed": proposed_,
+    "landing": landing, "rebasing": rebasing, "proposed": proposed_, "asking": asking,
     "declined": declined, "assumed-done": assumed_done, "failed": failed, "stopped": stopped, "removed": removed,
     "push failed": push_failed, "reply failed": reply_failed,
     "filing": filing, "filing failed": filing_failed, "waiting": waiting,

@@ -24,6 +24,7 @@ class OpenSession:
     steer: str | None = None
     skipped: bool = False
     brief: Brief | None = None
+    answers: bool = False
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,11 @@ class CutWorkspace:
 @dataclass(frozen=True)
 class DropWorkspace:
     pass
+
+
+@dataclass(frozen=True)
+class ResetWorkspace:
+    to: Sha
 
 
 @dataclass(frozen=True)

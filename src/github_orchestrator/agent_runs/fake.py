@@ -23,7 +23,11 @@ from github_orchestrator.agent_runs._summary_prompts import (
     gists_in,
     verdict_in,
 )
-from github_orchestrator.agent_runs._transcript import display_rows, summarize_event
+from github_orchestrator.agent_runs._transcript import (
+    display_rows,
+    last_words_after,
+    summarize_event,
+)
 from github_orchestrator.agent_runs.interface import (
     FinishedRun,
     FixComment,
@@ -101,6 +105,11 @@ class Reworking:
 
 
 @dataclass(frozen=True)
+class CarryingOnThread:
+    fix: ThreadFix
+
+
+@dataclass(frozen=True)
 class FilingTicket:
     fix: ThreadFix
 
@@ -112,7 +121,7 @@ class Session:
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
-        | Reworking | FilingTicket)
+        | Reworking | CarryingOnThread | FilingTicket)
 
 
 @dataclass(frozen=True)
@@ -195,6 +204,7 @@ class FakeRun:
                  outcome: Outcome, *, in_flight: bool = False) -> None:
         self.event_type = event_type
         self.last_action: str | None = None
+        self.last_words: str | None = None
         self._world = world
         self._pr = pr
         self._outcome = outcome
@@ -249,6 +259,7 @@ class FakeRun:
         lines = summarize_event(event)
         if lines:
             self.last_action = lines[-1]
+        self.last_words = last_words_after(event, self.last_words)
         self._reported = outcome_after(event, self._reported)
 
     def _end(self, exit_code: int) -> None:
@@ -266,6 +277,7 @@ class FakeAgentRuns:
     outcomes: list[Outcome] = field(default_factory=list)
     started: list[Started] = field(default_factory=list)
     sessions: list[Session] = field(default_factory=list)
+    answering: list[ThreadFix] = field(default_factory=list)
     pr_runs: dict[Pr, FakeRun] = field(default_factory=dict)
     gists: list[str | tuple[str, ...] | None] = field(default_factory=list)
     asked: list[Asked] = field(default_factory=list)
@@ -356,6 +368,9 @@ class FakeAgentRuns:
     def rework(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, Reworking(fix))
 
+    def carry_on_thread(self, fix: ThreadFix) -> FakeRun | str:
+        return self._fix_thread(fix, CarryingOnThread(fix))
+
     def file_ticket(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, FilingTicket(fix))
 
@@ -364,6 +379,12 @@ class FakeAgentRuns:
                                   f"session on {fix.key}")
         if refused is None:
             self.sessions.append(Session(fix, steer))
+        return refused
+
+    def answer_in_session(self, fix: ThreadFix) -> str | None:
+        refused = self.pr_processes.split_kept(fix.pr, fix.worktree, ["claude", "--continue"])
+        if refused is None:
+            self.answering.append(fix)
         return refused
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:

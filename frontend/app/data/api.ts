@@ -179,6 +179,7 @@ export interface Conversation {
   unread: boolean;
   record_state: RecordState;
   commit_check: CommitCheck | null;
+  question: Question | null;
 }
 
 export interface ConversationList {
@@ -319,6 +320,17 @@ export interface DraftOperation {
   body: string | null;
   anchor: Anchor | null;
   posted_comment: number | null;
+}
+
+export interface DropQuestionOperation {
+  id: string;
+  conversation: string | null;
+  kind: 'drop-question';
+  state: OperationState;
+  reason: string | null;
+  reason_code: ReasonCode | null;
+  requested_at: string | null;
+  settled_at: string | null;
 }
 
 export interface Emoji {
@@ -546,9 +558,9 @@ export interface NewestRelease {
   newer: boolean;
 }
 
-export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
 
-export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
 
 export type OperationList = Operation[];
 
@@ -571,7 +583,7 @@ export interface OperationSummary {
 }
 
 export interface Outcome {
-  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
   conversation: Conversation;
 }
 
@@ -700,6 +712,7 @@ export interface Proposal {
   tests: string | null;
   tests_note: string | null;
   commit_message: string | null;
+  last_words: string | null;
 }
 
 export type ProposalKind = 'commit' | 'reply' | 'ticket';
@@ -743,6 +756,14 @@ export interface PullRequestCommits {
 export interface PullRequestLine {
   side: DiffSide;
   line: number;
+}
+
+export interface Question {
+  text: string;
+  context: string;
+  options: string[];
+  head: string | null;
+  last_proposal: Commits | null;
 }
 
 export interface QuestionRequest {

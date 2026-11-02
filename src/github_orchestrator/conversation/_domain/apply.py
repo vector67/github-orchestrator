@@ -10,6 +10,7 @@ from github_orchestrator.conversation._domain.commands import (
     DeclarePlan,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     Fail,
@@ -19,6 +20,7 @@ from github_orchestrator.conversation._domain.commands import (
     PostNow,
     Reject,
     Reply,
+    ReportAsk,
     ReportDeclined,
     ReportFiled,
     ReportReady,
@@ -47,6 +49,7 @@ from github_orchestrator.conversation._domain.commit_check import (
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     ANSWER,
+    ASKING,
     ASSUMED_DONE,
     CONFIRMED,
     DECLINED,
@@ -113,6 +116,7 @@ from github_orchestrator.conversation._domain.effects import (
     PostReply,
     Push,
     React,
+    ResetWorkspace,
     ResolveThread,
     StartRun,
     StopRun,
@@ -205,6 +209,9 @@ UNREPORTED = ("ended without reporting a filed ticket; look for it in the tracke
 
 REOPENED_BY_A_REPLY = (WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE, CONFIRMED, REMOVED,
                        DEFERRED, REJECTED, RESOLVED)
+
+REPLIED_WHILE_ASKING = ("A new reply arrived on the thread while you waited for the "
+                        "author to answer your question.")
 
 FOLLOW_UP_NOTE = ("A new reply arrived on the thread while the last attempt "
                   "was being made. Change the attempt so it answers the "
@@ -531,7 +538,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
     reported = Sha.parse(command.sha)
     return Accepted(with_fix(
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.COMMIT, reply=None,
-        ticket=None, classification=None, thread_sha=reported, tests=command.tests,
+        ticket=None, classification=None, question=None, thread_sha=reported, tests=command.tests,
         tests_note=command.tests_note, agent_note=command.agent_note,
         summary=command.summary,
         confidence=(None if command.confidence is None
@@ -542,7 +549,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
 
 
 NO_COMMIT: dict[str, Any] = {
-    "thread_sha": None, "tests": None, "tests_note": None, "agent_note": None,
+    "question": None, "thread_sha": None, "tests": None, "tests_note": None, "agent_note": None,
     "summary": None, "confidence": None, "confidence_note": None, "reason": None,
 }
 
@@ -563,6 +570,13 @@ def _report_ticket(conversation: Conversation, command: ReportTicket,
         classification=Classification.OUT_OF_SCOPE, **NO_COMMIT))
 
 
+def _report_ask(conversation: Conversation, command: ReportAsk, at: str | None) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(_decidable(conversation, at), state=ASKING,
+                             question=command.question, session_from=None,
+                             attempts=max(fix.attempts - 1, 0), started_at=None))
+
+
 def _landed_by_a_decline(conversation: Conversation, classification: Classification) -> str:
     if conversation.state == OPEN and classification in ASSUMED_DONE_WHEN_DECLINED_AS:
         return ASSUMED_DONE
@@ -573,7 +587,7 @@ def _report_declined(conversation: Conversation, command: ReportDeclined,
                      at: str | None) -> Accepted:
     landed = replace(conversation, state=_landed_by_a_decline(conversation, command.classification))
     return Accepted(with_fix(_decidable(landed, at),
-                              state=DECLINED,
+                              state=DECLINED, question=None,
                               classification=command.classification,
                               reason=command.reason,
                               plan=(), summary=None, confidence=None,
@@ -583,7 +597,7 @@ def _report_declined(conversation: Conversation, command: ReportDeclined,
 def _run_started(conversation: Conversation, command: RunStarted) -> Accepted:
     fix = conversation.fix
     started = with_fix(conversation, state=RUNNING, started_at=command.at,
-                        attempts=fix.attempts + 1)
+                        attempts=fix.attempts + 1, last_words=None)
     return Accepted(started, (StartRun(kind=fix.run.kind, onto=fix.run.onto),))
 
 
@@ -614,30 +628,46 @@ def _fail_or_retry(conversation: Conversation, reason: str, at: str | None,
 
 
 def _proposed_by_exit(conversation: Conversation, head: Sha, note: str,
-                      at: str) -> Accepted:
-    return Accepted(with_fix(_decidable(conversation, at), state=PROPOSED,
+                      command: RunExited) -> Accepted:
+    return Accepted(with_fix(_decidable(conversation, command.at), state=PROPOSED,
                               kind=ProposalKind.COMMIT, reply=None, ticket=None,
                               thread_sha=head, tests="unverified",
-                              tests_note=note, reason=None))
+                              tests_note=note, reason=None, last_words=command.last_words))
+
+
+def _carried_on_with_the_reply(conversation: Conversation) -> Accepted:
+    brief = Brief(note=REPLIED_WHILE_ASKING, include=_repliers(conversation))
+    return Accepted(with_fix(conversation, state=QUEUED, started_at=None, decision_error=None,
+                             run=Run(kind=OperationKind.REWORK, brief=brief, resumes=True)))
+
+
+def _still_asking(conversation: Conversation) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(conversation, state=ASKING, started_at=None,
+                             attempts=max(fix.attempts - 1, 0)))
 
 
 def _run_exited(conversation: Conversation, command: RunExited) -> Accepted:
     fix = conversation.fix
     head = command.head
+    if fix.run.resumes and fix.question is not None:
+        return _still_asking(conversation)
     if fix.run.is_rebase:
         if head is not None and head != fix.run.onto and command.descends:
             return _proposed_by_exit(
                 conversation, head,
                 "run exited without reporting; rebased commit found in worktree",
-                command.at)
-        return _fail_or_retry(conversation, "run exited without rebasing",
+                command)
+        return _fail_or_retry(conversation,
+                              _with_detail("run exited without rebasing", command.last_words),
                               command.at)
     if head is not None and fix.base_sha and head != fix.base_sha:
         return _proposed_by_exit(
             conversation, head,
             "run exited without reporting; commit found in worktree",
-            command.at)
-    return _fail_or_retry(conversation, "run exited without reporting",
+            command)
+    return _fail_or_retry(conversation,
+                          _with_detail("run exited without reporting", command.last_words),
                           command.at)
 
 
@@ -813,8 +843,17 @@ def _first(conversation: Conversation) -> Accepted:
                   decision_error=None, reply_note=None, pending_reply=""))
 
 
+def _answer_in_session(conversation: Conversation) -> Accepted:
+    return Accepted(
+        with_fix(conversation, state=IN_SESSION, session_from=ASKING, attempts=0,
+                 decision_error=None),
+        (CutWorkspace(), OpenSession(back_to=ASKING, answers=True)))
+
+
 def _start_session(conversation: Conversation, command: StartSession) -> Accepted:
     fix = conversation.fix
+    if fix.is_asking:
+        return _answer_in_session(conversation)
     brief = (Brief(note=command.steer, pointed=command.pointed, include=command.include)
              if command.pointed or command.include else fix.run.brief)
     return Accepted(
@@ -841,6 +880,20 @@ def _retry(conversation: Conversation) -> Accepted:
         return _first(conversation)
     return Accepted(with_fix(conversation, state=QUEUED, attempts=0,
                               started_at=None, decision_error=None))
+
+
+QUESTION_DROPPED = "question dropped"
+
+
+def _drop_question(conversation: Conversation, at: str | None) -> Accepted:
+    fix = conversation.fix
+    dropped = with_fix(_decidable(conversation, at), question=None, decision_error=None)
+    if fix.thread_sha is not None or fix.kind != ProposalKind.COMMIT:
+        back_to = fix.thread_sha or fix.base_sha
+        return Accepted(with_fix(dropped, state=PROPOSED),
+                        () if back_to is None else (ResetWorkspace(to=back_to),))
+    failed = with_fix(dropped, state=FAILED, reason=QUESTION_DROPPED)
+    return Accepted(failed, () if fix.base_sha is None else (ResetWorkspace(to=fix.base_sha),))
 
 
 def _landing_withdrawn(conversation: Conversation, reason: str = WITHDRAWN) -> Accepted:
@@ -1129,6 +1182,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _report_reply(conversation, command, at)
         case ReportTicket():
             return _report_ticket(conversation, command, at)
+        case ReportAsk():
+            return _report_ask(conversation, command, at)
         case ReportFiled():
             return _report_filed(conversation, command)
         case Fail() | RunExited() | RunTimedOut() | RunLost() if (
@@ -1153,6 +1208,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _land(conversation, command)
         case Approve():
             return _approve(conversation, command)
+        case First() if conversation.fix.is_asking:
+            return _carried_on_with_the_reply(conversation)
         case First():
             return _first(conversation)
         case Rebase():
@@ -1199,6 +1256,8 @@ def _dispatch(conversation: Conversation, command: Change,
                                   defer_note=""))
         case Stop():
             return _stop(conversation)
+        case DropQuestion():
+            return _drop_question(conversation, at)
         case Resolve():
             return _closing(conversation, command)
         case Reject():

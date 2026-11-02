@@ -144,6 +144,10 @@ class ThreadWorkspace(Protocol):
 
     def drop(self) -> str | None: ...
 
+    def reset(self, to: Sha) -> str | None: ...
+
+    def diff_since(self, since: Sha) -> tuple[FileDiff, ...] | None: ...
+
 
 @dataclass(frozen=True)
 class BaseStanding:

@@ -136,6 +136,10 @@ def parse_diff(printed: str) -> tuple[FileDiff, ...]:
     return tuple(files)
 
 
+def worktree_files(printed: str | None) -> tuple[FileDiff, ...] | None:
+    return None if printed is None else parse_diff(printed)
+
+
 def diff_files(worktree: str, base: str, head: str,
                merged: str | None = None) -> tuple[FileDiff, ...] | None:
     left = base if merged is None else merged_tree(worktree, base, merged)

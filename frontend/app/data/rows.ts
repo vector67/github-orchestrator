@@ -68,6 +68,7 @@ const SETTLED: Phase[] = [
 ];
 
 const SAID: Partial<Record<Phase, string>> = {
+  asking: 'Agent question',
   rework: 'Your note · agent re-running',
   session: 'Session open',
   landing: 'Landing',

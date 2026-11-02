@@ -323,6 +323,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
       return 'On hold';
     case 'address-feedback':
       return `Address changes from ${listed(move.reviewers)}`;
+    case 'agent-question':
+      return 'Your move: an agent is asking you a question';
     case 'human-comments':
       return commentsOf(human, 'comment');
     case 'agent-on-human-comments':
@@ -862,7 +864,7 @@ const APPROVAL_NAMED: Move[] = [
 
 const UNPUSHED_BACKLOG = 10;
 
-const DECISIONS: Move[] = ['human-comments', 'bot-comments'];
+const DECISIONS: Move[] = ['agent-question', 'human-comments', 'bot-comments'];
 
 const MENTION_NAMED: Move[] = ['mention', 'mentioned'];
 

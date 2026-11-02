@@ -52,6 +52,7 @@ export type Phase =
   | 'filing'
   | 'rebasing'
   | 'proposed'
+  | 'asking'
   | 'declined'
   | 'failed'
   | 'stopped'
@@ -83,6 +84,7 @@ export const PHASE_HINTS: Record<Phase, string> = {
   filing:
     'accepted: an agent is filing the ticket, and the reply follows once it is filed',
   proposed: 'there is a fix to decide on',
+  asking: 'an agent stopped to ask you something before it goes on',
   declined: 'the agent declined to write a fix, and said why',
   failed: 'three attempts failed',
   stopped: 'you stopped the agent before it finished',
@@ -177,6 +179,7 @@ export function closedBy(conversation: Conversation): string | null {
 
 function readyPhase(conversation: Conversation): Phase {
   if (conversation.github_removed) return 'removed';
+  if (conversation.question) return 'asking';
   const landing = newestOf(conversation, [...RUN_KINDS, 'approve']);
   if (landing?.kind === 'approve' && landing.state === 'refused') {
     const failure = LANDING_FAILURES[landing.reason_code ?? ''];

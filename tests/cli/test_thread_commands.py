@@ -450,6 +450,26 @@ def test_reply_proposes_the_agents_answer(pr_worktree, running, threads, run_cli
     assert (stored.proposal.kind, stored.proposal.reply) == ("reply", "It runs once per poll.")
 
 
+def test_ask_puts_the_agents_question_and_its_ways_out_before_the_author(
+        pr_worktree, running, threads, run_cli):
+    ran = run_cli(*_report_argv("ask", thread_id=THREAD_KEY, question="Which bound?",
+                                context="Every test failed.",
+                                option=["Change production", "Widen the bound"]))
+
+    assert ran.code == 0, ran.err
+    question = _stored(threads).fix.question
+    assert (question.text, question.context, question.options) == (
+        "Which bound?", "Every test failed.", ("Change production", "Widen the bound"))
+
+
+def test_ask_on_a_thread_nobody_is_working_on_exits_nonzero(opened, threads, run_cli):
+    ran = run_cli(*_report_argv("ask", thread_id=THREAD_KEY, question="Which bound?",
+                                context="Every test failed."))
+
+    assert ran.code != 0
+    assert _stored(threads).fix.question is None
+
+
 @pytest.mark.parametrize("classification", ["risky", "needs-human", "acknowledgement"])
 def test_reply_refuses_what_needs_no_answer(pr_worktree, running, threads, run_cli,
                                             classification):

@@ -132,6 +132,18 @@ def _commit_check_of(conversation: Conversation) -> contract.CommitCheck | None:
                                 reasoning=check.reasoning)
 
 
+def _question_of(conversation: Conversation) -> contract.Question | None:
+    question = conversation.fix.question
+    if question is None:
+        return None
+    fix = conversation.fix
+    last_proposal = (None if fix.base_sha is None or fix.thread_sha is None
+                     else contract.Commits(base=str(fix.base_sha), head=str(fix.thread_sha)))
+    return contract.Question(text=question.text, context=question.context,
+                             options=list(question.options), head=_hex(question.head),
+                             last_proposal=last_proposal)
+
+
 def conversation_of(conversation: Conversation, account: str) -> contract.Conversation:
     """One record as the contract's conversation, with its own etag.
 
@@ -165,6 +177,7 @@ def conversation_of(conversation: Conversation, account: str) -> contract.Conver
         unread=conversation.unread,
         record_state=contract.RecordState(conversation.state),
         commit_check=_commit_check_of(conversation),
+        question=_question_of(conversation),
     )
     return drawn.model_copy(update={"etag": etag_of(
         drawn.model_dump_json(exclude={"updated_at"}).encode())})
@@ -251,6 +264,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
                 note=view.text or None)
         case OperationKind.UNPARK as unpark:
             return contract.UnparkOperation(**envelope, kind=unpark)
+        case OperationKind.DROP_QUESTION as dropped:
+            return contract.DropQuestionOperation(**envelope, kind=dropped)
         case OperationKind.OPEN_SHELL as shell:
             return contract.ShellOperation(**envelope, kind=shell)
         case OperationKind.CONFIRM | OperationKind.PLACE as placing:
@@ -388,6 +403,7 @@ def proposal_of(git: PrCheckout,
         tests_note=proposal.tests_note,
         commit_message=(None if proposal.thread_sha is None
                         else git.commit_message(proposal.thread_sha)),
+        last_words=proposal.last_words,
     )
 
 

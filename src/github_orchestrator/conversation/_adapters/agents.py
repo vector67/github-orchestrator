@@ -85,7 +85,9 @@ class ThreadAgents:
         asked = self._asked(conversation, _worktree_of(worktree),
                             skipped=bool(conversation.fix.classification),
                             brief=conversation.fix.run.brief)
-        if kind == OperationKind.REBASE:
+        if conversation.fix.run.resumes:
+            run = self.thread_work.carry_on_thread(asked)
+        elif kind == OperationKind.REBASE:
             run = self.thread_work.rebase_fix(asked, None if onto is None else str(onto))
         elif kind == OperationKind.REWORK:
             run = self.thread_work.rework(asked)
@@ -111,13 +113,18 @@ class ThreadAgents:
         if not alive:
             del self.runs[key]
         return RunProgress(alive=alive, elapsed=run.elapsed(),
-                           last_action=run.last_action)
+                           last_action=run.last_action, last_words=run.last_words)
 
     def open_session(self, worktree: str | None,
                      conversation: Conversation, steer: str | None,
                      skipped: bool, brief: Brief | None) -> str | None:
         return self.thread_work.open_session(
             self._asked(conversation, _worktree_of(worktree), skipped, brief), steer)
+
+    def answer_in_session(self, worktree: str | None,
+                          conversation: Conversation) -> str | None:
+        return self.thread_work.answer_in_session(
+            self._asked(conversation, _worktree_of(worktree), False, None))
 
     def open_shell(self, worktree: str | None) -> str | None:
         return self.thread_work.open_shell(self.pr, _worktree_of(worktree))

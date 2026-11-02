@@ -453,7 +453,11 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
         {{/if}}
         {{#if @spec.outcomes}}
           <fieldset class="dialog-ticks" data-test-outcomes>
-            <legend class="dialog-kicker">It is now:</legend>
+            <legend class="dialog-kicker">{{if
+                @spec.legend
+                @spec.legend
+                "It is now:"
+              }}</legend>
             {{#each @spec.outcomes key="to" as |one|}}
               <label class="dialog-tick">
                 <input
@@ -464,7 +468,25 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
                   checked={{this.picked one.to}}
                   {{on "change" this.pickOutcome}}
                 />
-                {{one.label}}
+                <span class="outcome">
+                  <span data-test-outcome-label>{{one.label}}</span>
+                  {{#if one.steps}}
+                    <span class="outcome-steps">
+                      <span data-test-outcome-steps={{one.to}}>
+                        {{#each one.steps key="@index" as |step index|}}
+                          {{#if index}}
+                            →
+                          {{/if}}
+                          <span
+                            class="state-step"
+                            data-step={{step}}
+                          >{{step}}</span>
+                        {{/each}}
+                      </span>
+                      <span class="outcome-worktree">{{one.worktree}}</span>
+                    </span>
+                  {{/if}}
+                </span>
               </label>
             {{/each}}
           </fieldset>

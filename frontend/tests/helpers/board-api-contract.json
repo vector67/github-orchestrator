@@ -94,6 +94,7 @@
        "create-draft": "#/components/schemas/DraftOperation",
        "defer": "#/components/schemas/DeferOperation",
        "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
@@ -146,6 +147,9 @@
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -279,6 +283,28 @@
    }
   },
   "/api/conversations/{key}/operations:discard": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:drop-question": {
    "post": {
     "202": {
      "$ref": "#/components/schemas/Outcome"
@@ -690,6 +716,22 @@
     }
    }
   },
+  "/api/conversations/{key}/worktree-diff": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Diff"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/dashboard": {
    "get": {
     "200": {
@@ -928,6 +970,7 @@
        "create-draft": "#/components/schemas/DraftOperation",
        "defer": "#/components/schemas/DeferOperation",
        "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
@@ -980,6 +1023,9 @@
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -1014,6 +1060,7 @@
        "create-draft": "#/components/schemas/DraftOperation",
        "defer": "#/components/schemas/DeferOperation",
        "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
@@ -1066,6 +1113,9 @@
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -1099,6 +1149,7 @@
        "create-draft": "#/components/schemas/DraftOperation",
        "defer": "#/components/schemas/DeferOperation",
        "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
@@ -1151,6 +1202,9 @@
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -2576,6 +2630,16 @@
      },
      "type": "array"
     },
+    "question": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Question"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "record_state": {
      "$ref": "#/components/schemas/RecordState"
     },
@@ -2630,7 +2694,8 @@
     "author_kind",
     "unread",
     "record_state",
-    "commit_check"
+    "commit_check",
+    "question"
    ],
    "type": "object"
   },
@@ -3458,6 +3523,82 @@
     "body",
     "anchor",
     "posted_comment"
+   ],
+   "type": "object"
+  },
+  "DropQuestionOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "drop-question",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
    ],
    "type": "object"
   },
@@ -4594,6 +4735,7 @@
     "open-shell",
     "approve",
     "stop",
+    "drop-question",
     "resolve",
     "reject",
     "defer",
@@ -4621,6 +4763,7 @@
       "create-draft": "#/components/schemas/DraftOperation",
       "defer": "#/components/schemas/DeferOperation",
       "discard": "#/components/schemas/DraftOperation",
+      "drop-question": "#/components/schemas/DropQuestionOperation",
       "edit-draft": "#/components/schemas/DraftOperation",
       "enrol": "#/components/schemas/DraftOperation",
       "file": "#/components/schemas/FileOperation",
@@ -4673,6 +4816,9 @@
      },
      {
       "$ref": "#/components/schemas/PlaceOperation"
+     },
+     {
+      "$ref": "#/components/schemas/DropQuestionOperation"
      },
      {
       "$ref": "#/components/schemas/ReplyOperation"
@@ -4842,6 +4988,7 @@
        "create-draft": "#/components/schemas/DraftOperation",
        "defer": "#/components/schemas/DeferOperation",
        "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
@@ -4894,6 +5041,9 @@
       },
       {
        "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -5683,6 +5833,16 @@
     "kind": {
      "$ref": "#/components/schemas/ProposalKind"
     },
+    "last_words": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "operation": {
      "anyOf": [
       {
@@ -5771,7 +5931,8 @@
     "confidence_note",
     "tests",
     "tests_note",
-    "commit_message"
+    "commit_message",
+    "last_words"
    ],
    "type": "object"
   },
@@ -5995,6 +6156,51 @@
    "required": [
     "side",
     "line"
+   ],
+   "type": "object"
+  },
+  "Question": {
+   "properties": {
+    "context": {
+     "type": "string"
+    },
+    "head": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_proposal": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Commits"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "options": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "text",
+    "context",
+    "options",
+    "head",
+    "last_proposal"
    ],
    "type": "object"
   },

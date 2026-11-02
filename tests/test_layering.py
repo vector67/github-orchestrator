@@ -571,7 +571,7 @@ PR_CHECKOUT_MEMBERS = frozenset({
     "diff_files", "named_commit", "changes", "pr_diff", "pr_commits", "has_commit", "blob", "no_worktree",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
-    "path", "branch", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop",
+    "path", "branch", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop", "reset", "diff_since",
 })
 
 
@@ -682,9 +682,9 @@ ROLE_MEMBERS = {
         "as_sent", "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
         "recheck", "check_for_fixes"}),
     "EditableConversation": frozenset({
-        "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "resolve", "reject", "place",
+        "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "drop_question", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "fail", "session_gone", "set_commit_verdict",
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "ask", "fail", "session_gone", "set_commit_verdict",
         "check_for_fixes"}),
 }
 

@@ -16,6 +16,7 @@ from github_orchestrator.conversation._domain.commands import (
     Confirm,
     Defer,
     Discard,
+    DropQuestion,
     EditDraft,
     Enrol,
     OpenShell,
@@ -70,6 +71,7 @@ KIND_OF_DECISION = {
     "retry": OperationKind.RETRY,
     "fix": OperationKind.FIRST,
     "stop": OperationKind.STOP,
+    "drop-question": OperationKind.DROP_QUESTION,
     "reject": OperationKind.REJECT,
     "not_fixed": OperationKind.REPLY,
     "reply": OperationKind.REPLY,
@@ -163,6 +165,8 @@ def _intent_of(command: Command) -> Intent:
                           anchor=command.anchor)
         case Stop():
             return Intent(decision="stop")
+        case DropQuestion():
+            return Intent(decision="drop-question")
         case Retry():
             return Intent(decision="retry")
         case WriteFix():
