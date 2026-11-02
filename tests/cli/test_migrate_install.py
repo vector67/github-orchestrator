@@ -2,6 +2,8 @@ import plistlib
 
 import pytest
 
+from github_orchestrator.thread_names import HeldFolder
+from github_orchestrator.thread_names.fake import FakeNameMigration
 from tests.builders import a_pr
 from tests.cli.scripted_system import Job
 from tests.cli.support import CONFIGURED
@@ -192,3 +194,60 @@ def test_on_linux_the_crontab_block_names_the_old_config_and_is_removed(
     assert (unpinned.config_path.parent / "crontab.bak").read_text() == CRON.format(
         checkout=checkout)
     assert unpinned.system.units["github-orchestrator.service"] == "active"
+
+
+IN_THE_WAY = HeldFolder(pr=a_pr(7, "acme/widgets"), thread="PRRT_a",
+                        folder="/data/thread-worktrees/acme/widgets/7/PRRT_a")
+
+
+def _sessions_in_the_way(machine):
+    machine.configure()
+    machine.answering_hubs.add(HUB)
+    machine.name_migration = FakeNameMigration([IN_THE_WAY])
+    return machine.name_migration
+
+
+def test_the_installer_s_start_names_each_session_in_the_migration_s_way_and_closes_them_when_told(
+        machine, run_cli):
+    migration = _sessions_in_the_way(machine)
+    machine.answers = ["y"]
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert "acme/widgets#7, thread PRRT_a: /data/thread-worktrees/acme/widgets/7/PRRT_a" in ran.out
+    assert machine.prompts == ["Close these sessions and migrate? [y/N] "]
+    assert migration.closed == 1
+    assert ran.out.index("Close") < ran.out.index("Starting the watcher")
+
+
+def test_the_installer_s_start_leaves_the_sessions_open_when_told_no_and_says_where_to_close_them(
+        machine, run_cli):
+    migration = _sessions_in_the_way(machine)
+    machine.answers = [EOFError]
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert migration.closed == 0
+    assert "the board offers Close sessions and migrate" in ran.out
+
+
+def test_the_installer_s_start_with_force_closes_the_sessions_without_asking(machine, run_cli):
+    migration = _sessions_in_the_way(machine)
+
+    ran = run_cli("start", "--from-installer", "--force")
+
+    assert ran.code == 0, ran.out
+    assert machine.prompts == [] and migration.closed == 1
+
+
+def test_the_installer_s_start_asks_nothing_when_no_session_is_in_the_migration_s_way(
+        machine, run_cli):
+    machine.configure()
+    machine.answering_hubs.add(HUB)
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert machine.prompts == [] and "migrat" not in ran.out

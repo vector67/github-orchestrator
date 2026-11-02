@@ -29,6 +29,7 @@ from github_orchestrator.board_api.fake import (
     FakeManagerPanel,
     FakeMentionable,
     FakeMentionsList,
+    FakeNamesMigration,
     FakeSetupDesk,
     FakeTold,
     FakeTour,
@@ -42,6 +43,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanels,
     Mentionable,
     MentionsList,
+    NamesMigration,
     ServerApp,
     SetupDesk,
     Told,
@@ -261,8 +263,10 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                harvest: HarvestSetup | None = None,
                records: ThreadRecords | None = None,
                mentions: MentionsList | None = None,
-               mentionable: Mentionable | None = None) -> list[Part]:
+               mentionable: Mentionable | None = None,
+               migration: NamesMigration | None = None) -> list[Part]:
     return [
+        fake_provider(NamesMigration, migration or FakeNamesMigration()),
         fake_provider(MentionsList, mentions or FakeMentionsList()),
         fake_provider(Mentionable, mentionable or FakeMentionable()),
         fake_provider(ThreadRecords, records or FakeThreadRecords()),
@@ -512,7 +516,7 @@ class OneServer:
 
 
 def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
-               host: str | None = None) -> OneServer:
+               host: str | None = None, migration: NamesMigration | None = None) -> OneServer:
     fake = fake_threads()
     _placed(fake.working_copies)
     fake.watch(THE_PR, is_author=True, title=TITLE, base_branch="main", head_sha="8f73fe8",
@@ -524,7 +528,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
     terminals = FakeTerminals()
     server: ServerApp = wire(
         fake_provider(Told, told),
-        *_hub_parts(holdings=holdings),
+        *_hub_parts(holdings=holdings, migration=migration),
         fake_provider(ConversationManagerFactory, fake),
         fake_provider(WorkingCopies, fake.working_copies),
         fake_provider(Terminals, terminals),

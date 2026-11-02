@@ -38,6 +38,7 @@ from github_orchestrator.agent_runs._pr_prompts import (
 from github_orchestrator.agent_runs._report_commands import ReportCommands
 from github_orchestrator.agent_runs._summaries import Run, Summaries
 from github_orchestrator.agent_runs._summary_prompts import (
+    changes_check_prompt,
     comment_gist_prompt,
     comments_prompt,
     commit_check_in,
@@ -539,6 +540,20 @@ class AgentRuns:
         self._checks.summarize(
             commit_check_prompt(comments, path=path, line=line, sha=sha, shown=shown,
                                 answers=answers),
+            given, label=key, checkout=worktree)
+
+    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                      path: str | None, line: int | None, base: str, head: str, shown: str,
+                      worktree: str, answers: Mapping[str, str],
+                      done: Callable[[str, str], None]) -> None:
+        def given(answer: str) -> None:
+            checked = commit_check_in(answer, answers)
+            if checked is not None:
+                done(*checked)
+
+        self._checks.summarize(
+            changes_check_prompt(comments, path=path, line=line, base=base, head=head,
+                                 shown=shown, answers=answers),
             given, label=key, checkout=worktree)
 
     def drain_summaries(self, timeout: float) -> bool:

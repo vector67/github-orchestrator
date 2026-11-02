@@ -21,6 +21,7 @@ from github_orchestrator.domain import HubState, LocalClock, Pr, Sleep
 from github_orchestrator.pr_event_queue import Queues
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.settings import ConfigFile
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.watcher import WatcherHealth
 
 LOCK_POLL_SECONDS = 2.0
@@ -41,6 +42,7 @@ class Instance:
     server_log: Path
     hub_url: str
     hub_health: HubHealth
+    migration: NameMigration
 
 
 class OtherInstances(Protocol):
@@ -104,8 +106,25 @@ def _restart_instance(sleep: Sleep, clock: LocalClock, instance: Instance) -> No
                     pr_processes=instance.pr_processes, watcher_health=instance.watcher_health)
 
 
+def hold_restarts(config: CliConfig) -> None:
+    config.restarts_held.parent.mkdir(parents=True, exist_ok=True)
+    config.restarts_held.touch()
+    print("Restarts are held until github-orchestrator allow-restarts.")
+
+
+def allow_restarts(config: CliConfig) -> None:
+    config.restarts_held.unlink(missing_ok=True)
+    print("Restarts are allowed again.")
+
+
 def restart_instances(config: CliConfig, sleep: Sleep, clock: LocalClock, run: Run,
                       instances: list[Instance]) -> None:
+    if config.restarts_held.exists():
+        print("A release stress test is in progress, so this restart is skipped; the release "
+              "restarts every instance when the stress test ends.")
+        print("If no stress test is running, run github-orchestrator allow-restarts "
+              "and restart again.")
+        return
     config.restart_lock.parent.mkdir(parents=True, exist_ok=True)
     with open(config.restart_lock, "a+") as lock:
         _take(lock, sleep)

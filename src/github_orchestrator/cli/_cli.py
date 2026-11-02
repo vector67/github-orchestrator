@@ -20,10 +20,13 @@ from github_orchestrator.cli._migrate import (
     move_old_config,
     old_config,
 )
+from github_orchestrator.cli._names_migration import clear_the_way
 from github_orchestrator.cli._parser import commands_of
 from github_orchestrator.cli._restart_all import (
     Instance,
     OtherInstances,
+    allow_restarts,
+    hold_restarts,
     restart_instances,
     stop_managers_and_server,
 )
@@ -56,6 +59,7 @@ from github_orchestrator.settings import (
     Logs,
     Process,
 )
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.watcher import Releases, WatcherHealth
 
 
@@ -68,7 +72,8 @@ class OperatorCli:
                  watcher_health: WatcherHealth, hub_health: HubHealth, holds: Holds,
                  dismissals: Dismissals, others: OtherInstances,
                  terminals: OpenTerminals, service: Service, checks: InstanceChecks,
-                 machine: MachineChecks, releases: Releases, server: ServerControl) -> None:
+                 machine: MachineChecks, releases: Releases, server: ServerControl,
+                 migration: NameMigration) -> None:
         self._config = config
         self._run = run
         self._sleep = sleep
@@ -94,6 +99,7 @@ class OperatorCli:
         self._machine = machine
         self._releases = releases
         self._server = server
+        self._migration = migration
 
     def main(self, argv: list[str]) -> int:
         self._argv = argv
@@ -109,7 +115,8 @@ class OperatorCli:
         return Instance(self._config.instance, self._pr_processes,
                         self._queues, self._watcher_health, self._terminals, self._service,
                         self._checks, self._config_file, self._config.data_dir, self._server,
-                        self._logs.path(Process.SERVER), self._config.hub_url, self._hub_health)
+                        self._logs.path(Process.SERVER), self._config.hub_url, self._hub_health,
+                        self._migration)
 
     def _every_instance(self) -> list[Instance]:
         return [self._this_instance(), *self._others.load()]
@@ -117,7 +124,7 @@ class OperatorCli:
     def _start(self, args: argparse.Namespace) -> None:
         config = self._config
         if args.from_installer:
-            self._start_from_installer()
+            self._start_from_installer(force=args.force)
             return
         migrate(self._config_file, self._run, "Migrating the config")
         if args.foreground:
@@ -125,7 +132,7 @@ class OperatorCli:
         else:
             start(self._service, config.hub_url, self._hub_health, self._sleep)
 
-    def _start_from_installer(self) -> None:
+    def _start_from_installer(self, *, force: bool) -> None:
         config = self._config
         moved = self._moved_old_config()
         if moved:
@@ -140,6 +147,8 @@ class OperatorCli:
                 print(line)
         for instance in instances:
             stop_managers_and_server(instance)
+        for instance in instances:
+            clear_the_way(instance, self._read_line, force=force)
         for instance in instances:
             named = "the default instance" if instance.name is None else instance.name
             print(f"==> Starting the watcher for {named}", flush=True)
@@ -164,14 +173,16 @@ class OperatorCli:
 
     def _open(self, page: str) -> None:
         open_board(self._service, self._config.hub_url, self._hub_health, self._sleep,
-                   self._desktop, graphical=self._config.graphical, page=page)
+                   self._desktop, self._server, self._config_file.location(),
+                   graphical=self._config.graphical, page=page)
 
     def _dispatch(self, argv: list[str]) -> None:
         config = self._config
         parsers = commands_of(config.version)
         args = parsers.parser.parse_args(argv or ["help"])
         if args.command not in ("help", "config", "setup", "open", "tutorial", "doctor",
-                                "status", "start", "restart", "restart-all", "uninstall",
+                                "status", "start", "restart", "restart-all", "hold-restarts",
+                                "allow-restarts", "uninstall",
                                 "update", "skill"):
             problem = self._config_file.check()
             if problem is not None:
@@ -195,7 +206,7 @@ class OperatorCli:
                                        watcher_health=self._watcher_health,
                                        hub_health=self._hub_health,
                                        holds=self._holds, dismissals=self._dismissals,
-                                       releases=self._releases),
+                                       releases=self._releases, server=self._server),
             "config": lambda a: show_config(self._config_file),
             "doctor": lambda a: report([
                 ("This machine", self._machine.findings()),
@@ -218,12 +229,14 @@ class OperatorCli:
                                                    [self._this_instance()]),
             "restart-all": lambda a: restart_instances(config, self._sleep, self._clock, self._run,
                                                        self._every_instance()),
+            "hold-restarts": lambda a: hold_restarts(config),
+            "allow-restarts": lambda a: allow_restarts(config),
             "stop": lambda a: stop(
                 self._read_line,
                 self._every_instance() if a.all else [self._this_instance()],
                 force=a.force),
             "update": lambda a: update(config, self._run, self._which, self._releases,
-                                       version=a.version, check=a.check),
+                                       version=a.version, check=a.check, force=a.force),
             "uninstall": lambda a: uninstall(config, self._run, self._which, self._read_line,
                                              self._every_instance(), yes=a.yes),
             "undismiss": lambda a: undismiss(Pr(a.repo, a.pr),

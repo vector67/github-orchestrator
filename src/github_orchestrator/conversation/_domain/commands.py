@@ -9,7 +9,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Question,
     Ticket,
 )
-from github_orchestrator.domain import Location
+from github_orchestrator.domain import Location, Sha
 
 
 @dataclass(frozen=True)
@@ -119,6 +119,12 @@ class SessionGone:
 class SetCommitVerdict:
     verdict: CommitVerdict
     reason: str
+
+
+@dataclass(frozen=True)
+class CheckForFixes:
+    viewer: str
+    head: Sha
 
 
 @dataclass(frozen=True)
@@ -233,6 +239,7 @@ Command = (
     | Fail
     | SessionGone
     | SetCommitVerdict
+    | CheckForFixes
     | Approve
     | Rework
     | StartSession

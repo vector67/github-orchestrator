@@ -132,6 +132,7 @@ class CommitCheck:
     parent: Sha
     verdict: CommitVerdict
     reasoning: str
+    since_comment: bool = False
 
 
 class ConfidenceLevel(StrEnum):

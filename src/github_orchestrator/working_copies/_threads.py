@@ -2,16 +2,12 @@ import logging
 import os
 import subprocess
 import threading
-from collections.abc import Callable
 from pathlib import Path
-from urllib.parse import quote, unquote
 
 from github_orchestrator.domain import Pr, Sha
 from github_orchestrator.working_copies._layout import (
-    pr_worktrees,
     thread_branch,
     thread_branch_prefix,
-    thread_slug,
     thread_worktree,
 )
 from github_orchestrator.working_copies._worktree import remove_worktree
@@ -89,43 +85,6 @@ def thread_branches(repo_dir: Path, pr: Pr) -> list[str] | None:
                   git_diagnostic(listed))
         return None
     return [ref.removeprefix("refs/heads/") for ref in listed.stdout.split()]
-
-
-def _named_by_bare_key(name: str) -> bool:
-    quoted, _, _ = name.rpartition("-")
-    return not (quoted.strip(".") and thread_slug(unquote(quoted)) == name)
-
-
-def bare_key_worktree(worktrees_dir: Path, pr: Pr, key: str) -> Path | None:
-    bare = quote(key, safe="")
-    if not _named_by_bare_key(bare):
-        return None
-    return pr_worktrees(worktrees_dir, pr) / bare
-
-
-def rename_bare_workspaces(pr_worktree: str, worktrees_dir: Path, pr: Pr,
-                           in_session: Callable[[str], bool]) -> None:
-    prefix = thread_branch_prefix(pr)
-    for branch in thread_branches(Path(pr_worktree), pr) or []:
-        bare = branch.removeprefix(prefix)
-        key = unquote(bare)
-        if not key.strip(".") or not _named_by_bare_key(bare):
-            continue
-        old = pr_worktrees(worktrees_dir, pr) / bare
-        new = thread_worktree(worktrees_dir, pr, key)
-        if old.exists() and new.exists():
-            log.error("Left %s under its old name: %s is already there", old, new)
-            continue
-        if old.exists() and in_session(str(old)):
-            log.info("Left %s under its old name: a terminal session is in it", old)
-        elif old.exists():
-            moved = run_git(pr_worktree, "worktree", "move", str(old), str(new))
-            if moved.returncode != 0:
-                log.error("Could not move %s to its new name: %s", old, git_diagnostic(moved))
-                continue
-        renamed = run_git(pr_worktree, "branch", "-m", branch, thread_branch(pr, key))
-        if renamed.returncode != 0:
-            log.error("Could not rename %s: %s", branch, git_diagnostic(renamed))
 
 
 def drop_checkout(pr_worktree: str, worktree: str | None,

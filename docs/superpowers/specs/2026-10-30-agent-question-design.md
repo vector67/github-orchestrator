@@ -56,11 +56,24 @@ that a silent run's last words are kept.
 07. **Actions.** Two: **Answer in a session** and **Drop…**. Send back for
     rework, approve and the rest are not offered on a question.
 
-08. **Answering.** Answer opens a live session in the thread's worktree that
-    continues the agent's last conversation there (`claude --continue`, as the
-    PR carry-on run already does headless; Codex `resume`). The session and the
-    fix run must use the same agent config directory, or there is nothing to
-    continue. While it is open the bar shows "Go to the session".
+08. **Answering.** Every fix run stores the id of the agent session it ran in
+    on the thread. Claude takes the id the orchestrator chooses
+    (`--session-id <uuid>`); Codex reports its own in the first `--json` event
+    (`thread.started`, `thread_id`).
+    Answer opens a live session in the thread's worktree that resumes that id
+    (`claude --resume <id>`, Codex `resume <id>`), never "the newest
+    conversation in the directory", which a reply re-run or another session in
+    the same worktree would change. A session that runs inside the answer
+    (item 09) stores its own id the same way. The session and the fix run must
+    use the same agent config directory, or there is nothing to resume.
+    The question goes in as the resume's opening prompt argument
+    (`codex resume <id> "<prompt>"`, `claude --resume <id> "<prompt>"`), never
+    typed into the TUI, which may be showing a start-up menu (Codex's update
+    offer takes the first keystrokes). Proven on 2026-11-02: a finished
+    `claude --print --session-id` run and a finished `codex exec --json` run
+    each resumed interactively by id, answered from the headless turn's
+    context, and wrote the new turns under the same id. While it is open the
+    bar shows "Go to the session".
 
 09. **When the session ends.** Reported `ready`, `reply`, `ticket` or `ask`:
     that report applies (a new `ask` replaces the question). Ended with no
@@ -78,7 +91,7 @@ that a silent run's last words are kept.
       discarded.
 
 11. **A reviewer reply while asking.** With no session open it re-runs the
-    agent: a headless continue of the same conversation with the reply. The
+    agent: a headless resume of the stored session id with the reply. The
     run reports, asks again, or ends silent, which goes back to `asking`.
 
 12. **A reviewer reply during the answer session.** Nothing is typed into the
@@ -89,8 +102,9 @@ that a silent run's last words are kept.
     comment's text. The toast stays until opened or dismissed.
 
 13. **The PR head moves while asking.** Nothing runs. The section heading gains
-    a marker, "PR moved since the question · N new commits". The
-    rebase-under-proposal rule applies once the thread is `proposed` again.
+    a marker, "PR moved since the question · N new commits", counted from the
+    PR head the question was asked on to the PR head now. Rebasing stays where
+    it is today: at approve time, when the pick conflicts.
 
 14. **Notification.** A new `agent_asked` notification, batched like the rest:
     "Agent question on #<n>", the question as the body, opening the thread. The

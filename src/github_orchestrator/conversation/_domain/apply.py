@@ -5,6 +5,7 @@ from github_orchestrator.conversation._domain import operations as history
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
     Approve,
+    CheckForFixes,
     Confirm,
     DeclarePlan,
     Defer,
@@ -102,6 +103,7 @@ from github_orchestrator.conversation._domain.effects import (
     GIST_ROOT,
     GIST_THREAD,
     AskCommitCheck,
+    AskFixCheck,
     AskVerdict,
     CutWorkspace,
     DeleteComment,
@@ -183,6 +185,7 @@ from github_orchestrator.conversation._domain.verdict import (
     PLACED_BY_A_VERDICT,
     STATE_OF_VERDICT,
     newest_said,
+    retry_due,
     unread_of,
     verdict_due,
     with_an_ask,
@@ -336,6 +339,19 @@ def _commit_check_due(conversation: Conversation, command: CommitCheckDue,
         return Accepted(conversation)
     return Accepted(with_a_check_ask(conversation, reference.on, at),
                     (AskCommitCheck(on=reference.on, candidates=reference.candidates),))
+
+
+def _check_for_fixes(conversation: Conversation, command: CheckForFixes,
+                     at: str | None) -> Accepted:
+    on, check = newest_said(conversation), conversation.commit_check
+    base = Sha.parse(conversation.original_commit or "")
+    checked_at_head = check is not None and check.on == on and check.sha == command.head
+    still_out = conversation.commit_check_asked_for == on and not retry_due(
+        conversation.commit_check_asks, conversation.commit_check_asked_at, at)
+    if on is None or base is None or checked_at_head or still_out:
+        return Accepted(conversation)
+    return Accepted(with_a_check_ask(conversation, on, at),
+                    (AskFixCheck(on=on, base=base, head=command.head),))
 
 
 def _set_commit_verdict(conversation: Conversation, command: SetCommitVerdict) -> Accepted:
@@ -1151,6 +1167,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return Accepted(checked(conversation, command.check))
         case SetCommitVerdict():
             return _set_commit_verdict(conversation, command)
+        case CheckForFixes():
+            return _check_for_fixes(conversation, command, at)
         case WorkspaceCut():
             return Accepted(with_fix(conversation, base_sha=command.base_sha))
         case DeclarePlan():

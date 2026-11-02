@@ -5,6 +5,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ASSUMED_DONE,
     OPEN,
     ROLE_REVIEWER,
+    WAITING_ON_REVIEWER,
     CommitCheck,
     CommitVerdict,
     Conversation,
@@ -15,10 +16,13 @@ from github_orchestrator.conversation._domain.verdict import (
     newest_said,
     retry_due,
 )
+from github_orchestrator.domain import Sha
 
 MAX_CANDIDATES = 5
 
 _STATE_OF_CHECK = {CommitVerdict.NOT_ADDRESSED: OPEN, CommitVerdict.ADDRESSED: ASSUMED_DONE}
+
+_STATE_OF_FIX_CHECK = {**_STATE_OF_CHECK, CommitVerdict.PARTLY: OPEN}
 
 _HASH = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
 
@@ -59,6 +63,17 @@ def commit_check_due(conversation: Conversation, viewer: str, now: str | None) -
         conversation.commit_check_asks, conversation.commit_check_asked_at, now)
 
 
+def not_checkable_for_fixes(conversation: Conversation, viewer: str) -> str | None:
+    comments = conversation.comments
+    if (conversation.role != ROLE_REVIEWER or conversation.state != WAITING_ON_REVIEWER
+            or not comments or comments[-1].author != viewer):
+        return "only a thread waiting on the author since your comment is checked for fixes"
+    if Sha.parse(conversation.original_commit or "") is None:
+        return ("the thread names no commit it was made on, so there is nothing to check "
+                "it against")
+    return None
+
+
 def with_a_check_ask(conversation: Conversation, on: str, at: str | None) -> Conversation:
     asks = (conversation.commit_check_asks + 1
             if conversation.commit_check_asked_for == on else 1)
@@ -70,7 +85,8 @@ def placed_by_check(conversation: Conversation) -> str | None:
     check = conversation.commit_check
     if check is None or check.on != newest_said(conversation):
         return None
-    return _STATE_OF_CHECK.get(check.verdict)
+    placing = _STATE_OF_FIX_CHECK if check.since_comment else _STATE_OF_CHECK
+    return placing.get(check.verdict)
 
 
 def checked(conversation: Conversation, check: CommitCheck) -> Conversation:

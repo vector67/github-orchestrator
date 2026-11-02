@@ -23,6 +23,7 @@ from tests.conversation.support import (
     world,
 )
 from tests.disk_layout import (
+    disk_name,
     thread_action_file,
     thread_dir,
     thread_intent_file,
@@ -183,7 +184,7 @@ def test_an_action_the_old_manager_wrote_is_the_cards_last_action(here, threads)
 
 
 def test_a_review_the_old_board_wrote_reads_back(here):
-    _left(thread_dir(here.settings.threads_dir, THE_PR) / "op_review1.review", OLD_REVIEW)
+    _left(thread_dir(here.settings.threads_dir, THE_PR) / f"{disk_name('op_review1')}.review", OLD_REVIEW)
 
     [review] = here.threads().reviews()
 

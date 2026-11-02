@@ -111,6 +111,12 @@ class NamedCommit:
 
 
 @dataclass(frozen=True)
+class Changes:
+    worktree: str
+    shown: str
+
+
+@dataclass(frozen=True)
 class Cut:
     workspace: "ThreadWorkspace | None"
     failure: str = ""
@@ -174,6 +180,8 @@ class PrCheckout(Protocol):
     def commit_message(self, sha: Sha) -> str | None: ...
 
     def named_commit(self, sha: Sha) -> NamedCommit | None: ...
+
+    def changes(self, base: Sha, head: Sha) -> Changes | None: ...
 
     def diff_files(self, base: Sha, head: Sha,
                    merged: Sha | None = None) -> tuple[FileDiff, ...] | None: ...

@@ -206,6 +206,7 @@ export interface Panel {
   actions: Offer[];
   footer: Footer;
   can_delete: boolean;
+  check_for_fixes: boolean;
   accept: AcceptView | null;
   rework: ReworkView | null;
   agent_words: string | null;
@@ -1069,6 +1070,15 @@ const COMMIT_VERDICTS: Record<CommitVerdict, string> = {
 
 const NAMED_SHA = 7;
 
+function checksForFixes(conversation: Conversation, context: Context): boolean {
+  return (
+    context.role === 'reviewer' &&
+    conversation.record_state === 'waiting_on_reviewer' &&
+    Boolean(conversation.anchor?.original_commit) &&
+    conversation.comments.at(-1)?.author === context.viewer
+  );
+}
+
 function commitCheckOf(conversation: Conversation): {
   commit_check: CommitCheckView | null;
   fold: Fold | null;
@@ -1152,6 +1162,7 @@ export function panelOf(
       refused: draft || reply?.refused ? null : written.refused,
     },
     can_delete: canDelete(conversation, comments, context.viewer),
+    check_for_fixes: checksForFixes(conversation, context),
   };
   if (context.role === 'reviewer') {
     return {

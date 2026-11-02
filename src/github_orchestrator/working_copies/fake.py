@@ -598,6 +598,14 @@ class FakeWorkingCopies:
                           for path, text in commit.tree.items() if before.get(path) != text)
         return commit.sha, parent, f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}"
 
+    def _diff_text(self, worktree: str, base: str, head: str) -> str | None:
+        old = self._rev_tree(worktree, base)
+        new = self._rev_tree(worktree, head)
+        if old is None or new is None:
+            return None
+        return "".join(_unified(path, old.get(path), new.get(path))
+                       for path in _changed_paths(old, new))
+
     def _diff_files(self, worktree: str, base: str, head: str,
                     merged: str | None = None) -> tuple[FileDiff, ...] | None:
         if self._diff_shown:

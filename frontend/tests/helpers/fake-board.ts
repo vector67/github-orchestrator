@@ -1,4 +1,5 @@
 import type {
+  ThreadNamesMigration,
   AuthorKind,
   CiCheck,
   Comment,
@@ -764,6 +765,8 @@ export class FakeBoard {
   state: HubState = 'watching';
   tourDue = false;
   toursSeen = 0;
+  migration: ThreadNamesMigration = { migrated: true, sessions: [] };
+  migrationsAsked = 0;
   emojis: Record<string, string> = {};
   harvestExtensionFolder = '/data/harvest-extension';
   pid = 4242;
@@ -1257,6 +1260,7 @@ export class FakeBoard {
       if (path === '/api/runs') return this.ledger;
       if (path === '/api/mentions') return this.mentions;
       if (path === '/api/tour') return { due: this.tourDue };
+      if (path === '/api/thread-names-migration') return this.migration;
       if (path === '/api/emojis')
         return {
           emojis: Object.entries(this.emojis).map(([name, picture]) => ({
@@ -1395,6 +1399,15 @@ export class FakeBoard {
       this.tourDue = false;
       return respond(null, { status: 204 });
     }
+    if (
+      side === 'hub' &&
+      url.endsWith('/api/thread-names-migration:close-sessions-and-migrate')
+    ) {
+      this.migrationsAsked += 1;
+      this.migration = { migrated: true, sessions: [] };
+      this.unheld = null;
+      return this.json(200, this.migration);
+    }
     if (side === 'hub' && url.endsWith('/api/harvest-extension:prepare')) {
       return this.prepareHarvestExtension(url);
     }
@@ -1422,7 +1435,9 @@ export class FakeBoard {
     const summarised = SUMMARISE.exec(url);
     if (summarised) return this.summarise(url, summarised[1]!, headers);
     const found =
-      /\/api\/(?:conversations\/([^/]+)\/)?operations:([a-z-]+)$/.exec(url);
+      /\/api\/(?:conversations\/([^/]+)\/|pull-request\/)?operations:([a-z-]+)$/.exec(
+        url,
+      );
     const key = decodeURIComponent(found?.[1] ?? '');
     const verb = found?.[2] ?? '';
     const body: unknown =
@@ -1440,6 +1455,7 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     if (verb === 'check-session') return this.checkSession(key);
+    if (verb === 'check-for-fixes') return respond(null, { status: 204 });
     const id = `op_${this.posted.length}`;
     if (verb === 'start-session' || verb === 'open-shell') {
       this.drain({

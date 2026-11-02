@@ -475,6 +475,30 @@ def test_writing_where_there_is_no_file_writes_one(tmp_path):
     assert set(repos_read_from(toml_file)) == {Repo("octocat", "hello")}
 
 
+def test_writing_keeps_the_config_private(tmp_path):
+    toml_file = write_config(tmp_path)
+    toml_file.chmod(0o600)
+
+    read_from(toml_file).get(ConfigFile).write(
+        {"gh_account": "someone"}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
+
+    assert stat.S_IMODE(toml_file.stat().st_mode) == 0o600
+
+
+def test_writing_writes_through_a_symlinked_config(tmp_path):
+    dotfiles = tmp_path / "dotfiles"
+    dotfiles.mkdir()
+    kept = write_config(dotfiles)
+    toml_file = tmp_path / "config.toml"
+    toml_file.symlink_to(kept)
+
+    read_from(toml_file).get(ConfigFile).write(
+        {"gh_account": "someone"}, repos={Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")})
+
+    assert toml_file.readlink() == kept
+    assert load_config(kept).gh_account == "someone"
+
+
 def test_a_written_value_with_quotes_and_backslashes_reads_back_as_written(tmp_path):
     toml_file = write_config(tmp_path)
     weird = '/tmp/a "quoted" \\ path'
@@ -605,6 +629,32 @@ def test_an_empty_mentions_start_is_stamped_in_its_own_line(tmp_path):
     toml_file = write_config(tmp_path, 'mentions_start = ""\nhub_port = 8721\n')
 
     assert read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START) == FIRST_START
+    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+    assert toml_file.read_text().count("mentions_start") == 1
+
+
+@pytest.mark.parametrize("written", ["2026-10-21", "2026-10-21T09:00:00"])
+def test_a_mentions_start_written_without_a_time_zone_is_read_in_local_time(tmp_path, written):
+    toml_file = write_config(tmp_path, f'mentions_start = "{written}"\n')
+
+    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == datetime.fromisoformat(
+        written).astimezone()
+
+
+def test_a_mentions_start_that_is_not_a_moment_is_refused(tmp_path):
+    toml_file = write_config(tmp_path, 'mentions_start = "last tuesday"\n')
+
+    with pytest.raises(ConfigProblem, match="mentions_start"):
+        load_config(toml_file)
+
+
+@pytest.mark.parametrize("line", ['  mentions_start = ""', '"mentions_start" = ""',
+                                  "'mentions_start' = \"\""])
+def test_an_empty_mentions_start_written_indented_or_quoted_is_stamped_in_place(tmp_path, line):
+    toml_file = write_config(tmp_path, f"{line}\nhub_port = 8721\n")
+
+    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+
     assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
     assert toml_file.read_text().count("mentions_start") == 1
 

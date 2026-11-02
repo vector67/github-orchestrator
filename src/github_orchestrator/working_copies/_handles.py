@@ -8,6 +8,7 @@ from github_orchestrator.working_copies._diff import is_branch_name
 from github_orchestrator.working_copies._layout import thread_branch
 from github_orchestrator.working_copies.interface import (
     BaseStanding,
+    Changes,
     Cut,
     FileDiff,
     NamedCommit,
@@ -73,6 +74,8 @@ class Git(Protocol):
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
 
     def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
+
+    def _diff_text(self, worktree: str, base: str, head: str) -> str | None: ...
 
     def _diff_files(self, worktree: str, base: str, head: str,
                     merged: str | None = None) -> tuple[FileDiff, ...] | None: ...
@@ -267,6 +270,11 @@ class BoundCheckout:
             return None
         full, parent, shown = read
         return NamedCommit(Sha(full), Sha(parent), path, shown)
+
+    def changes(self, base: Sha, head: Sha) -> Changes | None:
+        path = self._path()
+        shown = None if path is None else self.git._diff_text(path, str(base), str(head))
+        return None if path is None or shown is None else Changes(path, shown)
 
     def diff_files(self, base: Sha, head: Sha,
                    merged: Sha | None = None) -> tuple[FileDiff, ...] | None:

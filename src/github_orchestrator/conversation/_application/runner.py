@@ -24,6 +24,7 @@ from github_orchestrator.conversation._domain.conversation import (
 )
 from github_orchestrator.conversation._domain.effects import (
     AskCommitCheck,
+    AskFixCheck,
     AskVerdict,
     CutWorkspace,
     DeleteComment,
@@ -236,11 +237,26 @@ def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommi
                    if found is not None), None)
     if commit is None:
         return
-    key, sha, parent = conversation.key, commit.sha, commit.parent
+    ports.summaries.check_commit(
+        conversation, commit.sha, commit.shown, commit.worktree,
+        _check_recorder(ports, conversation.key, effect.on, commit.sha, commit.parent))
 
+
+def _ask_fix_check(ports: Ports, conversation: Conversation, effect: AskFixCheck) -> None:
+    changes = ports.git.changes(effect.base, effect.head)
+    if changes is None:
+        return
+    ports.summaries.check_changes(
+        conversation, effect.base, effect.head, changes.shown, changes.worktree,
+        _check_recorder(ports, conversation.key, effect.on, effect.head, effect.base,
+                        since_comment=True))
+
+
+def _check_recorder(ports: Ports, key: str, on: str, sha: Sha, parent: Sha, *,
+                    since_comment: bool = False) -> Callable[[CommitVerdict, str], None]:
     def record(verdict: CommitVerdict, reasoning: str) -> None:
-        check = CommitCheck(on=effect.on, sha=sha, parent=parent, verdict=verdict,
-                            reasoning=reasoning)
+        check = CommitCheck(on=on, sha=sha, parent=parent, verdict=verdict,
+                            reasoning=reasoning, since_comment=since_comment)
         with ports.records.update(key) as update:
             stored = update.conversation
             if stored is None:
@@ -249,7 +265,7 @@ def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommi
             if outcome.conversation != stored:
                 update.conversation = outcome.conversation
 
-    ports.summaries.check_commit(conversation, sha, commit.shown, commit.worktree, record)
+    return record
 
 
 def _unpick_outcome(ports: Ports, conversation: Conversation) -> Change:
@@ -349,6 +365,9 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return None
         case AskCommitCheck():
             _ask_commit_check(ports, conversation, effect)
+            return None
+        case AskFixCheck():
+            _ask_fix_check(ports, conversation, effect)
             return None
     raise NotImplementedError(type(effect).__name__)
 

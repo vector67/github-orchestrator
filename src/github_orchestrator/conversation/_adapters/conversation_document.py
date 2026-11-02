@@ -252,7 +252,8 @@ def _commit_check_document(check: CommitCheck | None) -> Document | None:
     if check is None:
         return None
     return {"on": check.on, "sha": str(check.sha), "parent": str(check.parent),
-            "verdict": check.verdict.value, "reasoning": check.reasoning}
+            "verdict": check.verdict.value, "reasoning": check.reasoning,
+            "since_comment": check.since_comment}
 
 
 def _commit_check(document: Document | None) -> CommitCheck | None:
@@ -261,7 +262,8 @@ def _commit_check(document: Document | None) -> CommitCheck | None:
     return CommitCheck(on=document["on"], sha=Sha(document["sha"]),
                        parent=Sha(document["parent"]),
                        verdict=CommitVerdict(document["verdict"]),
-                       reasoning=document["reasoning"])
+                       reasoning=document["reasoning"],
+                       since_comment=document["since_comment"])
 
 
 def _brief(brief: Document | None) -> Brief | None:

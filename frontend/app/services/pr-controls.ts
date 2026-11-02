@@ -12,7 +12,12 @@ import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
 import type PollService from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
-import type { Move, ShownPr, WallRow } from 'frontend/services/store';
+import type {
+  Move,
+  ShownPr,
+  Summaries,
+  WallRow,
+} from 'frontend/services/store';
 import type ToastsService from 'frontend/services/toasts';
 
 export type Control =
@@ -21,6 +26,7 @@ export type Control =
   | 'start-review'
   | 'mark-ready'
   | 'take-over'
+  | 'check-for-fixes'
   | 'dismiss'
   | 'close'
   | 'git'
@@ -43,6 +49,7 @@ export interface Controlled {
   live: boolean;
   showing: 'board' | 'hub';
   pending: boolean;
+  waitingOnAuthor: boolean;
 }
 
 export type Offer =
@@ -68,6 +75,8 @@ const HINTS = {
     'Marks this draft ready for review on GitHub, after you confirm with what is still outstanding in front of you',
   'take-over':
     'Treats this pull request as yours from now on, though someone else opened it: its agents fix CI, rebase and answer threads as they do on your own',
+  'check-for-fixes':
+    'Asks an agent, for each thread waiting on the author since your comment, whether the changes since then address it: Assumed done if they do, My move if not',
 };
 
 const BOARD_DOWN = {
@@ -80,6 +89,8 @@ const BOARD_DOWN = {
     'Ready for review goes through the manager’s board, which is not answering.',
   'take-over':
     'Take over goes through the manager’s board, which is not answering.',
+  'check-for-fixes':
+    'Check for fixes goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
 };
 
@@ -111,6 +122,12 @@ function carryOnHeldBack(shown: ShownPr): string | null {
 }
 
 type HubVerb = 'hold' | 'resume' | 'release';
+
+function waitingOnAuthor(summaries: Summaries): boolean {
+  return (
+    summaries.role === 'reviewer' && (summaries.groups['waiting'] ?? 0) > 0
+  );
+}
 
 function onHoldOf(shown: ShownPr): boolean {
   return shown.drawn.system.on_hold;
@@ -144,6 +161,7 @@ function offerOf(on: Controlled, control: Control): Offer {
   if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
   if (control === 'take-over' && shown.facts?.is_author !== false)
     return ABSENT;
+  if (control === 'check-for-fixes' && !on.waitingOnAuthor) return ABSENT;
   const why = heldBackOf(control, shown);
   if (why) return held(why);
   if (!on.live) return held(BOARD_DOWN[control]);
@@ -159,6 +177,7 @@ const KEYS: Record<Control, string> = {
   'start-review': 'a',
   'mark-ready': 'r',
   'take-over': 'T',
+  'check-for-fixes': 'F',
   dismiss: 'd',
   close: 'Q',
   git: 'g',
@@ -187,6 +206,7 @@ type Command =
   | 'start-review'
   | 'mark-ready'
   | 'take-over'
+  | 'check-for-fixes'
   | 'close'
   | 'release';
 
@@ -216,6 +236,7 @@ export default class PrControlsService extends Service {
       live,
       showing: live ? 'board' : 'hub',
       pending: Boolean(summary?.pressing.controls.pressed),
+      waitingOnAuthor: summary ? waitingOnAuthor(summary) : false,
     };
   }
 
@@ -229,6 +250,7 @@ export default class PrControlsService extends Service {
       live: row.drawn.standing === 'answering',
       showing: 'hub',
       pending: row.summaries.pressing.controls.pressed !== null,
+      waitingOnAuthor: waitingOnAuthor(row.summaries),
     };
   }
 
@@ -300,6 +322,10 @@ export default class PrControlsService extends Service {
       }
       return;
     }
+    if (control === 'check-for-fixes') {
+      await this.checkingForFixes(on);
+      return;
+    }
     if (!(await this.throughTheManager(on, control))) return;
     if (control === 'close') {
       this.toasts.say(
@@ -307,6 +333,21 @@ export default class PrControlsService extends Service {
         'done',
       );
     }
+  }
+
+  private async checkingForFixes(on: Controlled): Promise<void> {
+    const taken = await this.store.press(
+      on.shown,
+      'check-for-fixes',
+      'check for fixes',
+      `${this.prefix(on)}/api/pull-request/operations:check-for-fixes`,
+    );
+    if (!taken.done) return;
+    taken.body();
+    this.toasts.say(
+      `Asked an agent to check #${on.number}'s threads waiting on the author for fixes.`,
+      'done',
+    );
   }
 
   private async readOutstanding(on: Controlled): Promise<void> {

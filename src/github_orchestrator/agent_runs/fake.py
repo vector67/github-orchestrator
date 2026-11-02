@@ -183,8 +183,20 @@ class CommitCheckAsked:
     worktree: str
 
 
+@dataclass(frozen=True)
+class FixCheckAsked:
+    key: str
+    comments: tuple[tuple[str, str, str], ...]
+    path: str | None
+    line: int | None
+    base: str
+    head: str
+    shown: str
+    worktree: str
+
+
 Asked = (CommentAsked | ThreadAsked | CommentsAsked | FixesAsked | VerdictAsked
-         | CommitCheckAsked)
+         | CommitCheckAsked | FixCheckAsked)
 
 
 class FakeRun:
@@ -463,6 +475,17 @@ class FakeAgentRuns:
         if checked is not None:
             done(*checked)
 
+    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                      path: str | None, line: int | None, base: str, head: str, shown: str,
+                      worktree: str, answers: Mapping[str, str],
+                      done: Callable[[str, str], None]) -> None:
+        self.asked.append(FixCheckAsked(key, tuple(comments), path, line, base, head, shown,
+                                        worktree))
+        answer = self._answered()
+        checked = commit_check_in(answer, answers) if isinstance(answer, str) else None
+        if checked is not None:
+            done(*checked)
+
 
 @dataclass
 class HeldVerdicts(FakeAgentRuns):
@@ -487,11 +510,22 @@ class HeldVerdicts(FakeAgentRuns):
                                            worktree))
         self.held_checks.append((answers, done))
 
+    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+                      path: str | None, line: int | None, base: str, head: str, shown: str,
+                      worktree: str, answers: Mapping[str, str],
+                      done: Callable[[str, str], None]) -> None:
+        self.asked.append(FixCheckAsked(key, tuple(comments), path, line, base, head, shown,
+                                        worktree))
+        self.held_checks.append((answers, done))
+
     def verdicts_asked(self) -> list[VerdictAsked]:
         return [asked for asked in self.asked if isinstance(asked, VerdictAsked)]
 
     def commit_checks_asked(self) -> list[CommitCheckAsked]:
         return [asked for asked in self.asked if isinstance(asked, CommitCheckAsked)]
+
+    def fix_checks_asked(self) -> list[FixCheckAsked]:
+        return [asked for asked in self.asked if isinstance(asked, FixCheckAsked)]
 
     def give_check(self, word: str, reasoning: str) -> None:
         answers, done = self.held_checks.pop()

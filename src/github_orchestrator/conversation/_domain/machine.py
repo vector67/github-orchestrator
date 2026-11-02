@@ -6,6 +6,7 @@ from github_orchestrator.conversation._domain import operations as history
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
     Approve,
+    CheckForFixes,
     Confirm,
     DeclarePlan,
     Defer,
@@ -37,6 +38,9 @@ from github_orchestrator.conversation._domain.commands import (
     Unpark,
     WithdrawFromReview,
     WriteFix,
+)
+from github_orchestrator.conversation._domain.commit_check import (
+    not_checkable_for_fixes,
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
@@ -790,6 +794,12 @@ def _a_commit_checked(conversation: Conversation, command: SetCommitVerdict) -> 
     return None
 
 
+def _waiting_on_the_author(conversation: Conversation,
+                           command: CheckForFixes) -> Refused | None:
+    why = not_checkable_for_fixes(conversation, command.viewer)
+    return None if why is None else Refused(conversation, ErrorCode.NOT_PARKED, why)
+
+
 RULES: dict[type, tuple[Rule, ...]] = {
     GistWritten: (_the_gist_of_this_body,),
     DeclarePlan: (_planning((QUEUED, RUNNING, IN_SESSION), "takes no plan"),),
@@ -806,6 +816,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     Fail: (_running_only,),
     SetCommitVerdict: (_a_commit_checked,),
+    CheckForFixes: (_waiting_on_the_author,),
     SessionRefused: (_a_session_opening,),
     SessionGone: (_a_session_open,),
     RunStarted: (_queued_for_a_run,),

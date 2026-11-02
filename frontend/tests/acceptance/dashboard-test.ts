@@ -1250,6 +1250,39 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), ['take-over']);
   });
 
+  test('a pull request you review with threads waiting on the author offers Check for fixes', async function (assert) {
+    onTheHub();
+    board().actAs('reviewer');
+    board().conversations = [
+      thread({
+        key: 'k1',
+        state: 'waiting',
+        record_state: 'waiting_on_reviewer',
+      }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="check-for-fixes"]')
+      .hasAttribute('title', /\w/);
+
+    await click('[data-test-control="check-for-fixes"]');
+
+    assert.deepEqual(
+      board().posted.map((one) => one.url.replace(/^.*\/api\//, '')),
+      ['pull-request/operations:check-for-fixes'],
+    );
+  });
+
+  test('no thread waiting on the author offers no Check for fixes', async function (assert) {
+    onTheHub();
+    board().actAs('reviewer');
+    board().conversations = [thread({ key: 'k1' })];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-control="check-for-fixes"]').doesNotExist();
+  });
+
   test('only a pull request known to be someone else’s offers Take over', async function (assert) {
     for (const is_author of [true, null]) {
       onTheHub({ facts: { is_author } });

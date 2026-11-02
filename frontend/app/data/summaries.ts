@@ -1567,5 +1567,8 @@ export function mentionableOf(
   const logins = new Set([...onThePr, ...assignable]);
   return [...logins]
     .filter((login): login is string => !!login)
-    .map((login) => ({ login, name: names[login] ?? null }));
+    .map((login) => ({
+      login,
+      name: Object.hasOwn(names, login) ? (names[login] ?? null) : null,
+    }));
 }

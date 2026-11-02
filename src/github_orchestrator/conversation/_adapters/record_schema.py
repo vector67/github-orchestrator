@@ -374,7 +374,8 @@ def _commit_check(document: Document) -> Document | None:
         raise ValueError(f"commit check {check.get('verdict')!r} is no answer this board takes")
     return {"on": str(check.get("on") or ""), "sha": _sha(check, "sha"),
             "parent": _sha(check, "parent"), "verdict": check["verdict"],
-            "reasoning": str(check.get("reasoning") or "")}
+            "reasoning": str(check.get("reasoning") or ""),
+            "since_comment": bool(check.get("since_comment"))}
 
 
 def _confidence(document: Document) -> str | None:

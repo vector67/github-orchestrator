@@ -129,7 +129,7 @@ fonts, and the environment variables that move the config and data files.
 
 ```text
 everyday     open, status, logs, runs
-service      start, stop, restart, restart-all
+service      start, stop, restart, restart-all, hold-restarts, allow-restarts
 maintenance  update, doctor, config, uninstall, setup, skill
 learning     tutorial
 ```
@@ -168,7 +168,13 @@ When a newer release is out, the board's top bar shows **Update available** and
 ```bash
 github-orchestrator update           # install the newest release, then restart every instance on it
 github-orchestrator update --check   # only say whether there is one
+github-orchestrator update --force   # close, without asking, any terminal session in a folder the upgrade renames
 ```
+
+An upgrade can rename the folders of review threads' worktrees. A terminal
+session left open in one of them holds that up: `update` names each one and
+asks before closing them. Until they close the watcher waits, and the board
+lists them with a **Close sessions and migrate** button.
 
 ## Uninstall
 

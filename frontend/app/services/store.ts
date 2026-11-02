@@ -51,6 +51,7 @@ import type {
   SessionCheck,
   TerminalSession,
   TerminalSessionList,
+  ThreadNamesMigration,
   Tour,
   WallGroupName,
   WatcherHealth,
@@ -448,6 +449,8 @@ export default class StoreService extends Service {
     fields: Record<string, string>;
   } = { write: null, fields: {} };
   @tracked tour: Tour | null = null;
+  @tracked migration: ThreadNamesMigration | null = null;
+  @tracked closingSessions = false;
   @tracked harvestExtension: {
     write: StoredOperation | null;
     folder: string | null;
@@ -923,9 +926,13 @@ export default class StoreService extends Service {
     void waitForPromise(
       fetched<MentionableList>(at).then(
         ({ logins }) => {
+          if (logins.length === 0) this.assignableAsked.delete(pr.repo);
           this.assignable = { ...this.assignable, [pr.repo]: logins };
         },
-        (trouble: unknown) => reportError('mentionable', trouble),
+        (trouble: unknown) => {
+          this.assignableAsked.delete(pr.repo);
+          return reportError('mentionable', trouble);
+        },
       ),
     );
   }
@@ -947,6 +954,30 @@ export default class StoreService extends Service {
           ...this.harvestExtension,
           write: { ...write, state: 'refused', reason: prepared.why },
         };
+  }
+
+  async readMigration(): Promise<void> {
+    try {
+      this.migration = await fetched<ThreadNamesMigration>(
+        '/api/thread-names-migration',
+      );
+    } catch (trouble) {
+      void reportError('thread names migration', trouble);
+    }
+  }
+
+  async closeSessionsAndMigrate(): Promise<void> {
+    this.closingSessions = true;
+    const closed = await tried(
+      'close /api/thread-names-migration:close-sessions-and-migrate',
+      posted<ThreadNamesMigration>(
+        '/api/thread-names-migration:close-sessions-and-migrate',
+        null,
+        {},
+      ),
+    );
+    this.closingSessions = false;
+    if (closed.done) this.migration = closed.body.body;
   }
 
   async readTour(): Promise<void> {
@@ -1197,6 +1228,13 @@ export default class StoreService extends Service {
     return { done: true, body: session };
   }
 
+  checkForFixes(key: string): Promise<Tried<void>> {
+    return tried(
+      'write',
+      handed(this.here.api(`${under(key)}/operations:check-for-fixes`)),
+    );
+  }
+
   async askTheAgent(
     pr: Numbered,
     prompt: string,
@@ -1366,6 +1404,8 @@ export default class StoreService extends Service {
         this.unheld = unheld;
         this.configProblem =
           unheld === 'not-watching' ? (trouble as Refusal).detail : null;
+        if (unheld === 'waiting-to-migrate')
+          void waitForPromise(this.readMigration());
       }
       throw trouble;
     }

@@ -2762,6 +2762,21 @@ kbd {
   color: var(--muted);
 }
 
+.migration-sessions {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--text);
+}
+
+.migration-sessions li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
 .hub-nav {
   display: flex;
   gap: 2px;

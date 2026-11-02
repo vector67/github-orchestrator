@@ -50,7 +50,8 @@ GITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,
 GITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,
 GITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.
 Under -y the agent is claude unless chosen, the skill is installed when it is
-missing, and one that differs from this version's is left alone.
+missing, one that differs from this version's is left alone, and a terminal
+session in a folder the thread names migration moves is closed.
 GITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that
 download the release.
 USAGE
@@ -547,7 +548,16 @@ remember_agent
 
 step "Starting the watcher"
 note "It runs as a $([ "$PLATFORM" = macos ] && echo LaunchAgent || echo systemd user unit) and serves the board."
-"$COMMAND" start --from-installer || fail "The watcher did not start; github-orchestrator doctor says why."
+started() {
+    if [ -n "$YES" ]; then
+        "$COMMAND" start --from-installer --force </dev/null
+    elif [ -n "$TTY" ]; then
+        "$COMMAND" start --from-installer </dev/tty
+    else
+        "$COMMAND" start --from-installer </dev/null
+    fi
+}
+started || fail "The watcher did not start; github-orchestrator doctor says why."
 
 build_notifier() {
     if ! xcrun --find swiftc >/dev/null 2>&1 || ! xcrun --find codesign >/dev/null 2>&1; then

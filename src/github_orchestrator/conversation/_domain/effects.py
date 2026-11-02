@@ -109,6 +109,13 @@ class AskCommitCheck:
     candidates: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class AskFixCheck:
+    on: str
+    base: Sha
+    head: Sha
+
+
 Effect = (
       StartRun
     | StopRun
@@ -125,4 +132,5 @@ Effect = (
     | WriteGist
     | AskVerdict
     | AskCommitCheck
+    | AskFixCheck
 )

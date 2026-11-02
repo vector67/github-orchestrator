@@ -105,3 +105,16 @@ def named_commit(worktree: str, sha: str) -> tuple[str, str, str] | None:
     if shown.returncode != 0:
         return None
     return full, parents[0], shown.stdout.decode(errors="replace")
+
+
+def diff_text(worktree: str, base: str, head: str) -> str | None:
+    if Sha.parse(base) is None or Sha.parse(head) is None or not os.path.isdir(worktree):
+        return None
+    try:
+        diffed = _git(worktree, "diff", "--end-of-options", base, head)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        log.warning("git diff %s %s in %s failed to run: %s", base, head, worktree, exc)
+        return None
+    if diffed.returncode != 0:
+        return None
+    return diffed.stdout.decode(errors="replace")

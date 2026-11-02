@@ -7,7 +7,7 @@ _PROG = "github-orchestrator"
 
 _GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("everyday", ("open", "status", "logs", "runs")),
-    ("service", ("start", "stop", "restart", "restart-all")),
+    ("service", ("start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts")),
     ("maintenance", ("update", "doctor", "config", "uninstall", "setup", "skill")),
     ("learning", ("tutorial",)),
 )
@@ -81,6 +81,7 @@ class Commands:
             "--foreground", action="store_true",
             help="Run the watcher in this terminal instead, for a Linux without a user manager.")
         start_parser.add_argument("--from-installer", action="store_true", help=argparse.SUPPRESS)
+        start_parser.add_argument("-f", "--force", action="store_true", help=argparse.SUPPRESS)
 
         stop_parser = command(
             "stop", "Stop this instance's watcher and agent managers.", "stop --all",
@@ -103,6 +104,14 @@ class Commands:
             "to finish: for this instance and every other one, stop the agent managers, "
             "rewrite and reload the watcher's service and confirm the managers came back.")
 
+        command(
+            "hold-restarts", "Make every restart skip until allow-restarts.", "hold-restarts",
+            "For a release stress test running the board from a release branch: restart and "
+            "restart-all say why and change nothing while the hold lasts.")
+
+        command("allow-restarts", "Let restarts through again after hold-restarts.",
+                "allow-restarts")
+
         update_parser = command(
             "update", "Install the newest release and restart every instance on it.", "update",
             "Says which version is installed and which is newest, installs the newest with "
@@ -111,6 +120,10 @@ class Commands:
                                    help="Only say whether a newer release exists.")
         update_parser.add_argument("--version", metavar="X",
                                    help="Install release X instead, even an older one.")
+        update_parser.add_argument(
+            "-f", "--force", action="store_true",
+            help="Close any terminal session in a folder the thread names migration moves, "
+                 "without asking.")
 
         command(
             "doctor", "Check the install, the service, GitHub and each repo, and say how to fix "

@@ -202,6 +202,23 @@
     }
    }
   },
+  "/api/conversations/{key}/operations:check-for-fixes": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/operations:check-session": {
    "post": {
     "200": {
@@ -1276,6 +1293,14 @@
     "204": null
    }
   },
+  "/api/pull-request/operations:check-for-fixes": {
+   "post": {
+    "204": null,
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/operations:queue-reset-to-origin": {
    "post": {
     "204": null,
@@ -1551,6 +1576,20 @@
     },
     "409": {
      "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/thread-names-migration": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/ThreadNamesMigration"
+    }
+   }
+  },
+  "/api/thread-names-migration:close-sessions-and-migrate": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/ThreadNamesMigration"
     }
    }
   },
@@ -3631,6 +3670,7 @@
     "watcher-starting",
     "watcher-failing",
     "not-watching",
+    "waiting-to-migrate",
     "not-frozen",
     "terminal-refused",
     "manager-refused",
@@ -6675,6 +6715,29 @@
    ],
    "type": "object"
   },
+  "SessionInTheWay": {
+   "properties": {
+    "folder": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "thread": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "thread",
+    "folder"
+   ],
+   "type": "object"
+  },
   "SessionOperation": {
    "properties": {
     "conversation": {
@@ -7458,6 +7521,24 @@
     "pr-body"
    ],
    "type": "string"
+  },
+  "ThreadNamesMigration": {
+   "properties": {
+    "migrated": {
+     "type": "boolean"
+    },
+    "sessions": {
+     "items": {
+      "$ref": "#/components/schemas/SessionInTheWay"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "migrated",
+    "sessions"
+   ],
+   "type": "object"
   },
   "ThreadRow": {
    "properties": {

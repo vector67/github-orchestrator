@@ -6,7 +6,9 @@ import pytest
 from github_orchestrator.pr_manager import ManagedPr
 from github_orchestrator.pr_manager import __main__ as manager_main
 from github_orchestrator.settings import Process
-from github_orchestrator.settings.fake import FakeLogs
+from github_orchestrator.settings.fake import FakeLogs, fake_settings
+from github_orchestrator.thread_names import HeldFolder
+from github_orchestrator.thread_names.fake import FakeNameMigration
 from tests.builders import a_pr
 from tests.pr_manager.scripted_terminal import ScriptEnded
 from tests.pr_manager.support import manager_over
@@ -20,11 +22,12 @@ CONFIGURED = (
 )
 
 
-def _prepared(monkeypatch, tmp_path, *argv, config=CONFIGURED):
+def _prepared(monkeypatch, tmp_path, *argv, config=CONFIGURED, name_migration=None):
     if config is not None:
         (tmp_path / "config.toml").write_text(config)
     logs = FakeLogs()
-    manager = manager_over(settings_read_from(tmp_path / "config.toml", tmp_path), logs=logs)
+    manager = manager_over(settings_read_from(tmp_path / "config.toml", tmp_path), logs=logs,
+                           name_migration=name_migration)
     handed = []
 
     def container_for(env, home, managed):
@@ -52,6 +55,27 @@ def test_main_logs_to_the_pr_managers_log_naming_its_pr(monkeypatch, tmp_path):
     _, _, logs = _prepared(monkeypatch, tmp_path)
     _main()
     assert logs.configured == [(Process.PR_MANAGER, "o/n#1")]
+
+
+def test_main_migrates_thread_names_before_the_manager_runs(monkeypatch, tmp_path):
+    _prepared(monkeypatch, tmp_path)
+
+    assert isinstance(_main(), ScriptEnded)
+
+    assert fake_settings(tmp_path).layout_marker.exists()
+
+
+def test_a_session_in_the_way_of_the_migration_stops_the_manager_before_it_runs(
+    monkeypatch, tmp_path, caplog,
+):
+    held = HeldFolder(pr=a_pr(1, "o/n"), thread="PRRT_a", folder="/tmp/o/n/1/PRRT_a")
+    _prepared(monkeypatch, tmp_path, name_migration=FakeNameMigration([held]))
+
+    with caplog.at_level(logging.ERROR):
+        ended = _main()
+
+    assert isinstance(ended, SystemExit) and ended.code == 2
+    assert held.folder in caplog.text
 
 
 def test_a_broken_config_exits_before_the_manager_runs(monkeypatch, tmp_path, capsys):

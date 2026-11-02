@@ -19,6 +19,7 @@ from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.pr_summaries import SummaryLane
 from github_orchestrator.settings import Logs
 from github_orchestrator.settings.fake import Settings
+from github_orchestrator.thread_names import NameMigration
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.watcher import Health, Watcher, WatcherHealth
 from github_orchestrator.wiring import (
@@ -114,6 +115,7 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
                       releases_address: str | None = None,
                       summary_lane: SummaryLane | None = None,
                       mentions_inbox: MentionsInbox | None = None,
+                      name_migration: NameMigration | None = None,
                       ) -> dishka.Container:
     github = github or watching(settings)
     providers: list[Part] = [
@@ -146,6 +148,8 @@ def watcher_container(settings: Settings, *, github: FakeGitHub | None = None,
         providers.append(fake_provider(SummaryLane, summary_lane))
     if mentions_inbox is not None:
         providers.append(fake_provider(MentionsInbox, mentions_inbox))
+    if name_migration is not None:
+        providers.append(fake_provider(NameMigration, name_migration))
     if dry_run:
         providers.extend(dry_run_parts(settings))
     return build_container(settings, *providers, clocks=clocks_of(clock or at_now, sleep=sleep))
