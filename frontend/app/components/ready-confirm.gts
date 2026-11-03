@@ -31,18 +31,6 @@ const sentenceOf = (outstanding: Outstanding | null): string => {
 
 const isFirst = (index: number): boolean => index === 0;
 
-const isReviewers = (key: string): boolean => key === 'reviewers';
-
-const named = (logins: string[]): string =>
-  logins.length < 2
-    ? (logins[0] ?? '')
-    : `${logins.slice(0, -1).join(', ')} and ${logins[logins.length - 1]}`;
-
-const willAsk = (pick: AssignReviewersRequest): string =>
-  `Will ask ${named(pick.reviewers)}${
-    pick.detailed ? `, ${pick.detailed} in detail` : ''
-  }`;
-
 const threadAt = (repo: string, number: number, key: string): string[] => [
   ...repo.split('/'),
   String(number),
@@ -71,11 +59,21 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
     return this.pick.reviewers.length;
   }
 
+  get outstanding(): Outstanding | null {
+    const outstanding = this.args.outstanding;
+    if (!outstanding || !this.asking) return outstanding;
+    const groups = outstanding.groups.filter(
+      (group) => group.kind !== 'reviewers',
+    );
+    return {
+      groups,
+      total: groups.reduce((sum, group) => sum + group.count, 0),
+    };
+  }
+
   get option(): string {
-    if (this.asking) return `Mark ready and ask ${this.asking}`;
-    return anything(this.args.outstanding)
-      ? 'Mark ready anyway'
-      : 'Mark it ready';
+    if (this.asking) return `Mark ready and assign ${this.asking}`;
+    return anything(this.outstanding) ? 'Mark ready anyway' : 'Mark it ready';
   }
 
   openPicker = () => {
@@ -132,10 +130,10 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
             {{on "click" @cancel}}
           >×</button>
         </header>
-        {{#if (anything @outstanding)}}
-          <p class="note">{{sentenceOf @outstanding}}</p>
+        {{#if (anything this.outstanding)}}
+          <p class="note">{{sentenceOf this.outstanding}}</p>
           <div class="outstanding">
-            {{#each @outstanding.groups key="kind" as |group index|}}
+            {{#each this.outstanding.groups key="kind" as |group index|}}
               <details
                 class="outstanding-kind"
                 open={{isFirst index}}
@@ -171,31 +169,6 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
                   {{/each}}
                 </ul>
               </details>
-              {{#if (isReviewers group.kind)}}
-                <div class="outstanding-assign">
-                  {{#if this.asking}}
-                    <span
-                      class="outstanding-will-ask"
-                      data-test-will-ask
-                    >{{willAsk this.pick}}</span>
-                    <button
-                      type="button"
-                      class="btn"
-                      data-test-ready-assign
-                      {{on "click" this.openPicker}}
-                    >Change <kbd>⇧R</kbd></button>
-                  {{else}}
-                    <span class="outstanding-will-ask">Ask someone now, so the
-                      review starts the moment it is ready.</span>
-                    <button
-                      type="button"
-                      class="btn"
-                      data-test-ready-assign
-                      {{on "click" this.openPicker}}
-                    >Assign reviewers <kbd>⇧R</kbd></button>
-                  {{/if}}
-                </div>
-              {{/if}}
             {{/each}}
           </div>
         {{else}}
@@ -208,6 +181,13 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
             data-test-ready-option
           >{{this.option}}
             <kbd>y</kbd></button>
+          {{#if this.unreviewed}}
+            <button
+              type="button"
+              data-test-ready-assign
+              {{on "click" this.openPicker}}
+            >Assign reviewers <kbd>⇧R</kbd></button>
+          {{/if}}
           <button
             type="button"
             class="ghost"
@@ -221,7 +201,7 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
           @number={{@number}}
           @groups={{@groups}}
           @pick={{this.pick}}
-          @action="Ask them once ready"
+          @action="Assign them once ready"
           @assign={{this.chosen}}
           @cancel={{this.closePicker}}
         />
