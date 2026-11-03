@@ -71,6 +71,10 @@ def dismissed_file(dismissed_dir: Path, pr: Pr) -> Path:
     return _repo_dir(dismissed_dir, pr) / f"{pr.number}.flag"
 
 
+def reviewer_pick_file(data_dir: Path, pr: Pr) -> Path:
+    return _repo_dir(Path(data_dir) / "assign_when_ready", pr) / f"{pr.number}.json"
+
+
 def status_file(data_dir: Path, pr: Pr) -> Path:
     return _repo_dir(Path(data_dir) / "status", pr) / f"{pr.number}.json"
 

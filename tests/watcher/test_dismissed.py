@@ -14,6 +14,7 @@ from tests.conversation.support import (
 )
 from tests.disk_layout import (
     on_hold_file,
+    reviewer_pick_file,
     thread_dir,
 )
 from tests.pr_event_queue.support import ci_failed, disk_event_queue
@@ -41,9 +42,10 @@ def _window(world, path, *, running=False):
 
 
 def _flags(settings):
-    flag = on_hold_file(settings.on_hold_dir, THE_PR)
-    flag.parent.mkdir(parents=True, exist_ok=True)
-    flag.write_text("")
+    for flag in (on_hold_file(settings.on_hold_dir, THE_PR),
+                 reviewer_pick_file(settings.data_dir, THE_PR)):
+        flag.parent.mkdir(parents=True, exist_ok=True)
+        flag.write_text("")
 
 
 def _threads(settings, github, copies):
@@ -80,6 +82,7 @@ def test_a_pr_dismissed_forever_is_torn_down_but_keeps_its_dismissal_and_snapsho
     assert not thread_dir(settings.threads_dir, THE_PR).exists()
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert not on_hold_file(settings.on_hold_dir, THE_PR).exists()
+    assert reviewer_pick_file(settings.data_dir, THE_PR).exists()
     assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is Dismissal.FOREVER
     assert disk_change_detection(settings.state_dir).tracked() == [THE_PR]
 

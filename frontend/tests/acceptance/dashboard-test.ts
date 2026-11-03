@@ -1058,6 +1058,16 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-toast]').doesNotExist();
   });
 
+  test('the ready question opened from its link asks who can review, so Assign reviewers lists them', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard?ready=true');
+
+    await click('[data-test-ready-assign]');
+
+    assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
+  });
+
   test('with nobody asked to review, the ready question lists it as outstanding first, with a button that opens Assign reviewers over it', async function (assert) {
     board().mentionable = ['dave', 'anna', 'bob'];
     onTheHub({ facts: { draft: true, pending_reviewers: [] } });

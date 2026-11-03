@@ -1,9 +1,12 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import type Owner from '@ember/owner';
+import { service } from '@ember/service';
 import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
 import type { AssignReviewersRequest } from 'frontend/data/api';
+import type StoreService from 'frontend/services/store';
 import type { Outstanding, ReviewerGroup } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 import AssignReviewers from 'frontend/components/assign-reviewers';
@@ -48,7 +51,14 @@ const inATab = (event: MouseEvent): void => {
 };
 
 export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
+  @service declare store: StoreService;
+
   @tracked picking = false;
+
+  constructor(owner: Owner, args: ReadyConfirmSignature['Args']) {
+    super(owner, args);
+    this.store.readMentionable({ repo: args.repo, number: args.number });
+  }
 
   get unreviewed(): boolean {
     return (

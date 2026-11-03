@@ -289,7 +289,6 @@ export default class PrControlsService extends Service {
     if (control === 'close') return 'confirm-close';
     if (control === 'mark-ready') {
       void waitForPromise(this.readOutstanding(on));
-      this.store.readMentionable(on.shown);
       return 'confirm-ready';
     }
     if (control === 'assign-reviewers') {

@@ -66,8 +66,9 @@ class FakeReviewerPicks:
     def save(self, pr: Pr, pick: ReviewerPick) -> None:
         self._saved[pr] = pick
 
-    def forget(self, pr: Pr) -> None:
+    def forget(self, pr: Pr) -> bool:
         self._saved.pop(pr, None)
+        return True
 
 
 class FakeDismissals:

@@ -165,8 +165,8 @@ class JsonFileReviewerPicks:
         written.write_text(json.dumps({"reviewers": list(pick.reviewers), "detailed": pick.detailed}))
         written.replace(path)
 
-    def forget(self, pr: Pr) -> None:
-        self._path(pr).unlink(missing_ok=True)
+    def forget(self, pr: Pr) -> bool:
+        return _remove(pr, self._path(pr))
 
     def _path(self, pr: Pr) -> Path:
         return repo_subdir(self._picks_dir, pr.repo) / f"{pr.number}.json"
