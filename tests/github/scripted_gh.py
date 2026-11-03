@@ -559,6 +559,8 @@ class _World:
             return self._relevance(variables)
         if "mergeStateStatus" in query:
             return self._pulls(query, variables)
+        if "REVIEW_REQUESTED_EVENT" in query:
+            return self._asked_to_review(variables)
         if "__typename" in query:
             found = self.world.thread(variables["id"])
             return {"data": {"node": None if found is None else _node(found)}}
@@ -610,6 +612,21 @@ class _World:
             "viewerDidAuthor": record.state.author == self.world.account,
             "viewerLatestReview": {"state": "COMMENTED"} if record.viewer_reviewed else None,
         }}}}
+
+    def _asked_to_review(self, variables: dict[str, Any]) -> Any:
+        repo = Repo.parse(f"{variables['owner']}/{variables['name']}")
+        if repo not in self.world.repos:
+            return _graphql_failure(GhError(
+                f"Could not resolve to a Repository with the name '{repo}'."))
+        nodes = [{
+            "author": _graphql_author(record.state.author),
+            "requests": {"nodes": [
+                {"requestedReviewer": {} if who.startswith("@") else {"login": who}}
+                for who in record.state.pending_reviewers]},
+            "reviews": {"nodes": [{"author": _graphql_author(review.author)}
+                                  for review in record.state.reviews]},
+        } for record in self.world.prs.values() if record.pr.repo == repo]
+        return {"data": {"repository": {"pullRequests": {"nodes": nodes}}}}
 
     def _pulls(self, query: str, variables: dict[str, Any]) -> Any:
         repo = f"{variables['owner']}/{variables['name']}"

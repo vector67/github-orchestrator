@@ -1343,36 +1343,102 @@ button.copy-directory {
   color: var(--muted);
 }
 
-.decide-dialog .reviewer-picker {
-  margin: 0;
-  padding: 0;
-  border: 0;
+.decide-dialog .outstanding-assign {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 10px 22px;
+  padding: 8px 12px;
+  border: 1px dashed var(--hairline);
+}
+
+.decide-dialog .outstanding-will-ask {
+  font-size: var(--fs-m);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.decide-dialog .reviewer-search {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--page);
+  border: 1px solid var(--hairline);
+}
+
+.decide-dialog > form.assign {
+  width: min(640px, calc(100vw - 48px));
+}
+
+.decide-dialog .reviewer-groups {
+  display: grid;
+  flex-shrink: 1;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.decide-dialog .reviewer-group {
+  margin: 6px 0 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
 .decide-dialog .reviewer-list {
   display: grid;
   gap: 4px;
-  margin: 8px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .decide-dialog .reviewer-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
+  align-items: center;
   padding: 6px 12px;
   background: var(--grey-fill);
+  border: 1px solid transparent;
+}
+
+.decide-dialog .reviewer-row[aria-current="true"] {
+  background: var(--selected);
+  border-color: var(--border-strong);
 }
 
 .decide-dialog .reviewer-name {
   display: flex;
-  align-items: center;
+  flex: 1;
   gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.decide-dialog .reviewer-login {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-m);
-  cursor: pointer;
+}
+
+.decide-dialog .reviewer-fullname,
+.decide-dialog .reviewer-asked {
+  font-size: var(--fs-s);
+  color: var(--muted);
+}
+
+.decide-dialog .reviewer-asked {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.decide-dialog .reviewer-keys {
+  font-size: var(--fs-s);
 }
 
 .decide-dialog > form.hold-warning {
@@ -3604,7 +3670,8 @@ kbd {
 }
 
 :root:not([data-shortcuts]) kbd:not(#key-help kbd),
-:root:not([data-shortcuts]) .wall-foot {
+:root:not([data-shortcuts]) .wall-foot,
+:root:not([data-shortcuts]) .reviewer-keys {
   display: none;
 }
 

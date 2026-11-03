@@ -85,6 +85,12 @@ class GhCliGitHub:
             return []
         return [one["login"] for one in found]
 
+    def asked_to_review(self, repo: Repo) -> dict[str, int]:
+        try:
+            return _pull_requests.asked_to_review(self._gh, repo)
+        except (GhError, subprocess.TimeoutExpired):
+            return {}
+
     def repos_of(self, account: str) -> list[Listed] | str:
         gh = self._gh_as(account)
         try:

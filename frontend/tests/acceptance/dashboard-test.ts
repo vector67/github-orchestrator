@@ -3,8 +3,10 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   currentURL,
+  fillIn,
   find,
   findAll,
+  settled,
   triggerEvent,
   visit,
   waitFor,
@@ -1056,7 +1058,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-toast]').doesNotExist();
   });
 
-  test('with nobody asked to review, the ready question lists it as outstanding first and offers the repository’s people to ask', async function (assert) {
+  test('with nobody asked to review, the ready question lists it as outstanding first, with a button that opens Assign reviewers over it', async function (assert) {
     board().mentionable = ['dave', 'anna', 'bob'];
     onTheHub({ facts: { draft: true, pending_reviewers: [] } });
     await visit('/pr/o/r/7/dashboard');
@@ -1067,25 +1069,45 @@ module('Acceptance | dashboard', function (hooks) {
       .dom('[data-test-ready-confirm] [data-test-outstanding]')
       .hasAttribute('data-test-outstanding', 'reviewers')
       .containsText('No reviewers requested');
-    assert.deepEqual(texts('[data-test-ready-confirm] [data-test-reviewer]'), [
-      'anna',
-      'bob',
-    ]);
+    assert
+      .dom('[data-test-ready-confirm] [data-test-ready-assign]')
+      .hasText('Assign reviewers ⇧R');
+    assert.dom('[data-test-reviewer]').doesNotExist();
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
+
+    await click('[data-test-ready-assign]');
+
+    assert.dom('[data-test-assign-reviewers]').exists();
+    assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
+
+    await press('Escape');
+
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
+    assert.dom('[data-test-ready-confirm]').exists();
   });
 
-  test('the reviewers picked in the ready question are asked once it is marked ready, the starred one as detailed reviewer', async function (assert) {
+  test('the reviewers picked through the ready question are asked once it is marked ready, the starred one as detailed reviewer', async function (assert) {
     board().mentionable = ['anna', 'bob'];
     onTheHub({ facts: { draft: true, pending_reviewers: [] } });
     await visit('/pr/o/r/7/dashboard');
     await press('r');
+    await press('R');
 
     await click('[data-test-reviewer="anna"] input');
     await click('[data-test-detailed="bob"]');
 
     assert.dom('[data-test-reviewer="bob"] input').isChecked();
     assert.dom('[data-test-detailed="bob"]').hasAria('pressed', 'true');
+    assert.dom('[data-test-assign-option]').hasText('Ask them once ready ↵');
+
+    await click('[data-test-assign-option]');
+
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
+    assert
+      .dom('[data-test-ready-confirm] [data-test-will-ask]')
+      .hasText('Will ask anna and bob, bob in detail');
     assert.dom('[data-test-ready-option]').hasText('Mark ready and ask 2 y');
+    assert.deepEqual(verbs(), []);
 
     await press('y');
 
@@ -1117,7 +1139,11 @@ module('Acceptance | dashboard', function (hooks) {
     assert
       .dom('[data-test-ready-confirm]')
       .containsText('Nothing outstanding.');
-    assert.dom('[data-test-reviewer]').doesNotExist();
+    assert.dom('[data-test-ready-assign]').doesNotExist();
+
+    await press('R');
+
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
   });
 
   test('your pull request offers Assign reviewers, which asks the people picked and names the starred one detailed reviewer', async function (assert) {
@@ -1136,8 +1162,8 @@ module('Acceptance | dashboard', function (hooks) {
       .dom('[data-test-assign-reviewers]')
       .hasAttribute('role', 'dialog')
       .containsText('Assign reviewers to #7');
-    assert.deepEqual(texts('[data-test-reviewer]'), ['anna', 'bob']);
-    assert.dom('[data-test-assign-option]').isDisabled();
+    assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
+    assert.dom('[data-test-assign-option]').hasText('Ask them ↵').isDisabled();
 
     await click('[data-test-detailed="anna"]');
     await click('[data-test-assign-option]');
@@ -1165,6 +1191,159 @@ module('Acceptance | dashboard', function (hooks) {
       reviewers: ['bob'],
       detailed: null,
     });
+  });
+
+  test('Assign reviewers puts the people the repository usually asks first, most asked on top, then everyone else by login, and leaves the author out', async function (assert) {
+    board().mentionable = ['dave', 'bob', 'anna'];
+    board().reviewers = [
+      { login: 'dave', asked: 9 },
+      { login: 'carol', asked: 7 },
+      { login: 'bob', asked: 3 },
+    ];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.deepEqual(texts('[data-test-reviewer-group]'), [
+      'Usually asked',
+      'Everyone else',
+    ]);
+    assert.deepEqual(texts('[data-test-login]'), ['carol', 'bob', 'anna']);
+    assert
+      .dom('[data-test-reviewer="carol"] [data-test-asked]')
+      .hasText('7')
+      .hasAttribute('title', /recent pull requests/);
+    assert.dom('[data-test-reviewer="anna"] [data-test-asked]').doesNotExist();
+  });
+
+  test('with no one usually asked, Assign reviewers lists everyone under no heading', async function (assert) {
+    board().mentionable = ['bob', 'anna'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.dom('[data-test-reviewer-group]').doesNotExist();
+    assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
+  });
+
+  test('typing in Assign reviewers narrows the people by login or name, keeping their groups', async function (assert) {
+    board().mentionable = ['anna', 'bob', 'carol'];
+    board().reviewers = [{ login: 'carol', asked: 2 }];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('R');
+
+    assert.dom('[data-test-reviewer-search]').isFocused();
+
+    await fillIn('[data-test-reviewer-search]', 'exa');
+
+    assert.deepEqual(texts('[data-test-reviewer-group]'), ['Everyone else']);
+    assert.deepEqual(texts('[data-test-login]'), ['anna']);
+
+    await fillIn('[data-test-reviewer-search]', 'zz');
+
+    assert.dom('[data-test-login]').doesNotExist();
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .containsText('Nobody matches zz');
+  });
+
+  test('in Assign reviewers the arrows move the highlight, Space picks, * stars and Enter asks them', async function (assert) {
+    board().mentionable = ['anna', 'bob', 'carol'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('R');
+    const search = '[data-test-reviewer-search]';
+
+    assert
+      .dom('[data-test-reviewer="anna"]')
+      .hasAttribute('aria-current', 'true');
+
+    await triggerEvent(search, 'keydown', { key: 'ArrowDown' });
+    await triggerEvent(search, 'keydown', { key: ' ' });
+    await triggerEvent(search, 'keydown', { key: 'ArrowDown' });
+    await triggerEvent(search, 'keydown', { key: 'ArrowDown' });
+    await triggerEvent(search, 'keydown', { key: '*' });
+    await triggerEvent(search, 'keydown', { key: 'ArrowUp' });
+
+    assert
+      .dom('[data-test-reviewer="bob"]')
+      .hasAttribute('aria-current', 'true');
+    assert
+      .dom('[data-test-reviewer="anna"]')
+      .doesNotHaveAttribute('aria-current');
+    assert.dom('[data-test-reviewer="bob"] input').isChecked();
+    assert.dom('[data-test-reviewer="carol"] input').isChecked();
+    assert.dom('[data-test-detailed="carol"]').hasAria('pressed', 'true');
+    assert.dom(search).hasValue('');
+
+    await triggerEvent(search, 'keydown', { key: 'Enter' });
+
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['bob', 'carol'],
+      detailed: 'carol',
+    });
+  });
+
+  test('narrowing the people puts the highlight back on the first match', async function (assert) {
+    board().mentionable = ['anna', 'bob', 'carol'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('R');
+    const search = '[data-test-reviewer-search]';
+    await triggerEvent(search, 'keydown', { key: 'ArrowDown' });
+
+    await fillIn(search, 'c');
+    await triggerEvent(search, 'keydown', { key: ' ' });
+
+    assert.dom('[data-test-reviewer="carol"] input').isChecked();
+  });
+
+  test('while GitHub is being asked who can review, Assign reviewers says so', async function (assert) {
+    board().mentionable = ['anna'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    const release = board().hold(/\/api\/mentionable$/);
+
+    const pressing = press('R');
+    await waitFor('[data-test-assign-reviewers]');
+
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .containsText('Asking GitHub who can review…');
+    assert.dom('[data-test-login]').doesNotExist();
+
+    release();
+    await pressing;
+
+    assert.deepEqual(texts('[data-test-login]'), ['anna']);
+  });
+
+  test('with nobody to ask, Space and * are swallowed rather than typed into the search', async function (assert) {
+    board().mentionable = [];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('R');
+
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .containsText('Nobody to ask yet');
+
+    const swallowed = [' ', '*'].map((key) => {
+      const pressed = new KeyboardEvent('keydown', {
+        key,
+        bubbles: true,
+        cancelable: true,
+      });
+      find('[data-test-reviewer-search]')!.dispatchEvent(pressed);
+      return pressed.defaultPrevented;
+    });
+    await settled();
+
+    assert.deepEqual(swallowed, [true, true]);
+    assert.dom('[data-test-reviewer-search]').hasValue('');
   });
 
   test('a pull request that is not yours offers no Assign reviewers', async function (assert) {

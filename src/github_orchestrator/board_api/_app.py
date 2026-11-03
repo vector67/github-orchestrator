@@ -28,6 +28,7 @@ from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
     ApproveRequest,
+    AskedReviewer,
     AssignReviewersRequest,
     BaseFork,
     BriefRequest,
@@ -415,7 +416,11 @@ def list_mentionable(request: Request, board: Serving) -> Response:
     """Asked of GitHub the first time any board of the repository is asked,
     and kept until the server restarts.
     """
-    return etag.answered(request, MentionableList(logins=board.mentionable.of(board.pr.repo)))
+    counted = board.mentionable.asked_to_review(board.pr.repo)
+    reviewers = [AskedReviewer(login=login, asked=asked)
+                 for login, asked in sorted(counted.items(), key=lambda one: (-one[1], one[0]))]
+    return etag.answered(request, MentionableList(logins=board.mentionable.of(board.pr.repo),
+                                                  reviewers=reviewers))
 
 
 @reads.get("/people/{login}", tags=["people"], operation_id="readPerson",

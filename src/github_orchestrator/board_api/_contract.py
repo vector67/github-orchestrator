@@ -2122,10 +2122,20 @@ class EmojiList(BaseModel):
                                             "be asked.")
 
 
+class AskedReviewer(BaseModel):
+    login: str
+    asked: int = Field(description="How many of the repository's recent pull requests asked "
+                                   "them to review, or they reviewed unasked.")
+
+
 class MentionableList(BaseModel):
     logins: list[str] = Field(description="Everyone GitHub lets the pull request's repository "
                                           "assign, in the order it lists them. Empty when "
                                           "GitHub could not be asked.")
+    reviewers: list[AskedReviewer] = Field(
+        description="Who the repository's last 50 pull requests asked to review, or were "
+                    "reviewed by, most often first and then by login; their own pull requests "
+                    "and bots count for nobody. Empty when GitHub could not be asked.")
 
 
 class OutstandingMention(BaseModel):

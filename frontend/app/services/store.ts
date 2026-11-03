@@ -126,6 +126,7 @@ import {
   type Place,
   type PrHeader,
   type ResetStanding,
+  type ReviewerGroup,
   type Shown,
   type Stepper,
   type CommitNote,
@@ -151,6 +152,8 @@ export type {
   OutstandingItem,
   PrHeader,
   ResetStanding,
+  Reviewer,
+  ReviewerGroup,
   Summaries,
   Pip,
   PipState,
@@ -458,8 +461,8 @@ export default class StoreService extends Service {
     folder: string | null;
   } = { write: null, folder: null };
   @tracked emojis: Emoji[] = [];
-  @tracked private assignable: Record<string, string[]> = {};
-  private assignableAsked = new Set<string>();
+  @tracked private mentionables: Record<string, MentionableList> = {};
+  private mentionableAsked = new Set<string>();
   private restarting: Restarting | null = null;
 
   private joins = 0;
@@ -916,31 +919,36 @@ export default class StoreService extends Service {
     return mentionableOf(
       this.prs[key],
       this.threads[key],
-      this.assignable[pr.repo] ?? [],
+      this.mentionables[pr.repo]?.logins ?? [],
       this.names,
     );
   }
 
-  reviewable(pr: Numbered): Person[] {
+  reviewable(pr: Numbered): ReviewerGroup[] | null {
+    const listed = this.mentionables[pr.repo];
+    if (!listed?.logins.length && this.mentionableAsked.has(pr.repo))
+      return null;
     return reviewersOf(
       this.prs[keyOf(pr.repo, pr.number)],
-      this.assignable[pr.repo] ?? [],
+      listed ?? { logins: [], reviewers: [] },
       this.names,
     );
   }
 
   readMentionable(pr: Numbered): void {
-    if (this.assignableAsked.has(pr.repo)) return;
-    this.assignableAsked.add(pr.repo);
+    if (this.mentionableAsked.has(pr.repo)) return;
+    this.mentionableAsked.add(pr.repo);
     const at = `${this.here.prefixOf(pr)}/api/mentionable`;
     void waitForPromise(
       fetched<MentionableList>(at).then(
-        ({ logins }) => {
-          if (logins.length === 0) this.assignableAsked.delete(pr.repo);
-          this.assignable = { ...this.assignable, [pr.repo]: logins };
+        (answered) => {
+          if (answered.logins.length === 0)
+            this.mentionableAsked.delete(pr.repo);
+          this.mentionables = { ...this.mentionables, [pr.repo]: answered };
         },
         (trouble: unknown) => {
-          this.assignableAsked.delete(pr.repo);
+          this.mentionableAsked.delete(pr.repo);
+          this.mentionables = { ...this.mentionables };
           return reportError('mentionable', trouble);
         },
       ),

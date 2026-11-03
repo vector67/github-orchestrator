@@ -54,6 +54,11 @@ export interface ApproveRequest {
   ticket?: Ticket | null;
 }
 
+export interface AskedReviewer {
+  login: string;
+  asked: number;
+}
+
 export interface AssignReviewersRequest {
   reviewers: string[];
   detailed: string | null;
@@ -544,6 +549,7 @@ export interface MentionFact {
 
 export interface MentionableList {
   logins: string[];
+  reviewers: AskedReviewer[];
 }
 
 export interface Mentions {

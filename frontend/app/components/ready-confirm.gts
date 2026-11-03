@@ -3,17 +3,17 @@ import { tracked } from '@glimmer/tracking';
 import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
-import type { AssignReviewersRequest, Person } from 'frontend/data/api';
-import type { Outstanding } from 'frontend/services/store';
+import type { AssignReviewersRequest } from 'frontend/data/api';
+import type { Outstanding, ReviewerGroup } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
-import ReviewerPicker from 'frontend/components/reviewer-picker';
+import AssignReviewers from 'frontend/components/assign-reviewers';
 
 interface ReadyConfirmSignature {
   Args: {
     repo: string;
     number: number;
     outstanding: Outstanding | null;
-    people: Person[];
+    groups: ReviewerGroup[] | null;
     mark: (pick: AssignReviewersRequest) => void;
     cancel: () => void;
   };
@@ -31,6 +31,18 @@ const sentenceOf = (outstanding: Outstanding | null): string => {
 
 const isFirst = (index: number): boolean => index === 0;
 
+const isReviewers = (key: string): boolean => key === 'reviewers';
+
+const named = (logins: string[]): string =>
+  logins.length < 2
+    ? (logins[0] ?? '')
+    : `${logins.slice(0, -1).join(', ')} and ${logins[logins.length - 1]}`;
+
+const willAsk = (pick: AssignReviewersRequest): string =>
+  `Will ask ${named(pick.reviewers)}${
+    pick.detailed ? `, ${pick.detailed} in detail` : ''
+  }`;
+
 const threadAt = (repo: string, number: number, key: string): string[] => [
   ...repo.split('/'),
   String(number),
@@ -45,6 +57,7 @@ const inATab = (event: MouseEvent): void => {
 
 export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
   @tracked pick: AssignReviewersRequest = { reviewers: [], detailed: null };
+  @tracked picking = false;
 
   get unreviewed(): boolean {
     return (
@@ -54,16 +67,28 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
     );
   }
 
+  get asking(): number {
+    return this.pick.reviewers.length;
+  }
+
   get option(): string {
-    const asking = this.pick.reviewers.length;
-    if (asking) return `Mark ready and ask ${asking}`;
+    if (this.asking) return `Mark ready and ask ${this.asking}`;
     return anything(this.args.outstanding)
       ? 'Mark ready anyway'
       : 'Mark it ready';
   }
 
-  choose = (pick: AssignReviewersRequest) => {
+  openPicker = () => {
+    this.picking = true;
+  };
+
+  closePicker = () => {
+    this.picking = false;
+  };
+
+  chosen = (pick: AssignReviewersRequest) => {
     this.pick = pick;
+    this.picking = false;
   };
 
   mark = () => {
@@ -71,6 +96,10 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
   };
 
   answering = (key: string): boolean => {
+    if (key === 'R' && this.unreviewed) {
+      this.openPicker();
+      return true;
+    }
     if (key !== 'y') return false;
     this.mark();
     return true;
@@ -142,15 +171,33 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
                   {{/each}}
                 </ul>
               </details>
+              {{#if (isReviewers group.kind)}}
+                <div class="outstanding-assign">
+                  {{#if this.asking}}
+                    <span
+                      class="outstanding-will-ask"
+                      data-test-will-ask
+                    >{{willAsk this.pick}}</span>
+                    <button
+                      type="button"
+                      class="btn"
+                      data-test-ready-assign
+                      {{on "click" this.openPicker}}
+                    >Change <kbd>⇧R</kbd></button>
+                  {{else}}
+                    <span class="outstanding-will-ask">Ask someone now, so the
+                      review starts the moment it is ready.</span>
+                    <button
+                      type="button"
+                      class="btn"
+                      data-test-ready-assign
+                      {{on "click" this.openPicker}}
+                    >Assign reviewers <kbd>⇧R</kbd></button>
+                  {{/if}}
+                </div>
+              {{/if}}
             {{/each}}
           </div>
-          {{#if this.unreviewed}}
-            <ReviewerPicker
-              @people={{@people}}
-              @pick={{this.pick}}
-              @choose={{this.choose}}
-            />
-          {{/if}}
         {{else}}
           <p class="note">Nothing outstanding.</p>
         {{/if}}
@@ -169,6 +216,16 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
           >Cancel <kbd>Esc</kbd></button>
         </div>
       </form>
+      {{#if this.picking}}
+        <AssignReviewers
+          @number={{@number}}
+          @groups={{@groups}}
+          @pick={{this.pick}}
+          @action="Ask them once ready"
+          @assign={{this.chosen}}
+          @cancel={{this.closePicker}}
+        />
+      {{/if}}
     </div>
   </template>
 }

@@ -1,4 +1,5 @@
 import itertools
+from collections import Counter
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
@@ -67,6 +68,13 @@ class FakePullRequest:
     threads: list[Thread] = field(default_factory=list)
     review_comments: dict[int, list[ReviewComment]] = field(default_factory=dict)
     pending_review: int | None = None
+
+
+def _people_on(state: PullRequestState) -> set[str]:
+    requested = [who for who in state.pending_reviewers if not who.startswith("@")]
+    reviewed = [review.author for review in state.reviews if review.author]
+    return {login for login in (*requested, *reviewed)
+            if login != state.author and not login.endswith("[bot]")}
 
 
 def _as_github_answers(thread: Thread) -> Thread:
@@ -146,6 +154,13 @@ class FakeGitHub:
 
     def assignees(self, repo: Repo) -> list[str]:
         return self.assignable.get(repo, [])
+
+    def asked_to_review(self, repo: Repo) -> dict[str, int]:
+        counts: Counter[str] = Counter()
+        for record in self.prs.values():
+            if record.pr.repo == repo:
+                counts.update(_people_on(record.state))
+        return dict(counts)
 
     def repos_of(self, account: str) -> list[Listed] | str:
         refused = self.check_login(account)

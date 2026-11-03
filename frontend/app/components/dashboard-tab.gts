@@ -41,13 +41,17 @@ import {
   type Offer,
 } from 'frontend/services/pr-controls';
 import type StoreService from 'frontend/services/store';
-import type { Outstanding, Summaries } from 'frontend/services/store';
+import type {
+  Outstanding,
+  ReviewerGroup,
+  Summaries,
+} from 'frontend/services/store';
 import type TerminalService from 'frontend/services/terminal';
 import type ToastsService from 'frontend/services/toasts';
 import modal from 'frontend/modifiers/modal';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import AssignReviewers from 'frontend/components/assign-reviewers';
-import type { AssignReviewersRequest, Person } from 'frontend/data/api';
+import type { AssignReviewersRequest } from 'frontend/data/api';
 
 type Pane = 'notes' | 'agent';
 
@@ -268,9 +272,9 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     if (on) void this.controls.assignReviewers(on, pick);
   };
 
-  get people(): Person[] {
+  get groups(): ReviewerGroup[] | null {
     const pr = this.here.pr;
-    return pr ? this.store.reviewable(pr) : [];
+    return pr ? this.store.reviewable(pr) : null;
   }
 
   get readyAbout(): Numbered | null {
@@ -534,7 +538,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @repo={{this.readyAbout.repo}}
             @number={{this.readyAbout.number}}
             @outstanding={{this.outstanding}}
-            @people={{this.people}}
+            @groups={{this.groups}}
             @mark={{this.markReady}}
             @cancel={{this.cancelReady}}
           />
@@ -542,7 +546,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
         {{#if (eq this.asking "assign")}}
           <AssignReviewers
             @number={{this.reading.number}}
-            @people={{this.people}}
+            @groups={{this.groups}}
+            @action="Ask them"
             @assign={{this.assignReviewers}}
             @cancel={{this.cancelAsking}}
           />

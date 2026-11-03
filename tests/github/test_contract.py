@@ -630,6 +630,23 @@ def test_the_assignees_are_everyone_github_lets_the_repo_assign(world, github):
     assert github.assignees(Repo.parse(REPO)) == ["octocat", "hubot"]
 
 
+def test_who_is_asked_to_review_is_counted_over_the_repos_pull_requests_requests_and_reviews_alike(
+        world, github):
+    world.add_pr(a_pr(1, REPO), _state(pending_reviewers=("anna", "bob", "@acme/owners")))
+    world.add_pr(a_pr(2, REPO), _state(reviews=(Review("anna", ReviewState.APPROVED),
+                                                Review("hubot[bot]", ReviewState.COMMENTED))))
+    world.add_pr(a_pr(3, REPO), _state(author="anna", pending_reviewers=("carol",),
+                                       reviews=(Review("anna", ReviewState.COMMENTED),)),
+                 status="MERGED")
+    world.add_pr(a_pr(4, "acme/gadgets"), _state(pending_reviewers=("dave",)))
+
+    assert github.asked_to_review(Repo.parse(REPO)) == {"anna": 2, "bob": 1, "carol": 1}
+
+
+def test_a_repo_github_cannot_be_asked_about_has_nobody_asked_to_review(world, github):
+    assert github.asked_to_review(Repo.parse("octocat/nowhere")) == {}
+
+
 def test_the_repos_an_account_lists_come_newest_push_first_with_what_it_may_do_there(
         world, github):
     world.listed = [Repo.parse("acme/gadgets"), Repo.parse(REPO), Repo.parse("octocat/spoon-knife")]

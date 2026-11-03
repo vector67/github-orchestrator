@@ -112,7 +112,7 @@ def test_the_mentionable_are_asked_of_github_once_for_each_repo():
         asked.append(repo)
         return [f"{repo.owner}-bot"]
 
-    mentionable = FetchedMentionable(assignees)
+    mentionable = FetchedMentionable(assignees, lambda repo: {})
     widgets, gadgets = Repo("acme", "widgets"), Repo("acme", "gadgets")
 
     answers = [mentionable.of(widgets), mentionable.of(widgets), mentionable.of(gadgets)]
@@ -122,7 +122,32 @@ def test_the_mentionable_are_asked_of_github_once_for_each_repo():
 
 def test_a_repo_github_answered_no_one_for_is_asked_again():
     answers = [[], ["octocat"]]
-    mentionable = FetchedMentionable(lambda repo: answers.pop(0))
+    mentionable = FetchedMentionable(lambda repo: answers.pop(0), lambda repo: {})
     widgets = Repo("acme", "widgets")
 
     assert [mentionable.of(widgets), mentionable.of(widgets)] == [[], ["octocat"]]
+
+
+def test_who_a_repo_asks_to_review_is_asked_of_github_once_for_each_repo():
+    asked: list[Repo] = []
+
+    def asked_to_review(repo: Repo) -> dict[str, int]:
+        asked.append(repo)
+        return {f"{repo.owner}-bot": 2}
+
+    mentionable = FetchedMentionable(lambda repo: [], asked_to_review)
+    widgets, gadgets = Repo("acme", "widgets"), Repo("acme", "gadgets")
+
+    answers = [mentionable.asked_to_review(widgets), mentionable.asked_to_review(widgets),
+               mentionable.asked_to_review(gadgets)]
+
+    assert (answers, asked) == ([{"acme-bot": 2}] * 3, [widgets, gadgets])
+
+
+def test_a_repo_github_counted_nobody_for_is_asked_again():
+    answers: list[dict[str, int]] = [{}, {"octocat": 1}]
+    mentionable = FetchedMentionable(lambda repo: [], lambda repo: answers.pop(0))
+    widgets = Repo("acme", "widgets")
+
+    assert [mentionable.asked_to_review(widgets),
+            mentionable.asked_to_review(widgets)] == [{}, {"octocat": 1}]

@@ -5,6 +5,7 @@ import type {
   ConversationState,
   Diff,
   ManagerFlags,
+  MentionableList,
   Operation,
   Person,
   PrFacts,
@@ -1568,17 +1569,41 @@ export function timelineOf(
   return timeline;
 }
 
+export interface Reviewer extends Person {
+  asked: number;
+}
+
+export interface ReviewerGroup {
+  label: string | null;
+  people: Reviewer[];
+}
+
+const byLogin = (one: Reviewer, other: Reviewer): number =>
+  one.login < other.login ? -1 : one.login > other.login ? 1 : 0;
+
+const mostAsked = (one: Reviewer, other: Reviewer): number =>
+  other.asked - one.asked || byLogin(one, other);
+
 export function reviewersOf(
   pr: PrEntity | undefined,
-  assignable: string[],
+  listed: MentionableList,
   names: Record<string, string | null>,
-): Person[] {
-  return assignable
+): ReviewerGroup[] {
+  const asked = new Map(listed.reviewers.map((one) => [one.login, one.asked]));
+  const people = unique([...listed.logins, ...asked.keys()])
     .filter((login) => login !== pr?.author)
     .map((login) => ({
       login,
       name: Object.hasOwn(names, login) ? (names[login] ?? null) : null,
+      asked: asked.get(login) ?? 0,
     }));
+  const usual = people.filter((one) => one.asked > 0).sort(mostAsked);
+  const others = people.filter((one) => one.asked === 0).sort(byLogin);
+  if (!usual.length) return [{ label: null, people: others }];
+  return [
+    { label: 'Usually asked', people: usual },
+    { label: 'Everyone else', people: others },
+  ].filter((group) => group.people.length > 0);
 }
 
 export function mentionableOf(

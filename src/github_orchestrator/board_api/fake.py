@@ -224,9 +224,13 @@ class FakeEmojis:
 @dataclass
 class FakeMentionable:
     listed: dict[Repo, list[str]] = field(default_factory=dict)
+    asked: dict[Repo, dict[str, int]] = field(default_factory=dict)
 
     def of(self, repo: Repo) -> list[str]:
         return self.listed.get(repo, [])
+
+    def asked_to_review(self, repo: Repo) -> dict[str, int]:
+        return self.asked.get(repo, {})
 
 
 @dataclass

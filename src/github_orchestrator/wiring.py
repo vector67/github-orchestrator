@@ -406,7 +406,7 @@ class GitHubProvider(Provider):
 
     @provide
     def mentionable(self, client: GhCliGitHub) -> Mentionable:
-        return FetchedMentionable(client.assignees)
+        return FetchedMentionable(client.assignees, client.asked_to_review)
 
 
 @dataclass(frozen=True)
@@ -1255,9 +1255,12 @@ class FetchedEmojis:
 
 
 class FetchedMentionable:
-    def __init__(self, assignees: Callable[[Repo], list[str]]) -> None:
+    def __init__(self, assignees: Callable[[Repo], list[str]],
+                 asked_to_review: Callable[[Repo], dict[str, int]]) -> None:
         self._assignees = assignees
+        self._asked_to_review = asked_to_review
         self._asked: dict[Repo, list[str]] = {}
+        self._counted: dict[Repo, dict[str, int]] = {}
 
     def of(self, repo: Repo) -> list[str]:
         if repo in self._asked:
@@ -1266,6 +1269,14 @@ class FetchedMentionable:
         if logins:
             self._asked[repo] = logins
         return logins
+
+    def asked_to_review(self, repo: Repo) -> dict[str, int]:
+        if repo in self._counted:
+            return self._counted[repo]
+        counts = self._asked_to_review(repo)
+        if counts:
+            self._counted[repo] = counts
+        return counts
 
 
 class EveryTerminal:
@@ -1650,7 +1661,7 @@ class PreviewHubProvider(Provider):
 
     @provide
     def mentionable(self, access: Access) -> Mentionable:
-        return FetchedMentionable(access.assignees)
+        return FetchedMentionable(access.assignees, access.asked_to_review)
 
     @provide
     def watcher_health(self) -> WatcherHealth:

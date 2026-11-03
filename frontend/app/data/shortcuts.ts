@@ -81,7 +81,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       },
       {
         keys: [capOfControl('assign-reviewers')],
-        does: 'Assign reviewers, starring the detailed reviewer',
+        does: 'Assign reviewers: type to find someone, ↑ ↓ move, Space picks, * stars the detailed reviewer, ↵ asks them',
       },
       {
         keys: [capOfControl('take-over')],

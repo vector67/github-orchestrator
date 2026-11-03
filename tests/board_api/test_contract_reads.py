@@ -133,7 +133,19 @@ def test_the_mentionable_are_everyone_github_lets_the_repo_assign():
 
     answer = client_for(mentionable=mentionable).get("/api/mentionable")
 
-    assert answer.json() == {"logins": ["hubot", "octocat"]}
+    assert answer.json() == {"logins": ["hubot", "octocat"], "reviewers": []}
+
+
+def test_the_mentionable_come_with_who_the_repo_asks_to_review_most_often_first():
+    mentionable = FakeMentionable({THE_PR.repo: ["hubot", "octocat"]},
+                                  {THE_PR.repo: {"octocat": 2, "anna": 5, "hubot": 2}})
+
+    answer = client_for(mentionable=mentionable).get("/api/mentionable")
+
+    assert answer.json() == {"logins": ["hubot", "octocat"],
+                             "reviewers": [{"login": "anna", "asked": 5},
+                                           {"login": "hubot", "asked": 2},
+                                           {"login": "octocat", "asked": 2}]}
 
 
 def test_one_person_is_read_by_login():

@@ -2028,6 +2028,21 @@
    },
    "type": "object"
   },
+  "AskedReviewer": {
+   "properties": {
+    "asked": {
+     "type": "integer"
+    },
+    "login": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "login",
+    "asked"
+   ],
+   "type": "object"
+  },
   "AssignReviewersRequest": {
    "properties": {
     "detailed": {
@@ -4686,10 +4701,17 @@
       "type": "string"
      },
      "type": "array"
+    },
+    "reviewers": {
+     "items": {
+      "$ref": "#/components/schemas/AskedReviewer"
+     },
+     "type": "array"
     }
    },
    "required": [
-    "logins"
+    "logins",
+    "reviewers"
    ],
    "type": "object"
   },

@@ -8,7 +8,7 @@ import type RouterService from '@ember/routing/router-service';
 import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
-import type { AssignReviewersRequest, Person } from 'frontend/data/api';
+import type { AssignReviewersRequest } from 'frontend/data/api';
 import HubBar from 'frontend/components/hub-bar';
 import MigrationWait from 'frontend/components/migration-wait';
 import PendingRing from 'frontend/components/pending-ring';
@@ -21,6 +21,7 @@ import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 import type {
   Outstanding,
+  ReviewerGroup,
   WallRow,
   WallSection,
 } from 'frontend/services/store';
@@ -162,7 +163,7 @@ export default class Wall extends Component<WallSignature> {
     void this.controls.markReady(this.controls.ofRow(pr), pick);
   };
 
-  peopleOf = (pr: WallRow): Person[] => this.store.reviewable(pr);
+  groupsOf = (pr: WallRow): ReviewerGroup[] | null => this.store.reviewable(pr);
 
   open = (pr: WallRow) => {
     void this.router.transitionTo(pageOf(pr));
@@ -433,7 +434,7 @@ export default class Wall extends Component<WallSignature> {
                   @repo={{pr.repo}}
                   @number={{pr.number}}
                   @outstanding={{this.outstandingOf pr}}
-                  @people={{this.peopleOf pr}}
+                  @groups={{this.groupsOf pr}}
                   @mark={{fn this.markReady pr}}
                   @cancel={{this.cancelReady}}
                 />

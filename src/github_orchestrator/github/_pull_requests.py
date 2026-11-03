@@ -1,8 +1,9 @@
 import logging
+from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github._gh_cli import Gh
 from github_orchestrator.github.interface import (
@@ -323,6 +324,46 @@ mutation($id: ID!) {
 def mark_ready(gh: Gh, pr: Pr) -> None:
     pull = gh.api(f"repos/{pr.repo}/pulls/{pr.number}")
     gh.graphql_mutate(_MARK_READY_MUTATION, {"id": pull["node_id"]})
+
+
+RECENT = 50
+
+_ASKED_TO_REVIEW_QUERY = """
+query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    pullRequests(first: %(recent)d, orderBy: {field: CREATED_AT, direction: DESC}) {
+      nodes {
+        author { login __typename }
+        requests: timelineItems(itemTypes: [REVIEW_REQUESTED_EVENT], first: %(page)d) {
+          nodes { ... on ReviewRequestedEvent { requestedReviewer { ... on User { login } } } }
+        }
+        reviews(first: %(page)d) { nodes { author { login __typename } } }
+      }
+    }
+  }
+}
+""" % {"recent": RECENT, "page": PAGE}
+
+
+def _nodes(connection: Any) -> list[dict[str, Any]]:
+    return [node or {} for node in (connection or {}).get("nodes") or []]
+
+
+def _people_on(pull: dict[str, Any]) -> set[str]:
+    author = _author_login(pull.get("author"))
+    requested = [_author_login(node.get("requestedReviewer")) for node in _nodes(pull.get("requests"))]
+    reviewed = [_author_login(node.get("author")) for node in _nodes(pull.get("reviews"))]
+    return {login for login in (*requested, *reviewed)
+            if login and login != author and not login.endswith("[bot]")}
+
+
+def asked_to_review(gh: Gh, repo: Repo) -> dict[str, int]:
+    result = gh.graphql(_ASKED_TO_REVIEW_QUERY, {"owner": repo.owner, "name": repo.name})
+    found = ((result.get("data") or {}).get("repository")) or {}
+    counts: Counter[str] = Counter()
+    for pull in _nodes(found.get("pullRequests")):
+        counts.update(_people_on(pull))
+    return dict(counts)
 
 
 def assign_reviewers(gh: Gh, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> None:

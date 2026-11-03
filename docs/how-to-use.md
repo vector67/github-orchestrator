@@ -523,9 +523,12 @@ own draft, which first lists what is still outstanding (nobody asked to review,
 unsent drafts, Board threads waiting on you, threads unresolved on GitHub that
 the Board has not resolved or does not track, failing CI, a needed rebase,
 unpushed commits and agent work) and then marks it ready on GitHub; when nobody
-is asked to review it also offers the repository's people to ask, as Assign
-reviewers does, **Assign reviewers** (`⇧R`, then `y`) on your own PR, which asks
-the people you tick to review on GitHub and writes the one you star as
+is asked to review, that item carries an Assign reviewers button (`⇧R`) that
+opens the same dialog, and the people you pick there are asked once it is
+ready, **Assign reviewers** (`⇧R`) on your own PR, which lists the people the
+repository usually asks first, most asked on top, then everyone else by login:
+type to find someone, `↑` and `↓` move, `Space` picks, `*` stars the detailed
+reviewer and `↵` asks them to review on GitHub, writing the starred one as
 `Detailed reviewer: @<login>` in the description, replacing a line already
 there, **Take over**
 (`⇧T`) on someone else's PR, after which the orchestrator treats it as yours:
