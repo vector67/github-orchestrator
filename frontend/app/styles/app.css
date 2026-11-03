@@ -3926,6 +3926,7 @@ kbd {
 
 .switcher-row {
   display: flex;
+  box-sizing: border-box;
   width: calc(100% - 24px);
   font: inherit;
   text-align: left;
