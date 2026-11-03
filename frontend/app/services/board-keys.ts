@@ -23,6 +23,12 @@ export default class BoardKeysService extends Service implements Keymap {
     void this.router.transitionTo('conversations.detail', key);
   };
 
+  hrefOf = (key: string): string =>
+    this.router.urlFor('conversations.detail', key);
+
+  readyStep = (by: number): string | undefined =>
+    this.landing(by, this.threads.readyKeys);
+
   nextReady = (): void => {
     this.walk(1, this.threads.readyKeys);
   };
@@ -42,9 +48,13 @@ export default class BoardKeysService extends Service implements Keymap {
     return true;
   };
 
-  private walk(by: number, order: string[]): void {
+  private landing(by: number, order: string[]): string | undefined {
     const open = this.openId;
-    const landed = stepped(order, open === null ? -1 : order.indexOf(open), by);
+    return stepped(order, open === null ? -1 : order.indexOf(open), by);
+  }
+
+  private walk(by: number, order: string[]): void {
+    const landed = this.landing(by, order);
     if (landed) this.open(landed);
   }
 

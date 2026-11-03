@@ -35,6 +35,7 @@ import {
 } from 'frontend/services/pr-controls';
 import type ToastsService from 'frontend/services/toasts';
 import { moves, pulses, selects } from 'frontend/motion';
+import navigates from 'frontend/modifiers/navigates';
 
 const same = (one: unknown, other: unknown): boolean => one === other;
 
@@ -224,7 +225,7 @@ export default class Wall extends Component<WallSignature> {
     const pr = this.chosen;
     if (
       key === 'Enter' &&
-      document.activeElement?.closest('a[href], button:not(.wall-lead)')
+      document.activeElement?.closest(':is(a[href], button):not(.wall-lead)')
     )
       return false;
     if (key === 'j' || key === 'k') {
@@ -311,15 +312,15 @@ export default class Wall extends Component<WallSignature> {
                 }}
                 data-test-wall-row={{keyOf pr}}
               >
-                <button
-                  type="button"
+                <a
+                  href={{pageOf pr}}
                   class="wall-lead"
                   title="Open #{{pr.number}} · nothing runs until you choose"
                   aria-label="{{reading.move}}: {{reading.title}}"
                   aria-describedby={{says}}
                   data-test-wall-lead
                   {{on "focus" (fn this.select pr)}}
-                  {{on "click" (fn this.open pr)}}
+                  {{navigates (fn this.open pr)}}
                 >
                   <span class="move-line"><span
                       class="verb"
@@ -391,7 +392,7 @@ export default class Wall extends Component<WallSignature> {
                         {{reading.whose}}{{/if}}{{#if reading.branch}}
                         ·
                         {{reading.branch}}{{/if}}.</span></span>
-                </button>
+                </a>
                 <span class="row-controls">
                   {{#if (this.releasable pr)}}<button
                       type="button"

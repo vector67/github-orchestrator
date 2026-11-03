@@ -569,7 +569,9 @@ module('Acceptance | motion', function (hooks) {
 
     await click('#c-t2');
 
-    assert.dom('#rows [aria-selected="true"]').hasAttribute('id', 'c-t2');
+    assert
+      .dom('#rows li:has(> [aria-selected="true"])')
+      .hasAttribute('id', 'c-t2');
     assert.deepEqual(sliding(), ['c-t2'], 'the highlight slides onto the row');
 
     slides().forEach((one) => one.finish());
@@ -643,13 +645,17 @@ module('Acceptance | motion', function (hooks) {
 
     await press('j', 11);
 
-    assert.dom('#rows [aria-selected="true"]').hasAttribute('id', 'c-t11');
+    assert
+      .dom('#rows li:has(> [aria-selected="true"])')
+      .hasAttribute('id', 'c-t11');
     assert.true(rail.scrollTop > 0, 'the rail scrolled down');
     assert.true(insideOf(rail, '#c-t11'), 'the selected row is in view');
 
     await press('k', 11);
 
-    assert.dom('#rows [aria-selected="true"]').hasAttribute('id', 'c-t0');
+    assert
+      .dom('#rows li:has(> [aria-selected="true"])')
+      .hasAttribute('id', 'c-t0');
     assert.true(insideOf(rail, '#c-t0'), 'the selected row is in view');
     assert.deepEqual(slides(), [], 'nothing is left in flight');
   });

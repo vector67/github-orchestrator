@@ -2,13 +2,13 @@ import type { TOC } from '@ember/component/template-only';
 import type { Row } from 'frontend/data/rows';
 
 export interface BoardCardSignature {
-  Element: HTMLButtonElement;
-  Args: { row: Row };
+  Element: HTMLAnchorElement;
+  Args: { row: Row; href: string };
 }
 
 const BoardCard: TOC<BoardCardSignature> = <template>
-  <button
-    type="button"
+  <a
+    href={{@href}}
     class="board-card"
     data-test-card={{@row.id}}
     data-group={{@row.group}}
@@ -39,7 +39,7 @@ const BoardCard: TOC<BoardCardSignature> = <template>
     {{#if @row.meta}}
       <span class="card-meta" data-test-card-meta>{{@row.meta}}</span>
     {{/if}}
-  </button>
+  </a>
 </template>;
 
 export default BoardCard;

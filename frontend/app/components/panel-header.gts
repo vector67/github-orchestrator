@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { on } from '@ember/modifier';
 import { squareTitleOf } from 'frontend/data/groups';
+import navigates from 'frontend/modifiers/navigates';
 import type { Panel } from 'frontend/data/panel';
 import type BoardKeysService from 'frontend/services/board-keys';
 
@@ -18,6 +18,11 @@ export default class PanelHeader extends Component<PanelHeaderSignature> {
       ? 'Next answered →'
       : 'Next ready →';
   }
+
+  hrefOfStep = (by: number): string | undefined => {
+    const landing = this.boardKeys.readyStep(by);
+    return landing ? this.boardKeys.hrefOf(landing) : undefined;
+  };
 
   get roleLineShown() {
     return Boolean(this.args.panel.started || this.args.panel.role_line);
@@ -89,18 +94,18 @@ export default class PanelHeader extends Component<PanelHeaderSignature> {
         </span>
       </span>
       <span class="panel-walk">
-        <button
-          type="button"
+        <a
+          href={{this.hrefOfStep -1}}
           class="walk"
           data-test-prev
-          {{on "click" this.boardKeys.previousReady}}
-        >← Prev</button>
-        <button
-          type="button"
+          {{navigates this.boardKeys.previousReady}}
+        >← Prev</a>
+        <a
+          href={{this.hrefOfStep 1}}
           class="walk"
           data-test-next
-          {{on "click" this.boardKeys.nextReady}}
-        >{{this.nextLabel}}</button>
+          {{navigates this.boardKeys.nextReady}}
+        >{{this.nextLabel}}</a>
       </span>
     </header>
   </template>

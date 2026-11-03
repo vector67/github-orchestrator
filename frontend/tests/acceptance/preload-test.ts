@@ -24,7 +24,7 @@ module('Acceptance | preload', function (hooks) {
     await visit('/pr/o/r/7/conversations');
 
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/b');
-    assert.dom('#c-b').hasAttribute('aria-selected', 'true');
+    assert.dom('#c-b [role="option"]').hasAttribute('aria-selected', 'true');
   });
 
   test('the queue lands with the first row open too', async function (assert) {

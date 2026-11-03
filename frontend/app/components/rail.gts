@@ -1,8 +1,8 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import RailRow from 'frontend/components/rail-row';
+import navigates from 'frontend/modifiers/navigates';
 import { WAITING_FOR_FACTS } from 'frontend/components/thread-panel';
 import type { Section } from 'frontend/services/threads';
 import type BoardService from 'frontend/services/board';
@@ -62,11 +62,12 @@ export default class Rail extends Component<RailSignature> {
         {{#each section.rows key="id" as |row|}}
           <RailRow
             @row={{row}}
+            @href={{this.boardKeys.hrefOf row.id}}
             @selectedId={{this.selected}}
             data-flip-key={{row.id}}
             data-flip-group={{section.group.key}}
             data-decided={{if (this.board.isDecided row.id) "true"}}
-            {{on "click" (fn this.boardKeys.open row.id)}}
+            {{navigates (fn this.boardKeys.open row.id)}}
           />
         {{/each}}
       {{/each}}

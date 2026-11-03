@@ -6,7 +6,8 @@ import { fn } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
 import StateChip from 'frontend/components/state-chip';
 import { dashboardOf, type Reading } from 'frontend/data/dashboard';
-import { failingOf, keyOf, type Numbered } from 'frontend/data/wall';
+import { failingOf, keyOf, pageOf, type Numbered } from 'frontend/data/wall';
+import navigates from 'frontend/modifiers/navigates';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 import type { WallRow } from 'frontend/services/store';
@@ -66,13 +67,13 @@ export default class Switcher extends Component<SwitcherSignature> {
             <span class="group-count">{{section.prs.length}}</span></div>
           {{#each section.prs key="key" as |pr|}}
             {{#let (this.readingOf pr) as |reading|}}
-              <button
-                type="button"
+              <a
+                href={{pageOf pr}}
                 class="switcher-row edge lvl-{{section.level}}"
                 aria-current={{if (this.isCurrent pr) "true"}}
                 data-square={{reading.edge}}
                 data-test-switcher-row={{keyOf pr}}
-                {{on "click" (fn @pick pr)}}
+                {{navigates (fn @pick pr)}}
               ><span class="switcher-text"><span
                     class="verb"
                     data-test-verb
@@ -89,7 +90,7 @@ export default class Switcher extends Component<SwitcherSignature> {
                   >{{#if this.store.severalReposShown}}<span
                         data-test-row-repo
                       >{{pr.repo}}</span>{{/if}}#{{pr.number}}
-                    {{reading.title}}</span></span></button>
+                    {{reading.title}}</span></span></a>
             {{/let}}
           {{/each}}
         {{/each}}

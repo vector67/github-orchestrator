@@ -5,6 +5,7 @@ export interface RailRowSignature {
   Element: HTMLLIElement;
   Args: {
     row: Row;
+    href: string;
     selectedId?: string | null;
   };
 }
@@ -20,15 +21,20 @@ function selectedWord(row: Row, selectedId?: string | null): string {
 const RailRow: TOC<RailRowSignature> = <template>
   <li
     class="rail-row edge"
-    role="option"
+    role="presentation"
     id={{rowId @row}}
-    aria-selected={{selectedWord @row @selectedId}}
     data-group={{@row.group}}
     data-square={{@row.square}}
     data-pending={{if @row.pending "true"}}
     ...attributes
   >
-    <span class="rail-row-text">
+    <a
+      class="rail-row-text"
+      href={{@href}}
+      role="option"
+      aria-selected={{selectedWord @row @selectedId}}
+      tabindex="-1"
+    >
       <span class="gist" data-test-gist>{{@row.gist}}</span>
       {{#if @row.reference}}
         <span class="path" data-test-path>{{@row.reference}}</span>
@@ -46,7 +52,7 @@ const RailRow: TOC<RailRowSignature> = <template>
       {{#if @row.meta}}
         <span class="meta" data-test-meta>{{@row.meta}}</span>
       {{/if}}
-    </span>
+    </a>
   </li>
 </template>;
 
