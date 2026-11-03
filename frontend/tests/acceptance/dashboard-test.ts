@@ -1069,9 +1069,10 @@ module('Acceptance | dashboard', function (hooks) {
       .dom('[data-test-ready-confirm] [data-test-outstanding]')
       .hasAttribute('data-test-outstanding', 'reviewers')
       .containsText('No reviewers requested');
-    assert
-      .dom('[data-test-ready-confirm] [data-test-ready-assign]')
-      .hasText('Assign reviewers ⇧R');
+    assert.deepEqual(
+      texts('[data-test-ready-confirm] .dialog-actions button'),
+      ['Mark ready anyway y', 'Assign reviewers ⇧R', 'Cancel Esc'],
+    );
     assert.dom('[data-test-reviewer]').doesNotExist();
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
 
@@ -1098,15 +1099,18 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert.dom('[data-test-reviewer="bob"] input').isChecked();
     assert.dom('[data-test-detailed="bob"]').hasAria('pressed', 'true');
-    assert.dom('[data-test-assign-option]').hasText('Ask them once ready ↵');
+    assert.dom('[data-test-assign-option]').hasText('Assign them once ready ↵');
 
     await click('[data-test-assign-option]');
 
     assert.dom('[data-test-assign-reviewers]').doesNotExist();
     assert
-      .dom('[data-test-ready-confirm] [data-test-will-ask]')
-      .hasText('Will ask anna and bob, bob in detail');
-    assert.dom('[data-test-ready-option]').hasText('Mark ready and ask 2 y');
+      .dom('[data-test-ready-confirm] [data-test-outstanding="reviewers"]')
+      .doesNotExist();
+    assert
+      .dom('[data-test-ready-confirm] [data-test-ready-assign]')
+      .hasText('Assign reviewers ⇧R');
+    assert.dom('[data-test-ready-option]').hasText('Mark ready and assign 2 y');
     assert.deepEqual(verbs(), []);
 
     await press('y');

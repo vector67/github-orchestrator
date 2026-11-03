@@ -1343,23 +1343,6 @@ button.copy-directory {
   color: var(--muted);
 }
 
-.decide-dialog .outstanding-assign {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 10px 22px;
-  padding: 8px 12px;
-  border: 1px dashed var(--hairline);
-}
-
-.decide-dialog .outstanding-will-ask {
-  font-size: var(--fs-m);
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
 .decide-dialog .reviewer-search {
   box-sizing: border-box;
   width: 100%;
