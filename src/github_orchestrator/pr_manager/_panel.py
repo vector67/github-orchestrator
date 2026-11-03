@@ -85,6 +85,10 @@ class FilePanel(ManagerPanel):
         return self._hand(Command.ASSIGN_REVIEWERS,
                           {"reviewers": list(reviewers), "detailed": detailed})
 
+    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        return self._hand(Command.ASSIGN_WHEN_READY,
+                          {"reviewers": list(reviewers), "detailed": detailed})
+
     def take_over(self) -> str | None:
         return self._hand(Command.TAKE_OVER)
 

@@ -2,7 +2,7 @@ from collections.abc import Set
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import Pr, Repo, ReviewerPick
 from github_orchestrator.settings._config import (
     OrchestratorConfig as OrchestratorConfig,
 )
@@ -54,6 +54,20 @@ class FakeHolds:
         others = sorted({str(pr.repo) for pr in self._on_hold if pr.repo not in keep})
         self._on_hold = {pr for pr in self._on_hold if pr.repo in keep}
         return [into / repo for repo in others]
+
+
+class FakeReviewerPicks:
+    def __init__(self) -> None:
+        self._saved: dict[Pr, ReviewerPick] = {}
+
+    def saved(self, pr: Pr) -> ReviewerPick | None:
+        return self._saved.get(pr)
+
+    def save(self, pr: Pr, pick: ReviewerPick) -> None:
+        self._saved[pr] = pick
+
+    def forget(self, pr: Pr) -> None:
+        self._saved.pop(pr, None)
 
 
 class FakeDismissals:

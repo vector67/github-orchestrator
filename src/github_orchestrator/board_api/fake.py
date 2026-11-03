@@ -19,7 +19,7 @@ from github_orchestrator.board_api.interface import (
     SetupRead,
     SetupWrite,
 )
-from github_orchestrator.domain import CiCheck, HubState, Pr, Repo
+from github_orchestrator.domain import CiCheck, HubState, Pr, Repo, ReviewerPick
 
 IDLE = Dashboard(
     pr=Pr(Repo("o", "n"), 1), worktree="/wt", polled=True,
@@ -40,7 +40,7 @@ IDLE = Dashboard(
     working_on=None,
     elapsed_seconds=None, silent_seconds=None, last_run_event=None,
     last_run_exit_code=None, last_run_ended_at=None, queue=(), on_hold=False,
-    unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_queued=0, threads_live=frozenset(), threads_proposed=0,
+    assign_when_ready=None, unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_queued=0, threads_live=frozenset(), threads_proposed=0,
     threads_drafts=0, frozen_on=None, expected_branch=None,
     seconds_left=None, run_working=False, release_requested=False,
     hidden=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
@@ -109,6 +109,12 @@ class FakeManagerPanel:
     def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
         if self.refusal is None:
             self.assigned.append((tuple(reviewers), detailed))
+        return self.refusal
+
+    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        if self.refusal is None:
+            self.now = replace(self.now,
+                               assign_when_ready=ReviewerPick(tuple(reviewers), detailed))
         return self.refusal
 
     def take_over(self) -> str | None:

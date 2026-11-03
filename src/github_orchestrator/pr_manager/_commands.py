@@ -2,14 +2,14 @@ import logging
 from typing import Any
 
 from github_orchestrator.agent_runs import PrWork, Run
-from github_orchestrator.change_detection import ChangeDetection, ReviewRequested
-from github_orchestrator.domain import Monotonic
+from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewRequested
+from github_orchestrator.domain import Monotonic, ReviewerPick
 from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._refusals import Conditions, refusal
-from github_orchestrator.settings import Dismissals, Holds
+from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
 
 log = logging.getLogger(__name__)
 
@@ -25,8 +25,9 @@ class ManagerCommands:
                  worklist: Worklist,
                  pull_requests: PullRequests, pr_work: PrWork,
                  change_detection: ChangeDetection, intake: Intake,
-                 command_files: CommandFiles) -> None:
+                 command_files: CommandFiles, picks: ReviewerPicks) -> None:
         self._config = config
+        self._picks = picks
         self._monotonic = monotonic
         self._holds = holds
         self._dismissals = dismissals
@@ -107,6 +108,9 @@ class ManagerCommands:
                 self._mark_ready()
             case Command.ASSIGN_REVIEWERS:
                 self._assign_reviewers(fields["reviewers"], fields["detailed"])
+            case Command.ASSIGN_WHEN_READY:
+                self._assign_when_ready(ReviewerPick(tuple(fields["reviewers"]),
+                                                     fields["detailed"]))
             case Command.TAKE_OVER:
                 self._change_detection.take_over(self._config.pr)
                 log.info("%s: taken over — treated as yours from now on", self._config.pr)
@@ -164,12 +168,36 @@ class ManagerCommands:
             return
         log.info("Marked %s ready for review on GitHub", pr)
 
-    def _assign_reviewers(self, reviewers: list[str], detailed: str | None) -> None:
+    def assign_once_ready(self, facts: Facts | None) -> None:
+        pr = self._config.pr
+        if facts is None or facts.draft:
+            return
+        pick = self._picks.saved(pr)
+        if pick is None:
+            return
+        log.info("%s: no longer a draft — asking the reviewers picked for when it is ready", pr)
+        self._assign_reviewers(list(pick.reviewers), pick.detailed)
+        self._picks.forget(pr)
+
+    def _assign_when_ready(self, pick: ReviewerPick) -> None:
+        pr = self._config.pr
+        if not self._yours_to_assign():
+            return
+        self._picks.save(pr, pick)
+        log.info("%s: %s to be asked to review once it is ready", pr, ", ".join(pick.reviewers))
+
+    def _yours_to_assign(self) -> bool:
         pr = self._config.pr
         facts = self._change_detection.facts(pr)
         if facts is None or not facts.is_author:
             log.info("assign reviewers %s: refused — not yours", pr)
             self.notify(NOT_YOURS_TO_ASSIGN)
+            return False
+        return True
+
+    def _assign_reviewers(self, reviewers: list[str], detailed: str | None) -> None:
+        pr = self._config.pr
+        if not self._yours_to_assign():
             return
         refused = self._pull_requests.assign_reviewers(pr, reviewers, detailed)
         if refused is not None:

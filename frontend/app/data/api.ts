@@ -244,6 +244,7 @@ export interface DashboardSystem {
   last_run: LastRun | null;
   queue: QueuedEvent[];
   on_hold: boolean;
+  assign_when_ready: AssignReviewersRequest | null;
   unpushed_commits: UnpushedCommit[] | null;
   reset_to_origin: ResetToOrigin | null;
   diverged: boolean;

@@ -303,14 +303,22 @@ export default class PrControlsService extends Service {
 
   close = (on: Controlled): Promise<void> => this.carryOut(on, 'close');
 
-  markReady = (on: Controlled, pick: AssignReviewersRequest): Promise<void> =>
-    waitForPromise(this.markingReady(on, pick));
+  markReady = (on: Controlled): Promise<void> =>
+    this.carryOut(on, 'mark-ready');
 
   assignReviewers = (
     on: Controlled,
     pick: AssignReviewersRequest,
   ): Promise<void> =>
     waitForPromise(this.throughTheManager(on, 'assign-reviewers', pick)).then(
+      () => undefined,
+    );
+
+  assignWhenReady = (
+    on: Controlled,
+    pick: AssignReviewersRequest,
+  ): Promise<void> =>
+    waitForPromise(this.throughTheManager(on, 'assign-when-ready', pick)).then(
       () => undefined,
     );
 
@@ -374,15 +382,6 @@ export default class PrControlsService extends Service {
       fixChecksSaying(on.number, taken.body),
       taken.body.asked.length ? 'done' : 'failed',
     );
-  }
-
-  private async markingReady(
-    on: Controlled,
-    pick: AssignReviewersRequest,
-  ): Promise<void> {
-    if (!(await this.throughTheManager(on, 'mark-ready'))) return;
-    if (pick.reviewers.length)
-      await this.throughTheManager(on, 'assign-reviewers', pick);
   }
 
   private async readOutstanding(on: Controlled): Promise<void> {

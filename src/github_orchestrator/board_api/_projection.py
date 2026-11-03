@@ -518,6 +518,10 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             queue=[contract.QueuedEvent(event=queued.event, queued_at=queued.queued_at)
                    for queued in dashboard.queue],
             on_hold=dashboard.on_hold,
+            assign_when_ready=None if dashboard.assign_when_ready is None
+            else contract.AssignReviewersRequest(
+                reviewers=list(dashboard.assign_when_ready.reviewers),
+                detailed=dashboard.assign_when_ready.detailed),
             unpushed_commits=None if dashboard.unpushed_commits is None
             else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)
                   for commit in dashboard.unpushed_commits],

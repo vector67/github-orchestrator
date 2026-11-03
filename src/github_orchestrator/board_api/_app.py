@@ -844,6 +844,18 @@ def assign_reviewers(board: Serving, asked: AssignReviewersRequest) -> Response:
     return _handed_over(board, board.manager.assign_reviewers(asked.reviewers, asked.detailed))
 
 
+@writes.post("/manager:assign-when-ready", status_code=202, tags=["manager"],
+             operation_id="assignReviewersWhenReady", responses=HANDED_TO_THE_MANAGER,
+             summary="Ask reviewers to review this draft once it is ready for review.")
+def assign_reviewers_when_ready(board: Serving, asked: AssignReviewersRequest) -> Response:
+    """The manager keeps the pick on disk, replacing any it kept before, and
+    assigns it as `manager:assign-reviewers` does once the pull request is no
+    longer a draft, however it was marked ready. The dashboard's
+    `system.assign_when_ready` shows the pick while it waits.
+    """
+    return _handed_over(board, board.manager.assign_when_ready(asked.reviewers, asked.detailed))
+
+
 @writes.post("/manager:take-over", status_code=202, tags=["manager"],
              operation_id="takeOverPullRequest", responses=HANDED_TO_THE_MANAGER,
              summary="Treat this pull request as yours though someone else opened it.")

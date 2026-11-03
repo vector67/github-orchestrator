@@ -5,6 +5,7 @@ from github_orchestrator.settings.interface import (
     Holds,
     Logs,
     Process,
+    ReviewerPicks,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "Logs",
     "Holds",
     "Process",
+    "ReviewerPicks",
 ]

@@ -8,11 +8,13 @@ from github_orchestrator.settings import (
     ConfigFile,
     Dismissals,
     Holds,
+    ReviewerPicks,
 )
 from github_orchestrator.settings.fake import (
     ConfigRow,
     FakeDismissals,
     FakeHolds,
+    FakeReviewerPicks,
     OrchestratorConfig,
     Settings,
     fake_settings,
@@ -42,10 +44,16 @@ def disk_dismissals(data_dir: Path) -> Dismissals:
     return dismissals
 
 
+def disk_picks(data_dir: Path) -> ReviewerPicks:
+    picks: ReviewerPicks = _switches(data_dir).get(ReviewerPicks)
+    return picks
+
+
 @dataclass
 class AllSwitches:
     holds: Holds
     dismissals: Dismissals
+    picks: ReviewerPicks
 
     def forget(self, pr: Pr) -> bool:
         return all([role.forget(pr) for role in (self.holds, self.dismissals)])
@@ -55,11 +63,11 @@ class AllSwitches:
 
 
 def disk_switches(data_dir: Path) -> AllSwitches:
-    return AllSwitches(disk_holds(data_dir), disk_dismissals(data_dir))
+    return AllSwitches(disk_holds(data_dir), disk_dismissals(data_dir), disk_picks(data_dir))
 
 
 def fake_switches() -> AllSwitches:
-    return AllSwitches(FakeHolds(), FakeDismissals())
+    return AllSwitches(FakeHolds(), FakeDismissals(), FakeReviewerPicks())
 
 
 def _environment(config_path: Path, data_dir: Path | None) -> dict[str, str]:

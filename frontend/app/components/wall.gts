@@ -158,9 +158,17 @@ export default class Wall extends Component<WallSignature> {
     this.askReady(null);
   };
 
-  markReady = (pr: WallRow, pick: AssignReviewersRequest) => {
+  markReady = (pr: WallRow) => {
     this.cancelReady();
-    void this.controls.markReady(this.controls.ofRow(pr), pick);
+    void this.controls.markReady(this.controls.ofRow(pr));
+  };
+
+  assignReviewers = (pr: WallRow, pick: AssignReviewersRequest) => {
+    void this.controls.assignReviewers(this.controls.ofRow(pr), pick);
+  };
+
+  assignWhenReady = (pr: WallRow, pick: AssignReviewersRequest) => {
+    void this.controls.assignWhenReady(this.controls.ofRow(pr), pick);
   };
 
   groupsOf = (pr: WallRow): ReviewerGroup[] | null => this.store.reviewable(pr);
@@ -436,6 +444,8 @@ export default class Wall extends Component<WallSignature> {
                   @outstanding={{this.outstandingOf pr}}
                   @groups={{this.groupsOf pr}}
                   @mark={{fn this.markReady pr}}
+                  @assign={{fn this.assignReviewers pr}}
+                  @assignWhenReady={{fn this.assignWhenReady pr}}
                   @cancel={{this.cancelReady}}
                 />
               {{/if}}

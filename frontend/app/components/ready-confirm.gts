@@ -14,7 +14,9 @@ interface ReadyConfirmSignature {
     number: number;
     outstanding: Outstanding | null;
     groups: ReviewerGroup[] | null;
-    mark: (pick: AssignReviewersRequest) => void;
+    mark: () => void;
+    assign: (pick: AssignReviewersRequest) => void;
+    assignWhenReady: (pick: AssignReviewersRequest) => void;
     cancel: () => void;
   };
 }
@@ -46,7 +48,6 @@ const inATab = (event: MouseEvent): void => {
 };
 
 export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
-  @tracked pick: AssignReviewersRequest = { reviewers: [], detailed: null };
   @tracked picking = false;
 
   get unreviewed(): boolean {
@@ -57,25 +58,10 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
     );
   }
 
-  get asking(): number {
-    return this.pick.reviewers.length;
-  }
-
-  get outstanding(): Outstanding | null {
-    const outstanding = this.args.outstanding;
-    if (!outstanding || !this.asking) return outstanding;
-    const groups = outstanding.groups.filter(
-      (group) => group.kind !== 'reviewers',
-    );
-    return {
-      groups,
-      total: groups.reduce((sum, group) => sum + group.count, 0),
-    };
-  }
-
   get option(): string {
-    if (this.asking) return `Mark ready and assign ${this.asking}`;
-    return anything(this.outstanding) ? 'Mark ready anyway' : 'Mark it ready';
+    return anything(this.args.outstanding)
+      ? 'Mark ready anyway'
+      : 'Mark it ready';
   }
 
   openPicker = () => {
@@ -86,13 +72,18 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
     this.picking = false;
   };
 
-  chosen = (pick: AssignReviewersRequest) => {
-    this.pick = pick;
+  assign = (pick: AssignReviewersRequest) => {
     this.picking = false;
+    this.args.assign(pick);
+  };
+
+  assignWhenReady = (pick: AssignReviewersRequest) => {
+    this.picking = false;
+    this.args.assignWhenReady(pick);
   };
 
   mark = () => {
-    this.args.mark(this.pick);
+    this.args.mark();
   };
 
   answering = (key: string): boolean => {
@@ -132,10 +123,10 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
             {{on "click" @cancel}}
           >×</button>
         </header>
-        {{#if (anything this.outstanding)}}
-          <p class="note">{{sentenceOf this.outstanding}}</p>
+        {{#if (anything @outstanding)}}
+          <p class="note">{{sentenceOf @outstanding}}</p>
           <div class="outstanding">
-            {{#each this.outstanding.groups key="kind" as |group index|}}
+            {{#each @outstanding.groups key="kind" as |group index|}}
               {{#if (isReviewers group.kind)}}
                 <section
                   class="outstanding-kind outstanding-open"
@@ -228,9 +219,10 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
         <AssignReviewers
           @number={{@number}}
           @groups={{@groups}}
-          @pick={{this.pick}}
-          @action="Assign them once ready"
-          @assign={{this.chosen}}
+          @draft={{true}}
+          @pick={{null}}
+          @assign={{this.assign}}
+          @assignWhenReady={{this.assignWhenReady}}
           @cancel={{this.closePicker}}
         />
       {{/if}}

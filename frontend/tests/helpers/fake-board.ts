@@ -478,6 +478,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       last_run: null,
       queue: [],
       on_hold: false,
+      assign_when_ready: null,
       unpushed_commits: [],
       diverged: false,
       reset_to_origin: null,

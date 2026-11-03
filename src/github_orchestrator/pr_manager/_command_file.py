@@ -26,6 +26,7 @@ class Command(StrEnum):
     CLOSE = "close"
     MARK_READY = "mark-ready"
     ASSIGN_REVIEWERS = "assign-reviewers"
+    ASSIGN_WHEN_READY = "assign-when-ready"
     TAKE_OVER = "take-over"
 
 

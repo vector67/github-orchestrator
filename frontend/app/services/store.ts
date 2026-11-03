@@ -509,7 +509,9 @@ export default class StoreService extends Service {
   outstanding(repo: string, number: number): Outstanding | null {
     const key = keyOf(repo, number);
     const pr = this.prs[key];
-    return pr ? outstandingOf(pr, this.threads[key]) : null;
+    return pr
+      ? outstandingOf(pr, this.threads[key], this.operations[key])
+      : null;
   }
 
   prHeader(repo: string, number: number): PrHeader | null {
@@ -1754,8 +1756,10 @@ export default class StoreService extends Service {
   }
 
   private settle(pr: Numbered, one: StoredOperation, answered: boolean): void {
-    const facts = this.prs[keyOf(pr.repo, pr.number)]?.facts ?? null;
-    if (settledBy(one.kind ?? '', facts, answered)) this.drop(pr, one);
+    const held = this.prs[keyOf(pr.repo, pr.number)];
+    const facts = held?.facts ?? null;
+    const system = held?.drawn?.system ?? null;
+    if (settledBy(one.kind ?? '', facts, system, answered)) this.drop(pr, one);
   }
 
   private sentOn(pr: Numbered, conversation: string | null): string[] {

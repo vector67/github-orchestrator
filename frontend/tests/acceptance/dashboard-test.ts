@@ -1092,7 +1092,30 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-ready-confirm]').exists();
   });
 
-  test('the reviewers picked through the ready question are asked once it is marked ready, the starred one as detailed reviewer', async function (assert) {
+  test('on a draft, Assign reviewers offers to assign when it is ready for review or now', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.deepEqual(
+      texts('[data-test-assign-reviewers] .dialog-actions button'),
+      ['Assign when ready for review ↵', 'Assign now', 'Cancel Esc'],
+    );
+
+    await click('[data-test-reviewer="anna"] input');
+    await click('[data-test-assign-now]');
+
+    assert.deepEqual(verbs(), ['assign-reviewers']);
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['anna'],
+      detailed: null,
+    });
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
+  });
+
+  test('the reviewers picked through the ready question wait with the manager for it to be ready, and Mark ready only marks it ready', async function (assert) {
     board().mentionable = ['anna', 'bob'];
     onTheHub({ facts: { draft: true, pending_reviewers: [] } });
     await visit('/pr/o/r/7/dashboard');
@@ -1101,26 +1124,87 @@ module('Acceptance | dashboard', function (hooks) {
 
     await click('[data-test-reviewer="anna"] input');
     await click('[data-test-detailed="bob"]');
-
-    assert.dom('[data-test-reviewer="bob"] input').isChecked();
-    assert.dom('[data-test-detailed="bob"]').hasAria('pressed', 'true');
-    assert.dom('[data-test-assign-option]').hasText('Assign them once ready ↵');
-
     await click('[data-test-assign-option]');
 
+    assert.deepEqual(verbs(), ['assign-when-ready']);
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['anna', 'bob'],
+      detailed: 'bob',
+    });
     assert.dom('[data-test-assign-reviewers]').doesNotExist();
     assert
-      .dom('[data-test-ready-confirm] [data-test-outstanding="reviewers"]')
-      .doesNotExist();
+      .dom('[data-test-ready-confirm]')
+      .containsText('Nothing outstanding.');
     assert.dom('[data-test-ready-assign]').doesNotExist();
-    assert.dom('[data-test-ready-option]').hasText('Mark ready and assign 2 y');
-    assert.deepEqual(verbs(), []);
+
+    await streamed();
+
+    assert.dom('[data-test-outstanding="reviewers"]').doesNotExist();
+
+    onTheHub({
+      facts: { draft: true, pending_reviewers: [] },
+      system: {
+        assign_when_ready: { reviewers: ['anna', 'bob'], detailed: 'bob' },
+      },
+    });
+    await streamed();
+
+    assert.dom('[data-test-outstanding="reviewers"]').doesNotExist();
+    assert.dom('[data-test-ready-option]').hasText('Mark it ready y');
 
     await press('y');
 
-    assert.deepEqual(verbs(), ['mark-ready', 'assign-reviewers']);
-    assert.deepEqual(board().posted[1]?.body, {
-      reviewers: ['anna', 'bob'],
+    assert.deepEqual(verbs(), ['assign-when-ready', 'mark-ready']);
+  });
+
+  test('Assign now from the ready question asks them at once and goes back to the ready question without the reviewers item', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard');
+    await press('r');
+    await press('R');
+
+    await click('[data-test-reviewer="anna"] input');
+    await click('[data-test-assign-now]');
+
+    assert.deepEqual(verbs(), ['assign-reviewers']);
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
+    assert.dom('[data-test-outstanding="reviewers"]').doesNotExist();
+
+    await streamed();
+
+    assert.dom('[data-test-outstanding="reviewers"]').doesNotExist();
+  });
+
+  test('a pick waiting for the draft to be ready leaves no reviewers item in the ready question, and Assign reviewers starts from it', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub({
+      facts: { draft: true, pending_reviewers: [] },
+      system: {
+        assign_when_ready: { reviewers: ['anna', 'bob'], detailed: 'bob' },
+      },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('Nothing outstanding.');
+
+    await press('Escape');
+    await press('R');
+
+    assert.dom('[data-test-reviewer="anna"] input').isChecked();
+    assert.dom('[data-test-reviewer="bob"] input').isChecked();
+    assert.dom('[data-test-detailed="bob"]').hasAria('pressed', 'true');
+
+    await click('[data-test-reviewer="anna"] input');
+    await click('[data-test-assign-option]');
+
+    assert.deepEqual(verbs(), ['assign-when-ready']);
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['bob'],
       detailed: 'bob',
     });
   });
@@ -1170,7 +1254,11 @@ module('Acceptance | dashboard', function (hooks) {
       .hasAttribute('role', 'dialog')
       .containsText('Assign reviewers to #7');
     assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
-    assert.dom('[data-test-assign-option]').hasText('Ask them ↵').isDisabled();
+    assert.deepEqual(
+      texts('[data-test-assign-reviewers] .dialog-actions button'),
+      ['Assign now ↵', 'Cancel Esc'],
+    );
+    assert.dom('[data-test-assign-option]').isDisabled();
 
     await click('[data-test-detailed="anna"]');
     await click('[data-test-assign-option]');

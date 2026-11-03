@@ -880,6 +880,17 @@
     }
    }
   },
+  "/api/manager:assign-when-ready": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:carry-on": {
    "post": {
     "202": {},
@@ -3061,6 +3072,16 @@
     "agent": {
      "$ref": "#/components/schemas/AgentActivity"
     },
+    "assign_when_ready": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/AssignReviewersRequest"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "base": {
      "anyOf": [
       {
@@ -3125,6 +3146,7 @@
     "last_run",
     "queue",
     "on_hold",
+    "assign_when_ready",
     "unpushed_commits",
     "reset_to_origin",
     "diverged",

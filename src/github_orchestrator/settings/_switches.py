@@ -1,8 +1,9 @@
+import json
 import logging
 from collections.abc import Set
 from pathlib import Path
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import Pr, Repo, ReviewerPick
 from github_orchestrator.settings._paths import repo_subdir
 from github_orchestrator.settings.interface import Dismissal
 
@@ -141,3 +142,31 @@ class FlagFileDismissals:
 
     def forget(self, pr: Pr) -> bool:
         return _remove(pr, _flag_file(self._dismissed_dir, pr))
+
+
+class JsonFileReviewerPicks:
+    def __init__(self, picks_dir: Path) -> None:
+        self._picks_dir = picks_dir
+
+    def saved(self, pr: Pr) -> ReviewerPick | None:
+        try:
+            fields = json.loads(self._path(pr).read_text())
+            return ReviewerPick(tuple(fields["reviewers"]), fields["detailed"])
+        except FileNotFoundError:
+            return None
+        except (OSError, ValueError, KeyError, TypeError):
+            log.warning("%s: unreadable reviewer pick at %s", pr, self._path(pr), exc_info=True)
+            return None
+
+    def save(self, pr: Pr, pick: ReviewerPick) -> None:
+        path = self._path(pr)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        written = path.with_suffix(".tmp")
+        written.write_text(json.dumps({"reviewers": list(pick.reviewers), "detailed": pick.detailed}))
+        written.replace(path)
+
+    def forget(self, pr: Pr) -> None:
+        self._path(pr).unlink(missing_ok=True)
+
+    def _path(self, pr: Pr) -> Path:
+        return repo_subdir(self._picks_dir, pr.repo) / f"{pr.number}.json"

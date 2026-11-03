@@ -54,6 +54,12 @@ class Pr:
 
 
 @dataclass(frozen=True)
+class ReviewerPick:
+    reviewers: tuple[str, ...]
+    detailed: str | None
+
+
+@dataclass(frozen=True)
 class Clone:
     path: Path
     new_worktree_command: str

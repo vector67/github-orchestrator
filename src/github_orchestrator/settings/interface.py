@@ -5,7 +5,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.domain import Clone, HubState, Pr, Repo
+from github_orchestrator.domain import Clone, HubState, Pr, Repo, ReviewerPick
 
 
 class Process(Enum):
@@ -111,3 +111,9 @@ class Dismissals(Protocol):
     def forget(self, pr: Pr) -> bool: ...
 
 
+class ReviewerPicks(Protocol):
+    def saved(self, pr: Pr) -> ReviewerPick | None: ...
+
+    def save(self, pr: Pr, pick: ReviewerPick) -> None: ...
+
+    def forget(self, pr: Pr) -> None: ...

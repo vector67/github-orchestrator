@@ -157,6 +157,7 @@ from github_orchestrator.settings import (
     Holds,
     Logs,
     Process,
+    ReviewerPicks,
 )
 from github_orchestrator.settings._config import (
     RepoEntry,
@@ -180,6 +181,7 @@ from github_orchestrator.settings._settings import Settings
 from github_orchestrator.settings._switches import (
     FlagFileDismissals,
     FlagFileHolds,
+    JsonFileReviewerPicks,
 )
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
 from github_orchestrator.terminal_sessions._pty import Popen as PtyPopen
@@ -358,6 +360,10 @@ class SwitchesProvider(Provider):
     @provide
     def dismissals(self, wiring: SwitchesWiring) -> Dismissals:
         return FlagFileDismissals(wiring.dismissed_dir)
+
+    @provide
+    def reviewer_picks(self, wiring: SwitchesWiring) -> ReviewerPicks:
+        return JsonFileReviewerPicks(wiring.data_dir / "assign_when_ready")
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:

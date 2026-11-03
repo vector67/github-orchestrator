@@ -12,9 +12,10 @@ interface AssignReviewersSignature {
   Args: {
     number: number;
     groups: ReviewerGroup[] | null;
-    action: string;
-    pick?: AssignReviewersRequest;
+    draft: boolean;
+    pick: AssignReviewersRequest | null;
     assign: (pick: AssignReviewersRequest) => void;
+    assignWhenReady: (pick: AssignReviewersRequest) => void;
     cancel: () => void;
   };
 }
@@ -154,7 +155,17 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
     this.at = Math.max(0, Math.min(this.listed.length - 1, this.at + by));
   }
 
+  get primary(): string {
+    return this.args.draft ? 'Assign when ready for review' : 'Assign now';
+  }
+
   assign = () => {
+    if (this.nobody) return;
+    if (this.args.draft) this.args.assignWhenReady(this.pick);
+    else this.args.assign(this.pick);
+  };
+
+  assignNow = () => {
     if (!this.nobody) this.args.assign(this.pick);
   };
 
@@ -273,14 +284,23 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
           <kbd>*</kbd>
           stars the detailed reviewer ·
           <kbd>↵</kbd>
-          {{@action}}</p>
+          {{this.primary}}</p>
         <div class="dialog-actions">
           <button
             type="submit"
             class="primary"
             disabled={{this.nobody}}
             data-test-assign-option
-          >{{@action}} <kbd>↵</kbd></button>
+          >{{this.primary}} <kbd>↵</kbd></button>
+          {{#if @draft}}
+            <button
+              type="button"
+              class="btn"
+              disabled={{this.nobody}}
+              data-test-assign-now
+              {{on "click" this.assignNow}}
+            >Assign now</button>
+          {{/if}}
           <button
             type="button"
             class="ghost"

@@ -662,9 +662,18 @@ function agentOutstandingOf(pr: PrEntity): OutstandingItem[] {
   ];
 }
 
+function reviewersAsked(pr: PrEntity, operations: Operations): boolean {
+  return (
+    Boolean(pr.facts?.pending_reviewers.length) ||
+    Boolean(pr.drawn?.system.assign_when_ready) ||
+    pressedOn(pr, operations).reviewers.pressed !== null
+  );
+}
+
 function outstandingFrom(
   pr: PrEntity,
   threads: Threads | undefined,
+  operations: Operations,
 ): Outstanding {
   const all = Object.values(threads ?? {});
   const facts = pr.facts;
@@ -682,7 +691,7 @@ function outstandingFrom(
   const unresolved = unresolvedOf(all, board, facts);
   const items: Record<OutstandingKind, OutstandingItem[]> = {
     reviewers:
-      facts && !facts.pending_reviewers.length
+      facts && !reviewersAsked(pr, operations)
         ? [
             {
               key: 'reviewers',
@@ -725,18 +734,27 @@ function outstandingFrom(
   };
 }
 
-const outstandingMemo = new WeakMap<object, WeakMap<object, Outstanding>>();
+const outstandingMemo = new WeakMap<
+  object,
+  WeakMap<object, WeakMap<object, Outstanding>>
+>();
 
 export function outstandingOf(
   pr: PrEntity,
   threads: Threads | undefined,
+  operations: Operations = NO_OPERATIONS,
 ): Outstanding {
-  const byPr = outstandingMemo.get(pr) ?? new WeakMap<object, Outstanding>();
+  const byPr =
+    outstandingMemo.get(pr) ??
+    new WeakMap<object, WeakMap<object, Outstanding>>();
   outstandingMemo.set(pr, byPr);
-  const known = byPr.get(threads ?? NONE);
+  const byThreads =
+    byPr.get(threads ?? NONE) ?? new WeakMap<object, Outstanding>();
+  byPr.set(threads ?? NONE, byThreads);
+  const known = byThreads.get(operations);
   if (known) return known;
-  const found = outstandingFrom(pr, threads);
-  byPr.set(threads ?? NONE, found);
+  const found = outstandingFrom(pr, threads, operations);
+  byThreads.set(operations, found);
   return found;
 }
 

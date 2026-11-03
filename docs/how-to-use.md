@@ -522,15 +522,18 @@ when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
 own draft, which first lists what is still outstanding (nobody asked to review,
 unsent drafts, Board threads waiting on you, threads unresolved on GitHub that
 the Board has not resolved or does not track, failing CI, a needed rebase,
-unpushed commits and agent work) and then marks it ready on GitHub; when nobody
-is asked to review, its buttons include Assign reviewers (`⇧R`), which opens
-the same dialog; the people you pick there are assigned once it is ready, and
-the item drops off the list, **Assign reviewers** (`⇧R`) on your own PR, which lists the people the
+unpushed commits and agent work) and then marks it ready on GitHub; while
+nobody is asked to review and no pick waits, that item holds an Assign
+reviewers button (`⇧R`), which opens the same dialog over it, **Assign
+reviewers** (`⇧R`) on your own PR, which lists the people the
 repository usually asks first, most asked on top, then everyone else by login:
 type to find someone, `↑` and `↓` move, `Space` picks, `*` stars the detailed
 reviewer and `↵` asks them to review on GitHub, writing the starred one as
 `Detailed reviewer: @<login>` in the description, replacing a line already
-there, **Take over**
+there; on a draft `↵` is **Assign when ready for review**, which the manager
+keeps on disk and assigns as soon as the PR leaves draft, however it was marked
+ready, and **Assign now** asks them at once; opening it again starts from the
+waiting pick, and assigning when ready again replaces it, **Take over**
 (`⇧T`) on someone else's PR, after which the orchestrator treats it as yours:
 agents fix CI, rebase and answer its comments, the author's buttons appear, and
 the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft

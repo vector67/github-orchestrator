@@ -22,7 +22,7 @@ from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._snapshot import dashboard_of
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import PrProcesses
-from github_orchestrator.settings import Dismissals, Holds
+from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
 ConfigOf = Callable[[Pr, str], ManagerConfig]
@@ -43,8 +43,10 @@ class DashboardSource:
                  history: History, worklist: Worklist, holds: Holds,
                  dismissals: Dismissals, working_copies: WorkingCopies,
                  conversation_managers: ConversationManagerFactory, pr_processes: PrProcesses,
-                 status_files: StatusFiles, told: Told, shelves: Shelves) -> None:
+                 status_files: StatusFiles, told: Told, shelves: Shelves,
+                 picks: ReviewerPicks) -> None:
         self._config_of = config_of
+        self._picks = picks
         self._shelves = shelves
         self._told = told
         self._clock = clock
@@ -82,6 +84,7 @@ class DashboardSource:
             on_hold=self._holds.on_hold(pr), threads=threads, wrong=wrong, notice=notice,
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0,
                                               draft=facts is None or facts.draft),
+            assign_when_ready=self._picks.saved(pr),
         ))
 
     def _queue(self, pr: Pr) -> tuple[QueuedEvent, ...]:

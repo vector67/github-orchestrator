@@ -1,5 +1,6 @@
 import type {
   Conversation,
+  DashboardSystem,
   PrFacts,
   Proposal,
   ProposalKind,
@@ -825,7 +826,7 @@ export type Slot =
 
 interface PrWrite extends Carrying {
   slot: Slot;
-  until?: (facts: PrFacts) => boolean;
+  until?: (facts: PrFacts, system: DashboardSystem | null) => boolean;
   leaves?: boolean;
   unsent?: string;
   ringsOn?: string[];
@@ -852,6 +853,13 @@ const PR_WRITES = {
     doing: 'asking the reviewers',
     square: null,
     slot: 'reviewers',
+    until: (facts) => facts.pending_reviewers.length > 0,
+  },
+  'assign-when-ready': {
+    doing: 'keeping the reviewers for when it is ready',
+    square: null,
+    slot: 'reviewers',
+    until: (_facts, system) => Boolean(system?.assign_when_ready),
   },
   'check-for-fixes': {
     doing: 'asking for the checks',
@@ -968,11 +976,12 @@ export function leavesThePage(verb: PrVerb): boolean {
 export function settledBy(
   kind: string,
   facts: PrFacts | null,
+  system: DashboardSystem | null,
   answered: boolean,
 ): boolean {
   const until = prWriteOf(kind)?.until;
   if (!until) return answered;
-  return facts !== null && until(facts);
+  return facts !== null && until(facts, system);
 }
 
 export interface Pressed {

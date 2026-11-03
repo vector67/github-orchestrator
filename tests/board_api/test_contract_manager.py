@@ -55,6 +55,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
             "queue": [{"event": "ci-failed", "queued_at": "2026-09-26T21:41:00+00:00"},
                       {"event": None, "queued_at": "2026-09-26T21:42:00+00:00"}],
             "on_hold": True,
+            "assign_when_ready": None,
             "unpushed_commits": [{"sha": "c0ffee1", "subject": "handle empty input"},
                                  {"sha": "badf00d", "subject": "add parser tests"}],
             "diverged": True,
@@ -308,12 +309,27 @@ def test_assign_reviewers_is_accepted_and_handed_to_the_manager():
     assert panel.assigned == [(("anna", "bob"), "bob")]
 
 
+def test_assign_when_ready_is_handed_to_the_manager_and_the_dashboard_shows_the_pick_waiting():
+    panel = FakeManagerPanel()
+    client = client_for(manager=panel)
+
+    before = client.get("/api/dashboard").json()["system"]["assign_when_ready"]
+    answer = client.post("/api/manager:assign-when-ready",
+                         json={"reviewers": ["anna", "bob"], "detailed": "bob"})
+    after = client.get("/api/dashboard").json()["system"]["assign_when_ready"]
+
+    assert answer.status_code == 202
+    assert before is None
+    assert after == {"reviewers": ["anna", "bob"], "detailed": "bob"}
+
+
 @pytest.mark.parametrize(("path", "body"), [
     ("/api/manager:hold", None), ("/api/manager:resume", None),
     ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
     ("/api/manager:dismiss", {"until": "next-event"}), ("/api/manager:close", None),
     ("/api/manager:mark-ready", None), ("/api/manager:take-over", None),
     ("/api/manager:assign-reviewers", {"reviewers": ["anna"], "detailed": None}),
+    ("/api/manager:assign-when-ready", {"reviewers": ["anna"], "detailed": None}),
 ])
 def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
     panel = FakeManagerPanel(refusal="an agent is already running")
@@ -326,6 +342,7 @@ def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
     assert (panel.carried_on, panel.reviews_started, panel.dismissed, panel.closed,
             panel.marked_ready, panel.taken_over, panel.assigned) == (0, 0, None, 0, 0, 0, [])
     assert panel.dashboard().on_hold is False
+    assert panel.dashboard().assign_when_ready is None
 
 
 def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
@@ -338,7 +355,8 @@ def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
                              "/api/manager:carry-on", "/api/manager:start-review",
                              "/api/manager:dismiss", "/api/manager:close",
                              "/api/manager:mark-ready", "/api/manager:take-over",
-                             "/api/manager:assign-reviewers"}
+                             "/api/manager:assign-reviewers",
+                             "/api/manager:assign-when-ready"}
     assert all(command["responses"]["202"]["headers"]["Location"]
                for command in commands.values())
 

@@ -8,6 +8,7 @@ from github_orchestrator.change_detection import (
     SinceReview,
 )
 from github_orchestrator.conversation import ConversationManager
+from github_orchestrator.domain import ReviewerPick
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.working_copies import WrongBranch
 
@@ -34,7 +35,8 @@ def _since_review(state: Facts | None) -> SinceReview | None:
 def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  last_run: LastRun | None, queue: tuple[QueuedEvent, ...], on_hold: bool,
                  threads: ConversationManager, wrong: WrongBranch | None,
-                 notice: str | None, hidden: bool) -> Dashboard:
+                 notice: str | None, hidden: bool,
+                 assign_when_ready: ReviewerPick | None) -> Dashboard:
     counts = threads.counts()
     facts = None if facts is None else threads.as_sent(facts)
     since = _since_review(facts)
@@ -91,6 +93,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         last_run_ended_at=None if last_run is None else last_run.ended_at,
         queue=queue,
         on_hold=on_hold,
+        assign_when_ready=assign_when_ready,
         unpushed_commits=None,
         diverged=False,
         reset_to_origin=None,

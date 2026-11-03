@@ -260,10 +260,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.askReady(false);
   };
 
-  markReady = (pick: AssignReviewersRequest) => {
+  markReady = () => {
     this.cancelReady();
     const on = this.on;
-    if (on) void this.controls.markReady(on, pick);
+    if (on) void this.controls.markReady(on);
   };
 
   assignReviewers = (pick: AssignReviewersRequest) => {
@@ -271,6 +271,20 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     const on = this.on;
     if (on) void this.controls.assignReviewers(on, pick);
   };
+
+  assignWhenReady = (pick: AssignReviewersRequest) => {
+    this.cancelAsking();
+    const on = this.on;
+    if (on) void this.controls.assignWhenReady(on, pick);
+  };
+
+  get draft(): boolean {
+    return this.on?.shown.facts?.draft ?? false;
+  }
+
+  get savedPick(): AssignReviewersRequest | null {
+    return this.on?.shown.drawn.system.assign_when_ready ?? null;
+  }
 
   get groups(): ReviewerGroup[] | null {
     const pr = this.here.pr;
@@ -540,6 +554,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @outstanding={{this.outstanding}}
             @groups={{this.groups}}
             @mark={{this.markReady}}
+            @assign={{this.assignReviewers}}
+            @assignWhenReady={{this.assignWhenReady}}
             @cancel={{this.cancelReady}}
           />
         {{/if}}
@@ -547,8 +563,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
           <AssignReviewers
             @number={{this.reading.number}}
             @groups={{this.groups}}
-            @action="Ask them"
+            @draft={{this.draft}}
+            @pick={{this.savedPick}}
             @assign={{this.assignReviewers}}
+            @assignWhenReady={{this.assignWhenReady}}
             @cancel={{this.cancelAsking}}
           />
         {{/if}}

@@ -8,7 +8,15 @@ from typing import Protocol
 
 from starlette.types import ASGIApp
 
-from github_orchestrator.domain import CiCheck, HubState, Mention, Pr, Repo, ThreadRow
+from github_orchestrator.domain import (
+    CiCheck,
+    HubState,
+    Mention,
+    Pr,
+    Repo,
+    ReviewerPick,
+    ThreadRow,
+)
 
 
 class WallGroup(StrEnum):
@@ -138,6 +146,7 @@ class Dashboard:
     last_run_ended_at: str | None
     queue: tuple[QueuedEvent, ...]
     on_hold: bool
+    assign_when_ready: ReviewerPick | None
     unpushed_commits: tuple[UnpushedCommit, ...] | None
     diverged: bool
     reset_to_origin: ResetToOrigin | None
@@ -181,6 +190,8 @@ class ManagerPanel(Protocol):
     def mark_ready(self) -> str | None: ...
 
     def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None: ...
+
+    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> str | None: ...
 
     def take_over(self) -> str | None: ...
 

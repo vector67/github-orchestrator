@@ -220,6 +220,8 @@ class ManagerLoop:
         self._fetch_the_base_while_behind(state)
 
         wrong = self._freeze_on_wrong_branch(state.branch if state else None)
+        if wrong is None:
+            self._commands.assign_once_ready(state)
         waiting = self._worklist.waiting(pr)
         dashboard = self._written_status(wrong)
         if self._commands.active_run is None:

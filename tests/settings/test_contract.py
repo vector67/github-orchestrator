@@ -1,6 +1,6 @@
 import pytest
 
-from github_orchestrator.domain import Repo
+from github_orchestrator.domain import Repo, ReviewerPick
 from github_orchestrator.settings.fake import Dismissal
 from tests.builders import a_pr
 from tests.settings.support import disk_switches, fake_switches
@@ -156,3 +156,38 @@ def test_archiving_when_only_the_named_repo_is_on_hold_moves_nothing(switches, t
     assert switches.holds.on_hold(a_pr(1, REPO)) is True
 
 
+
+
+def test_a_pr_has_no_reviewer_pick_waiting_until_one_is_saved(switches):
+    assert switches.picks.saved(a_pr(7, REPO)) is None
+
+
+def test_a_saved_reviewer_pick_waits_until_forgotten(switches):
+    pick = ReviewerPick(("anna", "bob"), "bob")
+    switches.picks.save(a_pr(7, REPO), pick)
+
+    assert switches.picks.saved(a_pr(7, REPO)) == pick
+
+    switches.picks.forget(a_pr(7, REPO))
+
+    assert switches.picks.saved(a_pr(7, REPO)) is None
+
+
+def test_a_second_reviewer_pick_replaces_the_first(switches):
+    switches.picks.save(a_pr(7, REPO), ReviewerPick(("anna",), None))
+    switches.picks.save(a_pr(7, REPO), ReviewerPick(("bob",), "bob"))
+
+    assert switches.picks.saved(a_pr(7, REPO)) == ReviewerPick(("bob",), "bob")
+
+
+def test_a_reviewer_pick_waits_on_its_own_pr_only(switches):
+    switches.picks.save(a_pr(7, REPO), ReviewerPick(("anna",), None))
+
+    assert switches.picks.saved(a_pr(8, REPO)) is None
+    assert switches.picks.saved(a_pr(7, "acme/other")) is None
+
+
+def test_forgetting_a_pr_with_no_reviewer_pick_succeeds(switches):
+    switches.picks.forget(a_pr(7, REPO))
+
+    assert switches.picks.saved(a_pr(7, REPO)) is None

@@ -1527,6 +1527,15 @@ class ResetToOrigin(BaseModel):
                     "it was, or while it waits.")
 
 
+class AssignReviewersRequest(BaseModel):
+    reviewers: list[str] = Field(
+        description="The logins asked to review the pull request on GitHub.")
+    detailed: str | None = Field(
+        description="The login written into the description's "
+                    "`Detailed reviewer: @login` line, replacing the one there. "
+                    "Null leaves the description alone.")
+
+
 class DashboardSystem(BaseModel):
     agent: AgentActivity
     last_run: LastRun | None = Field(
@@ -1537,6 +1546,9 @@ class DashboardSystem(BaseModel):
                     "oldest first.")
     on_hold: bool = Field(
         description="On hold, the manager takes no events but a closing one.")
+    assign_when_ready: AssignReviewersRequest | None = Field(
+        description="The reviewers the manager asks once the pull request is no longer "
+                    "a draft. Null when none are waiting.")
     unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")
@@ -1872,15 +1884,6 @@ class DismissRequest(BaseModel):
                     "next event, until it is no longer a draft, or for good. "
                     "Whichever it is, the manager stops its run and exits, "
                     "and the board goes with it.")
-
-
-class AssignReviewersRequest(BaseModel):
-    reviewers: list[str] = Field(
-        description="The logins asked to review the pull request on GitHub.")
-    detailed: str | None = Field(
-        description="The login written into the description's "
-                    "`Detailed reviewer: @login` line, replacing the one there. "
-                    "Null leaves the description alone.")
 
 
 class HeldPullRequest(BaseModel):

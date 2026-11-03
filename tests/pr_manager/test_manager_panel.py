@@ -11,6 +11,7 @@ from github_orchestrator.agent_runs.fake import (
     Reviewing,
 )
 from github_orchestrator.board_api.interface import DismissUntil
+from github_orchestrator.domain import ReviewerPick
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -26,7 +27,7 @@ from tests.pr_manager.support import (
     run_manager,
     seed_state,
 )
-from tests.settings.support import disk_dismissals, disk_holds
+from tests.settings.support import disk_dismissals, disk_holds, disk_picks
 
 THE_PR = a_pr(PR, REPO)
 URL = "https://github.com/o/n/pull/1"
@@ -440,6 +441,66 @@ def test_assigning_reviewers_github_refuses_says_why_in_the_notice(settings, tmp
     assert notice is not None and "Not Found" in notice
 
 
+def test_reviewers_picked_for_when_a_draft_is_ready_wait_on_disk_and_show_on_its_dashboard(
+        settings, tmp_path):
+    seed_state(settings, draft=True)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(draft=True))
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: board.panel.assign_when_ready(("anna", "bob"), "bob"),
+                          lambda: seen.append(board.panel.dashboard().assign_when_ready),
+                          board=board, github=github)
+    assert github.pr_state(THE_PR).pending_reviewers == ()
+    assert disk_picks(settings.data_dir).saved(THE_PR) == ReviewerPick(("anna", "bob"), "bob")
+    assert seen == [ReviewerPick(("anna", "bob"), "bob")]
+
+
+def test_a_waiting_pick_is_asked_on_github_once_the_pr_leaves_draft_and_then_forgotten(
+        settings, tmp_path):
+    seed_state(settings, draft=True)
+    disk_picks(settings.data_dir).save(THE_PR, ReviewerPick(("anna", "bob"), "bob"))
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(body="Adds widgets."))
+    board = ServerPanel()
+    waiting = []
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: waiting.append(github.pr_state(THE_PR).pending_reviewers),
+                          lambda: seed_state(settings, draft=False), None,
+                          board=board, github=github)
+    state = github.pr_state(THE_PR)
+    assert waiting == [()]
+    assert state.pending_reviewers == ("anna", "bob")
+    assert state.body == "Adds widgets.\n\nDetailed reviewer: @bob"
+    assert disk_picks(settings.data_dir).saved(THE_PR) is None
+    assert board.panel.dashboard().assign_when_ready is None
+
+
+def test_a_waiting_pick_github_refuses_says_why_in_the_notice_and_is_forgotten(
+        settings, tmp_path):
+    seed_state(settings, draft=False)
+    disk_picks(settings.data_dir).save(THE_PR, ReviewerPick(("anna",), None))
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and "Not Found" in notice
+    assert disk_picks(settings.data_dir).saved(THE_PR) is None
+
+
+def test_reviewers_cannot_wait_for_someone_elses_pr_to_be_ready(settings, tmp_path):
+    seed_state(settings, is_author=False, draft=True)
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: board.panel.assign_when_ready(("anna",), None),
+                lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
+                is_author=False, board=board)
+    assert disk_picks(settings.data_dir).saved(THE_PR) is None
+    assert seen == ["assigning reviewers is only for your own pull request"]
+
+
 def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_branch(
         settings, tmp_path):
     seed_state(settings, branch="expected-branch")
@@ -466,6 +527,7 @@ PRESSES = {
     "close": lambda panel: panel.close(),
     "mark ready": lambda panel: panel.mark_ready(),
     "assign reviewers": lambda panel: panel.assign_reviewers(("anna",), None),
+    "assign when ready": lambda panel: panel.assign_when_ready(("anna",), None),
 }
 
 
