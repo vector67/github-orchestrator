@@ -2,7 +2,11 @@ import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type RouterService from '@ember/routing/router-service';
-import type { DismissUntil, GitRun } from 'frontend/data/api';
+import type {
+  AssignReviewersRequest,
+  DismissUntil,
+  GitRun,
+} from 'frontend/data/api';
 import {
   dismissedSaying,
   fixChecksSaying,
@@ -29,6 +33,7 @@ export type Control =
   | 'carry-on'
   | 'start-review'
   | 'mark-ready'
+  | 'assign-reviewers'
   | 'take-over'
   | 'check-for-fixes'
   | 'dismiss'
@@ -42,7 +47,8 @@ export type Pressed =
   | 'palette'
   | 'confirm-dismiss'
   | 'confirm-close'
-  | 'confirm-ready';
+  | 'confirm-ready'
+  | 'confirm-assign';
 
 export interface Controlled {
   number: number;
@@ -77,6 +83,8 @@ const HINTS = {
     'Takes this PR off the wall, until its next event or forever; you choose after the click',
   'mark-ready':
     'Marks this draft ready for review on GitHub, after you confirm with what is still outstanding in front of you',
+  'assign-reviewers':
+    'Asks the people you pick to review this pull request on GitHub; the one you star is named detailed reviewer in its description',
   'take-over':
     'Treats this pull request as yours from now on, though someone else opened it: its agents fix CI, rebase and answer threads as they do on your own',
   'check-for-fixes':
@@ -91,6 +99,8 @@ const BOARD_DOWN = {
   close: 'Close goes through the manager’s board, which is not answering.',
   'mark-ready':
     'Ready for review goes through the manager’s board, which is not answering.',
+  'assign-reviewers':
+    'Assign reviewers goes through the manager’s board, which is not answering.',
   'take-over':
     'Take over goes through the manager’s board, which is not answering.',
   'check-for-fixes':
@@ -159,7 +169,8 @@ function offerOf(on: Controlled, control: Control): Offer {
       title: onHoldOf(shown) ? HINTS.resume : HINTS.hold,
     };
   }
-  if (control === 'close' && !on.yours) return ABSENT;
+  if ((control === 'close' || control === 'assign-reviewers') && !on.yours)
+    return ABSENT;
   if (control === 'mark-ready' && !(on.yours && shown.facts?.draft))
     return ABSENT;
   if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
@@ -180,6 +191,7 @@ const KEYS: Record<Control, string> = {
   'carry-on': 'c',
   'start-review': 'a',
   'mark-ready': 'r',
+  'assign-reviewers': 'R',
   'take-over': 'T',
   'check-for-fixes': 'F',
   dismiss: 'd',
@@ -277,7 +289,12 @@ export default class PrControlsService extends Service {
     if (control === 'close') return 'confirm-close';
     if (control === 'mark-ready') {
       void waitForPromise(this.readOutstanding(on));
+      this.store.readMentionable(on.shown);
       return 'confirm-ready';
+    }
+    if (control === 'assign-reviewers') {
+      this.store.readMentionable(on.shown);
+      return 'confirm-assign';
     }
     if (control === 'git') return 'palette';
     void this.carryOut(on, control);
@@ -286,8 +303,16 @@ export default class PrControlsService extends Service {
 
   close = (on: Controlled): Promise<void> => this.carryOut(on, 'close');
 
-  markReady = (on: Controlled): Promise<void> =>
-    this.carryOut(on, 'mark-ready');
+  markReady = (on: Controlled, pick: AssignReviewersRequest): Promise<void> =>
+    waitForPromise(this.markingReady(on, pick));
+
+  assignReviewers = (
+    on: Controlled,
+    pick: AssignReviewersRequest,
+  ): Promise<void> =>
+    waitForPromise(this.throughTheManager(on, 'assign-reviewers', pick)).then(
+      () => undefined,
+    );
 
   dismiss = (on: Controlled, until: DismissUntil): Promise<void> =>
     waitForPromise(this.dismissing(on, until));
@@ -349,6 +374,15 @@ export default class PrControlsService extends Service {
       fixChecksSaying(on.number, taken.body),
       taken.body.asked.length ? 'done' : 'failed',
     );
+  }
+
+  private async markingReady(
+    on: Controlled,
+    pick: AssignReviewersRequest,
+  ): Promise<void> {
+    if (!(await this.throughTheManager(on, 'mark-ready'))) return;
+    if (pick.reviewers.length)
+      await this.throughTheManager(on, 'assign-reviewers', pick);
   }
 
   private async readOutstanding(on: Controlled): Promise<void> {

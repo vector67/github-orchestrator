@@ -1056,6 +1056,124 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-toast]').doesNotExist();
   });
 
+  test('with nobody asked to review, the ready question lists it as outstanding first and offers the repository’s people to ask', async function (assert) {
+    board().mentionable = ['dave', 'anna', 'bob'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-ready-confirm] [data-test-outstanding]')
+      .hasAttribute('data-test-outstanding', 'reviewers')
+      .containsText('No reviewers requested');
+    assert.deepEqual(texts('[data-test-ready-confirm] [data-test-reviewer]'), [
+      'anna',
+      'bob',
+    ]);
+    assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
+  });
+
+  test('the reviewers picked in the ready question are asked once it is marked ready, the starred one as detailed reviewer', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard');
+    await press('r');
+
+    await click('[data-test-reviewer="anna"] input');
+    await click('[data-test-detailed="bob"]');
+
+    assert.dom('[data-test-reviewer="bob"] input').isChecked();
+    assert.dom('[data-test-detailed="bob"]').hasAria('pressed', 'true');
+    assert.dom('[data-test-ready-option]').hasText('Mark ready and ask 2 y');
+
+    await press('y');
+
+    assert.deepEqual(verbs(), ['mark-ready', 'assign-reviewers']);
+    assert.deepEqual(board().posted[1]?.body, {
+      reviewers: ['anna', 'bob'],
+      detailed: 'bob',
+    });
+  });
+
+  test('marked ready with nobody picked, nobody is asked', async function (assert) {
+    board().mentionable = ['anna'];
+    onTheHub({ facts: { draft: true, pending_reviewers: [] } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+    await press('y');
+
+    assert.deepEqual(verbs(), ['mark-ready']);
+  });
+
+  test('a draft someone is asked to review has no reviewer question when it is marked ready', async function (assert) {
+    board().mentionable = ['anna'];
+    onTheHub({ facts: { draft: true, pending_reviewers: ['carol'] } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-ready-confirm]')
+      .containsText('Nothing outstanding.');
+    assert.dom('[data-test-reviewer]').doesNotExist();
+  });
+
+  test('your pull request offers Assign reviewers, which asks the people picked and names the starred one detailed reviewer', async function (assert) {
+    board().mentionable = ['dave', 'anna', 'bob'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="assign-reviewers"]')
+      .hasText('Assign reviewers ⇧R')
+      .hasAttribute('title', /\w/);
+
+    await press('R');
+
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .hasAttribute('role', 'dialog')
+      .containsText('Assign reviewers to #7');
+    assert.deepEqual(texts('[data-test-reviewer]'), ['anna', 'bob']);
+    assert.dom('[data-test-assign-option]').isDisabled();
+
+    await click('[data-test-detailed="anna"]');
+    await click('[data-test-assign-option]');
+
+    assert.deepEqual(verbs(), ['assign-reviewers']);
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['anna'],
+      detailed: 'anna',
+    });
+    assert.dom('[data-test-assign-reviewers]').doesNotExist();
+  });
+
+  test('unpicking the starred reviewer takes the star off', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('R');
+
+    await click('[data-test-detailed="anna"]');
+    await click('[data-test-reviewer="bob"] input');
+    await click('[data-test-reviewer="anna"] input');
+    await click('[data-test-assign-option]');
+
+    assert.deepEqual(board().posted[0]?.body, {
+      reviewers: ['bob'],
+      detailed: null,
+    });
+  });
+
+  test('a pull request that is not yours offers no Assign reviewers', async function (assert) {
+    onTheHub({ facts: { is_author: false } });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-control="assign-reviewers"]').doesNotExist();
+  });
+
   test('Ready for review stays pending with the ring after the manager takes it, until the dashboard shows the pull request ready', async function (assert) {
     onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');

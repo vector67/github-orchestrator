@@ -519,10 +519,15 @@ The band at the top has your move and why, and the buttons: **Open the Board**
 (`h`), **Carry on** (`c`), **Start a review agent** (`a`) when your move is to
 review or re-review, which starts the review agent a review request would, for
 when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
-own draft, which first lists what is still outstanding (unsent drafts, Board
-threads waiting on you, threads unresolved on GitHub that the Board has not
-resolved or does not track, failing CI, a needed rebase,
-unpushed commits and agent work) and then marks it ready on GitHub, **Take over**
+own draft, which first lists what is still outstanding (nobody asked to review,
+unsent drafts, Board threads waiting on you, threads unresolved on GitHub that
+the Board has not resolved or does not track, failing CI, a needed rebase,
+unpushed commits and agent work) and then marks it ready on GitHub; when nobody
+is asked to review it also offers the repository's people to ask, as Assign
+reviewers does, **Assign reviewers** (`⇧R`, then `y`) on your own PR, which asks
+the people you tick to review on GitHub and writes the one you star as
+`Detailed reviewer: @<login>` in the description, replacing a line already
+there, **Take over**
 (`⇧T`) on someone else's PR, after which the orchestrator treats it as yours:
 agents fix CI, rebase and answer its comments, the author's buttons appear, and
 the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft

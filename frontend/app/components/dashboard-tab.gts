@@ -46,6 +46,8 @@ import type TerminalService from 'frontend/services/terminal';
 import type ToastsService from 'frontend/services/toasts';
 import modal from 'frontend/modifiers/modal';
 import ReadyConfirm from 'frontend/components/ready-confirm';
+import AssignReviewers from 'frontend/components/assign-reviewers';
+import type { AssignReviewersRequest, Person } from 'frontend/data/api';
 
 type Pane = 'notes' | 'agent';
 
@@ -54,6 +56,7 @@ const KEYED = [
   'carry-on',
   'start-review',
   'mark-ready',
+  'assign-reviewers',
   'take-over',
   'check-for-fixes',
   'dismiss',
@@ -80,7 +83,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: 'dismiss' | 'close' | null = null;
+  @tracked asking: 'dismiss' | 'close' | 'assign' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -224,6 +227,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     if (next === 'confirm-dismiss') this.asking = 'dismiss';
     else if (next === 'confirm-close') this.asking = 'close';
     else if (next === 'confirm-ready') this.askReady(true);
+    else if (next === 'confirm-assign') this.asking = 'assign';
     else if (next === 'palette') this.palette.open();
     return next !== 'nothing';
   };
@@ -252,11 +256,22 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.askReady(false);
   };
 
-  markReady = () => {
+  markReady = (pick: AssignReviewersRequest) => {
     this.cancelReady();
     const on = this.on;
-    if (on) void this.controls.markReady(on);
+    if (on) void this.controls.markReady(on, pick);
   };
+
+  assignReviewers = (pick: AssignReviewersRequest) => {
+    this.cancelAsking();
+    const on = this.on;
+    if (on) void this.controls.assignReviewers(on, pick);
+  };
+
+  get people(): Person[] {
+    const pr = this.here.pr;
+    return pr ? this.store.reviewable(pr) : [];
+  }
 
   get readyAbout(): Numbered | null {
     return this.args.ready && this.offered('mark-ready') ? this.here.pr : null;
@@ -414,6 +429,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                     />{{/if}}{{this.labelOf "mark-ready" "Ready for review"}}
                   <kbd>{{capOfControl "mark-ready"}}</kbd></button>
               {{/if}}
+              {{#if (this.offered "assign-reviewers")}}
+                <button
+                  type="button"
+                  class="btn"
+                  disabled={{this.heldBack "assign-reviewers"}}
+                  title={{this.titleOf "assign-reviewers"}}
+                  data-test-control="assign-reviewers"
+                  {{on "click" (fn this.press "assign-reviewers")}}
+                >{{this.labelOf "assign-reviewers" "Assign reviewers"}}
+                  <kbd>{{capOfControl "assign-reviewers"}}</kbd></button>
+              {{/if}}
               {{#if (this.offered "take-over")}}
                 <button
                   type="button"
@@ -508,8 +534,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @repo={{this.readyAbout.repo}}
             @number={{this.readyAbout.number}}
             @outstanding={{this.outstanding}}
+            @people={{this.people}}
             @mark={{this.markReady}}
             @cancel={{this.cancelReady}}
+          />
+        {{/if}}
+        {{#if (eq this.asking "assign")}}
+          <AssignReviewers
+            @number={{this.reading.number}}
+            @people={{this.people}}
+            @assign={{this.assignReviewers}}
+            @cancel={{this.cancelAsking}}
           />
         {{/if}}
         {{#if (eq this.asking "dismiss")}}

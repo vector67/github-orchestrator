@@ -820,7 +820,8 @@ export type Slot =
   | 'git'
   | 'session'
   | 'ask'
-  | 'summary';
+  | 'summary'
+  | 'reviewers';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -847,6 +848,11 @@ const PR_WRITES = {
     until: (facts) => !facts.draft,
   },
   'take-over': { doing: 'taking it over', square: null, slot: 'controls' },
+  'assign-reviewers': {
+    doing: 'asking the reviewers',
+    square: null,
+    slot: 'reviewers',
+  },
   'check-for-fixes': {
     doing: 'asking for the checks',
     square: null,
@@ -944,6 +950,7 @@ const SLOTS: Slot[] = [
   'session',
   'ask',
   'summary',
+  'reviewers',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {

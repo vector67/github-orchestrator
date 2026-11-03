@@ -80,6 +80,10 @@ export const SHORTCUTS: ShortcutGroup[] = [
         does: 'Ready for review, after you confirm',
       },
       {
+        keys: [capOfControl('assign-reviewers')],
+        does: 'Assign reviewers, starring the detailed reviewer',
+      },
+      {
         keys: [capOfControl('take-over')],
         does: 'Take over someone else’s pull request as yours',
       },

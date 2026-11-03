@@ -542,7 +542,14 @@ export function summaryOf(
 }
 
 export type OutstandingKind =
-  'drafts' | 'board' | 'unresolved' | 'ci' | 'rebase' | 'unpushed' | 'agent';
+  | 'reviewers'
+  | 'drafts'
+  | 'board'
+  | 'unresolved'
+  | 'ci'
+  | 'rebase'
+  | 'unpushed'
+  | 'agent';
 
 export interface OutstandingItem {
   key: string;
@@ -564,6 +571,7 @@ export interface Outstanding {
 }
 
 const OUTSTANDING_LABELS: Record<OutstandingKind, string> = {
+  reviewers: 'No reviewers requested',
   drafts: 'Unsent draft comments',
   board: 'Board threads waiting on you',
   unresolved: 'Unresolved on GitHub',
@@ -672,6 +680,16 @@ function outstandingFrom(
       : [];
   const unresolved = unresolvedOf(all, board, facts);
   const items: Record<OutstandingKind, OutstandingItem[]> = {
+    reviewers:
+      facts && !facts.pending_reviewers.length
+        ? [
+            {
+              key: 'reviewers',
+              where: 'GitHub',
+              what: 'nobody is asked to review',
+            },
+          ]
+        : [],
     drafts: all
       .filter((one) => one.state === 'draft')
       .map((one) => threadItem(one, one.gist ?? 'unsent comment')),
@@ -1548,6 +1566,19 @@ export function timelineOf(
     timeline,
   });
   return timeline;
+}
+
+export function reviewersOf(
+  pr: PrEntity | undefined,
+  assignable: string[],
+  names: Record<string, string | null>,
+): Person[] {
+  return assignable
+    .filter((login) => login !== pr?.author)
+    .map((login) => ({
+      login,
+      name: Object.hasOwn(names, login) ? (names[login] ?? null) : null,
+    }));
 }
 
 export function mentionableOf(

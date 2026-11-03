@@ -105,6 +105,7 @@ import {
   filesOf,
   heldOf,
   mentionableOf,
+  reviewersOf,
   outstandingOf,
   placeOf,
   prHeaderOf,
@@ -915,6 +916,14 @@ export default class StoreService extends Service {
     return mentionableOf(
       this.prs[key],
       this.threads[key],
+      this.assignable[pr.repo] ?? [],
+      this.names,
+    );
+  }
+
+  reviewable(pr: Numbered): Person[] {
+    return reviewersOf(
+      this.prs[keyOf(pr.repo, pr.number)],
       this.assignable[pr.repo] ?? [],
       this.names,
     );

@@ -1343,6 +1343,38 @@ button.copy-directory {
   color: var(--muted);
 }
 
+.decide-dialog .reviewer-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.decide-dialog .reviewer-list {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decide-dialog .reviewer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--grey-fill);
+}
+
+.decide-dialog .reviewer-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-m);
+  cursor: pointer;
+}
+
 .decide-dialog > form.hold-warning {
   border: 2px solid var(--yellow);
   border-top-width: 6px;
