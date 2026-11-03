@@ -118,7 +118,7 @@ body {
   .linkish,
   .reply-open,
   .commit-edit,
-  .review-draft-tools button,
+  .review-draft-tools :is(a, button),
   .dialog-actions button.ghost,
   #panel-actions button[data-weight="ghost"],
   .diff-frame:not([data-expanded]) button.expand-diff
@@ -444,7 +444,7 @@ input[type="radio"] {
   box-shadow: inset 3px 0 0 var(--blue);
 }
 
-.rail-row[aria-selected="true"]::before,
+.rail-row:has(> [aria-selected="true"])::before,
 .wall-row[aria-current="true"]::before {
   position: absolute;
   inset: 0;
@@ -457,7 +457,7 @@ input[type="radio"] {
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
-.rail-row[aria-selected="true"][data-square="reopened"]::before {
+.rail-row[data-square="reopened"]:has(> [aria-selected="true"])::before {
   background: var(--grey-fill);
 }
 
@@ -520,6 +520,14 @@ input[type="radio"] {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rail-row-text::after {
+  position: absolute;
+  inset: 0;
+  content: "";
 }
 
 .rail-row .gist,
@@ -1754,6 +1762,7 @@ button.copy-directory {
   font: inherit;
   font-size: var(--fs-s);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   color: var(--text);
   background: var(--card);
@@ -2695,6 +2704,7 @@ kbd {
   padding: 0;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   color: inherit;
   background: none;
@@ -3926,9 +3936,11 @@ kbd {
 
 .switcher-row {
   display: flex;
+  box-sizing: border-box;
   width: calc(100% - 24px);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   color: var(--text);
   background: none;

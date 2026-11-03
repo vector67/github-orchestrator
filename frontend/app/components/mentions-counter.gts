@@ -6,6 +6,7 @@ import { fn } from '@ember/helper';
 import type RouterService from '@ember/routing/router-service';
 import type { OutstandingMention } from 'frontend/data/api';
 import { pageOf } from 'frontend/data/wall';
+import navigates from 'frontend/modifiers/navigates';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
@@ -47,12 +48,15 @@ export default class MentionsCounter extends Component {
     this.keys.drop(this.keymap);
   };
 
+  hrefOf = (mention: OutstandingMention): string =>
+    pageOf(
+      { repo: mention.repo, number: mention.number },
+      `/conversations/${encodeURIComponent(mention.thread ?? '')}`,
+    );
+
   go = async (mention: OutstandingMention): Promise<void> => {
     this.close();
-    const pr = { repo: mention.repo, number: mention.number };
-    await this.router.transitionTo(
-      pageOf(pr, `/conversations/${encodeURIComponent(mention.thread ?? '')}`),
-    );
+    await this.router.transitionTo(this.hrefOf(mention));
   };
 
   <template>
@@ -82,12 +86,12 @@ export default class MentionsCounter extends Component {
                 {{mention.repo}}#{{mention.number}}</span>
               <span class="mention-body">{{mention.body}}</span>
               {{#if (opensOnTheBoard mention)}}
-                <button
-                  type="button"
+                <a
+                  href={{this.hrefOf mention}}
                   class="linkish"
                   data-test-mention-open
-                  {{on "click" (fn this.go mention)}}
-                >Open on the board</button>
+                  {{navigates (fn this.go mention)}}
+                >Open on the board</a>
               {{else}}
                 <span class="mention-off">not on the board ·
                   <a

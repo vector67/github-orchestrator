@@ -49,6 +49,7 @@ import type {
 import type TerminalService from 'frontend/services/terminal';
 import type ToastsService from 'frontend/services/toasts';
 import modal from 'frontend/modifiers/modal';
+import navigates from 'frontend/modifiers/navigates';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import AssignReviewers from 'frontend/components/assign-reviewers';
 import type { AssignReviewersRequest } from 'frontend/data/api';
@@ -217,6 +218,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   flipPane = () => {
     this.pane = this.pane === 'notes' ? 'agent' : 'notes';
   };
+
+  get boardHref(): string {
+    return this.router.urlFor('conversations');
+  }
 
   toBoard = () => {
     void this.router.transitionTo('conversations');
@@ -387,12 +392,12 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 <kbd>{{capOfControl "release"}}</kbd></button>
             {{else}}
               {{#if this.threadsWaiting}}
-                <button
-                  type="button"
+                <a
+                  href={{this.boardHref}}
                   class="btn"
                   data-test-control="board"
-                  {{on "click" this.toBoard}}
-                >Open the Board <kbd>2</kbd></button>
+                  {{navigates this.toBoard}}
+                >Open the Board <kbd>2</kbd></a>
               {{/if}}
               {{#if this.reading.onHold}}
                 <button

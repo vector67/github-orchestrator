@@ -21,6 +21,7 @@ import {
   type DashboardOver,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
+import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
 
 const SHELL = {
   id: 'shell-1',
@@ -320,6 +321,18 @@ module('Acceptance | terminal', function (hooks) {
     assert
       .dom('[data-test-session="claude-k1"]')
       .hasAttribute('aria-current', 'true');
+  });
+
+  test('Go to the session links to the Terminal tab', async function (assert) {
+    board().conversations = [board().threadIn('session', { key: 'k1' })];
+    board().proposals['k1'] = [proposal({ directory: '/wt/thread-k1' })];
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert
+      .dom('[data-test-go-to-session]')
+      .hasAttribute('href', '/pr/o/r/7/terminal');
+    assert.true(await leftToTheBrowser('[data-test-go-to-session]'));
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
   });
 
   test('a Session open conversation whose session is gone says so and puts the comment back where it was', async function (assert) {

@@ -17,6 +17,7 @@ import {
   type FakeBoard,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
+import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
 
 const SLOW = 5000;
 
@@ -443,6 +444,15 @@ module('Acceptance | send review', function (hooks) {
     assert.strictEqual(board().posted.length, asked);
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/draft_a');
     assert.dom('[data-test-review]').doesNotExist();
+  });
+
+  test('a draft’s Edit links to its conversation', async function (assert) {
+    await opened();
+    const edit = '[data-test-review-draft="draft_a"] [data-test-edit]';
+
+    assert.dom(edit).hasAttribute('href', '/pr/o/r/7/conversations/draft_a');
+    assert.true(await leftToTheBrowser(edit));
+    assert.dom('[data-test-review]').exists();
   });
 
   test('a draft in a review on its way to GitHub opens locked', async function (assert) {

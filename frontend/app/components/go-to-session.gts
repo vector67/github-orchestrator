@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { on } from '@ember/modifier';
 import type RouterService from '@ember/routing/router-service';
+import navigates from 'frontend/modifiers/navigates';
 import type TerminalService from 'frontend/services/terminal';
 
 export interface GoToSessionSignature {
@@ -12,6 +12,10 @@ export default class GoToSession extends Component<GoToSessionSignature> {
   @service declare router: RouterService;
   @service declare terminal: TerminalService;
 
+  get href(): string {
+    return this.router.urlFor('terminal');
+  }
+
   go = async (): Promise<void> => {
     const { conversation, directory } = this.args;
     const { terminal } = this;
@@ -20,11 +24,11 @@ export default class GoToSession extends Component<GoToSessionSignature> {
   };
 
   <template>
-    <button
-      type="button"
+    <a
+      href={{this.href}}
       class="linkish go-to-session"
       data-test-go-to-session
-      {{on "click" this.go}}
-    >Go to the session in the Terminal tab</button>
+      {{navigates this.go}}
+    >Go to the session in the Terminal tab</a>
   </template>
 }

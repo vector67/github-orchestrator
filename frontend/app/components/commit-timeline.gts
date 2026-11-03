@@ -8,6 +8,7 @@ import type { Picked, Timeline } from 'frontend/data/timeline';
 import PendingRing from 'frontend/components/pending-ring';
 import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
+import { staysInThisTab } from 'frontend/modifiers/navigates';
 
 type End = 'from' | 'to';
 
@@ -104,6 +105,8 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     const target = event.target as Element;
     const opens = target.closest('[data-opens]')?.getAttribute('data-opens');
     if (opens) {
+      if (!staysInThisTab(event)) return;
+      event.preventDefault();
       void this.router.transitionTo(opens);
       return;
     }
@@ -555,16 +558,16 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 data-test-label-box={{label.kind}}
               />
             {{/if}}
-            <text
-              class="timeline-label"
-              x={{label.x}}
-              y={{label.y}}
-              dominant-baseline="middle"
-              data-kind={{label.kind}}
-              data-at={{label.at}}
-              data-opens={{label.opens}}
-              data-test-lane-label={{label.kind}}
-            >{{label.text}}</text>
+            <a href={{label.opens}}><text
+                class="timeline-label"
+                x={{label.x}}
+                y={{label.y}}
+                dominant-baseline="middle"
+                data-kind={{label.kind}}
+                data-at={{label.at}}
+                data-opens={{label.opens}}
+                data-test-lane-label={{label.kind}}
+              >{{label.text}}</text></a>
           {{/each}}
           {{#each @timeline.band.handles key="end" as |handle|}}
             <rect

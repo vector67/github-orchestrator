@@ -1,8 +1,8 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import BoardCard from 'frontend/components/board-card';
+import navigates from 'frontend/modifiers/navigates';
 import type BoardKeysService from 'frontend/services/board-keys';
 import type { Group } from 'frontend/data/groups';
 import type { Row } from 'frontend/data/rows';
@@ -42,9 +42,10 @@ export default class BoardColumns extends Component<BoardColumnsSignature> {
             {{#each column.rows key="id" as |row|}}
               <BoardCard
                 @row={{row}}
+                @href={{this.boardKeys.hrefOf row.id}}
                 data-flip-key={{row.id}}
                 data-flip-group={{column.column.key}}
-                {{on "click" (fn this.boardKeys.open row.id)}}
+                {{navigates (fn this.boardKeys.open row.id)}}
               />
             {{/each}}
           </div>

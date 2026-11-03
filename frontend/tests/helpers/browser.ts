@@ -1,3 +1,20 @@
+import { click } from '@ember/test-helpers';
+
+export async function leftToTheBrowser(target: string): Promise<boolean> {
+  let left = false;
+  const watch = (event: MouseEvent) => {
+    left = !event.defaultPrevented;
+    event.preventDefault();
+  };
+  window.addEventListener('click', watch);
+  try {
+    await click(target, { metaKey: true });
+  } finally {
+    window.removeEventListener('click', watch);
+  }
+  return left;
+}
+
 export interface GitHubCalls {
   opened: string[];
   copied: string[];

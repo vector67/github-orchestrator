@@ -98,12 +98,12 @@ module('Acceptance | polling', function (hooks) {
 
   test('a rail row survives a refresh', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
-    const before = document.querySelector('#rows li[role="option"]');
+    const before = document.querySelector('#rows li:has(> [role="option"])');
 
     await moved('second');
 
     assert.strictEqual(
-      document.querySelector('#rows li[role="option"]'),
+      document.querySelector('#rows li:has(> [role="option"])'),
       before,
       'the rail is redrawn every poll',
     );

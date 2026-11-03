@@ -170,8 +170,8 @@ module('Acceptance | panel', function (hooks) {
   test('prev and next ready are buttons, not text shaped like one', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.dom('[data-test-prev]').hasTagName('button').hasText('← Prev');
-    assert.dom('[data-test-next]').hasTagName('button').hasText('Next ready →');
+    assert.dom('[data-test-prev]').hasTagName('a').hasText('← Prev');
+    assert.dom('[data-test-next]').hasTagName('a').hasText('Next ready →');
   });
 
   test('clicking a row opens it and puts it in the url', async function (assert) {
@@ -180,7 +180,9 @@ module('Acceptance | panel', function (hooks) {
     await click(`#c-${KEY}`);
 
     assert.strictEqual(currentURL(), `/pr/o/r/7/conversations/${KEY}`);
-    assert.dom(`#c-${KEY}`).hasAttribute('aria-selected', 'true');
+    assert
+      .dom(`#c-${KEY} [role="option"]`)
+      .hasAttribute('aria-selected', 'true');
   });
 
   test('the panel reads the thread, its operations and its proposals', async function (assert) {

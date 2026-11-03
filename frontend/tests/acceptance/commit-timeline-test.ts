@@ -22,6 +22,7 @@ import {
   setupFakeBoard,
 } from 'frontend/tests/helpers/fake-board';
 import type { PullRequestCommits } from 'frontend/data/api';
+import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
 
 const FORK = 'ba5e000';
 const FIRST = 'a1a1a1a';
@@ -842,6 +843,16 @@ module(
       await click('[data-test-lane-label="stack"]');
 
       assert.strictEqual(currentURL(), '/pr/o/r/6/diff');
+    });
+
+    test('the base pull request’s lane label links to its diff', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+      const label = '[data-test-lane-label="stack"]';
+
+      assert.dom(`a:has(> ${label})`).hasAttribute('href', '/pr/o/r/6/diff');
+      assert.true(await leftToTheBrowser(label));
+      assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
     });
   },
 );

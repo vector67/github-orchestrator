@@ -16,7 +16,7 @@ function headings(): (string | null)[] {
 }
 
 function rowIds(): string[] {
-  return [...document.querySelectorAll('#rows li[role="option"]')].map(
+  return [...document.querySelectorAll('#rows li:has(> [role="option"])')].map(
     (node) => node.id,
   );
 }
@@ -242,8 +242,8 @@ module('Acceptance | rail', function (hooks) {
 
     await visit('/pr/o/r/7/conversations/b');
 
-    assert.dom('#c-b').hasAttribute('aria-selected', 'true');
-    assert.dom('#c-a').hasAttribute('aria-selected', 'false');
+    assert.dom('#c-b [role="option"]').hasAttribute('aria-selected', 'true');
+    assert.dom('#c-a [role="option"]').hasAttribute('aria-selected', 'false');
   });
 
   test('a record the board cannot read is still a row', async function (assert) {

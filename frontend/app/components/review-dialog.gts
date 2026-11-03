@@ -6,6 +6,8 @@ import PendingRing from 'frontend/components/pending-ring';
 import type { ReviewVerdict } from 'frontend/data/api';
 import { inFlight } from 'frontend/data/decisions';
 import modal from 'frontend/modifiers/modal';
+import navigates from 'frontend/modifiers/navigates';
+import type BoardKeysService from 'frontend/services/board-keys';
 import type ReviewService from 'frontend/services/review';
 import autocomplete from 'frontend/modifiers/autocomplete';
 
@@ -25,6 +27,7 @@ function is(one: unknown, other: unknown): boolean {
 
 export default class ReviewDialog extends Component {
   @service declare review: ReviewService;
+  @service('board-keys') declare boardKeys: BoardKeysService;
 
   readonly verdicts = VERDICTS;
 
@@ -132,12 +135,12 @@ export default class ReviewDialog extends Component {
                   >{{one.pending}}</span>
                 {{else}}
                   <span class="review-draft-tools">
-                    <button
-                      type="button"
+                    <a
+                      href={{this.boardKeys.hrefOf one.key}}
                       class="ghost"
                       data-test-edit
-                      {{on "click" (fn this.review.edit one.key)}}
-                    >Edit</button>
+                      {{navigates (fn this.review.edit one.key)}}
+                    >Edit</a>
                     <button
                       type="button"
                       class="ghost"
