@@ -156,6 +156,13 @@ class GhCliGitHub:
             return str(refused)
         return None
 
+    def assign_reviewers(self, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        try:
+            _pull_requests.assign_reviewers(self._gh, pr, reviewers, detailed)
+        except GhError as refused:
+            return str(refused)
+        return None
+
     def url(self, pr: Pr) -> str:
         return _pages.pr_url(pr)
 

@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from github_orchestrator.agent_runs import PrWork, Run
 from github_orchestrator.change_detection import ChangeDetection, ReviewRequested
@@ -15,6 +16,8 @@ log = logging.getLogger(__name__)
 NOTICE_SECONDS = 4.0
 
 NOT_YOUR_DRAFT = "mark ready is only for your own draft"
+
+NOT_YOURS_TO_ASSIGN = "assigning reviewers is only for your own pull request"
 
 
 class ManagerCommands:
@@ -40,10 +43,11 @@ class ManagerCommands:
 
     def obey(self, *, frozen: bool) -> None:
         for pending in self._command_files.pending(self._config.pr):
-            self.carry_out(pending.command, frozen=frozen)
+            self.carry_out(pending.command, frozen=frozen, fields=pending.fields)
             self._command_files.delete(pending)
 
-    def carry_out(self, command: Command, *, frozen: bool) -> None:
+    def carry_out(self, command: Command, *, frozen: bool,
+                  fields: dict[str, Any] | None = None) -> None:
         pr = self._config.pr
         if self._dismissed:
             log.info("%s: %s dropped — the manager is leaving", pr, command)
@@ -58,7 +62,7 @@ class ManagerCommands:
             self.notify(refused)
             return
         try:
-            self._act(command)
+            self._act(command, fields or {})
         except Exception:
             log.exception("Error carrying out %s for %s", command, pr)
 
@@ -78,7 +82,7 @@ class ManagerCommands:
             return None
         return self._notice
 
-    def _act(self, command: Command) -> None:
+    def _act(self, command: Command, fields: dict[str, Any]) -> None:
         match command:
             case Command.HOLD:
                 self._set_on_hold(True)
@@ -101,6 +105,8 @@ class ManagerCommands:
                 self._close()
             case Command.MARK_READY:
                 self._mark_ready()
+            case Command.ASSIGN_REVIEWERS:
+                self._assign_reviewers(fields["reviewers"], fields["detailed"])
             case Command.TAKE_OVER:
                 self._change_detection.take_over(self._config.pr)
                 log.info("%s: taken over — treated as yours from now on", self._config.pr)
@@ -157,3 +163,17 @@ class ManagerCommands:
             self.notify(refused)
             return
         log.info("Marked %s ready for review on GitHub", pr)
+
+    def _assign_reviewers(self, reviewers: list[str], detailed: str | None) -> None:
+        pr = self._config.pr
+        facts = self._change_detection.facts(pr)
+        if facts is None or not facts.is_author:
+            log.info("assign reviewers %s: refused — not yours", pr)
+            self.notify(NOT_YOURS_TO_ASSIGN)
+            return
+        refused = self._pull_requests.assign_reviewers(pr, reviewers, detailed)
+        if refused is not None:
+            log.warning("assign reviewers %s: GitHub refused — %s", pr, refused)
+            self.notify(refused)
+            return
+        log.info("Asked %s to review %s on GitHub", ", ".join(reviewers), pr)

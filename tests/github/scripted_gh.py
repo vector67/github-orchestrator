@@ -1,7 +1,7 @@
 import json
 import re
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -360,7 +360,9 @@ class _World:
             ("GET", r"repos/([^/]+/[^/]+)", self._repo),
             ("GET", r"repos/([^/]+/[^/]+)/assignees\?per_page=100", self._assignees),
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._pull),
-            ("PATCH", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._close),
+            ("PATCH", r"repos/([^/]+/[^/]+)/pulls/(\d+)", self._edit_pull),
+            ("POST", r"repos/([^/]+/[^/]+)/pulls/(\d+)/requested_reviewers",
+             self._request_reviewers),
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)/reviews/(\d+)/comments",
              self._review_comments),
             ("POST", r"repos/([^/]+/[^/]+)/issues/(\d+)/comments", self._comment_on_pr),
@@ -432,9 +434,20 @@ class _World:
             "state": "open" if record.status == "OPEN" else "closed",
         }
 
-    def _close(self, request: GhRequest, repo: str, number: str) -> Any:
-        assert request.payload == {"state": "closed"}, request.payload
-        if self.world.close(a_pr(int(number), repo)) is not None:
+    def _edit_pull(self, request: GhRequest, repo: str, number: str) -> Any:
+        record = self._record(repo, int(number))
+        if record is None:
+            return Failure(NOT_FOUND)
+        if request.payload == {"state": "closed"}:
+            self.world.close(record.pr)
+        else:
+            assert list(request.payload) == ["body"], request.payload
+            record.state = replace(record.state, body=request.payload["body"])
+        return self._pull(request, repo, number)
+
+    def _request_reviewers(self, request: GhRequest, repo: str, number: str) -> Any:
+        if self.world.assign_reviewers(a_pr(int(number), repo), request.payload["reviewers"],
+                                       None) is not None:
             return Failure(NOT_FOUND)
         return self._pull(request, repo, number)
 

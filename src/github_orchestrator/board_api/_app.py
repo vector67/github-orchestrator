@@ -28,6 +28,7 @@ from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
     ApproveRequest,
+    AssignReviewersRequest,
     BaseFork,
     BriefRequest,
     ClientError,
@@ -825,6 +826,17 @@ def mark_pull_request_ready(board: Serving) -> Response:
     GitHub's refusal in the status's notice.
     """
     return _handed_over(board, board.manager.mark_ready())
+
+
+@writes.post("/manager:assign-reviewers", status_code=202, tags=["manager"],
+             operation_id="assignReviewers", responses=HANDED_TO_THE_MANAGER,
+             summary="Ask reviewers to review this pull request and name its detailed reviewer.")
+def assign_reviewers(board: Serving, asked: AssignReviewersRequest) -> Response:
+    """The manager requests the reviews on GitHub and writes the detailed
+    reviewer into the description, or puts GitHub's refusal in the status's
+    notice.
+    """
+    return _handed_over(board, board.manager.assign_reviewers(asked.reviewers, asked.detailed))
 
 
 @writes.post("/manager:take-over", status_code=202, tags=["manager"],

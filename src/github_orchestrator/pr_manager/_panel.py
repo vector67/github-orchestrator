@@ -1,6 +1,7 @@
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel
@@ -80,6 +81,10 @@ class FilePanel(ManagerPanel):
     def mark_ready(self) -> str | None:
         return self._hand(Command.MARK_READY)
 
+    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        return self._hand(Command.ASSIGN_REVIEWERS,
+                          {"reviewers": list(reviewers), "detailed": detailed})
+
     def take_over(self) -> str | None:
         return self._hand(Command.TAKE_OVER)
 
@@ -135,10 +140,10 @@ class FilePanel(ManagerPanel):
             log.info("%s: %s refused — %s", self._pr, what, refused)
         return refused
 
-    def _hand(self, command: Command) -> str | None:
+    def _hand(self, command: Command, fields: dict[str, Any] | None = None) -> str | None:
         refused = self._refusal(command, command)
         if refused is None:
-            self._command_files.write(self._pr, command)
+            self._command_files.write(self._pr, command, fields or {})
         return refused
 
 

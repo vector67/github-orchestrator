@@ -1,7 +1,9 @@
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from github_orchestrator.domain import Pr
+from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github._gh_cli import Gh
 from github_orchestrator.github.interface import (
     Check,
@@ -321,6 +323,15 @@ mutation($id: ID!) {
 def mark_ready(gh: Gh, pr: Pr) -> None:
     pull = gh.api(f"repos/{pr.repo}/pulls/{pr.number}")
     gh.graphql_mutate(_MARK_READY_MUTATION, {"id": pull["node_id"]})
+
+
+def assign_reviewers(gh: Gh, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> None:
+    path = f"repos/{pr.repo}/pulls/{pr.number}"
+    gh.api_json(f"{path}/requested_reviewers", {"reviewers": list(reviewers)})
+    if detailed is None:
+        return
+    body = gh.api(path).get("body") or ""
+    gh.api_json(path, {"body": with_detailed_reviewer(body, detailed)}, method="PATCH")
 
 
 def relevance(gh: Gh, pr: Pr) -> Relevance | None:

@@ -54,6 +54,11 @@ export interface ApproveRequest {
   ticket?: Ticket | null;
 }
 
+export interface AssignReviewersRequest {
+  reviewers: string[];
+  detailed: string | null;
+}
+
 export type AuthorKind = 'mine' | 'human' | 'bot';
 
 export interface BaseFork {

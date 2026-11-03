@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -57,6 +58,7 @@ class FakeManagerPanel:
     dismissed: DismissUntil | None = None
     closed: int = 0
     marked_ready: int = 0
+    assigned: list[tuple[tuple[str, ...], str | None]] = field(default_factory=list)
     taken_over: int = 0
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
     ran: list[str] = field(default_factory=list)
@@ -102,6 +104,11 @@ class FakeManagerPanel:
     def mark_ready(self) -> str | None:
         if self.refusal is None:
             self.marked_ready += 1
+        return self.refusal
+
+    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        if self.refusal is None:
+            self.assigned.append((tuple(reviewers), detailed))
         return self.refusal
 
     def take_over(self) -> str | None:

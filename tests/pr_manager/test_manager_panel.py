@@ -389,6 +389,57 @@ def test_a_mark_ready_github_refuses_says_why_in_the_notice(settings, tmp_path):
     assert notice is not None and "Not Found" in notice
 
 
+def test_reviewers_assigned_from_the_board_are_asked_on_github_with_the_detailed_one_named(
+        settings, tmp_path):
+    seed_state(settings)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(body="Adds widgets."))
+    board = ServerPanel()
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: board.panel.assign_reviewers(("anna", "bob"), "bob"), None,
+                          board=board, github=github)
+    state = github.pr_state(THE_PR)
+    assert state.pending_reviewers == ("anna", "bob")
+    assert state.body == "Adds widgets.\n\nDetailed reviewer: @bob"
+
+
+def test_marking_ready_then_assigning_reviewers_does_both_on_github(settings, tmp_path):
+    seed_state(settings, draft=True)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState(draft=True))
+    board = ServerPanel()
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: (board.panel.mark_ready(),
+                                   board.panel.assign_reviewers(("anna",), None)),
+                          None, board=board, github=github)
+    state = github.pr_state(THE_PR)
+    assert (state.draft, state.pending_reviewers) == (False, ("anna",))
+
+
+def test_assigning_reviewers_is_refused_on_someone_elses_pr(settings, tmp_path):
+    seed_state(settings, is_author=False)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: board.panel.assign_reviewers(("anna",), None),
+                lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
+                is_author=False, board=board, github=github)
+    assert github.pr_state(THE_PR).pending_reviewers == ()
+    assert seen == ["assigning reviewers is only for your own pull request"]
+
+
+def test_assigning_reviewers_github_refuses_says_why_in_the_notice(settings, tmp_path):
+    seed_state(settings)
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path,
+                          lambda: board.panel.assign_reviewers(("anna",), None),
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and "Not Found" in notice
+
+
 def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_branch(
         settings, tmp_path):
     seed_state(settings, branch="expected-branch")
@@ -414,6 +465,7 @@ PRESSES = {
     "dismiss": lambda panel: panel.dismiss(DismissUntil.FOREVER),
     "close": lambda panel: panel.close(),
     "mark ready": lambda panel: panel.mark_ready(),
+    "assign reviewers": lambda panel: panel.assign_reviewers(("anna",), None),
 }
 
 

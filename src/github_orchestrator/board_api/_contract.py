@@ -1874,6 +1874,15 @@ class DismissRequest(BaseModel):
                     "and the board goes with it.")
 
 
+class AssignReviewersRequest(BaseModel):
+    reviewers: list[str] = Field(
+        description="The logins asked to review the pull request on GitHub.")
+    detailed: str | None = Field(
+        description="The login written into the description's "
+                    "`Detailed reviewer: @login` line, replacing the one there. "
+                    "Null leaves the description alone.")
+
+
 class HeldPullRequest(BaseModel):
     """One pull request the watcher holds, as the wall shows it."""
 

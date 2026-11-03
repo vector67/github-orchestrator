@@ -6,6 +6,7 @@ from pathlib import Path
 
 from github_orchestrator.domain import Location, Pr, Repo
 from github_orchestrator.github import _pages
+from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github.interface import (
     Check as Check,
 )
@@ -239,6 +240,18 @@ class FakeGitHub:
             return (f"gh api repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
                     "gh: Not Found (HTTP 404)")
         record.state = replace(record.state, draft=False)
+        return None
+
+    def assign_reviewers(self, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> str | None:
+        record = self.prs.get(pr)
+        if record is None:
+            return (f"gh api POST repos/{pr.repo}/pulls/{pr.number}/requested_reviewers failed "
+                    "(exit 1): gh: Not Found (HTTP 404)")
+        state = record.state
+        asked = [login for login in reviewers if login not in state.pending_reviewers]
+        record.state = replace(
+            state, pending_reviewers=(*state.pending_reviewers, *asked),
+            body=state.body if detailed is None else with_detailed_reviewer(state.body, detailed))
         return None
 
     def url(self, pr: Pr) -> str:

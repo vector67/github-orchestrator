@@ -258,6 +258,39 @@ def test_closing_a_pr_github_does_not_know_says_why(github):
     assert "Not Found" in (github.close(a_pr(40, REPO)) or "")
 
 
+def test_reviewers_i_assign_are_asked_to_review(world, github):
+    world.add_pr(a_pr(1, REPO), _state(body="Adds widgets."))
+
+    assert github.assign_reviewers(a_pr(1, REPO), ("anna", "bob"), None) is None
+
+    state = github.pr_state(a_pr(1, REPO))
+    assert state.pending_reviewers == ("anna", "bob")
+    assert state.body == "Adds widgets."
+
+
+def test_the_detailed_reviewer_i_assign_fills_the_descriptions_detailed_reviewer_line(world,
+                                                                                    github):
+    world.add_pr(a_pr(1, REPO), _state(body="Adds widgets.\n\nDetailed reviewer: @\n\nNotes."))
+
+    assert github.assign_reviewers(a_pr(1, REPO), ("anna", "bob"), "bob") is None
+
+    assert github.pr_state(a_pr(1, REPO)).body == (
+        "Adds widgets.\n\nDetailed reviewer: @bob\n\nNotes.")
+
+
+def test_the_detailed_reviewer_i_assign_is_added_to_a_description_without_the_line(world,
+                                                                                  github):
+    world.add_pr(a_pr(1, REPO), _state(body="Adds widgets."))
+
+    assert github.assign_reviewers(a_pr(1, REPO), ("bob",), "bob") is None
+
+    assert github.pr_state(a_pr(1, REPO)).body == "Adds widgets.\n\nDetailed reviewer: @bob"
+
+
+def test_assigning_reviewers_on_a_pr_github_does_not_know_says_why(github):
+    assert "Not Found" in (github.assign_reviewers(a_pr(40, REPO), ("bob",), None) or "")
+
+
 def test_a_draft_i_mark_ready_is_no_longer_a_draft(world, github):
     world.add_pr(a_pr(1, REPO), _state(draft=True))
 

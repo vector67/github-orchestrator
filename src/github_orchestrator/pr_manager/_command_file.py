@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from github_orchestrator.domain import Pr
 from github_orchestrator.pr_manager._files import write_whole
@@ -24,6 +25,7 @@ class Command(StrEnum):
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
     MARK_READY = "mark-ready"
+    ASSIGN_REVIEWERS = "assign-reviewers"
     TAKE_OVER = "take-over"
 
 
@@ -31,6 +33,7 @@ class Command(StrEnum):
 class Pending:
     path: Path
     command: Command
+    fields: dict[str, Any]
 
 
 class _Ids:
@@ -51,9 +54,9 @@ class CommandFiles:
     def __init__(self, data_dir: Path) -> None:
         self._dir = data_dir / "commands"
 
-    def write(self, pr: Pr, command: Command) -> None:
+    def write(self, pr: Pr, command: Command, fields: dict[str, Any]) -> None:
         path = self._of(pr) / f"{_IDS.next()}.json"
-        write_whole(path, json.dumps({"command": command.value}).encode())
+        write_whole(path, json.dumps({**fields, "command": command.value}).encode())
 
     def pending(self, pr: Pr) -> list[Pending]:
         try:
@@ -63,11 +66,11 @@ class CommandFiles:
             return []
         pending = []
         for path in paths:
-            command = _read(path)
-            if command is None:
+            read = _read(path)
+            if read is None:
                 self._discard(path)
             else:
-                pending.append(Pending(path, command))
+                pending.append(read)
         return pending
 
     def delete(self, pending: Pending) -> None:
@@ -93,9 +96,10 @@ class CommandFiles:
         return self._dir / pr.repo.owner / pr.repo.name / str(pr.number)
 
 
-def _read(path: Path) -> Command | None:
+def _read(path: Path) -> Pending | None:
     try:
-        return Command(json.loads(path.read_bytes())["command"])
+        fields = json.loads(path.read_bytes())
+        return Pending(path, Command(fields.pop("command")), fields)
     except FileNotFoundError:
         return None
     except (OSError, ValueError, KeyError, TypeError) as error:
