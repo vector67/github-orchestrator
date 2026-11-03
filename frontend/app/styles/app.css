@@ -1337,6 +1337,16 @@ button.copy-directory {
   -webkit-line-clamp: 4;
 }
 
+.decide-dialog .outstanding-head {
+  margin: 0;
+  padding: 6px 0;
+  font-size: var(--fs-m);
+}
+
+.decide-dialog .outstanding-assign {
+  margin: 0 0 10px 22px;
+}
+
 .decide-dialog .note {
   margin: 0;
   font-size: var(--fs-m);

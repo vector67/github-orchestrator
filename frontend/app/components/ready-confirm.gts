@@ -31,6 +31,8 @@ const sentenceOf = (outstanding: Outstanding | null): string => {
 
 const isFirst = (index: number): boolean => index === 0;
 
+const isReviewers = (kind: string): boolean => kind === 'reviewers';
+
 const threadAt = (repo: string, number: number, key: string): string[] => [
   ...repo.split('/'),
   String(number),
@@ -134,41 +136,74 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
           <p class="note">{{sentenceOf this.outstanding}}</p>
           <div class="outstanding">
             {{#each this.outstanding.groups key="kind" as |group index|}}
-              <details
-                class="outstanding-kind"
-                open={{isFirst index}}
-                data-test-outstanding={{group.kind}}
-              >
-                <summary><span class="outstanding-count">{{group.count}}</span>
-                  {{group.label}}</summary>
-                <ul class="outstanding-items">
-                  {{#each group.items key="key" as |item|}}
-                    <li
-                      class="outstanding-item"
-                      data-test-outstanding-item={{item.key}}
-                    >
-                      {{#if item.thread}}
-                        <LinkTo
-                          @route="conversations.detail"
-                          @models={{threadAt @repo @number item.thread}}
-                          @query={{hash back="close"}}
-                          class="outstanding-where outstanding-link"
-                          target="_blank"
-                          title="open the thread in a new tab; Back there closes it"
-                          {{on "click" inATab}}
-                        >{{item.where}}<span
-                            class="outstanding-opens"
-                            aria-hidden="true"
-                            data-test-opens-a-tab
-                          >↗</span></LinkTo>
-                      {{else}}
+              {{#if (isReviewers group.kind)}}
+                <section
+                  class="outstanding-kind outstanding-open"
+                  data-test-outstanding={{group.kind}}
+                >
+                  <p class="outstanding-head"><span
+                      aria-hidden="true"
+                    >▼</span><span
+                      class="outstanding-count"
+                    >{{group.count}}</span>
+                    {{group.label}}</p>
+                  <ul class="outstanding-items">
+                    {{#each group.items key="key" as |item|}}
+                      <li
+                        class="outstanding-item"
+                        data-test-outstanding-item={{item.key}}
+                      >
                         <span class="outstanding-where">{{item.where}}</span>
-                      {{/if}}
-                      <span class="outstanding-what">{{item.what}}</span>
-                    </li>
-                  {{/each}}
-                </ul>
-              </details>
+                        <span class="outstanding-what">{{item.what}}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                  <button
+                    type="button"
+                    class="btn outstanding-assign"
+                    data-test-ready-assign
+                    {{on "click" this.openPicker}}
+                  >Assign reviewers <kbd>⇧R</kbd></button>
+                </section>
+              {{else}}
+                <details
+                  class="outstanding-kind"
+                  open={{isFirst index}}
+                  data-test-outstanding={{group.kind}}
+                >
+                  <summary><span
+                      class="outstanding-count"
+                    >{{group.count}}</span>
+                    {{group.label}}</summary>
+                  <ul class="outstanding-items">
+                    {{#each group.items key="key" as |item|}}
+                      <li
+                        class="outstanding-item"
+                        data-test-outstanding-item={{item.key}}
+                      >
+                        {{#if item.thread}}
+                          <LinkTo
+                            @route="conversations.detail"
+                            @models={{threadAt @repo @number item.thread}}
+                            @query={{hash back="close"}}
+                            class="outstanding-where outstanding-link"
+                            target="_blank"
+                            title="open the thread in a new tab; Back there closes it"
+                            {{on "click" inATab}}
+                          >{{item.where}}<span
+                              class="outstanding-opens"
+                              aria-hidden="true"
+                              data-test-opens-a-tab
+                            >↗</span></LinkTo>
+                        {{else}}
+                          <span class="outstanding-where">{{item.where}}</span>
+                        {{/if}}
+                        <span class="outstanding-what">{{item.what}}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                </details>
+              {{/if}}
             {{/each}}
           </div>
         {{else}}
@@ -181,13 +216,6 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
             data-test-ready-option
           >{{this.option}}
             <kbd>y</kbd></button>
-          {{#if this.unreviewed}}
-            <button
-              type="button"
-              data-test-ready-assign
-              {{on "click" this.openPicker}}
-            >Assign reviewers <kbd>⇧R</kbd></button>
-          {{/if}}
           <button
             type="button"
             class="ghost"

@@ -1069,9 +1069,14 @@ module('Acceptance | dashboard', function (hooks) {
       .dom('[data-test-ready-confirm] [data-test-outstanding]')
       .hasAttribute('data-test-outstanding', 'reviewers')
       .containsText('No reviewers requested');
+    assert
+      .dom(
+        '[data-test-ready-confirm] [data-test-outstanding="reviewers"] [data-test-ready-assign]',
+      )
+      .hasText('Assign reviewers ⇧R');
     assert.deepEqual(
       texts('[data-test-ready-confirm] .dialog-actions button'),
-      ['Mark ready anyway y', 'Assign reviewers ⇧R', 'Cancel Esc'],
+      ['Mark ready anyway y', 'Cancel Esc'],
     );
     assert.dom('[data-test-reviewer]').doesNotExist();
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
@@ -1107,9 +1112,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert
       .dom('[data-test-ready-confirm] [data-test-outstanding="reviewers"]')
       .doesNotExist();
-    assert
-      .dom('[data-test-ready-confirm] [data-test-ready-assign]')
-      .hasText('Assign reviewers ⇧R');
+    assert.dom('[data-test-ready-assign]').doesNotExist();
     assert.dom('[data-test-ready-option]').hasText('Mark ready and assign 2 y');
     assert.deepEqual(verbs(), []);
 
