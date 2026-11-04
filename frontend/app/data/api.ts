@@ -134,6 +134,7 @@ export interface Comment {
   author: string;
   created_at: string | null;
   review_state: ReviewState | null;
+  reactions?: Reaction[];
   body: string;
   updated_at: string | null;
   html_url: string | null;
@@ -149,6 +150,7 @@ export interface CommentSummary {
   author: string;
   created_at: string | null;
   review_state: ReviewState | null;
+  reactions?: Reaction[];
 }
 
 export interface CommitCheck {
@@ -786,6 +788,19 @@ export interface QueuedEvent {
   event: string | null;
   queued_at: string;
 }
+
+export interface ReactRequest {
+  content: ReactionKind;
+  mine: boolean;
+}
+
+export interface Reaction {
+  content: ReactionKind;
+  count: number;
+  mine: boolean;
+}
+
+export type ReactionKind = 'thumbs-up' | 'thumbs-down' | 'laugh' | 'hooray' | 'confused' | 'heart' | 'rocket' | 'eyes';
 
 export interface ReadMark {
   sha: string;

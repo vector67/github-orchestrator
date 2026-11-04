@@ -20,6 +20,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -61,6 +62,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -145,6 +147,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -202,6 +205,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -259,6 +263,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -331,6 +336,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -403,6 +409,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -460,6 +467,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -532,6 +540,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -589,6 +598,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -676,6 +686,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -763,12 +774,14 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "octocat",
      "created_at": "2026-01-01T00:00:00Z",
      "id": 9001,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -841,6 +854,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -913,6 +927,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -970,6 +985,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1042,6 +1058,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1099,6 +1116,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1186,6 +1204,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1258,6 +1277,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1315,6 +1335,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1387,12 +1408,14 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "octocat",
      "created_at": "2026-01-01T00:00:00Z",
      "id": 9001,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -1465,6 +1488,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1537,6 +1561,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1609,6 +1634,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1681,12 +1707,14 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "octocat",
      "created_at": "2026-01-01T00:00:00Z",
      "id": 9001,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -1759,6 +1787,7 @@ export const RECORDED = {
      "author": "anna",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     }
    ],
@@ -1818,12 +1847,14 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -1865,12 +1896,14 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -1912,12 +1945,14 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -1975,12 +2010,14 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2038,6 +2075,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2110,6 +2148,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2167,6 +2206,7 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": null,
      "id": null,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2239,6 +2279,7 @@ export const RECORDED = {
      "author": "ben",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2280,18 +2321,21 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     },
     {
      "author": "octocat",
      "created_at": "2026-01-01T00:00:00Z",
      "id": 9001,
+     "reactions": [],
      "review_state": null
     }
    ],
@@ -2349,18 +2393,21 @@ export const RECORDED = {
      "author": "octocat",
      "created_at": "2026-09-12T10:00:00Z",
      "id": 1,
+     "reactions": [],
      "review_state": "CHANGES_REQUESTED"
     },
     {
      "author": "anna",
      "created_at": "2026-09-12T10:30:00Z",
      "id": 2,
+     "reactions": [],
      "review_state": null
     },
     {
      "author": "octocat",
      "created_at": "2026-01-01T00:00:00Z",
      "id": 9001,
+     "reactions": [],
      "review_state": null
     }
    ],

@@ -68,6 +68,7 @@ from github_orchestrator.board_api._contract import (
     PullRequestCommit,
     PullRequestCommits,
     QuestionRequest,
+    ReactRequest,
     ReadMark,
     ReadMarkRequest,
     ReadMarks,
@@ -86,6 +87,7 @@ from github_orchestrator.board_api._contract import (
     TerminalSessionList,
     ThreadKey,
     error_code,
+    reaction_word,
     side_of,
     verdict_of,
 )
@@ -1176,6 +1178,33 @@ def mark_seen(key: ThreadKey, board: Serving) -> Response:
     with board.conversations.editing(_thread(board, key).key) as editable:
         editable.mark_seen()
     return Response(status_code=204)
+
+
+REACTION_REFUSALS: dict[ErrorCode, int] = {
+    ErrorCode.NOT_FOUND: 404,
+    ErrorCode.GITHUB_REJECTED: 502,
+}
+
+
+@writes.post("/conversations/{key}/comments/{comment_id}:react", response_model=Conversation,
+             tags=["comments"], operation_id="reactToComment",
+             summary="Add your reaction to a comment, or take it back.",
+             responses={**ONE_THREAD, 502: {
+                 "description": "GitHub refused the reaction; the comment is "
+                                "left as it was.",
+                 "model": Errors}})
+def react_to_comment(key: ThreadKey, comment_id: int, asked: ReactRequest,
+                     board: Serving) -> Conversation:
+    """Sent to GitHub at once, not queued: a reaction decides nothing about
+    the thread. It answers with the conversation and its new etag, so a verb
+    the page sends next is not refused over the reaction it just made.
+    """
+    with board.conversations.editing(_thread(board, key).key) as editable:
+        reacted = editable.react(comment_id, reaction_word(asked.content), mine=asked.mine)
+    if isinstance(reacted, Denied):
+        code = error_code(reacted.code)
+        raise Refusal(REACTION_REFUSALS.get(code, 409), code, reacted.reason)
+    return conversation_of(_thread(board, key), board.conversations.facts().account)
 
 
 @writes.post("/conversations/{key}/operations:stop", status_code=202,

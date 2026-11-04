@@ -67,6 +67,25 @@
     }
    }
   },
+  "/api/conversations/{key}/comments/{comment_id}:react": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/Conversation"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "502": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/operations": {
    "get": {
     "200": {
@@ -2453,6 +2472,12 @@
     "posted_by_board": {
      "type": "boolean"
     },
+    "reactions": {
+     "items": {
+      "$ref": "#/components/schemas/Reaction"
+     },
+     "type": "array"
+    },
     "review_state": {
      "anyOf": [
       {
@@ -2518,6 +2543,12 @@
        "type": "null"
       }
      ]
+    },
+    "reactions": {
+     "items": {
+      "$ref": "#/components/schemas/Reaction"
+     },
+     "type": "array"
     },
     "review_state": {
      "anyOf": [
@@ -6317,6 +6348,53 @@
     "queued_at"
    ],
    "type": "object"
+  },
+  "ReactRequest": {
+   "properties": {
+    "content": {
+     "$ref": "#/components/schemas/ReactionKind"
+    },
+    "mine": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "content",
+    "mine"
+   ],
+   "type": "object"
+  },
+  "Reaction": {
+   "properties": {
+    "content": {
+     "$ref": "#/components/schemas/ReactionKind"
+    },
+    "count": {
+     "type": "integer"
+    },
+    "mine": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "content",
+    "count",
+    "mine"
+   ],
+   "type": "object"
+  },
+  "ReactionKind": {
+   "enum": [
+    "thumbs-up",
+    "thumbs-down",
+    "laugh",
+    "hooray",
+    "confused",
+    "heart",
+    "rocket",
+    "eyes"
+   ],
+   "type": "string"
   },
   "ReadMark": {
    "properties": {

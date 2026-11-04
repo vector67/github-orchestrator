@@ -90,6 +90,9 @@ def comments_of(conversation: Conversation,
         author=comment.author,
         created_at=comment.created_at,
         review_state=_review_state(comment.review_state),
+        reactions=[contract.Reaction(content=contract.reaction_kind(r.content),
+                                     count=r.count, mine=r.mine)
+                   for r in comment.reactions],
         body=comment.body,
         updated_at=comment.updated_at,
         html_url=None if comment.id is None else url_of(comment.id),
@@ -168,7 +171,10 @@ def conversation_of(conversation: Conversation, account: str) -> contract.Conver
         gist=conversation.gist or None,
         comments=[contract.CommentSummary(
             id=comment.id, author=comment.author, created_at=comment.created_at,
-            review_state=_review_state(comment.review_state))
+            review_state=_review_state(comment.review_state),
+            reactions=[contract.Reaction(content=contract.reaction_kind(r.content),
+                                         count=r.count, mine=r.mine)
+                       for r in comment.reactions])
             for comment in conversation.comments],
         operations=_summaries(conversation),
         mention=conversation.mention,

@@ -420,6 +420,42 @@ class Anchor(BaseModel):
                     "underneath it.")
 
 
+class ReactionKind(StrEnum):
+    """GitHub's eight reactions, in the order GitHub shows them."""
+
+    THUMBS_UP = "thumbs-up"
+    THUMBS_DOWN = "thumbs-down"
+    LAUGH = "laugh"
+    HOORAY = "hooray"
+    CONFUSED = "confused"
+    HEART = "heart"
+    ROCKET = "rocket"
+    EYES = "eyes"
+
+
+def reaction_kind(word: str) -> ReactionKind:
+    return ReactionKind(word.lower().replace("_", "-"))
+
+
+def reaction_word(kind: ReactionKind) -> str:
+    return kind.name
+
+
+class Reaction(BaseModel):
+    """One kind of reaction on a comment, as GitHub counts it."""
+
+    content: ReactionKind
+    count: int = Field(description="Everyone who reacted this way, you included.")
+    mine: bool = Field(description="You are one of them.")
+
+
+class ReactRequest(BaseModel):
+    """The body of `:react`."""
+
+    content: ReactionKind
+    mine: bool = Field(description="True adds your reaction, false takes it back.")
+
+
 class CommentSummary(BaseModel):
     """A comment as a conversation carries it: enough to order the thread,
     name who spoke and tell a review apart from a reply. The body is its own
@@ -434,6 +470,9 @@ class CommentSummary(BaseModel):
     review_state: ReviewState | None = Field(
         description="Set where the comment came with a review. Null on an "
                     "ordinary reply and on a draft.")
+    reactions: list[Reaction] = Field(
+        default_factory=list,
+        description="Only the kinds someone has used, in GitHub's order.")
 
 
 class Comment(CommentSummary):
