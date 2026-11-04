@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { modifier } from 'ember-modifier';
 import type { Reaction, ReactionKind } from 'frontend/data/api';
 import type ThreadsService from 'frontend/services/threads';
 import type ToastsService from 'frontend/services/toasts';
@@ -44,6 +45,10 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
 
   faces = FACES;
 
+  shown = modifier((element: HTMLElement) => {
+    element.scrollIntoView({ block: 'nearest' });
+  });
+
   togglePicker = (): void => {
     this.picking = !this.picking;
   };
@@ -74,27 +79,34 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
 
   <template>
     <div class="comment-reactions" data-test-reactions>
-      <button
-        type="button"
-        class="reaction-add"
-        aria-label="Add a reaction"
-        aria-expanded={{if this.picking "true" "false"}}
-        disabled={{this.sending}}
-        data-test-react
-        {{on "click" this.togglePicker}}
-      >☺</button>
-      {{#each @reactions key="content" as |reaction|}}
+      <div class="reaction-row">
         <button
           type="button"
-          class="reaction"
-          aria-pressed={{pressed reaction}}
+          class="reaction-add"
+          aria-label="Add a reaction"
+          aria-expanded={{if this.picking "true" "false"}}
           disabled={{this.sending}}
-          data-test-reaction={{reaction.content}}
-          {{on "click" (fn this.press reaction)}}
-        >{{faceOf reaction.content}} {{reaction.count}}</button>
-      {{/each}}
+          data-test-react
+          {{on "click" this.togglePicker}}
+        >☺</button>
+        {{#each @reactions key="content" as |reaction|}}
+          <button
+            type="button"
+            class="reaction"
+            aria-pressed={{pressed reaction}}
+            disabled={{this.sending}}
+            data-test-reaction={{reaction.content}}
+            {{on "click" (fn this.press reaction)}}
+          >{{faceOf reaction.content}} {{reaction.count}}</button>
+        {{/each}}
+      </div>
       {{#if this.picking}}
-        <div class="reaction-picker" role="menu" data-test-reaction-picker>
+        <div
+          class="reaction-picker"
+          role="menu"
+          data-test-reaction-picker
+          {{this.shown}}
+        >
           {{#each this.faces key="kind" as |offered|}}
             <button
               type="button"

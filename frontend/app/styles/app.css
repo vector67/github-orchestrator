@@ -739,12 +739,14 @@ input[type="radio"] {
 }
 
 .comment-reactions {
-  position: relative;
+  margin-top: 6px;
+}
+
+.reaction-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  margin-top: 6px;
 }
 
 .transcript-entry .comment-reactions {
@@ -784,11 +786,8 @@ input[type="radio"] {
 }
 
 .reaction-picker {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 5;
-  display: flex;
+  display: inline-flex;
+  margin-top: 4px;
   gap: 2px;
   padding: 4px;
   background: var(--card);

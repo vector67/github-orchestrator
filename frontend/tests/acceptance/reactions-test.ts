@@ -59,6 +59,30 @@ module('Acceptance | reactions', function (hooks) {
     assert.dom('[data-test-reaction-option]').doesNotExist('the picker closes');
   });
 
+  test('the picker under the last comment of a long thread opens where it can be seen', async function (assert) {
+    board().conversations = [thread({ key: KEY })];
+    board().comments[KEY] = Array.from({ length: 8 }, (_, at) =>
+      comment({ id: at + 1, review_state: null, body: `point ${at + 1}` }),
+    );
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const opened = [...document.querySelectorAll('[data-test-react]')].at(-1)!;
+
+    await click(opened);
+
+    const box = document
+      .querySelector('#panel-thread')!
+      .getBoundingClientRect();
+    const picker = document
+      .querySelector('[data-test-reaction-picker]')!
+      .getBoundingClientRect();
+    const where = `the picker (${picker.top}–${picker.bottom}), the thread's box (${box.top}–${box.bottom})`;
+    assert.true(picker.top >= box.top, `its top is in sight: ${where}`);
+    assert.true(
+      picker.bottom <= box.bottom + 1,
+      `its bottom is in sight: ${where}`,
+    );
+  });
+
   test('pressing my own reaction takes it back', async function (assert) {
     seed([{ content: 'rocket', count: 2, mine: true }]);
     await visit(`/pr/o/r/7/conversations/${KEY}`);
