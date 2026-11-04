@@ -10,6 +10,7 @@ import type {
   OperationKind,
   Proposal,
   ProposalKind,
+  Reaction,
   Ticket,
 } from 'frontend/data/api';
 import { causeOf } from 'frontend/data/failure';
@@ -44,12 +45,14 @@ import {
 import type { PrEntity } from 'frontend/services/store';
 
 export interface TranscriptEntry {
+  id: number | null;
   author: string;
   author_name: string;
   body: string;
   meta: string;
   highlighted: boolean;
   pending: boolean;
+  reactions: Reaction[];
 }
 
 export interface PlanStep {
@@ -565,6 +568,8 @@ export function transcriptOf(
     ? comments.findLastIndex((one) => one.author === opener)
     : -1;
   return comments.map((one, at) => ({
+    id: one.id,
+    reactions: one.reactions ?? [],
     author: one.author || 'ghost',
     author_name: context.names[one.author] ?? '',
     body: one.body,
@@ -607,6 +612,8 @@ function replyingOf(
   if (!arriving) return [];
   return [
     {
+      id: null,
+      reactions: [],
       author: context.viewer,
       author_name: context.names[context.viewer] ?? '',
       body: reply.body,

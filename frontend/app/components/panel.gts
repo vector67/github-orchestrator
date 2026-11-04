@@ -1,6 +1,7 @@
 import type { TOC } from '@ember/component/template-only';
 import CodeContext from 'frontend/components/code-context';
 import CommentBody from 'frontend/components/comment-body';
+import CommentReactions from 'frontend/components/comment-reactions';
 import CopyDirectory from 'frontend/components/copy-directory';
 import DiffFold from 'frontend/components/diff-fold';
 import DiffSlot from 'frontend/components/diff-slot';
@@ -79,6 +80,13 @@ const PanelView: TOC<PanelSignature> = <template>
                     {{/if}}
                   </div>
                   <CommentBody @body={{entry.body}} />
+                  {{#if entry.id}}
+                    <CommentReactions
+                      @conversation={{@panel.id}}
+                      @comment={{entry.id}}
+                      @reactions={{entry.reactions}}
+                    />
+                  {{/if}}
                 </article>
               {{/each}}
             </section>

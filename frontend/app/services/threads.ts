@@ -1,6 +1,12 @@
 import Service, { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
-import type { Commits, Conversation, Diff, Operation } from 'frontend/data/api';
+import type {
+  Commits,
+  Conversation,
+  Diff,
+  Operation,
+  ReactRequest,
+} from 'frontend/data/api';
 import {
   columnCards,
   countsOf,
@@ -12,6 +18,7 @@ import {
   type Role,
 } from 'frontend/data/groups';
 import type { Context, Details, Fix } from 'frontend/data/panel';
+import type { Tried } from 'frontend/data/tried';
 import type { Numbered } from 'frontend/data/wall';
 import { reviewSending } from 'frontend/data/review';
 import { rowOf, type Row, type Seen } from 'frontend/data/rows';
@@ -124,6 +131,14 @@ export default class ThreadsService extends Service {
 
   thread(key: string): Conversation | undefined {
     return this.conversations.find((one) => one.key === key);
+  }
+
+  react(
+    key: string,
+    comment: number,
+    asked: ReactRequest,
+  ): Promise<Tried<void>> {
+    return this.store.react(this.pr.at, key, comment, asked);
   }
 
   fixOf(key: string): Fix {

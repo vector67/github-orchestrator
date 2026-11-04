@@ -9,6 +9,7 @@ import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import { modifier } from 'ember-modifier';
 import CommentBody from 'frontend/components/comment-body';
+import CommentReactions from 'frontend/components/comment-reactions';
 import PendingRing from 'frontend/components/pending-ring';
 import Waiting from 'frontend/components/waiting';
 import { collapse } from 'frontend/motion';
@@ -192,6 +193,13 @@ export default class InlineCard extends Component<InlineCardSignature> {
                 <span class="meta">{{entry.meta}}</span>
               </div>
               <CommentBody @body={{entry.body}} />
+              {{#if entry.id}}
+                <CommentReactions
+                  @conversation={{@item.key}}
+                  @comment={{entry.id}}
+                  @reactions={{entry.reactions}}
+                />
+              {{/if}}
             </div>
           {{/each}}
           {{#if @item.pending}}

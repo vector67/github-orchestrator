@@ -31,7 +31,7 @@ function templateOf(path: string): RegExp {
     .split(/(\{[^}]+\})/)
     .map((part) =>
       part.startsWith('{')
-        ? '[^/]+'
+        ? '[^/:]+'
         : part.replace(/[.*+?^$()|[\]\\]/g, '\\$&'),
     )
     .join('');

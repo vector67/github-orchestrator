@@ -33,6 +33,9 @@ import type {
   PullRequest,
   PullRequestCommit,
   PullRequestCommits,
+  Reaction,
+  ReactionKind,
+  ReactRequest,
   ReadMark,
   RecordState,
   RunLedger,
@@ -210,6 +213,31 @@ export function operation(over: Partial<Operation> = {}): Operation {
     ...over,
     kind,
   } as Operation;
+}
+
+const REACTION_ORDER: ReactionKind[] = [
+  'thumbs-up',
+  'thumbs-down',
+  'laugh',
+  'hooray',
+  'confused',
+  'heart',
+  'rocket',
+  'eyes',
+];
+
+function reactedTo(
+  held: Reaction[],
+  { content, mine }: ReactRequest,
+): Reaction[] {
+  const was = held.find((one) => one.content === content);
+  const count =
+    (was?.count ?? 0) + (Boolean(was?.mine) === mine ? 0 : mine ? 1 : -1);
+  const others = held.filter((one) => one.content !== content);
+  const all = count > 0 ? [...others, { content, count, mine }] : others;
+  return REACTION_ORDER.flatMap((kind) =>
+    all.filter((one) => one.content === kind),
+  );
 }
 
 export function comment(over: Partial<Comment> = {}): Comment {
@@ -764,6 +792,8 @@ export class FakeBoard {
   asked: Asked[] = [];
   reported: Reported[] = [];
   seen: string[] = [];
+  reacted: ({ key: string; comment: number } & ReactRequest)[] = [];
+  reactionRefused: string | null = null;
   hubUrl = 'http://127.0.0.1:8720';
   fontProblem: string | null = null;
   newestRelease: NewestRelease | null = null;
@@ -1202,13 +1232,38 @@ export class FakeBoard {
     if (!comments) return one;
     return {
       ...one,
-      comments: comments.map(({ id, author, created_at, review_state }) => ({
-        id,
-        author,
-        created_at,
-        review_state,
-      })),
+      comments: comments.map(
+        ({ id, author, created_at, review_state, reactions }) => ({
+          id,
+          author,
+          created_at,
+          review_state,
+          reactions,
+        }),
+      ),
     };
+  }
+
+  private react(key: string, id: number, asked: ReactRequest): Response {
+    this.reacted.push({ key, comment: id, ...asked });
+    if (this.reactionRefused) {
+      return this.json(502, {
+        errors: [
+          {
+            status: 502,
+            code: 'github-rejected',
+            detail: this.reactionRefused,
+          },
+        ],
+      });
+    }
+    this.comments[key] = (this.comments[key] ?? []).map((one) =>
+      one.id === id
+        ? { ...one, reactions: reactedTo(one.reactions ?? [], asked) }
+        : one,
+    );
+    const found = this.conversations.find((c) => c.key === key)!;
+    return this.json(200, this.said(found));
   }
 
   private conversationsOf(asked: string): Conversation[] {
@@ -1395,6 +1450,15 @@ export class FakeBoard {
     if (seen) {
       this.seen.push(decodeURIComponent(seen[1]!));
       return respond(null, { status: 204 });
+    }
+    const reacting =
+      /\/api\/conversations\/([^/]+)\/comments\/(\d+):react$/.exec(url);
+    if (reacting) {
+      return this.react(
+        decodeURIComponent(reacting[1]!),
+        Number(reacting[2]),
+        JSON.parse(init.body as string) as ReactRequest,
+      );
     }
     if (url.endsWith('/api/client-errors')) {
       this.reported.push(JSON.parse(init.body as string) as Reported);

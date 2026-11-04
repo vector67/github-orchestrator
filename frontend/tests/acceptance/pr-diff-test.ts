@@ -1001,6 +1001,20 @@ module('Acceptance | pr diff', function (hooks) {
         .hasText('Comment on lines R17 to R19 Resolved');
     });
 
+    test('a posted comment in the diff takes a reaction, and a draft offers none', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      const card = `${under('+20')} [data-test-card="k1"]`;
+
+      await click(`${card} [data-test-react]`);
+      await click(`${card} [data-test-reaction-option="rocket"]`);
+
+      assert.deepEqual(board().reacted, [
+        { key: 'k1', comment: 1, content: 'rocket', mine: true },
+      ]);
+      assert.dom(`${card} [data-test-reaction="rocket"]`).hasText('🚀 1');
+      assert.dom('[data-test-card="d1"] [data-test-react]').doesNotExist();
+    });
+
     test('a thread deleted on GitHub folds to the lines it is on with a Deleted badge, and opens to its comments', async function (assert) {
       board().conversations.push(
         thread({ key: 'k5', anchor: anchored(20), github_removed: true }),

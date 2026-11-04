@@ -103,14 +103,15 @@ class Card:
                       comments=(ThreadComment(id=self.comment_id, author=self.author,
                                               body=self.body, created_at=MOMENT,
                                               author_name=self.author_name,
-                                              review_state=self.review_state),
+                                              review_state=self.review_state,
+                                              node_id=f"PRRC_{self.comment_id}"),
                                 *self.replies, *later))
 
 
 def _said(comment_id: int, author: str, author_name: str, body: str,
           when: str) -> ThreadComment:
     return ThreadComment(id=comment_id, author=author, author_name=author_name, body=body,
-                         created_at=when)
+                         created_at=when, node_id=f"PRRC_{comment_id}")
 
 
 READY = Card(9000001, "PRRT_ready",

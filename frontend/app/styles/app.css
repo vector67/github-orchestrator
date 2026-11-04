@@ -738,6 +738,75 @@ input[type="radio"] {
   line-height: 1.5;
 }
 
+.comment-reactions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.transcript-entry .comment-reactions {
+  grid-column: 2;
+}
+
+.reaction-add,
+.reaction,
+.reaction-option {
+  font: inherit;
+  font-size: var(--fs-s);
+  line-height: 1.4;
+  color: var(--text);
+  cursor: pointer;
+  background: transparent;
+}
+
+.reaction-add,
+.reaction {
+  padding: 1px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+}
+
+.reaction-add {
+  color: var(--muted);
+}
+
+.reaction-add:hover,
+.reaction:hover {
+  border-color: var(--border-strong);
+}
+
+.reaction[aria-pressed="true"] {
+  background: var(--blue-fill);
+  border-color: var(--blue);
+}
+
+.reaction-picker {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+}
+
+.reaction-option {
+  padding: 2px 6px;
+  font-size: var(--fs-l);
+  border: 0;
+  border-radius: 4px;
+}
+
+.reaction-option:hover {
+  background: var(--grey-fill);
+}
+
 .comment-body > :first-child {
   margin-top: 0;
 }

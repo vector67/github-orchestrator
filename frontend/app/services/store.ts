@@ -38,6 +38,7 @@ import type {
   Proposal,
   PullRequest,
   PullRequestCommits,
+  ReactRequest,
   ReadMark,
   ReadMarks,
   ResetRequest,
@@ -1319,6 +1320,25 @@ export default class StoreService extends Service {
       done: true,
       body: () => this.takeOutcome(pr, written.body, local),
     };
+  }
+
+  async react(
+    pr: Numbered,
+    key: string,
+    comment: number,
+    asked: ReactRequest,
+  ): Promise<Tried<void>> {
+    const answer = await tried(
+      'react',
+      posted<Conversation>(
+        `${this.here.prefixOf(pr)}${under(key)}/comments/${comment}:react`,
+        null,
+        asked,
+      ),
+    );
+    if (!answer.done) return answer;
+    this.takeThread(pr, answer.body.body);
+    return { done: true, body: undefined };
   }
 
   async createDraft(pr: Numbered, draft: unknown): Promise<string | null> {
