@@ -392,6 +392,8 @@ def _comment(comment: Any) -> Document:
         "body": comment.get("body") or "",
         "created_at": comment.get("created_at"),
         "updated_at": comment.get("updated_at"),
+        "node_id": comment.get("node_id") or "",
+        "reactions": comment.get("reactions") or [],
     }
 
 

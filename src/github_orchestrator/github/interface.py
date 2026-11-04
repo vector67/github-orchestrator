@@ -173,6 +173,24 @@ class Relevance:
         return self.state == "MERGED"
 
 
+class ReactionContent(Enum):
+    THUMBS_UP = "THUMBS_UP"
+    THUMBS_DOWN = "THUMBS_DOWN"
+    LAUGH = "LAUGH"
+    HOORAY = "HOORAY"
+    CONFUSED = "CONFUSED"
+    HEART = "HEART"
+    ROCKET = "ROCKET"
+    EYES = "EYES"
+
+
+@dataclass(frozen=True)
+class Reaction:
+    content: ReactionContent
+    count: int
+    mine: bool
+
+
 @dataclass(frozen=True)
 class ThreadComment:
     id: int | None = None
@@ -182,6 +200,8 @@ class ThreadComment:
     updated_at: str | None = None
     author_name: str = ""
     review_state: ReviewState | None = None
+    node_id: str = ""
+    reactions: tuple[Reaction, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -268,6 +288,10 @@ class Threads(Protocol):
     def unresolve_thread(self, key: str) -> None: ...
 
     def react(self, repo: Repo, comment_id: int) -> None: ...
+
+    def add_reaction(self, node_id: str, content: ReactionContent) -> None: ...
+
+    def remove_reaction(self, node_id: str, content: ReactionContent) -> None: ...
 
     def delete_comment(self, pr: Pr, kind: CommentKind,
                        comment_id: int) -> None: ...

@@ -278,8 +278,9 @@ PACKAGES = {
     ),
     "github": Package(
         pinned=frozenset({
-            "Access", "CommentKind", "PullRequestState", "PullRequests", "ReviewState",
-            "Reviews", "Thread", "ThreadComment", "Threads", "Verdict",
+            "Access", "CommentKind", "PullRequestState", "PullRequests",
+            "ReactionContent", "ReviewState", "Reviews", "Thread", "ThreadComment",
+            "Threads", "Verdict",
         }),
         may_import=(),
         role="GitHub answers in its own types and the modules that use it adapt them, never the reverse",
@@ -684,7 +685,7 @@ ROLE_MEMBERS = {
         "recheck", "check_for_fixes"}),
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "drop_question", "resolve", "reject", "place",
-        "unpark", "reply", "mark_seen", "edit", "enrol", "withdraw", "discard", "post_now",
+        "unpark", "reply", "mark_seen", "react", "edit", "enrol", "withdraw", "discard", "post_now",
         "plan", "step_done", "ready", "move_base", "not_a_fix", "ask", "fail", "session_gone", "set_commit_verdict",
         "check_for_fixes"}),
 }

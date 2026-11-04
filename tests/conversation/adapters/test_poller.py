@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 import pytest
@@ -7,6 +7,7 @@ from github_orchestrator.agent_runs.fake import HeldVerdicts
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
+    ReactionContent,
     Thread,
     ThreadComment,
 )
@@ -222,6 +223,18 @@ def test_a_stale_thread_alone_is_thread_activity(settings):
 
     assert polled.polled.activity.threads == ()
     assert [thread.key for thread in polled.polled.activity.stale] == ["PRRT_one"]
+
+
+def test_a_reaction_on_github_reaches_the_record_without_being_new_work(settings):
+    built = _world(settings, _thread(comments=[replace(_comment(1), node_id="PRRC_1")]))
+    _heard(built)
+    built.github.add_reaction("PRRC_1", ReactionContent.HEART)
+
+    polled = _heard(built)
+
+    assert (polled.active, polled.stale, polled.arrived) == ([], ["PRRT_one"], [])
+    [comment] = built.threads().get("PRRT_one").comments
+    assert [(r.content, r.count, r.mine) for r in comment.reactions] == [("HEART", 1, True)]
 
 
 def test_the_thread_activity_carries_the_cutoff_it_was_found_under(settings):

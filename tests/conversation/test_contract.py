@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
@@ -14,8 +14,8 @@ from github_orchestrator.conversation import (
 )
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Location, Pr, Side
-from github_orchestrator.github import CommentKind, PullRequestState
-from github_orchestrator.github.fake import FakeGitHub
+from github_orchestrator.github import CommentKind, PullRequestState, ReactionContent
+from github_orchestrator.github.fake import FakeGitHub, Reaction
 from github_orchestrator.notifications.fake import FakeNotifications, FixReady, Posted
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
@@ -290,6 +290,62 @@ def test_a_tick_with_no_run_ending_announces_nothing(stage):
     threads.tick(news, on_hold=False)
 
     assert (news.posted, news.gathered) == ([], [])
+
+
+def _reactions(comment) -> list[tuple[str, int, bool]]:
+    return [(r.content, r.count, r.mine) for r in comment.reactions]
+
+
+def _reacting(stage, *reactions: Reaction):
+    threads = _pr(stage)
+    on_github(stage.github, KEY, replace(said(101, BODY), node_id="PRRC_101",
+                                         reactions=reactions))
+    hear(threads)
+    return threads
+
+
+def test_my_reaction_reaches_github_and_the_stored_comment_at_once(stage):
+    threads = _reacting(stage, Reaction(ReactionContent.HEART, 1, mine=False))
+
+    with threads.editing(KEY) as editable:
+        reacted = editable.react(101, "HEART", mine=True)
+
+    assert not isinstance(reacted, Denied)
+    assert _reactions(threads.get(KEY).comments[0]) == [("HEART", 2, True)]
+    assert stage.github.thread(KEY).comments[0].reactions == (
+        Reaction(ReactionContent.HEART, 2, mine=True),)
+
+
+def test_taking_my_reaction_back_drops_it_from_github_and_the_stored_comment(stage):
+    threads = _reacting(stage, Reaction(ReactionContent.ROCKET, 1, mine=True))
+
+    with threads.editing(KEY) as editable:
+        editable.react(101, "ROCKET", mine=False)
+
+    assert _reactions(threads.get(KEY).comments[0]) == []
+    assert stage.github.thread(KEY).comments[0].reactions == ()
+
+
+def test_a_reaction_github_refuses_is_denied_and_leaves_the_comment_as_it_was(stage):
+    threads = _reacting(stage)
+    stage.github.prs[THE_PR].threads = []
+
+    with threads.editing(KEY) as editable:
+        denied = editable.react(101, "EYES", mine=True)
+
+    assert isinstance(denied, Denied)
+    assert denied.code is ErrorCode.GITHUB_REJECTED
+    assert _reactions(threads.get(KEY).comments[0]) == []
+
+
+def test_a_reaction_on_a_comment_the_thread_does_not_hold_is_denied_not_found(stage):
+    threads = _reacting(stage)
+
+    with threads.editing(KEY) as editable:
+        denied = editable.react(999, "EYES", mine=True)
+
+    assert isinstance(denied, Denied)
+    assert denied.code is ErrorCode.NOT_FOUND
 
 
 def test_a_report_on_a_thread_nobody_has_is_denied_not_found(stage):

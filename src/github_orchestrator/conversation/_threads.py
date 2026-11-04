@@ -116,6 +116,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Question,
     Ticket,
     UnreadableRecord,
+    reacted,
 )
 from github_orchestrator.conversation._domain.diff import KIND_REVIEW_SUMMARY
 from github_orchestrator.conversation._domain.events import WorkspaceCut
@@ -403,6 +404,22 @@ class _Editable:
         if held is not None and held.conversation is not None:
             held.conversation = replace(held.conversation,
                                         seen_at=self._pr.ports.clock.now())
+
+    def react(self, comment_id: int, content: str, *, mine: bool) -> Conversation | Denied:
+        self._still_open()
+        held, key = self._held, self._key
+        conversation = None if held is None else held.conversation
+        comment = next((c for c in conversation.comments if c.id == comment_id),
+                       None) if conversation is not None else None
+        if held is None or conversation is None or comment is None or not comment.node_id:
+            return Denied(ErrorCode.NOT_FOUND,
+                          f"thread {key} has no comment {comment_id} to react to")
+        refused = self._pr.ports.github.set_reaction(comment.node_id, content, mine)
+        if refused is not None:
+            return Denied(ErrorCode.GITHUB_REJECTED, refused)
+        held.conversation = replace(conversation, comments=tuple(
+            reacted(c, content, mine) if c is comment else c for c in conversation.comments))
+        return held.conversation
 
     def edit(self, body: str, anchor: Location) -> Conversation | Denied:
         return self._ask(EditDraft(body=body, anchor=anchor))

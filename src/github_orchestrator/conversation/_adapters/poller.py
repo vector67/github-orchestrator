@@ -9,6 +9,7 @@ from github_orchestrator.conversation._domain.diff import (
     diff_threads,
     fingerprint,
     open_review_threads,
+    reactions_of,
     within_cutoff,
 )
 from github_orchestrator.conversation._domain.thread import (
@@ -37,6 +38,7 @@ def thread_snapshot(
                          if within_cutoff(c, cutoff_iso)],
             "is_resolved": bool(t.is_resolved),
             "line": t.line,
+            "reactions": reactions_of(t.comments),
         }
         for t in threads
     }

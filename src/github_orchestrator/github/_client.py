@@ -15,6 +15,7 @@ from github_orchestrator.github.interface import (
     Listed,
     PostedComment,
     PullRequestState,
+    ReactionContent,
     Relevance,
     SentReview,
     Thread,
@@ -204,6 +205,12 @@ class GhCliGitHub:
 
     def react(self, repo: Repo, comment_id: int) -> None:
         _threads.react(self._gh, repo, comment_id)
+
+    def add_reaction(self, node_id: str, content: ReactionContent) -> None:
+        _threads.add_reaction(self._gh, node_id, content)
+
+    def remove_reaction(self, node_id: str, content: ReactionContent) -> None:
+        _threads.remove_reaction(self._gh, node_id, content)
 
     def post_review_comment(self, pr: Pr, head: str, location: Location,
                             body: str) -> ThreadComment:

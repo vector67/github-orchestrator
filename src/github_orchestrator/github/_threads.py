@@ -10,6 +10,8 @@ from github_orchestrator.github.interface import (
     CommentKind,
     GhError,
     PostedComment,
+    Reaction,
+    ReactionContent,
     ReviewComment,
     SentReview,
     Thread,
@@ -31,9 +33,13 @@ MAX_PAGES = 500
 
 AUTHOR_FIELDS = "author { login ... on User { name } }"
 
+REACTION_FIELDS = "reactionGroups { content viewerHasReacted reactors { totalCount } }"
+
 COMMENT_FIELDS = """
+  id
   databaseId
   %(author)s
+  %(reactions)s
   body
   createdAt
   updatedAt
@@ -42,7 +48,7 @@ COMMENT_FIELDS = """
   commit { oid }
   originalCommit { oid }
   pullRequestReview { state }
-""" % {"author": AUTHOR_FIELDS}
+""" % {"author": AUTHOR_FIELDS, "reactions": REACTION_FIELDS}
 
 CURSORS = "$threadCursor: String, $issueCursor: String, $reviewCursor: String"
 
@@ -68,13 +74,14 @@ CONNECTIONS = """
       }
       comments(first: %(page)d, after: $issueCursor) {
         pageInfo { hasNextPage endCursor }
-        nodes { id databaseId %(author)s body createdAt updatedAt }
+        nodes { id databaseId %(author)s %(reactions)s body createdAt updatedAt }
       }
       reviews(first: %(page)d, after: $reviewCursor) {
         pageInfo { hasNextPage endCursor }
-        nodes { id databaseId %(author)s body state createdAt }
+        nodes { id databaseId %(author)s %(reactions)s body state createdAt }
       }
-""" % {"page": PAGE_SIZE, "comment": COMMENT_FIELDS, "author": AUTHOR_FIELDS}
+""" % {"page": PAGE_SIZE, "comment": COMMENT_FIELDS, "author": AUTHOR_FIELDS,
+       "reactions": REACTION_FIELDS}
 
 _QUERY = """
 query($owner: String!, $name: String!, $number: Int!, %(cursors)s) {
@@ -110,9 +117,20 @@ def _display_name(node: dict[str, Any] | None) -> str:
     return author.get("name") or ""
 
 
+def _reactions(node: dict[str, Any]) -> tuple[Reaction, ...]:
+    return tuple(
+        Reaction(ReactionContent(group["content"]),
+                 (group.get("reactors") or {}).get("totalCount") or 0,
+                 bool(group.get("viewerHasReacted")))
+        for group in node.get("reactionGroups") or []
+        if (group.get("reactors") or {}).get("totalCount"))
+
+
 def _comment(node: dict[str, Any]) -> ThreadComment:
     return ThreadComment(
         id=node.get("databaseId"),
+        node_id=node.get("id") or "",
+        reactions=_reactions(node),
         author=_login(node),
         author_name=_display_name(node),
         review_state=review_state_of((node.get("pullRequestReview") or {}).get("state")),
@@ -349,6 +367,31 @@ def react(gh: Gh, repo: Repo, comment_id: int) -> None:
                 {"content": "+1"})
 
 
+_ADD_REACTION = """
+mutation($subjectId: ID!, $content: ReactionContent!) {
+  addReaction(input: {subjectId: $subjectId, content: $content}) {
+    reaction { content }
+  }
+}
+"""
+
+_REMOVE_REACTION = """
+mutation($subjectId: ID!, $content: ReactionContent!) {
+  removeReaction(input: {subjectId: $subjectId, content: $content}) {
+    reaction { content }
+  }
+}
+"""
+
+
+def add_reaction(gh: Gh, node_id: str, content: ReactionContent) -> None:
+    gh.graphql_mutate(_ADD_REACTION, {"subjectId": node_id, "content": content.value})
+
+
+def remove_reaction(gh: Gh, node_id: str, content: ReactionContent) -> None:
+    gh.graphql_mutate(_REMOVE_REACTION, {"subjectId": node_id, "content": content.value})
+
+
 def _placed(where: Location) -> dict[str, Any]:
     placed: dict[str, Any] = {"path": where.path, "line": where.line,
                               "side": _WORDS[where.side]}
@@ -360,6 +403,7 @@ def _placed(where: Location) -> dict[str, Any]:
 def _rest_comment(created: dict[str, Any]) -> ThreadComment:
     return ThreadComment(
         id=created.get("id"),
+        node_id=created.get("node_id") or "",
         author=(created.get("user") or {}).get("login") or "ghost",
         body=created.get("body") or "",
         created_at=created.get("created_at"),

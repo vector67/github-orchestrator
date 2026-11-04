@@ -44,5 +44,6 @@ class ErrorCode(StrEnum):
     REVIEW_IN_FLIGHT = "review-in-flight"
     NOTHING_ENROLLED = "nothing-enrolled"
     GIT_FAILED = "git-failed"
+    GITHUB_REJECTED = "github-rejected"
     AGENTS_DISABLED = "agents-disabled"
     INTERNAL_REFUSAL = "internal-refusal"

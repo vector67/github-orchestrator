@@ -14,11 +14,12 @@ from github_orchestrator.domain import Location, Side
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
+    ReactionContent,
     ReviewState,
     Thread,
     ThreadComment,
 )
-from github_orchestrator.github.fake import FAKE_NOW, FakeGitHub, ThreadAnchor
+from github_orchestrator.github.fake import FAKE_NOW, FakeGitHub, Reaction, ThreadAnchor
 from tests.builders import a_pr
 from tests.conversation.support import (
     PR,
@@ -276,6 +277,20 @@ def test_a_materialised_thread_carries_githubs_comments_and_anchor(settings):
         "src/app.py", 12, Side.AFTER, 12, 12, "c" * 40)
     assert (stored.comment_id, stored.comment_type, stored.author,
             stored.github_node_id) == (101, "review", "reviewer", "PRRT_one")
+
+
+def test_a_stored_comment_keeps_its_node_id_and_reactions(settings):
+    rocket = Reaction(ReactionContent.ROCKET, 2, mine=True)
+    built = _world(settings, _review_thread(
+        "PRRT_one", _comment(101, node_id="PRRC_101", reactions=(rocket,))))
+    polled = built.conversation_managers.of(THE_PR).poll(PullRequestState())
+
+    threads = built.threads(is_author=False)
+    threads.absorb(polled.activity)
+
+    [stored] = threads.get("PRRT_one").comments
+    assert stored.node_id == "PRRC_101"
+    assert [(r.content, r.count, r.mine) for r in stored.reactions] == [("ROCKET", 2, True)]
 
 
 def test_a_review_summary_keeps_its_reviewers_name_and_verdict(settings):

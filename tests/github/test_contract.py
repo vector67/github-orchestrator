@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -6,6 +7,7 @@ from github_orchestrator.domain import Location, Repo, Side
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
+    ReactionContent,
     ReviewState,
     Thread,
     ThreadComment,
@@ -17,6 +19,7 @@ from github_orchestrator.github.fake import (
     FakeGitHub,
     GhError,
     PushEvent,
+    Reaction,
     Relevance,
     Review,
     ThreadAnchor,
@@ -356,11 +359,58 @@ def test_every_kind_of_thread_comes_back_with_its_comments_and_anchor(world, git
     assert [t.key for t in threads] == ["PRRT_one", "IC_one", "PRR_one"]
     got_review, got_issue, got_summary = threads
     assert got_review == review
-    assert got_issue.comments == issue.comments
+    assert got_issue.comments == (replace(issue.comments[0], node_id="IC_one"),)
     assert got_issue.path is None
     assert got_summary.state is ReviewState.APPROVED
     assert got_summary.comments[0].review_state is ReviewState.APPROVED
     assert got_summary.comments[0].body == "overall good"
+
+
+def test_every_kind_of_comment_comes_back_with_its_reactions(world, github):
+    world.add_pr(a_pr(7, REPO), _state())
+    thumbs_up = (Reaction(ReactionContent.THUMBS_UP, 2, mine=True),)
+    heart = (Reaction(ReactionContent.HEART, 1, mine=False),)
+    eyes = (Reaction(ReactionContent.EYES, 3, mine=False),)
+    world.add_thread(a_pr(7, REPO), _review_thread(
+        "PRRT_one", _comment(1, node_id="PRRC_one", reactions=thumbs_up)))
+    world.add_thread(a_pr(7, REPO), Thread(
+        key="IC_one", kind=CommentKind.ISSUE,
+        comments=(_comment(900, reactions=heart),)))
+    world.add_thread(a_pr(7, REPO), Thread(
+        key="PRR_one", kind=CommentKind.REVIEW_SUMMARY,
+        comments=(_comment(700, body="overall good", reactions=eyes),),
+        state=ReviewState.APPROVED))
+
+    review, issue, summary = (t.comments[0] for t in github.threads(a_pr(7, REPO)))
+
+    assert (review.node_id, review.reactions) == ("PRRC_one", thumbs_up)
+    assert (issue.node_id, issue.reactions) == ("IC_one", heart)
+    assert (summary.node_id, summary.reactions) == ("PRR_one", eyes)
+
+
+def test_my_reaction_joins_the_others_and_leaves_again(world, github):
+    world.add_pr(a_pr(7, REPO), _state())
+    world.add_thread(a_pr(7, REPO), _review_thread("PRRT_one", _comment(
+        1, node_id="PRRC_one",
+        reactions=(Reaction(ReactionContent.ROCKET, 1, mine=False),))))
+
+    github.add_reaction("PRRC_one", ReactionContent.ROCKET)
+    github.add_reaction("PRRC_one", ReactionContent.THUMBS_UP)
+    joined = _thread(github, "PRRT_one").comments[0].reactions
+    github.remove_reaction("PRRC_one", ReactionContent.ROCKET)
+    left = _thread(github, "PRRT_one").comments[0].reactions
+
+    assert joined == (Reaction(ReactionContent.THUMBS_UP, 1, mine=True),
+                      Reaction(ReactionContent.ROCKET, 2, mine=True))
+    assert left == (Reaction(ReactionContent.THUMBS_UP, 1, mine=True),
+                    Reaction(ReactionContent.ROCKET, 1, mine=False))
+
+
+def test_a_reaction_on_a_comment_github_does_not_know_is_an_error(world, github):
+    world.add_pr(a_pr(7, REPO), _state())
+
+    with pytest.raises(GhError):
+        github.add_reaction("PRRC_gone", ReactionContent.HEART)
 
 
 def test_an_outdated_range_keeps_what_it_was_written_against(world, github):

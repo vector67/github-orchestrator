@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum, StrEnum
 
 from github_orchestrator.domain import Location, Sha, Side
@@ -279,6 +279,13 @@ class ReviewState(Enum):
 
 
 @dataclass(frozen=True)
+class Reaction:
+    content: str
+    count: int
+    mine: bool
+
+
+@dataclass(frozen=True)
 class Comment:
     id: int | None = None
     author: str = ""
@@ -287,6 +294,23 @@ class Comment:
     updated_at: str | None = None
     author_name: str = ""
     review_state: ReviewState | None = None
+    node_id: str = ""
+    reactions: tuple[Reaction, ...] = ()
+
+
+REACTION_ORDER = ("THUMBS_UP", "THUMBS_DOWN", "LAUGH", "HOORAY", "CONFUSED", "HEART",
+                  "ROCKET", "EYES")
+
+
+def reacted(comment: Comment, content: str, mine: bool) -> Comment:
+    counts = {r.content: (r.count, r.mine) for r in comment.reactions}
+    count, was_mine = counts.get(content, (0, False))
+    if was_mine != mine:
+        count += 1 if mine else -1
+    counts[content] = (count, mine)
+    return replace(comment, reactions=tuple(
+        Reaction(kind, *counts[kind]) for kind in REACTION_ORDER
+        if counts.get(kind, (0, False))[0] > 0))
 
 
 @dataclass(frozen=True)

@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.domain import Location, Repo, Side
-from github_orchestrator.github import CommentKind, Thread, ThreadComment, Verdict
+from github_orchestrator.github import (
+    CommentKind,
+    ReactionContent,
+    Thread,
+    ThreadComment,
+    Verdict,
+)
 from github_orchestrator.github.fake import SEARCH_REFUSED, FakeGitHub, GhError, Whose
 from tests.builders import a_pr
 
@@ -220,9 +226,17 @@ def _graphql_author(login: str | None) -> dict[str, str] | None:
 
 
 def _rest_comment(comment: ThreadComment, **extra: Any) -> dict[str, Any]:
-    return {"id": comment.id, "user": _author(comment.author), "body": comment.body,
-            "created_at": comment.created_at, "updated_at": comment.updated_at,
-            **extra}
+    return {"id": comment.id, "node_id": comment.node_id, "user": _author(comment.author),
+            "body": comment.body, "created_at": comment.created_at,
+            "updated_at": comment.updated_at, **extra}
+
+
+def _reaction_groups(comment: ThreadComment) -> list[dict[str, Any]]:
+    had = {reaction.content: reaction for reaction in comment.reactions}
+    return [{"content": content.value,
+             "viewerHasReacted": content in had and had[content].mine,
+             "reactors": {"totalCount": had[content].count if content in had else 0}}
+            for content in ReactionContent]
 
 
 def _comment_node(comment: ThreadComment, original_commit: str | None) -> dict[str, Any]:
@@ -230,8 +244,10 @@ def _comment_node(comment: ThreadComment, original_commit: str | None) -> dict[s
     if author is not None and comment.author_name:
         author["name"] = comment.author_name
     return {
+        "id": comment.node_id,
         "databaseId": comment.id,
         "author": author,
+        "reactionGroups": _reaction_groups(comment),
         "body": comment.body,
         "createdAt": comment.created_at,
         "updatedAt": comment.updated_at,
@@ -271,6 +287,7 @@ def _issue_node(thread: Thread) -> dict[str, Any]:
     comment = thread.comments[0]
     node = _comment_node(comment, None)
     return {"id": thread.key, "databaseId": comment.id, "author": node["author"],
+            "reactionGroups": node["reactionGroups"],
             "body": comment.body, "createdAt": comment.created_at,
             "updatedAt": comment.updated_at}
 
@@ -279,6 +296,7 @@ def _summary_node(thread: Thread) -> dict[str, Any]:
     comment = thread.comments[0]
     node = _comment_node(comment, None)
     return {"id": thread.key, "databaseId": comment.id, "author": node["author"],
+            "reactionGroups": node["reactionGroups"],
             "body": comment.body, "state": None if thread.state is None else thread.state.value,
             "createdAt": comment.created_at}
 
@@ -532,6 +550,8 @@ class _World:
 
     def _graphql(self, request: GhRequest) -> Any:
         query, variables = request.query, request.variables
+        if "addReaction" in query or "removeReaction" in query:
+            return self._reaction(query, variables)
         if "unresolveReviewThread" in query:
             return self._mutation(lambda: self.world.unresolve_thread(variables["threadId"]),
                                   "unresolveReviewThread")
@@ -567,6 +587,16 @@ class _World:
         if "reviewThreads(" in query:
             return self._threads(variables)
         raise AssertionError(f"no such query here: {query[:80]!r}")
+
+    def _reaction(self, query: str, variables: dict[str, Any]) -> Any:
+        name = "addReaction" if "addReaction" in query else "removeReaction"
+        content = ReactionContent(variables["content"])
+        write = self.world.add_reaction if name == "addReaction" else self.world.remove_reaction
+        try:
+            write(variables["subjectId"], content)
+        except GhError as error:
+            return _graphql_failure(error)
+        return {"data": {name: {"reaction": {"content": content.value}}}}
 
     def _add_to_pending_review(self, variables: dict[str, Any]) -> Any:
         sides = {word: side for side, word in _WORDS.items()}

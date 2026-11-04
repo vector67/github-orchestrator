@@ -9,6 +9,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Anchor,
     Comment,
     Conversation,
+    Reaction,
     ReviewState,
 )
 from github_orchestrator.conversation._domain.diff import (
@@ -24,6 +25,7 @@ from github_orchestrator.domain import Location, Pr, Repo, Sha
 from github_orchestrator.github import (
     CommentKind,
     PullRequests,
+    ReactionContent,
     Reviews,
     Thread,
     ThreadComment,
@@ -67,7 +69,10 @@ def _domain_comment(comment: ThreadComment) -> Comment:
     return Comment(id=comment.id, author=comment.author, body=comment.body,
                    created_at=comment.created_at, updated_at=comment.updated_at,
                    author_name=comment.author_name,
-                   review_state=_state_word(comment.review_state))
+                   review_state=_state_word(comment.review_state),
+                   node_id=comment.node_id,
+                   reactions=tuple(Reaction(r.content.value, r.count, r.mine)
+                                   for r in comment.reactions))
 
 
 def _anchor_of(thread: Thread) -> Anchor | None:
@@ -159,6 +164,14 @@ class GitHubThreads:
 
     def react(self, conversation: Conversation, comment_id: int) -> None:
         self._github.react(self._pr.repo, comment_id)
+
+    def set_reaction(self, node_id: str, content: str, mine: bool) -> str | None:
+        write = self._github.add_reaction if mine else self._github.remove_reaction
+        try:
+            write(node_id, ReactionContent(content))
+        except RuntimeError as error:
+            return str(error)
+        return None
 
     def post_review_comment(self, conversation: Conversation,
                             head: str) -> PostedDraft:

@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.conversation import (
     PointedLine,
     ProposalKind,
     Question,
+    Reaction,
     ReasonCode,
     Run,
     Step,
@@ -98,6 +99,9 @@ def _comment(comment: Comment) -> dict[str, Any]:
         "body": comment.body,
         "created_at": comment.created_at,
         "updated_at": comment.updated_at,
+        "node_id": comment.node_id,
+        "reactions": [{"content": r.content, "count": r.count, "mine": r.mine}
+                      for r in comment.reactions],
     }
 
 
@@ -317,6 +321,9 @@ def _decoded_comment(entry: Document) -> Comment:
         body=entry["body"],
         created_at=entry["created_at"],
         updated_at=entry["updated_at"],
+        node_id=entry["node_id"],
+        reactions=tuple(Reaction(r["content"], r["count"], r["mine"])
+                        for r in entry["reactions"]),
     )
 
 

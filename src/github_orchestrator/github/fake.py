@@ -16,6 +16,7 @@ from github_orchestrator.github.interface import (
     Listed,
     PostedComment,
     PullRequestState,
+    ReactionContent,
     Relevance,
     ReviewComment,
     ReviewState,
@@ -29,6 +30,9 @@ from github_orchestrator.github.interface import (
 )
 from github_orchestrator.github.interface import (
     PushEvent as PushEvent,
+)
+from github_orchestrator.github.interface import (
+    Reaction as Reaction,
 )
 from github_orchestrator.github.interface import (
     Review as Review,
@@ -86,13 +90,24 @@ def _as_github_answers(thread: Thread) -> Thread:
             updated_at=comment.updated_at or comment.created_at,
         )
         if thread.kind is CommentKind.ISSUE:
-            comment = replace(comment, review_state=None)
+            comment = replace(comment, review_state=None, node_id=thread.key)
         if thread.kind is CommentKind.REVIEW_SUMMARY:
             comment = replace(comment, review_state=thread.state,
-                              updated_at=comment.created_at)
+                              updated_at=comment.created_at, node_id=thread.key)
         comments.append(comment)
     return replace(thread, comments=tuple(comments),
                    anchor=thread.anchor or ThreadAnchor())
+
+
+def _reacted(reactions: tuple[Reaction, ...], content: ReactionContent,
+             mine: bool) -> tuple[Reaction, ...]:
+    counts = {reaction.content: (reaction.count, reaction.mine) for reaction in reactions}
+    count, was_mine = counts.get(content, (0, False))
+    if was_mine != mine:
+        count += 1 if mine else -1
+    counts[content] = (count, mine)
+    return tuple(Reaction(kind, *counts[kind]) for kind in ReactionContent
+                 if counts.get(kind, (0, False))[0] > 0)
 
 
 class FakeGitHub:
@@ -311,6 +326,7 @@ class FakeGitHub:
         record = self._pr(pr)
         comment = self._new_comment(body)
         key = f"IC_{comment.id}"
+        comment = replace(comment, node_id=key)
         record.threads.append(Thread(key=key, kind=CommentKind.ISSUE, comments=(comment,),
                                      anchor=ThreadAnchor()))
         return PostedComment(comment, key)
@@ -328,6 +344,25 @@ class FakeGitHub:
             raise GhError(f"gh api POST repos/{repo}/pulls/comments/{comment_id}/"
                           f"reactions failed (exit 1): gh: Not Found (HTTP 404)")
         self.reactions.setdefault(comment_id, []).append("+1")
+
+    def add_reaction(self, node_id: str, content: ReactionContent) -> None:
+        self._react_by_node(node_id, content, mine=True)
+
+    def remove_reaction(self, node_id: str, content: ReactionContent) -> None:
+        self._react_by_node(node_id, content, mine=False)
+
+    def _react_by_node(self, node_id: str, content: ReactionContent, *, mine: bool) -> None:
+        for record in self.prs.values():
+            for thread in record.threads:
+                for comment in thread.comments:
+                    if comment.node_id == node_id:
+                        reacted = replace(comment, reactions=_reacted(comment.reactions,
+                                                                      content, mine))
+                        self._put(record, replace(thread, comments=tuple(
+                            reacted if one is comment else one for one in thread.comments)))
+                        return
+        raise GhError(f"gh graphql mutation failed: Could not resolve to a "
+                      f"node with the global id of '{node_id}'")
 
     def post_review_comment(self, pr: Pr, head: str,
                             location: Location, body: str) -> ThreadComment:
@@ -454,8 +489,10 @@ class FakeGitHub:
                           for one in record.threads]
 
     def _new_comment(self, body: str) -> ThreadComment:
-        return ThreadComment(id=next(self._ids), author=self.account, body=body,
-                             created_at=FAKE_NOW, updated_at=FAKE_NOW)
+        comment_id = next(self._ids)
+        return ThreadComment(id=comment_id, author=self.account, body=body,
+                             created_at=FAKE_NOW, updated_at=FAKE_NOW,
+                             node_id=f"PRRC_{comment_id}")
 
     def _draft_thread(self, where: Location, comment: ThreadComment) -> Thread:
         return Thread(

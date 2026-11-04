@@ -64,6 +64,17 @@ def _line_moved(entry: dict[str, Any] | list[Any] | None,
     return "line" not in entry or entry["line"] != thread.line
 
 
+def reactions_of(comments: tuple[Comment, ...]) -> list[list[Any]]:
+    return [[c.id, [[r.content, r.count, r.mine] for r in c.reactions]]
+            for c in comments if c.reactions]
+
+
+def _reactions_moved(entry: dict[str, Any] | list[Any] | None,
+                     thread: FetchedThread) -> bool:
+    return (isinstance(entry, dict)
+            and entry.get("reactions") != reactions_of(thread.comments))
+
+
 def _drifted(seen: dict[int | None, str | None],
              comments: tuple[Comment, ...]) -> bool:
     now = {c.id: fingerprint(c) for c in comments}
@@ -115,7 +126,8 @@ def diff_threads(
             active.append(ActiveThread(thread=thread, new_comments=fresh))
         elif thread.key in old and (_drifted(seen, comments)
                                        or _resolution_moved(entry, thread)
-                                       or _line_moved(entry, thread)):
+                                       or _line_moved(entry, thread)
+                                       or _reactions_moved(entry, thread)):
             stale.append(thread)
 
     return {
