@@ -305,7 +305,7 @@ jobs:
         run: |
           mkdir -p "$HOME/.config/github-orchestrator"
           printf '%s\n' 'gh_account = "octocat"' 'agents_enabled = false' 'check_for_updates = false' '' \
-            '[[repos]]' 'repo = "acme/widgets"' 'local_path = "~/repositories/widgets"' \
+            '[[repos]]' 'repo = "acme/widgets"' "local_path = \"$HOME/repositories/widgets\"" \
             > "$HOME/.config/github-orchestrator/config.toml"
 
       - name: Install the last published release with its own install.sh
