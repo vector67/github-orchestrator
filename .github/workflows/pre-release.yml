@@ -269,22 +269,55 @@ jobs:
           mkdir -p "$RUNNER_TEMP/home"
           echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
 
-      - name: Install the last published release with its own install.sh
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Download the last published release's install.sh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           previous=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
           echo "upgrading from $previous"
+          echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
           gh release download "$previous" --repo "$GITHUB_REPOSITORY" --pattern install.sh --output previous-install.sh
-          sh previous-install.sh -y --no-open --version "$previous"
-          curl -fsS http://127.0.0.1:8720/api/health
 
-      - name: Give the old release a config
+      - name: Put a stand-in GitHub with one open pull request first on PATH
+        run: |
+          stand_in="$RUNNER_TEMP/stand-in-github"
+          seed="$RUNNER_TEMP/widgets-seed"
+          mkdir -p "$stand_in" "$HOME/repositories"
+          cp source/tools/stand-in-github/gh "$stand_in/gh"
+          chmod +x "$stand_in/gh"
+          git init -q -b main "$seed"
+          git -C "$seed" -c user.name=octocat -c user.email=octocat@example.com commit -q --allow-empty -m start
+          git -C "$seed" checkout -q -b add-widget
+          echo widget > "$seed/widget.txt"
+          git -C "$seed" add widget.txt
+          git -C "$seed" -c user.name=octocat -c user.email=octocat@example.com commit -q -m "add a widget"
+          git -C "$seed" checkout -q main
+          git clone -q --bare "$seed" "$stand_in/widgets.git"
+          git clone -q "$stand_in/widgets.git" "$HOME/repositories/widgets"
+          echo "$stand_in" >> "$GITHUB_PATH"
+
+      - name: Give the old release a config that watches the stand-in's repo
         run: |
           mkdir -p "$HOME/.config/github-orchestrator"
-          printf '%s\n' 'gh_account = "octocat"' '' '[[repos]]' 'repo = "octocat/hello-world"' 'local_path = "~/repositories/hello-world"' \
+          printf '%s\n' 'gh_account = "octocat"' 'agents_enabled = false' 'check_for_updates = false' '' \
+            '[[repos]]' 'repo = "acme/widgets"' 'local_path = "~/repositories/widgets"' \
             > "$HOME/.config/github-orchestrator/config.toml"
+
+      - name: Install the last published release with its own install.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ "$(command -v gh)" = "$RUNNER_TEMP/stand-in-github/gh" ]
+          sh previous-install.sh -y --no-open --version "$PREVIOUS"
+          curl -fsS http://127.0.0.1:8720/api/health
+
+      - name: The old release runs an agent manager for the stand-in's pull request
+        run: python3 source/tools/stand-in-github/managers.py before old-managers.txt
 
       - name: Install the new wheel over it
         env:
@@ -297,8 +330,13 @@ jobs:
           version=$(echo "$wheel" | cut -d- -f2)
           curl -fsS http://127.0.0.1:8720/api/health | tee health.json
           python3 -c 'import json, sys; got = json.load(open("health.json"))["version"]; assert got == sys.argv[1], f"hub runs {got}, not {sys.argv[1]}"' "$version"
-          grep -q 'octocat/hello-world' "$HOME/.config/github-orchestrator/config.toml"
+          grep -q 'acme/widgets' "$HOME/.config/github-orchestrator/config.toml"
           "$HOME/.local/bin/github-orchestrator" config
+
+      - name: No old agent manager survives, and the one running started on the new version
+        run: |
+          version=$(basename dist/*.whl | cut -d- -f2)
+          python3 source/tools/stand-in-github/managers.py after old-managers.txt "$version"
 
       - name: The board loads in headless Chrome without a script error
         run: |
@@ -309,6 +347,12 @@ jobs:
             --dump-dom http://127.0.0.1:8720/ > board.html 2> chrome.log || true
           if grep -E 'CONSOLE.*Uncaught' chrome.log; then exit 1; fi
           grep -q '<script' board.html || { tail -n 50 chrome.log; exit 1; }
+
+      - name: Show what the stand-in GitHub was asked and what the logs say
+        if: failure()
+        run: |
+          cat "$RUNNER_TEMP/stand-in-github/calls.log" || true
+          tail -n 100 "$HOME"/.local/share/github-orchestrator/logs/*.log || true
 
   update-command:
     needs: build
