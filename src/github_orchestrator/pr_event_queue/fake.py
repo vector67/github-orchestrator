@@ -83,9 +83,9 @@ class FakePrEventQueue:
     def _queue(self, pr: Pr) -> _Queue:
         return self._queues.setdefault(pr, _Queue())
 
-    def _held(self, pr: Pr) -> list[Queued]:
+    def _held_oldest_first(self, pr: Pr) -> list[Queued]:
         queue = self._queue(pr)
-        return [entry.event for entry in queue.pending + queue.in_flight]
+        return [entry.event for entry in queue.in_flight + queue.pending]
 
     def _enqueue(self, pr: Pr, item: Queued) -> None:
         self._queue(pr).pending.append(_Held(item, _now(), next(self._order)))
@@ -94,7 +94,7 @@ class FakePrEventQueue:
         self._enqueue(pr, event)
 
     def add_thread_activity(self, pr: Pr, activity: ThreadActivity) -> None:
-        if found_again(activity, self._held(pr)):
+        if found_again(activity, self._held_oldest_first(pr)):
             return
         self._enqueue(pr, activity)
 

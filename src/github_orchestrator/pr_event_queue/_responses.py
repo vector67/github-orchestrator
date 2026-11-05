@@ -40,10 +40,11 @@ def settling_of(held: list[Queued]) -> bool:
     return any(isinstance(event, ThreadActivity) for event in held)
 
 
-def found_again(activity: ThreadActivity, held: list[Queued]) -> bool:
-    return any(isinstance(event, ThreadActivity)
-               and (event.threads, event.stale) == (activity.threads, activity.stale)
-               for event in held)
+def found_again(activity: ThreadActivity, held_oldest_first: list[Queued]) -> bool:
+    latest = next((event for event in reversed(held_oldest_first)
+                   if isinstance(event, ThreadActivity)), None)
+    return (latest is not None
+            and (latest.threads, latest.stale) == (activity.threads, activity.stale))
 
 
 def launch_of(event: Queued, is_author: bool) -> Launching | None:

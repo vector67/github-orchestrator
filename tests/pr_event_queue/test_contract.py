@@ -293,6 +293,25 @@ def test_thread_activity_found_again_while_the_first_is_carried_out_is_added_onc
     assert event_queue.waiting(THE_PR).count == 0
 
 
+def test_thread_activity_found_again_after_other_activity_waits_is_added_again(event_queue):
+    event_queue.add_thread_activity(THE_PR, activity("PRRT_one"))
+    event_queue.add_thread_activity(THE_PR, activity(stale=("PRRT_one",)))
+
+    event_queue.add_thread_activity(THE_PR, activity("PRRT_one"))
+
+    assert event_queue.waiting(THE_PR).count == 3
+
+
+def test_thread_activity_found_again_after_other_activity_behind_the_one_carried_out_is_added_again(event_queue):
+    event_queue.add_thread_activity(THE_PR, activity("PRRT_one"))
+    _take(event_queue)
+    event_queue.add_thread_activity(THE_PR, activity(stale=("PRRT_one",)))
+
+    event_queue.add_thread_activity(THE_PR, activity("PRRT_one"))
+
+    assert event_queue.waiting(THE_PR).count == 2
+
+
 def test_other_thread_activity_is_added_beside_what_waits(event_queue):
     event_queue.add_thread_activity(THE_PR, activity("PRRT_one"))
     event_queue.add_thread_activity(THE_PR, activity(stale=("PRRT_one",)))

@@ -313,9 +313,9 @@ class DiskPrEventQueue:
         enqueue(self._queues_dir, pr, event)
 
     def add_thread_activity(self, pr: Pr, activity: ThreadActivity) -> None:
-        held = (list_pending(self._queues_dir, pr)
-                + list_in_flight(self._queues_dir, pr))
-        if found_again(activity, held):
+        held_oldest_first = (list_in_flight(self._queues_dir, pr)
+                             + list_pending(self._queues_dir, pr))
+        if found_again(activity, held_oldest_first):
             logger.info("%s: the %s found again is already waiting; not adding it twice",
                         pr, activity.kind)
             return
