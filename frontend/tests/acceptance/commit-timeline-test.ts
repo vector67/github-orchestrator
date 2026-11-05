@@ -1580,6 +1580,36 @@ module(
       assert.deepEqual(keyed(), [...PLAIN_KEY, 'origin']);
     });
 
+    test("on local after the worktree is rebased onto newer main, origin's older fork comes before the worktree's on main", async function (assert) {
+      board().commits = prHistory(STALE_FORK, [
+        prCommit(FIRST, STALE_FORK, 'Add the widget'),
+        prCommit(SECOND, FIRST, 'Name the widget'),
+        prCommit(THIRD, SECOND, 'Test the widget'),
+      ]);
+      board().localCommits = prHistory(FORK, [
+        prCommit(STALE_ONE, FORK, 'Add the widget'),
+        prCommit(STALE_TWO, STALE_ONE, 'Name the widget'),
+      ]);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+
+      await click('[data-test-timeline-toggle]');
+
+      const onBase = dots('base');
+      const [older, newer] = [STALE_FORK, FORK].map((sha) =>
+        onBase.find((one) => one.sha === sha)!,
+      );
+      const onOrigin = dots('origin');
+      assert.true(
+        older!.x < newer!.x,
+        "origin's fork comes before the worktree's",
+      );
+      assert.true(
+        onOrigin[0]!.x > older!.x,
+        "origin's lane forks from origin's fork",
+      );
+    });
+
     test('on local the header counts the worktree and origin apart, and the stepper says its commit is not on origin', async function (assert) {
       await visit('/pr/o/r/7/diff');
       await click('[data-test-source="local"]');

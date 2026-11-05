@@ -243,6 +243,7 @@ class FakeWorkingCopies:
 
     def _fetch_branch(self, worktree: Path, branch: str) -> None:
         if branch not in self.origin:
+            self.fetched.pop(branch, None)
             raise RuntimeError(
                 f"git fetch origin {branch} in {worktree} failed: "
                 f"fatal: couldn't find remote ref {branch}"
@@ -322,6 +323,7 @@ class FakeWorkingCopies:
         if branch in self.origin:
             self.fetched[branch] = self.origin[branch]
         else:
+            self.fetched.pop(branch, None)
             self.notifications.fetch_failed(pr, branch)
         self._fetch_base(base_branch)
 

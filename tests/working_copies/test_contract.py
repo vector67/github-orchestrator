@@ -389,6 +389,25 @@ def test_fetching_a_prs_checkout_moves_its_origin_head_and_not_its_local_one(
         Sha(pushed), Sha(head), Sha(pushed))
 
 
+def test_fetching_a_branch_origin_deleted_says_so_and_forgets_origins_head(
+        world, pr_worktree, pr_checkout):
+    world.delete_on_origin(BRANCH)
+
+    failed = pr_checkout.fetch("main")
+
+    assert failed is not None and BRANCH in failed
+    assert pr_checkout.origin_head() is None
+
+
+def test_refreshing_a_branch_origin_deleted_forgets_origins_head(
+        world, pr_worktree, pr_checkout):
+    world.delete_on_origin(BRANCH)
+
+    world.copies.fetch_pr_branch(world.repo_dir, THE_PR, BRANCH, "main")
+
+    assert pr_checkout.origin_head() is None
+
+
 def test_a_fetched_base_ahead_of_the_branch_says_how_far_behind_it_is(
         world, pr_worktree, pr_checkout):
     world.advance_main({"m": "more\n"}, "more main")

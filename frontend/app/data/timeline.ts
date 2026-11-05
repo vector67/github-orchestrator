@@ -559,10 +559,11 @@ function originForkOf(
       ...history.commits,
       ...there,
     ].map((one) => one.sha),
+    ...oldForkOf(history).map((one) => one.id),
   ]);
   const fork = there[0]?.parents[0];
   if (!fork || known.has(fork)) return [];
-  return [{ id: fork, lane: BASE_LANE, parents: [history.fork] }];
+  return [{ id: fork, lane: BASE_LANE, parents: [], span: OLD_FORK_SPAN }];
 }
 
 function nodesOf(
@@ -573,12 +574,12 @@ function nodesOf(
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
     ...oldForkOf(history),
+    ...originForkOf(history, there),
     ...outsideOf(history).map((id) => ({
       id,
       lane: BASE_LANE,
       parents: [],
     })),
-    ...originForkOf(history, there),
     ...(history.stack?.commits ?? []).map((one) => ({
       id: one.sha,
       lane: STACK_LANE,

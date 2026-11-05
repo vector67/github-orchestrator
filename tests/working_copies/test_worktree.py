@@ -18,7 +18,8 @@ def _porcelain(path, branch):
 
 def _fetch(copies, tmp_path, branch, fetched):
     listed = _completed(_porcelain(tmp_path, branch))
-    with patch("subprocess.run", side_effect=[listed, fetched]) as run:
+    still_on_origin = _completed(stdout="")
+    with patch("subprocess.run", side_effect=[listed, fetched, still_on_origin]) as run:
         copies.fetch_pr_branch(tmp_path / "repo", a_pr(7, "owner/name"), branch, None)
     return run
 

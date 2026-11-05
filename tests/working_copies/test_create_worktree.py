@@ -214,8 +214,8 @@ def test_nothing_is_added_when_the_fetch_fails(
 
     assert _create(settings, repo, "feature-x") is None
 
-    [(argv, kwargs)] = ran
-    assert argv[:4] == ["git", "-C", str(repo), "fetch"]
+    assert [argv[:4] for argv, _ in ran] == [["git", "-C", str(repo), "fetch"],
+                                             ["git", "-C", str(repo), "ls-remote"]]
     assert not (repo.parent / "feature-x").exists()
 
 

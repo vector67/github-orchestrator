@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 GIT_TIMEOUT = 60
 NEW_WORKTREE_TIMEOUT = 300
 FALLBACK_NAMES = 20
+NO_MATCHING_REF = 2
 EVEN_IF_LOCKED_SINCE_NO_HUMAN_LOCKS_OURS = ("--force", "--force")
 
 
@@ -73,9 +74,17 @@ def fetch_branch(worktree: Path, branch: str) -> None:
             f"git fetch origin {branch} in {worktree} timed out after {GIT_TIMEOUT}s"
         )
     if fetched.returncode != 0:
+        if _gone_from_origin(worktree, branch):
+            _git("-C", str(worktree), "update-ref", "-d", f"refs/remotes/origin/{branch}")
         raise RuntimeError(
             f"git fetch origin {branch} in {worktree} failed: {fetched.stderr.strip()}"
         )
+
+
+def _gone_from_origin(worktree: Path, branch: str) -> bool:
+    listed = _git("-C", str(worktree), "ls-remote", "--exit-code", "origin",
+                  f"refs/heads/{branch}")
+    return listed is not None and listed.returncode == NO_MATCHING_REF
 
 
 def fetch_base(worktree: Path, base_branch: str | None) -> None:

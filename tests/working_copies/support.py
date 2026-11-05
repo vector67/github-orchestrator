@@ -185,6 +185,9 @@ class GitWorld:
         git(seed, "checkout", "-q", BRANCH)
         return git(seed, "rev-parse", "main")
 
+    def delete_on_origin(self, branch: str) -> None:
+        git(self.root / "seed", "push", "-q", "origin", "--delete", branch)
+
     def merge_main(self, worktree: Path | str, files: dict[str, str], message: str) -> str:
         git(Path(worktree), "fetch", "-q", "origin", "main")
         git(Path(worktree), "merge", "-q", "--no-ff", "--no-commit", "origin/main")
@@ -244,6 +247,9 @@ class FakeWorld:
 
     def advance_main(self, files: dict[str, str], message: str) -> str:
         return self.fake.publish("main", self.fake.origin["main"], files, message)
+
+    def delete_on_origin(self, branch: str) -> None:
+        del self.fake.origin[branch]
 
     def merge_main(self, worktree: Path | str, files: dict[str, str], message: str) -> str:
         self.fake.fetched["main"] = self.fake.origin["main"]
