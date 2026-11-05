@@ -23,7 +23,12 @@ export function keyOf(pr: Numbered): string {
 }
 
 export function numberIn(text: string): number | null {
-  return /^\d+$/.test(text) ? Number(text) : null;
+  const number = Number(text);
+  return /^\d+$/.test(text) && Number.isSafeInteger(number) ? number : null;
+}
+
+export function namesARepo(owner: string, name: string): boolean {
+  return [owner, name].every((part) => /^[A-Za-z0-9_.-]+$/.test(part));
 }
 
 export function pageOf(pr: Numbered, under = ''): string {

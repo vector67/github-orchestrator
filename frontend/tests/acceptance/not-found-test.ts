@@ -30,6 +30,40 @@ module('Acceptance | not found', function (hooks) {
       );
   });
 
+  test('a path the board never had keeps the theme the viewer chose', async function (assert) {
+    localStorage.setItem('board-theme', 'dark');
+    try {
+      await visit('/nope-top-level');
+
+      assert.dom(document.documentElement).hasAttribute('data-theme', 'dark');
+    } finally {
+      localStorage.removeItem('board-theme');
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
+  for (const url of [
+    '/pr/a%20b/c/5',
+    '/pr/acme/c%20d/5',
+    '/pr/%E2%80%AEacme/widgets/5',
+  ]) {
+    test(`${url}, a repository github could not name, is a page the board does not have`, async function (assert) {
+      await visit(url);
+
+      assert.dom('[data-test-not-found]').exists();
+      assert.dom('[data-test-load-trouble]').doesNotExist();
+      assert.dom('[data-test-tab]').doesNotExist();
+      assert.dom('[data-test-title-bar]').doesNotExist();
+    });
+  }
+
+  test('a pull request number too big to be one is a page the board does not have', async function (assert) {
+    await visit('/pr/acme/nope/99999999999999999999');
+
+    assert.dom('[data-test-not-found]').exists();
+    assert.dom(document.body).doesNotIncludeText('100000000000000000000');
+  });
+
   test('a pull request path with no number in it says so', async function (assert) {
     await visit('/pr/acme/widgets/latest');
 

@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
-import { numberIn, type Numbered } from 'frontend/data/wall';
+import { namesARepo, numberIn, type Numbered } from 'frontend/data/wall';
 import type HereService from 'frontend/services/here';
 import type HubService from 'frontend/services/hub';
 import type PollService from 'frontend/services/poll';
@@ -21,7 +21,12 @@ export default class PrRoute extends Route {
 
   beforeModel(): void {
     const { owner, name, number } = this.paramsFor('pr') as Params;
-    if (numberIn(number) === null) {
+    if (!namesARepo(owner, name)) {
+      void this.router.replaceWith(
+        'not-found',
+        `pr/${owner}/${name}/${number}`,
+      );
+    } else if (numberIn(number) === null) {
       void this.router.replaceWith(
         'old-link.under',
         owner,
