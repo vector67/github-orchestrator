@@ -90,8 +90,12 @@ module('Acceptance | reactions', function (hooks) {
     );
     assert.true(picker.matches(':popover-open'), 'it is drawn over the page');
     assert.true(
-      top >= under && top <= under + 12,
-      `it opens just under the smiley (${top} under ${under})`,
+      top >= under,
+      `it opens below the smiley (${top} under ${under})`,
+    );
+    assert.true(
+      top <= under + 12,
+      `it opens right by it (${top} under ${under})`,
     );
   });
 
