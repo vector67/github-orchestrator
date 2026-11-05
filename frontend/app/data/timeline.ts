@@ -48,6 +48,7 @@ const DIAMOND = 8;
 const FAR = 20;
 const KEPT = 2;
 const RUN = 'run';
+const CAPTION = `${RUN}-caption`;
 const RUN_SPAN = 2;
 const RUN_REACH = 10;
 const DATE_DROP = 28;
@@ -57,6 +58,9 @@ const RUN_GAP = 4;
 const LABEL_CHAR = 7.5;
 const LABEL_PAD = 6;
 const LABEL_REACH = 10;
+const NOTE_CHAR = 6;
+const SHA_ROOM = SHORT * NOTE_CHAR + 2 * LABEL_PAD;
+const SHA_ASIDE = 2;
 
 export function isMerge(commit: PullRequestCommit): boolean {
   return commit.parents.length > 1;
@@ -106,7 +110,7 @@ export interface TimelineDot {
   path: string;
   x: number;
   y: number;
-  shaY: number;
+  shaAt: Note;
   pushed: boolean | null;
   showSha: boolean;
   date: string | null;
@@ -430,15 +434,13 @@ function stretchesOf(history: PullRequestCommits): Stretch[] {
       stretches.push({
         fold: {
           id: `${RUN}-${next}`,
-          text: `⋯ ${one.at - next}`,
+          text: `⋯ ${one.at - next} more`,
           listed: listedOf(sited, next, one.at - 1),
         },
       });
     stretches.push({ commit: one.commit });
     next = one.at + 1;
   }
-  const last = stretches.findLast((one) => 'fold' in one);
-  if (last && 'fold' in last) last.fold.text = `${last.fold.text} more`;
   return stretches;
 }
 
@@ -487,28 +489,36 @@ function baseNodesOf(
   history: PullRequestCommits,
   lane: string,
   column: number,
+  captioned: boolean,
 ): GraphNode[] {
   const stretches = stretchesOf(history);
-  if (!stretches.some((one) => 'fold' in one))
+  const caption =
+    captioned && history.base_commits.length
+      ? [{ id: CAPTION, lane, parents: [history.fork] }]
+      : [];
+  if (!caption.length && !stretches.some((one) => 'fold' in one))
     return stretches.flatMap((one) =>
       'commit' in one
         ? [{ id: one.commit.sha, lane, parents: one.commit.parents }]
         : [],
     );
-  let before = history.fork;
-  return stretches.map((one) => {
-    const node =
-      'fold' in one
-        ? {
-            id: one.fold.id,
-            lane,
-            parents: [before],
-            span: spanOf(one.fold.text, column),
-          }
-        : { id: one.commit.sha, lane, parents: [before] };
-    before = node.id;
-    return node;
-  });
+  let before = caption[0]?.id ?? history.fork;
+  return [
+    ...caption,
+    ...stretches.map((one) => {
+      const node =
+        'fold' in one
+          ? {
+              id: one.fold.id,
+              lane,
+              parents: [before],
+              span: spanOf(one.fold.text, column),
+            }
+          : { id: one.commit.sha, lane, parents: [before] };
+      before = node.id;
+      return node;
+    }),
+  ];
 }
 
 function collapsedOf(
@@ -570,6 +580,7 @@ function nodesOf(
   history: PullRequestCommits,
   there: PullRequestCommit[],
   column: number,
+  captioned: boolean,
 ): GraphNode[] {
   const onBase = history.stack ? STACK_LANE : BASE_LANE;
   return [
@@ -585,7 +596,7 @@ function nodesOf(
       lane: STACK_LANE,
       parents: one.parents,
     })),
-    ...baseNodesOf(history, onBase, column),
+    ...baseNodesOf(history, onBase, column, captioned),
     ...history.commits.map((one) => ({
       id: one.sha,
       lane: PR_LANE,
@@ -615,7 +626,7 @@ function drawingOf(
   const drawn = (spacing: Spacing) =>
     layout(
       lanes,
-      nodesOf(history, there, spacing.column),
+      nodesOf(history, there, spacing.column, false),
       { ...spacing, top: spacing.top + top },
       across,
     );
@@ -628,7 +639,7 @@ function drawingOf(
   return {
     graph: layout(
       lanes,
-      nodesOf(history, there, DOWN.column),
+      nodesOf(history, there, DOWN.column, true),
       DOWN,
       across,
       true,
@@ -706,6 +717,7 @@ function sinceOf(
   base: string,
   collapsed: CollapsedRun[],
   textX: number,
+  right: number,
 ): SinceFork | null {
   const placed = graph.nodes;
   const opening = stretchesOf(history)[0];
@@ -725,10 +737,10 @@ function sinceOf(
       height: last.y - first.y + 2 * BAND_REACH,
       textAt: {
         x: textX,
-        y: first.y - graph.column / 2 + NOTE_LIFT,
+        y: placed.get(CAPTION)!.y + NOTE_LIFT,
         anchor: 'start',
       },
-      text,
+      text: fitted(text, Math.floor((right - textX) / NOTE_CHAR)),
     };
   const pill = collapsed.find((one) => one.x === first.x);
   const x = pill ? pill.left - RUN_GAP : first.x - BAND_REACH;
@@ -746,6 +758,12 @@ function sinceOf(
   };
 }
 
+function shaUnder(node: Placed, forking: boolean): Note {
+  return forking
+    ? { x: node.x - SHA_ASIDE, y: node.y + SHA_DROP, anchor: 'end' }
+    : { x: node.x, y: node.y + SHA_DROP, anchor: 'middle' };
+}
+
 function tickAt(x: number, y: number): string {
   return `M ${x} ${y - TICK} L ${x} ${y + TICK}`;
 }
@@ -754,7 +772,7 @@ function daysOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
 ): TimelineDay[] {
-  return history.commits.flatMap((one, index) => {
+  const days = history.commits.flatMap((one, index) => {
     const text = dayOf(one.authored_at);
     const before = history.commits[index - 1];
     const at = placed.get(one.sha);
@@ -768,6 +786,11 @@ function daysOf(
         text,
       },
     ];
+  });
+  return days.map((day, index) => {
+    const next = days[index + 1];
+    const end = day.textX + day.text.length * NOTE_CHAR + DAY_GAP;
+    return next && end > next.x ? { ...day, text: '' } : day;
   });
 }
 
@@ -830,7 +853,10 @@ function labelsBeside(
 
 function fitted(text: string, room: number): string {
   if (text.length <= room) return text;
-  return room > 1 ? `${text.slice(0, room - 1)}…` : '';
+  const kept = text.slice(0, Math.max(room - 1, 0));
+  const space = text[kept.length] === ' ' ? kept.length : kept.lastIndexOf(' ');
+  const words = kept.slice(0, Math.max(space, 0)).trimEnd();
+  return words ? `${words}…` : '';
 }
 
 interface RowText {
@@ -919,6 +945,10 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       : [],
   );
   const leaving = new Set(forkCommitsOf(history).map((one) => one.sha));
+  const forking = new Set(
+    graph.edges.filter((one) => one.crossing).map((one) => one.from),
+  );
+  const named = graph.column >= SHA_ROOM;
   const placed = [...graph.nodes.values()].filter(
     (node) => !node.id.startsWith(RUN),
   );
@@ -978,12 +1008,13 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
   const textX = Math.max(...placed.map((one) => one.x)) + LABEL_GAP;
   const subjectX = textX + (SHORT + 1) * LABEL_CHAR;
   const beside = labelsBeside(labelled, graph.nodes, subjectX);
-  const width = vertical
-    ? Math.max(
-        graph.width,
-        Math.max(subjectX, ...beside.ends.values()) + TEXT_ROOM,
-      )
-    : graph.width;
+  const width =
+    vertical && !input.across
+      ? Math.max(
+          graph.width,
+          Math.max(subjectX, ...beside.ends.values()) + TEXT_ROOM,
+        )
+      : graph.width;
   const right = width - DOWN.right;
   const noteAt = (node: Placed, above: Note): Note =>
     vertical ? { x: right, y: node.y + NOTE_LIFT, anchor: 'end' } : above;
@@ -1013,12 +1044,12 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
             : '',
       x: node.x,
       y: node.y,
-      shaY: node.y + SHA_DROP,
+      shaAt: shaUnder(node, forking.has(node.id)),
       showSha:
         !vertical &&
         ((folded && leaving.has(node.id)) ||
           (at >= 0 &&
-            (!ticked ||
+            (named ||
               [showing.from, showing.to, input.current].includes(node.id)))),
       date: date ? dayOf(date) : null,
       dateAt: noteAt(
@@ -1110,7 +1141,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       vertical,
     ),
     flag: flagOf(order, input, graph, right),
-    since: sinceOf(history, graph, base, collapsed, textX),
+    since: sinceOf(history, graph, base, collapsed, textX, right),
     collapsed,
     days: ticked ? daysOf(history, graph.nodes) : [],
     ghosts: ghosts.length

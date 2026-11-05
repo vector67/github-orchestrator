@@ -986,7 +986,8 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
     const pills = findAll('[data-test-collapsed]');
     assert.deepEqual(
       pills.map((one) => one.textContent?.trim()),
-      ['⋯ 17', '⋯ 20 more'],
+      ['⋯ 17 more', '⋯ 20 more'],
+      'every pill words its count the same way',
     );
     const [first, second] = pills.map((one) =>
       Number(one.getAttribute('data-x')),
@@ -996,17 +997,19 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
       increasing([main[0]!.x, first!, leaving.x, second!]),
       'the dot sits between the two pills',
     );
+    const named = findAll('[data-test-sha]').find(
+      (one) => one.textContent.trim() === run[17],
+    );
+    assert.ok(named, 'with its sha under it');
+    const curve = find('[data-test-fork-curve][data-lane="origin"]')!;
     assert.true(
-      findAll('[data-test-sha]').some(
-        (one) => one.textContent.trim() === run[17],
-      ),
-      'with its sha under it',
+      curve.getAttribute('d')!.startsWith(`M ${leaving.x} ${leaving.y} `),
+      "origin's lane leaves from it",
     );
     assert.true(
-      find('[data-test-fork-curve][data-lane="origin"]')!
-        .getAttribute('d')!
-        .startsWith(`M ${leaving.x} ${leaving.y} `),
-      "origin's lane leaves from it",
+      named!.getBoundingClientRect().right <=
+        curve.getBoundingClientRect().left,
+      "and its sha stays clear of origin's curve",
     );
     assert.true(
       dots('pr').every((one) => one.x < leaving.x),
@@ -1056,12 +1059,12 @@ module('Acceptance | commit timeline far behind main', function (hooks) {
 
     await paneOf(120);
 
-    assert.deepEqual(rowsOn('base'), [
-      FORK,
-      `${run[17]} main 17`,
-      `${run[38]} main 38`,
-      `${run[39]} main 39`,
-    ]);
+    assert.deepEqual(
+      findAll('[data-test-timeline-row][data-lane="base"]').map((one) =>
+        one.getAttribute('data-sha'),
+      ),
+      [FORK, run[17]!, run[38]!, run[39]!],
+    );
     const leaving = dots('base')[1]!;
     const [first, second] = findAll('[data-test-collapsed]').map((one) =>
       Number(one.getAttribute('data-y')),
@@ -1205,12 +1208,12 @@ module(
       await visit('/pr/o/r/7/diff');
       await click('[data-test-timeline-toggle]');
 
-      await paneOf(1800);
+      await paneOf(2400);
 
       assert.deepEqual(shapes(), ['dot']);
       assert.strictEqual(shasShown().length, 40);
       assert.dom('[data-test-timeline-row]').doesNotExist();
-      assert.strictEqual(graphWidth(), 1800, 'spread to fill the pane');
+      assert.strictEqual(graphWidth(), 2400, 'spread to fill the pane');
 
       await paneOf(800);
 
@@ -1254,6 +1257,112 @@ module(
       assert.true(
         increasing(rows.map((one) => Number(one.getAttribute('data-y')))),
         'top to bottom',
+      );
+    });
+
+    test('vertical in a narrow tab, the drawing fits the pane, subjects stop at a whole word and the caption over main takes a row of its own', async function (assert) {
+      long(40);
+      const run = mainRun(2);
+      board().commits = {
+        ...withLongSubjects(board().commits),
+        behind: 2,
+        base_tip: run[1]!,
+        base_commits: [
+          prCommit(run[0]!, FORK, 'Note the release in the changelog'),
+          prCommit(run[1]!, run[0]!, 'Note the fix in the changelog'),
+        ],
+      };
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+
+      await tabOf(300);
+
+      assert.dom('[data-test-timeline]').hasAttribute('data-vertical');
+      const pane = find('.timeline-scroll') as HTMLElement;
+      const graph = find('[data-test-timeline-graph]')!;
+      await waitUntil(
+        () => Number(graph.getAttribute('width')) === pane.clientWidth,
+      );
+      assert.true(
+        pane.scrollWidth <= pane.clientWidth,
+        `${pane.scrollWidth}px drawn in a ${pane.clientWidth}px pane`,
+      );
+      const inPane = pane.getBoundingClientRect();
+      assert.deepEqual(
+        findAll('[data-test-timeline-graph] text')
+          .filter((one) => one.getBoundingClientRect().right > inPane.right)
+          .map((one) => one.textContent.trim()),
+        [],
+        'and no text runs past its edge',
+      );
+      const full = board().commits.commits.map((one) => one.subject);
+      const shown = findAll(
+        '[data-test-timeline-row][data-lane="pr"] .timeline-row-subject',
+      ).map((one) => one.textContent.trim());
+      const cut = shown.filter((one, index) => one !== full[index]);
+      assert.true(cut.length > 0, 'the long subjects are cut');
+      assert.deepEqual(
+        cut.filter((one) => {
+          const kept = one.slice(0, -1);
+          const subject = full[shown.indexOf(one)]!;
+          return !(
+            one.endsWith('…') &&
+            kept.trim() === kept &&
+            subject.startsWith(`${kept} `)
+          );
+        }),
+        [],
+        'each one after a whole word',
+      );
+      const caption = find(
+        '[data-test-since-fork] text',
+      )!.getBoundingClientRect();
+      const apart = (one: DOMRect) =>
+        one.bottom <= caption.top ||
+        caption.bottom <= one.top ||
+        one.right <= caption.left ||
+        caption.right <= one.left;
+      assert.deepEqual(
+        findAll('[data-test-timeline-row] text')
+          .filter((one) => !apart(one.getBoundingClientRect()))
+          .map((one) => one.textContent.trim()),
+        [],
+        'the caption touches no row',
+      );
+    });
+
+    test('dots too close for a sha apiece name only where you are, as ticks do', async function (assert) {
+      const shas = long(10);
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+
+      await paneOf(500);
+
+      assert.deepEqual(shapes(), ['dot']);
+      assert.deepEqual(shasShown(), [shas[0]]);
+
+      await paneOf(1000);
+
+      assert.deepEqual(shasShown(), shas);
+    });
+
+    test('a day too short to hold its date keeps its line and leaves the date out', async function (assert) {
+      long(24);
+      board().commits = {
+        ...board().commits,
+        commits: board().commits.commits.map((one, index) => ({
+          ...one,
+          authored_at: `${index ? DAYS[1] : DAYS[0]}T09:${String(index).padStart(2, '0')}:00Z`,
+        })),
+      };
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-timeline-toggle]');
+
+      await paneOf(800);
+
+      assert.deepEqual(
+        findAll('[data-test-day]').map((one) => one.textContent.trim()),
+        ['', 'Tue 20 Oct'],
       );
     });
 
@@ -1644,6 +1753,9 @@ module(
         ),
         ['tick', 'tick', 'tick', 'tick', 'tick'],
       );
+      assert
+        .dom('[data-test-key="origin"] i')
+        .hasAttribute('data-shape', 'tick', 'and so does their key');
     });
 
     test("clicking one of origin's commits picks nothing", async function (assert) {

@@ -96,8 +96,8 @@ drawn as a mockup and approved as drawn on 2026-10-22.
     main's tip stay real dots, with their dates under them. A commit inside that
     run that another lane leaves from (origin's lane when the worktree has
     diverged, the ghost lane's old fork, a stacked base's) stays a real dot with
-    its short sha under it, and splits the run into one pill per stretch:
-    `⋯ <k>` before it and `⋯ <k> more` for the last. That lane leaves from that
+    its short sha under it and to its left, clear of the lane leaving it, and
+    splits the run into one pill per stretch, each `⋯ <k> more` (#191). That lane leaves from that
     dot. The server sends each such commit with its place among main's commits
     since the fork (`base_forks`), beside the capped `base_commits` (#146,
     decided 2026-10-23). In the vertical timeline (decision 14) each pill and

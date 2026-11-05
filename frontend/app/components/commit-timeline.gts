@@ -485,9 +485,9 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             {{#if dot.showSha}}
               <text
                 class="timeline-sha"
-                x={{dot.x}}
-                y={{dot.shaY}}
-                text-anchor="middle"
+                x={{dot.shaAt.x}}
+                y={{dot.shaAt.y}}
+                text-anchor={{dot.shaAt.anchor}}
                 data-test-sha
               >{{dot.short}}</text>
             {{/if}}
@@ -654,6 +654,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         {{#if @timeline.key.origin}}
           <span class="timeline-key-item" data-test-key="origin"><i
               data-style="origin"
+              data-shape={{if @timeline.key.tick "tick"}}
             ></i>
             on origin, not here</span>
         {{/if}}

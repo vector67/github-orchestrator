@@ -5632,6 +5632,14 @@ button.tree-row[aria-current="true"] {
   border-color: var(--muted);
 }
 
+.timeline-key-item i[data-style="origin"][data-shape="tick"] {
+  width: 3px;
+  height: 14px;
+  background: var(--muted);
+  border: 0;
+  border-radius: 0;
+}
+
 .timeline-key-item i[data-style="not-pushed"] {
   background: var(--page);
   border-style: dashed;
