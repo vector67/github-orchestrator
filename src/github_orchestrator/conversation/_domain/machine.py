@@ -100,6 +100,8 @@ REWORK_ADVICE = "send back for rework"
 
 NOTHING_TO_POST = "the reply is empty, so there is nothing to post"
 
+INVISIBLE = dict.fromkeys(map(ord, "​‌‍⁠﻿"))
+
 PARKED = (WAITING_ON_REVIEWER, DEFERRED, REJECTED, RESOLVED, DISCARDED, CONFIRMED)
 
 CLOSED = (REJECTED, RESOLVED, DISCARDED, CONFIRMED)
@@ -379,9 +381,13 @@ def _a_commit_to_land(conversation: Conversation, command: Approve) -> Refused |
     return None
 
 
+def _blank(text: str) -> bool:
+    return not text.translate(INVISIBLE).strip()
+
+
 def _a_reply_to_post(conversation: Conversation, command: Approve) -> Refused | None:
     fix = conversation.fix
-    if fix.kind == ProposalKind.REPLY and fix.state != LANDING and not command.reply.strip():
+    if fix.kind == ProposalKind.REPLY and fix.state != LANDING and _blank(command.reply):
         return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
                                 NOTHING_TO_POST)
     return None
@@ -412,7 +418,7 @@ def _a_ticket_to_file(conversation: Conversation, command: Approve) -> Refused |
                                                             ticket.body)):
         return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
                                 "the ticket needs a project, a title and a body to be filed")
-    if not command.reply.strip():
+    if _blank(command.reply):
         return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
                                 NOTHING_TO_POST)
     return None
@@ -660,6 +666,15 @@ def _a_thread_left_to_resolve(conversation: Conversation,
     return None
 
 
+def _no_blank_closing_reply(conversation: Conversation,
+                            command: Resolve | Reject) -> Refused | None:
+    if command.reply and _blank(command.reply):
+        return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
+                                "the reply is blank, so nothing was posted; "
+                                "send no reply to close without one")
+    return None
+
+
 def _still_open_to_reject(conversation: Conversation, command: Reject) -> Refused | None:
     if conversation.state not in (OPEN, REMOVED):
         return _refuse_decision(
@@ -780,7 +795,7 @@ def _not_closed_to_reply(conversation: Conversation, command: Reply) -> Refused 
 
 
 def _something_said(conversation: Conversation, command: Reply) -> Refused | None:
-    if not command.text.strip():
+    if _blank(command.text):
         return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
                                 "nothing was said, so nothing was "
                                 "posted")
@@ -840,9 +855,9 @@ RULES: dict[type, tuple[Rule, ...]] = {
     DropQuestion: (_open_to("drops nothing"), _a_fix_in((ASKING,), "asks nothing to drop")),
     Resolve: (_still_open_to_resolve, _the_operators_to_resolve,
               _a_comment_to_answer_on_resolving, _a_thread_left_to_resolve,
-              _yours_to_delete),
+              _yours_to_delete, _no_blank_closing_reply),
     Reject: (_still_open_to_reject, _a_fix_to_turn_down, _a_comment_to_answer_on_rejecting,
-             _yours_to_delete),
+             _yours_to_delete, _no_blank_closing_reply),
     Defer: (_open_to_park, _the_operators_to_park),
     Wake: (_deferred_to_wake,),
     Unpark: (_parked_to_unpark,),

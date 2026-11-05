@@ -308,10 +308,11 @@ def test_accepting_a_reply_does_not_wait_on_a_claude_run_or_the_pr_worktree(sett
     assert [answer.body for answer in s.answers()] == [WORDS]
 
 
-def test_accepting_a_reply_with_nothing_to_say_is_refused(settings):
+@pytest.mark.parametrize("blank", ["  ", "\u200b\ufeff"], ids=["spaces", "zero-width"])
+def test_accepting_a_reply_with_nothing_to_say_is_refused(settings, blank):
     s = _a_reply_proposed(settings)
 
-    denied = s.ask(reply="  ")
+    denied = s.ask(reply=blank)
 
     assert isinstance(denied, Denied)
     assert denied.code is ErrorCode.EMPTY_BODY

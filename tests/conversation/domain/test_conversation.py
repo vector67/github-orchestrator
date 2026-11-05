@@ -1069,6 +1069,39 @@ def test_resolving_a_reviewer_thread_without_the_thumbs_up_resolves_and_reacts_t
     assert _held(threads).standing is ConversationState.DONE
 
 
+BLANK_REPLIES = pytest.mark.parametrize(
+    "blank", [" ", "\r\n", "​", " ​﻿\n"],
+    ids=["space", "crlf", "zero-width-space", "mixed"])
+
+
+@BLANK_REPLIES
+def test_resolving_with_a_blank_reply_is_refused_and_touches_nothing_on_github(settings, blank):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+    comments_before = len(_on_github(here).comments)
+
+    outcome = _asked(threads, "resolve", reply=blank, resolve=True)
+
+    assert isinstance(outcome, Denied)
+    assert outcome.code == ErrorCode.EMPTY_BODY
+    assert len(_on_github(here).comments) == comments_before
+    assert not _on_github(here).is_resolved
+    assert here.github.reactions == {}
+    assert _held(threads).standing is not ConversationState.DONE
+
+
+@BLANK_REPLIES
+def test_rejecting_with_a_blank_reply_is_refused_and_posts_nothing(settings, blank):
+    here, threads = _author(settings, _proposed)
+
+    outcome = _asked(threads, "reject", reply=blank)
+
+    assert isinstance(outcome, Denied)
+    assert outcome.code == ErrorCode.EMPTY_BODY
+    assert len(_on_github(here).comments) == 1
+    assert _held(threads).standing is not ConversationState.DONE
+
+
 def test_a_reviewers_resolve_kept_on_the_board_still_thumbs_up_the_newest_other_comment(settings):
     here = _here(settings)
     threads = _reviewer(here, *ANSWERED_THREAD)

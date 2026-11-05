@@ -680,10 +680,11 @@ def test_a_defer_with_no_modifier_wakes_by_hand(settings):
     assert (stored.standing, stored.wake_on) == (ConversationState.DEFERRED, "manual")
 
 
-def test_an_empty_reply_is_refused(settings):
+@pytest.mark.parametrize("blank", ["  ", "\u200b\n"], ids=["spaces", "zero-width-space"])
+def test_an_empty_reply_is_refused(settings, blank):
     s = scene(settings)
 
-    denied = s.answer("reply", "  ")
+    denied = s.answer("reply", blank)
 
     assert isinstance(denied, Denied)
     assert denied.code is ErrorCode.EMPTY_BODY
