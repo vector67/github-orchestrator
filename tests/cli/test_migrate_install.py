@@ -136,6 +136,22 @@ def test_the_installer_s_start_stops_every_instance_s_managers_and_server_before
     assert ran.out.index("Stopping the server for work") < ran.out.index("Starting the watcher")
 
 
+def test_the_installer_s_start_boots_each_old_watcher_out_before_stopping_its_managers(
+        unpinned, run_cli, checkout):
+    unpinned.configure()
+    _old_plist(unpinned, _uv_run(checkout))
+    unpinned.another_instance("work")
+    _old_plist(unpinned, _uv_run(checkout), label=f"{LABEL}.work")
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    for named in ("", " for work"):
+        assert ran.under(f"Stopping the watcher{named}") == "Stopped the watcher daemon.\n"
+        assert (ran.out.index(f"Stopping the watcher{named}")
+                < ran.out.index(f"Restarting the agent managers{named}"))
+
+
 def test_a_service_already_in_the_new_layout_gets_no_backup(unpinned, run_cli):
     unpinned.configure()
     run_cli("start", "--from-installer")

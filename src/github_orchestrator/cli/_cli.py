@@ -29,6 +29,7 @@ from github_orchestrator.cli._restart_all import (
     hold_restarts,
     restart_instances,
     stop_managers_and_server,
+    stop_watcher,
 )
 from github_orchestrator.cli._runs import logs, runs
 from github_orchestrator.cli._service import Service, launchd_label
@@ -146,6 +147,7 @@ class OperatorCli:
             for line in drop_cron_block(self._run, config.config_folder / "crontab.bak"):
                 print(line)
         for instance in instances:
+            stop_watcher(instance)
             stop_managers_and_server(instance)
         for instance in instances:
             clear_the_way(instance, self._read_line, force=force)

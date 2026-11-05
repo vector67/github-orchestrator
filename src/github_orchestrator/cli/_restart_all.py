@@ -80,6 +80,11 @@ def _named(instance: Instance) -> str:
     return "" if instance.name is None else f" for {instance.name}"
 
 
+def stop_watcher(instance: Instance) -> None:
+    _heading(f"Stopping the watcher{_named(instance)}")
+    instance.service.stop()
+
+
 def stop_managers_and_server(instance: Instance) -> tuple[set[Pr], int | None]:
     named = _named(instance)
     _heading(f"Restarting the agent managers{named}")
