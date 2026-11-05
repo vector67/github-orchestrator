@@ -63,6 +63,7 @@ class PerPr {
   @tracked unreadable: string | null = null;
   @tracked confirmingReset: ResetWhen | null = null;
   asked: string | null = null;
+  fetching: Promise<void> | null = null;
 
   constructor(readonly scope: PrScope) {}
 }
@@ -472,7 +473,12 @@ export default class PullRequestDiffService extends Service {
   };
 
   fetchBranch = () => {
-    void waitForPromise(this.fetchingBranch(this.pr));
+    const pr = this.pr;
+    if (pr.fetching) return;
+    pr.fetching = this.fetchingBranch(pr).finally(() => {
+      pr.fetching = null;
+    });
+    void waitForPromise(pr.fetching);
   };
 
   private async fetchingBranch(pr: PerPr): Promise<void> {

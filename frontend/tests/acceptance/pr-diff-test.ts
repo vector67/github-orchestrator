@@ -10,6 +10,7 @@ import {
   triggerEvent,
   visit,
   waitFor,
+  waitUntil,
 } from '@ember/test-helpers';
 import type { Anchor } from 'frontend/data/api';
 import {
@@ -156,6 +157,26 @@ module('Acceptance | pr diff', function (hooks) {
 
       assert.dom('[data-test-fetching]').doesNotExist();
       assert.dom('[data-test-pr-diff]').containsText('return pushed');
+    });
+
+    test('coming back to the Diff tab while its fetch is still out starts no second fetch, and stays marked fetching… until it is back', async function (assert) {
+      const release = board().hold(/\/api\/pull-request:fetch$/);
+
+      const visiting = visit('/pr/o/r/7/diff');
+      await waitFor('[data-test-fetching]');
+      void click('[data-test-tab="summary"]');
+      await waitUntil(() => !find('[data-test-diff-tab]'));
+      void click('[data-test-tab="diff"]');
+      await waitFor('[data-test-diff-tab]');
+
+      assert.dom('[data-test-fetching]').hasText('fetching the branch…');
+
+      release();
+      await visiting;
+      await settled();
+
+      assert.strictEqual(board().fetches, 1);
+      assert.dom('[data-test-fetching]').doesNotExist();
     });
 
     test('the branch is fetched only once the last fetched diff is in', async function (assert) {
