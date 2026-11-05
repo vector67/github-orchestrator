@@ -115,6 +115,13 @@ SUMMARIES.renderer.rules.fence = (tokens, at, options, env, self) => {
   return `<figure><pre><code>${SUMMARIES.utils.escapeHtml(block.content)}</code></pre></figure>`;
 };
 
+const WRITTEN_FIGURE = /<(\/?figure\b)/gi;
+
+for (const raw of ['html_block', 'html_inline'] as const) {
+  SUMMARIES.renderer.rules[raw] = (tokens, at) =>
+    (tokens[at]?.content ?? '').replace(WRITTEN_FIGURE, '&lt;$1');
+}
+
 const SANITISER = DOMPurify(window);
 
 SANITISER.addHook('uponSanitizeAttribute', keepingClasses(true));

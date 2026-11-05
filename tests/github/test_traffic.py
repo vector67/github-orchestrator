@@ -1,4 +1,5 @@
 import csv
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -101,6 +102,27 @@ def test_rows_from_later_calls_follow_the_first_under_one_header(tmp_path):
     github.search([REPO], "author")
 
     assert len(_rows(log)) == 2
+
+
+def test_calls_that_start_a_log_at_once_write_one_header_between_them(tmp_path):
+    for attempt in range(20):
+        log = tmp_path / f"gh_calls_{attempt}.csv"
+        gh = ScriptedGh().always("search prs", Raw("[]", _exchange(SEARCH_URL)))
+        github = real_github(gh=gh, requests_log=log)
+        together = threading.Barrier(8)
+
+        def call():
+            together.wait()
+            github.search([REPO], "author")
+
+        callers = [threading.Thread(target=call) for _ in range(8)]
+        for caller in callers:
+            caller.start()
+        for caller in callers:
+            caller.join()
+
+        assert log.read_text().count("at,account") == 1
+        assert len(_rows(log)) == 8
 
 
 def test_gh_is_asked_for_its_debug_output(tmp_path):

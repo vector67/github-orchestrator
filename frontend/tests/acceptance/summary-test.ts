@@ -122,6 +122,20 @@ module('Acceptance | summary tab', function (hooks) {
     assert.dom(figures[1]).hasText('not a diagram at all');
   });
 
+  test('a figure written into a summary as html is shown as words, not drawn', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      markdown:
+        '## Before you review\n\n<figure>flowchart LR\n  Flags --> Toolbar</figure>\n',
+    });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-summary-markdown] figure').doesNotExist();
+    assert.dom('[data-test-summary-markdown] svg').doesNotExist();
+    assert.dom('[data-test-summary-markdown]').includesText('<figure>');
+  });
+
   function squares(): (string | undefined)[] {
     return findAll('[data-test-diffstat-square]').map(
       (one) => (one as HTMLElement).dataset['testDiffstatSquare'],

@@ -427,6 +427,18 @@ def test_two_workflows_with_a_job_of_the_same_name_keep_both_results():
     assert sorted(c.conclusion or "" for c in checks) == ["failure", "success"]
 
 
+def test_one_workflow_run_again_in_a_new_suite_is_reported_once_at_its_latest_run():
+    cancelled = _run("claude", "CANCELLED", databaseId=1, startedAt="2026-10-15T10:00:00Z")
+    passed = _run("claude", "SUCCESS", databaseId=2, startedAt="2026-10-15T10:05:00Z")
+    head = _head([passed], [cancelled])
+    for suite in head["nodes"][0]["commit"]["checkSuites"]["nodes"]:
+        suite["workflowRun"] = {"workflow": {"name": "Claude review"}}
+
+    checks = _state(_pull(commits=head)).checks
+
+    assert [(c.name, c.conclusion) for c in checks] == [("claude", "success")]
+
+
 def test_commit_statuses_from_external_ci_come_back_beside_the_check_runs():
     head = _head([_run("tests")])
     head["nodes"][0]["commit"]["status"] = {"contexts": [

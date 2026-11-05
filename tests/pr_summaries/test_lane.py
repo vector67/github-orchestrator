@@ -1,3 +1,4 @@
+import fcntl
 import json
 import os
 import signal
@@ -276,6 +277,19 @@ def test_the_lane_runs_one_summary_at_a_time(tmp_path):
     assert lane.summaries.due(set()) == [other]
 
 
+def test_a_start_while_the_board_glances_at_an_idle_lane_waits_for_the_glance_and_runs(tmp_path):
+    lane = Lane(tmp_path, "clean")
+    lane.lane.poll()
+    glance = os.open(tmp_path / "summaries" / "lane.lock", os.O_RDONLY)
+    fcntl.flock(glance, fcntl.LOCK_SH)
+    threading.Timer(0.1, os.close, (glance,)).start()
+
+    refused = lane.lane.start(THE_PR, use_github_api=False)
+
+    assert refused is None
+    assert lane.summaries.load(THE_PR).exit_status == 0
+
+
 def test_a_started_run_reads_over_the_github_api_when_asked_and_answers_the_request_it_saw(tmp_path):
     lane = Lane(tmp_path, "clean")
     lane.summaries.want(THE_PR)
@@ -381,11 +395,12 @@ def test_a_start_that_fails_after_taking_the_slot_gives_it_back(tmp_path):
     assert lane.summaries.load(THE_PR).markdown == "# Summary\n\nIt does what it says.\n"
 
 
-def _a_server_that_dies_partway(tmp_path: Path, lane: Lane, behaviour: str) -> None:
+def _a_server_that_dies_partway(tmp_path: Path, lane: Lane, behaviour: str,
+                                timeout: float = 60) -> None:
     server = os.fork()
     if server == 0:
         try:
-            Lane(tmp_path, behaviour).lane.start(THE_PR, use_github_api=False)
+            Lane(tmp_path, behaviour, timeout=timeout).lane.start(THE_PR, use_github_api=False)
         finally:
             os._exit(0)
     _partway(lane)
@@ -445,6 +460,19 @@ def test_a_run_whose_server_died_and_whose_witness_failed_keeps_the_earlier_summ
     assert (stored.exit_status, stored.stderr) == (1, "Witnesses failed: why: timed out\n")
     assert (stored.head_sha, stored.markdown, stored.mismatches) == ("old", "# Earlier\n", 1)
     assert lane.summaries.due(set()) == []
+
+
+def test_a_run_whose_server_died_is_still_stopped_at_its_time(tmp_path):
+    lane = Lane(tmp_path, "partway")
+    _with_an_earlier_summary(lane)
+    _a_server_that_dies_partway(tmp_path, lane, "partway", timeout=1)
+
+    _until_it_stops_running(lane)
+
+    stored = lane.summaries.load(THE_PR)
+    assert stored.exit_status != 0
+    assert "stopped the run after" in stored.stderr
+    assert stored.markdown == "# Earlier\n"
 
 
 def test_a_run_that_died_with_no_server_waiting_is_stored_as_lost_and_left_due(tmp_path):

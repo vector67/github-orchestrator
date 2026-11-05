@@ -98,6 +98,13 @@ def test_an_empty_question_is_refused_before_the_manager_hears_it(web, manager):
     assert manager.asked == []
 
 
+def test_a_question_too_long_to_hand_the_agent_as_one_argument_is_refused(web, manager):
+    answer = web.post("/api/terminal/questions", json={"prompt": "why " * 5000})
+
+    assert answer.status_code == 400
+    assert manager.asked == []
+
+
 def test_a_question_the_manager_could_not_open_is_refused_with_its_reason(web, manager):
     manager.terminal_refusal = "refused: the worktree holds another PR's branch"
 

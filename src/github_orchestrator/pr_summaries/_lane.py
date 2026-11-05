@@ -1,13 +1,11 @@
-import contextlib
 import fcntl
 import json
 import logging
 import os
 import shutil
-import signal
 import subprocess
 import sys
-import threading
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -21,16 +19,28 @@ log = logging.getLogger(__name__)
 
 WORKING_FILES = "Working files: "
 WITNESSES = ("primer", "requested", "claimed", "implementation", "tests", "why", "alignment", "critic", "verdict")
+GLANCE_SECONDS = 1.0
 LOST = "github-orchestrator lost the run: it ended without an exit status.\n"
 RECORDING_THE_EXIT = """
-import json, subprocess, sys
+import json, os, signal, subprocess, sys
+timeout = float(sys.argv[2])
+stopped = False
 try:
-    status = subprocess.run(sys.argv[2:]).returncode
+    plugin = subprocess.Popen(sys.argv[3:])
+    try:
+        status = plugin.wait(timeout)
+    except subprocess.TimeoutExpired:
+        stopped = True
+        status = -signal.SIGKILL
+        sys.stderr.write(f"github-orchestrator stopped the run after {timeout / 60:g} minutes.\\n")
+        sys.stderr.flush()
 except OSError as failure:
     sys.stderr.write(f"github-orchestrator could not start the plugin: {failure}\\n")
     status = None
 with open(sys.argv[1], "w") as recorded:
     recorded.write(json.dumps(status))
+if stopped:
+    os.killpg(0, signal.SIGKILL)
 """
 
 
@@ -151,6 +161,10 @@ class LocalSummaryLane:
         if pr.repo not in self._clones:
             return f"{pr.repo} is not a watched repository"
         slot = self._slot()
+        glanced_until = time.monotonic() + GLANCE_SECONDS
+        while slot is None and self._held() is None and time.monotonic() < glanced_until:
+            time.sleep(0.01)
+            slot = self._slot()
         if slot is None:
             return "another summary is running"
         try:
@@ -262,25 +276,8 @@ class LocalSummaryLane:
                    *(["--earlier-primer", str(kept)] if kept.exists() else [])]
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
             process = subprocess.Popen(
-                [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"), *command],
+                [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"),
+                 str(self._timeout), *command],
                 cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
                 start_new_session=True, pass_fds=(slot,))
-        stopped = threading.Event()
-
-        def stop() -> None:
-            stopped.set()
-            with contextlib.suppress(ProcessLookupError):
-                os.killpg(process.pid, signal.SIGKILL)
-
-        deadline = threading.Timer(self._timeout, stop)
-        deadline.start()
-        try:
-            process.wait()
-        finally:
-            deadline.cancel()
-            deadline.join()
-        if stopped.is_set():
-            with open(outputs / "stderr", "a") as stderr:
-                stderr.write(f"github-orchestrator stopped the run after "
-                             f"{self._timeout / 60:g} minutes.\n")
-            (outputs / "exit_status").write_text(json.dumps(process.returncode))
+        process.wait()

@@ -1,4 +1,5 @@
 import csv
+import fcntl
 import os
 import subprocess
 from dataclasses import dataclass, field
@@ -86,8 +87,9 @@ class Traffic:
         if requests:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             with self._path.open("a", newline="") as file:
+                fcntl.flock(file, fcntl.LOCK_EX)
                 writer = csv.DictWriter(file, COLUMNS, restval="")
-                if file.tell() == 0:
+                if os.fstat(file.fileno()).st_size == 0:
                     writer.writeheader()
                 at = self._clock().isoformat()
                 writer.writerows({"at": at, "account": account, "exit": str(returncode),

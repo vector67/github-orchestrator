@@ -70,6 +70,8 @@ const KEYED = [
   'release',
 ] as const;
 
+const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
+
 const eq = (one: unknown, other: unknown): boolean => one === other;
 
 interface DashboardTabSignature {
@@ -311,6 +313,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   };
 
   closeAnswer = (key: string): boolean => {
+    if (MODIFIERS.has(key)) return true;
     if (key === 'y') this.close();
     else this.cancelAsking();
     return true;

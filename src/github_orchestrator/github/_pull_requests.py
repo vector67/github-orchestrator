@@ -49,6 +49,7 @@ STATE_FIELDS = """
       commits(last: 1) {
         totalCount
         nodes { commit { checkSuites(first: %(suites)d) { nodes {
+          workflowRun { workflow { name } }
           checkRuns(first: %(page)d, filterBy: {checkType: LATEST}) { nodes {
             databaseId name status conclusion url detailsUrl summary startedAt completedAt
           } }
@@ -139,10 +140,13 @@ def _checks(pull: dict[str, Any]) -> tuple[Check, ...]:
     heads = (pull.get("commits") or {}).get("nodes") or []
     head = ((heads[-1] or {}).get("commit") or {}) if heads else {}
     suites = (head.get("checkSuites") or {}).get("nodes") or []
-    runs = sorted((run for suite in suites
-                   for run in _dedupe_check_runs_by_name(
-                       [run for run in ((suite or {}).get("checkRuns") or {}).get("nodes") or []
-                        if run])),
+    by_workflow: dict[object, list[dict[str, Any]]] = {}
+    for index, suite in enumerate(suites):
+        workflow = (((suite or {}).get("workflowRun") or {}).get("workflow") or {}).get("name")
+        by_workflow.setdefault(workflow or index, []).extend(
+            run for run in ((suite or {}).get("checkRuns") or {}).get("nodes") or [] if run)
+    runs = sorted((run for grouped in by_workflow.values()
+                   for run in _dedupe_check_runs_by_name(grouped)),
                   key=lambda run: run.get("databaseId") or 0, reverse=True)
     contexts = ((head.get("status") or {}).get("contexts") or [])
     return tuple(

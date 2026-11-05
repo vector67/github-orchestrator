@@ -59,6 +59,22 @@ module('Acceptance | not found', function (hooks) {
     });
   }
 
+  test('a pull request the watcher does not hold is no route error', async function (assert) {
+    const logged: unknown[][] = [];
+    const error = console.error;
+    console.error = (...said: unknown[]) => logged.push(said);
+    try {
+      for (const url of UNHELD_TABS) await visit(url);
+    } finally {
+      console.error = error;
+    }
+
+    assert.deepEqual(
+      logged.filter((said) => String(said[0]).includes('processing route')),
+      [],
+    );
+  });
+
   test('a pull request the watcher does not hold is never called an outage, however long it stays open', async function (assert) {
     await visit('/pr/o/r/9/conversations');
     await clock().tick(LIST);

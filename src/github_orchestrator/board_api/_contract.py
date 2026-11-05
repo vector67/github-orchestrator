@@ -1891,9 +1891,10 @@ class TerminalRequest(BaseModel):
 
 class QuestionRequest(BaseModel):
     prompt: str = Field(
-        min_length=1,
+        min_length=1, max_length=16384,
         description="What to ask the agent, as its first message in a new session in the "
-                    "pull request's worktree.")
+                    "pull request's worktree. At most 16384 characters, so it fits in one "
+                    "command-line argument.")
 
 
 class TerminalSession(BaseModel):

@@ -985,6 +985,19 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
+  test('a modifier key alone leaves the close question open', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('Q');
+
+    for (const key of ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']) {
+      await press(key);
+    }
+
+    assert.dom('[data-test-close-confirm]').exists();
+    assert.deepEqual(verbs(), []);
+  });
+
   test('only a pull request you authored offers Close, by button or by Q', async function (assert) {
     for (const is_author of [false, null]) {
       onTheHub({ facts: { is_author } });
