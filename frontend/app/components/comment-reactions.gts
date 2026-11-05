@@ -46,7 +46,18 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
   faces = FACES;
 
   shown = modifier((element: HTMLElement) => {
-    element.scrollIntoView({ block: 'nearest' });
+    const smiley = element
+      .closest('.comment-reactions')!
+      .querySelector('.reaction-add')!
+      .getBoundingClientRect();
+    element.style.top = `${smiley.bottom + 4}px`;
+    element.style.left = `${smiley.left}px`;
+    element.showPopover();
+    const close = (scrolled: Event) => {
+      if (!element.contains(scrolled.target as Node)) this.picking = false;
+    };
+    document.addEventListener('scroll', close, true);
+    return () => document.removeEventListener('scroll', close, true);
   });
 
   togglePicker = (): void => {
@@ -103,6 +114,7 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
       {{#if this.picking}}
         <div
           class="reaction-picker"
+          popover="manual"
           role="menu"
           data-test-reaction-picker
           {{this.shown}}

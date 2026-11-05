@@ -785,13 +785,17 @@ input[type="radio"] {
 }
 
 .reaction-picker {
-  display: inline-flex;
-  margin-top: 4px;
+  inset: auto;
+  margin: 0;
   gap: 2px;
   padding: 4px;
   background: var(--card);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
+}
+
+.reaction-picker:popover-open {
+  display: flex;
 }
 
 .reaction-option {

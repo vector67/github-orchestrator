@@ -59,27 +59,39 @@ module('Acceptance | reactions', function (hooks) {
     assert.dom('[data-test-reaction-option]').doesNotExist('the picker closes');
   });
 
-  test('the picker under the last comment of a long thread opens where it can be seen', async function (assert) {
+  test('the picker opens over the page just under the smiley and moves nothing in the thread', async function (assert) {
     board().conversations = [thread({ key: KEY })];
     board().comments[KEY] = Array.from({ length: 8 }, (_, at) =>
       comment({ id: at + 1, review_state: null, body: `point ${at + 1}` }),
     );
     await visit(`/pr/o/r/7/conversations/${KEY}`);
-    const opened = [...document.querySelectorAll('[data-test-react]')].at(-1)!;
+    const smileys = [...document.querySelectorAll('[data-test-react]')];
+    const smiley = smileys.at(-1)!;
+    const thread_ = document.querySelector('#panel-thread')!;
+    const entries = () =>
+      [...document.querySelectorAll('[data-test-entry]')].map(
+        (entry) => entry.getBoundingClientRect().top,
+      );
+    smiley.scrollIntoView({ block: 'nearest' });
+    const before = JSON.stringify({
+      scrolled: thread_.scrollTop,
+      entries: entries(),
+    });
 
-    await click(opened);
+    await click(smiley);
 
-    const box = document
-      .querySelector('#panel-thread')!
-      .getBoundingClientRect();
-    const picker = document
-      .querySelector('[data-test-reaction-picker]')!
-      .getBoundingClientRect();
-    const where = `the picker (${picker.top}–${picker.bottom}), the thread's box (${box.top}–${box.bottom})`;
-    assert.true(picker.top >= box.top, `its top is in sight: ${where}`);
+    const picker = document.querySelector('[data-test-reaction-picker]')!;
+    const under = smiley.getBoundingClientRect().bottom;
+    const top = picker.getBoundingClientRect().top;
+    assert.strictEqual(
+      JSON.stringify({ scrolled: thread_.scrollTop, entries: entries() }),
+      before,
+      'nothing in the thread moved',
+    );
+    assert.true(picker.matches(':popover-open'), 'it is drawn over the page');
     assert.true(
-      picker.bottom <= box.bottom + 1,
-      `its bottom is in sight: ${where}`,
+      top >= under && top <= under + 12,
+      `it opens just under the smiley (${top} under ${under})`,
     );
   });
 
