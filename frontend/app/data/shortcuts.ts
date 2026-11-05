@@ -21,6 +21,11 @@ export const SHORTCUTS: ShortcutGroup[] = [
     shortcuts: [
       { keys: ['?'], does: 'Show these shortcuts' },
       { keys: ['/'], does: 'Hold to show the key on each button' },
+    ],
+  },
+  {
+    screen: 'Pull request',
+    shortcuts: [
       { keys: ['1'], does: 'Summary tab' },
       { keys: ['2'], does: 'Board tab' },
       { keys: ['3'], does: 'Dashboard tab' },

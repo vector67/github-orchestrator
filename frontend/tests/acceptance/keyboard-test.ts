@@ -190,7 +190,15 @@ module('Acceptance | keyboard', function (hooks) {
     assert.dom('[data-test-key-help]').hasAttribute('role', 'dialog');
     assert.deepEqual(
       findAll('[data-test-key-help] h3').map((one) => one.textContent.trim()),
-      ['Everywhere', 'Board', 'Dashboard', 'Terminal', 'Wall', 'Diff'],
+      [
+        'Everywhere',
+        'Pull request',
+        'Board',
+        'Dashboard',
+        'Terminal',
+        'Wall',
+        'Diff',
+      ],
     );
 
     const keys = findAll('[data-test-key-group="Board"] dt').map((one) =>
@@ -221,6 +229,30 @@ module('Acceptance | keyboard', function (hooks) {
       'd Discard',
       'l Withdraw from review',
       'z Full screen the fix, or close it',
+    ]);
+  });
+
+  test('the key help lists under Everywhere only the keys the wall takes too, and the tab, switcher and stepping keys under Pull request', async function (assert) {
+    await visit('/');
+
+    await triggerEvent(document, 'keydown', { key: '?' });
+
+    const keysOf = (group: string) =>
+      findAll(`[data-test-key-group="${group}"] dt`).map((one) =>
+        one.textContent.trim().replace(/\s+/g, ' '),
+      );
+    assert.deepEqual(keysOf('Everywhere'), ['?', '/']);
+    assert.deepEqual(keysOf('Pull request'), [
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      'o',
+      'y',
+      '\\',
+      '[]',
+      'Esc',
     ]);
   });
 
