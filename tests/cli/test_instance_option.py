@@ -1,3 +1,4 @@
+import re
 import sys
 
 import pytest
@@ -87,3 +88,8 @@ def test_an_instance_with_no_config_is_refused_rather_than_reported_on(machine, 
 def test_every_command_s_help_lists_instance(run_cli):
     for command in ("status", "start", "logs", "doctor", "queue"):
         assert "--instance NAME" in run_cli(command, "--help").out
+
+
+def test_instance_help_names_where_the_default_instance_s_config_lives(run_cli):
+    out = re.sub(r"-\s+", "-", " ".join(run_cli("status", "--help").out.split()))
+    assert "~/.config/github-orchestrator/config.toml" in out

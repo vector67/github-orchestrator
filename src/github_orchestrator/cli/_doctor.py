@@ -245,8 +245,10 @@ class MachineChecks:
         if found is None:
             return fail(f"{PACKAGE} is not on PATH", "uv tool update-shell, then open a new terminal")
         target = Path(found).resolve()
-        if install.source is not None and target == (install.venv / "bin" / PACKAGE).resolve():
-            return ok(f"{PACKAGE} on PATH ({found}) is the uv tool's command")
+        if target == (install.venv / "bin" / PACKAGE).resolve():
+            own = ("the uv tool's command" if install.source is not None
+                   else f"the command of {install.venv}, which this runs from")
+            return ok(f"{PACKAGE} on PATH ({found}) is {own}")
         checkout = checkout_of(target.parent.parent)
         if checkout is not None:
             return fail(f"{PACKAGE} on PATH ({found}) is a link into the checkout at {checkout}, "

@@ -826,6 +826,19 @@ def test_a_leftover_link_into_a_checkout_fails_and_says_how_to_put_the_tool_back
     assert stale.fix == "uv tool install --force --editable /src/gho"
 
 
+def test_running_from_a_checkout_s_own_environment_warns_but_does_not_fail(
+        machine, run_cli, tmp_path):
+    checkout = tmp_path / "checkout"
+    command = _venv(machine, checkout / ".venv")
+    (checkout / "pyproject.toml").touch()
+    machine.located["github-orchestrator"] = str(command)
+
+    ran = run_cli("doctor")
+
+    assert _finding(ran.out, "not a uv tool install").level == "warn"
+    assert _finding(ran.out, f"github-orchestrator on PATH ({command})").level == "ok"
+
+
 @pytest.mark.parametrize("platform", ["darwin", "linux"])
 def test_a_healthy_install_is_all_ok_and_exits_0(machine, run_cli, tmp_path, clone, platform):
     machine.platform = platform

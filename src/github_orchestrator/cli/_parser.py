@@ -38,7 +38,8 @@ class Commands:
         instance.add_argument(
             "--instance", metavar="NAME", default=argparse.SUPPRESS,
             help="Act on the instance whose config is ~/.config/github-orchestrator/NAME.toml "
-                 "(default: the default instance, or $GITHUB_ORCHESTRATOR_INSTANCE).")
+                 "(default: $GITHUB_ORCHESTRATOR_INSTANCE, else the default instance, whose config "
+                 "is ~/.config/github-orchestrator/config.toml).")
         self._lines: dict[str, str] = {}
         sub = self.parser.add_subparsers(dest="command", metavar="<command>", help=argparse.SUPPRESS)
 
