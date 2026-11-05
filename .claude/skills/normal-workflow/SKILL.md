@@ -43,6 +43,9 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    Write `Closes #<n>` only when the commit fixes the whole issue, and `Refs #<n>`
    for part of it: a pushed `Closes` closes the issue either way. File what is left
    as its own issue before the push, with the same release pick as the original.
+   What is left includes every gap you noticed yourself against what was asked
+   (a reference UI's behaviour you did not match, a case you did not check): file
+   each, or write `Refs`, never a `Closes` that reports it in passing.
 
 5. Check the branch for private information before it reaches the target: the
    repo is public, and whatever merges is pushed. Read `git diff <target>...<branch>`
@@ -82,7 +85,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    against the real state, and after a change to how the watcher reads or saves,
    check its log for a clean poll. Evidence counts only when it is newer than the
    restart: compare each log line's timestamp and each file's mtime with when
-   `make restart-all` ran. When the request names who will use the result (a
+   `make restart-all` ran. The logs (`watcher.log`, `agent-manager.log`,
+   `server.log`, `launchd.log`) are in `$XDG_DATA_HOME/github-orchestrator/logs/`
+   and stamp local time with no offset, so note the restart with `date`, never
+   `date -u`. When the request names who will use the result (a
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
    fresh agent diagnose it from what the change produced.

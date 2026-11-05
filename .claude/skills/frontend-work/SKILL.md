@@ -28,6 +28,25 @@ description: Must be invoked for any requested front-end change in this reposito
   and any `Uncaught` error raised while it ran, and exits 1 on an uncaught error:
   that is a failed check even when the screenshot looks right.
 
+  Check each popup, menu or picker in its worst position (the last item of a
+  scrolling box, the window's edges) everywhere the component renders: compare
+  its `getBoundingClientRect` with its container's and take a full screenshot,
+  never only a crop of where you expect it. A crop shows what you expected.
+
+  Check what only reads (opening, layout, scrolling) on the live board's real
+  threads; the preview's made-up data hides the shapes layout bugs live in. Keep
+  the preview for the steps that write to GitHub.
+
+- **A temporary overlay goes in the top layer.** Open a picker or menu as a
+  popover placed at its trigger, never in the page flow (it pushes everything
+  down) or inside a box that clips it. Its test asserts it is fully visible and
+  that nothing else moved.
+
+- **A named reference UI is the spec.** When the ask is "like GitHub" or another
+  product, list how the reference behaves (overlays or pushes, what moves, how it
+  closes) and assert each, not only the symptom reported; a fix that passes the
+  symptom test can still break the reference.
+
 - **Mock up from the running board.** A mockup or design draft of a board screen
   starts from `helper.sh` screenshots of the live board (each PR at
   `/pr/<owner>/<repo>/<n>/` on the hub) and reuses only treatments the board
