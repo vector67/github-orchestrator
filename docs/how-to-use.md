@@ -204,7 +204,7 @@ core count. Four agents each running `pytest -n auto` will lock the machine up.
 
 `agents_enabled = false` runs everything except the Claude subprocesses. Events
 still queue, drain, and notify. Queued review-board threads wait for the flag
-rather than being retired. `cli status` and `cli runs` both say the flag is off,
+rather than being retired. `github-orchestrator status` and `runs` both say the flag is off,
 so an empty ledger reads as the setting rather than a fault.
 
 `board_font_dir` points at a directory holding one typeface's `.otf` files. The
@@ -215,7 +215,7 @@ No typeface ships in this repo — point the key at your own copy. Leave it unse
 and the board still asks for `Board Face`, the browser falls back to Helvetica
 Neue and Arial, and every size and spacing rule is the same, so the layout does
 not move. Set it to a directory that cannot be listed or holds no
-`<Family>-<Style>.otf` face and `cli status` prints a `Font:` line saying which,
+`<Family>-<Style>.otf` face and `github-orchestrator status` prints a `Font:` line saying which,
 and every page's top bar says `Board font missing`, with the reason in its
 tooltip.
 
@@ -544,7 +544,7 @@ faded, the pressed button says what it is doing and the others wait; Ready for
 review and Close stay that way, with a turning ring, until the dashboard shows
 the PR ready or closed. A command the manager refuses says why on the band, in
 red; a refused Close or Dismiss says so in a toast instead. The wall's rows do
-the same, with the word among the row's chips. `cli undismiss --repo <owner/name> <pr>`
+the same, with the word among the row's chips. `github-orchestrator undismiss --repo <owner/name> <pr>`
 reverses a dismissal. Under it are the Status, Since you last acted, System and Git blocks.
 Unpushed in the System block is the count behind the wall's unpushed chip,
 which reads **diverged from origin** instead when the worktree has diverged.
@@ -627,6 +627,20 @@ the common ranges. The commits are dots while the pane has room for them, ticks
 when it is narrower, and narrower still the timeline turns vertical: one row
 per commit, oldest on top, with its short sha and subject, and the commit bar
 stays at the top of the pane while you scroll past it.
+
+When the worktree has diverged from origin, the timeline's header counts the
+commits in the worktree and the ones origin has since the fork, and a **Reset
+to origin** button sits beside them. It asks first, saying how many commits
+that aren't on origin will be dropped, and **Reset** moves the worktree to
+origin's head. A reset is refused, with the reason under the header, when the
+worktree has uncommitted changes, holds another branch, or moved since the page
+showed it. While an agent is working in the worktree the refusal offers
+**Reset when the agent finishes**, which asks again and warns that any commits
+the agent makes before then are dropped too. The queued reset shows as **Reset
+queued until the agent finishes** with a **Cancel** button. When the run ends
+the manager fetches origin and resets, and a note says **Reset to origin when
+the agent finished.**, or why the queued reset didn't run, such as a fix picked
+onto the branch and not pushed yet. Its `×` clears the note.
 
 **Auto read** in the settings gear ticks Read for you: Off (the default),
 Instantly when the commit opens, after 2, 5, 10 or 30 seconds on it, or once

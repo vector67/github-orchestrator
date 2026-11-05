@@ -24,7 +24,7 @@ def test_undismiss_a_dismissed_pr_says_it_cleared_the_flag(undismiss_dirs, run_c
     ran = run_cli("undismiss", "--repo", REPO, "61")
     assert ran.out == (
         "Cleared dismissal for octocat/hello-world#61; "
-        "the window reopens on the next poll cycle (~1 min).\n")
+        "it comes back to the wall on the next poll (~1 min).\n")
 
 
 def test_undismiss_clears_a_flag_that_outlived_its_state_file(undismiss_dirs, run_cli, settings):

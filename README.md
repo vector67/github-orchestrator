@@ -79,10 +79,13 @@ clones what is missing and restarts the watcher into watching. The first time
 the wall has pull requests it shows a short tour, which
 `github-orchestrator tutorial` shows again.
 
-`github-orchestrator doctor` checks the install, the requirements on your
-`PATH` and on the service's, the service itself, GitHub, each repo's clone, the
-hub and the watcher, and prints the fix for anything that is not ok. It changes
-nothing.
+`github-orchestrator doctor` checks the machine first: the install, whether a
+newer release is out, the command on your `PATH`, the skill, the agent (for
+Claude, whether the Atlassian MCP server is connected; for Codex, whether it is
+logged in) and desktop notifications. Then, for every instance, it checks the
+config, the hub's port, the requirements on your `PATH` and on the service's, the
+service itself, GitHub, each repo's clone, the hub and the watcher. It prints the
+fix for anything that is not ok, and changes nothing.
 
 ## Configuration
 
@@ -158,7 +161,9 @@ Runtime state lives under the resolved data dir; see
 every PR grouped by who has to move next. Opening one gives that PR's page with
 **Summary | Board | Dashboard | Terminal | Diff** tabs, and **Runs** lists the week's Claude runs
 under the watcher's health. [The hub](docs/how-to-use.md#the-hub) has the keys
-and the rest.
+and the rest. When a PR's worktree has diverged from origin, the Diff tab's
+timeline offers **Reset to origin**, or **Reset when the agent finishes** while
+an agent is working in it.
 
 ## Updating
 

@@ -190,7 +190,7 @@ def undismiss(pr: Pr, *, change_detection: ChangeDetection, dismissals: Dismissa
     if dismissals.undismiss(pr):
         print(
             f"Cleared dismissal for {pr}; "
-            "the window reopens on the next poll cycle (~1 min)."
+            "it comes back to the wall on the next poll (~1 min)."
         )
         return
     print(f"{pr} was not dismissed — nothing to do.")

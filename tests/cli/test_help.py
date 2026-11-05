@@ -66,7 +66,7 @@ def test_the_full_help_ends_with_the_debugging_commands_after_the_groups(run_cli
     sections = _sections(ran.out)
     assert list(sections) == ["everyday", "service", "maintenance", "learning", "debugging"]
     assert sections["debugging"] == ["queue", "undismiss"]
-    assert ran.out.rstrip().endswith("Clear a PR's dismissal so the watcher reopens its window.")
+    assert ran.out.rstrip().endswith("Clear a PR's dismissal so it comes back to the wall.")
 
 
 def test_help_leaves_out_the_debugging_and_agent_commands(run_cli):

@@ -174,7 +174,7 @@ class Commands:
         queue_parser.add_argument("pr", type=int, help="PR number")
 
         undismiss_parser = command(
-            "undismiss", "Clear a PR's dismissal so the watcher reopens its window.",
+            "undismiss", "Clear a PR's dismissal so it comes back to the wall.",
             "undismiss --repo acme/widgets 88")
         undismiss_parser.add_argument("--repo", type=parse_repo, required=True,
                                       help="The PR's repo, as owner/name")
