@@ -1,6 +1,7 @@
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
+from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -215,9 +216,7 @@ def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, t
                 worktree=tmp_path, is_author=True, board=board, pr_processes=managed_in(tmp_path),
                 working_copies=working_copies, run=lambda argv, **kwargs: ran.append(argv))
 
-    [(exit_code, lines, _)] = answers
-    assert exit_code != 0
-    assert lines == ["refused: the worktree holds another PR's branch"]
+    assert answers == [ManagerRefusal.WORKTREE_FROZEN]
     assert ran == []
 
 
@@ -232,7 +231,7 @@ def test_a_terminal_from_the_board_while_frozen_is_refused_and_opens_nothing(set
                 worktree=tmp_path, is_author=True, board=board,
                 working_copies=working_copies, pr_processes=windows)
 
-    assert answers == ["refused: the worktree holds another PR's branch"]
+    assert answers == [ManagerRefusal.WORKTREE_FROZEN]
     assert windows.sessions == {}
 
 

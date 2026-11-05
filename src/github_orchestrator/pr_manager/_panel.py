@@ -5,7 +5,7 @@ from typing import Any
 
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel
-from github_orchestrator.board_api.interface import DismissUntil
+from github_orchestrator.board_api.interface import DismissUntil, ManagerRefusal
 from github_orchestrator.domain import Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
@@ -18,13 +18,11 @@ from github_orchestrator.pr_manager._git_palette import (
     run_captured,
 )
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
-from github_orchestrator.pr_manager._refusals import AGENTS_DISABLED, refusal
+from github_orchestrator.pr_manager._refusals import refusal
 from github_orchestrator.pr_manager._status import StatusFiles
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses, shell_argv
 
 log = logging.getLogger(__name__)
-
-NO_WORKTREE = "refused: this pull request has no worktree yet, since its manager has not started"
 
 SHOWN_READ_ONLY = frozenset({"l", "d"})
 
@@ -63,58 +61,58 @@ class FilePanel(ManagerPanel):
     def agent_output(self, lines: int) -> list[tuple[str, bool]]:
         return self._history.transcript_tail(self._pr, lines)
 
-    def set_on_hold(self, on_hold: bool) -> str | None:
+    def set_on_hold(self, on_hold: bool) -> ManagerRefusal | None:
         return self._hand(Command.HOLD if on_hold else Command.RESUME)
 
-    def carry_on(self) -> str | None:
+    def carry_on(self) -> ManagerRefusal | None:
         return self._hand(Command.CARRY_ON)
 
-    def start_review(self) -> str | None:
+    def start_review(self) -> ManagerRefusal | None:
         return self._hand(Command.START_REVIEW)
 
-    def dismiss(self, until: DismissUntil) -> str | None:
+    def dismiss(self, until: DismissUntil) -> ManagerRefusal | None:
         return self._hand(_DISMISS_COMMANDS[until])
 
-    def close(self) -> str | None:
+    def close(self) -> ManagerRefusal | None:
         return self._hand(Command.CLOSE)
 
-    def mark_ready(self) -> str | None:
+    def mark_ready(self) -> ManagerRefusal | None:
         return self._hand(Command.MARK_READY)
 
-    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
         return self._hand(Command.ASSIGN_REVIEWERS,
                           {"reviewers": list(reviewers), "detailed": detailed})
 
-    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
         return self._hand(Command.ASSIGN_WHEN_READY,
                           {"reviewers": list(reviewers), "detailed": detailed})
 
-    def take_over(self) -> str | None:
+    def take_over(self) -> ManagerRefusal | None:
         return self._hand(Command.TAKE_OVER)
 
-    def run_git(self, keys: str) -> tuple[int, list[str], float]:
+    def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:
         command = resolve(keys)
         if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):
             raise ValueError(f"git palette keys {keys!r} name no command the page runs")
         worktree = self._worktree()
         if not worktree:
-            return -1, [NO_WORKTREE], 0.0
+            return ManagerRefusal.NO_WORKTREE
         with locked(Path(f"{worktree}.git-palette.lock")):
             refused = self._refusal(command.display)
             if refused is not None:
-                return -1, [refused], 0.0
+                return refused
             log.info("%s: git palette running %s", self._pr, command.display)
             result = run_captured(command, argv_for(command, keys), worktree,
                                   self._run, self._monotonic)
         return result.exit_code, result.lines, result.duration
 
-    def open_terminal(self, keys: str) -> str | None:
+    def open_terminal(self, keys: str) -> ManagerRefusal | str | None:
         pr, worktree = self._pr, self._worktree()
         command = resolve(keys)
         if keys != SHELL and (command is None or command.mode == "captured"):
             raise ValueError(f"terminal keys {keys!r} name nothing the terminal opens")
         if not worktree:
-            return NO_WORKTREE
+            return ManagerRefusal.NO_WORKTREE
         refused = self._refusal(f"a terminal for {keys!r}")
         if refused is not None:
             return refused
@@ -124,27 +122,28 @@ class FilePanel(ManagerPanel):
         return open_in_terminal(command, argv_for(command, keys), pr, worktree,
                                 self._pr_processes, self._pr_work)
 
-    def ask(self, prompt: str) -> str | None:
+    def ask(self, prompt: str) -> ManagerRefusal | str | None:
         worktree = self._worktree()
         if not worktree:
-            return NO_WORKTREE
+            return ManagerRefusal.NO_WORKTREE
         refused = self._refusal("a question for the agent")
         if refused is not None:
             return refused
         if not self._agents_enabled:
-            log.info("%s: a question for the agent refused — %s", self._pr, AGENTS_DISABLED)
-            return AGENTS_DISABLED
+            log.info("%s: a question for the agent refused — agents are disabled", self._pr)
+            return ManagerRefusal.AGENTS_DISABLED
         log.info("%s: asking the agent in a terminal", self._pr)
         return self._pr_work.ask_in_session(self._pr, worktree, prompt)
 
-    def _refusal(self, what: str, command: Command | None = None) -> str | None:
+    def _refusal(self, what: str, command: Command | None = None) -> ManagerRefusal | None:
         refused = refusal(self._status_files.conditions(self._pr), command,
                           agents_enabled=self._agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", self._pr, what, refused)
         return refused
 
-    def _hand(self, command: Command, fields: dict[str, Any] | None = None) -> str | None:
+    def _hand(self, command: Command,
+              fields: dict[str, Any] | None = None) -> ManagerRefusal | None:
         refused = self._refusal(command, command)
         if refused is None:
             self._command_files.write(self._pr, command, fields or {})

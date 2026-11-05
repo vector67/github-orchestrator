@@ -1,7 +1,7 @@
 import subprocess
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api.interface import ManagerPanels
+from github_orchestrator.board_api.interface import ManagerPanels, ManagerRefusal
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -51,17 +51,16 @@ def test_git_for_a_pr_whose_manager_never_started_is_refused_and_runs_nothing(
     panel = panels_over(settings, FakePrProcesses(), run=lambda *args, **kwargs: ran.append(args)
                         ).of(THE_PR)
 
-    exit_code, lines, _ = panel.run_git("s")
+    refused = panel.run_git("s")
 
-    assert (exit_code, ran, list(tmp_path.iterdir())) == (-1, [], [])
-    assert "no worktree" in lines[0]
+    assert (refused, ran, list(tmp_path.iterdir())) == (ManagerRefusal.NO_WORKTREE, [], [])
 
 
 def test_a_press_for_a_pr_whose_manager_never_started_is_refused_and_queues_nothing(settings):
     refused = panels_over(settings, FakePrProcesses()).of(THE_PR).set_on_hold(True)
 
     assert (refused, list((settings.data_dir / "commands").rglob("*.json"))) == (
-        "the manager is down, your actions can't be recorded", [])
+        ManagerRefusal.MANAGER_DOWN, [])
 
 
 def test_a_terminal_for_a_pr_whose_manager_never_started_is_refused_and_opens_nothing(settings):
@@ -69,4 +68,4 @@ def test_a_terminal_for_a_pr_whose_manager_never_started_is_refused_and_opens_no
 
     refused = panels_over(settings, windows).of(THE_PR).open_terminal("a")
 
-    assert (windows.sessions, "no worktree" in (refused or "")) == ({}, True)
+    assert (windows.sessions, refused) == ({}, ManagerRefusal.NO_WORKTREE)

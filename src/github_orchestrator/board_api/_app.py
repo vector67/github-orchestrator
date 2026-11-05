@@ -140,6 +140,7 @@ from github_orchestrator.board_api.interface import (
 )
 from github_orchestrator.board_api.interface import (
     ManagerPanel,
+    ManagerRefusal,
     ManagerStanding,
     Mentionable,
     ResetToOrigin,
@@ -152,7 +153,7 @@ from github_orchestrator.conversation import (
 )
 from github_orchestrator.domain import Location, Pr, UtcClock
 from github_orchestrator.domain import Sha as CommitSha
-from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
+from github_orchestrator.pr_summaries import PrSummaries, SummaryLane, SummaryRefusal
 from github_orchestrator.terminal_sessions import TerminalSessions
 from github_orchestrator.working_copies import FileDiff, PrCheckout
 
@@ -748,14 +749,27 @@ HANDED_TO_THE_MANAGER: dict[int | str, dict[str, Any]] = {202: {
         "description": "The dashboard to poll.",
         "schema": {"type": "string", "format": "uri-reference"}}}},
     409: {"description": "The PR manager's last status already rules it out: the "
-                         "worktree holds another branch, agents are disabled, or "
-                         "an agent is already running. The detail says which.",
+                         "manager is down, the worktree holds another branch, agents "
+                         "are disabled, or an agent is already running. The code says "
+                         "which.",
           "model": Errors}}
 
+RULED_OUT = {
+    ManagerRefusal.MANAGER_DOWN: "the manager is down",
+    ManagerRefusal.NO_WORKTREE: "the pull request has no worktree yet",
+    ManagerRefusal.WORKTREE_FROZEN: "the worktree holds another branch",
+    ManagerRefusal.AGENTS_DISABLED: "agents are disabled",
+    ManagerRefusal.AGENT_RUNNING: "an agent is already running",
+}
 
-def _handed_over(board: Board, refused: str | None) -> Response:
+
+def _ruled_out(refused: ManagerRefusal) -> Refusal:
+    return Refusal(409, ErrorCode(refused.value), RULED_OUT[refused])
+
+
+def _handed_over(board: Board, refused: ManagerRefusal | None) -> Response:
     if refused is not None:
-        raise Refusal(409, ErrorCode.MANAGER_REFUSED, refused)
+        raise _ruled_out(refused)
     return Response(status_code=202, headers={"Location": f"{board.prefix}{PREFIX}/dashboard"})
 
 
@@ -906,11 +920,11 @@ def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
     """
     dashboard = board.manager.dashboard()
     if dashboard.standing is not ManagerStanding.ANSWERING:
-        raise Refusal(409, ErrorCode.MANAGER_REFUSED,
+        raise Refusal(409, ErrorCode.MANAGER_DOWN,
                       "the manager is not answering, so whether an agent works in the "
                       "worktree is not known and it was left as it is")
     if dashboard.frozen_on is not None:
-        raise Refusal(409, ErrorCode.MANAGER_REFUSED,
+        raise Refusal(409, ErrorCode.WORKTREE_FROZEN,
                       f"the worktree holds {dashboard.frozen_on}, another branch, so it "
                       "was left as it is")
     if dashboard.working_on is not None:
@@ -1012,6 +1026,11 @@ def mark_unread(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
 
 @writes.post("/manager/git", response_model=GitRun, tags=["manager"],
              operation_id="runGit",
+             responses={409: {"description": "The PR manager's last status rules it "
+                                             "out: it has no worktree yet, or the "
+                                             "worktree holds another branch. The code "
+                                             "says which.",
+                              "model": Errors}},
              summary="Run one of the git palette's captured commands in the "
                      "worktree and answer what it printed.")
 def run_git(board: Serving, asked: GitRequest) -> GitRun:
@@ -1020,7 +1039,10 @@ def run_git(board: Serving, asked: GitRequest) -> GitRun:
     palette runs it: bounded in time, never prompting. A push that fails is
     answered here with its exit code, not refused.
     """
-    exit_code, lines, seconds = board.manager.run_git(asked.keys.value)
+    ran = board.manager.run_git(asked.keys.value)
+    if isinstance(ran, ManagerRefusal):
+        raise _ruled_out(ran)
+    exit_code, lines, seconds = ran
     return GitRun(exit_code=exit_code, lines=lines[:MAX_GIT_LINES], seconds=seconds,
                   truncated=len(lines) > MAX_GIT_LINES)
 
@@ -1031,10 +1053,18 @@ def _sessions(board: Board) -> TerminalSessionList:
         for session in board.terminals.listed()])
 
 
-TERMINAL_REFUSED = {"description": "The PR manager did not open it: the worktree "
-                                   "holds another branch, or the command could not "
-                                   "start. The detail says which.",
+TERMINAL_REFUSED = {"description": "The PR manager did not open it: its last status "
+                                   "rules it out, and the code says why, or the "
+                                   "command could not start, and the detail says "
+                                   "what the system said.",
                     "model": Errors}
+
+
+def _opened(refused: ManagerRefusal | str | None) -> None:
+    if isinstance(refused, ManagerRefusal):
+        raise _ruled_out(refused)
+    if refused is not None:
+        raise Refusal(409, ErrorCode.TERMINAL_REFUSED, refused)
 
 
 @reads.get("/terminal/sessions", response_model=TerminalSessionList, tags=["terminal"],
@@ -1058,9 +1088,7 @@ def open_terminal(board: Serving, asked: TerminalRequest) -> TerminalSessionList
     manager opens it as a new session here. Answered with the sessions after
     it opened, so a new one is the one not listed before.
     """
-    refused = board.manager.open_terminal(asked.keys)
-    if refused is not None:
-        raise Refusal(409, ErrorCode.TERMINAL_REFUSED, refused)
+    _opened(board.manager.open_terminal(asked.keys))
     return _sessions(board)
 
 
@@ -1072,9 +1100,7 @@ def ask_the_agent(board: Serving, asked: QuestionRequest) -> TerminalSessionList
     first message. Answered with the sessions after it opened, so a new one
     is the one not listed before.
     """
-    refused = board.manager.ask(asked.prompt)
-    if refused is not None:
-        raise Refusal(409, ErrorCode.TERMINAL_REFUSED, refused)
+    _opened(board.manager.ask(asked.prompt))
     return _sessions(board)
 
 
@@ -1772,10 +1798,17 @@ SUMMARY_STARTED: dict[int | str, dict[str, Any]] = {
               "schema": {"type": "string", "format": "uri-reference"}}}},
     409: {"description": "The summary lane started nothing: another summary is "
                          "running, agents are disabled, or the repository is not "
-                         "watched. The detail says which.",
+                         "watched. The code says which.",
           "model": Errors},
     412: {"description": "The summary moved under you; read it again.",
           "model": Errors}}
+
+
+SUMMARY_RULED_OUT = {
+    SummaryRefusal.AGENTS_DISABLED: "agents are disabled",
+    SummaryRefusal.REPO_NOT_WATCHED: "the repository is not watched",
+    SummaryRefusal.SUMMARY_RUNNING: "another summary is running",
+}
 
 
 def _summarised(board: Board, if_match: str, *, use_github_api: bool) -> Response:
@@ -1784,7 +1817,7 @@ def _summarised(board: Board, if_match: str, *, use_github_api: bool) -> Respons
                       f"the summary has moved since {if_match} was read")
     refused = board.lane.start(board.pr, use_github_api=use_github_api)
     if refused is not None:
-        raise Refusal(409, ErrorCode.SUMMARY_REFUSED, refused)
+        raise Refusal(409, ErrorCode(refused.value), SUMMARY_RULED_OUT[refused])
     return JSONResponse(status_code=202, content=_summary(board).model_dump(mode="json"),
                         headers={"Location": f"{board.prefix}{PREFIX}/summary"})
 

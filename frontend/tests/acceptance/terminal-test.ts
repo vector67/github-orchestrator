@@ -428,8 +428,8 @@ module('Acceptance | terminal', function (hooks) {
     await visit('/pr/o/r/7/terminal');
     board().refusal = {
       status: 409,
-      code: 'terminal-refused',
-      detail: "refused: the worktree holds another PR's branch",
+      code: 'worktree-frozen',
+      detail: 'the worktree holds another branch',
     };
 
     await click('[data-test-launch="c"]');
@@ -437,7 +437,7 @@ module('Acceptance | terminal', function (hooks) {
     assert.dom('[data-test-launchers]').hasAttribute('data-refused');
     assert
       .dom('[data-test-launchers] [data-test-refusal]')
-      .hasText("refused: the worktree holds another PR's branch");
+      .hasText("The worktree holds another pull request's branch.");
     assert.dom('[data-test-toast]').doesNotExist();
 
     await click('[data-test-launch="a"]');
@@ -533,8 +533,8 @@ module('Acceptance | terminal', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     board().refusal = {
       status: 409,
-      code: 'terminal-refused',
-      detail: "refused: the worktree holds another PR's branch",
+      code: 'worktree-frozen',
+      detail: 'the worktree holds another branch',
     };
 
     await click('[data-test-your-move] [data-test-rebase]');
@@ -547,7 +547,7 @@ module('Acceptance | terminal', function (hooks) {
       .isNotDisabled();
     assert
       .dom('[data-test-your-move] [data-test-rebase-refusal]')
-      .hasText("refused: the worktree holds another PR's branch");
+      .hasText("The worktree holds another pull request's branch.");
     assert.dom('[data-test-toast]').doesNotExist();
   });
 
@@ -631,12 +631,12 @@ module('Acceptance | terminal', function (hooks) {
     assert.dom('[data-test-rebase]').doesNotExist();
   });
 
-  test('a command the manager refuses says why and leaves you where you were', async function (assert) {
+  test('a command that could not start says what the system said and leaves you where you were', async function (assert) {
     onTheHub();
     board().refusal = {
       status: 409,
       code: 'terminal-refused',
-      detail: "refused: the worktree holds another PR's branch",
+      detail: 'could not start git: No such file or directory',
     };
     await visit('/pr/o/r/7/dashboard');
 
@@ -646,7 +646,7 @@ module('Acceptance | terminal', function (hooks) {
     assert
       .dom('[data-test-toast]')
       .includesText(
-        "git commit did not open: refused: the worktree holds another PR's branch",
+        'git commit did not open: could not start git: No such file or directory',
       );
   });
 

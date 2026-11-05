@@ -10,7 +10,7 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
-from github_orchestrator.board_api.interface import DismissUntil
+from github_orchestrator.board_api.interface import DismissUntil, ManagerRefusal
 from github_orchestrator.domain import ReviewerPick
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
@@ -292,7 +292,7 @@ def test_carry_on_from_the_board_is_refused_with_rs_notice_when_claude_is_disabl
                           lambda: answers.append(board.panel.carry_on()), None, board=board,
                           agent_runs=runs)
     assert runs.started == []
-    assert answers == ["agents are disabled in config.toml"]
+    assert answers == [ManagerRefusal.AGENTS_DISABLED]
 
 
 def _reviewer_of(settings, tmp_path, *script, **modules):
@@ -334,7 +334,7 @@ def test_start_review_from_the_board_is_refused_while_claude_is_running(settings
                  lambda: answers.append(board.panel.start_review()), None, board=board,
                  agent_runs=runs)
     assert [run.work for run in runs.started] == [CarryingOn(yours=False)]
-    assert answers == ["an agent is already running"]
+    assert answers == [ManagerRefusal.AGENT_RUNNING]
 
 
 def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manager_drains_it(
@@ -362,7 +362,7 @@ def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings
                  lambda: answers.append(board.panel.start_review()), None, board=board,
                  agent_runs=runs)
     assert runs.started == []
-    assert answers == ["agents are disabled in config.toml"]
+    assert answers == [ManagerRefusal.AGENTS_DISABLED]
 
 
 @pytest.mark.parametrize(("until", "dismissal"), [
@@ -557,10 +557,8 @@ def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_br
                 lambda: answers.append(board.panel.set_on_hold(True)), None,
                 worktree=tmp_path, is_author=True, board=board, working_copies=working_copies)
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is False
-    assert answers == ["refused: the worktree holds another PR's branch"]
+    assert answers == [ManagerRefusal.WORKTREE_FROZEN]
 
-
-MANAGER_DOWN = "the manager is down, your actions can't be recorded"
 
 PRESSES = {
     "hold": lambda panel: panel.set_on_hold(True),
@@ -581,7 +579,7 @@ def test_a_press_once_the_managers_status_is_stale_is_refused_and_queues_nothing
     manager = run_manager(settings, None, worktree=tmp_path, is_author=True)
     manager.clock.advance(10)
 
-    assert press(manager.board.panel) == MANAGER_DOWN
+    assert press(manager.board.panel) == ManagerRefusal.MANAGER_DOWN
     assert list((settings.data_dir / "commands").rglob("*.json")) == []
 
 
@@ -603,7 +601,7 @@ ASKS = {
 def test_a_frozen_status_refuses_while_it_is_fresh(settings, tmp_path, asking):
     manager = _frozen_and_managed(settings, tmp_path)
 
-    assert asking(manager.board.panel) == "refused: the worktree holds another PR's branch"
+    assert asking(manager.board.panel) == ManagerRefusal.WORKTREE_FROZEN
 
 
 @pytest.mark.parametrize("asking", ASKS.values(), ids=ASKS.keys())

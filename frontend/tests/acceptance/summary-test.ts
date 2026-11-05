@@ -592,12 +592,12 @@ module('Acceptance | summary tab', function (hooks) {
       .hasText('exit unknown · uv: command not found Rerun');
   });
 
-  test('a run the lane refuses leaves the strip as it was, saying why in the lane’s words', async function (assert) {
+  test('a run the lane refuses leaves the strip as it was, saying why in the board’s words', async function (assert) {
     board().summary = prSummary();
     await visit('/pr/o/r/7/summary');
     board().refusal = {
       status: 409,
-      code: 'summary-refused',
+      code: 'summary-running',
       detail: 'another summary is running',
     };
 
@@ -609,7 +609,7 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-said]')
       .hasAttribute('data-refused')
-      .hasText('another summary is running');
+      .hasText('Another summary is running; wait for it to finish.');
     assert
       .dom('[data-test-summary-strip]')
       .doesNotHaveAttribute('data-pending');

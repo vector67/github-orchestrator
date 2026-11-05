@@ -6,6 +6,7 @@ import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.fake import FakeManagerPanel
+from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
 from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager
@@ -163,7 +164,7 @@ def test_the_manager_refuses_a_question_while_agents_are_disabled(settings, tmp_
                                                                          agents_enabled=False))
     side = ManagerSide(disabled, tmp_path)
 
-    assert side.settle().ask("Why this name?") == "agents are disabled in config.toml"
+    assert side.settle().ask("Why this name?") == ManagerRefusal.AGENTS_DISABLED
 
     assert side.opened() == []
 

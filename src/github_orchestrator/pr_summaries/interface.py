@@ -1,6 +1,7 @@
 from collections.abc import Mapping, Set
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from typing import Protocol
 
 from github_orchestrator.domain import Pr
@@ -38,10 +39,16 @@ class Progress:
     agents: int
 
 
+class SummaryRefusal(StrEnum):
+    AGENTS_DISABLED = "agents-disabled"
+    REPO_NOT_WATCHED = "repo-not-watched"
+    SUMMARY_RUNNING = "summary-running"
+
+
 class SummaryLane(Protocol):
     def poll(self) -> None: ...
 
-    def start(self, pr: Pr, *, use_github_api: bool) -> str | None: ...
+    def start(self, pr: Pr, *, use_github_api: bool) -> SummaryRefusal | None: ...
 
     def progress(self, pr: Pr) -> Progress | None: ...
 

@@ -885,6 +885,9 @@
     },
     "400": {
      "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
     }
    }
   },
@@ -3786,12 +3789,16 @@
     "waiting-to-migrate",
     "not-frozen",
     "terminal-refused",
-    "manager-refused",
+    "manager-down",
+    "no-worktree",
+    "worktree-frozen",
+    "agent-running",
     "no-gh-token",
     "repo-not-visible",
     "setup-refused",
     "not-broken",
-    "summary-refused",
+    "summary-running",
+    "repo-not-watched",
     "harvest-extension-missing",
     "agent-working",
     "no-agent-working",

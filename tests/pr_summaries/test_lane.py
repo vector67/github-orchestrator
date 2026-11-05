@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.pr_summaries import Summary
+from github_orchestrator.pr_summaries import Summary, SummaryRefusal
 from tests.builders import a_pr
 from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
 
@@ -273,7 +273,7 @@ def test_the_lane_runs_one_summary_at_a_time(tmp_path):
 
     threads.finish(lane)
     assert len(threads.threads) == 1
-    assert refused == "another summary is running"
+    assert refused == SummaryRefusal.SUMMARY_RUNNING
     assert lane.summaries.due(set()) == [other]
 
 
@@ -320,7 +320,7 @@ def test_with_agents_disabled_the_lane_runs_nothing(tmp_path):
     lane.lane.poll()
     refused = lane.lane.start(THE_PR, use_github_api=False)
 
-    assert refused == "agents are disabled (agents_enabled=false)"
+    assert refused == SummaryRefusal.AGENTS_DISABLED
     assert not lane.folder.exists()
     assert lane.summaries.due(set()) == [THE_PR]
 
@@ -333,7 +333,7 @@ def test_a_pr_in_a_repository_no_longer_watched_is_not_summarised(tmp_path):
     lane.lane.poll()
     refused = lane.lane.start(elsewhere, use_github_api=False)
 
-    assert refused == "acme/gadgets is not a watched repository"
+    assert refused == SummaryRefusal.REPO_NOT_WATCHED
     assert lane.summaries.due(set()) == [elsewhere]
 
 
@@ -427,7 +427,7 @@ def test_a_run_whose_server_died_still_shows_as_running_and_cannot_be_started_tw
     _until_it_stops_running(lane)
     assert progress is not None
     assert dict(progress.done) == {"claimed": True, "implementation": False}
-    assert refused == "another summary is running"
+    assert refused == SummaryRefusal.SUMMARY_RUNNING
 
 
 def test_a_run_whose_server_died_is_stored_by_the_next_lane_to_see_it_finish(tmp_path):

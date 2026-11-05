@@ -332,7 +332,7 @@ PACKAGES = {
         role="PR windows run each PR's agent manager in the background and open its terminal sessions, and are handed the worktree by their callers",
     ),
     "pr_summaries": Package(
-        pinned=frozenset({"PrSummaries", "Summary", "SummaryLane"}),
+        pinned=frozenset({"PrSummaries", "Summary", "SummaryLane", "SummaryRefusal"}),
         may_import=(),
         role="PR summaries keep each PR's latest summary and its request marks, and run the pr-summary plugin one PR at a time in a lane of their own, knowing nothing of who asks for one",
     ),

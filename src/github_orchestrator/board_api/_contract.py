@@ -63,13 +63,14 @@ class ErrorCode(StrEnum):
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
 
-    TERMINAL_REFUSED is the PR manager not opening a terminal command: the
-    worktree is frozen on another branch, or the command could not start.
+    TERMINAL_REFUSED is a terminal command or question that could not start;
+    the detail is what the system said.
 
-    MANAGER_REFUSED is a command for the PR manager that its last status
-    already rules out: the manager is down, the worktree is frozen on another
-    branch, agents are disabled, or an agent is already running. The detail
-    says which.
+    MANAGER_DOWN, NO_WORKTREE, WORKTREE_FROZEN, AGENTS_DISABLED and
+    AGENT_RUNNING are a manager command, git run, terminal or question that
+    the PR manager's last status already rules out: the manager is not
+    answering, it has no worktree yet, the worktree holds another branch,
+    agents are disabled, or an agent is already running.
 
     NO_GH_TOKEN is gh holding no token for the login the setup screen asked
     about; the detail says to run `gh auth login`.
@@ -83,9 +84,9 @@ class ErrorCode(StrEnum):
     NOT_BROKEN is the setup screen asking to move aside a config that parses,
     which is never moved from the page.
 
-    SUMMARY_REFUSED is the summary lane not starting a run: another summary
-    is running, agents are disabled, or the repository is not watched. The
-    detail says which.
+    SUMMARY_RUNNING and REPO_NOT_WATCHED are the summary lane not starting a
+    run because another summary is running or the repository is not watched;
+    with agents disabled it answers AGENTS_DISABLED.
 
     HARVEST_EXTENSION_MISSING is the Harvest Time Tracker not installed in
     Chrome, so there is nothing to copy for the board.
@@ -149,12 +150,16 @@ class ErrorCode(StrEnum):
     WAITING_TO_MIGRATE = "waiting-to-migrate"
     NOT_FROZEN = "not-frozen"
     TERMINAL_REFUSED = "terminal-refused"
-    MANAGER_REFUSED = "manager-refused"
+    MANAGER_DOWN = "manager-down"
+    NO_WORKTREE = "no-worktree"
+    WORKTREE_FROZEN = "worktree-frozen"
+    AGENT_RUNNING = "agent-running"
     NO_GH_TOKEN = "no-gh-token"
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"
     NOT_BROKEN = "not-broken"
-    SUMMARY_REFUSED = "summary-refused"
+    SUMMARY_RUNNING = "summary-running"
+    REPO_NOT_WATCHED = "repo-not-watched"
     HARVEST_EXTENSION_MISSING = "harvest-extension-missing"
     AGENT_WORKING = "agent-working"
     NO_AGENT_WORKING = "no-agent-working"

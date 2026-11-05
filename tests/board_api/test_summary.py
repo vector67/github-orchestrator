@@ -186,7 +186,7 @@ def test_each_operation_says_whether_the_run_reads_over_the_github_api(tmp_path)
     assert (plain, over_the_api) == (False, True)
 
 
-def test_summarise_while_another_summary_runs_is_refused_with_the_lanes_reason(tmp_path):
+def test_summarise_while_another_summary_runs_is_refused_with_the_code_for_why(tmp_path):
     held = Held()
     client = client_for(summaries=summary_parts(tmp_path, run_in=held))
     summarised(client)
@@ -195,8 +195,7 @@ def test_summarise_while_another_summary_runs_is_refused_with_the_lanes_reason(t
 
     held.finish()
     assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "summary-refused"
-    assert answer.json()["errors"][0]["detail"] == "another summary is running"
+    assert answer.json()["errors"][0]["code"] == "summary-running"
 
 
 def test_summarise_with_agents_disabled_is_refused_and_runs_nothing(tmp_path):
@@ -205,7 +204,7 @@ def test_summarise_with_agents_disabled_is_refused_and_runs_nothing(tmp_path):
     answer = summarised(client, "summarise-with-github-api")
 
     assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "summary-refused"
+    assert answer.json()["errors"][0]["code"] == "agents-disabled"
     assert not folder(tmp_path).exists()
 
 

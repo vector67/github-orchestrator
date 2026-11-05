@@ -24,6 +24,14 @@ const SAID: Record<string, string> = {
   'review-in-flight':
     'A review is already on its way to GitHub; wait for it to land.',
   'empty-body': 'GitHub takes no comment or change request without a summary.',
+  'manager-down': "The manager is down, so your action can't be recorded.",
+  'no-worktree':
+    'This pull request has no worktree yet, since its manager has not started.',
+  'worktree-frozen': "The worktree holds another pull request's branch.",
+  'agent-running': 'An agent is already running for this pull request.',
+  'summary-running': 'Another summary is running; wait for it to finish.',
+  'repo-not-watched':
+    'This repository is not watched, so the board has no clone to summarise it in.',
 };
 
 export type Tried<T> =

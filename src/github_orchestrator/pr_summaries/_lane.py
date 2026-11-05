@@ -13,7 +13,12 @@ from pathlib import Path
 
 from github_orchestrator.domain import Pr, Repo, UtcClock
 from github_orchestrator.pr_summaries._disk import working_folder
-from github_orchestrator.pr_summaries.interface import Progress, PrSummaries, Summary
+from github_orchestrator.pr_summaries.interface import (
+    Progress,
+    PrSummaries,
+    Summary,
+    SummaryRefusal,
+)
 
 log = logging.getLogger(__name__)
 
@@ -155,18 +160,18 @@ class LocalSummaryLane:
         if due:
             self.start(due[0], use_github_api=False)
 
-    def start(self, pr: Pr, *, use_github_api: bool) -> str | None:
+    def start(self, pr: Pr, *, use_github_api: bool) -> SummaryRefusal | None:
         if not self._agents_enabled:
-            return "agents are disabled (agents_enabled=false)"
+            return SummaryRefusal.AGENTS_DISABLED
         if pr.repo not in self._clones:
-            return f"{pr.repo} is not a watched repository"
+            return SummaryRefusal.REPO_NOT_WATCHED
         slot = self._slot()
         glanced_until = time.monotonic() + GLANCE_SECONDS
         while slot is None and self._held() is None and time.monotonic() < glanced_until:
             time.sleep(0.01)
             slot = self._slot()
         if slot is None:
-            return "another summary is running"
+            return SummaryRefusal.SUMMARY_RUNNING
         try:
             self._store(slot)
             run = _Run(pr, self._clock(), self._head_of(pr),

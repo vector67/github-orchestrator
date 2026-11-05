@@ -6,6 +6,7 @@ from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     DismissUntil,
+    ManagerRefusal,
     ManagerStanding,
     QueuedEvent,
     ResetToOrigin,
@@ -331,14 +332,14 @@ def test_assign_when_ready_is_handed_to_the_manager_and_the_dashboard_shows_the_
     ("/api/manager:assign-reviewers", {"reviewers": ["anna"], "detailed": None}),
     ("/api/manager:assign-when-ready", {"reviewers": ["anna"], "detailed": None}),
 ])
-def test_a_command_the_manager_rules_out_is_refused_with_its_reason(path, body):
-    panel = FakeManagerPanel(refusal="an agent is already running")
+def test_a_command_the_manager_rules_out_is_refused_with_the_code_for_why(path, body):
+    panel = FakeManagerPanel(refusal=ManagerRefusal.AGENT_RUNNING)
 
     answer = client_for(manager=panel).post(path, json=body)
 
     assert answer.status_code == 409
     [error] = answer.json()["errors"]
-    assert (error["code"], error["detail"]) == ("manager-refused", "an agent is already running")
+    assert error["code"] == "agent-running"
     assert (panel.carried_on, panel.reviews_started, panel.dismissed, panel.closed,
             panel.marked_ready, panel.taken_over, panel.assigned) == (0, 0, None, 0, 0, 0, [])
     assert panel.dashboard().on_hold is False
@@ -391,6 +392,17 @@ def test_git_refuses_a_command_that_needs_a_terminal_and_runs_nothing():
                for keys in ("a", "c", "i3", "r", "rm -rf")]
 
     assert [one.status_code for one in answers] == [400] * 5
+    assert panel.ran == []
+
+
+@pytest.mark.parametrize("refusal", list(ManagerRefusal))
+def test_git_the_manager_rules_out_is_refused_with_the_code_for_why(refusal):
+    panel = FakeManagerPanel(git_refusal=refusal)
+
+    answer = client_for(manager=panel).post("/api/manager/git", json={"keys": "p"})
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == refusal.value
     assert panel.ran == []
 
 

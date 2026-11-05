@@ -4,6 +4,7 @@ import pytest
 from starlette.websockets import WebSocketDisconnect
 
 from github_orchestrator.board_api.fake import FakeManagerPanel
+from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
 from tests.board_api.support import BOARD_PATH, PORT, WORKTREE, board_for
 from tests.waiting import until
@@ -69,15 +70,25 @@ def test_a_command_the_terminal_does_not_open_is_refused_before_the_manager_hear
     assert manager.opened == []
 
 
-def test_a_command_the_manager_could_not_open_is_refused_with_its_reason(web, manager):
-    manager.terminal_refusal = "refused: the worktree holds another PR's branch"
+def test_a_command_the_manager_rules_out_is_refused_with_the_code_for_why(web, manager):
+    manager.terminal_refusal = ManagerRefusal.WORKTREE_FROZEN
 
     answer = web.post("/api/terminal/sessions", json={"keys": "c"})
 
     assert answer.status_code == 409
     [error] = answer.json()["errors"]
-    assert error["code"] == "terminal-refused"
-    assert error["detail"] == "refused: the worktree holds another PR's branch"
+    assert error["code"] == "worktree-frozen"
+
+
+def test_a_command_that_could_not_start_is_refused_with_what_the_system_said(web, manager):
+    manager.terminal_refusal = "could not start git: No such file or directory"
+
+    answer = web.post("/api/terminal/sessions", json={"keys": "c"})
+
+    assert answer.status_code == 409
+    [error] = answer.json()["errors"]
+    assert (error["code"], error["detail"]) == (
+        "terminal-refused", "could not start git: No such file or directory")
 
 
 def test_asking_claude_hands_the_prompt_to_the_manager(web, manager, sessions):
@@ -105,15 +116,14 @@ def test_a_question_too_long_to_hand_the_agent_as_one_argument_is_refused(web, m
     assert manager.asked == []
 
 
-def test_a_question_the_manager_could_not_open_is_refused_with_its_reason(web, manager):
-    manager.terminal_refusal = "refused: the worktree holds another PR's branch"
+def test_a_question_the_manager_rules_out_is_refused_with_the_code_for_why(web, manager):
+    manager.terminal_refusal = ManagerRefusal.AGENTS_DISABLED
 
     answer = web.post("/api/terminal/questions", json={"prompt": "Why this name?"})
 
     assert answer.status_code == 409
     [error] = answer.json()["errors"]
-    assert error["code"] == "terminal-refused"
-    assert error["detail"] == "refused: the worktree holds another PR's branch"
+    assert error["code"] == "agents-disabled"
 
 
 def test_a_page_connected_to_a_session_sees_what_it_prints(web, sessions):

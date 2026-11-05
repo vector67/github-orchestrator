@@ -79,19 +79,19 @@ def test_a_worktree_an_agent_is_working_in_is_left_as_it_is():
     assert copies.head_of(WORKTREE) == before
 
 
-@pytest.mark.parametrize("manager", [
-    FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.GONE)),
-    FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.STARTING)),
-    FakeManagerPanel(now=replace(DIVERGED, frozen_on="someone-elses-branch")),
+@pytest.mark.parametrize(("manager", "code"), [
+    (FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.GONE)), "manager-down"),
+    (FakeManagerPanel(now=replace(DIVERGED, standing=ManagerStanding.STARTING)), "manager-down"),
+    (FakeManagerPanel(now=replace(DIVERGED, frozen_on="someone-elses-branch")), "worktree-frozen"),
 ], ids=["gone", "starting", "frozen"])
-def test_a_worktree_whose_manager_cannot_say_no_agent_works_in_it_is_left_as_it_is(manager):
+def test_a_worktree_whose_manager_cannot_say_no_agent_works_in_it_is_left_as_it_is(manager, code):
     copies, _ = diverged()
     before = copies.head_of(WORKTREE)
 
     answer = reset_board(copies, manager).post(RESET, json=shown(copies))
 
     assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "manager-refused"
+    assert answer.json()["errors"][0]["code"] == code
     assert copies.head_of(WORKTREE) == before
 
 

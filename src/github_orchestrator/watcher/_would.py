@@ -5,7 +5,7 @@ from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane
-from github_orchestrator.pr_summaries import PrSummaries
+from github_orchestrator.pr_summaries import PrSummaries, SummaryRefusal
 from github_orchestrator.settings import Dismissal, Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._poll import Fetched
@@ -102,8 +102,8 @@ class WouldSummarise:
         if due:
             self._say(f"would summarise {due[0]}")
 
-    def start(self, pr: Pr, *, use_github_api: bool) -> str | None:
-        return "a dry run summarises nothing"
+    def start(self, pr: Pr, *, use_github_api: bool) -> SummaryRefusal:
+        return SummaryRefusal.AGENTS_DISABLED
 
     def progress(self, pr: Pr) -> None:
         return None

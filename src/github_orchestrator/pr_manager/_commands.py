@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from github_orchestrator.agent_runs import PrWork, Run
+from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewRequested
 from github_orchestrator.domain import Monotonic, ReviewerPick
 from github_orchestrator.github import PullRequests
@@ -18,6 +19,12 @@ NOTICE_SECONDS = 4.0
 NOT_YOUR_DRAFT = "mark ready is only for your own draft"
 
 NOT_YOURS_TO_ASSIGN = "assigning reviewers is only for your own pull request"
+
+REFUSED_NOTICES = {
+    ManagerRefusal.WORKTREE_FROZEN: "refused: the worktree holds another PR's branch",
+    ManagerRefusal.AGENTS_DISABLED: "agents are disabled in config.toml",
+    ManagerRefusal.AGENT_RUNNING: "an agent is already running",
+}
 
 
 class ManagerCommands:
@@ -60,7 +67,7 @@ class ManagerCommands:
                           command, agents_enabled=self._config.agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", pr, command, refused)
-            self.notify(refused)
+            self.notify(REFUSED_NOTICES[refused])
             return
         try:
             self._act(command, fields or {})

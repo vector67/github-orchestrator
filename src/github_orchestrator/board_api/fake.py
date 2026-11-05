@@ -11,6 +11,7 @@ from github_orchestrator.board_api.interface import (
     FieldRefusal,
     FolderInUse,
     Held,
+    ManagerRefusal,
     ManagerStanding,
     MentionsListing,
     RepoChoice,
@@ -64,8 +65,9 @@ class FakeManagerPanel:
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
     asked: list[str] = field(default_factory=list)
-    terminal_refusal: str | None = None
-    refusal: str | None = None
+    git_refusal: ManagerRefusal | None = None
+    terminal_refusal: ManagerRefusal | str | None = None
+    refusal: ManagerRefusal | None = None
 
     def dashboard(self) -> Dashboard:
         return self.now
@@ -76,62 +78,64 @@ class FakeManagerPanel:
     def agent_output(self, lines: int) -> list[tuple[str, bool]]:
         return self.output[-lines:]
 
-    def set_on_hold(self, on_hold: bool) -> str | None:
+    def set_on_hold(self, on_hold: bool) -> ManagerRefusal | None:
         if self.refusal is None:
             self.now = replace(self.now, on_hold=on_hold)
         return self.refusal
 
-    def carry_on(self) -> str | None:
+    def carry_on(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.carried_on += 1
         return self.refusal
 
-    def start_review(self) -> str | None:
+    def start_review(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.reviews_started += 1
         return self.refusal
 
-    def dismiss(self, until: DismissUntil) -> str | None:
+    def dismiss(self, until: DismissUntil) -> ManagerRefusal | None:
         if self.refusal is None:
             self.dismissed = until
         return self.refusal
 
-    def close(self) -> str | None:
+    def close(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.closed += 1
         return self.refusal
 
-    def mark_ready(self) -> str | None:
+    def mark_ready(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.marked_ready += 1
         return self.refusal
 
-    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+    def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
         if self.refusal is None:
             self.assigned.append((tuple(reviewers), detailed))
         return self.refusal
 
-    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> str | None:
+    def assign_when_ready(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
         if self.refusal is None:
             self.now = replace(self.now,
                                assign_when_ready=ReviewerPick(tuple(reviewers), detailed))
         return self.refusal
 
-    def take_over(self) -> str | None:
+    def take_over(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.taken_over += 1
         return self.refusal
 
-    def run_git(self, keys: str) -> tuple[int, list[str], float]:
+    def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:
+        if self.git_refusal is not None:
+            return self.git_refusal
         self.ran.append(keys)
         return self.git_answer
 
-    def open_terminal(self, keys: str) -> str | None:
+    def open_terminal(self, keys: str) -> ManagerRefusal | str | None:
         if self.terminal_refusal is None:
             self.opened.append(keys)
         return self.terminal_refusal
 
-    def ask(self, prompt: str) -> str | None:
+    def ask(self, prompt: str) -> ManagerRefusal | str | None:
         if self.terminal_refusal is None:
             self.asked.append(prompt)
         return self.terminal_refusal

@@ -1518,8 +1518,8 @@ module('Acceptance | dashboard', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     board().refusal = {
       status: 409,
-      code: 'manager-refused',
-      detail: 'the manager is busy',
+      code: 'manager-down',
+      detail: 'the manager is down',
     };
 
     await click('[data-test-control="close"]');
@@ -1527,7 +1527,9 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert
       .dom('[data-test-toast]')
-      .hasText('The manager did not take the close: the manager is busy');
+      .hasText(
+        "The manager did not take the close: The manager is down, so your action can't be recorded.",
+      );
     assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-pending');
     assert.dom('[data-test-action-band]').doesNotHaveAttribute('data-refused');
     assert.dom('[data-test-control="close"]').includesText('Close PR #7');
@@ -1882,15 +1884,15 @@ module('Acceptance | dashboard', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
     board().refusal = {
       status: 409,
-      code: 'manager-refused',
-      detail: 'the manager is busy',
+      code: 'agent-running',
+      detail: 'an agent is already running',
     };
 
     await click('[data-test-control="carry-on"]');
 
     assert
       .dom('[data-test-action-band] [data-test-refusal]')
-      .hasText('the manager is busy');
+      .hasText('An agent is already running for this pull request.');
 
     await press('h');
 
