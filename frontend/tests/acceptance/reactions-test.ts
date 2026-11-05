@@ -61,7 +61,7 @@ module('Acceptance | reactions', function (hooks) {
 
   test('the picker opens over the page just under the smiley and moves nothing in the thread', async function (assert) {
     board().conversations = [thread({ key: KEY })];
-    board().comments[KEY] = Array.from({ length: 8 }, (_, at) =>
+    board().comments[KEY] = Array.from({ length: 40 }, (_, at) =>
       comment({ id: at + 1, review_state: null, body: `point ${at + 1}` }),
     );
     await visit(`/pr/o/r/7/conversations/${KEY}`);

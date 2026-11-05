@@ -46,15 +46,18 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
   faces = FACES;
 
   shown = modifier((element: HTMLElement) => {
-    const smiley = element
+    const trigger = element
       .closest('.comment-reactions')!
-      .querySelector('.reaction-add')!
-      .getBoundingClientRect();
+      .querySelector('.reaction-add')!;
+    const smiley = trigger.getBoundingClientRect();
     element.style.top = `${smiley.bottom + 4}px`;
     element.style.left = `${smiley.left}px`;
     element.showPopover();
     const close = (scrolled: Event) => {
-      if (!element.contains(scrolled.target as Node)) this.picking = false;
+      if (element.contains(scrolled.target as Node)) return;
+      const now = trigger.getBoundingClientRect();
+      if (now.top !== smiley.top || now.left !== smiley.left)
+        this.picking = false;
     };
     document.addEventListener('scroll', close, true);
     return () => document.removeEventListener('scroll', close, true);
