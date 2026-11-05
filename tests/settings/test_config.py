@@ -1,4 +1,5 @@
 import stat
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -497,6 +498,31 @@ def test_writing_writes_through_a_symlinked_config(tmp_path):
 
     assert toml_file.readlink() == kept
     assert load_config(kept).gh_account == "someone"
+
+
+def test_two_saves_at_once_neither_tear_the_file_nor_lose_either_value(tmp_path):
+    toml_file = write_config(tmp_path)
+    config_file = read_from(toml_file).get(ConfigFile)
+    hello = {Repo("octocat", "hello"): Clone(Path("/tmp/hello"), "")}
+
+    for round_number in range(50):
+        both_ready = threading.Barrier(2)
+
+        def save(values):
+            both_ready.wait()
+            config_file.write(values, repos=hello)
+
+        savers = [threading.Thread(target=save, args=(values,)) for values in (
+            {"gh_account": f"first-{round_number}"},
+            {"agent_command": f"second-{round_number}"})]
+        for saver in savers:
+            saver.start()
+        for saver in savers:
+            saver.join()
+
+        config = load_config(toml_file)
+        assert (config.gh_account, config.agent_command) == (
+            f"first-{round_number}", f"second-{round_number}")
 
 
 def test_a_written_value_with_quotes_and_backslashes_reads_back_as_written(tmp_path):

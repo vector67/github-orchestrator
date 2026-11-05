@@ -1,12 +1,14 @@
+import contextlib
 import difflib
 import enum
+import fcntl
 import os
 import re
 import shutil
 import tempfile
 import tomllib
 import typing
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -501,7 +503,8 @@ class TomlConfigFile:
 
     def write(self, values: Mapping[str, str | int | bool], *,
               repos: Mapping[Repo, Clone]) -> None:
-        self._replace(self._written(values, repos))
+        with self._locked():
+            self._replace(self._written(values, repos))
 
     def _written(self, values: Mapping[str, str | int | bool],
                  repos: Mapping[Repo, Clone]) -> str:
@@ -513,25 +516,41 @@ class TomlConfigFile:
             for repo, clone in repos.items()])
 
     def mentions_start(self, now: datetime) -> datetime:
-        data = _read(self._path)
-        written = data.get(_MENTIONS_START)
-        if written:
-            return _zoned(written)
-        if _MENTIONS_START in data:
-            self.move_mentions_start(now)
-        else:
-            self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
-        return now
+        with self._locked():
+            data = _read(self._path)
+            written = data.get(_MENTIONS_START)
+            if written:
+                return _zoned(written)
+            if _MENTIONS_START in data:
+                self._move_mentions_start(now)
+            else:
+                self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
+            return now
 
     def move_mentions_start(self, to: datetime) -> None:
+        with self._locked():
+            self._move_mentions_start(to)
+
+    def _move_mentions_start(self, to: datetime) -> None:
         self._replace(_MENTIONS_START_LINE.sub(_mentions_start_line(to), self._path.read_text(),
                                                count=1))
 
-    def _replace(self, text: str) -> None:
+    @contextlib.contextmanager
+    def _locked(self) -> Iterator[None]:
         target = self._path.resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
-        writing = target.with_name(f"{target.name}.writing")
-        writing.write_text(text)
+        with open(target.with_name(f"{target.name}.lock"), "a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            yield
+
+    def _replace(self, text: str) -> None:
+        target = self._path.resolve()
+        descriptor, writing = tempfile.mkstemp(dir=target.parent, prefix=f"{target.name}.",
+                                               suffix=".writing")
+        with os.fdopen(descriptor, "w") as file:
+            file.write(text)
+            file.flush()
+            os.fsync(file.fileno())
         if target.exists():
             shutil.copymode(target, writing)
         os.replace(writing, target)
