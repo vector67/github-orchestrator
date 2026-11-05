@@ -2,6 +2,8 @@ import json
 from dataclasses import dataclass, replace
 from typing import Any
 
+import pytest
+
 from github_orchestrator.conversation import Denied, ReviewState
 from github_orchestrator.domain import Side
 from github_orchestrator.github import (
@@ -175,6 +177,19 @@ def test_an_id_only_snapshot_calls_nothing_stale(settings):
         "the snapshot written before fingerprints existed knows no bodies, so "
         "the first cycle after the upgrade must stay quiet"
     )
+
+
+@pytest.mark.parametrize("entry", [{"comments": [[]]}, 7, {"comments": 7}, [[[1], "x"]], [{}]])
+def test_a_malformed_cursor_entry_still_lets_the_pr_hear_new_comments(settings, entry):
+    diffing = Diffing(settings)
+    diffing.poll(_thread())
+    diffing.cursor_written_before({KEY: entry})
+
+    first = diffing.poll(_thread(comments=[_comment(), _comment(2)]))
+    second = diffing.poll(_thread(comments=[_comment(), _comment(2), _comment(3)]))
+
+    assert first.active == [KEY]
+    assert second.arrived == [3], "the cycle must have saved a fresh cursor"
 
 
 def test_a_comment_the_cutoff_deferred_is_reported_on_the_next_cycle(settings):

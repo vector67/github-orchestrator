@@ -28,11 +28,14 @@ def _seen(entry: dict[str, Any] | list[Any] | None) -> dict[int | None, str | No
     """Comment id to its stored body fingerprint, None where a bare id was stored."""
     stored = entry.get("comments") if isinstance(entry, dict) else entry
     seen: dict[int | None, str | None] = {}
-    for item in stored or []:
-        if isinstance(item, (list, tuple)):
-            seen[item[0]] = item[1] if len(item) > 1 else None
-        else:
+    if not isinstance(stored, list):
+        return seen
+    for item in stored:
+        if isinstance(item, int):
             seen[item] = None
+        elif isinstance(item, list) and item and isinstance(item[0], int):
+            fp = item[1] if len(item) > 1 else None
+            seen[item[0]] = fp if isinstance(fp, str) else None
     return seen
 
 
