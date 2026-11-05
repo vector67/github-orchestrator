@@ -49,12 +49,17 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
     const dropped = () => {
       this.dragging = null;
     };
+    const extending = (event: MouseEvent) => {
+      if (event.shiftKey) event.preventDefault();
+    };
+    svg.addEventListener('mousedown', extending);
     svg.addEventListener('click', clicked);
     svg.addEventListener('pointerdown', grabbed);
     svg.addEventListener('pointermove', moved);
     svg.addEventListener('pointerup', dropped);
     svg.addEventListener('pointerleave', dropped);
     return () => {
+      svg.removeEventListener('mousedown', extending);
       svg.removeEventListener('click', clicked);
       svg.removeEventListener('pointerdown', grabbed);
       svg.removeEventListener('pointermove', moved);
@@ -220,6 +225,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               <button
                 type="button"
                 class="btn timeline-reset"
+                disabled={{if @reset.confirming true false}}
                 data-test-reset-to-origin
                 {{on "click" @reset.ask}}
               >Reset to origin</button>
@@ -256,23 +262,26 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
               <p class="timeline-reset-question">Reset the worktree to origin?
                 {{this.dropped}}</p>
             {{/if}}
-            <button
-              type="button"
-              class="btn"
-              disabled={{this.confirmSending}}
-              data-test-reset-yes
-              {{on "click" @reset.confirm}}
-            >{{#if this.confirmSending}}{{#if @reset.pressing.ring}}<PendingRing
-                  />{{/if}}{{@reset.pressing.doing}}{{else if
-                (eq @reset.confirming "later")
-              }}Reset when it finishes{{else}}Reset{{/if}}</button>
-            <button
-              type="button"
-              class="btn"
-              disabled={{this.confirmSending}}
-              data-test-reset-no
-              {{on "click" @reset.cancel}}
-            >Cancel</button>
+            <span class="timeline-reset-choices" data-test-reset-choices>
+              <button
+                type="button"
+                class="btn"
+                disabled={{this.confirmSending}}
+                data-test-reset-yes
+                {{on "click" @reset.confirm}}
+              >{{#if this.confirmSending}}{{#if
+                    @reset.pressing.ring
+                  }}<PendingRing />{{/if}}{{@reset.pressing.doing}}{{else if
+                  (eq @reset.confirming "later")
+                }}Reset when it finishes{{else}}Reset{{/if}}</button>
+              <button
+                type="button"
+                class="btn"
+                disabled={{this.confirmSending}}
+                data-test-reset-no
+                {{on "click" @reset.cancel}}
+              >Cancel</button>
+            </span>
           </div>
         {{/if}}
       {{/if}}
@@ -283,8 +292,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           data-refused="true"
           data-test-reset-refused
         >
-          {{@reset.refused}}
-          {{#if @reset.offerLater}}
+          {{@reset.refused}}{{#if @reset.offerLater}}.
             <button
               type="button"
               class="btn timeline-reset"

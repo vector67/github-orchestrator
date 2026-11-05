@@ -305,6 +305,18 @@ module('Acceptance | pr diff', function (hooks) {
       assert.deepEqual(board().posted, []);
     });
 
+    test("the note that a line isn't in the latest commit closes with its ×", async function (assert) {
+      divergedLocally();
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click(`${LOCAL_ROW('+20')} [data-test-add]`);
+
+      await click('[data-test-unplaced-dismiss]');
+
+      assert.dom('[data-test-unplaced]').doesNotExist();
+      assert.dom(`${LOCAL_ROW('+20')} + [data-test-inline]`).doesNotExist();
+    });
+
     test('origin and local each say which head they draw', async function (assert) {
       await visit('/pr/o/r/7/diff');
 

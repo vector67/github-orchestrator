@@ -640,7 +640,7 @@ const ENTRIES = {
       submit: () => 'Confirm',
     },
     request: resolveRequest,
-    doing: 'confirming',
+    doing: 'resolving',
     square: 'done',
   },
   place: {

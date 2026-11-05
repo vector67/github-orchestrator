@@ -862,6 +862,9 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
       delete_comment: false,
       resolve: true,
     });
+    assert
+      .dom('[data-test-toast]')
+      .hasText('Queued: resolving.', 'the toast names what the card says');
   });
 
   test('confirm with resolving unticked keeps the thread open on GitHub and still puts 👍 there', async function (assert) {

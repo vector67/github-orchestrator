@@ -420,6 +420,27 @@ module('Acceptance | commit timeline', function (hooks) {
     );
   });
 
+  test("shift-pressing a dot leaves the timeline's text unselected", async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    await press(']');
+    await press('t');
+
+    const pressed = new MouseEvent('mousedown', {
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    dot(THIRD).dispatchEvent(pressed);
+    const plain = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    dot(THIRD).dispatchEvent(plain);
+
+    assert.true(pressed.defaultPrevented, 'a shift-press starts no selection');
+    assert.false(plain.defaultPrevented, 'a plain press is left alone');
+  });
+
   test('Escape and Back to stepping return to the commit you were on', async function (assert) {
     await visit('/pr/o/r/7/diff');
     await press(']');
@@ -1792,6 +1813,12 @@ module(
           "Reset the worktree to origin? Its 2 commits that aren't on origin will be dropped. Reset Cancel",
         );
       assert.strictEqual(resets(), 0, 'nothing is sent before Reset');
+      assert
+        .dom('[data-test-reset-to-origin]')
+        .isDisabled('the question is already open');
+      assert
+        .dom('[data-test-reset-confirm] [data-test-reset-choices]')
+        .containsText('Reset Cancel', 'Reset and Cancel wrap together');
 
       await click('[data-test-reset-yes]');
 
@@ -1842,6 +1869,7 @@ module(
       await click('[data-test-reset-no]');
 
       assert.dom('[data-test-reset-confirm]').doesNotExist();
+      assert.dom('[data-test-reset-to-origin]').isNotDisabled();
       assert.strictEqual(resets(), 0);
       assert.dom('[data-test-diverged]').exists();
     });
@@ -1901,6 +1929,11 @@ module(
       };
       await click('[data-test-reset-yes]');
 
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: an agent is working in the worktree, so it was left as it is. Reset when the agent finishes',
+        );
       await click('[data-test-reset-later]');
 
       assert

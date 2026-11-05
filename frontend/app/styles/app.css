@@ -5262,6 +5262,16 @@ button.tree-row[aria-current="true"] {
   line-height: 1.5;
 }
 
+.comment-unplaced-dismiss {
+  padding: 4px 12px;
+  font-size: var(--fs-s);
+}
+
+.timeline-reset-choices {
+  display: flex;
+  gap: 8px;
+}
+
 .timeline-reset-confirm .btn {
   padding: 4px 12px;
   font-size: var(--fs-s);
@@ -6014,6 +6024,10 @@ button.tree-row[aria-current="true"] {
 }
 
 .comment-unplaced {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
   margin: 0;
   padding: 8px 12px;
   font-size: var(--fs-s);

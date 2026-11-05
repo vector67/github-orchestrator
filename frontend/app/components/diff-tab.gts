@@ -434,8 +434,15 @@ export default class DiffTab extends Component<DiffTabSignature> {
               >
                 <:commenting as |selection|>
                   {{#if this.unplaced}}
-                    <p class="comment-unplaced" data-test-unplaced>
-                      {{NOT_AT_HEAD}}
+                    <p class="comment-unplaced">
+                      <span data-test-unplaced>{{NOT_AT_HEAD}}</span>
+                      <button
+                        type="button"
+                        class="btn comment-unplaced-dismiss"
+                        aria-label="dismiss"
+                        data-test-unplaced-dismiss
+                        {{on "click" this.close}}
+                      >×</button>
                     </p>
                   {{else}}
                     <CommentBox
