@@ -29,8 +29,7 @@ import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import didChange from 'frontend/modifiers/did-change';
 import type PullRequestDiffService from 'frontend/services/pull-request-diff';
-
-const eq = (one: unknown, other: unknown): boolean => one === other;
+import eq from 'frontend/helpers/eq';
 
 const NARROW_TAB = 720;
 

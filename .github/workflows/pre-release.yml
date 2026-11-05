@@ -262,6 +262,7 @@ jobs:
             [ -S "/run/user/$(id -u)/systemd/private" ] && break
             sleep 1
           done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
 
       - name: Use a scratch HOME
         if: runner.os == 'macOS'
@@ -376,6 +377,7 @@ jobs:
             [ -S "/run/user/$(id -u)/systemd/private" ] && break
             sleep 1
           done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
 
       - name: Use a scratch HOME
         if: runner.os == 'macOS'

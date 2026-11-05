@@ -9,6 +9,7 @@ import {
   type TerminalTheme,
 } from 'frontend/services/terminal';
 import type TerminalService from 'frontend/services/terminal';
+import eq from 'frontend/helpers/eq';
 
 interface TerminalColoursSignature {
   Args: { close: () => void };
@@ -24,8 +25,6 @@ const MODES = TERMINAL_THEMES.map((mode) => ({
   mode,
   name: MODE_NAMES[mode],
 }));
-
-const eq = (one: unknown, other: unknown): boolean => one === other;
 
 export default class TerminalColours extends Component<TerminalColoursSignature> {
   @service declare terminal: TerminalService;

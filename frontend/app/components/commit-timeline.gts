@@ -9,10 +9,9 @@ import PendingRing from 'frontend/components/pending-ring';
 import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
 import { staysInThisTab } from 'frontend/modifiers/navigates';
+import eq from 'frontend/helpers/eq';
 
 type End = 'from' | 'to';
-
-const eq = (one: unknown, other: unknown): boolean => one === other;
 
 const pushedOf = (pushed: boolean | null): string | null =>
   pushed === null ? null : String(pushed);

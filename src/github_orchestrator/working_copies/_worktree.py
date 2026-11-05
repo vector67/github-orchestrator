@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 GIT_TIMEOUT = 60
 NEW_WORKTREE_TIMEOUT = 300
 FALLBACK_NAMES = 20
+EVEN_IF_LOCKED_SINCE_NO_HUMAN_LOCKS_OURS = ("--force", "--force")
 
 
 def _git(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str] | None:
@@ -141,9 +142,8 @@ def remove_worktree(worktree: str) -> None:
     if Path(worktree).resolve() == Path(main_worktree).resolve():
         log.warning("Refusing to remove main worktree: %s", worktree)
         return
-    # The second --force also removes a locked worktree. That is on purpose: no
-    # human locks the worktrees the orchestrator cuts.
-    result = _git("-C", main_worktree, "worktree", "remove", "--force", "--force", worktree)
+    result = _git("-C", main_worktree, "worktree", "remove", *EVEN_IF_LOCKED_SINCE_NO_HUMAN_LOCKS_OURS,
+                  worktree)
     if result is None:
         log.error(
             "Failed to remove worktree %s: git worktree remove timed out after %ds",

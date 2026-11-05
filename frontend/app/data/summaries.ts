@@ -33,6 +33,7 @@ import { levelOf, type Level } from 'frontend/data/wall';
 import {
   dayOf,
   drawnAs,
+  isMerge,
   timelineBuilt,
   type Picked,
   type Standing,
@@ -1126,10 +1127,6 @@ export interface Pip {
 export interface DiffRange extends Commits {
   merged?: string;
   worktree?: WorktreeOf;
-}
-
-export function isMerge(commit: PullRequestCommit): boolean {
-  return commit.parents.length > 1;
 }
 
 function rangeOf(

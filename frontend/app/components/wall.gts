@@ -36,8 +36,7 @@ import {
 import type ToastsService from 'frontend/services/toasts';
 import { moves, pulses, selects } from 'frontend/motion';
 import navigates from 'frontend/modifiers/navigates';
-
-const same = (one: unknown, other: unknown): boolean => one === other;
+import eq from 'frontend/helpers/eq';
 
 const KEYED = ['hold', 'carry-on', 'mark-ready', 'dismiss', 'release'] as const;
 
@@ -257,7 +256,7 @@ export default class Wall extends Component<WallSignature> {
         <p class="wall-stale-note" data-test-wall-stale-note>These rows may be
           out of date.</p>
       {{/if}}
-      {{#if (same this.store.unheld "waiting-to-migrate")}}
+      {{#if (eq this.store.unheld "waiting-to-migrate")}}
         <MigrationWait />
       {{/if}}
       <div
@@ -458,7 +457,7 @@ export default class Wall extends Component<WallSignature> {
                 {{on "click" this.showAll}}
               >Show all repos</button>
             </div>
-          {{else if (same this.store.unheld "watcher-failing")}}
+          {{else if (eq this.store.unheld "watcher-failing")}}
             <div class="wall-empty" data-test-wall-unheld="watcher-failing">
               <p>The watcher’s polls are failing.</p>
               {{#if this.store.watcher.fix}}
@@ -468,14 +467,14 @@ export default class Wall extends Component<WallSignature> {
                 {{this.store.watcher.last_error}}
               </p>
             </div>
-          {{else if (same this.store.unheld "waiting-to-migrate")}}{{else if
-            (same this.store.unheld "not-watching")
+          {{else if (eq this.store.unheld "waiting-to-migrate")}}{{else if
+            (eq this.store.unheld "not-watching")
           }}
             <div class="wall-empty" data-test-wall-unheld="not-watching">
               <p>This hub watches nothing until its config is complete.</p>
               <p class="mono">{{this.store.configProblem}}</p>
             </div>
-          {{else if (same this.store.unheld "watcher-starting")}}
+          {{else if (eq this.store.unheld "watcher-starting")}}
             <p class="wall-empty" data-test-wall-unheld="watcher-starting">
               Waiting for the watcher’s first poll. The wall fills in when it
               ends.

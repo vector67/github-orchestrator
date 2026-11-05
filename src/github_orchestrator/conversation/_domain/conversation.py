@@ -196,6 +196,12 @@ WAKE_MANUAL = "manual"
 WAKE_CI = "ci"
 WAKE_PR_PREFIX = "pr:"
 WAKE_PUSH_PREFIX = "push:"
+WAKE_WORDS = (WAKE_MANUAL, "reply", WAKE_CI, "push")
+
+
+def wakes_on(condition: str) -> bool:
+    return condition in WAKE_WORDS or (condition.startswith(WAKE_PR_PREFIX)
+                                       and condition[len(WAKE_PR_PREFIX):].isdigit())
 
 QUEUED = "queued"
 RUNNING = "running"

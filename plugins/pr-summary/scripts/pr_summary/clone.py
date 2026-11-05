@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pr_summary.inputs import ChangedFile, Unreadable
 
-STATUSES = {"A": "added", "D": "removed", "M": "modified", "R": "renamed", "T": "modified", "C": "added"}
+STATUSES = {"A": "added", "D": "removed", "M": "modified", "R": "renamed", "T": "modified"}
 
 
 class CloneFailed(Exception):
@@ -59,13 +59,13 @@ class Clone:
         index = 0
         while index < len(statuses) and statuses[index]:
             letter = statuses[index][0]
-            if letter in "RC":
+            if letter == "R":
                 previous, path = statuses[index + 1], statuses[index + 2]
                 index += 3
             else:
                 previous, path = None, statuses[index + 1]
                 index += 2
-            files.append(ChangedFile(path=path, previous=previous if letter == "R" else None, status=STATUSES.get(letter, "modified"), changes=counts.get(path, 0)))
+            files.append(ChangedFile(path=path, previous=previous, status=STATUSES.get(letter, "modified"), changes=counts.get(path, 0)))
         return files
 
     def _counts(self, base: str, head: str) -> dict[str, int]:

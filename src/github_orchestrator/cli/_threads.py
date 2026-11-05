@@ -392,15 +392,6 @@ def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pr", type=int, required=True, help="PR number")
 
 
-WAKES = ("manual", "reply", "ci", "push")
-
-
-def _wake(text: str) -> str:
-    if text in WAKES or (text.startswith("pr:") and text[3:].isdigit()):
-        return text
-    raise argparse.ArgumentTypeError(f"{text!r} is none of {', '.join(WAKES)} or pr:<number>")
-
-
 HUMAN_ONLY = ("HUMAN ONLY: {what} An agent runs this only when a human told it to, "
               "and quotes them in --human-direction.")
 
@@ -445,7 +436,7 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
         thread_sub, "place", "move a thread to the outcome the operator chose, as the "
                              "board's move does; deferred parks it and done confirms it.")
     place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE])
-    place_parser.add_argument("--until", type=_wake, default="manual",
+    place_parser.add_argument("--until", default="manual",
                               help="With --to deferred: what wakes it, one of "
                                    "manual, reply, ci, push or pr:<number>")
     place_parser.add_argument("--note", default="",

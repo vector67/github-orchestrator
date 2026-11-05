@@ -61,9 +61,13 @@ class _Boards:
         self.routing = anyio.CapacityLimiter(ROUTING_THREADS)
 
     def of(self, pr: Pr) -> ASGIApp | None:
-        if pr not in self._told.held().managers or not self._migration.migrated():
-            return None
+        held = self._told.held().managers
+        serving = pr in held and self._migration.migrated()
         with self._lock:
+            for let_go in self._built.keys() - held.keys():
+                del self._built[let_go]
+            if not serving:
+                return None
             app = self._built.get(pr)
             if app is None:
                 app = self._built[pr] = self._build(pr)

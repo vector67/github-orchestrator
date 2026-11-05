@@ -92,7 +92,7 @@ def run_witnesses(manifest: dict[str, Path], launch: Launch, wait: Wait) -> dict
                     failures[folder.name] = "exited with an error"
                     return False
             except Exception as error:
-                failures[folder.name] = type(error).__name__
+                failures[folder.name] = ": ".join(filter(None, (type(error).__name__, str(error))))
                 return False
             reason = _unavailable(folder)
             if reason is None:

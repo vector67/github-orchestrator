@@ -55,6 +55,19 @@ def test_a_pr_the_watcher_let_go_of_is_not_found_though_its_board_was_built():
     assert server.client.get(f"{BOARD}/api/pull-request").status_code == 404
 
 
+def test_a_pr_the_watcher_let_go_of_and_took_back_gets_a_new_board():
+    server = one_server(THE_PR)
+    held = server.told.now
+    server.client.get(f"{BOARD}/api/dashboard")
+    server.told.now = one_server(NOT_HELD).told.now
+    server.client.get(f"{BOARD}/api/dashboard")
+    server.told.now = held
+
+    server.client.get(f"{BOARD}/api/dashboard")
+
+    assert server.panels.asked == [THE_PR, THE_PR]
+
+
 def test_a_held_prs_board_is_built_on_its_first_request_and_kept():
     server = one_server(THE_PR)
     built_before = list(server.panels.asked)

@@ -58,6 +58,10 @@ const LABEL_CHAR = 7.5;
 const LABEL_PAD = 6;
 const LABEL_REACH = 10;
 
+export function isMerge(commit: PullRequestCommit): boolean {
+  return commit.parents.length > 1;
+}
+
 export interface Picked {
   from: string;
   to: string;
@@ -904,11 +908,7 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
       ...there,
     ].map((one) => [one.sha, one.subject]),
   );
-  const merges = new Set(
-    history.commits
-      .filter((one) => one.parents.length > 1)
-      .map((one) => one.sha),
-  );
+  const merges = new Set(history.commits.filter(isMerge).map((one) => one.sha));
   const dates = new Map(
     folded
       ? [

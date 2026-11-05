@@ -12,14 +12,9 @@ from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     PointedLine,
     Ticket,
+    wakes_on,
 )
 from github_orchestrator.domain import Location, Side
-
-WAKE_MANUAL = "manual"
-
-WAKE_CI = "ci"
-
-WAKE_PR_PREFIX = "pr:"
 
 APPROVE = "approve"
 
@@ -51,16 +46,12 @@ RESOLVE = "resolve"
 
 NO_THUMBS_UP_MODIFIER = "no-thumbs-up"
 
-WAKE_MODIFIERS = (WAKE_MANUAL, "reply", WAKE_CI, "push")
-
 
 def _modifier_allowed(decision: str, modifier: str) -> bool:
     if modifier == "":
         return True
     if decision == "defer":
-        return (modifier in WAKE_MODIFIERS
-                or (modifier.startswith(WAKE_PR_PREFIX)
-                    and modifier[len(WAKE_PR_PREFIX):].isdigit()))
+        return wakes_on(modifier)
     if decision in WORDS_ONLY:
         return False
     if decision == PLACE:

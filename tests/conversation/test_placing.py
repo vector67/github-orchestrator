@@ -126,6 +126,18 @@ def test_a_deferred_thread_cannot_be_placed_by_hand(settings):
     assert _code(_placed(board, ConversationState.NOT_MINE)) == ErrorCode.NOT_PARKED
 
 
+def test_deferring_until_something_nothing_wakes_on_is_refused(settings):
+    board = _one_review_thread(settings)
+    board.agent_runs.give("my-move")
+
+    with board.manager.editing("PRRT_one") as editable:
+        asked = {until: _code(editable.place(ConversationState.DEFERRED, until=until))
+                 for until in ("tomorrow", "pr:soon")}
+
+    assert asked == {"tomorrow": ErrorCode.BAD_WAKE_CONDITION,
+                     "pr:soon": ErrorCode.BAD_WAKE_CONDITION}
+
+
 def test_a_reviewer_cannot_place_a_thread_where_no_outcome_of_theirs_lands_it(settings):
     refused = {}
     for to in (ConversationState.QUEUED, ConversationState.ASSUMED_DONE,

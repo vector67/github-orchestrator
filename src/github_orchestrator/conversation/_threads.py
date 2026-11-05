@@ -117,6 +117,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Ticket,
     UnreadableRecord,
     reacted,
+    wakes_on,
 )
 from github_orchestrator.conversation._domain.diff import KIND_REVIEW_SUMMARY
 from github_orchestrator.conversation._domain.events import WorkspaceCut
@@ -388,6 +389,8 @@ class _Editable:
               note: str = "") -> Conversation | Denied:
         if to is ConversationState.DONE:
             return self._ask(Confirm())
+        if to is ConversationState.DEFERRED and not wakes_on(until):
+            return Denied(ErrorCode.BAD_WAKE_CONDITION, f"nothing wakes a thread on {until!r}")
         if to is ConversationState.DEFERRED:
             return self._ask(Defer(wake_on=until, note=note))
         return self._ask(Place(to))

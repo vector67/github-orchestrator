@@ -17,7 +17,7 @@ STATUS_STALE_SECONDS = 10.0
 
 NOT_RUNNING = frozenset({ManagerPane.NO_WINDOW.value, ManagerPane.EXITED.value})
 
-_STAMP = "%Y-%m-%dT%H:%M:%S.%fZ"
+STAMP = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 class StatusFiles:
@@ -31,7 +31,7 @@ class StatusFiles:
     def write(self, dashboard: Dashboard) -> None:
         now = self._clock()
         status = {
-            "written_at": now.strftime(_STAMP),
+            "written_at": now.strftime(STAMP),
             "active_run": _active_run(dashboard, now),
             "notice": dashboard.notice,
             "threads_live": sorted(dashboard.threads_live),
@@ -107,11 +107,11 @@ def _active_run(dashboard: Dashboard, now: datetime) -> dict[str, str] | None:
 
 
 def _ago(now: datetime, seconds: float | None) -> str:
-    return (now - timedelta(seconds=seconds or 0.0)).strftime(_STAMP)
+    return (now - timedelta(seconds=seconds or 0.0)).strftime(STAMP)
 
 
 def _seconds_since(now: datetime, stamp: str) -> float:
-    return (now - datetime.strptime(stamp, _STAMP).replace(tzinfo=UTC)).total_seconds()
+    return (now - datetime.strptime(stamp, STAMP).replace(tzinfo=UTC)).total_seconds()
 
 
 def _later(one: str | None, other: str | None) -> str | None:

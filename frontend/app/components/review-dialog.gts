@@ -10,6 +10,7 @@ import navigates from 'frontend/modifiers/navigates';
 import type BoardKeysService from 'frontend/services/board-keys';
 import type ReviewService from 'frontend/services/review';
 import autocomplete from 'frontend/modifiers/autocomplete';
+import eq from 'frontend/helpers/eq';
 
 const VERDICTS: { value: ReviewVerdict; label: string }[] = [
   { value: 'COMMENT', label: 'Comment' },
@@ -19,10 +20,6 @@ const VERDICTS: { value: ReviewVerdict; label: string }[] = [
 
 function counted(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
-}
-
-function is(one: unknown, other: unknown): boolean {
-  return one === other;
 }
 
 export default class ReviewDialog extends Component {
@@ -98,7 +95,7 @@ export default class ReviewDialog extends Component {
                 type="radio"
                 name="verdict"
                 value={{verdict.value}}
-                checked={{is this.review.verdict verdict.value}}
+                checked={{eq this.review.verdict verdict.value}}
                 data-test-verdict={{verdict.value}}
                 {{on "change" (fn this.pick verdict.value)}}
               />

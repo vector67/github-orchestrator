@@ -20,7 +20,7 @@ from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._snapshot import dashboard_of
-from github_orchestrator.pr_manager._status import StatusFiles
+from github_orchestrator.pr_manager._status import STAMP, StatusFiles
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
@@ -28,8 +28,6 @@ from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 ConfigOf = Callable[[Pr, str], ManagerConfig]
 
 Flags = tuple[str | None, bool, str | None, bool, int]
-
-_STAMP = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 def _unpushed_commit(line: str) -> UnpushedCommit:
@@ -120,6 +118,6 @@ class DashboardSource:
                  dashboard.hidden, len(dashboard.threads_live))
         seen = self._flags_seen.get(dashboard.pr)
         if seen is None or seen[0] != flags:
-            seen = (flags, self._clock().strftime(_STAMP))
+            seen = (flags, self._clock().strftime(STAMP))
             self._flags_seen[dashboard.pr] = seen
         return replace(dashboard, flags_changed_at=seen[1])

@@ -11,12 +11,11 @@ import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
+import eq from 'frontend/helpers/eq';
 
 interface HubBarSignature {
   Args: { on: 'wall' | 'runs' | 'setup' };
 }
-
-const eq = (one: string, other: string): boolean => one === other;
 
 export default class HubBar extends Component<HubBarSignature> {
   @service declare hub: HubService;

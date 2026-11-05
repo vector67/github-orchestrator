@@ -96,6 +96,19 @@ def test_a_failed_witness_leaves_the_rest_and_the_judge_running(tmp_path: Path) 
     assert judged == ["claimed.json", "implementation.json", "tests.json"]
 
 
+def test_a_witness_that_raises_fails_with_the_error_and_its_message(tmp_path: Path) -> None:
+    manifest = manifest_in(tmp_path, ["why", "alignment"])
+
+    def launch(witness: str, folder: Path) -> bool:
+        if witness == "why":
+            raise OSError("claude is not on the PATH")
+        return True
+
+    failures = run_witnesses(manifest, launch, no_wait)
+
+    assert failures == {"why": "OSError: claude is not on the PATH"}
+
+
 def test_the_primer_runs_beside_the_witnesses_but_is_never_judged(tmp_path: Path) -> None:
     manifest = manifest_in(tmp_path, ["claimed", "primer", "alignment"])
     launched: list[str] = []

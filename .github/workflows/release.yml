@@ -86,6 +86,7 @@ jobs:
             [ -S "/run/user/$(id -u)/systemd/private" ] && break
             sleep 1
           done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
 
       - name: Install the published release with its own install.sh
         env:
@@ -111,6 +112,7 @@ jobs:
             [ -S "/run/user/$(id -u)/systemd/private" ] && break
             sleep 1
           done
+          XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user show-environment >/dev/null
 
       - name: Install the release before this one with its own install.sh
         env:

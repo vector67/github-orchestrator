@@ -17,6 +17,7 @@ import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type ThemeService from 'frontend/services/theme';
 import TerminalColours from 'frontend/components/terminal-colours';
+import eq from 'frontend/helpers/eq';
 
 const TOOTH_RADIUS = 5.75;
 const TEETH = 8;
@@ -47,8 +48,6 @@ const AUTO_READ_CHOICES = AUTO_READS.map((when) => ({
   when,
   name: AUTO_READ_NAMES[when],
 }));
-
-const eq = (one: unknown, other: unknown): boolean => one === other;
 
 export default class SettingsMenu extends Component {
   @service declare harvestSwitch: HarvestSwitchService;

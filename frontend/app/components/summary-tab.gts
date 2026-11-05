@@ -13,10 +13,7 @@ import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 import type ThemeService from 'frontend/services/theme';
 import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
-
-function is(one: string, other: string): boolean {
-  return one === other;
-}
+import eq from 'frontend/helpers/eq';
 
 export default class SummaryTab extends Component {
   @service declare here: HereService;
@@ -118,9 +115,9 @@ export default class SummaryTab extends Component {
           data-pending={{if this.pressing.pressed "true"}}
           data-test-summary-strip
         >
-          {{#if (is this.tab.state "none-yet-reviewer")}}
+          {{#if (eq this.tab.state "none-yet-reviewer")}}
             <span>Waiting for its turn</span>
-          {{else if (is this.tab.state "none-yet-author")}}
+          {{else if (eq this.tab.state "none-yet-author")}}
             <span>No summary</span>
             <button
               type="button"
@@ -133,7 +130,7 @@ export default class SummaryTab extends Component {
                 this.pressing.doing
                 "Summarise"
               }}</button>
-          {{else if (is this.tab.state "running")}}
+          {{else if (eq this.tab.state "running")}}
             {{#if this.tab.markdown}}
               <span><code>{{this.tab.sha}}</code>
                 · finished
@@ -154,7 +151,7 @@ export default class SummaryTab extends Component {
                 {{/each}}
               </ol>
             {{/if}}
-          {{else if (is this.tab.state "needs-github-api")}}
+          {{else if (eq this.tab.state "needs-github-api")}}
             <span>{{this.tab.reason}}</span>
             <button
               type="button"
@@ -167,7 +164,7 @@ export default class SummaryTab extends Component {
                 this.pressing.doing
                 this.githubApi
               }}</button>
-          {{else if (is this.tab.state "failed")}}
+          {{else if (eq this.tab.state "failed")}}
             <span>{{exitWordOf this.tab.exitStatus}}
               ·
               {{this.tab.reason}}</span>
@@ -180,7 +177,7 @@ export default class SummaryTab extends Component {
                 {{on "click" this.run}}
               >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
             </span>
-          {{else if (is this.tab.state "stale")}}
+          {{else if (eq this.tab.state "stale")}}
             <span>Written for
               <code>{{this.tab.sha}}</code>, head is
               <code>{{this.tab.head}}</code>{{#if this.tab.behind}},

@@ -52,6 +52,7 @@ import navigates from 'frontend/modifiers/navigates';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import AssignReviewers from 'frontend/components/assign-reviewers';
 import type { AssignReviewersRequest } from 'frontend/data/api';
+import eq from 'frontend/helpers/eq';
 
 type Pane = 'notes' | 'agent';
 
@@ -70,8 +71,6 @@ const KEYED = [
 ] as const;
 
 const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
-
-const eq = (one: unknown, other: unknown): boolean => one === other;
 
 interface DashboardTabSignature {
   Args: { pane?: string | null; ready?: boolean };

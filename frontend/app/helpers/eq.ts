@@ -1,0 +1,3 @@
+export default function eq(one: unknown, other: unknown): boolean {
+  return one === other;
+}
