@@ -40,17 +40,6 @@ import eq from 'frontend/helpers/eq';
 
 const KEYED = ['hold', 'carry-on', 'mark-ready', 'dismiss', 'release'] as const;
 
-const FOLDABLE = 'parked';
-const PARKED_FOLDED = 'wall-parked-folded';
-
-function foldedBefore(): boolean {
-  try {
-    return localStorage.getItem(PARKED_FOLDED) === 'true';
-  } catch {
-    return false;
-  }
-}
-
 interface WallSignature {
   Args: { ready?: string | null };
 }
@@ -64,7 +53,6 @@ export default class Wall extends Component<WallSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
-  @tracked parkedFolded = foldedBefore();
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private lastAt = -1;
@@ -80,24 +68,17 @@ export default class Wall extends Component<WallSignature> {
   }
 
   get order(): WallRow[] {
-    return this.hub.sections.flatMap((section) => this.shownOf(section));
+    return this.hub.walked;
   }
 
-  foldable = (section: WallSection): boolean => section.group === FOLDABLE;
+  foldable = (section: WallSection): boolean => this.hub.foldable(section);
 
-  isFolded = (section: WallSection): boolean =>
-    this.foldable(section) && this.parkedFolded;
+  isFolded = (section: WallSection): boolean => this.hub.isFolded(section);
 
-  shownOf = (section: WallSection): WallRow[] =>
-    this.isFolded(section) ? [] : section.prs;
+  shownOf = (section: WallSection): WallRow[] => this.hub.shownOf(section);
 
   toggleParked = () => {
-    this.parkedFolded = !this.parkedFolded;
-    try {
-      localStorage.setItem(PARKED_FOLDED, String(this.parkedFolded));
-    } catch {
-      return;
-    }
+    this.hub.toggleParked();
   };
 
   get stale(): boolean {

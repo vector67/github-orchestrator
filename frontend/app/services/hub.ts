@@ -10,8 +10,19 @@ import {
 import type PollService from 'frontend/services/poll';
 import type ReachabilityService from 'frontend/services/reachability';
 import type StoreService from 'frontend/services/store';
-import type { PrEntity, WallSection } from 'frontend/services/store';
+import type { PrEntity, WallRow, WallSection } from 'frontend/services/store';
 import type { NewestRelease } from 'frontend/data/api';
+
+const FOLDABLE = 'parked';
+const PARKED_FOLDED = 'wall-parked-folded';
+
+function foldedBefore(): boolean {
+  try {
+    return localStorage.getItem(PARKED_FOLDED) === 'true';
+  } catch {
+    return false;
+  }
+}
 
 export default class HubService extends Service {
   @service('poll') declare loader: PollService;
@@ -19,6 +30,7 @@ export default class HubService extends Service {
   @service declare store: StoreService;
 
   @tracked selected: string | null = null;
+  @tracked parkedFolded = foldedBefore();
 
   get now(): number {
     return Math.max(this.loader.now, this.loader.hubAt);
@@ -51,6 +63,31 @@ export default class HubService extends Service {
 
   get sections(): WallSection[] {
     return this.store.wall;
+  }
+
+  foldable(section: WallSection): boolean {
+    return section.group === FOLDABLE;
+  }
+
+  isFolded(section: WallSection): boolean {
+    return this.foldable(section) && this.parkedFolded;
+  }
+
+  shownOf(section: WallSection): WallRow[] {
+    return this.isFolded(section) ? [] : section.prs;
+  }
+
+  get walked(): WallRow[] {
+    return this.sections.flatMap((section) => this.shownOf(section));
+  }
+
+  toggleParked(): void {
+    this.parkedFolded = !this.parkedFolded;
+    try {
+      localStorage.setItem(PARKED_FOLDED, String(this.parkedFolded));
+    } catch {
+      return;
+    }
   }
 
   get stale(): boolean {

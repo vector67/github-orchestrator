@@ -274,6 +274,17 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(selected(), ['o/r#8']);
   });
 
+  test('on a pull request ] skips the rows of a folded Parked section, as j does on the wall', async function (assert) {
+    onTheHub(heldPr(), parkedPr(9), heldPr({ number: 8 }));
+    await visit('/');
+    await click('[data-test-wall-group="parked"] [data-test-fold]');
+    await visit('/pr/o/r/8/dashboard');
+
+    await press(']');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/8/dashboard');
+  });
+
   test('a mention you have not answered needs you and names who, and answered ones wait on others', async function (assert) {
     onTheHub(
       heldPr({

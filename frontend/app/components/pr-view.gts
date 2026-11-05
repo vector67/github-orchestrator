@@ -132,7 +132,7 @@ export default class PrView extends Component<PrViewSignature> {
   }
 
   get order(): WallRow[] {
-    return this.hub.sections.flatMap((section) => section.prs);
+    return this.hub.walked;
   }
 
   openSwitcher = () => {
