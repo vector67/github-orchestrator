@@ -85,7 +85,7 @@ class Rebasing:
 
 @dataclass(frozen=True)
 class CarryingOn:
-    pass
+    yours: bool
 
 
 @dataclass(frozen=True)
@@ -336,8 +336,8 @@ class FakeAgentRuns:
     def rebase(self, worktree: str, pr: Pr, event_type: str, *, reason: str) -> FakeRun | str:
         return self._pr_run(worktree, pr, event_type, Rebasing(reason))
 
-    def carry_on(self, worktree: str, pr: Pr) -> FakeRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CarryingOn())
+    def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> FakeRun | str:
+        return self._pr_run(worktree, pr, CARRY_ON, CarryingOn(yours))
 
     def ran(self, pr: Pr | None, event: str, elapsed_seconds: float, ended_at: datetime,
             cost_usd: float | None = None, exit_code: int = 0) -> "FakeAgentRuns":

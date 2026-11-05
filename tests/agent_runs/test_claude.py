@@ -70,12 +70,53 @@ def test_a_run_is_claude_printing_stream_json_on_the_model(runs, claude, tmp_pat
 
 
 def test_a_continued_run_asks_claude_to_continue_with_a_prompt_on_stdin(runs, claude, tmp_path):
-    finish(runs.carry_on(str(tmp_path), THE_PR))
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=True))
 
     [spawned] = claude.spawned
     assert spawned.argv[-1] == "--continue"
     [prompt] = claude.prompts
     assert prompt
+
+
+USER_SETTINGS_ONLY = ["--setting-sources", "user"]
+
+
+def _loads_only_user_settings(argv):
+    at = argv.index("--setting-sources")
+    return argv[at:at + 2] == USER_SETTINGS_ONLY
+
+
+def test_a_review_loads_none_of_the_branch_s_project_settings(runs, claude, tmp_path):
+    finish(runs.review(str(tmp_path), THE_PR, "review-requested", title="Fix bug", url="",
+                       branch="fix", additions=1, deletions=1))
+
+    [spawned] = claude.spawned
+    assert _loads_only_user_settings(spawned.argv)
+
+
+def test_a_rereview_loads_none_of_the_branch_s_project_settings(runs, claude, tmp_path):
+    finish(runs.rereview(str(tmp_path), THE_PR, "review-requested", title="Fix bug", url="",
+                         branch="fix", verdict="commented", said=None, since=None,
+                         commits=None, replied=()))
+
+    [spawned] = claude.spawned
+    assert _loads_only_user_settings(spawned.argv)
+
+
+def test_carrying_on_on_someone_else_s_pr_loads_none_of_its_project_settings(
+        runs, claude, tmp_path):
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=False))
+
+    [spawned] = claude.spawned
+    assert _loads_only_user_settings(spawned.argv)
+    assert spawned.argv[-1] == "--continue"
+
+
+def test_carrying_on_on_your_own_pr_loads_its_project_settings(runs, claude, tmp_path):
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=True))
+
+    [spawned] = claude.spawned
+    assert "--setting-sources" not in spawned.argv
 
 
 WORK = "CLAUDE_CONFIG_DIR=~/.claude-work claude"

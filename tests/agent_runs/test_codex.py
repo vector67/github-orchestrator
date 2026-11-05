@@ -80,7 +80,7 @@ def test_carrying_on_resumes_the_thread_the_last_run_started(runs, world, codex,
     world.script(Outcome(events=A_TURN))
     finish(_start(runs, tmp_path))
 
-    finish(runs.carry_on(str(tmp_path), THE_PR))
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=True))
 
     assert codex.spawned[1].argv == ["codex", "exec", "--json", "--approve-for-me",
                                      "-m", MODEL, "resume", THREAD, "-"]
@@ -88,7 +88,7 @@ def test_carrying_on_resumes_the_thread_the_last_run_started(runs, world, codex,
 
 
 def test_carrying_on_with_no_thread_on_record_resumes_the_newest_session(runs, codex, tmp_path):
-    finish(runs.carry_on(str(tmp_path), THE_PR))
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=True))
 
     [spawned] = codex.spawned
     assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL,
@@ -217,7 +217,7 @@ def test_a_second_run_is_marked_where_the_first_ended(runs, world, tmp_path):
     world.script(Outcome(events=A_TURN), Outcome(events=A_TURN[:4]))
 
     finish(_start(runs, tmp_path))
-    finish(runs.carry_on(str(tmp_path), THE_PR))
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=True))
 
     tail = runs.transcript_tail(THE_PR, 4)
     assert tail == [("✓ done", False), ("", True), ("✻ thinking", False),

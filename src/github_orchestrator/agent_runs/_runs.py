@@ -319,10 +319,12 @@ class AgentRuns:
         return _repo_dir(self._transcripts_dir, pr.repo) / f"{pr.number}.running"
 
     def _start(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
-               continuing: bool = False, in_flight: Path | None = None) -> AgentRun | str:
+               project_settings: bool, continuing: bool = False,
+               in_flight: Path | None = None) -> AgentRun | str:
         thread = last_thread_in(self._transcript(pr)) if continuing else None
         argv = [*self._clamp, *self._command,
-                *self._lines.headless(self._model, carrying_on=continuing, thread=thread)]
+                *self._lines.headless(self._model, carrying_on=continuing, thread=thread,
+                                      project_settings=project_settings)]
 
         try:
             proc = self._popen(
@@ -366,9 +368,9 @@ class AgentRuns:
         )
 
     def _pr_run(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
-                continuing: bool = False) -> AgentRun | str:
-        run = self._start(worktree, pr, event_type, prompt, continuing=continuing,
-                          in_flight=self._in_flight(pr))
+                project_settings: bool, continuing: bool = False) -> AgentRun | str:
+        run = self._start(worktree, pr, event_type, prompt, project_settings=project_settings,
+                          continuing=continuing, in_flight=self._in_flight(pr))
         if not isinstance(run, str):
             self._pr_runs[pr] = run
         return run
@@ -376,26 +378,31 @@ class AgentRuns:
     def review(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                branch: str, additions: int, deletions: int) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, review_prompt(
-            self._commands, self._changes_file, pr, title, url, branch, additions, deletions))
+            self._commands, self._changes_file, pr, title, url, branch, additions, deletions),
+            project_settings=False)
 
     def rereview(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                  branch: str, verdict: str, said: FixComment | None, since: str | None,
                  commits: Sequence[str] | None, replied: Replied) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, rereview_prompt(
             self._commands, self._changes_file, pr, title, url, branch, verdict=verdict,
-            said=said, since=since, commits=commits, replied=replied))
+            said=said, since=since, commits=commits, replied=replied),
+            project_settings=False)
 
     def fix_check(self, worktree: str, pr: Pr, event_type: str, *, check: str,
                   summary: str | None, push: bool) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type,
                             fix_check_prompt(self._changes_file, pr, check, summary, push,
-                                             self._workers))
+                                             self._workers),
+                            project_settings=True)
 
     def rebase(self, worktree: str, pr: Pr, event_type: str, *, reason: str) -> AgentRun | str:
-        return self._pr_run(worktree, pr, event_type, rebase_prompt(pr, reason))
+        return self._pr_run(worktree, pr, event_type, rebase_prompt(pr, reason),
+                            project_settings=True)
 
-    def carry_on(self, worktree: str, pr: Pr) -> AgentRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, continuing=True)
+    def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> AgentRun | str:
+        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, project_settings=yours,
+                            continuing=True)
 
     def rebase_in_session(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split(pr, worktree, [*self._command, *self._lines.rebase_session()])
@@ -404,7 +411,8 @@ class AgentRuns:
         return self._pr_processes.split(pr, worktree, [*self._command, "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, prompt: str) -> AgentRun | str:
-        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt)
+        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
+                           project_settings=True)
 
     def fix(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, thread_prompt(self._commands, fix, self._workers))
@@ -420,7 +428,8 @@ class AgentRuns:
 
     def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
         return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}",
-                           carry_on_prompt(self._commands, fix), continuing=True)
+                           carry_on_prompt(self._commands, fix), project_settings=True,
+                           continuing=True)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,

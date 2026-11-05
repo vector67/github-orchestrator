@@ -270,8 +270,17 @@ def test_carry_on_from_the_board_starts_claude_continue_as_r_does(settings, tmp_
               lambda: seen.append(board.panel.dashboard().working_on), board=board,
               agent_runs=runs)
     [started] = runs.started
-    assert started.work == CarryingOn()
+    assert started.work == CarryingOn(yours=True)
     assert seen == ["manual-continue"]
+
+
+def test_carry_on_on_someone_else_s_pr_says_the_pr_is_not_yours(settings, tmp_path):
+    runs = _runs(Outcome(finishes=False))
+    board = ServerPanel()
+    _reviewer_of(settings, tmp_path, lambda: board.panel.carry_on(), None, board=board,
+                 agent_runs=runs)
+    [started] = runs.started
+    assert started.work == CarryingOn(yours=False)
 
 
 def test_carry_on_from_the_board_is_refused_with_rs_notice_when_claude_is_disabled(
@@ -324,7 +333,7 @@ def test_start_review_from_the_board_is_refused_while_claude_is_running(settings
     _reviewer_of(settings, tmp_path, lambda: board.panel.carry_on(),
                  lambda: answers.append(board.panel.start_review()), None, board=board,
                  agent_runs=runs)
-    assert [run.work for run in runs.started] == [CarryingOn()]
+    assert [run.work for run in runs.started] == [CarryingOn(yours=False)]
     assert answers == ["an agent is already running"]
 
 
@@ -341,7 +350,7 @@ def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manage
                  lambda: seen.append(board.panel.dashboard().notice), board=board,
                  agent_runs=runs)
     assert answers == [None, None]
-    assert [run.work for run in runs.started] == [CarryingOn()]
+    assert [run.work for run in runs.started] == [CarryingOn(yours=False)]
     assert seen == ["an agent is already running"]
 
 

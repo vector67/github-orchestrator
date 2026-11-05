@@ -56,7 +56,7 @@ def _replied(github: FakeGitHub, key: str, comment: ThreadComment) -> None:
 
 def _run_alive(here: World) -> None:
     here.agent_runs.script(Outcome(finishes=False))
-    here.agent_runs.carry_on(WORKTREE, THE_PR)
+    here.agent_runs.carry_on(WORKTREE, THE_PR, yours=True)
 
 
 @dataclass

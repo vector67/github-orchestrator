@@ -131,7 +131,9 @@ class ManagerCommands:
         config = self._config
         pr = config.pr
         log.info("carry on %s: carrying on the last agent run", pr)
-        started = self._pr_work.carry_on(config.worktree, pr)
+        facts = self._change_detection.facts(pr)
+        started = self._pr_work.carry_on(config.worktree, pr,
+                                         yours=facts is not None and facts.is_author is True)
         if isinstance(started, str):
             self.notify(started)
             return

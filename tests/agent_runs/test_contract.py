@@ -102,7 +102,7 @@ def test_a_run_is_started_in_the_working_copy(world):
 
 
 def test_a_run_carried_on_by_hand_is_a_manual_continue(world):
-    run = world.runs.carry_on(world.worktree, THE_PR)
+    run = world.runs.carry_on(world.worktree, THE_PR, yours=True)
     finish(run)
 
     assert world.started_in() == [world.worktree]
@@ -716,6 +716,6 @@ def test_the_run_carried_on_from_an_interruption_finishing_ends_the_interruption
     run.interrupt()
     restarted = world.restarted()
 
-    finish(restarted.carry_on(world.worktree, THE_PR))
+    finish(restarted.carry_on(world.worktree, THE_PR, yours=True))
 
     assert world.restarted().interrupted(THE_PR) is None

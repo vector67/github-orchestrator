@@ -48,7 +48,7 @@ def _after_an_interruption(runs):
 
 
 def _carried_on(runs):
-    return [started for started in runs.started if started.work == CarryingOn()]
+    return [started for started in runs.started if isinstance(started.work, CarryingOn)]
 
 
 def test_a_manager_carries_on_the_run_its_last_manager_was_interrupted_in(settings, tmp_path):

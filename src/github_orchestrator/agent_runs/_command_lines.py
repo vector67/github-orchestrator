@@ -8,7 +8,8 @@ READ_ONLY_TOOLS = "Read,Grep,Glob"
 
 
 class CommandLines(Protocol):
-    def headless(self, model: str, *, carrying_on: bool, thread: str | None) -> list[str]: ...
+    def headless(self, model: str, *, carrying_on: bool, thread: str | None,
+                 project_settings: bool) -> list[str]: ...
 
     def gist(self, model: str) -> list[str]: ...
 
@@ -26,9 +27,12 @@ def _without(key: str) -> dict[str, str]:
 
 
 class ClaudeCommandLines:
-    def headless(self, model: str, *, carrying_on: bool, thread: str | None) -> list[str]:
+    def headless(self, model: str, *, carrying_on: bool, thread: str | None,
+                 project_settings: bool) -> list[str]:
         argv = ["--print", "--output-format", "stream-json", "--verbose",
                 "--permission-mode", "auto", "--model", model]
+        if not project_settings:
+            argv += ["--setting-sources", "user"]
         return [*argv, "--continue"] if carrying_on else argv
 
     def gist(self, model: str) -> list[str]:
@@ -49,7 +53,8 @@ class ClaudeCommandLines:
 
 
 class CodexCommandLines:
-    def headless(self, model: str, *, carrying_on: bool, thread: str | None) -> list[str]:
+    def headless(self, model: str, *, carrying_on: bool, thread: str | None,
+                 project_settings: bool) -> list[str]:
         argv = ["exec", "--json", "--approve-for-me", "-m", model]
         if carrying_on:
             argv += ["resume", thread or "--last"]

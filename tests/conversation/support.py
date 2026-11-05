@@ -94,7 +94,7 @@ class World:
             place(the_pr, worktree)
         if pr_run_live:
             self.agent_runs.script(Outcome(finishes=False))
-            self.agent_runs.carry_on(worktree, the_pr)
+            self.agent_runs.carry_on(worktree, the_pr, yours=True)
         return self.conversation_managers.of(the_pr)
 
     def claude(self, enabled: bool) -> "World":
