@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
 
 from github_orchestrator.board_api._contract import (
     ErrorCode,
@@ -170,6 +171,13 @@ async def _unvalidated(request: Request, exc: Exception) -> Response:
     return refused(400, ErrorCode.MALFORMED_REQUEST, _sentence(exc))
 
 
+async def _unrouted(request: Request, exc: Exception) -> Response:
+    if not isinstance(exc, HTTPException):
+        raise exc
+    code = ErrorCode.NOT_FOUND if exc.status_code == 404 else ErrorCode.MALFORMED_REQUEST
+    return refused(exc.status_code, code, str(exc.detail), dict(exc.headers or {}))
+
+
 def add_refusal_handlers(app: FastAPI) -> None:
     """Answer every refusal as `Errors`, including the ones FastAPI raises.
 
@@ -178,3 +186,4 @@ def add_refusal_handlers(app: FastAPI) -> None:
     """
     app.add_exception_handler(Refusal, _refused)
     app.add_exception_handler(RequestValidationError, _unvalidated)
+    app.add_exception_handler(HTTPException, _unrouted)

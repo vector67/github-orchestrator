@@ -39,10 +39,10 @@ def blob(worktree: str, sha: str, path: str) -> bytes | None:
     the caller's refusal to make and a decode that throws inside the adapter
     would look like the commit being missing.
     """
-    if Sha.parse(sha) is None or not os.path.isdir(worktree):
+    if Sha.parse(sha) is None or not os.path.isdir(worktree) or "\0" in path:
         return None
     try:
-        shown = _git(worktree, "show", f"{sha}:{path}", "--end-of-options")
+        shown = _git(worktree, "cat-file", "blob", f"{sha}:{path}")
     except (OSError, subprocess.TimeoutExpired) as exc:
         log.warning("git show %s:%s in %s failed to run: %s", sha, path,
                     worktree, exc)

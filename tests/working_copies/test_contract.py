@@ -435,6 +435,17 @@ def test_a_base_that_changed_the_branchs_files_names_each_conflict(
     assert (standing.behind_by, standing.conflicts) == (1, ("g",))
 
 
+def test_a_conflict_in_a_file_named_beyond_ascii_is_named_as_written(
+        world, pr_worktree, pr_checkout):
+    world.commit(pr_worktree, {"café.md": "mine\n"}, "the branch writes café.md")
+    world.advance_main({"café.md": "theirs\n"}, "main writes café.md too")
+    pr_checkout.fetch("main")
+
+    standing = pr_checkout.base_standing("main")
+
+    assert standing is not None and standing.conflicts == ("café.md",)
+
+
 def test_a_base_with_no_worktree_has_no_standing(world):
     assert world.copies.checkout(THE_PR).base_standing("main") is None
 
@@ -986,3 +997,8 @@ def test_commits_and_files_are_found_only_where_they_are(cut, pr_checkout):
     assert pr_checkout.has_commit(Sha("0" * 40)) is False
     assert pr_checkout.blob(cut.base_sha, "g") == b"one\ntwo\nthree\n"
     assert pr_checkout.blob(cut.base_sha, "missing") is None
+
+
+@pytest.mark.parametrize("path", ["", "a\0b"], ids=["the-root-tree", "a-null-byte"])
+def test_a_path_naming_no_file_holds_nothing(cut, pr_checkout, path):
+    assert pr_checkout.blob(cut.base_sha, path) is None

@@ -264,6 +264,61 @@ module('Acceptance | reply', function (hooks) {
     assert.dom(BOX).hasValue(':thu');
   });
 
+  test('emojis the board could not list yet are asked for again when a box opens', async function (assert) {
+    board().emojis = {};
+    await visit('/pr/o/r/7/conversations/k1');
+    board().emojis = EMOJIS;
+    await click(OPEN);
+
+    await fillIn(BOX, ':tad');
+
+    assert.dom(OPTION).hasText('🎉 :tada:');
+  });
+
+  test('a colon and one letter offers nothing, so enter starts a new line', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, 'LGTM :t');
+
+    assert.dom(SUGGESTIONS).doesNotExist();
+  });
+
+  test('moving the caret away from the colon puts the offer away', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'nice :thu and more');
+    const field = document.querySelector<HTMLTextAreaElement>(BOX)!;
+    field.setSelectionRange(9, 9);
+    await triggerKeyEvent(BOX, 'keyup', 'ArrowLeft');
+
+    assert.dom(SUGGESTIONS).exists();
+
+    field.setSelectionRange(18, 18);
+    await triggerKeyEvent(BOX, 'keyup', 'End');
+
+    assert.dom(SUGGESTIONS).doesNotExist();
+  });
+
+  test('an emoji drawn as text by default is put in with its emoji form', async function (assert) {
+    board().emojis = {
+      heart: `${PICTURES}/unicode/2764.png?v8`,
+      hash: `${PICTURES}/unicode/0023-20e3.png?v8`,
+    };
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+
+    await fillIn(BOX, ':heart');
+    await triggerKeyEvent(BOX, 'keydown', 'Tab');
+    await fillIn(
+      BOX,
+      `${document.querySelector<HTMLTextAreaElement>(BOX)!.value} :hash`,
+    );
+    await triggerKeyEvent(BOX, 'keydown', 'Tab');
+
+    assert.dom(BOX).hasValue('❤️ #️⃣');
+  });
+
   test('a colon inside a word offers nothing', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     await click(OPEN);

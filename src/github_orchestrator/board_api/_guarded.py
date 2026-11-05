@@ -84,7 +84,7 @@ def _unguarded(request: Request, port: int) -> Response | None:
         return _refusal(403, ErrorCode.FOREIGN_ORIGIN,
                         "a write from another site's page is refused")
     declared = request.headers.get("Content-Length")
-    if declared is None:
+    if declared is None or "Transfer-Encoding" in request.headers:
         return _refusal(411, ErrorCode.MALFORMED_REQUEST,
                         "a write must name its length")
     try:
@@ -153,6 +153,8 @@ class _GuardedSockets:
                 await send({"type": "websocket.close", "code": POLICY_VIOLATION,
                             "reason": refused})
                 return
+        if scope["type"] == "http" and scope["method"] == "HEAD":
+            scope = {**scope, "method": "GET"}
         await self._app(scope, receive, send)
 
 

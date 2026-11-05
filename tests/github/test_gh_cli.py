@@ -554,6 +554,13 @@ def test_emojis_github_will_not_list_are_none(answer):
     assert real_github(gh=gh).emojis() == {}
 
 
+@pytest.mark.parametrize("answer", [["shipit"], {"shipit": 1}, Raw("<html>")])
+def test_emojis_github_lists_in_an_odd_shape_are_none(answer):
+    gh = ScriptedGh().answer("GET emojis", answer)
+
+    assert real_github(gh=gh).emojis() == {}
+
+
 @pytest.mark.parametrize("answer", [Failure("gh: Something went wrong (HTTP 502)"), Timeout()])
 def test_assignees_github_will_not_list_are_none(answer):
     gh = ScriptedGh().answer(f"GET repos/{REPO}/assignees?per_page=100", answer)

@@ -74,8 +74,12 @@ class GhCliGitHub:
 
     def emojis(self) -> dict[str, str]:
         try:
-            named: dict[str, str] = self._gh.api("emojis")
-        except (GhError, subprocess.TimeoutExpired):
+            named = self._gh.api("emojis")
+        except (GhError, subprocess.TimeoutExpired, ValueError):
+            return {}
+        if not isinstance(named, dict):
+            return {}
+        if not all(isinstance(name, str) and isinstance(picture, str) for name, picture in named.items()):
             return {}
         return named
 

@@ -1247,16 +1247,27 @@ class CommandsAndStatus:
 
 
 class FetchedEmojis:
-    def __init__(self, listed: Callable[[], dict[str, str]]) -> None:
+    def __init__(self, listed: Callable[[], dict[str, str]], waited: float = 5.0) -> None:
+        self._listed = listed
+        self._waited = waited
         self._named: dict[str, str] = {}
-        self._fetching = threading.Thread(target=self._fetch, args=(listed,), daemon=True)
-        self._fetching.start()
+        self._lock = threading.Lock()
+        self._fetching = self._fetched()
 
-    def _fetch(self, listed: Callable[[], dict[str, str]]) -> None:
-        self._named = listed()
+    def _fetched(self) -> threading.Thread:
+        fetching = threading.Thread(target=self._fetch, daemon=True)
+        fetching.start()
+        return fetching
+
+    def _fetch(self) -> None:
+        self._named = self._listed()
 
     def named(self) -> dict[str, str]:
-        self._fetching.join()
+        with self._lock:
+            if not self._named and not self._fetching.is_alive():
+                self._fetching = self._fetched()
+            fetching = self._fetching
+        fetching.join(self._waited)
         return self._named
 
 

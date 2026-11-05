@@ -7,7 +7,7 @@ import { peopleNamed } from 'frontend/data/mention';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
 
-const EMOJI_TYPED = /(?:^|\s):([\w+-]+)$/;
+const EMOJI_TYPED = /(?:^|\s):([\w+-]{2,})$/;
 
 const PERSON_TYPED = /(?:^|\s)@([\w-]*)$/;
 
@@ -199,13 +199,25 @@ function completing(field: HTMLTextAreaElement, sources: Sources): () => void {
     event.stopImmediatePropagation();
   };
 
+  const moved = () => {
+    const still =
+      typed &&
+      field.selectionStart === typed.end &&
+      field.selectionEnd === typed.end;
+    if (!still) look();
+  };
+
   field.addEventListener('input', look);
   field.addEventListener('keydown', press, { capture: true });
+  field.addEventListener('keyup', moved);
+  field.addEventListener('click', moved);
   field.addEventListener('blur', close);
   return () => {
     close();
     field.removeEventListener('input', look);
     field.removeEventListener('keydown', press, { capture: true });
+    field.removeEventListener('keyup', moved);
+    field.removeEventListener('click', moved);
     field.removeEventListener('blur', close);
   };
 }
@@ -225,6 +237,7 @@ export default class Autocomplete extends Modifier<AutocompleteSignature> {
     this.completing = true;
     const pr = this.here.at;
     if (this.here.pr) this.store.readMentionable(pr);
+    if (!this.store.emojis.length) void this.store.readEmojis();
     registerDestructor(
       this,
       completing(field, {

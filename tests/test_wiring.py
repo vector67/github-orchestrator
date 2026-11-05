@@ -105,6 +105,28 @@ def test_the_emojis_are_the_ones_github_listed():
     assert FetchedEmojis(lambda: {"shipit": SHIPIT}).named() == {"shipit": SHIPIT}
 
 
+def test_emojis_github_would_not_list_are_asked_for_again_on_the_next_read():
+    answers = [{}, {"shipit": SHIPIT}]
+    emojis = FetchedEmojis(lambda: answers.pop(0) if answers else {"shipit": SHIPIT})
+
+    emojis.named()
+
+    assert emojis.named() == {"shipit": SHIPIT}
+
+
+def test_a_slow_github_leaves_the_emojis_empty_rather_than_holding_the_read():
+    answered = threading.Event()
+
+    def listed():
+        answered.wait(5)
+        return {"shipit": SHIPIT}
+
+    emojis = FetchedEmojis(listed, waited=0.01)
+
+    assert emojis.named() == {}
+    answered.set()
+
+
 def test_the_mentionable_are_asked_of_github_once_for_each_repo():
     asked: list[Repo] = []
 

@@ -306,13 +306,14 @@ class GitWorkingCopies:
         try:
             counted = _threads.run_git(worktree, "rev-list", "--count", f"HEAD..{base}")
             merged = _threads.run_git(worktree, "merge-tree", "--write-tree", "--name-only",
-                                      "--no-messages", "HEAD", base)
+                                      "--no-messages", "-z", "HEAD", base)
             fetch_head = _threads.run_git(worktree, "rev-parse", "--git-path", "FETCH_HEAD")
         except (OSError, subprocess.TimeoutExpired):
             return None
         if counted.returncode != 0 or merged.returncode not in (0, 1):
             return None
-        conflicts = tuple(merged.stdout.splitlines()[1:]) if merged.returncode == 1 else ()
+        conflicts = (tuple(name for name in merged.stdout.split("\0")[1:] if name)
+                     if merged.returncode == 1 else ())
         return BaseStanding(behind_by=int(counted.stdout.strip()), conflicts=conflicts,
                             fetched_at=_modified_at(Path(worktree), fetch_head))
 

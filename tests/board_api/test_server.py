@@ -86,6 +86,14 @@ def test_a_post_whose_length_is_not_a_number_is_refused(started):
     assert b"400" in _raw_post(started.queued(), [("Content-Length", "lots")])
 
 
+def test_a_post_sent_in_chunks_is_refused_whatever_length_it_names(started):
+    status = _raw_post(started.queued(),
+                       [("Content-Length", "3"), ("Transfer-Encoding", "chunked")],
+                       b"3\r\n{}\n\r\n0\r\n\r\n")
+
+    assert b"411" in status
+
+
 def test_the_app_route_climbs_out_of_no_directory(tmp_path, started):
     (tmp_path / "secret.txt").write_text("not yours")
 

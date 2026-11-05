@@ -8,7 +8,11 @@ import {
   visit,
   waitFor,
 } from '@ember/test-helpers';
-import { heldPr, setupFakeBoard } from 'frontend/tests/helpers/fake-board';
+import {
+  heldPr,
+  runLedger,
+  setupFakeBoard,
+} from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 import {
   choice,
@@ -80,6 +84,23 @@ module('Acceptance | setup', function (hooks) {
     await clock().tick(RESTART);
     await clock().tick(RESTART);
   }
+
+  test('the top bar’s poll age moves on when the setup page is the first one loaded', async function (assert) {
+    watchingTwo();
+    const polled = new Date(2026, 8, 28, 14, 32, 5).getTime();
+    board().ledger = runLedger({
+      watcher: {
+        polled_at: new Date(polled).toISOString(),
+        next_poll_at: new Date(polled + 60_000).toISOString(),
+      },
+    });
+    clock().now = polled + 19_000;
+    await visit('/setup');
+
+    await clock().tick(1000);
+
+    assert.dom('[data-test-health="poll"]').hasText('polled 14:32:05, 20s ago');
+  });
 
   test("a hub in setup opens on the setup page with gh's account filled in and its pushable repos listed at once", async function (assert) {
     inSetup();

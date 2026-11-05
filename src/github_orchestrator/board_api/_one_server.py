@@ -39,7 +39,15 @@ from github_orchestrator.working_copies import WorkingCopies
 TERMINAL_THREADS = 64
 ROUTING_THREADS = 8
 
-_BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]+)/api/")
+_BOARD_PATH = re.compile(r"^/pr/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/([0-9]{1,18})/api/")
+
+
+def _pr_at(found: re.Match[str]) -> Pr | None:
+    owner, name, number = found.groups()
+    try:
+        return Pr(Repo(owner, name), int(number))
+    except ValueError:
+        return None
 
 
 class _Boards:
@@ -69,9 +77,8 @@ class _Routed:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         found = _BOARD_PATH.match(scope["path"]) if scope["type"] in ("http", "websocket") else None
-        if found is not None:
-            owner, name, number = found.groups()
-            pr = Pr(Repo(owner, name), int(number))
+        pr = _pr_at(found) if found is not None else None
+        if pr is not None:
             board = await anyio.to_thread.run_sync(self._boards.of, pr,
                                                    limiter=self._boards.routing)
             if board is not None:

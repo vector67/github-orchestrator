@@ -1848,6 +1848,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -2307,6 +2308,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -2708,6 +2710,7 @@
      ]
     },
     "key": {
+     "maxLength": 128,
      "pattern": "^[A-Za-z0-9_-]+$",
      "type": "string"
     },
@@ -2805,6 +2808,7 @@
     },
     "unreadable": {
      "items": {
+      "maxLength": 128,
       "pattern": "^[A-Za-z0-9_-]+$",
       "type": "string"
      },
@@ -3191,6 +3195,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -3539,6 +3544,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -3635,6 +3641,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -3994,6 +4001,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -4147,6 +4155,7 @@
    "properties": {
     "asked": {
      "items": {
+      "maxLength": 128,
       "pattern": "^[A-Za-z0-9_-]+$",
       "type": "string"
      },
@@ -4206,6 +4215,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -5293,6 +5303,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -5441,6 +5452,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -5915,6 +5927,7 @@
      ]
     },
     "conversation": {
+     "maxLength": 128,
      "pattern": "^[A-Za-z0-9_-]+$",
      "type": "string"
     },
@@ -6483,6 +6496,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -6669,6 +6683,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -6679,6 +6694,7 @@
     },
     "drafts": {
      "items": {
+      "maxLength": 128,
       "pattern": "^[A-Za-z0-9_-]+$",
       "type": "string"
      },
@@ -6925,6 +6941,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -7388,6 +7405,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -7489,6 +7507,7 @@
   "SkippedFixCheck": {
    "properties": {
     "key": {
+     "maxLength": 128,
      "pattern": "^[A-Za-z0-9_-]+$",
      "type": "string"
     },
@@ -7561,6 +7580,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },
@@ -7748,6 +7768,7 @@
      "$ref": "#/components/schemas/AuthorKind"
     },
     "key": {
+     "maxLength": 128,
      "pattern": "^[A-Za-z0-9_-]+$",
      "type": "string"
     },
@@ -7816,6 +7837,7 @@
     "conversation": {
      "anyOf": [
       {
+       "maxLength": 128,
        "pattern": "^[A-Za-z0-9_-]+$",
        "type": "string"
       },

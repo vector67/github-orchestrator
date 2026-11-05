@@ -160,8 +160,32 @@ def test_a_key_in_a_path_is_the_key_the_bodies_carry(contract):
     assert asked["schema"]["pattern"] == answered["pattern"]
 
 
-def test_a_key_the_board_could_never_have_minted_is_malformed():
-    answer = client_for().get("/api/conversations/not.a.key")
+@pytest.mark.parametrize("body", [b'{"body": "\xff"}', b"[" * 100_000],
+                         ids=["not-utf-8", "nested-too-deep"])
+def test_a_body_that_will_not_parse_is_refused_in_the_contracts_error_shape(body):
+    answer = client_for().post("/api/conversations/k1/operations:reply", content=body,
+                               headers={"Content-Type": "application/json", "If-Match": "x"})
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == ErrorCode.MALFORMED_REQUEST
+
+
+def test_a_method_a_path_does_not_take_is_refused_in_the_contracts_error_shape():
+    answer = client_for().put("/api/pull-request", content=b"{}")
+
+    assert answer.status_code == 405
+    assert answer.json()["errors"][0]["status"] == 405
+
+
+def test_a_head_is_answered_as_its_get_is():
+    client = client_for()
+
+    assert client.head("/api/pull-request").status_code == client.get("/api/pull-request").status_code == 200
+
+
+@pytest.mark.parametrize("key", ["not.a.key", "k" * 256])
+def test_a_key_the_board_could_never_have_minted_is_malformed(key):
+    answer = client_for().get(f"/api/conversations/{key}")
 
     assert answer.status_code == 400
     assert answer.json()["errors"][0]["code"] == ErrorCode.MALFORMED_REQUEST

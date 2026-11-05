@@ -83,6 +83,13 @@ STARTED = {"description": "Taken. Poll the operation at `Location`.",
            "headers": {"Location": {"schema": {"type": "string", "format": "uri-reference"}}}}
 
 
+def _repo(owner: str, name: str) -> Repo:
+    try:
+        return Repo(owner, name)
+    except ValueError as invalid:
+        raise Refusal(400, ErrorCode.MALFORMED_REQUEST, str(invalid)) from invalid
+
+
 def _revision(read: SetupRead) -> str:
     return etag.etag_of(json.dumps({
         "state": read.state, "config_path": read.config_path, "problem": read.problem,
@@ -153,7 +160,7 @@ def list_repos(login: LoginParameter, desk: Desk) -> SetupRepoChoices:
            operation_id="readSetupRepo", responses={404: UNSEEN},
            summary="One repo typed by name, as the login sees it.")
 def read_repo(owner: Owner, name: Name, login: Login, desk: Desk) -> SetupRepoChoice:
-    found = desk.repo(login, Repo(owner, name))
+    found = desk.repo(login, _repo(owner, name))
     if isinstance(found, str):
         raise Refusal(404, ErrorCode.REPO_NOT_VISIBLE, found)
     return _choice_of(found)
@@ -163,7 +170,7 @@ def read_repo(owner: Owner, name: Name, login: Login, desk: Desk) -> SetupRepoCh
            operation_id="readSetupClone",
            summary="Where the repo's clone is or would go, and whether one is there.")
 def read_clone(owner: Owner, name: Name, desk: Desk) -> SetupClone:
-    spot = desk.clone(Repo(owner, name))
+    spot = desk.clone(_repo(owner, name))
     return SetupClone(repo=str(spot.repo), path=spot.path, exists=spot.exists,
                       is_clone=spot.is_clone)
 

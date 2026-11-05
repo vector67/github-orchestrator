@@ -624,11 +624,9 @@ function rebaseOf(pr: PrEntity): OutstandingItem[] {
   if (!facts || !behindMain(facts)) return [];
   const base = pr.drawn?.system.base ?? null;
   const onto = pr.base_branch ?? 'the base';
-  const standing = base
-    ? `${base.behind_by} commits behind`
-    : facts.merge_state === 'conflicts'
-      ? 'conflicts'
-      : 'behind';
+  const standing =
+    behindOf(base?.behind_by ?? null) ??
+    (facts.merge_state === 'conflicts' ? 'conflicts' : 'behind');
   return [
     { key: 'base', where: onto, what: standing },
     ...(base?.conflicts ?? []).map((path) => ({
@@ -725,7 +723,12 @@ function outstandingFrom(
     .map((kind) => ({
       kind,
       label: OUTSTANDING_LABELS[kind],
-      count: kind === 'unresolved' ? unresolved.count : items[kind].length,
+      count:
+        kind === 'unresolved'
+          ? unresolved.count
+          : kind === 'rebase'
+            ? 1
+            : items[kind].length,
       items: items[kind],
     }));
   return {

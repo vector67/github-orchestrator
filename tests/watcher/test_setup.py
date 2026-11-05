@@ -238,6 +238,16 @@ def test_a_clone_is_suggested_under_the_repositories_folder_until_one_is_there(w
     assert (a_clone["exists"], a_clone["is_clone"]) == (True, True)
 
 
+@pytest.mark.parametrize("path", ["/api/setup/clones/%2e%2e/x", "/api/setup/repos/%2e%2e/x"])
+def test_a_repo_named_by_a_dot_segment_is_refused_as_malformed(world, path):
+    serve(world)
+
+    answer = world.web.get(path, params={"login": ME})
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
+
+
 def test_a_watched_repo_s_clone_is_where_the_config_says(world):
     serve(world, 'gh_account = "octocat"\n\n[[repos]]\nrepo = "acme/widgets"\n'
                  'local_path = "/src/widgets"\n', state=HubState.WATCHING)

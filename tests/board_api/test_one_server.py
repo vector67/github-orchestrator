@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 from github_orchestrator.board_api.interface import NOTHING_HELD
 from tests.board_api.support import SERVER_PID, THE_PR, one_server
 from tests.builders import a_pr
@@ -20,6 +22,18 @@ def test_a_pr_the_watcher_does_not_hold_is_not_found():
 
     assert answer.status_code == 404
     assert answer.json()["errors"][0]["code"] == "not-found"
+
+
+@pytest.mark.parametrize(("path", "status", "code"), [
+    ("/pr/acme/%2e%2e/54/api/pull-request", 404, "not-found"),
+    (f"/pr/acme/widgets/{'9' * 5000}/api/pull-request", 400, "malformed-request"),
+], ids=["dot-segment", "huge-number"])
+def test_a_pr_path_naming_no_pr_is_refused_through_the_guard(path, status, code):
+    answer = one_server(THE_PR).client.get(path)
+
+    assert answer.status_code == status
+    assert answer.json()["errors"][0]["code"] == code
+    assert answer.headers["X-Frame-Options"] == "DENY"
 
 
 def test_a_pr_read_is_refused_as_starting_until_the_watcher_says_what_it_holds():

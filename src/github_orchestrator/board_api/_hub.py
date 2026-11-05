@@ -282,8 +282,16 @@ def read_contract(request: Request) -> Response:
     return JSONResponse(document)
 
 
+def _no_such_pr(owner: str, name: str, number: int) -> Refusal:
+    return Refusal(404, ErrorCode.NOT_FOUND,
+                   f"the watcher holds no pull request {owner}/{name}#{number}")
+
+
 def _held(desk: Desk, owner: str, name: str, number: int) -> Pr:
-    pr = Pr(Repo(owner, name), number)
+    try:
+        pr = Pr(Repo(owner, name), number)
+    except ValueError as invalid:
+        raise _no_such_pr(owner, name, number) from invalid
     if pr not in desk.told.held().managers:
         raise Refusal(404, ErrorCode.NOT_FOUND,
                       f"the watcher holds no pull request {pr}")
@@ -342,14 +350,13 @@ def read_nothing(unknown: str) -> Response:
 def refuse_unheld(owner: Owner, name: Name, number: int, path: str, desk: Serving) -> Response:
     if not desk.told.held().told or not desk.migration.migrated():
         raise _unheld(desk)
-    raise Refusal(404, ErrorCode.NOT_FOUND,
-                  f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")
+    raise _no_such_pr(owner, name, number)
 
 
 async def hang_up_unheld(websocket: WebSocket, owner: Owner, name: Name, number: int,
                          path: str) -> None:
     await websocket.accept()
-    await websocket.close(GONE, f"the watcher holds no pull request {Pr(Repo(owner, name), number)}")
+    await websocket.close(GONE, f"the watcher holds no pull request {owner}/{name}#{number}")
 
 
 unheld = APIRouter(tags=["hub"])

@@ -188,7 +188,7 @@ def side_of(word: DiffSide) -> Side:
 
 Sha = Annotated[str, StringConstraints(pattern="^[0-9a-f]{7,40}$")]
 
-ThreadKey = Annotated[str, StringConstraints(pattern="^[A-Za-z0-9_-]+$")]
+ThreadKey = Annotated[str, StringConstraints(pattern="^[A-Za-z0-9_-]+$", max_length=128)]
 
 WakeCondition = Annotated[
     str, StringConstraints(pattern="^(manual|reply|ci|push|pr:[0-9]+)$"),

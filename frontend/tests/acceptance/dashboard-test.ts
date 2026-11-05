@@ -1548,11 +1548,11 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert
       .dom('[data-test-ready-confirm]')
-      .containsText('You have 7 outstanding items.');
+      .containsText('You have 6 outstanding items.');
     assert.deepEqual(texts('[data-test-outstanding] summary'), [
       '1 Unsent draft comments',
       '1 Failing CI',
-      '2 Needs a rebase',
+      '1 Needs a rebase',
       '2 Unpushed commits',
       '1 Agent still working',
     ]);
@@ -1561,6 +1561,41 @@ module('Acceptance | dashboard', function (hooks) {
       [true, false, false, false, false],
     );
     assert.dom('[data-test-ready-option]').hasText('Mark ready anyway y');
+  });
+
+  test('the ready question counts a rebase once however many files conflict, and says one commit in the singular', async function (assert) {
+    onTheHub({
+      facts: { draft: true, merge_state: 'conflicts' },
+      system: {
+        base: { behind_by: 1, conflicts: ['a.py', 'b.py'], fetched_at: null },
+      },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert.deepEqual(texts('[data-test-outstanding] summary'), [
+      '1 Needs a rebase',
+    ]);
+    assert
+      .dom('[data-test-outstanding-item="base"] .outstanding-what')
+      .hasText('1 commit behind');
+  });
+
+  test('the ready question says a base it has counted no commits behind conflicts', async function (assert) {
+    onTheHub({
+      facts: { draft: true, merge_state: 'conflicts' },
+      system: {
+        base: { behind_by: 0, conflicts: ['a.py'], fetched_at: null },
+      },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom('[data-test-outstanding-item="base"] .outstanding-what')
+      .hasText('conflicts');
   });
 
   test("only a board thread's file and line in the ready question link to it", async function (assert) {
