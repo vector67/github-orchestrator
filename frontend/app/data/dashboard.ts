@@ -10,6 +10,7 @@ import type {
 import { tildeOf } from 'frontend/data/address';
 import { countsOf as groupCountsOf, READY_GROUP } from 'frontend/data/groups';
 import type {
+  AtWork,
   Move,
   NextMove,
   Summaries,
@@ -488,7 +489,7 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
     case 'agent-running':
       return runningOf(shown.drawn.system);
     case 'agent-on-threads': {
-      const queued = shown.drawn.system.threads.queued;
+      const queued = summaries.atWork.queued;
       return queued
         ? `${queued} more queued`
         : 'its fixes come to the board for you to decide';
@@ -659,16 +660,17 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
       ci === 'failing' ? 'alarm' : ci === 'passing' ? 'quiet' : '',
     ),
   );
-  if (status.mergeable === null)
+  const merge = facts.merge_state;
+  if (merge === null || merge === 'unknown')
     rows.push(row('mergeable', 'Mergeable', 'not known yet', 'quiet'));
-  else if (status.mergeable)
+  else if (merge !== 'conflicts' && merge !== 'behind')
     rows.push(row('mergeable', 'Mergeable', 'yes', 'quiet'));
   else if (agentRebasing(shown))
     rows.push(row('mergeable', 'Mergeable', 'no, agent rebasing'));
   else
     rows.push({
       ...row('mergeable', 'Mergeable', 'no', 'alarm'),
-      rebase: status.needs_rebase,
+      rebase: true,
     });
   const decision = facts.review_decision;
   rows.push(
@@ -719,18 +721,17 @@ function agentLine(system: DashboardSystem, now: number): string {
   return `idle, last ${runNameOf(last.event)} ended ${ago} ago, ${exitWordOf(last.exit_code)}`;
 }
 
-function threadsLine(shown: ShownPr): string {
-  const { queued, live, proposed } = shown.drawn.system.threads;
-  return `${queued} queued, ${live} working, ${proposed} ready`;
+function threadsLine({ queued, working, ready }: AtWork): string {
+  return `${queued} queued, ${working} working, ${ready} ready`;
 }
 
-function systemRows(shown: ShownPr, now: number): Row[] {
+function systemRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
   const system = shown.drawn.system;
   const queued = system.queue.length;
   const rows = [
     row('agent', system.agent.name, agentLine(system, now)),
     row('queue', 'Queue', queued ? `${queued} pending` : 'empty'),
-    row('threads', 'Threads', threadsLine(shown)),
+    row('threads', 'Threads', threadsLine(summaries.atWork)),
   ];
   const ahead = system.unpushed_commits?.length ?? null;
   if (ahead !== null) {
@@ -1253,7 +1254,7 @@ export function dashboardOf(
     unpolled: shown.drawn.polled ? null : FIRST_POLL,
     notice: shown.drawn.notice,
     status: shown.drawn.polled ? statusRows(shown, summaries, now) : [],
-    system: systemRows(shown, now),
+    system: systemRows(shown, summaries, now),
     since: frozen ? null : since,
     rebaseIsNext: rebaseIsNext(shown, next),
     draft: next.flags.includes('draft'),

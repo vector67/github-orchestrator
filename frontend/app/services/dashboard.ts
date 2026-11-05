@@ -11,10 +11,6 @@ export default class DashboardService extends Service {
   @service declare poll: PollService;
   @service declare store: StoreService;
 
-  get now(): number {
-    return this.poll.now;
-  }
-
   get isLive(): boolean {
     const { streams, streamed } = this.poll.board;
     return streams?.dashboard.state === 'open' && streamed;

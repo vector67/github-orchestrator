@@ -15,8 +15,8 @@ import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil } from 'frontend/data/api';
-import { ageOf, dashboardOf, type Reading } from 'frontend/data/dashboard';
-import { failingOf, keyOf, pageOf } from 'frontend/data/wall';
+import { ageOf, type Reading } from 'frontend/data/dashboard';
+import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 import type {
@@ -109,13 +109,7 @@ export default class Wall extends Component<WallSignature> {
     return this.order.find((pr) => keyOf(pr) === this.hub.selected);
   }
 
-  readingOf = (pr: WallRow): Reading =>
-    dashboardOf(
-      pr,
-      pr.summaries,
-      this.hub.now,
-      failingOf(pr, this.store.ledger?.runs ?? []),
-    );
+  readingOf = (pr: WallRow): Reading => this.store.rowReading(pr, this.hub.now);
 
   get tabTitle(): string {
     const count = this.store.needYou;

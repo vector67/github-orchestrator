@@ -5,8 +5,8 @@ import { pulses } from 'frontend/motion';
 import { fn } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
 import StateChip from 'frontend/components/state-chip';
-import { dashboardOf, type Reading } from 'frontend/data/dashboard';
-import { failingOf, keyOf, pageOf, type Numbered } from 'frontend/data/wall';
+import type { Reading } from 'frontend/data/dashboard';
+import { keyOf, pageOf, type Numbered } from 'frontend/data/wall';
 import navigates from 'frontend/modifiers/navigates';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -27,13 +27,7 @@ export default class Switcher extends Component<SwitcherSignature> {
 
   isCurrent = (pr: WallRow): boolean => keyOf(pr) === keyOf(this.args.current);
 
-  readingOf = (pr: WallRow): Reading =>
-    dashboardOf(
-      pr,
-      pr.summaries,
-      this.hub.now,
-      failingOf(pr, this.store.ledger?.runs ?? []),
-    );
+  readingOf = (pr: WallRow): Reading => this.store.rowReading(pr, this.hub.now);
 
   <template>
     <button

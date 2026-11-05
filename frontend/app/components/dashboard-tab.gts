@@ -14,7 +14,6 @@ import PendingRing from 'frontend/components/pending-ring';
 import RebaseButton from 'frontend/components/rebase-button';
 import {
   clockOf,
-  dashboardOf,
   notLiveOf,
   standingOf,
   threadsWaitingOf,
@@ -123,10 +122,6 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.keys.drop(this.palette.keymap);
   }
 
-  get now(): number {
-    return Math.max(this.dashboard.now, this.hub.now);
-  }
-
   get number(): number | null {
     return this.here.pr?.number ?? null;
   }
@@ -139,8 +134,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   get reading(): Reading | null {
     const shown = this.dashboard.shown;
-    const summaries = this.summaries;
-    return shown && summaries ? dashboardOf(shown, summaries, this.now) : null;
+    return shown ? this.store.reading(shown, this.hub.now) : null;
   }
 
   get threadsWaiting(): string | null {

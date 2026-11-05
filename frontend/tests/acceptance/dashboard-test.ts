@@ -18,6 +18,7 @@ import {
   heldPr,
   setupFakeBoard,
   thread,
+  threadRow,
   unpushed,
   waitingEvents,
   type DashboardOver,
@@ -182,9 +183,12 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('the status block marks what is wrong and words the rest', async function (assert) {
     onTheHub({
-      facts: { ci_status: 'failing', review_decision: 'changes-requested' },
+      facts: {
+        ci_status: 'failing',
+        review_decision: 'changes-requested',
+        merge_state: 'conflicts',
+      },
       status: {
-        mergeable: false,
         last_event_at: ago(3 * 3600),
         review_ready_at: ago(2 * 86400),
       },
@@ -214,7 +218,7 @@ module('Acceptance | dashboard', function (hooks) {
   });
 
   test('a mergeability GitHub has not decided reads as not known, with no alarm', async function (assert) {
-    onTheHub({ status: { mergeable: null } });
+    onTheHub({ facts: { merge_state: 'unknown' } });
 
     await visit('/pr/o/r/7/dashboard');
 
@@ -226,9 +230,25 @@ module('Acceptance | dashboard', function (hooks) {
       .doesNotExist();
   });
 
+  test('a branch behind its base reads as not mergeable, beside the move that says so', async function (assert) {
+    onTheHub({
+      facts: factsFor('rebase', { merge_state: 'behind' }),
+      status: { mergeable: true, needs_rebase: false },
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-value]')
+      .hasText('no');
+    assert.dom('[data-test-status="mergeable"] [data-test-alarm]').exists();
+    assert.dom('[data-test-status="mergeable"] [data-test-rebase]').exists();
+  });
+
   test('a conflict the agent is rebasing away reads as handled, and no reviewer reads as not assigned', async function (assert) {
     onTheHub({
-      status: { mergeable: false, detailed_reviewer: null },
+      facts: { merge_state: 'conflicts' },
+      status: { detailed_reviewer: null },
       system: { agent: { ...WORKING, event: 'became-unmergeable' } },
     });
 
@@ -285,11 +305,20 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('the system block says what Claude is doing, the queue, the threads and what is unpushed', async function (assert) {
     onTheHub({
+      threads: [
+        threadRow('q1', 'queued', 'open', 'human'),
+        threadRow('w1', 'working', 'open', 'human'),
+        threadRow('w2', 'in-session', 'open', 'bot'),
+        threadRow('r1', 'ready', 'open', 'human'),
+        threadRow('r2', 'ready', 'open', 'human'),
+        threadRow('r3', 'ready', 'open', 'bot'),
+        threadRow('d1', 'done', 'open', 'human'),
+      ],
       system: {
         agent: WORKING,
         queue: waitingEvents(10),
         unpushed_commits: unpushed(2),
-        threads: { queued: 1, live: 2, proposed: 3, drafts: 0 },
+        threads: { queued: 7, live: 7, proposed: 7, drafts: 0 },
       },
     });
 

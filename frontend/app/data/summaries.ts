@@ -90,6 +90,12 @@ export interface Tally {
   agentOn: number;
 }
 
+export interface AtWork {
+  queued: number;
+  working: number;
+  ready: number;
+}
+
 export interface Yours {
   answered: number;
   total: number;
@@ -121,6 +127,7 @@ export interface Summaries {
   yours: Yours;
   human: Tally;
   bot: Tally;
+  atWork: AtWork;
   move: NextMove;
   mismatches: string | null;
   openMentions: string[];
@@ -219,6 +226,15 @@ function tallyOf(threads: Thread[]): Tally {
     total: threads.length,
     toDecide: threads.filter((one) => one.state === 'ready').length,
     agentOn: threads.filter(atWork).length,
+  };
+}
+
+function atWorkOf(threads: Thread[]): AtWork {
+  const queued = threads.filter((one) => one.state === 'queued').length;
+  return {
+    queued,
+    working: threads.filter(atWork).length - queued,
+    ready: threads.filter((one) => one.state === 'ready').length,
   };
 }
 
@@ -478,6 +494,7 @@ function summarised(
     },
     human,
     bot,
+    atWork: atWorkOf(all),
     move: nextMoveOf(facts, {
       flags: pr?.flags ?? null,
       isAuthor: role === 'author',

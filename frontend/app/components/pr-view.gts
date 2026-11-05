@@ -12,14 +12,13 @@ import MentionsCounter from 'frontend/components/mentions-counter';
 import SettingsMenu from 'frontend/components/settings-menu';
 import Switcher from 'frontend/components/switcher';
 import {
-  dashboardOf,
   threadsWaitingOf,
   type Chip,
   type Reading,
 } from 'frontend/data/dashboard';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
-import { failingOf, keyOf, pageOf, type Numbered } from 'frontend/data/wall';
+import { keyOf, pageOf, type Numbered } from 'frontend/data/wall';
 import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
@@ -71,15 +70,8 @@ export default class PrView extends Component<PrViewSignature> {
   }
 
   get reading(): Reading | null {
-    const { shown, summaries } = this;
-    return shown && summaries
-      ? dashboardOf(
-          shown,
-          summaries,
-          this.hub.now,
-          failingOf(shown, this.store.ledger?.runs ?? []),
-        )
-      : null;
+    const shown = this.shown;
+    return shown ? this.store.reading(shown, this.hub.now) : null;
   }
 
   get title(): string {

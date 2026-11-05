@@ -21,7 +21,7 @@ export default class HubService extends Service {
   @tracked selected: string | null = null;
 
   get now(): number {
-    return this.loader.hubAt;
+    return Math.max(this.loader.now, this.loader.hubAt);
   }
 
   get missed(): boolean {

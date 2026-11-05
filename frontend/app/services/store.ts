@@ -137,14 +137,17 @@ import {
   type PickedRange,
   type Summaries,
   type SummaryTab,
+  type WallRow,
   type WallSection,
 } from 'frontend/data/summaries';
 import type { Picked, Timeline } from 'frontend/data/timeline';
-import type { Numbered } from 'frontend/data/wall';
+import { failingOf, type Numbered } from 'frontend/data/wall';
+import { dashboardOf, type Reading } from 'frontend/data/dashboard';
 import type HereService from 'frontend/services/here';
 import { DOWN } from 'frontend/services/reachability';
 
 export type {
+  AtWork,
   Flag,
   Move,
   NextMove,
@@ -499,6 +502,24 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  reading(shown: ShownPr, now: number): Reading | null {
+    const summaries = this.summary(shown.repo, shown.number);
+    return summaries ? this.readingWith(shown, summaries, now) : null;
+  }
+
+  rowReading(row: WallRow, now: number): Reading {
+    return this.readingWith(row, row.summaries, now);
+  }
+
+  private readingWith(
+    shown: ShownPr,
+    summaries: Summaries,
+    now: number,
+  ): Reading {
+    const failing = failingOf(shown, this.ledger?.runs ?? []);
+    return dashboardOf(shown, summaries, now, failing);
   }
 
   resetStanding(repo: string, number: number): ResetStanding | null {

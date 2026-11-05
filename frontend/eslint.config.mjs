@@ -43,15 +43,28 @@ const parserOptions = {
 };
 
 const THE_WIRE = {
-  regex: '(^frontend|\\.)/data/(http|stream)$',
+  regex: '(^frontend|\\.)/(data/)?(http|stream)$',
   message:
     'Only the store talks to the server: ask StoreService to read or write, and read what it holds.',
 };
 
 const THE_SUMMARIES = {
-  regex: '(^frontend|\\.)/data/summaries$',
+  regex: '(^frontend|\\.)/(data/)?summaries$',
   message:
     'A summary is computed once, in the store: read it through StoreService.',
+};
+
+const THE_READING = {
+  regex: '(^frontend|\\.)/(data/)?dashboard$',
+  importNames: ['dashboardOf'],
+  message:
+    'A pull request’s reading is computed once, in the store: read it through StoreService.reading.',
+};
+
+const THE_FETCH = {
+  name: 'fetch',
+  message:
+    'Only data/http and data/stream call fetch: everything else goes through them.',
 };
 
 const THE_LOADER = {
@@ -122,7 +135,7 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',
-        { patterns: [THE_WIRE, THE_SUMMARIES] },
+        { patterns: [THE_WIRE, THE_SUMMARIES, THE_READING] },
       ],
     },
   },
@@ -138,8 +151,24 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',
-        { patterns: [THE_WIRE, THE_SUMMARIES, THE_LOADER] },
+        { patterns: [THE_WIRE, THE_SUMMARIES, THE_READING, THE_LOADER] },
       ],
+    },
+  },
+  {
+    files: ['app/data/report.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        { patterns: [THE_SUMMARIES, THE_READING, THE_LOADER] },
+      ],
+    },
+  },
+  {
+    files: ['app/**/*.{ts,gts}'],
+    ignores: ['app/data/http.ts', 'app/data/stream.ts'],
+    rules: {
+      'no-restricted-globals': ['error', THE_FETCH],
     },
   },
   {

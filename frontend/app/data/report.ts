@@ -1,3 +1,4 @@
+import { handed } from 'frontend/data/http';
 import { Abandoned, Refusal } from 'frontend/data/refusal';
 
 const MAX_MESSAGE = 4000;
@@ -10,14 +11,10 @@ export async function reportError(
   if (trouble instanceof Refusal || trouble instanceof Abandoned) return;
   const error = trouble instanceof Error ? trouble : new Error(String(trouble));
   try {
-    await fetch('/api/client-errors', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        where,
-        message: error.message.slice(0, MAX_MESSAGE),
-        stack: error.stack?.slice(0, MAX_STACK) ?? null,
-      }),
+    await handed('/api/client-errors', {
+      where,
+      message: error.message.slice(0, MAX_MESSAGE),
+      stack: error.stack?.slice(0, MAX_STACK) ?? null,
     });
   } catch {
     return;
