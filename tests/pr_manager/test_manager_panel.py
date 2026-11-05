@@ -141,6 +141,8 @@ def test_a_board_read_lists_the_commits_made_since_the_last_tick(settings, tmp_p
 
 def _behind_main(settings, tmp_path, mergeable_state):
     copies = FakeWorkingCopies()
+    fetched = threading.Event()
+    copies.on_fetch = fetched.set
     pushed = copies.add_repo(tmp_path / "repo", {"a": "0"}, "init")
     copies.add_worktree(tmp_path, "PROJ-123-test")
     copies.branches["PROJ-123-test"] = copies.origin["PROJ-123-test"] = pushed
@@ -150,7 +152,8 @@ def _behind_main(settings, tmp_path, mergeable_state):
                mergeable_state=mergeable_state)
     windows = FakePrProcesses()
     windows.open(THE_PR, tmp_path)
-    board = _on_the_browser_front(settings, tmp_path, None, working_copies=copies,
+    until_fetched = (lambda: fetched.wait(2)) if mergeable_state == "behind" else None
+    board = _on_the_browser_front(settings, tmp_path, until_fetched, working_copies=copies,
                                   pr_processes=windows)
     return copies, pushed, board.panel.dashboard()
 
@@ -161,6 +164,38 @@ def test_a_pr_behind_its_base_fetches_the_base_and_says_how_far_behind_it_is(
 
     assert dashboard.base is not None
     assert (dashboard.base.behind_by, dashboard.base.conflicts) == (1, ())
+
+
+class SlowFetchCopies(FakeWorkingCopies):
+    def __init__(self):
+        super().__init__()
+        self.release = threading.Event()
+        self.released_while_fetching = None
+
+    def _fetch(self, worktree, base_branch):
+        self.released_while_fetching = self.release.wait(2)
+        return super()._fetch(worktree, base_branch)
+
+
+def test_the_manager_draws_its_status_while_the_base_is_still_fetching(settings, tmp_path):
+    copies = SlowFetchCopies()
+    pushed = copies.add_repo(tmp_path / "repo", {"a": "0"}, "init")
+    copies.add_worktree(tmp_path, "PROJ-123-test")
+    copies.branches["PROJ-123-test"] = copies.origin["PROJ-123-test"] = pushed
+    copies.publish("main", pushed, {"b": "1"}, "main moves")
+    seed_state(settings, title="t", url=URL, head_sha=pushed, base_branch="main",
+               mergeable_state="behind")
+    board = ServerPanel()
+    seen = []
+
+    def the_board_reads_then_the_fetch_ends():
+        seen.append(board.panel.dashboard().url)
+        copies.release.set()
+
+    _on_the_browser_front(settings, tmp_path, the_board_reads_then_the_fetch_ends,
+                          working_copies=copies, board=board)
+
+    assert (seen, copies.released_while_fetching) == ([URL], True)
 
 
 def test_a_pr_level_with_its_base_fetches_nothing_and_has_no_base_standing(

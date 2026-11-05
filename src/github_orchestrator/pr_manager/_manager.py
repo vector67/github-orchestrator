@@ -1,4 +1,5 @@
 import logging
+from threading import Thread
 
 from github_orchestrator.agent_runs import History, LastRun, Run
 from github_orchestrator.board_api import Dashboard
@@ -206,7 +207,15 @@ class ManagerLoop:
         if self._base_fetched_at is not None and now - self._base_fetched_at < BASE_FETCH_SECONDS:
             return
         self._base_fetched_at = now
-        refused = self._working_copies.checkout(self._config.pr).fetch(state.base_branch)
+        Thread(target=self._fetch_the_base, args=(state.base_branch,),
+               name=f"base-fetch-{self._config.pr}", daemon=True).start()
+
+    def _fetch_the_base(self, base_branch: str | None) -> None:
+        try:
+            refused = self._working_copies.checkout(self._config.pr).fetch(base_branch)
+        except Exception:
+            log.exception("loop %s: fetching the base raised", self._config.pr)
+            return
         if refused is not None:
             log.warning("loop %s: could not fetch the base to see how far behind it is: %s",
                         self._config.pr, refused)
