@@ -54,8 +54,36 @@ class _File:
         )
 
 
+_ESCAPED = {"a": 7, "b": 8, "t": 9, "n": 10, "v": 11, "f": 12, "r": 13,
+            '"': 34, "\\": 92}
+
+
+def _unquoted(name: str) -> str:
+    if len(name) < 2 or not (name.startswith('"') and name.endswith('"')):
+        return name
+    quoted = name[1:-1]
+    raw = bytearray()
+    at = 0
+    while at < len(quoted):
+        if quoted[at] != "\\" or at + 1 == len(quoted):
+            raw += quoted[at].encode()
+            at += 1
+        elif quoted[at + 1] in _ESCAPED:
+            raw.append(_ESCAPED[quoted[at + 1]])
+            at += 2
+        else:
+            raw.append(int(quoted[at + 1:at + 4], 8))
+            at += 4
+    return raw.decode(errors="replace")
+
+
 def _named(line: str) -> str:
-    return line.split(" b/", 1)[-1].strip()
+    names = line.removeprefix("diff --git ")
+    half = len(names) // 2
+    old, new = _unquoted(names[:half]), _unquoted(names[half + 1:])
+    if old.startswith("a/") and new.startswith("b/") and old[2:] == new[2:]:
+        return new[2:]
+    return names.split(" b/", 1)[-1].strip()
 
 
 def _start(header: str) -> _File:
@@ -99,13 +127,13 @@ def _preamble(current: _File, line: str) -> None:
     elif line.startswith("deleted file mode"):
         current.status = REMOVED
     elif line.startswith("rename from "):
-        current.old_path = line.removeprefix("rename from ").strip()
+        current.old_path = _unquoted(line.removeprefix("rename from "))
         current.status = RENAMED
     elif line.startswith("copy from "):
-        current.old_path = line.removeprefix("copy from ").strip()
+        current.old_path = _unquoted(line.removeprefix("copy from "))
         current.status = COPIED
     elif line.startswith("rename to ") or line.startswith("copy to "):
-        current.path = line.split(" to ", 1)[1].strip()
+        current.path = _unquoted(line.split(" to ", 1)[1])
     elif line.startswith("Binary files") or line.startswith("GIT binary patch"):
         current.is_binary = True
 

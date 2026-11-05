@@ -45,10 +45,12 @@ class _GitUnavailable(Exception):
 
 
 def _run_git(worktree: str, *args: str) -> subprocess.CompletedProcess[str]:
-    argv = ["git", "--no-optional-locks", "-C", worktree, *args]
+    argv = ["git", "--no-optional-locks", "-C", worktree,
+            "-c", "diff.suppressBlankEmpty=false", *args]
     try:
         return subprocess.run(
-            argv, capture_output=True, text=True, timeout=DIFF_TIMEOUT,
+            argv, capture_output=True, encoding="utf-8", errors="replace",
+            timeout=DIFF_TIMEOUT,
             stdin=subprocess.DEVNULL,
             env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
@@ -71,6 +73,7 @@ def raw_diff(source: DiffSource, unified: int) -> tuple[str | None, str]:
     pathspec = ["--", source.path] if source.path else []
     try:
         diff = _run_git(source.worktree, "diff", "--no-color",
+                        "--no-ext-diff", "--no-textconv", "-M",
                         f"-U{unified}",
                         "--src-prefix=a/", "--dst-prefix=b/",
                         "--end-of-options",

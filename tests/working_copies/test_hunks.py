@@ -123,3 +123,100 @@ def test_a_commit_against_itself_changes_nothing(tmp_path, git_template, copies)
     _, head = git_template(_build_history)
 
     assert copies.checkout(a_pr(1, "o/n")).diff_files(Sha(head.strip()), Sha(head.strip())) == ()
+
+
+def _write(path, content):
+    if content is None:
+        path.unlink()
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+
+
+def _two_commits(root, config, before, after):
+    repo = root / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "T")
+    for path, content in before:
+        _write(repo / path, content)
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "base")
+    base = _git(repo, "rev-parse", "HEAD")
+    for path, content in after:
+        _write(repo / path, content)
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-q", "-m", "head")
+    for key, value in config:
+        _git(repo, "config", key, value)
+    return base, _git(repo, "rev-parse", "HEAD")
+
+
+def _diffed(git_template, copies, config=(), before=(), after=()):
+    base, head = git_template(_two_commits, config, before, after)
+    files = copies.checkout(a_pr(1, "o/n")).diff_files(Sha(base), Sha(head))
+    return {diff.path: diff for diff in files}
+
+
+SOURCE = b"".join(b"line %d\n" % n for n in range(1, 30))
+
+
+def test_a_line_that_is_not_utf8_reads_with_a_replacement_character(git_template, copies):
+    files = _diffed(git_template, copies, after=(("menu.txt", "café\n".encode("latin-1")),))
+
+    [hunk] = files["menu.txt"].hunks
+    assert [line.text for line in hunk.lines] == ["caf�"]
+
+
+def test_a_config_that_detects_copies_still_shows_a_copy_as_an_added_file(git_template, copies):
+    files = _diffed(git_template, copies, config=(("diff.renames", "copies"),),
+                    before=(("original.txt", SOURCE),),
+                    after=(("original.txt", SOURCE.replace(b"line 1\n", b"line one\n")),
+                           ("a_copy.txt", SOURCE)))
+
+    assert [(path, diff.status, diff.old_path) for path, diff in files.items()] == [
+        ("a_copy.txt", "added", None), ("original.txt", "modified", None)]
+
+
+def test_an_external_diff_tool_in_the_config_is_not_used(git_template, copies):
+    files = _diffed(git_template, copies, config=(("diff.external", "true"),),
+                    after=(("notes.txt", b"hello\n"),))
+
+    assert list(files) == ["notes.txt"]
+
+
+def test_a_textconv_filter_in_the_config_is_not_used(git_template, copies):
+    files = _diffed(git_template, copies, config=(("diff.shout.textconv", "rev"),),
+                    before=((".gitattributes", b"*.txt diff=shout\n"),),
+                    after=(("notes.txt", b"hello\n"),))
+
+    [hunk] = files["notes.txt"].hunks
+    assert [line.text for line in hunk.lines] == ["hello"]
+
+
+def test_a_blank_context_line_keeps_the_numbers_when_the_config_suppresses_its_space(
+        git_template, copies):
+    files = _diffed(git_template, copies, config=(("diff.suppressBlankEmpty", "true"),),
+                    before=(("notes.txt", b"one\n\ntwo\n"),),
+                    after=(("notes.txt", b"one\n\nthree\n"),))
+
+    [hunk] = files["notes.txt"].hunks
+    assert [(line.kind, line.old_line, line.new_line) for line in hunk.lines] == [
+        ("context", 1, 1), ("context", 2, 2), ("removed", 3, None), ("added", None, 3)]
+
+
+@pytest.mark.parametrize("name", ["x b/y.txt", "café.txt", "tab\there.txt", 'say "hi".txt'])
+def test_a_file_name_comes_back_as_it_is_on_disk(git_template, copies, name):
+    files = _diffed(git_template, copies, after=((name, b"hello\n"),))
+
+    assert list(files) == [name]
+    assert files[name].status == "added"
+
+
+def test_a_renamed_file_keeps_both_names_as_they_are_on_disk(git_template, copies):
+    files = _diffed(git_template, copies, before=(("old name.txt", SOURCE),),
+                    after=(("old name.txt", None), ("x b/café.txt", SOURCE)))
+
+    renamed = files["x b/café.txt"]
+    assert (renamed.status, renamed.old_path) == ("renamed", "old name.txt")
