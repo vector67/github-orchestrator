@@ -769,6 +769,7 @@ class TerminalSessionsWiring(Wiring):
     pr: Pr | None
     _: KW_ONLY
     first_connection_seconds: float = FIRST_CONNECTION_SECONDS
+    clamp: tuple[str, ...] = ()
 
 
 @wires(TerminalSessionsWiring)
@@ -779,7 +780,8 @@ class TerminalSessionsProvider(Provider):
     @provide
     def pty_terminals(self, wiring: TerminalSessionsWiring) -> PtyTerminals:
         return PtyTerminals(wiring.popen, wiring.environment, wiring.directory,
-                            first_connection_seconds=wiring.first_connection_seconds)
+                            first_connection_seconds=wiring.first_connection_seconds,
+                            clamp=wiring.clamp)
 
     @provide
     def terminals(self, terminals: PtyTerminals) -> Terminals:
@@ -1757,7 +1759,7 @@ def mode_wirings(settings: Settings, managed: ManagedPr | None,
     places = pr_processes_places(settings, clamp)
     sessions = TerminalSessionsWiring(
         subprocess.Popen, settings.child_environment(),
-        terminal_sessions_dir(settings), None if managed is None else managed.pr)
+        terminal_sessions_dir(settings), None if managed is None else managed.pr, clamp=clamp)
     windows = BackgroundPrProcessesWiring(subprocess.run, places)
     pages = BoardPagesWiring(HubPages(settings.config.hub_port))
     fronts: list[Part] = [] if managed is None else [BrowserFrontProvider]

@@ -320,11 +320,15 @@ so the Linux unit is unchanged.
   it starts, workers included, run at the normal class.
 - Background work starts under `taskpolicy -c utility`, the class the whole tree
   had before. `utility_clamp` in `wiring.py` gives that prefix on macOS and
-  nothing elsewhere, and four spawn sites put it in front of what they start:
+  nothing elsewhere, and five spawn sites put it in front of what they start:
   - `BackgroundPrProcesses._start`: every agent manager, so the agent runs it
-    starts, their git and test processes and the terminal sessions it opens all
-    inherit the class. `taskpolicy` execs in place, so the recorded pid is the
-    manager's and `ps` still finds it.
+    starts and their git and test processes inherit the class. `taskpolicy`
+    execs in place, so the recorded pid is the manager's and `ps` still finds it.
+  - `PtySessions._started`: each terminal session's holder, so the command it
+    runs inherits the class. The server opens the board's terminals and its
+    agent questions itself, through the file-backed panel, so they inherit
+    nothing from a manager. The session still lists the command it was asked
+    for, without the prefix.
   - `AgentRuns._start`: each headless agent run (review, re-review, fix-check,
     rebase, carry-on, thread fix, rework, ticket).
   - `AgentRuns`' one-shot asks: comment and thread gists, thread verdicts and
@@ -332,9 +336,7 @@ so the Linux unit is unchanged.
     any manager.
   - `LocalSummaryLane._plugin_run`: the pr-summary plugin and its witnesses,
     which the watcher's poll starts.
-- Not clamped: the server itself, the watcher's own git and `gh` calls, and the
-  terminal sessions the board opens through a manager, which already inherit the
-  manager's class.
+- Not clamped: the server itself and the watcher's own git and `gh` calls.
 
 Measured 2026-10-16 against the live, launchd-started server of the main
 instance after the restart, with the same rig: 70 spinners, the probe, and one

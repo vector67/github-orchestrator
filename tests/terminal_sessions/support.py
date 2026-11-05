@@ -12,15 +12,17 @@ from github_orchestrator.wiring import (
 from tests.builders import a_pr
 
 
-def _container(settings: Settings, first_connection_seconds: float) -> dishka.Container:
+def _container(settings: Settings, first_connection_seconds: float,
+               clamp: tuple[str, ...] = ()) -> dishka.Container:
     return wire(TerminalSessionsWiring(
         subprocess.Popen, settings.child_environment(), terminal_sessions_dir(settings),
-        a_pr(1, "octocat/terminals"), first_connection_seconds=first_connection_seconds))
+        a_pr(1, "octocat/terminals"), first_connection_seconds=first_connection_seconds,
+        clamp=clamp))
 
 
-def real_terminal_sessions(settings: Settings, *,
-                           first_connection_seconds: float = 30.0) -> TerminalSessions:
-    sessions: TerminalSessions = _container(settings, first_connection_seconds).get(
+def real_terminal_sessions(settings: Settings, *, first_connection_seconds: float = 30.0,
+                           clamp: tuple[str, ...] = ()) -> TerminalSessions:
+    sessions: TerminalSessions = _container(settings, first_connection_seconds, clamp).get(
         TerminalSessions)
     return sessions
 

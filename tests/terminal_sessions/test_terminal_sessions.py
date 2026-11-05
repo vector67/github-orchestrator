@@ -201,6 +201,18 @@ def test_a_session_is_an_xterm_with_the_programs_environment(real, settings, wor
     assert data in heard
 
 
+def test_a_session_runs_under_the_clamp_and_is_listed_with_its_own_command(
+        settings, worktree):
+    clamped = real_terminal_sessions(settings, clamp=("env", "CLAMPED=yes"))
+    command = ["sh", "-c", "echo clamped=$CLAMPED; while :; do sleep 0.1; done"]
+
+    started = clamped.start(str(worktree), command)
+
+    assert b"clamped=yes" in _heard(clamped.attach(started), b"clamped=yes")
+    assert [session.argv for session in clamped.listed()] == [tuple(command)]
+    _ended_everything(clamped)
+
+
 def test_a_later_connection_is_shown_what_the_session_printed_before_it(real, worktree):
     started = real.start(str(worktree), ["sh", "-c", "echo early; while :; do sleep 0.1; done"])
     first = real.attach(started)

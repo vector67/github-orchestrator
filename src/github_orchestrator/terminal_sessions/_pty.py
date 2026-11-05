@@ -101,11 +101,12 @@ def _alive(pid: int) -> bool:
 
 class PtySessions:
     def __init__(self, popen: Popen, environment: Mapping[str, str], directory: Path, *,
-                 first_connection_seconds: float) -> None:
+                 first_connection_seconds: float, clamp: tuple[str, ...]) -> None:
         self._popen = popen
         self._environment = environment
         self._directory = directory
         self._first_connection_seconds = first_connection_seconds
+        self._clamp = clamp
 
     def start(self, worktree: str, argv: list[str]) -> str:
         return self._started(str(self._first_connection_seconds), worktree, argv)
@@ -116,7 +117,7 @@ class PtySessions:
     def _started(self, wait: str, worktree: str, argv: list[str]) -> str:
         session = secrets.token_hex(6)
         holder = self._popen(
-            [sys.executable, "-m", HOLDER, str(self._directory), session,
+            [*self._clamp, sys.executable, "-m", HOLDER, str(self._directory), session,
              wait, worktree, *argv],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             env={**os.environ, **self._environment}, cwd="/", close_fds=True)
@@ -173,15 +174,17 @@ class PtySessions:
 
 class PtyTerminals:
     def __init__(self, popen: Popen, environment: Mapping[str, str], directory: Path, *,
-                 first_connection_seconds: float) -> None:
+                 first_connection_seconds: float, clamp: tuple[str, ...]) -> None:
         self._popen = popen
         self._environment = environment
         self._directory = directory
         self._first_connection_seconds = first_connection_seconds
+        self._clamp = clamp
 
     def _in(self, directory: Path) -> PtySessions:
         return PtySessions(self._popen, self._environment, directory,
-                           first_connection_seconds=self._first_connection_seconds)
+                           first_connection_seconds=self._first_connection_seconds,
+                           clamp=self._clamp)
 
     def of(self, pr: Pr) -> PtySessions:
         return self._in(self._directory / hashlib.sha256(str(pr).encode()).hexdigest()[:PLACE])
