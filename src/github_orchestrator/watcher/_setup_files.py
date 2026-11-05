@@ -43,6 +43,8 @@ class SetupFiles:
             return None
 
     def keep_listing(self, login: str, at: datetime, choices: list[RepoChoice]) -> None:
+        if not LOGIN.fullmatch(login):
+            return
         self._write_whole(self._listing(login), json.dumps({
             "listed_at": at.isoformat(),
             "repos": [{**asdict(one), "repo": str(one.repo)} for one in choices],

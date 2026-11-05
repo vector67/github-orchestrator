@@ -26,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow pre-release.yml --commit "$GITHUB_SHA" --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow pre-release.yml --event workflow_dispatch --commit "$GITHUB_SHA" --status success --limit 1 --json databaseId -q '.[0].databaseId')
           if [ -z "$run" ]; then
             echo "no successful pre-release run on $GITHUB_SHA; run the pre-release workflow on this commit first"; exit 1
           fi

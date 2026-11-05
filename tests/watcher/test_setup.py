@@ -207,6 +207,17 @@ def test_the_account_s_repos_are_kept_for_a_minute_for_every_process_that_serves
                                                "octocat/hello-world"]
 
 
+def test_the_repos_of_a_login_github_could_not_name_are_not_kept(world):
+    container = watcher_container(fake_settings(world.tmp_path), github=world.github,
+                                  pr_processes=world.processes, clock=world.clock,
+                                  home=world.home, clone_problem=world.clone_problem)
+    world.github.tokens["../escaped"] = "gho_escaped"
+
+    container.get(SetupDesk).repos("../escaped")
+
+    assert list(world.tmp_path.rglob("escaped.json")) == []
+
+
 def test_a_repo_typed_by_name_is_looked_up_for_the_login(world):
     answer = serve(world).web.get("/api/setup/repos/octocat/hello-world", params={"login": ME})
 
