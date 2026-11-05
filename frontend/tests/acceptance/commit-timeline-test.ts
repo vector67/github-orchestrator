@@ -1475,6 +1475,24 @@ module(
       assert.dom('[data-test-not-pushed]').doesNotExist();
     });
 
+    test('back on origin, Esc leaves for the wall rather than drop a range of commits picked on local that origin cannot draw', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+      await click(dot(THIRD), { shiftKey: true });
+      await click(dot(FOURTH), { shiftKey: true });
+
+      assert.dom('[data-test-range]').includesText(`${THIRD} → ${FOURTH}`);
+
+      await click('[data-test-source="origin"]');
+
+      assert.dom('[data-test-range]').doesNotExist();
+
+      await press('Escape');
+
+      assert.strictEqual(currentURL(), '/');
+    });
+
     function press(key: string) {
       return triggerEvent(document, 'keydown', { key });
     }

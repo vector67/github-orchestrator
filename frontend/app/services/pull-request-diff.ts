@@ -275,7 +275,7 @@ export default class PullRequestDiffService extends Service {
   };
 
   unpick = (): boolean => {
-    if (!this.pr.picked) return false;
+    if (!this.picked) return false;
     this.pr.picked = null;
     return true;
   };
