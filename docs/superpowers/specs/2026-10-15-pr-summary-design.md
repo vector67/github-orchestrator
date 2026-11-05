@@ -19,24 +19,25 @@ tab, before Board) reuses it with two additions, `--work-dir` and `--gh-account`
 `github_orchestrator`.
 
 You give it a PR (URL, or a number in the current repository). It prints a
-summary in five sections and names the scratch folder holding the working
-files.
+primer and a summary in five sections, and names the scratch folder holding
+the working files.
 
 ## Sections
 
 Shown in this order:
 
-| Section   | Question                                       | Length          |
-| --------- | ---------------------------------------------- | --------------- |
-| Requested | What did the ticket ask for?                   | one sentence    |
-| Claimed   | What does the author say they did?             | one or two      |
-| Intent    | What do the implementation and the tests do?   | one or two each |
-| Why       | Why was the change necessary?                  | two or three    |
-| Alignment | Do these agree? Every mismatch, in trust order | a list          |
+| Section           | Question                                       | Length                |
+| ----------------- | ---------------------------------------------- | --------------------- |
+| Before you review | What must a reviewer understand first?         | three to six concepts |
+| Requested         | What did the ticket ask for?                   | one sentence          |
+| Claimed           | What does the author say they did?             | one or two            |
+| Intent            | What do the implementation and the tests do?   | one or two each       |
+| Why               | Why was the change necessary?                  | two or three          |
+| Alignment         | Do these agree? Every mismatch, in trust order | a list                |
 
 ## Witnesses
 
-Each section except Alignment is a **witness**: an agent with a fixed prompt
+Each section from Requested to Why is a **witness**: an agent with a fixed prompt
 (its agent definition), a tool list the CLI enforces, and an input folder a
 deterministic script prepared.
 
@@ -49,17 +50,45 @@ deterministic script prepared.
 | why            | the ticket key, the repo's why guidance, earlier PRs' non-author comments, this PR's non-author human comments; then linked and earlier tickets and Confluence through Atlassian | Read, Write, Glob, Atlassian (read) |
 | alignment      | the five witnesses' outputs only                                                                                                                                                 | Read, Write, Glob                   |
 
+### The primer
+
+"Before you review" comes from the **primer** agent, which is no witness: it
+explains rather than judges, so it may read what the authors wrote, and
+alignment never sees it. It reads the PR's title and description, the ticket
+key, the production diff and changed files with their comments, the unchanged
+production files at head from a clone (`repo/`), and Jira and Confluence
+through the Atlassian read tools; its tools are Read, Write, Glob, Grep and
+those. It writes three to six concepts, each nesting the concepts it leans on:
+
+```json
+{
+  "witness": "primer",
+  "concepts": [
+    {"name": "Order export", "explanation": "Markdown, ending **In this PR:** …", "concepts": []}
+  ]
+}
+```
+
+Each concept renders as a collapsed `<details>` with its children nested
+inside. `--earlier-primer <file>` hands it the `output.json` of an earlier run
+on the same PR, so a rerun updates those concepts against the new head rather
+than starting over.
+
 ### Isolation
 
-Each witness runs as its own process:
+Each witness, and the primer, alignment judge, critic and final judge, runs
+as its own process:
 
 ```
-claude -p --restricted --plugin-dir <plugin> --agent pr-summary:<witness>
-       --model opus --permission-mode acceptEdits --no-session-persistence
+claude -p --restricted --plugin-dir <plugin> --agent pr-summary:<agent>
+       --permission-mode acceptEdits --no-session-persistence
+       [--mcp-config <file> --strict-mcp-config]
        --allowedTools <its Atlassian read tools>
 ```
 
-with its input folder as the working directory. Checked by hand on
+with its input folder as the working directory. The model, `opus`, comes from
+each agent file's frontmatter. `--mcp-config` is passed only when the run was
+given one, so the Atlassian servers are connected before the agent starts. Checked by hand on
 2026-10-15: under `--restricted` the file tools refuse any path outside the
 working directory, the agent's `tools:` list is all it gets, and with a
 working directory outside git the session gets no `git status` and no
@@ -145,10 +174,27 @@ claim nothing supports. A mismatch is not a judgement that the PR is wrong.
 requested against why, then implementation against both, then tests against
 the three above, then claimed against all four.
 
-`render.py`, not the judge, decides whether everything matches: only when
+### Challenging the mismatches
+
+When the judge lists any mismatch, the script numbers them into
+`mismatches.json` and runs two more agents, each once for the whole list:
+
+- the **critic** tries to falsify every mismatch from the witnesses' outputs
+  and the code the implementation and tests witnesses read, writing one
+  challenge per number:
+  `{"challenges": [{"mismatch": 1, "falsified": true, "reason": "…", "evidence": ["…"]}]}`;
+- the **final judge** (`verdict`) reads the same plus the critic's output as
+  `critic.json`, checks the critic's evidence itself, and rules on each:
+  `{"verdicts": [{"mismatch": 1, "falsified": false, "reason": "…"}]}`.
+
+Both have Read, Write, Glob and Grep, and no Atlassian tools. If the critic
+fails, the final judge does not run and every mismatch stands.
+
+`report.py`, not the judge, decides whether everything matches: only when
 every witness produced a valid output and the list is empty. A witness that
 did not run or failed is shown as the first rung ("No ticket found",
-"Why failed: …").
+"Why failed: …"). The mismatches that stand follow; the ones the final judge
+ruled falsified come last, crossed out, each followed by the critic's reason.
 
 ## Preparing the inputs
 
@@ -204,18 +250,20 @@ listed in the config's `bots`.
 
 ## Running
 
-`scripts/summarise.py <pr>` runs `prepare.py`, starts the five witnesses at
-once, waits, copies their `output.json` files into the alignment folder, runs
-the judge, then runs `render.py` and prints its markdown and the scratch
-folder's path. A witness that fails or runs past ten minutes is recorded as
-failed; the rest continue. A witness that cannot reach the tools its agent
+`scripts/summarise.py <pr>` prepares the inputs (`pr_summary/inputs.py`),
+starts the five witnesses and the primer at once, waits, copies the
+witnesses' `output.json` files into the alignment folder, runs the judge, then
+the critic and final judge when there are mismatches. It then renders the
+summary with `pr_summary/report.py` and prints its markdown and the scratch
+folder's path. `--prepare-only` writes the input folders and stops. An agent
+that fails or runs past ten minutes is recorded as failed; the rest continue. A witness that cannot reach the tools its agent
 file names writes only `{"unavailable": "<why>"}` and is run once more after
 30 seconds; if it is unavailable again it fails, and the judge never sees it.
 Any failed witness makes the run exit non-zero after printing the summary,
 naming each failure on stderr.
 
-`scripts/render.py` checks each `output.json` against its shape and prints
-the summary in section order. A missing or malformed output shows as that
+`report.py` checks each `output.json` against its shape and prints the
+summary in section order. A missing or malformed output shows as that
 section's failure.
 
 The skill is a thin wrapper: it runs
@@ -252,9 +300,11 @@ organisation-specific knowledge out of the public prompts.
 plugins/pr-summary/
   .claude-plugin/plugin.json
   skills/pr-summary/SKILL.md         runs summarise.py
-  agents/<witness>.md                six agents: fixed prompt, tools, model
-  scripts/summarise.py, prepare.py, render.py
-  scripts/pr_summary/                their logic
+  agents/<agent>.md                  nine agents: the five witnesses, primer,
+                                     alignment, critic and verdict; each a
+                                     fixed prompt, tools and model
+  scripts/summarise.py               the entry point
+  scripts/pr_summary/                its logic: inputs, witnesses, report, …
 ```
 
 The scripts carry their dependencies inline for `uv run`. Others install the
@@ -294,9 +344,10 @@ plugin with `claude plugin marketplace add <owner>/github-orchestrator` and
 
 ## Testing
 
-`prepare.py`, `summarise.py` and `render.py` are written test-first. Their
+`summarise.py` and the `pr_summary` modules are written test-first. Their
 logic (ticket lookup, file sorting, stripping, author and bot filtering,
-earlier-PR selection, truncation, folder layout, rendering) runs against
+earlier-PR selection, truncation, folder layout, numbering and challenging
+mismatches, rendering) runs against
 GitHub responses written into the tests, never live `gh`, and the witness
 launcher against a fake `claude`. The agents' prompts are checked by running
 the skill on real PRs and by adversarial review: agents hunting for any way a

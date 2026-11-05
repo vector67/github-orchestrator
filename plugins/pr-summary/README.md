@@ -92,6 +92,7 @@ for a finished witness. The last line of the output names the folder:
   implementation/
   tests/
   why/
+  primer/
   alignment/
   critic/           when there are mismatches: them, the witnesses' outputs and the code
   verdict/          the same, plus the critic's output as critic.json
