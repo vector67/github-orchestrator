@@ -1,7 +1,10 @@
 import argparse
 import dataclasses
 import json
+import logging
 import os
+import shutil
+import signal
 import socket
 import subprocess
 import tempfile
@@ -73,6 +76,9 @@ MOMENT = "2026-09-12T09:00:00Z"
 LAST_RUN_ENDED = datetime.fromisoformat("2026-09-12T08:41:00+00:00")
 BASE_BRANCH = "main"
 RECHECK_SECONDS = 5.0
+SETTLE_SECONDS = 1.0
+
+log = logging.getLogger(__name__)
 
 @dataclasses.dataclass(frozen=True)
 class Repo:
@@ -697,6 +703,8 @@ def _author_board(seeding: _Seeding) -> None:
     seeding.ask(LANDED, lambda conversation: conversation.approve(
         reply="Good catch — spelled them out."))
     seeding.propose(REPLY_REFUSED)
+    log.warning("seeded: GitHub refuses the reply on %s on purpose, so the PostReply "
+                "failure that follows is part of the preview", REPLY_REFUSED.key)
     seeding.ask(REPLY_REFUSED, lambda conversation: conversation.approve(
         reply="Renamed, thanks."))
     seeding.propose(REBASING)
@@ -724,6 +732,7 @@ def _author_board(seeding: _Seeding) -> None:
     seeding.open(REOPENED, _said(9100003, "anna", "Anna Example",
                                  "Not yet — the reader skips it the same way.",
                                  "2026-09-12T10:30:00Z"))
+    seeding.outside.agent_runs.script(RunOutcome(finishes=False))
     seeding.ask(REWORKING, lambda conversation: conversation.rework(
         note="Raise a typed error rather than the bare ValueError.",
         pointed=((REWORKING.path, REWORKING.line, "    return sorted(line_items, key=str)"),),
@@ -797,7 +806,7 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
 
 
 def seed(conversation_managers: ConversationManagerFactory, outside: Outside, viewer: str, repo: Repo,
-         reviewer: bool = False, reviewed_on: str | None = None) -> None:
+         reviewer: bool = False, reviewed_on: str | None = None) -> ConversationManager:
     outside.github.add_pr(PR)
     _record_the_pr(outside, repo, viewer, reviewer, reviewed_on)
     outside.pr_processes.open(PR, Path(repo.worktree))
@@ -808,6 +817,7 @@ def seed(conversation_managers: ConversationManagerFactory, outside: Outside, vi
     else:
         _author_board(seeding)
     _record_the_pr(outside, repo, viewer, reviewer, reviewed_on)
+    return seeding.conversations
 
 
 def worktree_in(directory: Path) -> Path:
@@ -820,6 +830,30 @@ class PreviewPanels:
 
     def of(self, pr: Pr) -> ManagerPanel:
         return self.panel
+
+
+EMOJIS = {name: f"https://github.githubassets.com/images/icons/emoji/{picture}.png?v8"
+          for name, picture in (("+1", "unicode/1f44d"), ("-1", "unicode/1f44e"),
+                                ("smile", "unicode/1f604"), ("laughing", "unicode/1f606"),
+                                ("tada", "unicode/1f389"), ("heart", "unicode/2764"),
+                                ("rocket", "unicode/1f680"), ("eyes", "unicode/1f440"),
+                                ("confused", "unicode/1f615"), ("thinking", "unicode/1f914"),
+                                ("white_check_mark", "unicode/2705"), ("shipit", "shipit"))}
+
+
+def preview_github() -> FakeGitHub:
+    github = FakeGitHub()
+    github.emojis_named = dict(EMOJIS)
+    return github
+
+
+def settle(conversations: ConversationManager) -> None:
+    conversations.tick(FakeNotifications(), on_hold=False, schedule=False)
+
+
+def _settle_until(stopped: threading.Event, conversations: ConversationManager) -> None:
+    while not stopped.wait(SETTLE_SECONDS):
+        settle(conversations)
 
 
 def preview_hub(panels: PreviewPanels) -> PreviewHub:
@@ -835,20 +869,20 @@ def page_of(port: int) -> str:
 def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False, *,
           conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
           panels: PreviewPanels, sessions: TerminalSessions, reviews: KeptReviews,
-          shape: str | None = None) -> list[str]:
+          shape: str | None = None) -> tuple[list[str], ConversationManager]:
     repo = build_repo(worktree_in(directory), reviewer, shape)
     rebased = shape == "rebased"
-    seed(conversation_managers, outside, viewer, repo, reviewer,
-         repo.head if rebased or shape == "diverged" else None)
+    conversations = seed(conversation_managers, outside, viewer, repo, reviewer,
+                         repo.head if rebased or shape == "diverged" else None)
     panels.panel = manager_panel(lambda: running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree)
     if not rebased:
-        return []
+        return [], conversations
     seen = _git(repo.worktree, "rev-list", "--reverse",
                 f"{repo.base_branch}..{repo.head}").split()
     reviews.keep(PR, repo.head, repo.base_branch)
     rebase_onto_main(worktree_in(directory))
-    return seen
+    return seen, conversations
 
 
 def _mark_read_once_serving(port: int, shas: list[str]) -> None:
@@ -886,8 +920,20 @@ def main(argv: list[str] | None = None) -> int:
                         help="give the author preview's branch this shape on the diff tab's timeline")
     args = parser.parse_args(argv)
     directory = Path(tempfile.mkdtemp(prefix="review-board-preview-"))
+    try:
+        _serve_from(directory, args)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        interrupting = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        shutil.rmtree(directory, ignore_errors=True)
+        signal.signal(signal.SIGINT, interrupting)
+    return 0
+
+
+def _serve_from(directory: Path, args: argparse.Namespace) -> None:
     pr_processes = FakePrProcesses()
-    github = FakeGitHub()
+    github = preview_github()
     agent_runs = HeldVerdicts(pr_processes)
     desktop = FakeDesktop()
 
@@ -904,11 +950,11 @@ def main(argv: list[str] | None = None) -> int:
     serving = container(False)[0] if args.agents_disabled else seeding
     github.account = viewer
     outside = Outside(github, agent_runs, pr_processes, seeding.get(ChangeDetection))
-    seen = serve(directory, viewer, outside, reviewer=args.reviewer,
-                 conversation_managers=seeding.get(ConversationManagerFactory),
-                 dashboards=seeding.get(Dashboards), panels=panels,
-                 sessions=serving.get(Terminals).of(PR), reviews=seeding.get(KeptReviews),
-                 shape=args.shape)
+    seen, conversations = serve(directory, viewer, outside, reviewer=args.reviewer,
+                                conversation_managers=seeding.get(ConversationManagerFactory),
+                                dashboards=seeding.get(Dashboards), panels=panels,
+                                sessions=serving.get(Terminals).of(PR),
+                                reviews=seeding.get(KeptReviews), shape=args.shape)
     listening = socket.socket()
     listening.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listening.bind(("127.0.0.1", args.port))
@@ -919,7 +965,14 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(page_of(port), flush=True)
     app = serving.get(ServerApp).app(port, os.getpid())
-    uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, lifespan="off",
-                                  timeout_graceful_shutdown=1)).run(sockets=[listening])
-    return 0
+    stopped = threading.Event()
+    settling = threading.Thread(target=_settle_until, args=(stopped, conversations),
+                                daemon=True)
+    settling.start()
+    try:
+        uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, lifespan="off",
+                                      timeout_graceful_shutdown=1)).run(sockets=[listening])
+    finally:
+        stopped.set()
+        settling.join()
 

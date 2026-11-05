@@ -753,6 +753,17 @@ def test_an_on_hold_tick_leaves_the_decisions_waiting_and_starts_no_run(settings
     assert here.agent_runs.started == []
 
 
+def test_a_tick_that_may_not_schedule_still_settles_the_decisions_and_starts_no_run(settings):
+    here, threads = _ready_world(settings, agent_runs=_agent_runs())
+    with threads.editing(KEY) as editable:
+        editable.reply("on it")
+
+    threads.tick(FakeNotifications(), on_hold=False, schedule=False)
+
+    assert _read(threads).operations[-1].state is OperationState.APPLIED
+    assert here.agent_runs.started == []
+
+
 def test_the_counts_say_what_is_queued_live_and_proposed(settings):
     here = _world(settings, agent_runs=_agent_runs())
     threads = here.threads()

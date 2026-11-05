@@ -1,3 +1,5 @@
+import signal
+
 import pytest
 
 from github_orchestrator import preview
@@ -185,6 +187,94 @@ def test_the_previews_pr_board_draws_its_dashboard_as_the_wall_does_after_a_queu
     assert drawn["system"]["reset_to_origin"] == row["dashboard"]["system"]["reset_to_origin"]
     assert row["dashboard"]["system"]["reset_to_origin"] is not None
     assert drawn["listed_at"] >= row["dashboard"]["listed_at"]
+
+
+def served_preview(tmp_path, reviewer=False):
+    pr_processes = FakePrProcesses()
+    github = preview.preview_github()
+    agent_runs = HeldVerdicts(pr_processes)
+    panels = preview.PreviewPanels()
+    container, viewer = preview_container({}, tmp_path, data_dir=tmp_path,
+                                          repo=preview.PR.repo,
+                                          local_path=preview.worktree_in(tmp_path),
+                                          github=github, desktop=FakeDesktop(),
+                                          agent_runs=agent_runs, pr_processes=pr_processes,
+                                          agents_enabled=True, hub=preview.preview_hub(panels))
+    github.account = viewer
+    outside = preview.Outside(github, agent_runs, pr_processes, container.get(ChangeDetection))
+    _, conversations = preview.serve(
+        tmp_path, viewer, outside, reviewer,
+        conversation_managers=container.get(ConversationManagerFactory),
+        dashboards=container.get(Dashboards), panels=panels, sessions=FakeTerminalSessions(),
+        reviews=container.get(KeptReviews))
+    web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
+    return conversations, web, f"/pr/{preview.PR.repo}/{preview.PR.number}/api"
+
+
+def test_the_preview_settles_an_operation_the_board_queues(tmp_path):
+    conversations, web, board = served_preview(tmp_path)
+    tag = web.get(f"{board}/conversations/PRRT_ready").json()["etag"]
+    asked = web.post(f"{board}/conversations/PRRT_ready/operations:resolve",
+                     headers={"If-Match": tag}, json={"reply": "Fixed, thanks."})
+
+    preview.settle(conversations)
+
+    [operation] = [one for one in web.get(f"{board}/conversations/PRRT_ready/operations").json()
+                   if one["id"] == asked.json()["operation"]["id"]]
+    assert operation["state"] == "applied"
+
+
+@pytest.mark.parametrize("reviewer", [False, True])
+def test_settling_leaves_every_seeded_thread_where_the_preview_put_it(tmp_path, reviewer):
+    conversations, web, board = served_preview(tmp_path, reviewer)
+    seeded = web.get(f"{board}/conversations").json()["conversations"]
+
+    preview.settle(conversations)
+
+    settled = web.get(f"{board}/conversations").json()["conversations"]
+    assert ({one["key"]: one["state"] for one in settled}
+            == {one["key"]: one["state"] for one in seeded})
+
+
+def test_the_preview_offers_emojis_to_complete(tmp_path):
+    pr_processes = FakePrProcesses()
+    container, _ = preview_container({}, tmp_path, data_dir=tmp_path, repo=preview.PR.repo,
+                                     local_path=preview.worktree_in(tmp_path),
+                                     github=preview.preview_github(), desktop=FakeDesktop(),
+                                     agent_runs=FakeAgentRuns(pr_processes),
+                                     pr_processes=pr_processes, agents_enabled=True,
+                                     hub=preview.preview_hub(preview.PreviewPanels()))
+    web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
+
+    assert web.get("/api/emojis").json()["emojis"]
+
+
+def test_the_preview_says_the_reply_failure_it_logs_while_seeding_is_seeded(tmp_path, caplog):
+    served_preview(tmp_path)
+
+    messages = [record.getMessage() for record in caplog.records]
+    failed = next(index for index, message in enumerate(messages)
+                  if message.startswith("PostReply failed"))
+    assert "seeded" in messages[failed - 1]
+    assert "PRRT_reply_refused" in messages[failed - 1]
+
+
+@pytest.mark.no_replay
+def test_the_preview_removes_its_folder_when_ctrl_c_stops_it(tmp_path, monkeypatch):
+    def interrupted(self, sockets=None):
+        raise KeyboardInterrupt
+
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setattr(preview.tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setattr(preview.uvicorn.Server, "run", interrupted)
+    handler = signal.getsignal(signal.SIGINT)
+
+    stopped = preview.main([])
+
+    assert stopped == 0
+    assert not list(tmp_path.glob("review-board-preview-*"))
+    assert signal.getsignal(signal.SIGINT) is handler
 
 
 def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_every_launcher(tmp_path):

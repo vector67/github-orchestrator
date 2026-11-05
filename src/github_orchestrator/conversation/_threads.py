@@ -679,7 +679,7 @@ class _ConversationManager:
         return Absorbed(threads=len(activity.threads), created=tuple(created),
                         refreshed=tuple(refreshed))
 
-    def tick(self, news: ThreadNews, *, on_hold: bool) -> None:
+    def tick(self, news: ThreadNews, *, on_hold: bool, schedule: bool = True) -> None:
         pr, ports = self._pr.pr, self._pr.ports
         try:
             if not on_hold:
@@ -704,7 +704,8 @@ class _ConversationManager:
             ask_due_commit_checks(ports)
         except Exception:
             log.exception("loop %s: the commits named in threads could not be checked", pr)
-        for settled in self._pr.runs.pump_and_schedule(pr, ports, schedule=not on_hold):
+        for settled in self._pr.runs.pump_and_schedule(pr, ports,
+                                                       schedule=schedule and not on_hold):
             _announce_settled(news, pr, settled)
 
     def counts(self) -> Counts:
