@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import tomllib
 import typing
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -390,7 +390,7 @@ def _backup_of(path: Path) -> Path:
     return backup
 
 
-def _migrated(path: Path) -> Path | None:
+def _migrated(path: Path, replace: Callable[[str], None]) -> Path | None:
     try:
         original = path.read_bytes()
         data = tomllib.loads(original.decode())
@@ -413,10 +413,7 @@ def _migrated(path: Path) -> Path | None:
         return None
     backup = _backup_of(path)
     backup.write_bytes(original)
-    rewriting = path.with_name(f"{path.name}.migrating")
-    rewriting.write_text(_rendered(data, tables))
-    shutil.copymode(path, rewriting)
-    os.replace(rewriting, path)
+    replace(_rendered(data, tables))
     return backup
 
 
@@ -578,15 +575,17 @@ class TomlConfigFile:
 
     def move_aside(self, now: datetime) -> str:
         moved = self._path.with_name(f"{self._path.name}.broken-{now:%Y%m%d-%H%M%S}")
-        hub_port = _hub_port_of(self._path)
-        os.replace(self._path, moved)
-        if hub_port != OrchestratorConfig.hub_port:
-            self._path.write_text(_rendered({"hub_port": hub_port}, []))
+        with self._locked():
+            hub_port = _hub_port_of(self._path)
+            os.replace(self._path, moved)
+            if hub_port != OrchestratorConfig.hub_port:
+                self._replace(_rendered({"hub_port": hub_port}, []))
         return str(moved)
 
     def migrate(self) -> list[str]:
         said = []
-        backup = _migrated(self._path)
+        with self._locked():
+            backup = _migrated(self._path, self._replace)
         if backup is not None:
             said.append(f"Rewrote {self._path} for this release; the old one is {backup}")
             _, self._problem = read_config(self._path)

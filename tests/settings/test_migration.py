@@ -8,6 +8,7 @@ from tests.settings.support import (
     ConfigProblem,
     load_config,
     read_from,
+    run_during_a_save,
     settings_read_from,
 )
 
@@ -112,6 +113,27 @@ def test_migrating_keeps_the_old_file_beside_it_and_says_where(tmp_path):
                     f"{tmp_path / 'config.toml.bak'}"]
 
 
+def test_migrating_a_symlinked_config_rewrites_the_file_it_links_to(tmp_path):
+    (tmp_path / "dotfiles").mkdir()
+    kept = _config(tmp_path / "dotfiles")
+    config = tmp_path / "config.toml"
+    config.symlink_to(kept)
+
+    _migrated(config)
+
+    assert config.resolve() == kept
+    assert load_config(kept).gh_account == "octocat"
+
+
+def test_migrating_waits_for_a_save_in_progress_and_keeps_what_it_saved(tmp_path):
+    config = _config(tmp_path)
+
+    run_during_a_save(config, lambda: _migrated(config),
+                      lambda: config.write_text(OLD.replace('"octocat"', '"someone"')))
+
+    assert load_config(config).gh_account == "someone"
+
+
 def test_a_second_migration_changes_nothing(tmp_path):
     config = _config(tmp_path)
     _migrated(config)
@@ -120,7 +142,8 @@ def test_a_second_migration_changes_nothing(tmp_path):
     assert _migrated(config) == []
 
     assert config.read_text() == first
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["config.toml", "config.toml.bak"]
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["config.toml", "config.toml.bak",
+                                                              "config.toml.lock"]
 
 
 def test_a_backup_an_earlier_migration_left_is_never_written_over(tmp_path):
@@ -153,7 +176,7 @@ def test_a_config_that_is_missing_or_cannot_be_read_is_left_alone(tmp_path, body
     assert _migrated(config) == []
 
     assert sorted(path.name for path in tmp_path.iterdir()) == (
-        [] if body is None else ["config.toml"])
+        ["config.toml.lock"] if body is None else ["config.toml", "config.toml.lock"])
 
 
 def test_a_migrated_config_passes_the_check_of_the_file_that_migrated_it(tmp_path):

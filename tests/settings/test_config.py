@@ -15,6 +15,7 @@ from tests.settings.support import (
     example_config,
     load_config,
     read_from,
+    run_during_a_save,
     settings_read_from,
 )
 
@@ -738,6 +739,17 @@ def test_a_broken_config_moved_aside_leaves_its_hub_port_behind_so_the_hub_comes
 
     assert toml_file.read_text() == "hub_port = 8721\n"
     assert read_from(toml_file).get(ConfigFile).state() is HubState.SETUP
+
+
+def test_moving_aside_waits_for_a_save_in_progress_and_moves_what_it_saved(tmp_path):
+    toml_file = tmp_path / "config.toml"
+    toml_file.write_text('hub_port = 8721\ngh_acount = "octocat"\n')
+    config_file = read_from(toml_file).get(ConfigFile)
+
+    run_during_a_save(toml_file, lambda: config_file.move_aside(datetime(2026, 10, 9, 8, 30, 5)),
+                      lambda: toml_file.write_text('hub_port = 8723\ngh_acount = "octocat"\n'))
+
+    assert toml_file.read_text() == "hub_port = 8723\n"
 
 
 def test_a_broken_config_is_moved_aside_under_the_time_it_was_moved(tmp_path):
