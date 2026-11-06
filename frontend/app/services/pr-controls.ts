@@ -41,7 +41,7 @@ export type Control =
   | 'git'
   | 'release';
 
-export type Pressed =
+export type PressOutcome =
   | 'nothing'
   | 'done'
   | 'palette'
@@ -278,7 +278,7 @@ export default class PrControlsService extends Service {
     return on ? offerOf(on, control) : ABSENT;
   }
 
-  press(on: Controlled | null, control: Control): Pressed {
+  press(on: Controlled | null, control: Control): PressOutcome {
     if (!on) return 'nothing';
     const offer = offerOf(on, control);
     if (offer.state === 'absent') return 'nothing';
