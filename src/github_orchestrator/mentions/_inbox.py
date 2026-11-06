@@ -19,7 +19,7 @@ from github_orchestrator.github import (
     Threads,
 )
 from github_orchestrator.mentions._listing import listed, started_before, write_listing
-from github_orchestrator.mentions.interface import StartLine
+from github_orchestrator.mentions.interface import StartLine, StartUnread
 
 log = logging.getLogger(__name__)
 
@@ -50,8 +50,11 @@ class GitHubMentionsInbox:
         began = self._clock()
         if self._searched_at is not None and began - self._searched_at < SEARCH_EVERY:
             return
+        try:
+            start = self._start_line.mentions_start(began)
+        except ValueError as unread:
+            raise StartUnread(str(unread)) from unread
         self._searched_at = began
-        start = self._start_line.mentions_start(began)
         started = self._started(began, start)
         mentions: list[ListedMention] = []
         held = False

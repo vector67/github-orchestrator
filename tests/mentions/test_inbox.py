@@ -22,7 +22,7 @@ from github_orchestrator.github import (
     ThreadComment,
 )
 from github_orchestrator.github.fake import GhError
-from github_orchestrator.mentions import MentionsInbox
+from github_orchestrator.mentions import MentionsInbox, StartUnread
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.change_detection.support import POLLED_AT
 from tests.conversation.support import REPO, THE_PR, WORKTREE, at, drain, world
@@ -215,6 +215,17 @@ def test_the_inbox_searches_again_only_once_half_an_hour_has_passed(tmp_path):
     now[0] += timedelta(seconds=1)
 
     assert (early, _listed_threads(here)) == ([], ["IC_1"])
+
+
+def test_an_inbox_whose_start_will_not_read_tries_again_the_next_cycle(tmp_path):
+    here = _here(tmp_path)
+    here.github.repos.add(Repo.parse(REPO))
+    here.settings.config_path.write_text("mentions_start = 2026-10-21T09:00:00Z\n")
+    with pytest.raises(StartUnread, match="mentions_start"):
+        _searched(here)
+    here.settings.config_path.write_text(f'mentions_start = "{START.isoformat()}"\n')
+
+    assert _searched(here)["searched_at"] == datetime.fromisoformat(SEARCHED).isoformat()
 
 
 def test_an_unanswered_mention_on_a_merged_pr_is_listed(tmp_path):

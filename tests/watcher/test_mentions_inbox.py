@@ -1,5 +1,8 @@
+import pytest
+
+from github_orchestrator.mentions import StartUnread
 from github_orchestrator.watcher import Watcher
-from tests.watcher.support import watcher_container, watcher_over
+from tests.watcher.support import health, watcher_container, watcher_over
 
 
 class CountedSearches:
@@ -28,6 +31,15 @@ def test_a_mentions_inbox_that_fails_does_not_fail_the_cycle(settings, caplog):
 
     assert inbox.searches == 1
     assert "mentions.json unwritable" in caplog.text
+
+
+def test_a_config_the_mentions_inbox_cannot_read_fails_the_cycle_and_says_why(settings):
+    inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
+
+    with pytest.raises(StartUnread):
+        watcher_over(settings, mentions_inbox=inbox).run_cycle()
+
+    assert health(settings).last_error.endswith("mentions_start must be in quotes")
 
 
 def test_a_dry_run_says_it_would_search_for_mentions_and_writes_nothing(settings, capsys):

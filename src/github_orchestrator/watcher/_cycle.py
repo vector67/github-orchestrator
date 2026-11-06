@@ -15,7 +15,7 @@ from github_orchestrator.change_detection import (
 from github_orchestrator.conversation import ConversationManagerFactory, ThreadActivity
 from github_orchestrator.domain import HubState, Pr, Sleep, UtcClock
 from github_orchestrator.github import PullRequests
-from github_orchestrator.mentions import MentionsInbox
+from github_orchestrator.mentions import MentionsInbox, StartUnread
 from github_orchestrator.notifications import Courier
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
@@ -392,6 +392,8 @@ class PollingWatcher:
             log.exception("Could not start the next summary")
         try:
             self._mentions_inbox.search_if_due()
+        except StartUnread:
+            raise
         except Exception:
             log.exception("Could not search for mentions")
         log.debug("--- watcher end ---")

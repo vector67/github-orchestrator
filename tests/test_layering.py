@@ -291,7 +291,7 @@ PACKAGES = {
         role="the Harvest extension's board copy is made from the Chrome install it is handed, and knows nothing of the board that asks for it",
     ),
     "mentions": Package(
-        pinned=frozenset({"MentionsInbox", "StartLine"}),
+        pinned=frozenset({"MentionsInbox", "StartLine", "StartUnread"}),
         may_import=("github", "conversation", "board_api"),
         role="the mentions inbox searches GitHub and reads review threads to list what mentions the user, hands the board that list only through the board API's types, and knows nothing of the watcher that runs it",
         imported_by=("wiring", "watcher"),

@@ -10,7 +10,7 @@ import tomllib
 import typing
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +90,7 @@ class OrchestratorConfig:
 _HINTS = typing.get_type_hints(OrchestratorConfig)
 
 
-class ConfigError(Exception):
+class ConfigError(ValueError):
     def __init__(self, said: str, until_setup: str | None = None,
                  until_restart: str | None = None) -> None:
         super().__init__(said)
@@ -136,6 +136,7 @@ def _read(config_path: Path) -> dict[str, Any]:
                           f"keep {RENAMED_KEYS[old]} and remove {old}")
     data = renamed(data)
     _read_repos(config_path, data)
+    _refuse_unquoted_mentions_start(config_path, data.get("mentions_start"))
     fields = OrchestratorConfig.__dataclass_fields__
     for key, value in data.items():
         if key == "repos":
@@ -161,6 +162,12 @@ def _read(config_path: Path) -> dict[str, Any]:
     _check_tracker(config_path, data.get("tracker", Tracker.NONE), data.get("tracker_project", ""))
     _check_mentions_start(config_path, data.get("mentions_start", ""))
     return data
+
+
+def _refuse_unquoted_mentions_start(config_path: Path, written: object) -> None:
+    if isinstance(written, date):
+        raise ConfigError(f"{config_path}: mentions_start must be in quotes: "
+                          f"mentions_start = {_toml_string(written.isoformat())}")
 
 
 def _check_mentions_start(config_path: Path, written: str) -> None:

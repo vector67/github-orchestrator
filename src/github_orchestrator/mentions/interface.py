@@ -2,6 +2,10 @@ from datetime import datetime
 from typing import Protocol
 
 
+class StartUnread(Exception):
+    pass
+
+
 class StartLine(Protocol):
     def mentions_start(self, now: datetime) -> datetime: ...
 

@@ -696,6 +696,21 @@ def test_a_mentions_start_that_is_not_a_moment_is_refused(tmp_path):
         load_config(toml_file)
 
 
+@pytest.mark.parametrize(("written", "quoted"), [
+    ("2026-10-01T00:00:00Z", 'mentions_start = "2026-10-01T00:00:00+00:00"'),
+    ("2026-10-01", 'mentions_start = "2026-10-01"'),
+])
+def test_a_mentions_start_written_without_quotes_is_refused_with_the_line_to_write(
+        tmp_path, written, quoted):
+    toml_file = write_config(tmp_path, f"mentions_start = {written}\n")
+
+    with pytest.raises(ConfigProblem) as e:
+        load_config(toml_file)
+
+    assert "in quotes" in str(e.value)
+    assert quoted in str(e.value)
+
+
 @pytest.mark.parametrize("line", ['  mentions_start = ""', '"mentions_start" = ""',
                                   "'mentions_start' = \"\""])
 def test_an_empty_mentions_start_written_indented_or_quoted_is_stamped_in_place(tmp_path, line):
