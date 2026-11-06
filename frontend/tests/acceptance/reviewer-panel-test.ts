@@ -10,6 +10,7 @@ import {
   operation,
   proposal,
   setupFakeBoard,
+  summary,
   thread,
   type DashboardOver,
   type FakeBoard,
@@ -820,6 +821,47 @@ module('Acceptance | a commit a reply names', function (hooks) {
     assert
       .dom('#panel-fix [data-test-commit-verdict]')
       .hasText('Partly addressed');
+  });
+});
+
+module('Acceptance | a proposal on a reviewer thread', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  hooks.beforeEach(function () {
+    reviewing(board());
+    board().conversations = [
+      {
+        ...board().conversations[0]!,
+        operations: [summary({ id: `${KEY}.1` })],
+      },
+    ];
+    board().proposals[KEY] = [
+      proposal({
+        id: `${KEY}.1.proposal`,
+        conversation: KEY,
+        summary: 'dropped the wrapper class',
+        confidence: 'high',
+        confidence_note: 'both suites pass',
+      }),
+    ];
+    board().diffs[`${KEY}.1.proposal`] = diffOf(
+      'src/tax.py',
+      added(12, '    if rate is None: raise'),
+    );
+  });
+
+  test('the panel draws the proposal: its summary, confidence and diff', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-panel-summary]')
+      .hasText('dropped the wrapper class');
+    assert
+      .dom('[data-test-confidence]')
+      .includesText('Confidence: high')
+      .includesText('both suites pass');
+    assert.dom('[data-test-frame]').includesText('if rate is None: raise');
   });
 });
 

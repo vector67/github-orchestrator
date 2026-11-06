@@ -1174,7 +1174,7 @@ export function panelOf(
     can_delete: canDelete(conversation, comments, context.viewer),
     check_for_fixes: checksForFixes(conversation, context),
   };
-  if (context.role === 'reviewer') {
+  if (context.role === 'reviewer' && !proposal) {
     return {
       ...top,
       ...NO_FIX,
