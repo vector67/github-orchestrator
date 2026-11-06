@@ -37,6 +37,13 @@ description: Must be invoked for any requested front-end change in this reposito
   threads; the preview's made-up data hides the shapes layout bugs live in. Keep
   the preview for the steps that write to GitHub.
 
+  `make preview` builds the front end when it changed and serves the preview on
+  port 8791 (`PREVIEW_PORT=` for another, `PREVIEW_ARGS='--reviewer'` or
+  `--shape <shape>` for the other boards). It is shaped like the hub: its pages
+  and API sit under `/pr/acme/widgets/7/`, so the API answers at
+  `/pr/acme/widgets/7/api/...`, not `/api/...`, and a conversation opens at
+  `/pr/acme/widgets/7/conversations/<key>`.
+
 - **A temporary overlay goes in the top layer.** Open a picker or menu as a
   popover placed at its trigger, never in the page flow (it pushes everything
   down) or inside a box that clips it. Its test asserts it is fully visible and

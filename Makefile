@@ -2,10 +2,11 @@ VENV_PYTHON := $(CURDIR)/.venv/bin/python
 FRONTEND_DIR := $(CURDIR)/frontend
 PYTEST_WORKERS ?= 8
 SERVED_APP := $(CURDIR)/src/github_orchestrator/board_api/static/app
+PREVIEW_PORT ?= 8791
 RESTART_LOCK := $(CURDIR)/.restart-all.lock
 HOLDING_LOCK := $(if $(shell command -v lockf),lockf -k,flock -o)
 
-.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch
+.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch preview
 
 dev-install:
 	uv tool install --force --editable .
@@ -45,6 +46,15 @@ restart-all-holding-the-lock:
 	@echo "==> Building the notification apps"
 	@$(MAKE) --no-print-directory notifier_apps
 	@$(VENV_PYTHON) -m github_orchestrator.cli restart-all
+
+preview:
+	@if [ ! -e $(SERVED_APP)/index.html ] || [ -n "$$(cd $(FRONTEND_DIR) && find app public config index.html vite.config.mjs babel.config.mjs package-lock.json -newer $(SERVED_APP)/index.html -print -quit)" ]; then \
+		$(MAKE) --no-print-directory build_frontend; \
+	else \
+		echo "front end unchanged since its last build"; \
+	fi
+	@echo "preview at http://127.0.0.1:$(PREVIEW_PORT)/pr/acme/widgets/7/"
+	uv run python -m github_orchestrator.preview --port $(PREVIEW_PORT) --agents-disabled $(PREVIEW_ARGS)
 
 notifier_apps:
 	@sh src/github_orchestrator/desktop/notifier/build.sh
