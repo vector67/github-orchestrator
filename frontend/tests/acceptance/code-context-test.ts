@@ -83,6 +83,29 @@ module('Acceptance | code context', function (hooks) {
     ]);
   });
 
+  test('See in diff opens an outdated thread at the line GitHub places it on in the latest commit', async function (assert) {
+    board().conversations = [
+      thread({
+        key: 'k1',
+        anchor: {
+          ...thread().anchor,
+          line: 42,
+          original_line: 30,
+          is_outdated: true,
+        },
+      }),
+    ];
+    board().sources['a1b2c3d:src/foo.py'] = sourceWith({});
+
+    await visit('/pr/o/r/7/conversations/k1');
+    await click('[data-test-context] [data-test-see-in-diff]');
+
+    assert.strictEqual(
+      currentURL(),
+      '/pr/o/r/7/diff?file=src%2Ffoo.py&line=42',
+    );
+  });
+
   test('a thread on removed lines reads them from the merge base the diff starts at', async function (assert) {
     board().conversations = [
       thread({

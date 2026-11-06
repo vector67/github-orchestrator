@@ -37,7 +37,7 @@ export default class CodeContext extends Component<CodeContextSignature> {
   }
 
   get diffAt(): { file: string; line: string } {
-    return { file: this.args.code.path, line: String(this.args.code.first) };
+    return { file: this.args.code.path, line: String(this.args.code.in_diff) };
   }
 
   @cached

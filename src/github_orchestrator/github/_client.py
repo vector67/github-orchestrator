@@ -29,7 +29,6 @@ log = logging.getLogger(__name__)
 _SEARCHES: dict[Whose, str] = {
     "author": "--author=@me",
     "review-requested": "--review-requested=@me",
-    "mentions": "--mentions=@me",
 }
 
 _LISTED = "user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member"
@@ -134,11 +133,11 @@ class GhCliGitHub:
 
     def search(self, repos: Collection[Repo], whose: Whose, *,
                updated_since: datetime | None = None) -> list[Pr]:
+        query = f'"@{self._account}"' if whose == "mentions" else _SEARCHES[whose]
         if updated_since is None:
-            return self._gh.search_prs(repos, _SEARCHES[whose])
+            return self._gh.search_prs(repos, query)
         updated = updated_since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-        return self._gh.search_prs(repos, _SEARCHES[whose], f"--updated=>={updated}",
-                                   open_only=False)
+        return self._gh.search_prs(repos, query, f"--updated=>={updated}", open_only=False)
 
     def pr_state(self, pr: Pr) -> PullRequestState:
         ahead = self._states_ahead.pop(pr, None)
