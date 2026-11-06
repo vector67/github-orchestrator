@@ -77,6 +77,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ROLE_REVIEWER,
     RUNNING,
     SESSION_GONE,
+    THUMBS_UP,
     WAITING_ON_REVIEWER,
     WITHDRAWN,
     Anchor,
@@ -94,6 +95,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Run,
     Step,
     UnreadableRecord,
+    reacted,
 )
 from github_orchestrator.conversation._domain.diff import (
     KIND_DRAFT,
@@ -930,10 +932,10 @@ def _unresolves_on_github(conversation: Conversation) -> bool:
             and conversation.comment_type == KIND_REVIEW)
 
 
-def _newest_other_comment(conversation: Conversation, viewer: str) -> int | None:
+def _newest_other_comment(conversation: Conversation, viewer: str) -> Comment | None:
     for comment in reversed(conversation.comments):
         if comment.author != viewer and comment.id is not None:
-            return comment.id
+            return comment
     return None
 
 
@@ -948,11 +950,12 @@ def _settled_with_thumbs_up(told: Conversation, viewer: str) -> Accepted:
     if (told.closing_reply or told.closing_without_thumbs_up
             or told.role != ROLE_REVIEWER or told.comment_type != KIND_REVIEW):
         return settled
-    comment_id = _newest_other_comment(told, viewer)
-    if comment_id is None:
+    comment = _newest_other_comment(told, viewer)
+    if comment is None or comment.id is None:
         return settled
     return Accepted(settled.conversation,
-                    (React(comment_id=comment_id),) + settled.effects)
+                    (React(comment_id=comment.id, node_id=comment.node_id),)
+                    + settled.effects)
 
 
 def _thread_unresolved(conversation: Conversation,
@@ -1299,7 +1302,9 @@ def _dispatch(conversation: Conversation, command: Change,
             return _decision_failed(conversation,
                                     f"reopen failed: {command.error}")
         case ReactionPosted():
-            return Accepted(conversation)
+            return Accepted(replace(conversation, comments=tuple(
+                reacted(c, THUMBS_UP, True) if c.id == command.comment_id else c
+                for c in conversation.comments)))
         case ReactionFailed():
             return Accepted(with_fix(
                 conversation, reply_note=f"thumbs-up failed: {command.error}"))

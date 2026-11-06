@@ -204,9 +204,6 @@ class GhCliGitHub:
         else:
             _threads.unresolve_thread(self._gh, key)
 
-    def react(self, repo: Repo, comment_id: int) -> None:
-        _threads.react(self._gh, repo, comment_id)
-
     def set_reaction(self, node_id: str, content: str, *, mine: bool) -> None:
         if mine:
             _threads.add_reaction(self._gh, node_id, ReactionContent(content))

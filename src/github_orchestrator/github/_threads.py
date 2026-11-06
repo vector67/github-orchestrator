@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
-from github_orchestrator.domain import Location, Pr, Repo, Side
+from github_orchestrator.domain import Location, Pr, Side
 from github_orchestrator.github._gh_cli import Gh
 from github_orchestrator.github.interface import (
     CommentKind,
@@ -360,11 +360,6 @@ def resolve_thread(gh: Gh, key: str) -> None:
 
 def unresolve_thread(gh: Gh, key: str) -> None:
     gh.graphql_mutate(_UNRESOLVE_THREAD, {"threadId": key})
-
-
-def react(gh: Gh, repo: Repo, comment_id: int) -> None:
-    gh.api_json(f"repos/{repo}/pulls/comments/{comment_id}/reactions",
-                {"content": "+1"})
 
 
 _ADD_REACTION = """

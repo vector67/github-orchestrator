@@ -1,6 +1,7 @@
 from github_orchestrator.github.interface import (
     Access,
     CommentKind,
+    GhError,
     PullRequests,
     PullRequestState,
     Reviews,
@@ -14,6 +15,7 @@ from github_orchestrator.github.interface import (
 __all__ = [
     "Access",
     "CommentKind",
+    "GhError",
     "PullRequestState",
     "PullRequests",
     "ReviewState",

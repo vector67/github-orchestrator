@@ -507,7 +507,7 @@ def test_an_authors_resolve_on_github_puts_no_thumbs_up_on_the_thread(stage):
     drain(threads)
 
     assert stage.github.thread(KEY).is_resolved is True
-    assert stage.github.reactions == {}
+    assert stage.github.thumbed_up() == []
 
 
 def test_an_authors_resolve_on_github_of_a_removed_comment_closes_it_on_the_board(stage):

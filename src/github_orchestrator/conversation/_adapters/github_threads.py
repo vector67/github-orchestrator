@@ -24,6 +24,7 @@ from github_orchestrator.conversation._domain.thread import FetchedThread
 from github_orchestrator.domain import Location, Pr, Repo, Sha
 from github_orchestrator.github import (
     CommentKind,
+    GhError,
     PullRequests,
     Reviews,
     Thread,
@@ -161,13 +162,10 @@ class GitHubThreads:
     def unresolve_thread(self, conversation: Conversation) -> None:
         self._github.set_resolved(_thread_id(conversation), False)
 
-    def react(self, conversation: Conversation, comment_id: int) -> None:
-        self._github.react(self._pr.repo, comment_id)
-
     def set_reaction(self, node_id: str, content: str, mine: bool) -> str | None:
         try:
             self._github.set_reaction(node_id, content, mine=mine)
-        except RuntimeError as error:
+        except GhError as error:
             return str(error)
         return None
 

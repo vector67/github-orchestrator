@@ -278,7 +278,7 @@ PACKAGES = {
     ),
     "github": Package(
         pinned=frozenset({
-            "Access", "CommentKind", "PullRequestState", "PullRequests",
+            "Access", "CommentKind", "GhError", "PullRequestState", "PullRequests",
             "ReviewState", "Reviews", "Thread", "ThreadComment",
             "Threads", "Verdict",
         }),

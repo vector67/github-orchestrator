@@ -226,7 +226,7 @@ class ThreadUnresolveFailed:
 
 @dataclass(frozen=True)
 class ReactionPosted:
-    pass
+    comment_id: int
 
 
 @dataclass(frozen=True)

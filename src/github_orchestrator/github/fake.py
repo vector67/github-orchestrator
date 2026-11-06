@@ -90,6 +90,7 @@ def _as_github_answers(thread: Thread) -> Thread:
             comment,
             author=comment.author or "ghost",
             updated_at=comment.updated_at or comment.created_at,
+            node_id=comment.node_id or f"PRRC_{comment.id}",
         )
         if thread.kind is CommentKind.ISSUE:
             comment = replace(comment, review_state=None, node_id=thread.key)
@@ -122,7 +123,6 @@ class FakeGitHub:
         self.granted: dict[str, tuple[str, ...]] = {account: ("repo",)}
         self.cloned: list[tuple[Repo, Path]] = []
         self.prs: dict[Pr, FakePullRequest] = {}
-        self.reactions: dict[int, list[str]] = {}
         self.emojis_named: dict[str, str] = {}
         self.assignable: dict[Repo, list[str]] = {}
         self._ids = itertools.count(9001)
@@ -332,11 +332,11 @@ class FakeGitHub:
         self._put(record, replace(thread, is_resolved=resolved,
                                   resolved_by=self.account if resolved else None))
 
-    def react(self, repo: Repo, comment_id: int) -> None:
-        if not self._holds(repo, None, CommentKind.REVIEW, comment_id):
-            raise GhError(f"gh api POST repos/{repo}/pulls/comments/{comment_id}/"
-                          f"reactions failed (exit 1): gh: Not Found (HTTP 404)")
-        self.reactions.setdefault(comment_id, []).append("+1")
+    def thumbed_up(self) -> list[int | None]:
+        return [comment.id for record in self.prs.values() for thread in record.threads
+                for comment in thread.comments
+                if any(r.content is ReactionContent.THUMBS_UP and r.mine
+                       for r in comment.reactions)]
 
     def set_reaction(self, node_id: str, content: str, *, mine: bool) -> None:
         self._react_by_node(node_id, ReactionContent(content), mine=mine)

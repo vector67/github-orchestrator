@@ -17,6 +17,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
 )
 from github_orchestrator.conversation._domain.conversation import (
+    THUMBS_UP,
     CommitCheck,
     CommitVerdict,
     Conversation,
@@ -325,11 +326,10 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
                 return ThreadUnresolveFailed(_failed(conversation, effect, exc))
             return ThreadUnresolved(at=ports.clock.now())
         case React():
-            try:
-                ports.github.react(conversation, effect.comment_id)
-            except Exception as exc:
-                return ReactionFailed(_failed(conversation, effect, exc))
-            return ReactionPosted()
+            refused = ports.github.set_reaction(effect.node_id, THUMBS_UP, True)
+            if refused is not None:
+                return ReactionFailed(refused)
+            return ReactionPosted(effect.comment_id)
         case DropWorkspace():
             failure = thread_workspace(ports, conversation).drop()
             if failure is not None:

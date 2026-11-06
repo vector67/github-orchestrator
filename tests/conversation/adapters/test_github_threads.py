@@ -195,7 +195,7 @@ def test_the_thumbs_up_goes_on_the_newest_other_comment_and_not_the_root(setting
 
     _decided(threads, "PRRT_one", "resolve", resolve=True)
 
-    assert built.github.reactions == {404: ["+1"]}
+    assert built.github.thumbed_up() == [404]
 
 
 def test_the_comment_the_conversation_names_is_deleted(settings):

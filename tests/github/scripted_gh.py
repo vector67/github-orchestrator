@@ -388,7 +388,6 @@ class _World:
             ("GET", r"repos/([^/]+/[^/]+)/pulls/(\d+)/reviews/(\d+)/comments",
              self._review_comments),
             ("POST", r"repos/([^/]+/[^/]+)/issues/(\d+)/comments", self._comment_on_pr),
-            ("POST", r"repos/([^/]+/[^/]+)/pulls/comments/(\d+)/reactions", self._react),
             ("POST", r"repos/([^/]+/[^/]+)/pulls/(\d+)/comments", self._review_comment),
             ("POST", r"repos/([^/]+/[^/]+)/pulls/(\d+)/reviews", self._review),
             ("POST", r"repos/([^/]+/[^/]+)/pulls/(\d+)/reviews/(\d+)/events", self._submit),
@@ -485,14 +484,6 @@ class _World:
         except GhError:
             return Failure(NOT_FOUND)
         return _rest_comment(posted.comment, node_id=posted.key)
-
-    def _react(self, request: GhRequest, repo: str, comment_id: str) -> Any:
-        assert request.payload == {"content": "+1"}, request.payload
-        try:
-            self.world.react(Repo.parse(repo), int(comment_id))
-        except GhError:
-            return Failure(NOT_FOUND)
-        return {"id": 1, "content": "+1"}
 
     def _draft(self, placed: dict[str, Any]) -> tuple[Location, str]:
         sides = {word: side for side, word in _WORDS.items()}

@@ -556,7 +556,7 @@ def test_a_reviewer_resolve_tells_github_and_thumbs_up_the_last_word(settings):
     stored = s.decide("resolve", resolve=True)
 
     assert s.here.github.thread(KEY).is_resolved is True
-    assert s.here.github.reactions == {202: ["+1"]}
+    assert s.here.github.thumbed_up() == [202]
     assert [c.id for c in s.here.github.thread(KEY).comments] == [COMMENT_ID, 202]
     assert stored.standing is ConversationState.DONE
     assert stored.github_resolved is True

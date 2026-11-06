@@ -1041,7 +1041,7 @@ def test_resolving_a_reviewer_thread_with_a_reply_posts_then_resolves(settings):
     assert settled.standing is ConversationState.DONE
     assert settled.github_resolved is True
     assert settled.github_resolved_at == NOW
-    assert here.github.reactions == {}, "a reply is the thanks"
+    assert here.github.thumbed_up() == [], "a reply is the thanks"
 
 
 def test_resolving_a_reviewer_thread_without_a_reply_resolves_then_thumbs_up_the_newest_other_comment(settings):
@@ -1051,8 +1051,18 @@ def test_resolving_a_reviewer_thread_without_a_reply_resolves_then_thumbs_up_the
     _asked(threads, "resolve", resolve=True)
 
     assert _on_github(here).is_resolved is True
-    assert here.github.reactions == {5002: ["+1"]}
+    assert here.github.thumbed_up() == [5002]
     assert _held(threads).standing is ConversationState.DONE
+
+
+def test_the_thumbs_up_shows_on_the_stored_comment_before_the_next_poll(settings):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+
+    _asked(threads, "resolve", resolve=True)
+
+    thanked = next(c for c in _held(threads).comments if c.id == 5002)
+    assert [(r.content, r.count, r.mine) for r in thanked.reactions] == [("THUMBS_UP", 1, True)]
 
 
 def test_resolving_a_reviewer_thread_without_the_thumbs_up_resolves_and_reacts_to_nothing(settings):
@@ -1062,7 +1072,7 @@ def test_resolving_a_reviewer_thread_without_the_thumbs_up_resolves_and_reacts_t
     _asked(threads, "resolve", thumbs_up=False, resolve=True)
 
     assert _on_github(here).is_resolved is True
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
     assert _held(threads).standing is ConversationState.DONE
 
 
@@ -1083,7 +1093,7 @@ def test_resolving_with_a_blank_reply_is_refused_and_touches_nothing_on_github(s
     assert outcome.code == ErrorCode.EMPTY_BODY
     assert len(_on_github(here).comments) == comments_before
     assert not _on_github(here).is_resolved
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
     assert _held(threads).standing is not ConversationState.DONE
 
 
@@ -1106,7 +1116,7 @@ def test_a_reviewers_resolve_kept_on_the_board_still_thumbs_up_the_newest_other_
     _asked(threads, "resolve")
 
     assert not _on_github(here).is_resolved
-    assert here.github.reactions == {5002: ["+1"]}
+    assert here.github.thumbed_up() == [5002]
     assert _held(threads).standing is ConversationState.DONE
 
 
@@ -1116,7 +1126,7 @@ def test_a_reviewers_resolve_kept_on_the_board_without_the_thumbs_up_reacts_to_n
 
     _asked(threads, "resolve", thumbs_up=False)
 
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
     assert _held(threads).standing is ConversationState.DONE
 
 
@@ -1128,7 +1138,7 @@ def test_a_thread_with_only_the_openers_comments_gets_no_reaction(settings):
     _asked(threads, "resolve")
 
     assert _held(threads).standing is ConversationState.DONE
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
 
 
 def test_confirming_a_mention_i_answered_thumbs_up_the_mentioner_not_my_reply(settings):
@@ -1138,7 +1148,7 @@ def test_confirming_a_mention_i_answered_thumbs_up_the_mentioner_not_my_reply(se
 
     _asked(threads, "resolve", resolve=True)
 
-    assert here.github.reactions == {5001: ["+1"]}
+    assert here.github.thumbed_up() == [5001]
 
 
 def test_confirming_a_mention_with_no_reply_thumbs_up_the_mentioner(settings):
@@ -1147,7 +1157,7 @@ def test_confirming_a_mention_with_no_reply_thumbs_up_the_mentioner(settings):
 
     _asked(threads, "resolve")
 
-    assert here.github.reactions == {5001: ["+1"]}
+    assert here.github.thumbed_up() == [5001]
 
 
 def test_a_reviewers_resolve_of_a_conversation_comment_reacts_to_nothing(settings):
@@ -1156,7 +1166,7 @@ def test_a_reviewers_resolve_of_a_conversation_comment_reacts_to_nothing(setting
 
     _asked(threads, "resolve")
 
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
     assert not _held(threads).fix.reply_note
     assert _held(threads).standing is ConversationState.DONE
 
@@ -1219,7 +1229,7 @@ def test_a_failed_reaction_is_a_note_and_the_thread_still_settles(settings):
     stored = _held(threads)
     assert stored.standing is ConversationState.DONE
     assert stored.fix.reply_note.startswith("thumbs-up failed: ")
-    assert here.github.reactions == {}
+    assert here.github.thumbed_up() == []
 
 
 def test_resolving_an_author_thread_silently_settles_it_here_only(settings):

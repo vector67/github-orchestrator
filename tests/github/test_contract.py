@@ -59,7 +59,8 @@ def _state(**fields):
 def _comment(comment_id, author="reviewer", body="please fix", **fields):
     return ThreadComment(id=comment_id, author=author, body=body,
                          created_at="2026-09-01T10:00:00Z",
-                         updated_at="2026-09-01T10:00:00Z", **fields)
+                         updated_at="2026-09-01T10:00:00Z",
+                         **{"node_id": f"PRRC_{comment_id}", **fields})
 
 
 def _review_thread(key="PRRT_one", *comments, **fields):
@@ -491,22 +492,6 @@ def test_resolving_a_thread_github_does_not_know_is_an_error(github):
         github.set_resolved("PRRT_gone", True)
     with pytest.raises(GhError):
         github.set_resolved("PRRT_gone", False)
-
-
-def test_a_thumbs_up_lands_on_the_comment_it_is_given(world, github):
-    world.add_pr(a_pr(7, REPO), _state())
-    world.add_thread(a_pr(7, REPO), _review_thread("PRRT_one", _comment(101), _comment(404)))
-
-    github.react(Repo.parse(REPO), 404)
-
-    assert world.reactions == {404: ["+1"]}
-
-
-def test_a_thumbs_up_on_a_comment_github_does_not_know_is_an_error(world, github):
-    world.add_pr(a_pr(7, REPO), _state())
-
-    with pytest.raises(GhError):
-        github.react(Repo.parse(REPO), 404)
 
 
 def test_a_review_comment_opens_a_thread_on_its_line(world, github):

@@ -86,6 +86,7 @@ class UnresolveThread:
 @dataclass(frozen=True)
 class React:
     comment_id: int
+    node_id: str
 
 
 @dataclass(frozen=True)

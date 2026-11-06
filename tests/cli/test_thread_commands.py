@@ -866,7 +866,7 @@ def test_resolve_without_resolving_on_github_puts_no_thumbs_up_on_the_thread(
 
     _directed(run_cli, threads, "resolve", OperationKind.RESOLVE)
 
-    assert machine.github.reactions == {}
+    assert machine.github.thumbed_up() == []
     assert _stored(threads).standing is ConversationState.DONE
 
 

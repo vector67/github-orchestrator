@@ -41,13 +41,13 @@ def _confirmed(board, key="PRRT_one"):
 def test_confirm_moves_an_assumed_done_thread_to_done_and_touches_nothing_on_github(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("assumed-done")
-    on_github = copy.deepcopy((board.here.github.prs[THE_PR], board.here.github.reactions))
+    on_github = copy.deepcopy(board.here.github.prs[THE_PR])
 
     _confirmed(board)
 
     held = board.get("PRRT_one")
     assert (held.standing, held.state) == (ConversationState.DONE, "confirmed")
-    assert (board.here.github.prs[THE_PR], board.here.github.reactions) == on_github
+    assert board.here.github.prs[THE_PR] == on_github
 
 
 def test_only_an_assumed_done_thread_can_be_confirmed(settings):
@@ -76,13 +76,12 @@ def test_a_reviewer_places_a_thread_any_verdict_put_somewhere_in_each_outcome_by
                    ConversationState.NOT_MINE):
             board = _one_review_thread(settings)
             board.agent_runs.give(word)
-            on_github = copy.deepcopy((board.here.github.prs[THE_PR],
-                                       board.here.github.reactions))
+            on_github = copy.deepcopy(board.here.github.prs[THE_PR])
             _placed(board, to)
             held = board.get("PRRT_one")
             placed[word, to] = (held.standing, held.unread,
                                 len(board.agent_runs.verdicts_asked()))
-            assert (board.here.github.prs[THE_PR], board.here.github.reactions) == on_github
+            assert board.here.github.prs[THE_PR] == on_github
 
     assert placed == {
         ("my-move", ConversationState.READY): (ConversationState.READY, False, 1),

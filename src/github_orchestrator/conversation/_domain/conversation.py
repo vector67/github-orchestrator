@@ -304,7 +304,9 @@ class Comment:
     reactions: tuple[Reaction, ...] = ()
 
 
-REACTION_ORDER = ("THUMBS_UP", "THUMBS_DOWN", "LAUGH", "HOORAY", "CONFUSED", "HEART",
+THUMBS_UP = "THUMBS_UP"
+
+REACTION_ORDER = (THUMBS_UP, "THUMBS_DOWN", "LAUGH", "HOORAY", "CONFUSED", "HEART",
                   "ROCKET", "EYES")
 
 
