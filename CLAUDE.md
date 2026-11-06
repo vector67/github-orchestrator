@@ -14,6 +14,7 @@ make test      # the python suite, then the ember suite, then one line with both
 make lint-fix  # whatever those linters fix themselves
 make watch     # rerun the python suite on every save
 make interface-report  # each package's exports and each class's methods against the spec's budgets
+make contract  # regenerate the front end's API types and the fake board's contract copy
 ```
 
 Either aggregate stops at the first stage that fails. `lint-python`,

@@ -111,6 +111,7 @@ def test_the_board_app_checks_its_fake_against_the_contract_the_board_serves():
     held_types = rewritten(TYPES, types)
 
     assert (held, held_types) == (wanted, types), (
-        f"{COPY.name} or {TYPES.name} was behind /api/openapi.json and has "
-        "been rewritten; commit both and run the ember suite, whose types "
-        "come from it and whose FakeBoard answers are checked against it")
+        f"{COPY.name} or {TYPES.name} was behind /api/openapi.json, so this "
+        "test rewrote both and a rerun (or make contract) should pass. Commit "
+        "them, then run the full make lint and make test: the front end's types changed, and its "
+        "FakeBoard answers are checked against the contract")

@@ -6,7 +6,7 @@ PREVIEW_PORT ?= 8791
 RESTART_LOCK := $(CURDIR)/.restart-all.lock
 HOLDING_LOCK := $(if $(shell command -v lockf),lockf -k,flock -o)
 
-.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch preview
+.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch preview contract
 
 dev-install:
 	uv tool install --force --editable .
@@ -124,6 +124,14 @@ test-frontend:
 
 record:
 	uv run pytest tests/ -q --record
+
+contract:
+	@if uv run pytest tests/board_api/test_contract_copy.py -q -p no:randomly >/dev/null; then \
+		echo "the front end's API types already match /api/openapi.json"; \
+	else \
+		uv run pytest tests/board_api/test_contract_copy.py -q -p no:randomly && \
+		echo "rewrote frontend/app/data/api.ts and the fake board's contract copy; commit both, then run the full make lint and make test"; \
+	fi
 
 interface-report:
 	uv run python -m tests.interface_report
