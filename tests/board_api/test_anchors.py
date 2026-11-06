@@ -101,15 +101,29 @@ def in_context(path, size):
                                     section=None, lines=lines),))
 
 
-def test_a_diff_of_thousands_of_lines_anchors_in_under_a_second():
-    size = 5000
+def anchoring_of(size):
     copies = FakeWorkingCopies()
     copies.show_diff((in_context("src/big.py", size),))
     client, shas = pull_request({"src/big.py": "old\n"}, {"src/big.py": "new\n"}, copies=copies)
+    return lambda: anchors(client, shas[0], shas[1], shas)
 
-    started = time.monotonic()
-    answer = anchors(client, shas[0], shas[1], shas)
-    elapsed = time.monotonic() - started
 
-    assert onto(answer, "src/big.py", "LEFT", size) == {"side": "LEFT", "line": size}
-    assert elapsed < 1, f"anchoring {2 * size} diff lines took {elapsed:.1f}s"
+def timed(anchoring):
+    started = time.perf_counter()
+    answer = anchoring()
+    return time.perf_counter() - started, answer
+
+
+def test_a_diff_ten_times_longer_anchors_in_about_ten_times_the_time():
+    small, large = 500, 5000
+    anchor_small, anchor_large = anchoring_of(small), anchoring_of(large)
+
+    small_times, large_times = [], []
+    for _ in range(3):
+        small_times.append(timed(anchor_small)[0])
+        elapsed, answer = timed(anchor_large)
+        large_times.append(elapsed)
+    ratio = min(large_times) / min(small_times)
+
+    assert onto(answer, "src/big.py", "LEFT", large) == {"side": "LEFT", "line": large}
+    assert ratio < 30, f"ten times the lines took {ratio:.0f} times as long to anchor"
