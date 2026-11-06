@@ -17,6 +17,15 @@ wait.
     `summarising`, `checking`, `writing`, `moving`, `going`, …) and
     `board.acting` go. **Done** (steps 1–7, `204b8b69` to `a3b66bb4`).
 
+    The exception is a write with no PR entity: the setup page's writes and
+    harvest Prepare. Each is the same `sent` operation, made by the same
+    `sending`, but held in its own slot (`setupWrite`, `harvestExtension`)
+    beside the fields or folder its answer brings, and read through
+    `pressedBy` in `summaries.ts` like every other write. `operations` is
+    keyed by PR and merged with what the server's operation list returns,
+    and these writes have neither a key there nor a server operation to be
+    replaced by: the HTTP answer settles them.
+
 02. **What derives from it.** `thread.ts` `outstanding()` and `busy()` treat
     `sent` like `pending`, so rows, panels, cards and the composer lock follow.
     The word is `decisions.inFlight(kind)`; verbs without one get one there.
