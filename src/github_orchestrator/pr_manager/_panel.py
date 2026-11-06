@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.agent_runs import History, PrWork
-from github_orchestrator.board_api import Dashboard, ManagerPanel
+from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.interface import DismissUntil, ManagerRefusal
 from github_orchestrator.domain import Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
@@ -33,7 +33,7 @@ _DISMISS_COMMANDS = {
 }
 
 
-class FilePanel(ManagerPanel):
+class FilePanel(ManagerPanel, ManagerWorktree):
     def __init__(self, pr: Pr, worktree: Callable[[], str], *, agents_enabled: bool,
                  run: GitRun, monotonic: Monotonic, status_files: StatusFiles,
                  command_files: CommandFiles, dashboards: DashboardSource,
@@ -167,6 +167,12 @@ class FilePanels:
         self._pr_work = pr_work
 
     def of(self, pr: Pr) -> ManagerPanel:
+        return self._panel(pr)
+
+    def worktree(self, pr: Pr) -> ManagerWorktree:
+        return self._panel(pr)
+
+    def _panel(self, pr: Pr) -> FilePanel:
         return FilePanel(pr, lambda: self._pr_processes.manager_path(pr) or "",
                          agents_enabled=self._config_of(pr, "").agents_enabled, run=self._run,
                          monotonic=self._monotonic, status_files=self._status_files,

@@ -148,7 +148,8 @@ class OneServer:
             return board_app(Board(
                 conversations=self._conversation_managers.of(pr),
                 git=self._working_copies.checkout(pr), pr=pr, port=port,
-                manager=self._panels.of(pr), app_root=self._app_root, hub_url=url,
+                manager=self._panels.of(pr), worktree=self._panels.worktree(pr),
+                app_root=self._app_root, hub_url=url,
                 fonts=self._fonts, check_presence=self._check_presence,
                 first_names_only=self._first_names_only,
                 heartbeat_seconds=self._heartbeat_seconds, check_seconds=self._check_seconds,

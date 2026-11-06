@@ -20,7 +20,7 @@ from starlette.types import ASGIApp
 
 from github_orchestrator.agent_runs import History
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api import ManagerPanel
+from github_orchestrator.board_api import ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.fake import (
     FakeDashboards,
     FakeEmojis,
@@ -133,7 +133,7 @@ class Serving(TypedDict, total=False):
     check_presence: bool
     app_root: Path
     font_dir: str | None
-    manager: ManagerPanel | None
+    manager: FakeManagerPanel | None
     heartbeat_seconds: float
     sessions: TerminalSessions | None
     first_names_only: bool
@@ -173,9 +173,12 @@ class OneTerminal:
 
 @dataclass
 class OnePanel:
-    panel: ManagerPanel
+    panel: FakeManagerPanel
 
     def of(self, pr: Pr) -> ManagerPanel:
+        return self.panel
+
+    def worktree(self, pr: Pr) -> ManagerWorktree:
         return self.panel
 
 
@@ -500,6 +503,9 @@ class CountedPanels:
 
     def of(self, pr: Pr) -> ManagerPanel:
         self.asked.append(pr)
+        return self.panel
+
+    def worktree(self, pr: Pr) -> ManagerWorktree:
         return self.panel
 
 

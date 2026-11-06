@@ -142,6 +142,7 @@ from github_orchestrator.board_api.interface import (
     ManagerPanel,
     ManagerRefusal,
     ManagerStanding,
+    ManagerWorktree,
     Mentionable,
     ResetToOrigin,
     Shelf,
@@ -184,6 +185,7 @@ class Board:
     pr: Pr
     port: int
     manager: ManagerPanel
+    worktree: ManagerWorktree
     app_root: Path
     hub_url: str
     heartbeat_seconds: float
@@ -1037,7 +1039,7 @@ def run_git(board: Serving, asked: GitRequest) -> GitRun:
     palette runs it: bounded in time, never prompting. A push that fails is
     answered here with its exit code, not refused.
     """
-    ran = board.manager.run_git(asked.keys.value)
+    ran = board.worktree.run_git(asked.keys.value)
     if isinstance(ran, ManagerRefusal):
         raise _ruled_out(ran)
     exit_code, lines, seconds = ran
@@ -1086,7 +1088,7 @@ def open_terminal(board: Serving, asked: TerminalRequest) -> TerminalSessionList
     manager opens it as a new session here. Answered with the sessions after
     it opened, so a new one is the one not listed before.
     """
-    _opened(board.manager.open_terminal(asked.keys))
+    _opened(board.worktree.open_terminal(asked.keys))
     return _sessions(board)
 
 
@@ -1098,7 +1100,7 @@ def ask_the_agent(board: Serving, asked: QuestionRequest) -> TerminalSessionList
     first message. Answered with the sessions after it opened, so a new one
     is the one not listed before.
     """
-    _opened(board.manager.ask(asked.prompt))
+    _opened(board.worktree.ask(asked.prompt))
     return _sessions(board)
 
 
@@ -1845,12 +1847,12 @@ def _dashboard(board: Board) -> Dashboard:
 
 
 def _changes(board: Board) -> ManagerChanges:
-    return ManagerChanges(markdown=board.manager.changes())
+    return ManagerChanges(markdown=board.worktree.changes())
 
 
 def _output(board: Board, lines: int) -> AgentOutput:
     return AgentOutput(lines=[OutputLine(text=text, run_boundary=boundary)
-                               for text, boundary in board.manager.agent_output(lines)])
+                               for text, boundary in board.worktree.agent_output(lines)])
 
 
 OutputLines = Annotated[int, Query(ge=1, le=MAX_OUTPUT_LINES)]

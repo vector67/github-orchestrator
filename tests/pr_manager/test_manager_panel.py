@@ -592,8 +592,8 @@ def _frozen_and_managed(settings, tmp_path):
 
 
 ASKS = {
-    "a question": lambda panel: panel.ask("Why this name?"),
-    "a terminal": lambda panel: panel.open_terminal("a"),
+    "a question": lambda worktree: worktree.ask("Why this name?"),
+    "a terminal": lambda worktree: worktree.open_terminal("a"),
 }
 
 
@@ -601,7 +601,7 @@ ASKS = {
 def test_a_frozen_status_refuses_while_it_is_fresh(settings, tmp_path, asking):
     manager = _frozen_and_managed(settings, tmp_path)
 
-    assert asking(manager.board.panel) == ManagerRefusal.WORKTREE_FROZEN
+    assert asking(manager.board.worktree) == ManagerRefusal.WORKTREE_FROZEN
 
 
 @pytest.mark.parametrize("asking", ASKS.values(), ids=ASKS.keys())

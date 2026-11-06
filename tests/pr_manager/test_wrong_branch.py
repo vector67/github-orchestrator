@@ -212,7 +212,7 @@ def test_git_from_the_board_while_frozen_is_refused_and_runs_nothing(settings, t
     answers = []
     working_copies = _checked_out(tmp_path, EXPECTED)
     run_manager(settings, _check_out(working_copies, tmp_path, HERE),
-                lambda: answers.append(board.panel.run_git("p")), None,
+                lambda: answers.append(board.worktree.run_git("p")), None,
                 worktree=tmp_path, is_author=True, board=board, pr_processes=managed_in(tmp_path),
                 working_copies=working_copies, run=lambda argv, **kwargs: ran.append(argv))
 
@@ -227,7 +227,7 @@ def test_a_terminal_from_the_board_while_frozen_is_refused_and_opens_nothing(set
     answers = []
     working_copies = _checked_out(tmp_path, EXPECTED)
     run_manager(settings, _check_out(working_copies, tmp_path, HERE),
-                lambda: answers.append(board.panel.open_terminal("a")), None,
+                lambda: answers.append(board.worktree.open_terminal("a")), None,
                 worktree=tmp_path, is_author=True, board=board,
                 working_copies=working_copies, pr_processes=windows)
 

@@ -36,7 +36,7 @@ def panels_over(settings, windows, run=subprocess.run):
 
 def test_a_panel_reads_the_notes_in_the_worktree_its_manager_was_started_in(settings, tmp_path):
     windows = FakePrProcesses()
-    panel = panels_over(settings, windows).of(THE_PR)
+    panel = panels_over(settings, windows).worktree(THE_PR)
     windows.open(THE_PR, tmp_path)
     windows.changes[tmp_path] = "# What changed\n"
 
@@ -49,7 +49,7 @@ def test_git_for_a_pr_whose_manager_never_started_is_refused_and_runs_nothing(
     monkeypatch.chdir(tmp_path)
     ran = []
     panel = panels_over(settings, FakePrProcesses(), run=lambda *args, **kwargs: ran.append(args)
-                        ).of(THE_PR)
+                        ).worktree(THE_PR)
 
     refused = panel.run_git("s")
 
@@ -66,6 +66,6 @@ def test_a_press_for_a_pr_whose_manager_never_started_is_refused_and_queues_noth
 def test_a_terminal_for_a_pr_whose_manager_never_started_is_refused_and_opens_nothing(settings):
     windows = FakePrProcesses()
 
-    refused = panels_over(settings, windows).of(THE_PR).open_terminal("a")
+    refused = panels_over(settings, windows).worktree(THE_PR).open_terminal("a")
 
     assert (windows.sessions, refused) == ({}, ManagerRefusal.NO_WORKTREE)

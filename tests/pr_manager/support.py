@@ -8,7 +8,7 @@ from typing import Any
 import dishka
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.board_api import ManagerPanel
+from github_orchestrator.board_api import ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.fake import FakeManagerPanel
 from github_orchestrator.board_api.interface import ManagerPanels
 from github_orchestrator.change_detection import ChangeDetection, Poll
@@ -99,6 +99,7 @@ def managed_in(worktree: str | Path, repo: str = REPO, pr: int = PR) -> FakePrPr
 @dataclass
 class ServerPanel:
     panel: ManagerPanel = field(default_factory=FakeManagerPanel)
+    worktree: ManagerWorktree = field(default_factory=FakeManagerPanel)
 
 
 @dataclass
@@ -180,6 +181,7 @@ def manager_over(settings: Settings, *script: Any, worktree: str | Path = "/wt",
                                 clocks=clocks_of(clock.now, monotonic=clock.monotonic,
                                                  sleep=sleep))
     board.panel = container.get(ManagerPanels).of(managed.pr)
+    board.worktree = container.get(ManagerPanels).worktree(managed.pr)
     return Manager(
         manager=container.get(PrManager), clock=clock, board=board,
         desktop=desktop, notifications=notifications, github=github, event_queue=container.get(Intake), working_copies=working_copies,

@@ -34,7 +34,7 @@ def _ran(settings, worktree, *keys, run=None):
     answers = []
 
     def ask():
-        answers.extend(board.panel.run_git(each) for each in keys)
+        answers.extend(board.worktree.run_git(each) for each in keys)
 
     modules = {} if run is None else {"run": run}
     run_manager(settings, ask, worktree=worktree, is_author=True, board=board,
@@ -105,7 +105,7 @@ def test_a_command_waits_while_another_process_runs_git_in_the_same_worktree(set
     def ask_while_the_palette_is_busy():
         with open(tmp_path / "wt.git-palette.lock", "w") as other:
             fcntl.flock(other, fcntl.LOCK_EX)
-            asking = threading.Thread(target=lambda: board.panel.run_git("s"))
+            asking = threading.Thread(target=lambda: board.worktree.run_git("s"))
             asking.start()
             seen.append(started.wait(0.2))
         asking.join()

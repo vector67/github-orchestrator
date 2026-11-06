@@ -232,7 +232,7 @@ PACKAGES = {
         role="agent runs hear about review threads and the PR manager only through the requests their callers fill in",
     ),
     "board_api": Package(
-        pinned=frozenset({"Dashboard", "ManagerPanel"}),
+        pinned=frozenset({"Dashboard", "ManagerPanel", "ManagerWorktree"}),
         may_import=("conversation", "working_copies", "terminal_sessions", "pr_summaries", ROOT,
                     LIBRARIES),
         role="the board serves one PR's review threads, its terminal sessions and its summary, and reaches the rest of the program only through them",

@@ -25,7 +25,7 @@ from github_orchestrator.agent_runs.fake import (
     Reworking,
 )
 from github_orchestrator.agent_runs.fake import Outcome as RunOutcome
-from github_orchestrator.board_api import Dashboard, ManagerPanel
+from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.fake import (
     FakeHoldings,
     FakeManagerPanel,
@@ -828,9 +828,12 @@ def worktree_in(directory: Path) -> Path:
 
 @dataclasses.dataclass
 class PreviewPanels:
-    panel: ManagerPanel = dataclasses.field(default_factory=FakeManagerPanel)
+    panel: FakeManagerPanel = dataclasses.field(default_factory=FakeManagerPanel)
 
     def of(self, pr: Pr) -> ManagerPanel:
+        return self.panel
+
+    def worktree(self, pr: Pr) -> ManagerWorktree:
         return self.panel
 
 
