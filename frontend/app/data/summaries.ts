@@ -23,6 +23,7 @@ import type {
 import { edgeOf } from 'frontend/data/dashboard';
 import {
   openingOf,
+  pressedBy,
   pressingOf,
   type Pressed,
   type Pressing,
@@ -1176,6 +1177,17 @@ export function mentionRowsOf(mentions: Mentions | null): MentionRow[] {
   }));
   mentionRowsSoFar.set(mentions, rows);
   return rows;
+}
+
+export function setupPressedOf(
+  write: StoredOperation | null,
+  kind: string,
+): Pressed {
+  return pressedBy(write?.kind === kind ? write : null);
+}
+
+export function harvestPreparingOf(write: StoredOperation | null): Pressed {
+  return pressedBy(write);
 }
 
 export interface ResetStanding {

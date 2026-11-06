@@ -13,7 +13,7 @@ import type {
   SetupCloneProgress,
   SetupRepoChoice,
 } from 'frontend/data/api';
-import { pressedBy, type Pressed } from 'frontend/data/decisions';
+import type { Pressed } from 'frontend/data/decisions';
 import { Refusal } from 'frontend/data/refusal';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -129,21 +129,16 @@ export default class SetupPage extends Component {
     return this.store.setupOperation?.state === 'restarting';
   }
 
-  private pressed(kind: string): Pressed {
-    const write = this.store.setupWrite.write;
-    return pressedBy(write?.kind === kind ? write : null);
-  }
-
   get pressedCheck(): Pressed {
-    return this.pressed('check-account');
+    return this.store.setupPressed('check-account');
   }
 
   get pressedStart(): Pressed {
-    return this.pressed('write-setup');
+    return this.store.setupPressed('write-setup');
   }
 
   get pressedMove(): Pressed {
-    return this.pressed('move-aside');
+    return this.store.setupPressed('move-aside');
   }
 
   get refused(): Record<string, string> {

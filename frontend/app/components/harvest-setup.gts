@@ -3,7 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
 import PendingRing from 'frontend/components/pending-ring';
-import { pressedBy, type Pressed } from 'frontend/data/decisions';
+import type { Pressed } from 'frontend/data/decisions';
 import modal from 'frontend/modifiers/modal';
 import type HarvestSwitchService from 'frontend/services/harvest-switch';
 import type StoreService from 'frontend/services/store';
@@ -17,7 +17,7 @@ export default class HarvestSetup extends Component {
   }
 
   get preparing(): Pressed {
-    return pressedBy(this.store.harvestExtension.write);
+    return this.store.harvestPreparing;
   }
 
   prepare = () => waitForPromise(this.store.prepareHarvestExtension());

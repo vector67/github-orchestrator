@@ -77,6 +77,7 @@ import {
   opensTerminal,
   settledBy,
   slotOf,
+  type Pressed,
   type PrVerb,
   type SetupWrite,
 } from 'frontend/data/decisions';
@@ -105,6 +106,7 @@ import {
   detailsOf,
   enteredAt,
   filesOf,
+  harvestPreparingOf,
   heldOf,
   mentionableOf,
   mentionRowsOf,
@@ -114,6 +116,7 @@ import {
   prHeaderOf,
   readOf,
   resetStandingOf,
+  setupPressedOf,
   shownOf,
   stepperOf,
   commitNoteOf,
@@ -504,6 +507,14 @@ export default class StoreService extends Service {
 
   get mentionRows(): MentionRow[] {
     return mentionRowsOf(this.mentions);
+  }
+
+  setupPressed(kind: string): Pressed {
+    return setupPressedOf(this.setupWrite.write, kind);
+  }
+
+  get harvestPreparing(): Pressed {
+    return harvestPreparingOf(this.harvestExtension.write);
   }
 
   resetStanding(repo: string, number: number): ResetStanding | null {
