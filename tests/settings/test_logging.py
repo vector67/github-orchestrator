@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 import pytest
 
@@ -120,6 +121,19 @@ def test_a_process_with_no_context_is_named_by_its_pid_alone(tmp_path):
     logging.getLogger("t").warning("hello")
 
     assert f"[{os.getpid()}]" in logs.path(Process.WATCHER).read_text()
+
+
+def test_each_line_is_stamped_with_its_utc_offset(tmp_path):
+    logs = _logs(tmp_path)
+    logs.configure_logging(Process.WATCHER)
+    before = datetime.now().astimezone().replace(microsecond=0)
+    logging.getLogger("t").warning("hello")
+    after = datetime.now().astimezone()
+
+    stamp = logs.path(Process.WATCHER).read_text().split(" ", 1)[0]
+    logged = datetime.fromisoformat(stamp)
+    assert logged.tzinfo is not None
+    assert before <= logged <= after
 
 
 @pytest.mark.parametrize("scheduler", [Process.LAUNCHD])

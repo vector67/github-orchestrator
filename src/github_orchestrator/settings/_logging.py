@@ -2,6 +2,7 @@ import fcntl
 import logging
 import os
 import shutil
+from datetime import datetime
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 
@@ -38,6 +39,11 @@ class _Context(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         record.context = self._context
         return True
+
+
+class _OffsetStampedFormatter(logging.Formatter):
+    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:
+        return datetime.fromtimestamp(record.created).astimezone().isoformat(timespec="milliseconds")
 
 
 class SharedRotatingFileHandler(WatchedFileHandler):
@@ -101,7 +107,7 @@ class LogFiles:
             _trim(self.path(Process.LAUNCHD), self._max_bytes)
         handler = SharedRotatingFileHandler(str(self.path(process)), self._max_bytes,
                                             self._backup_count)
-        handler.setFormatter(logging.Formatter(_FORMAT))
+        handler.setFormatter(_OffsetStampedFormatter(_FORMAT))
         handler.addFilter(_Context(context))
 
         root = logging.getLogger()

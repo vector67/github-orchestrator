@@ -87,8 +87,9 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    restart: compare each log line's timestamp and each file's mtime with when
    `make restart-all` ran. The logs (`watcher.log`, `agent-manager.log`,
    `server.log`, `launchd.log`) are in `$XDG_DATA_HOME/github-orchestrator/logs/`
-   and stamp local time with no offset, so note the restart with `date`, never
-   `date -u`. When the request names who will use the result (a
+   and all but `launchd.log`, which holds raw process output, stamp each line in
+   ISO 8601 with its UTC offset, so note the restart with
+   `date -Iseconds` and compare instants, not wall-clock digits. When the request names who will use the result (a
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
    fresh agent diagnose it from what the change produced.
