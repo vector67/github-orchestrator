@@ -163,8 +163,6 @@ MAX_OUTPUT_LINES = 2000
 
 PREFIX = "/api"
 
-AS_OF_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-
 BASE_COMMITS_AT_EACH_END = 10
 
 SERVER_ERROR_DETAIL = ("the board failed unexpectedly; the traceback is in "
@@ -353,7 +351,7 @@ def read_pull_request_commits(request: Request, board: Serving,
         base_forks=[BaseFork(commit=commit_of(history.base_commits[places[sha]]),
                              at=places[sha])
                     for sha in dict.fromkeys(leaving) if sha in places],
-        fork_at=history.fork_at.astimezone(UTC).strftime(AS_OF_FORMAT),
+        fork_at=history.fork_at.astimezone(UTC).strftime(UtcClock.STAMP),
         stack=None if stack is None else Stack(
             branch=stack.branch, fork=str(stack.fork), commits=stacked),
         reviewed=reviewed))
@@ -457,7 +455,7 @@ def list_conversations(request: Request, board: Serving) -> Response:
     the read. One bad file on disk must not take the whole board with it, and
     the board must not pretend the thread is not there.
     """
-    listed_at = board.clock().strftime(AS_OF_FORMAT)
+    listed_at = board.clock.stamp()
     return etag.answered(request, collection_of(board.conversations.all(),
                                                 board.conversations.facts().account,
                                                 listed_at))
@@ -971,7 +969,7 @@ def queue_reset_to_origin(board: Serving) -> Response:
         raise Refusal(409, ErrorCode.NO_AGENT_WORKING,
                       "no agent is working in the worktree, so reset it now instead")
     _refuse_unless_diverged(dashboard)
-    ResetToOrigin(queued_at=board.clock().strftime(AS_OF_FORMAT)).keep(board.shelf)
+    ResetToOrigin(queued_at=board.clock.stamp()).keep(board.shelf)
     return Response(status_code=204)
 
 

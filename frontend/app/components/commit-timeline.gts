@@ -8,6 +8,7 @@ import type { Picked, Timeline } from 'frontend/data/timeline';
 import PendingRing from 'frontend/components/pending-ring';
 import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
+import fits from 'frontend/modifiers/fits';
 import { staysInThisTab } from 'frontend/modifiers/navigates';
 import eq from 'frontend/helpers/eq';
 
@@ -65,19 +66,6 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       svg.removeEventListener('pointermove', moved);
       svg.removeEventListener('pointerup', dropped);
       svg.removeEventListener('pointerleave', dropped);
-    };
-  };
-
-  measure = (scroll: HTMLElement) => {
-    let frame = 0;
-    const watching = new ResizeObserver(() => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => this.args.fit(scroll.clientWidth));
-    });
-    watching.observe(scroll);
-    return () => {
-      cancelAnimationFrame(frame);
-      watching.disconnect();
     };
   };
 
@@ -319,11 +307,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
           >×</button>
         </p>
       {{/if}}
-      <div
-        class="timeline-scroll"
-        {{didChange this.listen}}
-        {{didChange this.measure}}
-      >
+      <div class="timeline-scroll" {{didChange this.listen}} {{fits @fit}}>
         <svg
           class="timeline-graph"
           width={{@timeline.width}}

@@ -5,13 +5,12 @@ from typing import Protocol
 
 from github_orchestrator.board_api._contract import PullRequestCommit, ReviewedCommits
 from github_orchestrator.board_api.interface import Shelf, Shelves
-from github_orchestrator.domain import Pr, Sha
+from github_orchestrator.domain import Pr, Sha, UtcClock
 from github_orchestrator.working_copies import WorkingCopies
 
 log = logging.getLogger(__name__)
 
 REVIEWED = "reviewed"
-AT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class Commit(Protocol):
@@ -35,7 +34,7 @@ def commit_of(commit: Commit) -> PullRequestCommit:
     return PullRequestCommit(
         sha=str(commit.sha), parents=[str(parent) for parent in commit.parents],
         subject=commit.subject, author=commit.author,
-        authored_at=commit.authored_at.astimezone(UTC).strftime(AT_FORMAT))
+        authored_at=commit.authored_at.astimezone(UTC).strftime(UtcClock.STAMP))
 
 
 def kept(shelf: Shelf, sha: str) -> ReviewedCommits | None:

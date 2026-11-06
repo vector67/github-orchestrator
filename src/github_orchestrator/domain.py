@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 _SEGMENT = re.compile(r"[A-Za-z0-9._-]+")
 _HEX = re.compile(r"[0-9a-fA-F]{7,40}")
@@ -166,10 +166,14 @@ class Mention:
 
 @dataclass(frozen=True)
 class UtcClock:
+    STAMP: ClassVar[str] = "%Y-%m-%dT%H:%M:%SZ"
     now: Callable[[], datetime]
 
     def __call__(self) -> datetime:
         return self.now()
+
+    def stamp(self) -> str:
+        return self.now().strftime(UtcClock.STAMP)
 
 
 @dataclass(frozen=True)

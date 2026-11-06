@@ -6,7 +6,7 @@ import { relativeOf } from 'frontend/data/dashboard';
 import type CommitBoxService from 'frontend/services/commit-box';
 import type HubService from 'frontend/services/hub';
 import type { CommitNote, PickedRange, Stepper } from 'frontend/services/store';
-import didChange from 'frontend/modifiers/did-change';
+import fits from 'frontend/modifiers/fits';
 
 export interface CommitBarSignature {
   Args: {
@@ -33,12 +33,6 @@ export default class CommitBar extends Component<CommitBarSignature> {
   get age(): string {
     return relativeOf(this.args.stepper.authoredAt, this.hub.now);
   }
-
-  measure = (pips: HTMLElement) => {
-    const watching = new ResizeObserver(() => this.args.fit(pips.clientWidth));
-    watching.observe(pips);
-    return () => watching.disconnect();
-  };
 
   get full(): boolean {
     return this.commitBox.sizing === 'full';
@@ -186,7 +180,7 @@ export default class CommitBar extends Component<CommitBarSignature> {
             </div>
           {{/if}}
         {{/if}}
-        <div class="commit-pips-measure" {{didChange this.measure}}></div>
+        <div class="commit-pips-measure" {{fits @fit}}></div>
         <ol
           class="commit-pips"
           aria-label="the pull request's commits"

@@ -9,8 +9,6 @@ from github_orchestrator.working_copies import WorkingCopies
 
 log = logging.getLogger(__name__)
 
-_AT = "%Y-%m-%dT%H:%M:%SZ"
-
 
 class QueuedReset:
     def __init__(self, config: ManagerConfig, shelves: Shelves, working_copies: WorkingCopies,
@@ -72,4 +70,4 @@ class QueuedReset:
         ResetToOrigin(ran_at=self._now(), refused=refused).keep(shelf)
 
     def _now(self) -> str:
-        return self._clock().strftime(_AT)
+        return self._clock.stamp()

@@ -5,7 +5,7 @@ import type { Lines } from 'frontend/data/selection';
 
 export const NOT_AT_HEAD = "This line doesn't exist in the latest commit";
 
-export interface Placed extends Inlined {
+export interface DrawnInline extends Inlined {
   elsewhere: number;
 }
 
@@ -65,7 +65,10 @@ export function postedAt(
   return anchors ? carried(lines, anchors, 'to head') : lines;
 }
 
-export function drawnOn(inlined: Inlined, anchors: DiffAnchors | null): Placed {
+export function drawnOn(
+  inlined: Inlined,
+  anchors: DiffAnchors | null,
+): DrawnInline {
   if (!anchors) return { ...inlined, elsewhere: 0 };
   const drawn = new Set(anchors.files.map((one) => one.path));
   const shown: Inline[] = [];

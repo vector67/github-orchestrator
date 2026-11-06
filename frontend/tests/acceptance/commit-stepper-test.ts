@@ -122,14 +122,14 @@ module('Acceptance | commit stepper', function (hooks) {
       scroller = scroller.parentElement!;
     assert.true(scroller.contains(bar), 'the bar scrolls with the diff');
     assert.true(scroller.contains(timeline), 'and so does the timeline');
-    assert.deepEqual(
-      [getComputedStyle(bar).position, getComputedStyle(timeline).position],
-      ['static', 'static'],
-      'neither stays pinned in place',
-    );
 
     scroller.scrollTop = scroller.scrollHeight;
 
+    assert.true(
+      bar.getBoundingClientRect().bottom <=
+        scroller.getBoundingClientRect().top,
+      'scrolled down, the bar is out of sight',
+    );
     assert.true(
       timeline.getBoundingClientRect().bottom <=
         scroller.getBoundingClientRect().top,

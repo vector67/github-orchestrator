@@ -6,7 +6,7 @@ import {
   drawnOn,
   elsewhereOf,
   postedAt,
-  type Placed,
+  type DrawnInline,
 } from 'frontend/data/anchors';
 import type { Pressing, Pressings } from 'frontend/data/decisions';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
@@ -546,7 +546,7 @@ export default class PullRequestDiffService extends Service {
     pr.unreadable = outcome === 'failed' ? commitsOf(range) : null;
   }
 
-  get inline(): Placed {
+  get inline(): DrawnInline {
     return drawnOn(this.atHead, this.anchors ?? null);
   }
 
