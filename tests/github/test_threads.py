@@ -306,7 +306,7 @@ def test_the_reply_github_posted_is_read_back_whole():
                                    updated_at="2026-09-07T12:00:00Z")
 
 
-@pytest.mark.parametrize("write", ["reply_to_thread"])
+@pytest.mark.parametrize("write", ["reply_to_thread", "resolve", "unresolve"])
 def test_a_thread_write_github_refuses_reaches_the_caller(write):
     gh = ScriptedGh().answer("graphql", Failure("gh: viewer cannot resolve"))
     github = real_github(gh=gh)
