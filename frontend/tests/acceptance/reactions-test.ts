@@ -1,14 +1,49 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { visit, click } from '@ember/test-helpers';
 import {
+  click,
+  currentURL,
+  find,
+  triggerEvent,
+  visit,
+} from '@ember/test-helpers';
+import {
+  added,
+  changed,
   comment,
+  context,
+  prDiff,
   setupFakeBoard,
   thread,
 } from 'frontend/tests/helpers/fake-board';
-import type { Reaction } from 'frontend/data/api';
+import type { Anchor, Reaction } from 'frontend/data/api';
 
 const KEY = 'PRRT_aa';
+
+const ON_LINE_20: Anchor = {
+  path: 'src/widgets/changes.py',
+  line: 20,
+  start_line: null,
+  start_side: null,
+  side: 'RIGHT',
+  original_line: 20,
+  original_start_line: null,
+  original_commit: 'ba5e000',
+  is_outdated: false,
+};
+
+function picker(): Element {
+  return find('[data-test-reaction-picker]')!;
+}
+
+function insideTheWindow(box: DOMRect): boolean {
+  return (
+    box.left >= 0 &&
+    box.top >= 0 &&
+    box.right <= window.innerWidth &&
+    box.bottom <= window.innerHeight
+  );
+}
 
 function pills(): [string, string, boolean][] {
   return [...document.querySelectorAll('[data-test-reaction]')].map((pill) => [
@@ -97,6 +132,84 @@ module('Acceptance | reactions', function (hooks) {
       top <= under + 12,
       `it opens right by it (${top} under ${under})`,
     );
+  });
+
+  test('Escape closes the picker and leaves the thread open', async function (assert) {
+    seed([]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-react]');
+
+    await triggerEvent(document.activeElement!, 'keydown', { key: 'Escape' });
+
+    assert.dom('[data-test-reaction-picker]').doesNotExist();
+    assert.strictEqual(currentURL(), `/pr/o/r/7/conversations/${KEY}`);
+    assert.deepEqual(board().reacted, []);
+  });
+
+  test('a click outside the picker closes it and sends nothing', async function (assert) {
+    seed([]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-react]');
+
+    await click('[data-test-entry-body]');
+
+    assert.dom('[data-test-reaction-picker]').doesNotExist();
+    assert.deepEqual(board().reacted, []);
+  });
+
+  test('a picker opened at the window’s right edge stays inside the window', async function (assert) {
+    seed([]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const smiley = find('[data-test-react]') as HTMLElement;
+    const drawn = smiley.getBoundingClientRect();
+    const scale = drawn.width / smiley.offsetWidth;
+    const shift = (window.innerWidth - 2 - drawn.right) / scale;
+    smiley.style.transform = `translateX(${shift}px)`;
+    const placed = smiley.getBoundingClientRect();
+
+    await triggerEvent(smiley, 'click');
+
+    const box = picker().getBoundingClientRect();
+    assert.true(
+      placed.right > window.innerWidth - 40,
+      `the smiley sits at the edge (${placed.right} of ${window.innerWidth})`,
+    );
+    assert.true(
+      insideTheWindow(box),
+      `the picker fits (${JSON.stringify(box)})`,
+    );
+    assert.true(box.top >= placed.bottom, 'it still opens below the smiley');
+  });
+
+  test('the smiley on a diff card opens its picker over the page, under it, and Escape closes it', async function (assert) {
+    board().pullRequestDiff = prDiff(
+      changed('src/widgets/changes.py', [
+        context(18, '    rows = []'),
+        added(19, '    return rows'),
+        added(20, '    # done'),
+      ]),
+    );
+    board().conversations = [thread({ key: 'k1', anchor: ON_LINE_20 })];
+    board().comments = { k1: [comment({ body: 'please rename' })] };
+    await visit('/pr/o/r/7/diff');
+    const smiley = find('[data-test-card="k1"] [data-test-react]')!;
+
+    await click(smiley);
+
+    const under = smiley.getBoundingClientRect().bottom;
+    const box = picker().getBoundingClientRect();
+    assert.true(picker().matches(':popover-open'), 'it is drawn over the page');
+    assert.true(box.top >= under, `it opens below the smiley (${box.top})`);
+    assert.true(box.top <= under + 12, `it opens right by it (${under})`);
+    assert.true(
+      insideTheWindow(box),
+      `the picker fits (${JSON.stringify(box)})`,
+    );
+
+    await triggerEvent(document.activeElement!, 'keydown', { key: 'Escape' });
+
+    assert.dom('[data-test-reaction-picker]').doesNotExist();
+    assert.strictEqual(currentURL(), '/pr/o/r/7/diff');
   });
 
   test('pressing my own reaction takes it back', async function (assert) {

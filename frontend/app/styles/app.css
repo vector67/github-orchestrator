@@ -771,7 +771,15 @@ input[type="radio"] {
 }
 
 .reaction-add {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
   color: var(--muted);
+}
+
+.reaction-add .smiley {
+  width: 16px;
+  height: 16px;
 }
 
 .reaction-add:hover,

@@ -5,6 +5,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import type { Reaction, ReactionKind } from 'frontend/data/api';
+import type KeysService from 'frontend/services/keys';
+import type { Keymap } from 'frontend/services/keys';
 import type ThreadsService from 'frontend/services/threads';
 import type ToastsService from 'frontend/services/toasts';
 
@@ -24,6 +26,8 @@ const FACES: Face[] = [
   { kind: 'eyes', face: '👀' },
 ];
 
+const EDGE = 8;
+
 function faceOf(kind: ReactionKind): string {
   return FACES.find((one) => one.kind === kind)?.face ?? '';
 }
@@ -37,6 +41,7 @@ export interface CommentReactionsSignature {
 }
 
 export default class CommentReactions extends Component<CommentReactionsSignature> {
+  @service declare keys: KeysService;
   @service declare threads: ThreadsService;
   @service declare toasts: ToastsService;
 
@@ -45,22 +50,42 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
 
   faces = FACES;
 
+  private readonly keymap: Keymap = {
+    take: (key) => {
+      if (key !== 'Escape') return false;
+      this.picking = false;
+      return true;
+    },
+  };
+
   shown = modifier((element: HTMLElement) => {
     const trigger = element
       .closest('.comment-reactions')!
       .querySelector('.reaction-add')!;
     const smiley = trigger.getBoundingClientRect();
     element.style.top = `${smiley.bottom + 4}px`;
-    element.style.left = `${smiley.left}px`;
     element.showPopover();
-    const close = (scrolled: Event) => {
+    const room = window.innerWidth - element.offsetWidth - EDGE;
+    element.style.left = `${Math.max(EDGE, Math.min(smiley.left, room))}px`;
+    const moved = (scrolled: Event) => {
       if (element.contains(scrolled.target as Node)) return;
       const now = trigger.getBoundingClientRect();
       if (now.top !== smiley.top || now.left !== smiley.left)
         this.picking = false;
     };
-    document.addEventListener('scroll', close, true);
-    return () => document.removeEventListener('scroll', close, true);
+    const outside = (pressed: Event) => {
+      const target = pressed.target as Node;
+      if (!element.contains(target) && !trigger.contains(target))
+        this.picking = false;
+    };
+    document.addEventListener('scroll', moved, true);
+    document.addEventListener('mousedown', outside, true);
+    this.keys.push('dialog', this.keymap);
+    return () => {
+      document.removeEventListener('scroll', moved, true);
+      document.removeEventListener('mousedown', outside, true);
+      this.keys.drop(this.keymap);
+    };
   });
 
   togglePicker = (): void => {
@@ -102,7 +127,23 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
           disabled={{this.sending}}
           data-test-react
           {{on "click" this.togglePicker}}
-        >☺</button>
+        ><svg
+            class="smiley"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentcolor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            aria-hidden="true"
+            focusable="false"
+          ><circle cx="8" cy="8" r="6.75" /><path
+              d="M5.5 9.75c.6.8 1.45 1.25 2.5 1.25s1.9-.45 2.5-1.25"
+            /><circle cx="5.75" cy="6.5" r=".5" fill="currentcolor" /><circle
+              cx="10.25"
+              cy="6.5"
+              r=".5"
+              fill="currentcolor"
+            /></svg></button>
         {{#each @reactions key="content" as |reaction|}}
           <button
             type="button"
