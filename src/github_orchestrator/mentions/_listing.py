@@ -16,10 +16,10 @@ from github_orchestrator.domain import Mention, Pr, Repo
 log = logging.getLogger(__name__)
 
 
-def listed(pr: Pr, mention: Mention, *, url: str, card: bool) -> dict[str, Any]:
-    return {"repo": str(pr.repo), "number": pr.number, "thread": mention.thread,
-            "comment_id": mention.comment_id, "kind": mention.kind, "author": mention.author,
-            "at": mention.at, "body": mention.body, "url": url, "card": card}
+def listed(pr: Pr, mention: Mention, *, url: str, on_board: bool) -> ListedMention:
+    return ListedMention(pr=pr, thread=mention.thread, comment_id=mention.comment_id,
+                         kind=mention.kind, author=mention.author, at=mention.at,
+                         body=mention.body, url=url, on_board=on_board)
 
 
 def started_before(path: Path) -> dict[str, str] | None:
@@ -31,11 +31,12 @@ def started_before(path: Path) -> dict[str, str] | None:
 
 
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
-                  mentions: Sequence[Mapping[str, Any]]) -> None:
+                  mentions: Sequence[ListedMention]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     writing = path.with_name(f"{path.name}.writing")
     writing.write_text(json.dumps({"searched_at": searched_at.isoformat(),
-                                   "started": dict(started), "mentions": list(mentions)}))
+                                   "started": dict(started),
+                                   "mentions": [_entry(mention) for mention in mentions]}))
     os.replace(writing, path)
 
 
@@ -59,10 +60,17 @@ class ListingFile:
             return NO_MENTIONS_LISTED
 
 
+def _entry(mention: ListedMention) -> dict[str, Any]:
+    return {"repo": str(mention.pr.repo), "number": mention.pr.number,
+            "thread": mention.thread, "comment_id": mention.comment_id, "kind": mention.kind,
+            "author": mention.author, "at": mention.at, "body": mention.body,
+            "url": mention.url, "on_board": mention.on_board}
+
+
 def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
     if type(entry["number"]) is not int:
         raise TypeError(f"the PR number {entry['number']!r} is not a number")
     return ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
                          thread=entry["thread"], comment_id=entry["comment_id"],
                          kind=entry["kind"], author=entry["author"], at=entry["at"],
-                         body=entry["body"], url=entry["url"], card=entry["card"])
+                         body=entry["body"], url=entry["url"], on_board=entry["on_board"])

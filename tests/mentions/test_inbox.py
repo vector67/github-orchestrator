@@ -231,7 +231,7 @@ def test_an_unanswered_mention_on_a_merged_pr_is_listed(tmp_path):
         mentions=(ListedMention(pr=THE_PR, thread="IC_1", comment_id=1, kind="issue",
                                 author="anna", at="2026-10-22T10:00:00Z", body="@octocat ping",
                                 url="https://github.com/acme/widgets/pull/7#issuecomment-1",
-                                card=False),))
+                                on_board=False),))
 
 
 def test_a_listed_mention_says_its_card_is_on_the_board(tmp_path):
@@ -240,7 +240,7 @@ def test_a_listed_mention_says_its_card_is_on_the_board(tmp_path):
 
     here.container.get(MentionsInbox).search_if_due()
 
-    assert [mention.card for mention in here.container.get(MentionsList).listed().mentions] == [
+    assert [mention.on_board for mention in here.container.get(MentionsList).listed().mentions] == [
         True]
 
 
@@ -321,7 +321,7 @@ def test_a_listing_whose_start_has_no_time_zone_still_lists_the_mention(tmp_path
 def _entry(**changed):
     return {"repo": REPO, "number": 7, "thread": "IC_1", "comment_id": 1, "kind": "issue",
             "author": "anna", "at": "2026-10-22T10:00:00Z", "body": "@octocat ping",
-            "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "card": False,
+            "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "on_board": False,
             **changed}
 
 

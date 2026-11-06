@@ -3,8 +3,8 @@ from collections.abc import Collection
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
+from github_orchestrator.board_api.interface import ListedMention
 from github_orchestrator.conversation import (
     Conversation,
     ConversationManager,
@@ -53,7 +53,7 @@ class GitHubMentionsInbox:
         self._searched_at = began
         start = self._start_line.mentions_start(began)
         started = self._started(began, start)
-        mentions: list[dict[str, Any]] = []
+        mentions: list[ListedMention] = []
         held = False
         try:
             found = self._pull_requests.search(self._repos, "mentions", updated_since=start)
@@ -97,7 +97,7 @@ class GitHubMentionsInbox:
         return {str(repo): before.get(str(repo), began.isoformat()) for repo in self._repos}
 
     def _outstanding(self, pr: Pr, state: PullRequestState,
-                     start: datetime) -> list[dict[str, Any]] | None:
+                     start: datetime) -> list[ListedMention] | None:
         manager = self._conversation_managers.of(pr)
         found = manager.poll(state).mentions
         if found is None:
@@ -112,7 +112,7 @@ class GitHubMentionsInbox:
             if mention.at is not None and _moment(mention.at) >= start and not _closed(card,
                                                                                          mention):
                 outstanding.append(listed(pr, mention, url=self._url(pr, mention),
-                                          card=card is not None))
+                                          on_board=card is not None))
         return outstanding
 
     def _url(self, pr: Pr, mention: Mention) -> str:

@@ -249,7 +249,7 @@ class ListedMention:
     at: str | None
     body: str
     url: str
-    card: bool
+    on_board: bool
 
 
 @dataclass(frozen=True)

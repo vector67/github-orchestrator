@@ -9,7 +9,7 @@ HELD = a_pr(7, "acme/widgets")
 GONE = a_pr(8, "acme/widgets")
 PING = ListedMention(pr=HELD, thread="IC_1", comment_id=1, kind="issue", author="anna",
                      at="2026-10-22T10:00:00Z", body="@octocat ping",
-                     url="https://github.com/acme/widgets/pull/7#issuecomment-1", card=True)
+                     url="https://github.com/acme/widgets/pull/7#issuecomment-1", on_board=True)
 
 
 def _listed(*mentions):
@@ -31,7 +31,7 @@ def test_the_mentions_list_names_each_mention_and_where_it_is_on_github():
 
 def test_a_mention_is_on_the_board_only_when_the_watcher_holds_its_pr_and_its_card_is_made():
     web = served_hub(told=holding(HELD), mentions=_listed(
-        PING, replace(PING, thread="IC_2", comment_id=2, card=False),
+        PING, replace(PING, thread="IC_2", comment_id=2, on_board=False),
         replace(PING, pr=GONE, thread="IC_3", comment_id=3)))
 
     assert [(mention["thread"], mention["on_board"])

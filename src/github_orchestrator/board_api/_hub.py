@@ -208,7 +208,7 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            thread=mention.thread, comment_id=mention.comment_id,
                            kind=mention.kind, author=mention.author, at=mention.at,
                            body=mention.body, url=mention.url,
-                           on_board=mention.card and mention.pr in held)
+                           on_board=mention.on_board and mention.pr in held)
         for mention in listing.mentions]))
 
 
