@@ -176,10 +176,14 @@ class SlowFetchCopies(FakeWorkingCopies):
         super().__init__()
         self.release = threading.Event()
         self.released_while_fetching = None
+        self.fetch_ended = threading.Event()
 
     def _fetch(self, worktree, base_branch):
         self.released_while_fetching = self.release.wait(2)
-        return super()._fetch(worktree, base_branch)
+        try:
+            return super()._fetch(worktree, base_branch)
+        finally:
+            self.fetch_ended.set()
 
 
 def test_the_manager_draws_its_status_while_the_base_is_still_fetching(settings, tmp_path):
@@ -200,6 +204,7 @@ def test_the_manager_draws_its_status_while_the_base_is_still_fetching(settings,
     _on_the_browser_front(settings, tmp_path, the_board_reads_then_the_fetch_ends,
                           working_copies=copies, board=board)
 
+    assert copies.fetch_ended.wait(2)
     assert (seen, copies.released_while_fetching) == ([URL], True)
 
 
