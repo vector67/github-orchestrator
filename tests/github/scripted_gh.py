@@ -330,8 +330,7 @@ def _graphql_failure(error: GhError) -> Failure:
 
 
 _WHOSE: dict[str, Whose] = {"--author=@me": "author",
-                            "--review-requested=@me": "review-requested",
-                            "--mentions=@me": "mentions"}
+                            "--review-requested=@me": "review-requested"}
 
 
 class _World:
@@ -365,7 +364,7 @@ class _World:
         updated = next((a.removeprefix("--updated=>=") for a in argv
                         if a.startswith("--updated=>=")), None)
         found = self.world.search(
-            repos, next(_WHOSE[a] for a in argv if a in _WHOSE),
+            repos, next((_WHOSE[a] for a in argv if a in _WHOSE), "mentions"),
             updated_since=None if updated is None else datetime.fromisoformat(updated))
         return [{"number": pr.number, "repository": {"nameWithOwner": str(pr.repo)}}
                 for pr in found]
