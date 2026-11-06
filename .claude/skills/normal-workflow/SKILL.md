@@ -96,9 +96,12 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
 8. Remove the workspace the way the `using-git-worktrees` skill made it, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once
    `git branch --merged main` lists it). A tree the Agent tool cut for a subagent
-   stays locked as `claude agent <id> (pid N …)` after the agent ends. When
-   `ps -p N` shows that pid is this session, the tree is clean and its branch is
-   merged, run `git worktree unlock <path>` and remove it without asking.
+   stays locked as `claude agent <id> (pid N …)` after the agent ends, and the
+   agent cannot reach the main checkout to remove it, so the session that
+   dispatched it does, as soon as the agent reports and before the next
+   dispatch. When `ps -p N` shows that pid is this session, the tree is clean and
+   its branch is merged, run `git worktree unlock <path>` and remove it without
+   asking.
 
 9. Close the issue with `gh issue close <n>` once the merge has passed step 7,
    unless a pushed `Closes #<n>` already closed it. Prove it with

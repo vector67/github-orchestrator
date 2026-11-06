@@ -38,8 +38,8 @@ Everything below exists to make the first round the last.
    touched module is within budget and every leftover names a constraint that
    holds in the code.
 
-5. **Merge and restart through `normal-workflow`** steps 4 to 6, then return to
-   step 2 for the next plan step.
+5. **Merge, restart and remove the step's tree through `normal-workflow`**
+   steps 4 to 8, then return to step 2 for the next plan step.
 
 6. **Check test speed once the last step is merged.** With no other test runs
    or agents going, run `make measure-test-speed` on `main` and compare its
