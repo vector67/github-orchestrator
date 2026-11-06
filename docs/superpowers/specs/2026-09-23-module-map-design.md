@@ -197,6 +197,12 @@ takes `after|before`.
   schema refuses one that is no commit hash and reads the rest into `Sha` at
   load, and a thread workspace's `pick`, `descends`, `head_sha` and
   `workspace(key, base_sha)` take and answer `Sha` (`a33f3d08`).
+- `ThreadName`: a thread key as it names a record file, a worktree folder and
+  a branch: the key quoted, a dash, then a hex of which of its letters are
+  capitals, so two keys that differ only in case never share a name on a
+  case-insensitive disk. `ThreadName.parse` answers `None` for a name no key
+  spells. Thread records, working copies and the thread names migration each
+  carried a copy of the encoding and its inverse (#247).
 
 ## Processes
 

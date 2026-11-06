@@ -306,3 +306,10 @@ def test_a_twin_spelled_with_a_quoted_letter_never_stands_for_the_key(tmp_path):
     _write(thread_dir(tmp_path, THE_PR) / "%73tate-0.reset", b"twin")
 
     assert _records(tmp_path).list("reset") == {"state": b"mine"}
+
+
+def test_a_file_spelling_a_key_that_names_no_file_of_its_own_is_passed_over(tmp_path):
+    _records(tmp_path).save("json", KEY, b"mine")
+    _write(thread_dir(tmp_path, THE_PR) / "%2E%2E-0.json", b"stray")
+
+    assert _records(tmp_path).list("json") == {KEY: b"mine"}

@@ -7,6 +7,7 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from pathlib import Path
 from typing import ClassVar, Protocol
+from urllib.parse import quote, unquote
 
 _SEGMENT = re.compile(r"[A-Za-z0-9._-]+")
 _HEX = re.compile(r"[0-9a-fA-F]{7,40}")
@@ -129,6 +130,27 @@ class Sha:
 
 
 @dataclass(frozen=True)
+class ThreadName:
+    key: str
+
+    def __post_init__(self) -> None:
+        if not self.key.strip("."):
+            raise ValueError(f"invalid thread key {self.key!r}")
+
+    @classmethod
+    def parse(cls, name: str) -> ThreadName | None:
+        quoted, _, _ = name.rpartition("-")
+        key = unquote(quoted)
+        if not key.strip(".") or str(cls(key)) != name:
+            return None
+        return cls(key)
+
+    def __str__(self) -> str:
+        letters = "".join("1" if c.isupper() else "0" for c in self.key if c.isalpha())
+        return f"{quote(self.key, safe='')}-{int(letters or '0', 2):x}"
+
+
+@dataclass(frozen=True)
 class Location:
     path: str
     line: int
@@ -207,4 +229,4 @@ class HubState(StrEnum):
 
 
 __all__ = ["HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
-           "Side", "Sleep", "UtcClock"]
+           "Side", "Sleep", "ThreadName", "UtcClock"]

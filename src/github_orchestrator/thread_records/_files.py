@@ -8,9 +8,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import quote, unquote
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import Pr, Repo, ThreadName
 from github_orchestrator.thread_records._lock import locked
 from github_orchestrator.thread_records.interface import PrRecords, UnreadableThread
 
@@ -21,24 +20,6 @@ _KIND = re.compile(r"[a-z]+")
 
 def _repo_dir(base: Path, repo: Repo) -> Path:
     return Path(base) / repo.owner / repo.name
-
-
-def _uppercase_letters(key: str) -> str:
-    letters = "".join("1" if c.isupper() else "0" for c in key if c.isalpha())
-    return format(int(letters or "0", 2), "x")
-
-
-def _disk_name(key: str) -> str:
-    if not key or key.strip(".") == "":
-        raise ValueError(f"invalid thread key {key!r}")
-    return f"{quote(key, safe='')}-{_uppercase_letters(key)}"
-
-
-def _key_on_disk(name: str) -> str | None:
-    quoted, _, _ = name.rpartition("-")
-    if quoted.strip(".") and _disk_name(unquote(quoted)) == name:
-        return unquote(quoted)
-    return None
 
 
 def _suffix(kind: str) -> str:
@@ -92,7 +73,7 @@ class DiskPrRecords:
         return thread_dir(self.threads_dir, self.pr)
 
     def _named(self, kind: str, key: str) -> Path:
-        return self._dir / f"{_disk_name(key)}{_suffix(kind)}"
+        return self._dir / f"{ThreadName(key)}{_suffix(kind)}"
 
     def save(self, kind: str, key: str, document: bytes) -> None:
         _write_atomically(self._named(kind, key), document)
@@ -119,10 +100,11 @@ class DiskPrRecords:
                 log.warning("Passing over %s: %s", path, exc)
         listed: dict[str, bytes | None] = {}
         for _, _, path in sorted(found):
-            key = _key_on_disk(path.stem)
-            if key is None:
+            named = ThreadName.parse(path.stem)
+            if named is None:
                 log.warning("Passing over %s: it is not named by a thread key", path)
                 continue
+            key = named.key
             try:
                 listed[key] = _read(path)
             except UnreadableThread as exc:
@@ -132,7 +114,7 @@ class DiskPrRecords:
 
     @contextmanager
     def lock(self, name: str) -> Iterator[None]:
-        with locked(self._dir / f"{_disk_name(name)}.lock"):
+        with locked(self._dir / f"{ThreadName(name)}.lock"):
             yield
 
     def delete(self, kind: str, key: str) -> None:

@@ -80,7 +80,7 @@ def _under(module, package):
 
 KERNEL = "github_orchestrator.domain"
 KERNEL_ENTRIES = frozenset({"HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo",
-                            "Sha", "Side", "Sleep", "UtcClock"})
+                            "Sha", "Side", "Sleep", "ThreadName", "UtcClock"})
 
 
 def _shared(module):

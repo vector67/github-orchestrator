@@ -5,9 +5,9 @@ import subprocess
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import quote, unquote
+from urllib.parse import unquote
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import Pr, Repo, ThreadName
 
 log = logging.getLogger(__name__)
 
@@ -16,25 +16,16 @@ BRANCHES = "orchestrator/thread/"
 _KIND = re.compile(r"[a-z]+")
 
 
-def _uppercase_letters(key: str) -> str:
-    letters = "".join("1" if c.isupper() else "0" for c in key if c.isalpha())
-    return format(int(letters or "0", 2), "x")
-
-
-def _valid(key: str) -> bool:
-    return bool(key.strip("."))
-
-
 def new_name(key: str) -> str:
-    return f"{quote(key, safe='')}-{_uppercase_letters(key)}"
+    return str(ThreadName(key))
 
 
 def key_of(name: str) -> str | None:
-    quoted, _, _ = name.rpartition("-")
-    if _valid(quoted) and new_name(unquote(quoted)) == name:
-        return unquote(quoted)
+    named = ThreadName.parse(name)
+    if named is not None:
+        return named.key
     key = unquote(name)
-    return key if _valid(key) else None
+    return key if key.strip(".") else None
 
 
 def _pr_folder(base: Path, pr: Pr) -> Path:
