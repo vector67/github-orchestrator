@@ -331,13 +331,19 @@ export default class PullRequestDiffService extends Service {
   }
 
   private get onto(): Commits | undefined {
-    return this.threads.pullRequest?.diffs.origin;
+    const pullRequest = this.threads.pullRequest;
+    const origin = pullRequest?.diffs.origin;
+    const head = pullRequest?.head_sha;
+    return origin && head ? { base: origin.base, head } : origin;
   }
 
   private get anchoredFrom(): DiffRange | null {
     if (this.range) return this.range;
-    if (this.source !== 'local') return null;
-    return this.threads.pullRequest?.diffs.local ?? null;
+    const shown = this.threads.pullRequest?.diffs[this.source];
+    if (!shown) return null;
+    const postedOnShown =
+      this.source === 'origin' && shown.head === this.onto?.head;
+    return postedOnShown ? null : shown;
   }
 
   private get anchors(): DiffAnchors | null | undefined {

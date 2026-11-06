@@ -51,6 +51,7 @@ module('Acceptance | commit stepper', function (hooks) {
       base: FORK,
       head: THIRD,
     };
+    board().pullRequest = { ...board().pullRequest, head_sha: THIRD };
     board().commits = prHistory(FORK, [
       prCommit(FIRST, FORK, 'Add the widget'),
       prCommit(SECOND, FIRST, 'Name the widget'),

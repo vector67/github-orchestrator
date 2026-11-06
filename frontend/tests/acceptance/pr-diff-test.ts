@@ -292,6 +292,45 @@ module('Acceptance | pr diff', function (hooks) {
       );
     });
 
+    test('a comment written on origin is posted at the line it sits on in the head the poll found, when the fetch is behind it', async function (assert) {
+      board().pullRequest = { ...board().pullRequest, head_sha: 'f00d000' };
+      board().anchors['ba5e000..c0ffee1'] = {
+        files: [
+          {
+            path: 'src/widgets/changes.py',
+            lines: [
+              { side: 'RIGHT', line: 19, onto: { side: 'RIGHT', line: 23 } },
+            ],
+          },
+        ],
+      };
+      await visit('/pr/o/r/7/diff');
+      await click(`${LOCAL_ROW('+19')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'name it better');
+      await click('[data-test-box-save]');
+
+      assert.strictEqual(
+        board().askedFor(/\/anchors\/ba5e000\.\.f00d000$/).length,
+        1,
+      );
+      assert.deepEqual(
+        board().posted.map((one) => [one.verb, one.body]),
+        [
+          [
+            'create-draft',
+            {
+              body: 'name it better',
+              path: 'src/widgets/changes.py',
+              line: 23,
+              side: 'RIGHT',
+              start_line: null,
+              start_side: null,
+            },
+          ],
+        ],
+      );
+    });
+
     test("a local line the pull request's head lacks says so where the comment box would open, and nothing is posted", async function (assert) {
       divergedLocally();
       await visit('/pr/o/r/7/diff');
