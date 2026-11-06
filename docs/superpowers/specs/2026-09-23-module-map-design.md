@@ -1338,7 +1338,13 @@ how each setting is resolved, the log layout, and the switch files.
   `Logs`, `Process` and `Dismissal`, seven against a budget of about five.
   `ConfigError` and `Settings` left. Later `Dismissal` took its display words
   as its values, so the CLI prints `dismissal.value` and no outside module
-  writes the name: it left the exports, which are now six.
+  writes the name: it left the exports, which are now six. Later `Holds`
+  and `ReviewerPicks` made seven, and `Dismissal` came back for the
+  watcher's dry run, which matched on it to word how long a dismissal
+  lasts. **Done** (the commit that records this): `Dismissal.lasts` says
+  it ("until the next event", "until ready for review", "forever"), the dry
+  run reads it, and `Dismissal` left again: six, `ConfigFile`, `Dismissals`,
+  `Holds`, `Logs`, `Process` and `ReviewerPicks`.
 - **Done** (`d627d666`): `TMUX_SESSION` moved to PR windows. **Done**
   (`2e3a4eba`): `is_repo_spec` became `Repo.parse`.
 - **Done** (`d627d666`): `REPO_ROOT` and the `UNSET_*` words stay inside.

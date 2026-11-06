@@ -26,6 +26,14 @@ class Dismissal(Enum):
     FOREVER = "forever"
     UNTIL_READY_FOR_REVIEW = "until-ready"
 
+    @property
+    def lasts(self) -> str:
+        return _LASTS[self]
+
+
+_LASTS = {Dismissal.UNTIL_NEXT_EVENT: "until the next event", Dismissal.FOREVER: "forever",
+          Dismissal.UNTIL_READY_FOR_REVIEW: "until ready for review"}
+
 
 @dataclass(frozen=True)
 class ConfigRow:
