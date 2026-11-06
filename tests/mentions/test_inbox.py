@@ -101,6 +101,17 @@ def test_a_new_mention_in_a_thread_resolved_earlier_counts_again(tmp_path):
     assert [listed["comment_id"] for listed in _searched(here)["mentions"]] == [2]
 
 
+def test_a_mention_i_have_replied_to_leaves_though_its_card_is_still_open(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, Thread(key="PRRT_1", kind=CommentKind.REVIEW, path="f", line=1, comments=(
+        ThreadComment(id=1, author="anna", body="@octocat wdyt?",
+                      created_at="2026-10-22T10:00:00Z"),
+        ThreadComment(id=2, author="octocat", body="agreed",
+                      created_at="2026-10-22T10:05:00Z"))))
+
+    assert _listed_threads(here) == []
+
+
 def test_a_mention_made_before_the_start_is_cleared(tmp_path):
     here = _here(tmp_path)
     _mentioned(here, _issue("IC_1", 1, "anna", "@octocat old", "2026-10-21T08:59:59Z"),

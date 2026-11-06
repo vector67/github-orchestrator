@@ -510,7 +510,9 @@ export default class StoreService extends Service {
   }
 
   get mentionRows(): MentionRow[] {
-    return mentionRowsOf(this.mentions);
+    return mentionRowsOf(this.mentions, this.viewer, (repo, number) =>
+      this.conversations(repo, number),
+    );
   }
 
   setupPressed(kind: string): Pressed {

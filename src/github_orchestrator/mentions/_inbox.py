@@ -111,6 +111,8 @@ class GitHubMentionsInbox:
                  for mention in found]
         outstanding = []
         for mention in dated:
+            if mention.answered:
+                continue
             card = _card(manager, mention)
             if mention.at is not None and _moment(mention.at) >= start and not _closed(card,
                                                                                          mention):

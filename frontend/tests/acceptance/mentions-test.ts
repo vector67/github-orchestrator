@@ -99,4 +99,68 @@ module('Acceptance | mentions', function (hooks) {
 
     assert.dom('[data-top-bar] [data-test-mentions-count]').hasText('1');
   });
+
+  test('a mention leaves the counter once the board holds your reply after it, before the next search', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [
+      thread({
+        key: 'k1',
+        comments: [
+          {
+            id: 1,
+            author: 'anna',
+            created_at: '2026-06-10T10:00:00Z',
+            review_state: null,
+          },
+          {
+            id: 2,
+            author: 'octocat',
+            created_at: '2026-06-10T10:05:00Z',
+            review_state: null,
+          },
+        ],
+      }),
+    ];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', comment_id: 1 }),
+      outstandingMention({ thread: 'k2', comment_id: 3 }),
+    ];
+
+    await visit('/pr/o/r/7');
+
+    assert.dom('[data-top-bar] [data-test-mentions-count]').hasText('1');
+    await click('[data-test-mentions-count]');
+    assert.dom('[data-test-mention="k1"]').doesNotExist();
+    assert.dom('[data-test-mention="k2"]').exists();
+  });
+
+  test('a mention made after your last reply stays in the counter', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [
+      thread({
+        key: 'k1',
+        comments: [
+          {
+            id: 2,
+            author: 'octocat',
+            created_at: '2026-06-10T09:55:00Z',
+            review_state: null,
+          },
+          {
+            id: 1,
+            author: 'anna',
+            created_at: '2026-06-10T10:00:00Z',
+            review_state: null,
+          },
+        ],
+      }),
+    ];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', comment_id: 1 }),
+    ];
+
+    await visit('/pr/o/r/7');
+
+    assert.dom('[data-top-bar] [data-test-mentions-count]').hasText('1');
+  });
 });

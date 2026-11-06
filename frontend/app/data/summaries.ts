@@ -1167,8 +1167,20 @@ export interface MentionRow extends OutstandingMention {
 
 const mentionRowsSoFar = new WeakMap<Mentions, MentionRow[]>();
 
-export function mentionRowsOf(mentions: Mentions | null): MentionRow[] {
+export function mentionRowsOf(
+  mentions: Mentions | null,
+  viewer: string | null,
+  conversationsOf: (repo: string, number: number) => Conversation[],
+): MentionRow[] {
   if (!mentions) return [];
+  const rows = listedMentionRows(mentions);
+  if (viewer === null) return rows;
+  return rows.filter(
+    (row) => !repliedSince(row, viewer, conversationsOf(row.repo, row.number)),
+  );
+}
+
+function listedMentionRows(mentions: Mentions): MentionRow[] {
   const known = mentionRowsSoFar.get(mentions);
   if (known) return known;
   const rows = mentions.mentions.map((mention) => ({
@@ -1177,6 +1189,22 @@ export function mentionRowsOf(mentions: Mentions | null): MentionRow[] {
   }));
   mentionRowsSoFar.set(mentions, rows);
   return rows;
+}
+
+function repliedSince(
+  row: MentionRow,
+  viewer: string,
+  conversations: Conversation[],
+): boolean {
+  if (row.at === null) return false;
+  const mentionedAt = Date.parse(row.at);
+  const conversation = conversations.find(({ key }) => key === row.thread);
+  return (conversation?.comments ?? []).some(
+    (comment) =>
+      comment.author === viewer &&
+      comment.created_at !== null &&
+      Date.parse(comment.created_at) > mentionedAt,
+  );
 }
 
 export function setupPressedOf(
