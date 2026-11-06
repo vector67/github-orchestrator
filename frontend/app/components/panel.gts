@@ -35,7 +35,7 @@ function replies(panel: Panel) {
 }
 
 function reviewing(panel: Panel) {
-  return panel.role === 'reviewer';
+  return panel.role === 'reviewer' && !panel.fix_label;
 }
 
 function reveal(entry: HTMLElement, pending?: unknown) {
