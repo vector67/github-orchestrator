@@ -5,6 +5,7 @@ __pycache__/
 .claude/worktrees/
 /config.toml
 /config.toml.bak*
+/config.toml.lock
 docs/github/
 
 # superpowers subagent-driven-development scratch
