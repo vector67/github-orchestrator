@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from github_orchestrator.agent_runs import LastRun, Run
 from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import ManagerStanding, QueuedEvent
@@ -11,6 +13,18 @@ from github_orchestrator.conversation import ConversationManager
 from github_orchestrator.domain import ReviewerPick
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.working_copies import WrongBranch
+
+_VERDICTS = frozenset({ReviewerStatus.APPROVED, ReviewerStatus.CHANGES_REQUESTED})
+
+
+def _as_sent(facts: Facts, threads: ConversationManager) -> Facts:
+    sent = None if facts.polled_at is None else threads.sent_since(facts.polled_at)
+    if sent is None:
+        return facts
+    given, settled_at = sent
+    if given is ReviewerStatus.COMMENTED and facts.my_review in _VERDICTS:
+        return replace(facts, viewer_requested=False)
+    return replace(facts, my_review=given, my_review_at=settled_at, viewer_requested=False)
 
 
 def _my_review(state: Facts) -> str | None:
@@ -38,7 +52,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  notice: str | None, hidden: bool,
                  assign_when_ready: ReviewerPick | None) -> Dashboard:
     counts = threads.counts()
-    facts = None if facts is None else threads.as_sent(facts)
+    facts = None if facts is None else _as_sent(facts, threads)
     since = _since_review(facts)
     return Dashboard(
         pr=config.pr,

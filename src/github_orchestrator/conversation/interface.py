@@ -4,7 +4,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from typing import ClassVar, Protocol
 
-from github_orchestrator.change_detection import Facts
+from github_orchestrator.change_detection import ReviewerStatus
 from github_orchestrator.conversation._application.asking import Denied
 from github_orchestrator.conversation._domain.commit_check import FixChecks
 from github_orchestrator.conversation._domain.conversation import (
@@ -186,7 +186,7 @@ class ConversationManager(Protocol):
 
     def reviews(self) -> Sequence[Review]: ...
 
-    def as_sent(self, facts: Facts) -> Facts: ...
+    def sent_since(self, polled_at: str) -> tuple[ReviewerStatus, str] | None: ...
 
     def facts(self) -> PrFacts: ...
 

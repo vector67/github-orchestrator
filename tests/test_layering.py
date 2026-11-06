@@ -681,7 +681,7 @@ CONVERSATION_MEMBERS = frozenset({"of"})
 ROLE_MEMBERS = {
     "ConversationManager": frozenset({
         "editing", "get", "all", "open_draft", "open_thread", "send_review", "reviews",
-        "as_sent", "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
+        "sent_since", "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
         "recheck", "check_for_fixes"}),
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "drop_question", "resolve", "reject", "place",
