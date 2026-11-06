@@ -204,14 +204,14 @@ class FakeGitHub:
                     f"nameWithOwner failed (exit 1): GraphQL: Could not resolve to a Repository")
         return None
 
-    def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]:
-        return [record.pr for record in self._open_in(repos) if self._found(record, whose)]
-
-    def mentioned_since(self, repos: Collection[Repo], since: datetime) -> list[Pr]:
+    def search(self, repos: Collection[Repo], whose: Whose, *,
+               updated_since: datetime | None = None) -> list[Pr]:
+        if updated_since is None:
+            return [record.pr for record in self._open_in(repos) if self._found(record, whose)]
         seen = self._searchable(repos)
         return [record.pr for record in self.prs.values()
-                if record.pr.repo in seen and record.mentioned
-                and datetime.fromisoformat(record.updated_at) >= since]
+                if record.pr.repo in seen and self._found(record, whose)
+                and datetime.fromisoformat(record.updated_at) >= updated_since]
 
     def _found(self, record: FakePullRequest, whose: Whose) -> bool:
         if whose == "author":
@@ -249,12 +249,6 @@ class FakeGitHub:
     def head_branch(self, pr: Pr) -> str | None:
         record = self.prs.get(pr)
         return None if record is None else record.state.branch or None
-
-    def is_closed(self, pr: Pr) -> bool | None:
-        record = self.prs.get(pr)
-        if record is None:
-            return None
-        return record.status != "OPEN"
 
     def close(self, pr: Pr) -> str | None:
         record = self.prs.get(pr)

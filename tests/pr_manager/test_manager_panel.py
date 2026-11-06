@@ -386,7 +386,7 @@ def test_close_from_the_board_closes_the_pr_on_github(settings, tmp_path):
     board = ServerPanel()
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.close(), None, board=board,
                           github=github)
-    assert github.is_closed(THE_PR) is True
+    assert github.relevance(THE_PR).is_open is False
 
 
 def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):

@@ -56,7 +56,8 @@ class GitHubMentionsInbox:
         mentions: list[dict[str, Any]] = []
         held = False
         try:
-            for pr in self._configured(self._pull_requests.mentioned_since(self._repos, start)):
+            found = self._pull_requests.search(self._repos, "mentions", updated_since=start)
+            for pr in self._configured(found):
                 try:
                     state = self._pull_requests.pr_state(pr)
                 except Exception:

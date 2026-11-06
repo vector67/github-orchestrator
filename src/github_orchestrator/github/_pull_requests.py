@@ -307,15 +307,6 @@ def head_branch(gh: Gh, pr: Pr) -> str | None:
     return branch if isinstance(branch, str) and branch else None
 
 
-def is_closed(gh: Gh, pr: Pr) -> bool | None:
-    try:
-        answer = gh.api(f"repos/{pr.repo}/pulls/{pr.number}")
-    except GhError as e:
-        log.warning("could not tell whether %s is closed: %s", pr, e)
-        return None
-    return bool(answer.get("state") == "closed")
-
-
 _MARK_READY_MUTATION = """
 mutation($id: ID!) {
   markPullRequestReadyForReview(input: {pullRequestId: $id}) {
@@ -381,7 +372,11 @@ def assign_reviewers(gh: Gh, pr: Pr, reviewers: Sequence[str], detailed: str | N
 
 def relevance(gh: Gh, pr: Pr) -> Relevance | None:
     owner, name = pr.repo.owner, pr.repo.name
-    gql = gh.graphql(_RELEVANCE_QUERY, {"owner": owner, "name": name, "number": pr.number})
+    try:
+        gql = gh.graphql(_RELEVANCE_QUERY, {"owner": owner, "name": name, "number": pr.number})
+    except GhError as e:
+        log.warning("could not tell how %s stands: %s", pr, e)
+        return None
     pr_data = (((gql or {}).get("data") or {}).get("repository", {}) or {}).get("pullRequest")
     if not pr_data:
         return None

@@ -70,4 +70,5 @@ class PullRequests:
         return self._change_detection.facts(self._pr)
 
     def is_closed(self, number: int) -> bool | None:
-        return self._github.is_closed(Pr(self._pr.repo, number))
+        relevance = self._github.relevance(Pr(self._pr.repo, number))
+        return None if relevance is None else not relevance.is_open

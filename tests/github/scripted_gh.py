@@ -359,10 +359,9 @@ class _World:
             return Failure(f"{SEARCH_REFUSED} (HTTP 422)")
         updated = next((a.removeprefix("--updated=>=") for a in argv
                         if a.startswith("--updated=>=")), None)
-        if updated is not None:
-            found = self.world.mentioned_since(repos, datetime.fromisoformat(updated))
-        else:
-            found = self.world.search(repos, next(_WHOSE[a] for a in argv if a in _WHOSE))
+        found = self.world.search(
+            repos, next(_WHOSE[a] for a in argv if a in _WHOSE),
+            updated_since=None if updated is None else datetime.fromisoformat(updated))
         return [{"number": pr.number, "repository": {"nameWithOwner": str(pr.repo)}}
                 for pr in found]
 

@@ -107,7 +107,8 @@ def test_every_pr_mentioning_me_updated_since_a_moment_is_found_open_closed_or_m
     world.add_pr(a_pr(5, REPO), _state(author="anna"), mentioned=True,
                  updated_at="2026-10-22T08:00:00Z")
 
-    found = github.mentioned_since([Repo.parse(REPO)], datetime(2026, 10, 21, tzinfo=UTC))
+    found = github.search([Repo.parse(REPO)], "mentions",
+                          updated_since=datetime(2026, 10, 21, tzinfo=UTC))
 
     assert sorted(found) == [a_pr(2, REPO), a_pr(3, REPO), a_pr(5, REPO)]
 
@@ -238,23 +239,11 @@ def test_the_head_branch_of_a_pr_github_does_not_know_is_none(github):
     assert github.head_branch(a_pr(40, REPO)) is None
 
 
-def test_a_closed_or_merged_pr_is_closed_and_an_open_one_is_not(world, github):
-    world.add_pr(a_pr(1, REPO), _state())
-    world.add_pr(a_pr(2, REPO), _state(), status="CLOSED")
-    world.add_pr(a_pr(3, REPO), _state(), status="MERGED")
-
-    assert [github.is_closed(a_pr(n, REPO)) for n in (1, 2, 3)] == [False, True, True]
-
-
-def test_whether_a_pr_github_does_not_know_is_closed_is_unknown(github):
-    assert github.is_closed(a_pr(40, REPO)) is None
-
-
-def test_a_pr_i_close_is_closed(world, github):
+def test_a_pr_i_close_is_no_longer_open(world, github):
     world.add_pr(a_pr(1, REPO), _state())
 
     assert github.close(a_pr(1, REPO)) is None
-    assert github.is_closed(a_pr(1, REPO)) is True
+    assert github.relevance(a_pr(1, REPO)).is_open is False
 
 
 def test_closing_a_pr_github_does_not_know_says_why(github):

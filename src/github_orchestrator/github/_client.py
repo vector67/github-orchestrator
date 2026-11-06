@@ -132,12 +132,12 @@ class GhCliGitHub:
             return str(refused)
         return None
 
-    def search(self, repos: Collection[Repo], whose: Whose) -> list[Pr]:
-        return self._gh.search_prs(repos, _SEARCHES[whose])
-
-    def mentioned_since(self, repos: Collection[Repo], since: datetime) -> list[Pr]:
-        updated = since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-        return self._gh.search_prs(repos, _SEARCHES["mentions"], f"--updated=>={updated}",
+    def search(self, repos: Collection[Repo], whose: Whose, *,
+               updated_since: datetime | None = None) -> list[Pr]:
+        if updated_since is None:
+            return self._gh.search_prs(repos, _SEARCHES[whose])
+        updated = updated_since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return self._gh.search_prs(repos, _SEARCHES[whose], f"--updated=>={updated}",
                                    open_only=False)
 
     def pr_state(self, pr: Pr) -> PullRequestState:
@@ -148,9 +148,6 @@ class GhCliGitHub:
 
     def head_branch(self, pr: Pr) -> str | None:
         return _pull_requests.head_branch(self._gh, pr)
-
-    def is_closed(self, pr: Pr) -> bool | None:
-        return _pull_requests.is_closed(self._gh, pr)
 
     def close(self, pr: Pr) -> str | None:
         try:

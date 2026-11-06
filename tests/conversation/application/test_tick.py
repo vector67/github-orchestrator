@@ -92,9 +92,9 @@ class CountingGitHub(FakeGitHub):
         super().__init__()
         self.closed_asks = 0
 
-    def is_closed(self, pr):
+    def relevance(self, pr):
         self.closed_asks += 1
-        return super().is_closed(pr)
+        return super().relevance(pr)
 
 
 def _world(settings, **fakes):

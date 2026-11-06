@@ -230,9 +230,9 @@ def test_every_repo_is_searched_in_one_gh_call_with_no_cap_below_githubs():
 def test_the_mentions_since_search_asks_for_every_state_updated_from_that_moment_in_utc():
     gh = ScriptedGh().answer("search prs", [])
 
-    real_github(gh=gh).mentioned_since(
-        [Repo.parse("acme/widgets")],
-        datetime(2026, 10, 21, 11, 30, tzinfo=timezone(timedelta(hours=2))))
+    real_github(gh=gh).search(
+        [Repo.parse("acme/widgets")], "mentions",
+        updated_since=datetime(2026, 10, 21, 11, 30, tzinfo=timezone(timedelta(hours=2))))
 
     [call] = [request for request in gh.calls if request.route == "search prs"]
     assert "--mentions=@me" in call.argv
@@ -540,12 +540,12 @@ def test_pushes_are_dated_by_their_commit_or_by_the_force_push():
 
 
 def test_a_pr_github_will_not_describe_is_logged_with_what_gh_said(caplog):
-    gh = ScriptedGh().always(PULL, Failure("gh: Bad credentials (HTTP 401)"))
+    gh = ScriptedGh().always("graphql", Failure("gh: Bad credentials (HTTP 401)"))
 
     with caplog.at_level(logging.WARNING):
-        closed = real_github(gh=gh).is_closed(a_pr(7, REPO))
+        relevance = real_github(gh=gh).relevance(a_pr(7, REPO))
 
-    assert closed is None
+    assert relevance is None
     assert f"{REPO}#7" in caplog.text
     assert "Bad credentials" in caplog.text
 

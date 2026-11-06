@@ -262,7 +262,7 @@ def test_the_board_reads_no_mentions_before_the_first_search(tmp_path):
 def test_a_mention_github_spells_in_another_case_is_listed_under_the_configured_repo(tmp_path):
     here = _here(tmp_path)
     _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
-    here.github.mentioned_since = lambda repos, since: [Pr(Repo.parse("Acme/Widgets"), 7)]
+    here.github.search = lambda repos, whose, updated_since=None: [Pr(Repo.parse("Acme/Widgets"), 7)]
 
     assert [(listed["repo"], listed["thread"]) for listed in _searched(here)["mentions"]] == [
         (REPO, "IC_1")]
@@ -271,7 +271,7 @@ def test_a_mention_github_spells_in_another_case_is_listed_under_the_configured_
 def test_a_mention_in_a_repo_the_config_does_not_name_is_skipped(tmp_path):
     here = _here(tmp_path, "acme/gadgets")
     _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
-    here.github.mentioned_since = lambda repos, since: [
+    here.github.search = lambda repos, whose, updated_since=None: [
         Pr(Repo.parse("acme/gadgets-renamed"), 3), THE_PR]
 
     assert _listed_threads(here) == ["IC_1"]
@@ -294,7 +294,7 @@ def test_a_pr_whose_state_will_not_read_is_skipped_and_the_others_listed(tmp_pat
     here = _here(tmp_path)
     _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
     gone = _a_pr_whose_state_will_not_read(here)
-    here.github.mentioned_since = lambda repos, since: [gone, THE_PR]
+    here.github.search = lambda repos, whose, updated_since=None: [gone, THE_PR]
 
     assert _listed_threads(here) == ["IC_1"]
 
@@ -302,7 +302,7 @@ def test_a_pr_whose_state_will_not_read_is_skipped_and_the_others_listed(tmp_pat
 def test_a_pr_whose_state_will_not_read_keeps_the_start(tmp_path):
     here = _here(tmp_path)
     gone = _a_pr_whose_state_will_not_read(here)
-    here.github.mentioned_since = lambda repos, since: [gone]
+    here.github.search = lambda repos, whose, updated_since=None: [gone]
 
     assert _listed_threads(here) == []
     assert datetime.fromisoformat(_start(here)) == START
