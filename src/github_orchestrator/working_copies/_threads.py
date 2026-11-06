@@ -33,7 +33,8 @@ def run_git(cwd: str, *args: str) -> subprocess.CompletedProcess[str]:
     try:
         return subprocess.run(
             ["git", "-C", cwd, *args],
-            capture_output=True, text=True, timeout=GIT_TIMEOUT,
+            capture_output=True, encoding="utf-8", errors="replace",
+            timeout=GIT_TIMEOUT,
             stdin=subprocess.DEVNULL,
             env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
@@ -236,15 +237,17 @@ def diff_since(worktree: str, since: str) -> str | None:
     if Sha.parse(since) is None:
         log.warning("refusing to diff %r in %s: it is not a commit", since, worktree)
         return None
-    prefixes = ("--no-color", "-U3", "--src-prefix=a/", "--dst-prefix=b/")
+    diff = ("-c", "diff.suppressBlankEmpty=false", "diff", "--no-color",
+            "--no-ext-diff", "--no-textconv", "-M", "-U3",
+            "--src-prefix=a/", "--dst-prefix=b/")
     try:
-        tracked = run_git(worktree, "diff", *prefixes, "--end-of-options", since)
+        tracked = run_git(worktree, *diff, "--end-of-options", since)
         untracked = run_git(worktree, "ls-files", "--others", "--exclude-standard", "-z")
         if tracked.returncode != 0 or untracked.returncode != 0:
             log.warning("git could not diff %s in %s: %s", since, worktree,
                         git_diagnostic(tracked if tracked.returncode else untracked))
             return None
-        added = [run_git(worktree, "diff", *prefixes, "--no-index", "--", "/dev/null", path).stdout
+        added = [run_git(worktree, *diff, "--no-index", "--", "/dev/null", path).stdout
                  for path in untracked.stdout.split("\0") if path]
     except (OSError, subprocess.TimeoutExpired) as e:
         log.warning("git could not diff %s in %s: %s", since, worktree, e)

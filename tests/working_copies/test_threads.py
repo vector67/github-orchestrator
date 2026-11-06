@@ -282,6 +282,81 @@ def test_a_workspace_diffs_everything_past_a_commit_committed_or_not(git, pr_wor
     assert added == {"f": ["uncommitted"], "g": ["committed since"], "new": ["untracked"]}
 
 
+SOURCE = b"".join(b"line %d\n" % n for n in range(1, 30))
+
+
+def _diffed_workspace(git, pr_worktree, config=(), before=(), after=(), commit_after=False):
+    cut = _cut(git, pr_worktree)
+    wt = Path(cut.path)
+    _git(wt, "config", "user.email", "t@example.com")
+    _git(wt, "config", "user.name", "T")
+    for name, content in before:
+        (wt / name).write_bytes(content)
+    _git(wt, "add", ".")
+    _git(wt, "commit", "-qm", "the proposal")
+    proposed = _git(wt, "rev-parse", "HEAD").stdout.strip()
+    for name, content in after:
+        (wt / name).write_bytes(content)
+    if commit_after:
+        _git(wt, "add", ".")
+        _git(wt, "commit", "-qm", "past the proposal")
+    for key, value in config:
+        _git(wt, "config", key, value)
+    return {file.path: file for file in cut.diff_since(Sha(proposed))}
+
+
+def _texts(file):
+    return [line.text for hunk in file.hunks for line in hunk.lines]
+
+
+def test_a_workspace_line_that_is_not_utf8_reads_with_a_replacement_character(git, pr_worktree):
+    files = _diffed_workspace(git, pr_worktree,
+                              after=(("f", "café\n".encode("latin-1")),
+                                     ("menu.txt", "thé\n".encode("latin-1"))))
+
+    assert _texts(files["f"]) == ["base", "caf�"]
+    assert _texts(files["menu.txt"]) == ["th�"]
+
+
+def test_a_workspace_diff_ignores_an_external_diff_tool_in_the_config(git, pr_worktree):
+    files = _diffed_workspace(git, pr_worktree, config=(("diff.external", "true"),),
+                              after=(("f", b"changed\n"),))
+
+    assert _texts(files["f"]) == ["base", "changed"]
+
+
+def test_a_workspace_diff_ignores_a_textconv_filter_in_the_config(git, pr_worktree):
+    files = _diffed_workspace(git, pr_worktree, config=(("diff.shout.textconv", "rev"),),
+                              before=((".gitattributes", b"* diff=shout\n"),),
+                              after=(("f", b"hello\n"), ("new", b"hello\n")))
+
+    assert _texts(files["f"]) == ["base", "hello"]
+    assert _texts(files["new"]) == ["hello"]
+
+
+def test_a_workspace_blank_context_line_keeps_the_numbers_when_the_config_suppresses_its_space(
+        git, pr_worktree):
+    files = _diffed_workspace(git, pr_worktree, config=(("diff.suppressBlankEmpty", "true"),),
+                              before=(("notes.txt", b"one\n\ntwo\n"),),
+                              after=(("notes.txt", b"one\n\nthree\n"),))
+
+    [hunk] = files["notes.txt"].hunks
+    assert [(line.kind, line.old_line, line.new_line) for line in hunk.lines] == [
+        ("context", 1, 1), ("context", 2, 2), ("removed", 3, None), ("added", None, 3)]
+
+
+def test_a_workspace_diff_shows_a_copy_as_an_added_file_when_the_config_detects_copies(
+        git, pr_worktree):
+    files = _diffed_workspace(git, pr_worktree, config=(("diff.renames", "copies"),),
+                              before=(("original.txt", SOURCE),),
+                              after=(("original.txt", SOURCE.replace(b"line 1\n", b"line one\n")),
+                                     ("a_copy.txt", SOURCE)),
+                              commit_after=True)
+
+    assert [(path, file.status, file.old_path) for path, file in sorted(files.items())] == [
+        ("a_copy.txt", "added", None), ("original.txt", "modified", None)]
+
+
 def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
     git, pr_worktree, worktrees_dir
 ):
