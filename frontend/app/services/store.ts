@@ -106,6 +106,7 @@ import {
   filesOf,
   heldOf,
   mentionableOf,
+  mentionRowsOf,
   reviewersOf,
   outstandingOf,
   placeOf,
@@ -123,6 +124,7 @@ import {
   tickedOn,
   wallOf,
   type Entered,
+  type MentionRow,
   type Outstanding,
   type Place,
   type PrHeader,
@@ -149,6 +151,7 @@ import { DOWN } from 'frontend/services/reachability';
 export type {
   AtWork,
   Flag,
+  MentionRow,
   Move,
   NextMove,
   Outstanding,
@@ -521,6 +524,10 @@ export default class StoreService extends Service {
   ): Reading {
     const failing = failingOf(shown, this.ledger?.runs ?? []);
     return dashboardOf(shown, summaries, now, failing);
+  }
+
+  get mentionRows(): MentionRow[] {
+    return mentionRowsOf(this.mentions);
   }
 
   resetStanding(repo: string, number: number): ResetStanding | null {

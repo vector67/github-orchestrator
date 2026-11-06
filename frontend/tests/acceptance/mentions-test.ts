@@ -76,6 +76,21 @@ module('Acceptance | mentions', function (hooks) {
       .doesNotExist();
   });
 
+  test('a mention on the board without a thread links to GitHub instead', async function (assert) {
+    board().held = [heldPr()];
+    board().mentions.mentions = [
+      outstandingMention({ thread: null, comment_id: 1 }),
+    ];
+    await visit('/');
+
+    await click('[data-test-mentions-count]');
+
+    assert.dom('[data-test-mentions-menu] [data-test-mention-github]').exists();
+    assert
+      .dom('[data-test-mentions-menu] [data-test-mention-open]')
+      .doesNotExist();
+  });
+
   test('the counter is in the top bar of a pull request’s page too', async function (assert) {
     board().held = [heldPr()];
     board().mentions.mentions = [outstandingMention()];

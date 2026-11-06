@@ -4,15 +4,12 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import type RouterService from '@ember/routing/router-service';
-import type { OutstandingMention } from 'frontend/data/api';
 import { pageOf } from 'frontend/data/wall';
 import navigates from 'frontend/modifiers/navigates';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
-
-const opensOnTheBoard = (mention: OutstandingMention): boolean =>
-  mention.on_board && mention.thread !== null;
+import type { MentionRow } from 'frontend/services/store';
 
 export default class MentionsCounter extends Component {
   @service declare router: RouterService;
@@ -34,8 +31,8 @@ export default class MentionsCounter extends Component {
     this.keys.drop(this.keymap);
   }
 
-  get mentions(): OutstandingMention[] {
-    return this.store.mentions?.mentions ?? [];
+  get mentions(): MentionRow[] {
+    return this.store.mentionRows;
   }
 
   open = () => {
@@ -48,13 +45,13 @@ export default class MentionsCounter extends Component {
     this.keys.drop(this.keymap);
   };
 
-  hrefOf = (mention: OutstandingMention): string =>
+  hrefOf = (mention: MentionRow): string =>
     pageOf(
       { repo: mention.repo, number: mention.number },
       `/conversations/${encodeURIComponent(mention.thread ?? '')}`,
     );
 
-  go = async (mention: OutstandingMention): Promise<void> => {
+  go = async (mention: MentionRow): Promise<void> => {
     this.close();
     await this.router.transitionTo(this.hrefOf(mention));
   };
@@ -85,7 +82,7 @@ export default class MentionsCounter extends Component {
                 on
                 {{mention.repo}}#{{mention.number}}</span>
               <span class="mention-body">{{mention.body}}</span>
-              {{#if (opensOnTheBoard mention)}}
+              {{#if mention.opensOnTheBoard}}
                 <a
                   href={{this.hrefOf mention}}
                   class="linkish"

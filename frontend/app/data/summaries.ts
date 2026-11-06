@@ -6,7 +6,9 @@ import type {
   Diff,
   ManagerFlags,
   MentionableList,
+  Mentions,
   Operation,
+  OutstandingMention,
   Person,
   PrFacts,
   PullRequestCommit,
@@ -1156,6 +1158,24 @@ export function mergeNoteOf(
     came: merged && merged.filter((one) => !changed.has(one.path)).length,
     own: [...changed],
   };
+}
+
+export interface MentionRow extends OutstandingMention {
+  opensOnTheBoard: boolean;
+}
+
+const mentionRowsSoFar = new WeakMap<Mentions, MentionRow[]>();
+
+export function mentionRowsOf(mentions: Mentions | null): MentionRow[] {
+  if (!mentions) return [];
+  const known = mentionRowsSoFar.get(mentions);
+  if (known) return known;
+  const rows = mentions.mentions.map((mention) => ({
+    ...mention,
+    opensOnTheBoard: mention.on_board && mention.thread !== null,
+  }));
+  mentionRowsSoFar.set(mentions, rows);
+  return rows;
 }
 
 export interface ResetStanding {
