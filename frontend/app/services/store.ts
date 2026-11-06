@@ -333,6 +333,7 @@ function listsOf(facts: PrFacts): PrFacts {
     changes_requested_by: list(facts.changes_requested_by),
     pending_reviewers: list(facts.pending_reviewers),
     mentions: list(facts.mentions),
+    checks: list(facts.checks),
   };
 }
 

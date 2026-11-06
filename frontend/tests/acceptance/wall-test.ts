@@ -12,7 +12,7 @@ import {
   waitFor,
   waitUntil,
 } from '@ember/test-helpers';
-import type { HeldPullRequest, ThreadCounts } from 'frontend/data/api';
+import type { HeldPullRequest, PrFacts, ThreadCounts } from 'frontend/data/api';
 import {
   check,
   factsFor,
@@ -3168,6 +3168,28 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-row="o/r#7"]')
       .exists('the healthy row still shows');
     assert.dom('[data-test-wall]').exists();
+  });
+
+  test('a first paint whose facts have no checks still shows the row', async function (assert) {
+    const seven = heldPr();
+    const unchecked: Partial<PrFacts> = { ...seven.dashboard.facts! };
+    delete unchecked.checks;
+    onTheHub(seven);
+    wallAnswers(
+      wallOf([
+        {
+          ...seven,
+          dashboard: {
+            ...seven.dashboard,
+            facts: { ...unchecked, ci_status: 'pending' },
+          },
+        },
+      ]),
+    );
+
+    await visit('/');
+
+    assert.dom('[data-test-wall-row="o/r#7"]').exists();
   });
 
   test('the rows of a wall whose watcher is overdue are marked stale', async function (assert) {
