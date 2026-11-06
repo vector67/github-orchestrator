@@ -239,6 +239,25 @@ def test_taking_over_a_pr_never_polled_knows_nothing_of_it(detection):
     detection.take_over(THE_PR)
 
     assert detection.facts(THE_PR) is None
+    assert detection.tracked() == []
+
+
+def test_a_pr_taken_over_before_its_first_poll_is_yours_once_polled(detection):
+    detection.take_over(THE_PR)
+
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(THE_PR).is_author is True
+
+
+def test_a_pr_taken_over_then_forgotten_is_still_yours_when_found_again(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+    detection.forget(THE_PR)
+
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(THE_PR).is_author is True
 
 
 def test_a_forgotten_pr_is_no_longer_known(detection):

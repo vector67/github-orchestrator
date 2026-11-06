@@ -14,3 +14,6 @@ class WouldSaveChangeDetection(DiskChangeDetection):
 
     def _save(self, pr: Pr, snapshot: dict[str, Any]) -> None:
         self._say(f"would save state for {pr}")
+
+    def _mark_taken_over(self, pr: Pr) -> None:
+        self._say(f"would mark {pr} taken over")

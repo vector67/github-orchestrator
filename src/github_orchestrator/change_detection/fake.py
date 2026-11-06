@@ -39,11 +39,13 @@ class FakeChangeDetection:
         self._clock = clock
         self._held: dict[Pr, str] = {}
         self._facts: dict[Pr, tuple[str, Facts]] = {}
+        self._taken_over: set[Pr] = set()
 
     def advance(self, pr: Pr, poll: Poll, pending_ci_checks: set[str]) -> list[PrEvent]:
         step = advance(pr, self._last(pr), poll, pending_ci_checks,
                        self._clock().isoformat(), account=self._account,
-                       poll_interval=self._poll_interval)
+                       poll_interval=self._poll_interval,
+                       taken_over=pr in self._taken_over)
         self._held[pr] = json.dumps(step.snapshot)
         return step.events
 
@@ -79,6 +81,7 @@ class FakeChangeDetection:
         self._held[pr] = json.dumps(closing(self._last(pr)))
 
     def take_over(self, pr: Pr) -> None:
+        self._taken_over.add(pr)
         snapshot = self._last(pr)
         if snapshot is not None:
             self._held[pr] = json.dumps(taking_over(snapshot))

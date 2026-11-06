@@ -78,6 +78,9 @@ class DiskChangeDetection:
     def _file(self, pr: Pr) -> Path:
         return _repo_dir(self._state_dir, pr.repo) / f"{pr.number}.json"
 
+    def _taken_over_marker(self, pr: Pr) -> Path:
+        return _repo_dir(self._state_dir, pr.repo) / f"{pr.number}.taken-over"
+
     def _files(self) -> Iterator[Path]:
         if not self._state_dir.exists():
             return iter(())
@@ -92,7 +95,8 @@ class DiskChangeDetection:
     def advance(self, pr: Pr, poll: Poll, pending_ci_checks: set[str]) -> list[PrEvent]:
         step = advance(pr, self._last(pr), poll, pending_ci_checks,
                        self._clock().isoformat(), account=self._account,
-                       poll_interval=self._poll_interval)
+                       poll_interval=self._poll_interval,
+                       taken_over=self._taken_over_marker(pr).exists())
         self._save(pr, step.snapshot)
         return step.events
 
@@ -143,9 +147,15 @@ class DiskChangeDetection:
         self._save(pr, closing(self._last(pr)))
 
     def take_over(self, pr: Pr) -> None:
+        self._mark_taken_over(pr)
         snapshot = self._last(pr)
         if snapshot is not None:
             self._save(pr, taking_over(snapshot))
+
+    def _mark_taken_over(self, pr: Pr) -> None:
+        marker = self._taken_over_marker(pr)
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.touch()
 
     def forget(self, pr: Pr) -> bool:
         path = self._file(pr)

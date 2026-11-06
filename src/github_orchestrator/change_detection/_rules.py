@@ -92,7 +92,7 @@ def _review_decision(state: PullRequestState) -> ReviewDecision | None:
 
 
 def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
-                account: str) -> dict[str, Any]:
+                account: str, taken_over: bool) -> dict[str, Any]:
     state = poll.state
 
     latest_reviewer = None
@@ -121,7 +121,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
     detailed_reviewer = detailed_reviewer_match.group(1) if detailed_reviewer_match else None
     is_detailed_reviewer = detailed_reviewer == account
 
-    taken_over = bool((old or {}).get("taken_over"))
+    taken_over = taken_over or bool((old or {}).get("taken_over"))
     is_author_pr = state.author == account or taken_over
 
     activity = compute_review_activity(
@@ -321,9 +321,9 @@ def _carry_known_mergeability(old: dict[str, Any] | None, current: dict[str, Any
 
 def advance(
     pr: Pr, old: dict[str, Any] | None, poll: Poll, pending_ci_checks: set[str],
-    now: str, *, account: str, poll_interval: int,
+    now: str, *, account: str, poll_interval: int, taken_over: bool,
 ) -> Step:
-    current = snapshot_of(pr, poll, old, account=account)
+    current = snapshot_of(pr, poll, old, account=account, taken_over=taken_over)
     _carry_known_mergeability(old, current)
 
     if old is None:
