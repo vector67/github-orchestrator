@@ -187,7 +187,7 @@ gh_account = "your-github-username"
 # check_for_updates = true
 
 # The board's mentions counter counts the mentions of you made since this
-# moment. The hub writes it here the first time it starts and moves it forward
+# moment. The hub writes it above [[repos]] the first time it starts and moves it forward
 # each time nothing is left to count, so leave it to the hub.
 # mentions_start = "2026-10-23T09:00:00+00:00"
 

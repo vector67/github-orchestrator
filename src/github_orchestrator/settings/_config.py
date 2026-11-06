@@ -441,8 +441,22 @@ _MENTIONS_START_LINE = re.compile(
     re.MULTILINE)
 
 
+_TABLE_HEADER = re.compile(r"^[ \t]*\[{1,2}[^\[\]]+\]{1,2}[ \t]*(?:#.*)?$")
+
+
 def _mentions_start_line(at: datetime) -> str:
     return f"{_MENTIONS_START} = {_toml_string(at.isoformat())}"
+
+
+def _with_mentions_start(text: str, at: datetime) -> str:
+    lines = text.splitlines(keepends=True)
+    first_table = next((i for i, line in enumerate(lines) if _TABLE_HEADER.match(line)), None)
+    if first_table is None:
+        return text + ("" if not text or text.endswith("\n") else "\n") + _mentions_start_line(at) + "\n"
+    opening = first_table
+    while opening > 0 and lines[opening - 1].lstrip().startswith("#"):
+        opening -= 1
+    return "".join(lines[:opening]) + _mentions_start_line(at) + "\n\n" + "".join(lines[opening:])
 
 
 class TomlConfigFile:
@@ -524,7 +538,7 @@ class TomlConfigFile:
             if _MENTIONS_START in data:
                 self._move_mentions_start(now)
             else:
-                self._replace(_mentions_start_line(now) + "\n" + self._path.read_text())
+                self._replace(_with_mentions_start(self._path.read_text(), now))
             return now
 
     def move_mentions_start(self, to: datetime) -> None:

@@ -600,15 +600,36 @@ FIRST_START = datetime(2026, 10, 23, 9, 0, tzinfo=timezone.utc)
 LATER = datetime(2026, 10, 24, 9, 30, tzinfo=timezone.utc)
 
 
-def test_a_config_with_no_mentions_start_is_stamped_now_above_what_it_already_says(tmp_path):
-    toml_file = write_config(tmp_path, "# the hub's own words\nhub_port = 8721\n")
-    before = toml_file.read_text()
+def test_a_config_with_no_mentions_start_is_stamped_now_below_its_keys_and_above_its_repos(tmp_path):
+    toml_file = write_config(tmp_path, "hub_port = 8721\n")
 
     started = read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
     assert started == FIRST_START
-    assert toml_file.read_text() == f'mentions_start = "{FIRST_START.isoformat()}"\n' + before
+    assert toml_file.read_text() == ('gh_account = "octocat"\nhub_port = 8721\n\n'
+                                     f'mentions_start = "{FIRST_START.isoformat()}"\n\n'
+                                     '[[repos]]\nrepo = "octocat/hello"\nlocal_path = "/tmp/hello"\n')
     assert load_config(toml_file).hub_port == 8721
+
+
+def test_a_stamped_mentions_start_stays_above_the_comment_that_opens_the_repos(tmp_path):
+    toml_file = write_config(tmp_path, 'hub_port = 8721\n\n# what to watch\n[[repos]]\n'
+                                       'repo = "octocat/hello"\nlocal_path = "/tmp/hello"\n')
+
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
+
+    assert toml_file.read_text().splitlines()[2:6] == [
+        "", f'mentions_start = "{FIRST_START.isoformat()}"', "", "# what to watch"]
+
+
+def test_a_config_with_no_tables_is_stamped_at_its_end(tmp_path):
+    toml_file = tmp_path / "config.toml"
+    toml_file.write_text('watch_repo = "octocat/hello"\nlocal_path = "/tmp/hello"')
+
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
+
+    assert toml_file.read_text().splitlines()[-1] == f'mentions_start = "{FIRST_START.isoformat()}"'
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == FIRST_START
 
 
 def test_a_stamped_mentions_start_is_read_back_and_not_stamped_again(tmp_path):
