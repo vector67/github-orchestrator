@@ -9,6 +9,8 @@ from github_orchestrator.domain import Mention
 KIND_PR_BODY = "pr-body"
 PR_BODY_KEY = "pr-body"
 _DETAILED_REVIEWER = re.compile(r"^\s*detailed reviewer:.*$", re.IGNORECASE | re.MULTILINE)
+_CODE = re.compile(r"^ {0,3}(`{3,}|~{3,}).*?(?:^ {0,3}\1|\Z)|(`+)(?!`).+?(?<!`)\2(?!`)",
+                   re.MULTILINE | re.DOTALL)
 
 
 def _names(account: str) -> re.Pattern[str]:
@@ -16,7 +18,7 @@ def _names(account: str) -> re.Pattern[str]:
 
 
 def _names_me(names: re.Pattern[str], body: str) -> bool:
-    return names.search(_DETAILED_REVIEWER.sub("", body)) is not None
+    return names.search(_CODE.sub("", _DETAILED_REVIEWER.sub("", body))) is not None
 
 
 def _mine(comment: Comment, account: str) -> bool:

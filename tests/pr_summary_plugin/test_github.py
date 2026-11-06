@@ -2,7 +2,7 @@ import subprocess
 from typing import Any
 
 import pytest
-from pr_summary.github import GhFailed, gh_cli
+from pr_summary.github import GhFailed, gh_cli, pull_request
 
 CUT_OFF = subprocess.CompletedProcess(["gh"], 1, b"", b"unexpected end of JSON input\n")
 NOT_FOUND = subprocess.CompletedProcess(["gh"], 1, b"", b"gh: Not Found (HTTP 404)\n")
@@ -41,3 +41,9 @@ def test_any_other_failure_is_not_asked_for_again(monkeypatch: pytest.MonkeyPatc
     with pytest.raises(GhFailed, match="HTTP 404"):
         gh_cli(["api", "user"])
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("body", [b"", b'{"data": {"repos'])
+def test_a_cut_off_body_from_a_gh_that_exited_cleanly_fails(body: bytes) -> None:
+    with pytest.raises(GhFailed, match="not JSON"):
+        pull_request(lambda args: body, "acme", "widgets", 1)

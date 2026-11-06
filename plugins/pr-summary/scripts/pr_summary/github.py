@@ -101,7 +101,11 @@ def _variables(query: str, owner: str, repo: str, number: int) -> list[str]:
 
 
 def _graphql(gh: Gh, query: str, owner: str, repo: str, number: int) -> dict[str, Any]:
-    response: dict[str, Any] = json.loads(gh(["api", "graphql", *_variables(query, owner, repo, number)]))
+    body = gh(["api", "graphql", *_variables(query, owner, repo, number)])
+    try:
+        response: dict[str, Any] = json.loads(body)
+    except json.JSONDecodeError:
+        raise GhFailed(f"gh api graphql answered with a body that is not JSON: {body[:200]!r}") from None
     return response
 
 

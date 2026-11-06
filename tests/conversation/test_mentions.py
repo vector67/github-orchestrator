@@ -65,6 +65,17 @@ def test_only_my_name_as_a_whole_word_by_someone_else_is_a_mention(settings):
     assert [(mention.author, mention.comment_id) for mention in mentions] == [("bob", 4)]
 
 
+def test_my_name_inside_code_is_no_mention(settings):
+    mentions = _mentions(
+        settings,
+        _issue("IC_1", _said(1, "anna", "run `gh pr edit --add-reviewer @octocat`", "2026-09-01T10:00:00Z")),
+        _issue("IC_2", _said(2, "anna", "```\nCODEOWNERS: @octocat\n```", "2026-09-01T10:01:00Z")),
+        _issue("IC_3", _said(3, "anna", "`@octocat` is the owner, @octocat please look", "2026-09-01T10:02:00Z")),
+    )
+
+    assert [mention.comment_id for mention in mentions] == [3]
+
+
 def test_a_mention_on_a_review_thread_is_answered_by_my_later_reply_on_that_thread(settings):
     mentions = _mentions(
         settings,
