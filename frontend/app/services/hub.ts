@@ -12,17 +12,10 @@ import type ReachabilityService from 'frontend/services/reachability';
 import type StoreService from 'frontend/services/store';
 import type { PrEntity, WallRow, WallSection } from 'frontend/services/store';
 import type { NewestRelease } from 'frontend/data/api';
+import { keep, recall } from 'frontend/data/site-data';
 
 const FOLDABLE = 'parked';
 const PARKED_FOLDED = 'wall-parked-folded';
-
-function foldedBefore(): boolean {
-  try {
-    return localStorage.getItem(PARKED_FOLDED) === 'true';
-  } catch {
-    return false;
-  }
-}
 
 export default class HubService extends Service {
   @service('poll') declare loader: PollService;
@@ -30,7 +23,7 @@ export default class HubService extends Service {
   @service declare store: StoreService;
 
   @tracked selected: string | null = null;
-  @tracked parkedFolded = foldedBefore();
+  @tracked parkedFolded = recall(PARKED_FOLDED) === 'true';
 
   get now(): number {
     return Math.max(this.loader.now, this.loader.hubAt);
@@ -83,11 +76,7 @@ export default class HubService extends Service {
 
   toggleParked(): void {
     this.parkedFolded = !this.parkedFolded;
-    try {
-      localStorage.setItem(PARKED_FOLDED, String(this.parkedFolded));
-    } catch {
-      return;
-    }
+    keep(PARKED_FOLDED, String(this.parkedFolded));
   }
 
   get stale(): boolean {

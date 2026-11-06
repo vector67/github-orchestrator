@@ -1,5 +1,6 @@
 import Service from '@ember/service';
 import type { Ticket } from 'frontend/data/api';
+import { keep, recalledAs } from 'frontend/data/site-data';
 
 const KEPT = 'decide-dialog-drafts';
 const FORTNIGHT = 14 * 24 * 60 * 60 * 1000;
@@ -54,19 +55,10 @@ export default class DialogDraftsService extends Service {
   }
 
   private read(): Shelf {
-    try {
-      const raw = localStorage.getItem(KEPT);
-      return raw ? fresh(JSON.parse(raw) as Shelf, Date.now()) : {};
-    } catch {
-      return {};
-    }
+    return recalledAs(KEPT, (kept) => fresh(kept as Shelf, Date.now()), {});
   }
 
   private write(shelf: Shelf): void {
-    try {
-      localStorage.setItem(KEPT, JSON.stringify(shelf));
-    } catch {
-      return;
-    }
+    keep(KEPT, JSON.stringify(shelf));
   }
 }

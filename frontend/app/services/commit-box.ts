@@ -1,5 +1,6 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { keep, recall, recalledAs } from 'frontend/data/site-data';
 
 export type CommitSizing = 'full' | 'minimal' | 'hidden';
 
@@ -24,73 +25,38 @@ const SKIP_MERGES = 'commit-skip-merges';
 const AUTO_READ = 'commit-auto-read';
 
 function autoReading(): AutoRead {
-  try {
-    const kept = localStorage.getItem(AUTO_READ);
-    return AUTO_READS.find((one) => one === kept) ?? 'off';
-  } catch {
-    return 'off';
-  }
+  const kept = recall(AUTO_READ);
+  return AUTO_READS.find((one) => one === kept) ?? 'off';
 }
 
 function recalled(): CommitSizing {
-  try {
-    const kept = localStorage.getItem(SIZING);
-    return COMMIT_SIZINGS.find((one) => one === kept) ?? 'full';
-  } catch {
-    return 'full';
-  }
-}
-
-function skipping(): boolean {
-  try {
-    return localStorage.getItem(SKIP_MERGES) !== 'false';
-  } catch {
-    return true;
-  }
+  const kept = recall(SIZING);
+  return COMMIT_SIZINGS.find((one) => one === kept) ?? 'full';
 }
 
 function dismissals(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(DISMISSED) ?? '{}') as Record<
-      string,
-      string
-    >;
-  } catch {
-    return {};
-  }
+  return recalledAs(DISMISSED, (kept) => kept as Record<string, string>, {});
 }
 
 export default class CommitBoxService extends Service {
   @tracked sizing: CommitSizing = recalled();
   @tracked private dismissed: Record<string, string> = dismissals();
-  @tracked skipMerges: boolean = skipping();
+  @tracked skipMerges: boolean = recall(SKIP_MERGES) !== 'false';
   @tracked autoRead: AutoRead = autoReading();
 
   chooseAutoRead(autoRead: AutoRead): void {
     this.autoRead = autoRead;
-    try {
-      localStorage.setItem(AUTO_READ, autoRead);
-    } catch {
-      return;
-    }
+    keep(AUTO_READ, autoRead);
   }
 
   chooseSkipMerges(skip: boolean): void {
     this.skipMerges = skip;
-    try {
-      localStorage.setItem(SKIP_MERGES, String(skip));
-    } catch {
-      return;
-    }
+    keep(SKIP_MERGES, String(skip));
   }
 
   choose(sizing: CommitSizing): void {
     this.sizing = sizing;
-    try {
-      localStorage.setItem(SIZING, sizing);
-    } catch {
-      return;
-    }
+    keep(SIZING, sizing);
   }
 
   noteDismissed(pr: string, head: string): boolean {
@@ -99,10 +65,6 @@ export default class CommitBoxService extends Service {
 
   dismissNote(pr: string, head: string): void {
     this.dismissed = { ...this.dismissed, [pr]: head };
-    try {
-      localStorage.setItem(DISMISSED, JSON.stringify(this.dismissed));
-    } catch {
-      return;
-    }
+    keep(DISMISSED, JSON.stringify(this.dismissed));
   }
 }

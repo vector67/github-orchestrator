@@ -1,5 +1,6 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { keep, recall } from 'frontend/data/site-data';
 
 const REMEMBERED = 'board-theme';
 
@@ -7,14 +8,8 @@ export default class ThemeService extends Service {
   @tracked chosen: string | null = null;
 
   restore(): void {
-    let kept: string | null = null;
-    try {
-      kept = localStorage.getItem(REMEMBERED);
-    } catch {
-      kept = null;
-    }
     const asked = new URLSearchParams(window.location.search).get('theme');
-    this.apply(asked ?? kept);
+    this.apply(asked ?? recall(REMEMBERED));
   }
 
   apply(theme: string | null): void {
@@ -32,10 +27,6 @@ export default class ThemeService extends Service {
   toggle(): void {
     const next = this.dark ? 'light' : 'dark';
     this.apply(next);
-    try {
-      localStorage.setItem(REMEMBERED, next);
-    } catch {
-      // a viewer with site data blocked still gets the theme, just not kept
-    }
+    keep(REMEMBERED, next);
   }
 }

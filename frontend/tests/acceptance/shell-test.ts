@@ -119,6 +119,31 @@ module('Acceptance | shell', function (hooks) {
       .hasAttribute('data-theme', wasDark ? 'dark' : 'light', 'and flips back');
   });
 
+  test('with site data blocked the board still opens and its settings still switch', async function (assert) {
+    const storage = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('site data is blocked', 'SecurityError');
+      },
+    });
+    try {
+      await visit('/pr/o/r/7/conversations');
+      const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      await click('[data-test-settings-open]');
+      await click('[data-test-theme-toggle]');
+      await click('[data-test-harvest-toggle]');
+
+      assert
+        .dom(document.documentElement)
+        .hasAttribute('data-theme', wasDark ? 'light' : 'dark');
+      assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: on');
+    } finally {
+      Object.defineProperty(window, 'localStorage', storage);
+    }
+  });
+
   for (const page of ['/pr/o/r/7/conversations', '/']) {
     test(`on ${page} a gear opens the settings menu, which holds the theme, the Harvest timer, commit box sizing, auto read and the terminal's colours, and closes on Escape`, async function (assert) {
       await visit(page);

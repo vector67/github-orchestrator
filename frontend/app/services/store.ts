@@ -97,6 +97,7 @@ import {
   unheldBy,
   type Unheld,
 } from 'frontend/data/refusal';
+import { forget, keep, recall, recalledAs } from 'frontend/data/site-data';
 import { reportError } from 'frontend/data/report';
 import { MOVED, tried, type Tried } from 'frontend/data/tried';
 import { EventStream, type StreamState } from 'frontend/data/stream';
@@ -349,75 +350,50 @@ type ShelvedBeforeManyRepos = Omit<HeldPullRequests, 'watching'> & {
 };
 
 function unshelved(): HeldPullRequests | null {
-  try {
-    const raw = localStorage.getItem(SHELVED_WALL);
-    if (!raw) return null;
-    const held = JSON.parse(raw) as HeldPullRequests | ShelvedBeforeManyRepos;
-    const threaded = held.pull_requests.every((row) =>
-      Array.isArray(row.dashboard.threads as unknown),
-    );
-    if (!threaded) return null;
-    const { watching } = held;
-    return {
-      ...held,
-      watching: typeof watching === 'string' ? [watching] : watching,
-    };
-  } catch {
-    return null;
-  }
+  return recalledAs(
+    SHELVED_WALL,
+    (kept) => {
+      const held = kept as HeldPullRequests | ShelvedBeforeManyRepos;
+      const threaded = held.pull_requests.every((row) =>
+        Array.isArray(row.dashboard.threads as unknown),
+      );
+      if (!threaded) return null;
+      const { watching } = held;
+      return {
+        ...held,
+        watching: typeof watching === 'string' ? [watching] : watching,
+      };
+    },
+    null,
+  );
 }
 
 function shelve(held: HeldPullRequests): void {
-  try {
-    localStorage.setItem(SHELVED_WALL, JSON.stringify(held));
-  } catch {
-    return;
-  }
+  keep(SHELVED_WALL, JSON.stringify(held));
 }
 
 function unshelve(): void {
-  try {
-    localStorage.removeItem(SHELVED_WALL);
-  } catch {
-    return;
-  }
-}
-
-function recalled(): string | null {
-  try {
-    return localStorage.getItem(CHOSEN_REPOS);
-  } catch {
-    return null;
-  }
+  forget(SHELVED_WALL);
 }
 
 function remember(asked: string | null): void {
-  try {
-    if (asked) localStorage.setItem(CHOSEN_REPOS, asked);
-    else localStorage.removeItem(CHOSEN_REPOS);
-  } catch {
-    return;
-  }
+  if (asked) keep(CHOSEN_REPOS, asked);
+  else forget(CHOSEN_REPOS);
 }
 
 function recalledEntries(): Record<string, Entered> {
-  try {
-    const raw = localStorage.getItem(SECTIONS_ENTERED);
-    const entries: unknown = raw ? JSON.parse(raw) : {};
-    return entries && typeof entries === 'object'
-      ? (entries as Record<string, Entered>)
-      : {};
-  } catch {
-    return {};
-  }
+  return recalledAs(
+    SECTIONS_ENTERED,
+    (entries) =>
+      entries && typeof entries === 'object'
+        ? (entries as Record<string, Entered>)
+        : {},
+    {},
+  );
 }
 
 function rememberEntries(entries: Record<string, Entered>): void {
-  try {
-    localStorage.setItem(SECTIONS_ENTERED, JSON.stringify(entries));
-  } catch {
-    return;
-  }
+  keep(SECTIONS_ENTERED, JSON.stringify(entries));
 }
 
 function askedIn(router: RouterService): string | null {
@@ -449,7 +425,7 @@ export default class StoreService extends Service {
   @tracked configProblem: string | null = null;
   @tracked viewer: string | null = null;
   @tracked names: Record<string, string | null> = {};
-  @tracked private remembered: string | null = recalled();
+  @tracked private remembered: string | null = recall(CHOSEN_REPOS);
   @tracked setup: Setup | null = null;
   @tracked accounts: Record<string, SetupAccount> = {};
   @tracked repoChoices: Record<string, SetupRepoChoice[]> = {};

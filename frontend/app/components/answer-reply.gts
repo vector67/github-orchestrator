@@ -5,6 +5,7 @@ import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import CommentBody from 'frontend/components/comment-body';
 import type { Comment } from 'frontend/data/api';
+import { keep, recalledAs } from 'frontend/data/site-data';
 import modal from 'frontend/modifiers/modal';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
@@ -22,20 +23,15 @@ function seenOf(reply: Reply): string {
 }
 
 function remembered(): string[] {
-  try {
-    const kept: unknown = JSON.parse(localStorage.getItem(SEEN) ?? '[]');
-    return Array.isArray(kept) ? kept.map(String) : [];
-  } catch {
-    return [];
-  }
+  return recalledAs(
+    SEEN,
+    (kept) => (Array.isArray(kept) ? kept.map(String) : []),
+    [],
+  );
 }
 
 function remember(seen: string[]): void {
-  try {
-    localStorage.setItem(SEEN, JSON.stringify(seen));
-  } catch {
-    return;
-  }
+  keep(SEEN, JSON.stringify(seen));
 }
 
 export default class AnswerReply extends Component {

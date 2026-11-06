@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type { TerminalSession } from 'frontend/data/api';
 import { reportError } from 'frontend/data/report';
+import { keep, recall } from 'frontend/data/site-data';
 import { Session } from 'frontend/data/terminal';
 import {
   DARK_THEMES,
@@ -35,20 +36,8 @@ const REMEMBERED_DARK = 'terminal-dark-theme';
 const LIGHT_SYSTEM = window.matchMedia('(prefers-color-scheme: light)');
 
 function recalled<T extends string>(key: string, among: T[], fallback: T): T {
-  try {
-    const kept = localStorage.getItem(key);
-    return among.find((one) => one === kept) ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function keep(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    return;
-  }
+  const kept = recall(key);
+  return among.find((one) => one === kept) ?? fallback;
 }
 
 const keysOf = (themes: NamedTheme[]) => themes.map((one) => one.key);
