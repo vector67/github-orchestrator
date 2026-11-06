@@ -69,7 +69,8 @@ class LockedNameMigration:
             if held:
                 return held
             log.info("migrating thread names to carry their key's case")
-            self._names.rename(planned)
+            if not self._names.rename(planned):
+                return []
             write_marker(self._marker, self._version)
             self._seen = True
         return []

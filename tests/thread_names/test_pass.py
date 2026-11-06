@@ -204,6 +204,25 @@ def test_a_locked_workspace_keeps_its_folder_and_its_branch(settings, clone):
     assert _branch_at(old) == PREFIX + "PRRT_a"
 
 
+def test_a_branch_that_cannot_take_its_new_name_after_its_workspace_moved_keeps_the_migration_open(
+    settings, clone
+):
+    _legacy_workspace(settings, clone, "PRRT_a")
+    lock = clone / ".git" / "refs" / "heads" / f"{_new_branch('PRRT_a')}.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.touch()
+    migration = _migration(settings, clone)
+
+    migration.migrate()
+    migration.migrate()
+
+    assert not migration.migrated() and not settings.layout_marker.exists()
+    lock.unlink()
+    migration.migrate()
+    new = thread_worktree(settings.thread_worktrees_dir, THE_PR, "PRRT_a")
+    assert migration.migrated() and _branch_at(new) == _new_branch("PRRT_a")
+
+
 def test_a_stale_bare_folder_that_is_no_worktree_is_not_moved_into_the_new_name(settings, clone):
     old, fix = _legacy_workspace(settings, clone, "PRRT_a")
     (old / ".git").unlink()

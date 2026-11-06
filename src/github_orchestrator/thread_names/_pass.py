@@ -115,24 +115,25 @@ def _planned(clone: Path, repo: Repo, worktrees_dir: Path) -> list[ThreadRename]
     return planned
 
 
-def _rename(thread: ThreadRename) -> None:
+def _renamed_whole(thread: ThreadRename) -> bool:
     if thread.left is not None:
         log.warning("%s", thread.left)
-        return
+        return True
     if thread.folder is not None:
         moved = _git(thread.clone, "worktree", "move", str(thread.folder),
                      str(thread.target_folder))
         if moved.returncode != 0:
             log.warning("Left %s under its old name: %s", thread.folder, _said(moved))
-            return
+            return True
         log.info("Moved %s to %s", thread.folder, thread.target_folder)
     if thread.branch != thread.target_branch:
         renamed = _git(thread.clone, "branch", "-m", thread.branch, thread.target_branch)
         if renamed.returncode != 0:
             log.error("Could not rename %s to %s: %s", thread.branch, thread.target_branch,
                       _said(renamed))
-            return
+            return False
         log.info("Renamed %s to %s", thread.branch, thread.target_branch)
+    return True
 
 
 def _report_dead_folders(worktrees_dir: Path) -> None:
@@ -154,8 +155,8 @@ class ThreadNames:
         return [thread for repo, clone in self._clones.items() if clone.is_dir()
                 for thread in _planned(clone, repo, self._worktrees_dir)]
 
-    def rename(self, planned: list[ThreadRename]) -> None:
+    def rename(self, planned: list[ThreadRename]) -> bool:
         _rename_records(self._threads_dir)
-        for thread in planned:
-            _rename(thread)
+        whole = [_renamed_whole(thread) for thread in planned]
         _report_dead_folders(self._worktrees_dir)
+        return all(whole)
