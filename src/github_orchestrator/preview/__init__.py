@@ -391,6 +391,8 @@ def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> 
         longest[path] = max(longest.get(path, 0), line)
     root.mkdir(parents=True, exist_ok=True)
     _git(root, "init", "-q", "-b", BASE_BRANCH)
+    _git(root, "config", "user.name", "preview")
+    _git(root, "config", "user.email", "preview@example.com")
     for path, last in longest.items():
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
