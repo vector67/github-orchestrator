@@ -3066,15 +3066,21 @@ kbd {
   border: 1.5px solid transparent;
 }
 
-.mentions-count.outstanding {
-  font-weight: var(--fw-strong);
+.mentions-count:hover,
+.mentions-count[aria-expanded="true"] {
   color: var(--text);
   border-color: var(--border-strong);
 }
 
-.mentions-count:hover,
-.mentions-count[aria-expanded="true"] {
-  color: var(--text);
+.mentions-count.outstanding {
+  font-weight: var(--fw-strong);
+  color: var(--page);
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.mentions-count.outstanding:hover,
+.mentions-count.outstanding[aria-expanded="true"] {
   border-color: var(--border-strong);
 }
 
