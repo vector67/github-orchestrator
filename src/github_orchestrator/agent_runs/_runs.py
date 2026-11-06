@@ -311,6 +311,7 @@ class AgentRuns:
         self._verdicts = Summaries(run, clamped, agent.verdict_model, self._lines)
         self._jev = jev
         self._pr_runs: dict[Pr, AgentRun] = {}
+        self._thread_runs: list[AgentRun] = []
 
     def _transcript(self, pr: Pr) -> Path:
         return _repo_dir(self._transcripts_dir, pr.repo) / f"{pr.number}.jsonl"
@@ -410,9 +411,18 @@ class AgentRuns:
     def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
         return self._pr_processes.split(pr, worktree, [*self._command, "--", prompt])
 
-    def _fix_thread(self, fix: ThreadFix, prompt: str) -> AgentRun | str:
-        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
-                           project_settings=True)
+    def _fix_thread(self, fix: ThreadFix, prompt: str, *,
+                    continuing: bool = False) -> AgentRun | str:
+        run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
+                          project_settings=True, continuing=continuing)
+        if not isinstance(run, str):
+            self._thread_runs = [*(one for one in self._thread_runs if not one.over), run]
+        return run
+
+    def stop_thread_runs(self) -> None:
+        for run in self._thread_runs:
+            run.terminate()
+        self._thread_runs = []
 
     def fix(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, thread_prompt(self._commands, fix, self._workers))
@@ -427,9 +437,7 @@ class AgentRuns:
         return self._fix_thread(fix, filing_prompt(self._commands, fix))
 
     def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
-        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}",
-                           carry_on_prompt(self._commands, fix), project_settings=True,
-                           continuing=True)
+        return self._fix_thread(fix, carry_on_prompt(self._commands, fix), continuing=True)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,

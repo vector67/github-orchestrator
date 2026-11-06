@@ -2,11 +2,29 @@ import dataclasses
 
 import pytest
 
-from github_orchestrator.agent_runs.fake import CarryingOn, FakeAgentRuns, Outcome
+from github_orchestrator.agent_runs.fake import (
+    THREAD_EVENT_PREFIX,
+    CarryingOn,
+    FakeAgentRuns,
+    Outcome,
+)
 from github_orchestrator.board_api.interface import DismissUntil
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
-from tests.pr_manager.support import ServerPanel, manager_over, run_manager, seed_state
+from tests.conversation.support import (
+    fake_conversation_managers,
+    hear,
+    on_github,
+    repo_at,
+    said,
+)
+from tests.pr_manager.support import (
+    THE_PR,
+    ServerPanel,
+    manager_over,
+    run_manager,
+    seed_state,
+)
 
 TERMINATED = -15
 
@@ -40,6 +58,24 @@ def test_sigterm_terminates_a_live_run(settings, tmp_path):
     with pytest.raises(SystemExit):
         manager.run()
     assert runs.last_run(a_pr(1, "o/n")).exit_code == TERMINATED
+
+
+def test_sigterm_terminates_a_live_thread_run(settings, tmp_path):
+    seed_state(settings, title="t", url="u")
+    runs = _runs(Outcome(finishes=False))
+    threads = fake_conversation_managers(runs)
+    repo_at(threads.working_copies, tmp_path, {"f": "old\n"}, pr=THE_PR)
+    threads.watch(THE_PR, is_author=True)
+    on_github(threads.github, "PRRT_1", said(1, "rename this"), pr=THE_PR)
+    hear(threads.of(THE_PR))
+    manager = manager_over(settings, SystemExit("terminated by signal 15"), worktree=tmp_path,
+                           is_author=True, agent_runs=runs, github=threads.github,
+                           working_copies=threads.working_copies,
+                           conversation_managers=threads)
+    with pytest.raises(SystemExit):
+        manager.run()
+    assert [entry["exit_code"] for entry in runs.ledger
+            if entry["event"] == f"{THREAD_EVENT_PREFIX}PRRT_1"] == [TERMINATED]
 
 
 def _after_an_interruption(runs):

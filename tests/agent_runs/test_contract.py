@@ -280,6 +280,20 @@ def test_every_run_on_a_thread_is_that_thread_s_run_in_its_worktree(world, start
     assert world.started_in() == [world.worktree]
 
 
+def test_stopping_the_thread_runs_terminates_every_live_one_and_leaves_the_pr_run(world):
+    world.script(*[Outcome(events=(INIT,), finishes=False)] * 3)
+    threads = [world.runs.fix(_thread(world.worktree, key)) for key in ("PRRT_1", "PRRT_2")]
+    pr_run = world.start()
+    for run in (*threads, pr_run):
+        pump_until(run, lambda: len(world.started_in()) == 3)
+
+    world.runs.stop_thread_runs()
+
+    assert [run.finished().exit_code for run in threads] == [-15, -15]
+    assert pr_run.is_alive() is True
+    pr_run.terminate()
+
+
 def test_a_thread_run_is_not_this_prs_last_run(world):
     world.ran("ci-failed")
     _fixed_a_thread(world)

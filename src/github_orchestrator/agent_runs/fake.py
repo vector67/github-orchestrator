@@ -279,6 +279,7 @@ class FakeAgentRuns:
     sessions: list[Session] = field(default_factory=list)
     answering: list[ThreadFix] = field(default_factory=list)
     pr_runs: dict[Pr, FakeRun] = field(default_factory=dict)
+    thread_runs: list[FakeRun] = field(default_factory=list)
     gists: list[str | tuple[str, ...] | None] = field(default_factory=list)
     asked: list[Asked] = field(default_factory=list)
     ledger: list[dict[str, Any]] = field(default_factory=list)
@@ -294,7 +295,7 @@ class FakeAgentRuns:
         return self
 
     def restarted(self) -> "FakeAgentRuns":
-        return dataclasses.replace(self, pr_runs={})
+        return dataclasses.replace(self, pr_runs={}, thread_runs=[])
 
     def next_outcome(self) -> Outcome:
         return self.outcomes.pop(0) if self.outcomes else Outcome()
@@ -357,7 +358,15 @@ class FakeAgentRuns:
         return self.pr_processes.split(pr, worktree, ["claude", "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, work: Work) -> FakeRun | str:
-        return self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", work)
+        run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", work)
+        if not isinstance(run, str):
+            self.thread_runs.append(run)
+        return run
+
+    def stop_thread_runs(self) -> None:
+        for run in self.thread_runs:
+            run.terminate()
+        self.thread_runs.clear()
 
     def fix(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, FixingThread(fix))

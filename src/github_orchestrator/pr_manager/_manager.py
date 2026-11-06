@@ -1,7 +1,7 @@
 import logging
 from threading import Thread
 
-from github_orchestrator.agent_runs import History, LastRun, Run
+from github_orchestrator.agent_runs import History, LastRun, Run, ThreadWork
 from github_orchestrator.board_api import Dashboard
 from github_orchestrator.change_detection import ChangeDetection, CiFailed, Facts
 from github_orchestrator.conversation import (
@@ -37,8 +37,10 @@ class ManagerLoop:
                  worklist: Worklist, working_copies: WorkingCopies, history: History,
                  conversation_managers: ConversationManagerFactory,
                  change_detection: ChangeDetection, dashboards: DashboardSource,
-                 status_files: StatusFiles, resets: QueuedReset) -> None:
+                 status_files: StatusFiles, resets: QueuedReset,
+                 thread_work: ThreadWork) -> None:
         self._config = config
+        self._thread_work = thread_work
         self._resets = resets
         self._front = front
         self._commands = commands
@@ -89,6 +91,10 @@ class ManagerLoop:
                         log.info("Agent manager for %s exiting after its dismissal", pr)
                         break
             finally:
+                try:
+                    self._thread_work.stop_thread_runs()
+                except Exception:
+                    log.exception("loop %s: stopping the thread runs during shutdown raised", pr)
                 active_run = self._commands.active_run
                 if active_run is not None:
                     try:
