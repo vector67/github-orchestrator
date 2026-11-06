@@ -63,6 +63,10 @@ def thread_worktree(thread_worktrees_dir: Path, pr: Pr, key: str) -> Path:
     return thread_dir(thread_worktrees_dir, pr) / disk_name(key)
 
 
+def thread_branch(pr: Pr, key: str) -> str:
+    return f"orchestrator/thread/{pr.number}/{disk_name(key)}"
+
+
 def on_hold_file(on_hold_dir: Path, pr: Pr) -> Path:
     return _repo_dir(on_hold_dir, pr) / f"{pr.number}.flag"
 

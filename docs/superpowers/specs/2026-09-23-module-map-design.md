@@ -483,6 +483,11 @@ worktrees live, how branch trouble is detected, and how long it may last.
   records this): `remove_worktree` left the interface and the fake once no
   outside module called it; the fake's tests remove a worktree from outside
   with `lose_worktree` and make a removal fail with `fail_removals`.
+- **Done** (the commit that records this): `ThreadWorkspace.branch` left
+  the interface; no module outside working copies read it, and the handle
+  keeps it private for `pick` and `drop`. The tests that check the branch
+  a workspace is cut on spell it from the PR and the key in
+  `tests/disk_layout.py`. `ThreadWorkspace` has ten methods.
 - **Done** (browser mode, step 5): `wrong_branch(pr, now=…)` answers the
   wrong branch a PR's manager is frozen on, judged as `report_branch` would,
   or `None`, and starts no grace of its own, so the hub can say a PR is

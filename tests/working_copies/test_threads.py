@@ -5,7 +5,7 @@ import pytest
 
 from github_orchestrator.domain import Sha
 from tests.builders import a_pr
-from tests.disk_layout import thread_worktree
+from tests.disk_layout import thread_branch, thread_worktree
 from tests.working_copies.support import copies_for
 
 GIT_TIMEOUT = 60
@@ -104,7 +104,7 @@ def test_a_workspace_is_cut_off_the_pr_head_on_its_own_branch(
 
     cut = _cut(git, pr_worktree)
 
-    wt, branch = cut.path, cut.branch
+    wt, branch = cut.path, thread_branch(cut.pr, cut.key)
     assert wt == str(thread_worktree(worktrees_dir, THE_PR, THREAD_KEY))
     assert (Path(wt) / "f").read_text() == "base\n"
     assert branch == f"orchestrator/thread/{PR}/{THREAD_KEY}-f"
@@ -116,12 +116,12 @@ def test_a_workspace_is_cut_off_the_pr_head_on_its_own_branch(
 
 def test_a_workspace_cut_over_a_stale_one_starts_clean(git, pr_worktree):
     first = _cut(git, pr_worktree)
-    wt, _ = first.path, first.branch
+    wt = first.path
     (Path(wt) / "leftover").write_text("stale attempt")
 
     again = _cut(git, pr_worktree)
 
-    assert (again.path, again.branch) == (first.path, first.branch)
+    assert again.path == first.path
     assert Path(wt).is_dir()
     assert not (Path(wt) / "leftover").exists()
     listing = _git(pr_worktree, "worktree", "list", "--porcelain").stdout
@@ -133,7 +133,6 @@ def test_two_keys_that_differ_only_by_case_are_cut_two_workspaces(git, pr_worktr
     lower = _cut(git, pr_worktree, key="PRRT_abcr")
 
     assert upper.path.lower() != lower.path.lower()
-    assert upper.branch.lower() != lower.branch.lower()
     assert Path(upper.path).is_dir() and Path(lower.path).is_dir()
 
 
@@ -168,7 +167,7 @@ def test_a_cut_that_failed_leaves_a_branch_the_next_cut_clears(
     blocker.unlink()
     cut = _cut(git, pr_worktree)
 
-    wt, _ = cut.path, cut.branch
+    wt = cut.path
     assert (Path(wt) / "f").read_text() == "base\n"
     assert str(cut.base_sha) == head
     verify = _git(pr_worktree, "rev-parse", "--verify", branch)
@@ -186,7 +185,7 @@ def test_a_workspace_that_is_still_there_is_handed_back_with_its_base(
 
     again = _cut(git, pr_worktree, base_sha=first.base_sha)
 
-    assert (again.path, again.branch) == (first.path, first.branch)
+    assert again.path == first.path
     assert again.base_sha == first.base_sha
 
 
@@ -194,7 +193,7 @@ def test_a_workspace_whose_directory_is_gone_is_cut_again(
     git, pr_worktree, worktrees_dir
 ):
     first = _cut(git, pr_worktree)
-    worktree, _ = first.path, first.branch
+    worktree = first.path
     _git(pr_worktree, "worktree", "remove", "--force", worktree)
     (pr_worktree / "f").write_text("moved on\n")
     _git(pr_worktree, "add", "f")
@@ -203,7 +202,7 @@ def test_a_workspace_whose_directory_is_gone_is_cut_again(
 
     again = _cut(git, pr_worktree, base_sha=first.base_sha)
 
-    assert (again.path, again.branch) == (first.path, first.branch)
+    assert again.path == first.path
     assert str(again.base_sha) == head
     assert again.path == worktree
 
@@ -231,7 +230,7 @@ def test_dropping_a_workspace_removes_its_checkout_and_its_branch(
     git, pr_worktree, worktrees_dir
 ):
     cut = _cut(git, pr_worktree)
-    branch = cut.branch
+    branch = thread_branch(cut.pr, cut.key)
 
     cut.drop()
 
@@ -292,7 +291,7 @@ def test_dropping_a_workspace_whose_cut_was_killed_mid_checkout_removes_it(
     cut.drop()
 
     assert not thread_worktree(worktrees_dir, THE_PR, THREAD_KEY).exists()
-    assert _git(pr_worktree, "rev-parse", "--verify", cut.branch).returncode != 0
+    assert _git(pr_worktree, "rev-parse", "--verify", thread_branch(cut.pr, cut.key)).returncode != 0
 
 
 def test_dropping_a_fix_that_never_had_a_workspace_runs_no_git(
@@ -306,7 +305,7 @@ def test_dropping_a_fix_that_never_had_a_workspace_runs_no_git(
 def _fix_in_a_workspace(git, pr_worktree, key=THREAD_KEY, name="f",
                         text="fixed\n"):
     cut = _cut(git, pr_worktree, key)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     (Path(worktree) / name).write_text(text)
     _git(worktree, "add", name)
     assert _git(worktree, "commit", "-q", "-m", f"fix {key}").returncode == 0
@@ -375,7 +374,7 @@ def test_two_commits_the_rebase_can_be_judged_on_still_reach_git(git, monkeypatc
 def test_a_pick_folds_every_commit_the_fix_left_into_the_tips_one(git,
                                                                   pr_worktree):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     _commit_in(worktree, "g", "second\n", "second attempt",
                "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
     tip = _commit_in(worktree, "h", "third\n", "the fix as it now stands",
@@ -405,7 +404,7 @@ def test_a_squash_that_fails_puts_the_pr_head_back_and_refuses(
     git, pr_worktree, monkeypatch
 ):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     tip = _commit_in(worktree, "g", "second\n", "second attempt",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
     before = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
@@ -430,7 +429,7 @@ def test_a_squash_that_fails_puts_the_pr_head_back_and_refuses(
 
 def _two_commit_fix(git, pr_worktree):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     tip = _commit_in(worktree, "g", "second\n", "second attempt",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
     return cut, tip
@@ -540,7 +539,7 @@ def test_a_range_that_undoes_itself_says_there_was_nothing_left_to_land(
     git, pr_worktree
 ):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     tip = _commit_in(worktree, "f", "base\n", "and back again",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
     before = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
@@ -608,7 +607,7 @@ def test_an_abbreviated_thread_sha_the_tip_moved_past_is_still_refused(
     git, pr_worktree
 ):
     cut, reviewed = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     (Path(worktree) / "g").write_text("unreviewed\n")
     _git(worktree, "add", "g")
     assert _git(worktree, "commit", "-q", "-m", "unreviewed").returncode == 0
@@ -622,7 +621,7 @@ def test_a_branch_git_cannot_resolve_is_refused_with_what_git_said(
     git, pr_worktree
 ):
     cut, sha = _fix_in_a_workspace(git, pr_worktree)
-    worktree, branch = cut.path, cut.branch
+    worktree, branch = cut.path, thread_branch(cut.pr, cut.key)
     assert _git(pr_worktree, "worktree", "remove", "--force",
                 worktree).returncode == 0
     assert _git(pr_worktree, "branch", "-D", branch).returncode == 0
@@ -647,7 +646,7 @@ def test_a_conflicting_pick_is_aborted_and_names_the_head_it_hit(
     git, pr_worktree
 ):
     cut, _ = _fix_in_a_workspace(git, pr_worktree, text="thread\n")
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     (Path(worktree) / "g").write_text("from the fix\n")
     _git(worktree, "add", "g")
     assert _git(worktree, "commit", "-q", "-m", "add g").returncode == 0
@@ -807,7 +806,7 @@ def test_a_rebased_workspace_descends_from_what_it_was_rebased_onto(
     git, pr_worktree
 ):
     cut, _ = _fix_in_a_workspace(git, pr_worktree, name="g", text="fix\n")
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     _move_the_pr_head(pr_worktree, "moved\n")
     onto = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
     assert _git(worktree, "rebase", onto).returncode == 0
@@ -820,7 +819,7 @@ def test_descending_is_answered_about_the_sha_given_not_the_workspaces_head(
     git, pr_worktree
 ):
     cut, before = _fix_in_a_workspace(git, pr_worktree, name="g", text="fix\n")
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     _move_the_pr_head(pr_worktree, "moved\n")
     onto = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
     assert _git(worktree, "rebase", onto).returncode == 0
@@ -837,7 +836,7 @@ def test_a_fix_with_no_workspace_has_no_progress_to_count(git):
 def test_the_commit_message_is_the_whole_message_the_agent_wrote(git,
                                                                  pr_worktree):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     tip = _commit_in(worktree, "g", "second\n",
                      "Rename the helper\n\nIt said the wrong thing.",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
@@ -869,7 +868,7 @@ def test_a_pick_given_a_message_folds_every_commit_into_one_with_it(
     git, pr_worktree
 ):
     cut, _ = _fix_in_a_workspace(git, pr_worktree)
-    worktree, _ = cut.path, cut.branch
+    worktree = cut.path
     tip = _commit_in(worktree, "g", "second\n", "second attempt",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
     before = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()

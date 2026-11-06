@@ -79188,7 +79188,7 @@
     }
    ]
   },
-  "tests/working_copies/test_contract.py::test_a_thread_nobody_adopted_names_no_worktree_or_branch[git]": {
+  "tests/working_copies/test_contract.py::test_a_thread_nobody_adopted_names_no_worktree[git]": {
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
     {
      "argv": [

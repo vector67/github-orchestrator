@@ -113,7 +113,7 @@ class BoundWorkspace:
         return self.git._thread_path(self.pr, self.key) if self.base_sha else None
 
     @property
-    def branch(self) -> str | None:
+    def _branch(self) -> str | None:
         return thread_branch(self.pr, self.key) if self.base_sha else None
 
     def ensure(self) -> Cut:
@@ -135,7 +135,7 @@ class BoundWorkspace:
         if located.path is None:
             return Picked(refusal=located.missing)
         with self.git._serialized(self.pr):
-            return self.git._pick(located.path, self.branch, _text(self.base_sha),
+            return self.git._pick(located.path, self._branch, _text(self.base_sha),
                                   _text(thread_sha), message)
 
     def head_sha(self) -> Sha | None:
@@ -158,7 +158,7 @@ class BoundWorkspace:
         if located.path is None:
             return located.missing
         try:
-            self.git._drop_workspace(located.path, self.path, self.branch)
+            self.git._drop_workspace(located.path, self.path, self._branch)
         except ThreadGitError as exc:
             return str(exc)
         return None

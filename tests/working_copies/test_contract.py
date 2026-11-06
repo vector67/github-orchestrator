@@ -6,6 +6,7 @@ from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Sha
 from github_orchestrator.github import PullRequestState
 from tests.builders import a_pr
+from tests.disk_layout import thread_branch
 from tests.working_copies.support import (
     BRANCH,
     PR,
@@ -587,7 +588,7 @@ def test_a_thread_whose_base_is_recorded_and_whose_worktree_is_there_keeps_it(
 
     again = pr_checkout.workspace(KEY, cut.base_sha).ensure().workspace
 
-    assert (again.path, again.branch, again.base_sha) == (cut.path, cut.branch, cut.base_sha)
+    assert (again.path, again.base_sha) == (cut.path, cut.base_sha)
     assert again.head_sha() == worked
 
 
@@ -600,10 +601,10 @@ def test_a_worktree_no_record_adopted_is_cut_afresh(world, pr_checkout, cut):
     assert again.head_sha() == again.base_sha == cut.base_sha
 
 
-def test_a_thread_nobody_adopted_names_no_worktree_or_branch(pr_checkout):
+def test_a_thread_nobody_adopted_names_no_worktree(pr_checkout):
     held = pr_checkout.workspace(KEY, None)
 
-    assert (held.path, held.branch, held.head_sha()) == (None, None, None)
+    assert (held.path, held.head_sha()) == (None, None)
 
 
 def test_a_dropped_workspace_is_gone(world, pr_worktree, cut):
@@ -751,7 +752,7 @@ def test_a_fix_whose_branch_is_gone_is_not_picked(world, pr_worktree, cut):
     refused = cut.pick(tip)
 
     assert refused.missing_branch is not None
-    assert refused.missing_branch == cut.branch
+    assert refused.missing_branch == thread_branch(cut.pr, cut.key)
 
 
 def test_a_fix_that_conflicts_leaves_the_pr_branch_where_it_was(world, pr_worktree, cut,
