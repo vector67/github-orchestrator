@@ -488,6 +488,16 @@ worktrees live, how branch trouble is detected, and how long it may last.
   keeps it private for `pick` and `drop`. The tests that check the branch
   a workspace is cut on spell it from the PR and the key in
   `tests/disk_layout.py`. `ThreadWorkspace` has ten methods.
+- **Done** (the commit that records this): `PrCheckout` had grown to 18
+  methods and splits by role. It keeps what acts on the PR's worktree (why
+  there is none, a thread's workspace, clean, push, unpick, fetch, reset to
+  origin, the base's standing) and hands out **Revisions** as
+  `checkout.revisions`: the two heads, a commit's message and name, the
+  changes and file diffs between two commits, the PR's diff and commits,
+  whether a commit is there and a file's bytes at one. `PrCheckout` has 9
+  methods and `Revisions` 10. Callers reach `Revisions` only through
+  `checkout.revisions` and never write its name, so it stays out of the
+  exports, which are still 5.
 - **Done** (browser mode, step 5): `wrong_branch(pr, now=…)` answers the
   wrong branch a PR's manager is frozen on, judged as `report_branch` would,
   or `None`, and starts no grace of its own, so the hub can say a PR is

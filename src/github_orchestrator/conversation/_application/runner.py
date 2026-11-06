@@ -233,7 +233,7 @@ def _verdict_recorder(ports: Ports,
 
 def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommitCheck) -> None:
     named = (Sha.parse(candidate) for candidate in effect.candidates)
-    commit = next((found for found in (ports.git.named_commit(sha) for sha in named if sha)
+    commit = next((found for found in (ports.git.revisions.named_commit(sha) for sha in named if sha)
                    if found is not None), None)
     if commit is None:
         return
@@ -243,7 +243,7 @@ def _ask_commit_check(ports: Ports, conversation: Conversation, effect: AskCommi
 
 
 def _ask_fix_check(ports: Ports, conversation: Conversation, effect: AskFixCheck) -> None:
-    changes = ports.git.changes(effect.base, effect.head)
+    changes = ports.git.revisions.changes(effect.base, effect.head)
     if changes is None:
         return
     ports.summaries.check_changes(

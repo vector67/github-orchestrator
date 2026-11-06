@@ -841,12 +841,12 @@ def test_the_commit_message_is_the_whole_message_the_agent_wrote(git,
                      "Rename the helper\n\nIt said the wrong thing.",
                      "Ada Lovelace <ada@example.com>", "2026-02-02T02:02:02Z")
 
-    assert _in(git).commit_message(Sha(tip)) == (
+    assert _in(git).revisions.commit_message(Sha(tip)) == (
         "Rename the helper\n\nIt said the wrong thing.")
 
 
 def test_a_commit_git_does_not_know_has_no_message(git, pr_worktree):
-    assert _in(git).commit_message(Sha("e" * 40)) is None
+    assert _in(git).revisions.commit_message(Sha("e" * 40)) is None
 
 
 def test_a_pick_given_a_message_lands_its_one_commit_with_it(git, pr_worktree):

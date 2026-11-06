@@ -238,10 +238,10 @@ def _thread(board: Board, key: str) -> domain.Conversation:
 def _lines(board: Board, sha: str, path: str, first: int,
            last: int | None) -> FileLines:
     commit = CommitSha.parse(sha)
-    if commit is None or not board.git.has_commit(commit):
+    if commit is None or not board.git.revisions.has_commit(commit):
         raise Refusal(404, ErrorCode.NO_SUCH_COMMIT,
                       board.git.no_worktree() or f"this repository has no commit {sha}")
-    content = board.git.blob(commit, path)
+    content = board.git.revisions.blob(commit, path)
     if content is None:
         raise Refusal(404, ErrorCode.NO_SUCH_PATH,
                       f"{sha} holds nothing at {path}")
@@ -300,12 +300,12 @@ def read_pull_request_diff(request: Request, board: Serving,
     `/diffs` answers.
     """
     facts = board.conversations.facts()
-    head = board.git.origin_head() if source is DiffSource.ORIGIN else board.git.local_head()
+    head = board.git.revisions.origin_head() if source is DiffSource.ORIGIN else board.git.revisions.local_head()
     if head is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
                       or f"git could not find the pull request's {source} head")
-    diff = board.git.pr_diff(facts.base_branch, head)
+    diff = board.git.revisions.pr_diff(facts.base_branch, head)
     if diff is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
@@ -313,7 +313,7 @@ def read_pull_request_diff(request: Request, board: Serving,
                          f"{facts.base_branch or 'the default branch'}")
     return etag.answered(request, diff_of(
         str(diff.base), str(diff.head), diff.files,
-        lambda path: board.git.blob(diff.head, path)))
+        lambda path: board.git.revisions.blob(diff.head, path)))
 
 
 @reads.get("/pull-request/commits", response_model=PullRequestCommits,
@@ -327,8 +327,8 @@ def read_pull_request_commits(request: Request, board: Serving,
     has not pushed.
     """
     facts = board.conversations.facts()
-    head = board.git.origin_head() if source is DiffSource.ORIGIN else board.git.local_head()
-    history = None if head is None else board.git.pr_commits(facts.base_branch, head)
+    head = board.git.revisions.origin_head() if source is DiffSource.ORIGIN else board.git.revisions.local_head()
+    history = None if head is None else board.git.revisions.pr_commits(facts.base_branch, head)
     if history is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
@@ -360,10 +360,10 @@ def read_pull_request_commits(request: Request, board: Serving,
 
 
 def _origin_fork(board: Board, base_branch: str | None, ours: set[str]) -> str:
-    origin = board.git.origin_head()
+    origin = board.git.revisions.origin_head()
     if origin is None or str(origin) in ours:
         return ""
-    theirs = board.git.pr_commits(base_branch, origin)
+    theirs = board.git.revisions.pr_commits(base_branch, origin)
     return "" if theirs is None else str(theirs.fork)
 
 
@@ -632,7 +632,7 @@ def read_proposal(key: ThreadKey, proposal_id: str, request: Request,
 
 def _commit(board: Board, sha: str) -> CommitSha:
     commit = CommitSha.parse(sha)
-    if commit is None or not board.git.has_commit(commit):
+    if commit is None or not board.git.revisions.has_commit(commit):
         raise Refusal(404, ErrorCode.NO_SUCH_COMMIT,
                       board.git.no_worktree() or f"this repository has no commit {sha}")
     return commit
@@ -655,18 +655,18 @@ def read_diff(base: Sha, head: Sha, request: Request, board: Serving,
                               "merge's own changes are `/diffs/{first parent}..{merge}"
                               "?merged={second parent}`.")] = None) -> Response:
     since, until = _commit(board, base), _commit(board, head)
-    files = board.git.diff_files(since, until,
+    files = board.git.revisions.diff_files(since, until,
                                  None if merged is None else _commit(board, merged))
     if files is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree() or f"git could not diff {base}..{head}")
     return etag.answered(request, diff_of(
-        base, head, files, lambda path: board.git.blob(until, path)))
+        base, head, files, lambda path: board.git.revisions.blob(until, path)))
 
 
 def _diffed(board: Board, since: CommitSha, until: CommitSha,
             merged: CommitSha | None = None) -> tuple[FileDiff, ...]:
-    files = board.git.diff_files(since, until, merged)
+    files = board.git.revisions.diff_files(since, until, merged)
     if files is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree() or f"git could not diff {since}..{until}")
@@ -1010,7 +1010,7 @@ def read_read_marks(request: Request, board: Serving) -> Response:
              summary="Mark one of the pull request's commits read.")
 def mark_read(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
     """Its subject is kept beside its sha. Answered with every mark."""
-    message = board.git.commit_message(_commit(board, asked.sha)) or ""
+    message = board.git.revisions.commit_message(_commit(board, asked.sha)) or ""
     board.shelf.save(READ, asked.sha, message.split("\n", 1)[0].encode())
     return _read_marks(board)
 
@@ -1509,7 +1509,7 @@ def _fetched_head(board: Board) -> CommitSha:
     failed = board.git.fetch(board.conversations.facts().base_branch)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
-    head = board.git.origin_head()
+    head = board.git.revisions.origin_head()
     if head is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree() or "the checkout has no head fetched from origin")

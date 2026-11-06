@@ -41,7 +41,7 @@ def _asks(copies, worktree, pr=None):
         "commits_since": lambda: copies.commits_since(worktree, SHA),
         "head_sha": lambda: workspace.head_sha(),
         "descends": lambda: workspace.descends(SHA, OTHER),
-        "commit_message": lambda: pr.commit_message(Sha(SHA)),
+        "commit_message": lambda: pr.revisions.commit_message(Sha(SHA)),
     }
 
 

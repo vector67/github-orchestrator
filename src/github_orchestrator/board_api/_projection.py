@@ -408,7 +408,7 @@ def proposal_of(git: PrCheckout,
         tests=proposal.tests,
         tests_note=proposal.tests_note,
         commit_message=(None if proposal.thread_sha is None
-                        else git.commit_message(proposal.thread_sha)),
+                        else git.revisions.commit_message(proposal.thread_sha)),
         last_words=proposal.last_words,
     )
 

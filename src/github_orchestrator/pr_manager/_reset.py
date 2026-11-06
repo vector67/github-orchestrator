@@ -42,7 +42,7 @@ class QueuedReset:
         if failed is not None:
             self._did_not_run(pr, shelf, failed)
             return
-        seen = checkout.local_head()
+        seen = checkout.revisions.local_head()
         if ResetToOrigin.kept(shelf) != queued:
             log.info("%s: the queued reset to origin was cancelled while origin was fetched", pr)
             return

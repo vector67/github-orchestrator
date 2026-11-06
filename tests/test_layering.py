@@ -569,8 +569,12 @@ WORKING_COPIES_MEMBERS = frozenset({
     "checkout",
 })
 PR_CHECKOUT_MEMBERS = frozenset({
-    "workspace", "is_clean", "push", "unpick", "fetch", "reset_to_origin", "base_standing", "origin_head", "local_head", "commit_message",
-    "diff_files", "named_commit", "changes", "pr_diff", "pr_commits", "has_commit", "blob", "no_worktree",
+    "workspace", "is_clean", "push", "unpick", "fetch", "reset_to_origin", "base_standing",
+    "no_worktree", "revisions",
+})
+REVISIONS_MEMBERS = frozenset({
+    "origin_head", "local_head", "commit_message", "diff_files", "named_commit", "changes",
+    "pr_diff", "pr_commits", "has_commit", "blob",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
     "path", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop", "reset", "diff_since",
@@ -585,6 +589,7 @@ def test_working_copies_offer_worktrees_branch_trouble_and_a_checkout_per_pr():
     package = importlib.import_module(WORKING_COPIES)
     assert _members(package.WorkingCopies) == WORKING_COPIES_MEMBERS
     assert _members(package.PrCheckout) == PR_CHECKOUT_MEMBERS
+    assert _members(importlib.import_module(f"{WORKING_COPIES}.interface").Revisions) == REVISIONS_MEMBERS
     assert _members(package.ThreadWorkspace) == THREAD_WORKSPACE_MEMBERS, (
         "a thread's git work goes through the handles a PR checkout hands out, and "
         "none of them takes a worktree path or a stored workspace string"

@@ -62,7 +62,7 @@ def copies(settings, tmp_path):
 @pytest.fixture
 def changed(tmp_path, git_template, copies):
     base, head = git_template(_build_history)
-    files = copies.checkout(a_pr(1, "o/n")).diff_files(Sha(base.strip()), Sha(head.strip()))
+    files = copies.checkout(a_pr(1, "o/n")).revisions.diff_files(Sha(base.strip()), Sha(head.strip()))
     return {diff.path: diff for diff in files}
 
 
@@ -113,7 +113,7 @@ def test_a_deleted_file_is_named_by_the_side_it_came_from(changed):
 def test_the_files_come_back_in_the_order_git_printed_them(tmp_path, git_template, copies):
     base, head = git_template(_build_history)
 
-    files = copies.checkout(a_pr(1, "o/n")).diff_files(Sha(base.strip()), Sha(head.strip()))
+    files = copies.checkout(a_pr(1, "o/n")).revisions.diff_files(Sha(base.strip()), Sha(head.strip()))
 
     assert [one.path for one in files] == [
         "billing/invoice_writer.py", "gone.py", "logo.png", "new/name.py"]
@@ -122,7 +122,7 @@ def test_the_files_come_back_in_the_order_git_printed_them(tmp_path, git_templat
 def test_a_commit_against_itself_changes_nothing(tmp_path, git_template, copies):
     _, head = git_template(_build_history)
 
-    assert copies.checkout(a_pr(1, "o/n")).diff_files(Sha(head.strip()), Sha(head.strip())) == ()
+    assert copies.checkout(a_pr(1, "o/n")).revisions.diff_files(Sha(head.strip()), Sha(head.strip())) == ()
 
 
 def _write(path, content):
@@ -155,7 +155,7 @@ def _two_commits(root, config, before, after):
 
 def _diffed(git_template, copies, config=(), before=(), after=()):
     base, head = git_template(_two_commits, config, before, after)
-    files = copies.checkout(a_pr(1, "o/n")).diff_files(Sha(base), Sha(head))
+    files = copies.checkout(a_pr(1, "o/n")).revisions.diff_files(Sha(base), Sha(head))
     return {diff.path: diff for diff in files}
 
 

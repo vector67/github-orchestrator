@@ -52,7 +52,7 @@ class ShelvedReviews:
         head = Sha.parse(sha)
         if head is None or sha in shelf.list(REVIEWED):
             return
-        history = self._working_copies.checkout(pr).pr_commits(base_branch, head)
+        history = self._working_copies.checkout(pr).revisions.pr_commits(base_branch, head)
         if history is None:
             log.warning("Could not list the commits %s's review of %s saw", pr, sha)
             return

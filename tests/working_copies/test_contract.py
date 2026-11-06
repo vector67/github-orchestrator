@@ -65,7 +65,7 @@ def test_a_prs_checkout_reads_the_worktree_its_head_branch_is_checked_out_in(
         world, pr_worktree):
     head = Sha(world.head_of(pr_worktree))
 
-    assert world.copies.checkout(THE_PR).commit_message(head) == "feature work"
+    assert world.copies.checkout(THE_PR).revisions.commit_message(head) == "feature work"
 
 
 def test_a_prs_checkout_with_no_worktree_says_so_and_every_read_fails(world):
@@ -73,8 +73,8 @@ def test_a_prs_checkout_with_no_worktree_says_so_and_every_read_fails(world):
     head = Sha("a" * 40)
 
     assert BRANCH in checkout.no_worktree()
-    assert checkout.commit_message(head) is None
-    assert checkout.diff_files(head, head) is None
+    assert checkout.revisions.commit_message(head) is None
+    assert checkout.revisions.diff_files(head, head) is None
     assert checkout.is_clean() is False
     assert checkout.push() == checkout.no_worktree()
     assert checkout.workspace(KEY, None).ensure().failure == checkout.no_worktree()
@@ -348,7 +348,7 @@ def test_a_branch_origin_has_fetches_quietly(world, pr_worktree):
 
 
 def _base_of(checkout, head):
-    diff = checkout.pr_diff("main", Sha(head))
+    diff = checkout.revisions.pr_diff("main", Sha(head))
     return None if diff is None else diff.base
 
 
@@ -374,7 +374,7 @@ def test_a_base_that_will_not_fetch_leaves_the_head_fetched_and_says_nothing(
 
     world.copies.fetch_pr_branch(world.repo_dir, THE_PR, BRANCH, "gone")
 
-    assert pr_checkout.has_commit(Sha(head))
+    assert pr_checkout.revisions.has_commit(Sha(head))
     assert world.notifications.posted == []
 
 
@@ -382,11 +382,11 @@ def test_fetching_a_prs_checkout_moves_its_origin_head_and_not_its_local_one(
         world, pr_worktree, pr_checkout):
     pushed = world.head_of(pr_worktree)
     _, head = world.advance_base()
-    before = pr_checkout.origin_head()
+    before = pr_checkout.revisions.origin_head()
 
     assert pr_checkout.fetch("main") is None
 
-    assert (before, pr_checkout.origin_head(), pr_checkout.local_head()) == (
+    assert (before, pr_checkout.revisions.origin_head(), pr_checkout.revisions.local_head()) == (
         Sha(pushed), Sha(head), Sha(pushed))
 
 
@@ -397,7 +397,7 @@ def test_fetching_a_branch_origin_deleted_says_so_and_forgets_origins_head(
     failed = pr_checkout.fetch("main")
 
     assert failed is not None and BRANCH in failed
-    assert pr_checkout.origin_head() is None
+    assert pr_checkout.revisions.origin_head() is None
 
 
 def test_refreshing_a_branch_origin_deleted_forgets_origins_head(
@@ -406,7 +406,7 @@ def test_refreshing_a_branch_origin_deleted_forgets_origins_head(
 
     world.copies.fetch_pr_branch(world.repo_dir, THE_PR, BRANCH, "main")
 
-    assert pr_checkout.origin_head() is None
+    assert pr_checkout.revisions.origin_head() is None
 
 
 def test_a_fetched_base_ahead_of_the_branch_says_how_far_behind_it_is(
@@ -475,7 +475,7 @@ def test_a_commit_not_pushed_moves_only_the_local_head(world, pr_worktree, pr_ch
 
     local = world.commit(pr_worktree, {"h": "x\n"}, "local work")
 
-    assert (pr_checkout.origin_head(), pr_checkout.local_head()) == (Sha(pushed), Sha(local))
+    assert (pr_checkout.revisions.origin_head(), pr_checkout.revisions.local_head()) == (Sha(pushed), Sha(local))
 
 
 def test_a_branch_no_worktree_holds_is_not_fetched(world):
@@ -527,7 +527,7 @@ def test_a_commit_named_by_a_short_hash_reads_as_its_hash_its_parent_and_where_i
     parent = world.head_of(pr_worktree)
     sha = world.commit(pr_worktree, {"h": "renamed\n"}, "Rename the helper")
 
-    named = pr_checkout.named_commit(Sha(sha[:7]))
+    named = pr_checkout.revisions.named_commit(Sha(sha[:7]))
 
     assert (named.sha, named.parent, named.worktree) == (Sha(sha), Sha(parent),
                                                          str(pr_worktree))
@@ -535,7 +535,7 @@ def test_a_commit_named_by_a_short_hash_reads_as_its_hash_its_parent_and_where_i
 
 
 def test_a_hash_the_checkout_does_not_hold_reads_as_no_commit(world, pr_checkout):
-    assert pr_checkout.named_commit(Sha("abcdef1")) is None
+    assert pr_checkout.revisions.named_commit(Sha("abcdef1")) is None
 
 
 def test_the_changes_between_two_commits_read_as_their_diff_and_where_it_is(
@@ -544,7 +544,7 @@ def test_the_changes_between_two_commits_read_as_their_diff_and_where_it_is(
     world.commit(pr_worktree, {"g": "other\n"}, "Add another")
     head = world.commit(pr_worktree, {"h": "renamed\n"}, "Rename the helper")
 
-    changes = pr_checkout.changes(Sha(base), Sha(head))
+    changes = pr_checkout.revisions.changes(Sha(base), Sha(head))
 
     assert changes.worktree == str(pr_worktree)
     assert ("-old" in changes.shown, "+renamed" in changes.shown,
@@ -555,7 +555,7 @@ def test_changes_from_a_commit_the_checkout_does_not_hold_read_as_none(
         world, pr_worktree, pr_checkout):
     head = world.head_of(pr_worktree)
 
-    assert pr_checkout.changes(Sha("abcdef1"), Sha(head)) is None
+    assert pr_checkout.revisions.changes(Sha("abcdef1"), Sha(head)) is None
 
 
 def test_a_thread_gets_its_own_worktree_at_the_pr_head(world, pr_worktree, cut):
@@ -703,8 +703,8 @@ def test_a_picked_fix_lands_on_the_pr_branch(world, pr_worktree, cut, pr_checkou
     assert landed.landed_sha is not None
     assert landed.landed_base == cut.base_sha
     assert Sha(world.head_of(pr_worktree)) == landed.landed_sha
-    assert pr_checkout.blob(landed.landed_sha, "g") == b"one\n2\nthree\n"
-    assert pr_checkout.commit_message(landed.landed_sha) == "fix the middle"
+    assert pr_checkout.revisions.blob(landed.landed_sha, "g") == b"one\n2\nthree\n"
+    assert pr_checkout.revisions.commit_message(landed.landed_sha) == "fix the middle"
 
 
 def test_a_fix_of_several_commits_lands_as_one(world, pr_worktree, cut, pr_checkout):
@@ -715,7 +715,7 @@ def test_a_fix_of_several_commits_lands_as_one(world, pr_worktree, cut, pr_check
     landed = cut.pick(tip)
 
     assert len(world.copies.commits_since(pr_worktree, str(cut.base_sha))) == 1
-    assert pr_checkout.commit_message(landed.landed_sha) == "second half"
+    assert pr_checkout.revisions.commit_message(landed.landed_sha) == "second half"
 
 
 def test_a_fix_lands_with_the_message_it_is_given(world, pr_worktree, cut, pr_checkout):
@@ -723,7 +723,7 @@ def test_a_fix_lands_with_the_message_it_is_given(world, pr_worktree, cut, pr_ch
 
     landed = cut.pick(tip, "Fix the middle line")
 
-    assert pr_checkout.commit_message(landed.landed_sha) == "Fix the middle line"
+    assert pr_checkout.revisions.commit_message(landed.landed_sha) == "Fix the middle line"
 
 
 def test_a_fix_that_names_no_commit_is_not_picked(world, pr_worktree, cut):
@@ -813,7 +813,7 @@ def test_a_diff_is_files_hunks_and_numbered_lines(world, cut, pr_checkout):
     checkout = cut.path
     tip = Sha(world.commit(checkout, {"g": "one\n2\nthree\n", "h": "new\n"}, "fix"))
 
-    files = {diff.path: diff for diff in pr_checkout.diff_files(cut.base_sha, tip)}
+    files = {diff.path: diff for diff in pr_checkout.revisions.diff_files(cut.base_sha, tip)}
 
     assert (files["h"].status, files["h"].added, files["h"].removed) == ("added", 1, 0)
     changed = files["g"]
@@ -829,14 +829,14 @@ def test_a_diff_is_files_hunks_and_numbered_lines(world, cut, pr_checkout):
 
 def test_the_prs_diff_runs_from_where_the_branch_left_main_to_its_head(
         world, pr_worktree, cut, pr_checkout):
-    diff = pr_checkout.pr_diff("main", cut.base_sha)
+    diff = pr_checkout.revisions.pr_diff("main", cut.base_sha)
 
     assert diff is not None
-    assert pr_checkout.commit_message(diff.base) == "first"
+    assert pr_checkout.revisions.commit_message(diff.base) == "first"
     assert diff.head == cut.base_sha
     assert [(file.path, file.status) for file in diff.files] == [("g", "added")]
-    assert pr_checkout.pr_diff(None, cut.base_sha) == diff
-    assert pr_checkout.pr_diff("--nope", cut.base_sha) == diff
+    assert pr_checkout.revisions.pr_diff(None, cut.base_sha) == diff
+    assert pr_checkout.revisions.pr_diff("--nope", cut.base_sha) == diff
 
 
 def test_the_prs_commits_run_oldest_first_from_where_the_branch_left_main(
@@ -844,10 +844,10 @@ def test_the_prs_commits_run_oldest_first_from_where_the_branch_left_main(
     first = Sha(world.head_of(pr_worktree))
     second = Sha(world.commit(pr_worktree, {"h": "more\n"}, "second change\n\nwhy it changed"))
 
-    history = pr_checkout.pr_commits("main", second)
+    history = pr_checkout.revisions.pr_commits("main", second)
 
     assert history is not None
-    assert pr_checkout.commit_message(history.fork) == "first"
+    assert pr_checkout.revisions.commit_message(history.fork) == "first"
     assert [(commit.sha, commit.parents, commit.subject, commit.author)
             for commit in history.commits] == [
         (first, (history.fork,), "feature work", "T"),
@@ -861,7 +861,7 @@ def test_the_prs_commits_carry_what_main_gained_since_the_fork(world, pr_worktre
     tip = Sha(world.advance_main({"n": "still more\n"}, "still more main"))
     assert pr_checkout.fetch("main") is None
 
-    history = pr_checkout.pr_commits("main", head)
+    history = pr_checkout.revisions.pr_commits("main", head)
 
     assert history is not None
     assert history.base_tip == tip
@@ -871,7 +871,7 @@ def test_the_prs_commits_carry_what_main_gained_since_the_fork(world, pr_worktre
 
 def test_a_prs_commits_on_a_main_that_has_not_moved_have_the_fork_as_mains_tip(
         pr_worktree, pr_checkout, world):
-    history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
+    history = pr_checkout.revisions.pr_commits("main", Sha(world.head_of(pr_worktree)))
 
     assert history is not None
     assert (history.base_tip, history.base_commits) == (history.fork, ())
@@ -883,12 +883,12 @@ def test_after_merging_main_the_prs_commits_run_from_the_merged_main_commit(
     main = Sha(world.advance_main({"m": "more\n"}, "more main"))
     merge = Sha(world.merge_main(pr_worktree, {"g": "one\nmended\nthree\n"}, "Merge main"))
 
-    history = pr_checkout.pr_commits("main", merge)
+    history = pr_checkout.revisions.pr_commits("main", merge)
 
     assert history is not None
     assert history.fork == main
     assert [(commit.sha, commit.parents) for commit in history.commits] == [
-        (first, (pr_checkout.pr_diff("main", first).base,)), (merge, (first, main))]
+        (first, (pr_checkout.revisions.pr_diff("main", first).base,)), (merge, (first, main))]
 
 
 def test_a_diff_past_a_merged_commit_leaves_out_what_the_merge_brought_in(
@@ -897,8 +897,8 @@ def test_a_diff_past_a_merged_commit_leaves_out_what_the_merge_brought_in(
     main = Sha(world.advance_main({"m": "more\n"}, "more main"))
     merge = Sha(world.merge_main(pr_worktree, {"g": "one\nmended\nthree\n"}, "Merge main"))
 
-    plain = pr_checkout.diff_files(first, merge)
-    own = pr_checkout.diff_files(first, merge, merged=main)
+    plain = pr_checkout.revisions.diff_files(first, merge)
+    own = pr_checkout.revisions.diff_files(first, merge, merged=main)
 
     assert plain is not None and own is not None
     assert [file.path for file in plain] == ["g", "m"]
@@ -910,14 +910,14 @@ def test_a_pr_based_on_another_branch_carries_that_branchs_own_commits(
     based_on = Sha(world.head_of(pr_worktree))
     head = Sha(world.commit(pr_worktree, {"h": "more\n"}, "on top"))
 
-    history = pr_checkout.pr_commits(BRANCH, head)
+    history = pr_checkout.revisions.pr_commits(BRANCH, head)
 
     assert history is not None
     assert history.fork == based_on
     assert [commit.sha for commit in history.commits] == [head]
     assert history.stack is not None
     assert history.stack.branch == "main"
-    assert pr_checkout.commit_message(history.stack.fork) == "first"
+    assert pr_checkout.revisions.commit_message(history.stack.fork) == "first"
     assert [(commit.sha, commit.subject) for commit in history.stack.commits] == [
         (based_on, "feature work")]
     assert history.fork_at == history.stack.commits[-1].authored_at
@@ -929,11 +929,11 @@ def test_a_worktree_left_behind_by_a_rewritten_origin_keeps_its_own_fork_and_com
     main, rewritten = world.advance_base()
     assert pr_checkout.fetch("main") is None
 
-    local = pr_checkout.pr_commits("main", pr_checkout.local_head())
-    origin = pr_checkout.pr_commits("main", pr_checkout.origin_head())
+    local = pr_checkout.revisions.pr_commits("main", pr_checkout.revisions.local_head())
+    origin = pr_checkout.revisions.pr_commits("main", pr_checkout.revisions.origin_head())
 
     assert local is not None and origin is not None
-    assert pr_checkout.commit_message(local.fork) == "first"
+    assert pr_checkout.revisions.commit_message(local.fork) == "first"
     assert (local.base_tip, [commit.sha for commit in local.commits]) == (Sha(main), [stale])
     assert (origin.fork, [commit.sha for commit in origin.commits]) == (Sha(main), [Sha(rewritten)])
 
@@ -945,7 +945,7 @@ def test_a_fetch_that_resets_drops_the_worktrees_own_commits_for_origins_current
 
     assert fetch_and_reset(pr_checkout) is None
 
-    assert (pr_checkout.local_head(), pr_checkout.origin_head()) == (
+    assert (pr_checkout.revisions.local_head(), pr_checkout.revisions.origin_head()) == (
         Sha(rewritten), Sha(rewritten))
     assert world.copies.commits_since(pr_worktree, rewritten) == ()
 
@@ -959,7 +959,7 @@ def test_a_fetch_that_resets_a_worktree_with_changes_says_so_and_changes_nothing
     refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "uncommitted changes" in refused
-    assert pr_checkout.local_head() == stale
+    assert pr_checkout.revisions.local_head() == stale
     assert pr_checkout.is_clean() is False
 
 
@@ -972,7 +972,7 @@ def test_a_fetch_that_resets_onto_a_file_the_worktree_holds_untracked_leaves_it_
     refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None
-    assert pr_checkout.local_head() == stale
+    assert pr_checkout.revisions.local_head() == stale
 
 
 def test_a_fetch_that_resets_a_worktree_edited_while_it_fetches_says_so_and_keeps_the_commits(
@@ -984,7 +984,7 @@ def test_a_fetch_that_resets_a_worktree_edited_while_it_fetches_says_so_and_keep
     refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "uncommitted changes" in refused
-    assert pr_checkout.local_head() == stale
+    assert pr_checkout.revisions.local_head() == stale
 
 
 def test_a_fetch_that_resets_a_worktree_switched_to_another_branch_leaves_that_branch_as_it_is(
@@ -1002,23 +1002,23 @@ def test_a_fetch_that_resets_a_worktree_switched_to_another_branch_leaves_that_b
 
 
 def test_a_pr_based_on_main_stacks_on_nothing(world, pr_worktree, pr_checkout):
-    history = pr_checkout.pr_commits("main", Sha(world.head_of(pr_worktree)))
+    history = pr_checkout.revisions.pr_commits("main", Sha(world.head_of(pr_worktree)))
 
     assert history is not None
     assert history.stack is None
 
 
 def test_a_prs_commits_with_no_worktree_are_unknown(world):
-    assert world.copies.checkout(THE_PR).pr_commits("main", Sha("a" * 40)) is None
+    assert world.copies.checkout(THE_PR).revisions.pr_commits("main", Sha("a" * 40)) is None
 
 
 def test_commits_and_files_are_found_only_where_they_are(cut, pr_checkout):
-    assert pr_checkout.has_commit(cut.base_sha) is True
-    assert pr_checkout.has_commit(Sha("0" * 40)) is False
-    assert pr_checkout.blob(cut.base_sha, "g") == b"one\ntwo\nthree\n"
-    assert pr_checkout.blob(cut.base_sha, "missing") is None
+    assert pr_checkout.revisions.has_commit(cut.base_sha) is True
+    assert pr_checkout.revisions.has_commit(Sha("0" * 40)) is False
+    assert pr_checkout.revisions.blob(cut.base_sha, "g") == b"one\ntwo\nthree\n"
+    assert pr_checkout.revisions.blob(cut.base_sha, "missing") is None
 
 
 @pytest.mark.parametrize("path", ["", "a\0b"], ids=["the-root-tree", "a-null-byte"])
 def test_a_path_naming_no_file_holds_nothing(cut, pr_checkout, path):
-    assert pr_checkout.blob(cut.base_sha, path) is None
+    assert pr_checkout.revisions.blob(cut.base_sha, path) is None

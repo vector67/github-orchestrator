@@ -165,6 +165,88 @@ class BoundWorkspace:
 
 
 @dataclass(frozen=True)
+class BoundRevisions:
+    git: Git
+    pr: Pr
+
+    def _path(self) -> str | None:
+        return self.git._pr_worktree(self.pr).path
+
+    def origin_head(self) -> Sha | None:
+        path = self._path()
+        return None if path is None else Sha.parse(self.git._origin_head(path))
+
+    def local_head(self) -> Sha | None:
+        return Sha.parse(self.git._head_sha(self._path()))
+
+    def commit_message(self, sha: Sha) -> str | None:
+        path = self._path()
+        return None if path is None else self.git._commit_message(path, str(sha))
+
+    def named_commit(self, sha: Sha) -> NamedCommit | None:
+        path = self._path()
+        read = None if path is None else self.git._named_commit(path, str(sha))
+        if path is None or read is None:
+            return None
+        full, parent, shown = read
+        return NamedCommit(Sha(full), Sha(parent), path, shown)
+
+    def changes(self, base: Sha, head: Sha) -> Changes | None:
+        path = self._path()
+        shown = None if path is None else self.git._diff_text(path, str(base), str(head))
+        return None if path is None or shown is None else Changes(path, shown)
+
+    def diff_files(self, base: Sha, head: Sha,
+                   merged: Sha | None = None) -> tuple[FileDiff, ...] | None:
+        path = self._path()
+        return None if path is None else self.git._diff_files(path, str(base), str(head),
+                                                              _text(merged))
+
+    def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
+        path = self._path()
+        if path is None:
+            return None
+        found = self.git._pr_base(path, base_branch, str(head))
+        base = None if found is None else Sha.parse(found[0])
+        if base is None:
+            return None
+        files = self.git._diff_files(path, str(base), str(head))
+        return None if files is None else PrDiff(base, head, files)
+
+    def pr_commits(self, base_branch: str | None, head: Sha) -> PrCommits | None:
+        path = self._path()
+        if path is None:
+            return None
+        found = self.git._pr_base(path, base_branch, str(head))
+        if found is None:
+            return None
+        fork, tip, _ = found
+        commits = self.git._commits_between(path, fork, str(head))
+        base_commits = self.git._commits_between(path, fork, tip)
+        fork_at = self.git._authored_at(path, fork)
+        if commits is None or base_commits is None or fork_at is None:
+            return None
+        return PrCommits(Sha(fork), commits, Sha(tip), base_commits, fork_at,
+                         self._stack(path, base_branch, fork))
+
+    def _stack(self, path: str, base_branch: str | None, fork: str) -> Stack | None:
+        found = None if base_branch is None else self.git._pr_base(path, None, fork)
+        if found is None or found[2] == base_branch or found[0] == fork:
+            return None
+        under, _, branch = found
+        commits = self.git._commits_between(path, under, fork)
+        return None if commits is None else Stack(branch, Sha(under), commits)
+
+    def has_commit(self, sha: Sha) -> bool:
+        path = self._path()
+        return path is not None and self.git._has_commit(path, str(sha))
+
+    def blob(self, sha: Sha, path: str) -> bytes | None:
+        worktree = self._path()
+        return None if worktree is None else self.git._blob(worktree, str(sha), path)
+
+
+@dataclass(frozen=True)
 class BoundCheckout:
     git: Git
     pr: Pr
@@ -252,75 +334,6 @@ class BoundCheckout:
             return None
         return self.git._base_standing(path, base_branch)
 
-    def origin_head(self) -> Sha | None:
-        path = self._path()
-        return None if path is None else Sha.parse(self.git._origin_head(path))
-
-    def local_head(self) -> Sha | None:
-        return Sha.parse(self.git._head_sha(self._path()))
-
-    def commit_message(self, sha: Sha) -> str | None:
-        path = self._path()
-        return None if path is None else self.git._commit_message(path, str(sha))
-
-    def named_commit(self, sha: Sha) -> NamedCommit | None:
-        path = self._path()
-        read = None if path is None else self.git._named_commit(path, str(sha))
-        if path is None or read is None:
-            return None
-        full, parent, shown = read
-        return NamedCommit(Sha(full), Sha(parent), path, shown)
-
-    def changes(self, base: Sha, head: Sha) -> Changes | None:
-        path = self._path()
-        shown = None if path is None else self.git._diff_text(path, str(base), str(head))
-        return None if path is None or shown is None else Changes(path, shown)
-
-    def diff_files(self, base: Sha, head: Sha,
-                   merged: Sha | None = None) -> tuple[FileDiff, ...] | None:
-        path = self._path()
-        return None if path is None else self.git._diff_files(path, str(base), str(head),
-                                                              _text(merged))
-
-    def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
-        path = self._path()
-        if path is None:
-            return None
-        found = self.git._pr_base(path, base_branch, str(head))
-        base = None if found is None else Sha.parse(found[0])
-        if base is None:
-            return None
-        files = self.git._diff_files(path, str(base), str(head))
-        return None if files is None else PrDiff(base, head, files)
-
-    def pr_commits(self, base_branch: str | None, head: Sha) -> PrCommits | None:
-        path = self._path()
-        if path is None:
-            return None
-        found = self.git._pr_base(path, base_branch, str(head))
-        if found is None:
-            return None
-        fork, tip, _ = found
-        commits = self.git._commits_between(path, fork, str(head))
-        base_commits = self.git._commits_between(path, fork, tip)
-        fork_at = self.git._authored_at(path, fork)
-        if commits is None or base_commits is None or fork_at is None:
-            return None
-        return PrCommits(Sha(fork), commits, Sha(tip), base_commits, fork_at,
-                         self._stack(path, base_branch, fork))
-
-    def _stack(self, path: str, base_branch: str | None, fork: str) -> Stack | None:
-        found = None if base_branch is None else self.git._pr_base(path, None, fork)
-        if found is None or found[2] == base_branch or found[0] == fork:
-            return None
-        under, _, branch = found
-        commits = self.git._commits_between(path, under, fork)
-        return None if commits is None else Stack(branch, Sha(under), commits)
-
-    def has_commit(self, sha: Sha) -> bool:
-        path = self._path()
-        return path is not None and self.git._has_commit(path, str(sha))
-
-    def blob(self, sha: Sha, path: str) -> bytes | None:
-        worktree = self._path()
-        return None if worktree is None else self.git._blob(worktree, str(sha), path)
+    @property
+    def revisions(self) -> BoundRevisions:
+        return BoundRevisions(self.git, self.pr)

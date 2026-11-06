@@ -205,7 +205,7 @@ def pr_diff(ports: Ports) -> tuple[FileDiff, ...] | None:
     head = Sha.parse(ports.pull_requests.head_sha())
     if head is None:
         return None
-    diff = ports.git.pr_diff(ports.pull_requests.base_branch(), head)
+    diff = ports.git.revisions.pr_diff(ports.pull_requests.base_branch(), head)
     return None if diff is None else diff.files
 
 

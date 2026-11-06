@@ -68,7 +68,7 @@ def branch_at(worktree: Path | str) -> str | None:
 
 
 def fetch_and_reset(checkout: PrCheckout, seen: Sha | None = None) -> str | None:
-    shown = seen or checkout.local_head()
+    shown = seen or checkout.revisions.local_head()
     assert shown is not None
     return checkout.fetch("main") or checkout.reset_to_origin(BRANCH, shown)
 

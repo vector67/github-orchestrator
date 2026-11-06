@@ -84,7 +84,7 @@ def test_a_reset_refuses_a_worktree_whose_commits_are_only_unpushed(
     refused = fetch_and_reset(pr_checkout)
 
     assert refused is not None and "only unpushed" in refused
-    assert pr_checkout.local_head() == unpushed
+    assert pr_checkout.revisions.local_head() == unpushed
 
 
 @pytest.fixture
@@ -112,7 +112,7 @@ def test_a_reset_in_a_clone_that_fetches_only_main_lands_on_origins_current_head
 
     assert fetch_and_reset(git_checkout) is None
 
-    assert git_checkout.local_head() == Sha(rewritten)
+    assert git_checkout.revisions.local_head() == Sha(rewritten)
 
 
 def _origin_tracks(world, name, text):
@@ -196,7 +196,7 @@ def test_a_reset_waits_for_a_pick_or_push_under_way_and_then_refuses_the_head_it
 
     assert waited
     assert landed and reset and reset[0] is not None
-    assert pr_checkout.local_head() != seen
+    assert pr_checkout.revisions.local_head() != seen
 
 
 def test_an_unpick_keeps_a_commit_made_after_it_checked_the_worktree_was_clean(
