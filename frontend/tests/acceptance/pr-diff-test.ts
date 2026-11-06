@@ -331,6 +331,34 @@ module('Acceptance | pr diff', function (hooks) {
       );
     });
 
+    test('a comment on a removed line is anchored against the merge base of the head the poll found, when the author merged the base in since the fetch', async function (assert) {
+      board().pullRequest = {
+        ...board().pullRequest,
+        head_sha: 'f00d000',
+        merge_base: 'ba5e001',
+      };
+      board().anchors['ba5e000..c0ffee1'] = {
+        files: [
+          {
+            path: 'src/widgets/changes.py',
+            lines: [
+              { side: 'RIGHT', line: 19, onto: { side: 'RIGHT', line: 23 } },
+            ],
+          },
+        ],
+      };
+      await visit('/pr/o/r/7/diff');
+      await click(`${LOCAL_ROW('+19')} [data-test-add]`);
+
+      assert.deepEqual(
+        [
+          board().askedFor(/\/anchors\/ba5e001\.\.f00d000$/).length,
+          board().askedFor(/\/anchors\/ba5e000\.\.f00d000$/).length,
+        ],
+        [1, 0],
+      );
+    });
+
     test("a local line the pull request's head lacks says so where the comment box would open, and nothing is posted", async function (assert) {
       divergedLocally();
       await visit('/pr/o/r/7/diff');

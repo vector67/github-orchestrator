@@ -22,6 +22,7 @@ def test_the_pull_request_read_answers_the_contracts_fields():
         "base_branch": "main",
         "branch": "rename-the-helper",
         "head_sha": "8f73fe8",
+        "merge_base": None,
         "created_at": None,
         "commits": None,
         "additions": 0,

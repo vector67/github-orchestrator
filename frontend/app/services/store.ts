@@ -205,6 +205,7 @@ export interface PrEntity {
   branch: string | null;
   base_branch: string | null;
   head_sha: string | null;
+  merge_base: string | null;
   created_at: string | null;
   commits: number | null;
   additions: number;
@@ -1609,6 +1610,7 @@ export default class StoreService extends Service {
       branch: pull.branch ?? held.branch,
       base_branch: pull.base_branch ?? held.base_branch,
       head_sha: pull.head_sha ?? held.head_sha,
+      merge_base: pull.merge_base,
       created_at: pull.created_at,
       commits: pull.commits,
       additions: pull.additions,
@@ -2072,6 +2074,7 @@ export default class StoreService extends Service {
       branch: null,
       base_branch: null,
       head_sha: null,
+      merge_base: null,
       created_at: null,
       commits: null,
       additions: 0,

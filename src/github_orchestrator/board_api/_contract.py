@@ -225,6 +225,11 @@ class PullRequest(BaseModel):
         description="The branch's current head. A `rebase` operation carries "
                     "`onto`, and without this there is nothing to compare it "
                     "against.")
+    merge_base: Sha | None = Field(
+        description="Where `head_sha` left the base branch, the merge base a "
+                    "comment's anchor is checked against when it is posted. It "
+                    "can differ from `/pull-request/diff`'s `base` until the "
+                    "next fetch. Null where git does not know `head_sha`.")
     created_at: str | None = Field(
         description="When the pull request was opened. Null where GitHub did not say.")
     commits: int | None = Field(

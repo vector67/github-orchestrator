@@ -288,6 +288,7 @@ export const PULL_REQUEST: PullRequest = {
   base_branch: 'main',
   branch: 'fix-the-widget',
   head_sha: 'c0ffee1',
+  merge_base: 'ba5e000',
   created_at: null,
   commits: null,
   additions: 0,

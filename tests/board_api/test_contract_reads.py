@@ -915,6 +915,19 @@ def test_the_local_diff_runs_to_the_worktrees_own_commit():
     assert answer.json()["files"][0]["hunks"][0]["lines"][-1]["text"] == "not pushed"
 
 
+def test_the_pull_request_names_the_merge_base_of_the_head_it_posts_against():
+    copies, fetched_base, _ = branched_from_main()
+    main = copies.origin["main"]
+    posted = copies.publish("posted", main, {"src/foo.py": "def write():\n    check()\n"},
+                            "merge main in")
+    client = client_of(board_on(fake_threads(working_copies=copies), head_sha=posted))
+
+    answer = client.get("/api/pull-request").json()
+
+    assert (answer["merge_base"], client.get("/api/pull-request/diff").json()["base"]) == (
+        main, fetched_base)
+
+
 def pr_commits_of(copies, **params):
     return pr_board(copies).get("/api/pull-request/commits", params=params)
 

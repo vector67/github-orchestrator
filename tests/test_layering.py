@@ -574,7 +574,7 @@ PR_CHECKOUT_MEMBERS = frozenset({
 })
 REVISIONS_MEMBERS = frozenset({
     "origin_head", "local_head", "commit_message", "diff_files", "named_commit", "changes",
-    "pr_diff", "pr_commits", "has_commit", "blob",
+    "pr_base", "pr_diff", "pr_commits", "has_commit", "blob",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
     "path", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop", "reset", "diff_since",

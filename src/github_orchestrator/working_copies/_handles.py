@@ -202,13 +202,15 @@ class BoundRevisions:
         return None if path is None else self.git._diff_files(path, str(base), str(head),
                                                               _text(merged))
 
-    def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
+    def pr_base(self, base_branch: str | None, head: Sha) -> Sha | None:
         path = self._path()
-        if path is None:
-            return None
-        found = self.git._pr_base(path, base_branch, str(head))
-        base = None if found is None else Sha.parse(found[0])
-        if base is None:
+        found = None if path is None else self.git._pr_base(path, base_branch, str(head))
+        return None if found is None else Sha.parse(found[0])
+
+    def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
+        base = self.pr_base(base_branch, head)
+        path = self._path()
+        if base is None or path is None:
             return None
         files = self.git._diff_files(path, str(base), str(head))
         return None if files is None else PrDiff(base, head, files)

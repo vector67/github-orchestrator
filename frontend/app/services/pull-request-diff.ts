@@ -334,15 +334,19 @@ export default class PullRequestDiffService extends Service {
     const pullRequest = this.threads.pullRequest;
     const origin = pullRequest?.diffs.origin;
     const head = pullRequest?.head_sha;
-    return origin && head ? { base: origin.base, head } : origin;
+    const base = pullRequest?.merge_base ?? origin?.base;
+    return base && head ? { base, head } : origin;
   }
 
   private get anchoredFrom(): DiffRange | null {
     if (this.range) return this.range;
     const shown = this.threads.pullRequest?.diffs[this.source];
     if (!shown) return null;
+    const onto = this.onto;
     const postedOnShown =
-      this.source === 'origin' && shown.head === this.onto?.head;
+      this.source === 'origin' &&
+      onto !== undefined &&
+      commitsOf(shown) === commitsOf(onto);
     return postedOnShown ? null : shown;
   }
 

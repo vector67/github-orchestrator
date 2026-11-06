@@ -24483,6 +24483,68 @@
    ]
   },
   "tests/preview/test_preview.py::test_a_reviewer_card_can_read_the_code_its_comment_sits_on": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"merge-base\", \"--end-of-options\", \"main\", \"462fc216f30d355b3a3fbc125187e54edbd496d6\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "merge-base",
+      "--end-of-options",
+      "main",
+      "462fc216f30d355b3a3fbc125187e54edbd496d6"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"main^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"origin/main^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "origin/main^{commit}"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"cat-file\", \"-e\", \"462fc216f30d355b3a3fbc125187e54edbd496d6^{commit}\", \"--end-of-options\"], null, null]": [
     {
      "argv": [

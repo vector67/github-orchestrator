@@ -280,11 +280,18 @@ def read_pull_request(request: Request, board: Serving) -> Response:
         base_branch=facts.base_branch,
         branch=facts.branch,
         head_sha=facts.head_sha,
+        merge_base=_merge_base(board, facts.base_branch, facts.head_sha),
         created_at=facts.created_at,
         commits=facts.commits,
         additions=facts.additions,
         deletions=facts.deletions,
     ))
+
+
+def _merge_base(board: Board, base_branch: str | None, head_sha: str | None) -> str | None:
+    head = CommitSha.parse(head_sha)
+    base = None if head is None else board.git.revisions.pr_base(base_branch, head)
+    return None if base is None else str(base)
 
 
 @reads.get("/pull-request/diff", response_model=Diff, tags=["pull request"],

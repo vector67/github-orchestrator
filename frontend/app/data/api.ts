@@ -745,6 +745,7 @@ export interface PullRequest {
   base_branch: string | null;
   branch: string | null;
   head_sha: string | null;
+  merge_base: string | null;
   created_at: string | null;
   commits: number | null;
   additions: number;

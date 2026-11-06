@@ -506,6 +506,10 @@ worktrees live, how branch trouble is detected, and how long it may last.
   wrong branch a PR's manager is frozen on, judged as `report_branch` would,
   or `None`, and starts no grace of its own, so the hub can say a PR is
   frozen and offer its release. `WorkingCopies` has 10 methods.
+- **Done** (#302): `Revisions.pr_base` answers where a head left the base
+  branch without diffing it, so `/pull-request` can name the merge base of
+  the head a comment is posted against on every poll. `pr_diff` builds on
+  it. `Revisions` has 11 methods.
 
 ### PR windows
 

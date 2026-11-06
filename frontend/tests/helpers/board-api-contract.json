@@ -6160,6 +6160,17 @@
     "html_url": {
      "type": "string"
     },
+    "merge_base": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{7,40}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "number": {
      "type": "integer"
     },
@@ -6185,6 +6196,7 @@
     "base_branch",
     "branch",
     "head_sha",
+    "merge_base",
     "created_at",
     "commits",
     "additions",
