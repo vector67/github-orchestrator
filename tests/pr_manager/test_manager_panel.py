@@ -52,7 +52,7 @@ def test_the_panel_answers_the_status_the_manager_last_drew(settings, tmp_path):
     status = board.panel.dashboard()
     assert (status.agents_enabled, status.working_on, status.on_hold, status.queue,
             status.url, status.notice) == (True, None, True, (), URL, None)
-    assert (status.threads_queued, len(status.threads_live), status.threads_proposed) == (0, 0, 0)
+    assert (status.threads_live, status.thread_rows) == (frozenset(), ())
 
 
 def test_the_panel_names_the_agent_this_instance_runs(settings, tmp_path):

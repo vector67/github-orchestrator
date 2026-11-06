@@ -135,8 +135,6 @@ class Dashboard:
     detailed_reviewer: str | None
     is_detailed_reviewer: bool
     ci: str
-    mergeable: bool | None
-    needs_rebase: bool
     review_decision: str | None
     my_review: str | None
     last_event_at: str | None
@@ -177,10 +175,7 @@ class Dashboard:
     diverged: bool
     reset_to_origin: ResetToOrigin | None
     base: BaseStanding | None
-    threads_queued: int
     threads_live: frozenset[str]
-    threads_proposed: int
-    threads_drafts: int
     frozen_on: str | None
     expected_branch: str | None
     seconds_left: float | None

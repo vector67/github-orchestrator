@@ -232,8 +232,6 @@ export interface DashboardPr {
 export interface DashboardStatus {
   detailed_reviewer: string | null;
   you_are_the_detailed_reviewer: boolean;
-  mergeable: boolean | null;
-  needs_rebase: boolean;
   last_event_at: string | null;
   review_ready_at: string | null;
   since_you_last_acted: SinceYouActed | null;
@@ -250,7 +248,6 @@ export interface DashboardSystem {
   unpushed_commits: UnpushedCommit[] | null;
   reset_to_origin: ResetToOrigin | null;
   diverged: boolean;
-  threads: ThreadCounts;
   base: BaseStanding | null;
 }
 
@@ -1069,13 +1066,6 @@ export interface TerminalSession {
 
 export interface TerminalSessionList {
   sessions: TerminalSession[];
-}
-
-export interface ThreadCounts {
-  queued: number;
-  live: number;
-  proposed: number;
-  drafts: number;
 }
 
 export type ThreadKind = 'draft' | 'review' | 'issue' | 'review-summary' | 'pr-body';

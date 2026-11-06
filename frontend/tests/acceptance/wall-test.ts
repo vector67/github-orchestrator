@@ -12,7 +12,7 @@ import {
   waitFor,
   waitUntil,
 } from '@ember/test-helpers';
-import type { HeldPullRequest, PrFacts, ThreadCounts } from 'frontend/data/api';
+import type { HeldPullRequest, PrFacts } from 'frontend/data/api';
 import {
   check,
   factsFor,
@@ -380,10 +380,6 @@ module('Acceptance | wall', function (hooks) {
     ).join('');
   }
 
-  function threads(over: Partial<ThreadCounts>): ThreadCounts {
-    return { queued: 0, live: 0, proposed: 0, drafts: 0, ...over };
-  }
-
   function needing(number: number, dashboard: DashboardOver) {
     return heldPr({ number, dashboard });
   }
@@ -452,8 +448,7 @@ module('Acceptance | wall', function (hooks) {
       }),
       needing(8, {
         facts: factsFor('review'),
-        manager: { threads_live: 1 },
-        system: { threads: threads({ live: 1 }) },
+        manager: { threads_live: 2 },
       }),
       needing(9, { facts: null, polled: false }),
       needing(10, { facts: factsFor('ready-to-merge') }),
@@ -527,7 +522,7 @@ module('Acceptance | wall', function (hooks) {
       'Send your review',
       'Re-review',
       'Agent is carrying on',
-      'Agent is working on 1 thread',
+      'Agent is working on 2 threads',
       'Waiting for the first poll',
       'Ready to merge',
       'Waiting on CI',
@@ -722,7 +717,6 @@ module('Acceptance | wall', function (hooks) {
       heldPr({
         dashboard: {
           facts: factsFor('rebase', { merge_state: 'behind' }),
-          status: { mergeable: true, needs_rebase: true },
         },
       }),
     );
@@ -940,7 +934,6 @@ module('Acceptance | wall', function (hooks) {
     onTheHub(
       heldPr({
         dashboard: {
-          status: { mergeable: false },
           facts: factsFor('fix-ci', {
             checks: [check('unit-tests', 'failed')],
             review_decision: 'changes-requested',
@@ -2767,7 +2760,7 @@ module('Acceptance | wall', function (hooks) {
   test('a pull request not polled yet does not raise a conflicts alarm', async function (assert) {
     onTheHub(
       heldPr({
-        dashboard: { polled: false, facts: null, status: { mergeable: false } },
+        dashboard: { polled: false, facts: null },
       }),
     );
 
@@ -2784,7 +2777,6 @@ module('Acceptance | wall', function (hooks) {
       heldPr({
         dashboard: {
           facts: { merge_state: 'unknown' },
-          status: { mergeable: null },
         },
       }),
     );

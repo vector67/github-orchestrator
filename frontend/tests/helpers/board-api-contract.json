@@ -3055,19 +3055,6 @@
       }
      ]
     },
-    "mergeable": {
-     "anyOf": [
-      {
-       "type": "boolean"
-      },
-      {
-       "type": "null"
-      }
-     ]
-    },
-    "needs_rebase": {
-     "type": "boolean"
-    },
     "review_ready_at": {
      "anyOf": [
       {
@@ -3095,8 +3082,6 @@
    "required": [
     "detailed_reviewer",
     "you_are_the_detailed_reviewer",
-    "mergeable",
-    "needs_rebase",
     "last_event_at",
     "review_ready_at",
     "since_you_last_acted",
@@ -3162,9 +3147,6 @@
       }
      ]
     },
-    "threads": {
-     "$ref": "#/components/schemas/ThreadCounts"
-    },
     "unpushed_commits": {
      "anyOf": [
       {
@@ -3188,7 +3170,6 @@
     "unpushed_commits",
     "reset_to_origin",
     "diverged",
-    "threads",
     "base"
    ],
    "type": "object"
@@ -7752,29 +7733,6 @@
    },
    "required": [
     "sessions"
-   ],
-   "type": "object"
-  },
-  "ThreadCounts": {
-   "properties": {
-    "drafts": {
-     "type": "integer"
-    },
-    "live": {
-     "type": "integer"
-    },
-    "proposed": {
-     "type": "integer"
-    },
-    "queued": {
-     "type": "integer"
-    }
-   },
-   "required": [
-    "queued",
-    "live",
-    "proposed",
-    "drafts"
    ],
    "type": "object"
   },

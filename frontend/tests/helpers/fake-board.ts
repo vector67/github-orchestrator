@@ -485,8 +485,6 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
     status: {
       detailed_reviewer: 'carol',
       you_are_the_detailed_reviewer: false,
-      mergeable: true,
-      needs_rebase: false,
       last_event_at: '2026-09-12T08:30:00Z',
       review_ready_at: '2026-09-11T08:00:00Z',
       since_you_last_acted: null,
@@ -510,7 +508,6 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       unpushed_commits: [],
       diverged: false,
       reset_to_origin: null,
-      threads: { queued: 0, live: 0, proposed: 0, drafts: 0 },
       base: null,
       ...system,
     },

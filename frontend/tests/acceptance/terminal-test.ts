@@ -492,7 +492,6 @@ module('Acceptance | terminal', function (hooks) {
 
   const REBASE_NEXT: DashboardOver = {
     facts: factsFor('rebase'),
-    status: { mergeable: false, needs_rebase: true },
   };
 
   test('when the next move is a rebase, the bar offers it and it opens the steered rebase in the Terminal tab', async function (assert) {
@@ -594,7 +593,6 @@ module('Acceptance | terminal', function (hooks) {
   test('a mergeable no that a rebase would fix offers the rebase beside it, whatever the next move', async function (assert) {
     needingARebase({
       facts: factsFor('fix-ci', { merge_state: 'conflicts' }),
-      status: { mergeable: false, needs_rebase: true },
     });
     await visit('/pr/o/r/7/dashboard');
 
@@ -606,7 +604,7 @@ module('Acceptance | terminal', function (hooks) {
   });
 
   test('a pull request that needs no rebase is offered none', async function (assert) {
-    needingARebase({ status: { mergeable: false, needs_rebase: false } });
+    needingARebase({});
     await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-rebase]').doesNotExist();

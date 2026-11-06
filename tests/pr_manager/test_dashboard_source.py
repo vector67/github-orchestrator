@@ -126,8 +126,7 @@ def test_proposed_fixes_are_counted_with_no_manager(settings, tmp_path):
                                working_copies=fake.working_copies)
 
     assert unmanaged == managed
-    assert (unmanaged.threads_proposed, [row.standing for row in unmanaged.thread_rows]) == (
-        1, ["ready"])
+    assert [row.standing for row in unmanaged.thread_rows] == ["ready"]
 
 
 def test_a_pr_with_no_manager_carries_the_facts_its_move_reads(settings, tmp_path):

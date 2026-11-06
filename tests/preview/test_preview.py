@@ -64,9 +64,6 @@ def client_for_preview(tmp_path, reviewer):
                             lambda: preview.running(dashboards.dashboard(preview.PR))))
 
 
-RUN_KINDS = {"first", "rebase", "rework", "retry", "start-session"}
-
-
 def anchors_of(cards):
     return {(card.path, card.line) for card in cards}
 
@@ -326,19 +323,10 @@ def test_the_preview_serves_a_manager_panel_with_something_in_every_part(seeded)
 
 
 @pytest.mark.parametrize("fixture", ["seeded", "reviewed"])
-def test_the_previews_dashboard_counts_the_threads_its_board_holds(fixture, request):
+def test_the_previews_dashboard_rows_the_threads_its_board_holds(fixture, request):
     client = request.getfixturevalue(fixture)
-    threads = client.get("/api/conversations").json()["conversations"]
     dashboard = client.get("/api/dashboard").json()
-    counted = dashboard["system"]["threads"]
 
-    drafts = sum(1 for thread in threads if thread["state"] == "draft")
-    proposed = sum(1 for thread in threads
-                   if thread["state"] == "ready" and not thread["github_removed"]
-                   and not thread["question"] and thread["operations"]
-                   and thread["operations"][-1]["kind"] in RUN_KINDS
-                   and thread["operations"][-1]["state"] == "applied")
-    assert (counted["proposed"], counted["drafts"]) == (proposed, drafts)
     rows = dashboard["threads"]
     if fixture == "reviewed":
         yours = [row for row in rows if row["author_kind"] == "mine"

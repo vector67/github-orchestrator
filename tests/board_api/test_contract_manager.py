@@ -28,8 +28,8 @@ WORKING = replace(
     reset_to_origin=ResetToOrigin(queued_at="2026-09-26T21:42:00Z"),
     base=BaseStanding(14, ("src/widgets/parser.py",), 1790000000.0),
     last_run_event="ci-failed",
-    last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
-    threads_live=frozenset({"PRRT_one", "PRRT_two"}), threads_proposed=4, threads_drafts=0, needs_rebase=True,
+    last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00",
+    threads_live=frozenset({"PRRT_one", "PRRT_two"}),
     notice=Notice(NoticeCode.CLOSE_REFUSED, "gh: Not Found (HTTP 404)"))
 
 FROZEN = replace(IDLE, frozen_on="PROJ-31-split-2", expected_branch="PROJ-34-remove-changes",
@@ -46,7 +46,6 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                "base_branch": "main", "ticket": "PROJ-34", "author": "octocat"},
         "polled": True,
         "status": {"detailed_reviewer": "carol", "you_are_the_detailed_reviewer": False,
-                   "mergeable": True, "needs_rebase": True,
                    "last_event_at": "2026-06-10T10:30:00Z",
                    "review_ready_at": "2026-06-09T08:00:00Z", "since_you_last_acted": None,
                    "changed_files": 7, "approved_by": []},
@@ -64,7 +63,6 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
             "diverged": True,
             "reset_to_origin": {"queued_at": "2026-09-26T21:42:00Z", "ran_at": None,
                                 "refused": None},
-            "threads": {"queued": 1, "live": 2, "proposed": 4, "drafts": 0},
             "base": {"behind_by": 14, "conflicts": ["src/widgets/parser.py"],
                      "fetched_at": "2026-09-21T14:13:20+00:00"},
         },

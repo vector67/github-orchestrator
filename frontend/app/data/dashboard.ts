@@ -316,7 +316,7 @@ function commentsOf(tally: Tally, noun: string): string {
 }
 
 function moveOf(shown: ShownPr, summaries: Summaries): string {
-  const { threads, agent } = shown.drawn.system;
+  const { agent } = shown.drawn.system;
   const { move, human, bot } = summaries;
   const code = move.code;
   switch (code) {
@@ -341,7 +341,7 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'agent-running':
       return `Agent is ${doingOf(agent.event)}`;
     case 'agent-on-threads':
-      return `Agent is working on ${plural(threads.live, 'thread')}`;
+      return `Agent is working on ${plural(shown.flags?.threads_live ?? 0, 'thread')}`;
     case 'first-poll':
       return FIRST_POLL;
     case 'await-ci':

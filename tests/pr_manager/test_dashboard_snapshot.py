@@ -26,8 +26,7 @@ def test_the_dashboard_holds_the_pr_and_its_status_as_values(settings, tmp_path)
             dashboard.is_author) == (
         "Remove the changes field", "PROJ-34", "PROJ-34-remove-changes",
         "https://github.com/o/n/pull/1", True)
-    assert (dashboard.ci, dashboard.mergeable, dashboard.review_decision) == (
-        "failing", False, "changes-requested")
+    assert (dashboard.ci, dashboard.review_decision) == ("failing", "changes-requested")
     assert (dashboard.detailed_reviewer, dashboard.is_detailed_reviewer) == ("carol", False)
     assert (dashboard.last_event_at, dashboard.review_ready_at) == (
         "2026-06-10T10:30:00+00:00", "2026-06-09T08:00:00Z")
@@ -36,26 +35,10 @@ def test_the_dashboard_holds_the_pr_and_its_status_as_values(settings, tmp_path)
     assert dashboard.since_commits is None
 
 
-def test_the_dashboard_says_whether_the_branch_needs_a_rebase(settings, tmp_path):
-    seed(settings, polled_pr(mergeable_state="dirty"))
-
-    assert _drawn(settings, tmp_path).needs_rebase is True
-
-
 def test_the_dashboard_names_the_branch_the_pr_merges_into(settings, tmp_path):
     seed(settings, polled_pr(base_branch="develop"))
 
     assert _drawn(settings, tmp_path).base_branch == "develop"
-
-
-def test_the_dashboard_leaves_mergeable_unknown_before_the_first_poll(settings, tmp_path):
-    assert _drawn(settings, tmp_path).mergeable is None
-
-
-def test_the_dashboard_leaves_mergeable_unknown_while_github_is_still_deciding(settings, tmp_path):
-    seed(settings, polled_pr(mergeable=False, mergeable_state="unknown"))
-
-    assert _drawn(settings, tmp_path).mergeable is None
 
 
 def test_a_reviewers_dashboard_holds_their_review_and_what_happened_since(settings, tmp_path):

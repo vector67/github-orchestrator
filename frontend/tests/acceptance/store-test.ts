@@ -19,19 +19,13 @@ import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 
 const LIST = 5000;
 
-const LAGGING: HeldOver = {
-  dashboard: {
-    system: { threads: { queued: 0, live: 0, proposed: 3, drafts: 4 } },
-  },
-};
-
 module('Acceptance | one store', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
   const clock = setupFakeClock(hooks);
 
   function onTheHub(...held: HeldOver[]): void {
-    board().held = held.map((one) => heldPr({ ...LAGGING, ...one }));
+    board().held = held.map((one) => heldPr(one));
   }
 
   function reason(): string | null {
@@ -188,11 +182,7 @@ module('Acceptance | one store', function (hooks) {
   });
 
   test('after an accept the Board tab and the strip agree with the list at once', async function (assert) {
-    onTheHub({
-      dashboard: {
-        system: { threads: { queued: 0, live: 0, proposed: 1, drafts: 0 } },
-      },
-    });
+    onTheHub({});
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
@@ -243,9 +233,7 @@ module('Acceptance | one store', function (hooks) {
 
     board().held = [
       heldPr({
-        ...LAGGING,
         dashboard: {
-          ...LAGGING.dashboard,
           threads: [
             row('k1', 'done', 'resolved', 'human', '2026-10-08T10:00:00Z'),
           ],
@@ -266,15 +254,13 @@ module('Acceptance | one store', function (hooks) {
     const proposed = board().threadIn('proposed', { key: 'k1' });
     board().held = [
       heldPr({
-        ...LAGGING,
         dashboard: {
-          ...LAGGING.dashboard,
           threads: [
             row('k1', 'ready', 'open', 'human', proposed.updated_at ?? ''),
           ],
         },
       }),
-      heldPr({ ...LAGGING, number: 8 }),
+      heldPr({ number: 8 }),
     ];
     board().conversations = [proposed];
     await visit('/pr/o/r/7/dashboard');

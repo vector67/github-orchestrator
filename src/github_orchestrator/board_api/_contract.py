@@ -1489,13 +1489,6 @@ class LastRun(BaseModel):
     ended_at: str
 
 
-class ThreadCounts(BaseModel):
-    queued: int = Field(description="Threads waiting for an agent run.")
-    live: int = Field(description="Threads an agent is working on now.")
-    proposed: int = Field(description="Fixes an agent proposed, waiting for your decision.")
-    drafts: int = Field(description="Your draft review comments, not sent yet.")
-
-
 class DashboardPr(BaseModel):
     repo: str
     number: int
@@ -1526,11 +1519,6 @@ class DashboardStatus(BaseModel):
         description="The login of the detailed reviewer. Null where none is "
                     "assigned.")
     you_are_the_detailed_reviewer: bool
-    mergeable: bool | None = Field(
-        description="Null before the first poll and while GitHub is still working it out.")
-    needs_rebase: bool = Field(
-        description="The branch conflicts with or is behind its base, so a "
-                    "rebase on main would bring it level.")
     last_event_at: str | None
     review_ready_at: str | None
     since_you_last_acted: SinceYouActed | None = Field(
@@ -1605,7 +1593,6 @@ class DashboardSystem(BaseModel):
         description="The worktree holds commits the pull request lacks and the pull "
                     "request holds commits the worktree lacks, as when origin was "
                     "rewritten under a worktree holding the older branch.")
-    threads: ThreadCounts
     base: BaseStanding | None = Field(
         description="How the branch stands against its freshly fetched base. Null "
                     "while GitHub says no rebase is needed, or where git could not say.")

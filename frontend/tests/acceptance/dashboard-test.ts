@@ -233,7 +233,6 @@ module('Acceptance | dashboard', function (hooks) {
   test('a branch behind its base reads as not mergeable, beside the move that says so', async function (assert) {
     onTheHub({
       facts: factsFor('rebase', { merge_state: 'behind' }),
-      status: { mergeable: true, needs_rebase: false },
     });
 
     await visit('/pr/o/r/7/dashboard');
@@ -318,7 +317,6 @@ module('Acceptance | dashboard', function (hooks) {
         agent: WORKING,
         queue: waitingEvents(10),
         unpushed_commits: unpushed(2),
-        threads: { queued: 7, live: 7, proposed: 7, drafts: 0 },
       },
     });
 

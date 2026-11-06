@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import itertools
 from dataclasses import field
@@ -82,6 +83,10 @@ def _over(settings, *script, **modules):
     script = tuple((lambda: board.panel.carry_on()) if item == CARRY_ON else item
                    for item in script)
     return manager_over(settings, *script, board=board, **modules)
+
+
+def _standings(manager):
+    return collections.Counter(row.standing for row in _shown(manager).thread_rows)
 
 
 def _shown(manager):
@@ -383,8 +388,7 @@ def test_a_thread_run_started_on_one_tick_is_not_started_again_on_the_next(setti
     _heard(manager, "PRRT_queued")
     manager.run()
     assert len(runs.started) == 1
-    shown = _shown(manager)
-    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (0, 1, 0)
+    assert _standings(manager) == {"working": 1}
 
 
 def test_thread_runs_are_started_up_to_max_thread_runs(settings, tmp_path):
@@ -405,8 +409,7 @@ def test_on_hold_starts_no_thread_runs(settings, tmp_path):
     _heard(manager, "PRRT_queued")
     manager.run()
     assert runs.started == []
-    shown = _shown(manager)
-    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 0, 0)
+    assert _standings(manager) == {"queued": 1}
 
 
 def test_frozen_on_the_wrong_branch_starts_no_thread_runs(settings, tmp_path):
@@ -422,7 +425,7 @@ def test_frozen_on_the_wrong_branch_starts_no_thread_runs(settings, tmp_path):
     assert manager.container.get(Dashboards).dashboard(THE_PR).frozen_on == "some-other-branch"
 
 
-def test_the_dashboard_counts_queued_working_and_ready_threads(settings, tmp_path):
+def test_the_dashboard_holds_queued_working_and_ready_threads(settings, tmp_path):
     seed_state(settings, title="t", url="u")
     runs = _runs()
     manager = manager_over(_with_config(settings, max_thread_runs=1), None, is_author=True,
@@ -434,5 +437,4 @@ def test_the_dashboard_counts_queued_working_and_ready_threads(settings, tmp_pat
     _heard(manager, "PRRT_waiting")
     runs.script(Outcome(finishes=False))
     manager.run()
-    shown = _shown(manager)
-    assert (shown.threads_queued, len(shown.threads_live), shown.threads_proposed) == (1, 1, 1)
+    assert _standings(manager) == {"queued": 1, "working": 1, "ready": 1, "done": 1}

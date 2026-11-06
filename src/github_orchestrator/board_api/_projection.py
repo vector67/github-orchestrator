@@ -500,7 +500,6 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
         status=contract.DashboardStatus(
             detailed_reviewer=dashboard.detailed_reviewer,
             you_are_the_detailed_reviewer=dashboard.is_detailed_reviewer,
-            mergeable=dashboard.mergeable, needs_rebase=dashboard.needs_rebase,
             last_event_at=dashboard.last_event_at, review_ready_at=dashboard.review_ready_at,
             since_you_last_acted=None if dashboard.since_commits is None
             else contract.SinceYouActed(
@@ -536,9 +535,6 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             else contract.ResetToOrigin(queued_at=dashboard.reset_to_origin.queued_at,
                                         ran_at=dashboard.reset_to_origin.ran_at,
                                         refused=dashboard.reset_to_origin.refused),
-            threads=contract.ThreadCounts(
-                queued=dashboard.threads_queued, live=len(dashboard.threads_live),
-                proposed=dashboard.threads_proposed, drafts=dashboard.threads_drafts),
             base=None if dashboard.base is None else contract.BaseStanding(
                 behind_by=dashboard.base.behind_by, conflicts=list(dashboard.base.conflicts),
                 fetched_at=None if dashboard.base.fetched_at is None

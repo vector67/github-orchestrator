@@ -253,14 +253,8 @@ module('Acceptance | pr view', function (hooks) {
       .hasAttribute('href', 'https://github.com/o/r/pull/7');
   });
 
-  test('the bar shows chips from the facts, whatever the status says', async function (assert) {
-    onTheHub(
-      heldPr({
-        dashboard: {
-          status: { needs_rebase: true },
-        },
-      }),
-    );
+  test('the bar shows no chips while the facts are quiet', async function (assert) {
+    onTheHub(heldPr());
 
     await visit('/pr/o/r/7');
 
