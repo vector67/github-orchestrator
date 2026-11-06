@@ -143,6 +143,10 @@ function waitingOnAuthor(summaries: Summaries): boolean {
   );
 }
 
+function controlsPending(summaries: Summaries): boolean {
+  return summaries.pressing.controls.pressed !== null;
+}
+
 function onHoldOf(shown: ShownPr): boolean {
   return shown.drawn.system.on_hold;
 }
@@ -251,7 +255,7 @@ export default class PrControlsService extends Service {
       held: this.dashboard.onTheWall,
       live,
       showing: live ? 'board' : 'hub',
-      pending: Boolean(summary?.pressing.controls.pressed),
+      pending: summary ? controlsPending(summary) : false,
       waitingOnAuthor: summary ? waitingOnAuthor(summary) : false,
     };
   }
@@ -265,7 +269,7 @@ export default class PrControlsService extends Service {
       held: true,
       live: row.drawn.standing === 'answering',
       showing: 'hub',
-      pending: row.summaries.pressing.controls.pressed !== null,
+      pending: controlsPending(row.summaries),
       waitingOnAuthor: waitingOnAuthor(row.summaries),
     };
   }
