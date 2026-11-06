@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from github_orchestrator.agent_runs import PrWork, Run
-from github_orchestrator.board_api.interface import ManagerRefusal
+from github_orchestrator.board_api.interface import Notice, NoticeCode
 from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewRequested
 from github_orchestrator.domain import Monotonic, ReviewerPick
 from github_orchestrator.github import PullRequests
@@ -15,16 +15,6 @@ from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
 log = logging.getLogger(__name__)
 
 NOTICE_SECONDS = 4.0
-
-NOT_YOUR_DRAFT = "mark ready is only for your own draft"
-
-NOT_YOURS_TO_ASSIGN = "assigning reviewers is only for your own pull request"
-
-REFUSED_NOTICES = {
-    ManagerRefusal.WORKTREE_FROZEN: "refused: the worktree holds another PR's branch",
-    ManagerRefusal.AGENTS_DISABLED: "agents are disabled in config.toml",
-    ManagerRefusal.AGENT_RUNNING: "an agent is already running",
-}
 
 
 class ManagerCommands:
@@ -46,7 +36,7 @@ class ManagerCommands:
         self._command_files = command_files
         self.active_run: Run | None = None
         self._dismissed = False
-        self._notice: str | None = None
+        self._notice: Notice | None = None
         self._notice_at = 0.0
 
     def obey(self, *, frozen: bool) -> None:
@@ -67,7 +57,7 @@ class ManagerCommands:
                           command, agents_enabled=self._config.agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", pr, command, refused)
-            self.notify(REFUSED_NOTICES[refused])
+            self.notify(Notice(NoticeCode(refused.value)))
             return
         try:
             self._act(command, fields or {})
@@ -78,11 +68,11 @@ class ManagerCommands:
     def dismissed(self) -> bool:
         return self._dismissed
 
-    def notify(self, text: str) -> None:
-        self._notice = text
+    def notify(self, notice: Notice) -> None:
+        self._notice = notice
         self._notice_at = self._monotonic()
 
-    def notice(self) -> str | None:
+    def notice(self) -> Notice | None:
         if self._notice is None:
             return None
         if self._monotonic() - self._notice_at >= NOTICE_SECONDS:
@@ -142,7 +132,7 @@ class ManagerCommands:
         started = self._pr_work.carry_on(config.worktree, pr,
                                          yours=facts is not None and facts.is_author is True)
         if isinstance(started, str):
-            self.notify(started)
+            self.notify(Notice(NoticeCode.AGENT_WONT_START, started))
             return
         self.active_run = started
 
@@ -159,7 +149,7 @@ class ManagerCommands:
         refused = self._pull_requests.close(pr)
         if refused is not None:
             log.warning("close %s: GitHub refused — %s", pr, refused)
-            self.notify(refused)
+            self.notify(Notice(NoticeCode.CLOSE_REFUSED, refused))
             return
         log.info("Closed %s on GitHub; the watcher tears it down on its next poll", pr)
 
@@ -168,12 +158,12 @@ class ManagerCommands:
         facts = self._change_detection.facts(pr)
         if facts is None or not (facts.is_author and facts.draft):
             log.info("mark ready %s: refused — not your draft", pr)
-            self.notify(NOT_YOUR_DRAFT)
+            self.notify(Notice(NoticeCode.NOT_YOUR_DRAFT))
             return
         refused = self._pull_requests.mark_ready(pr)
         if refused is not None:
             log.warning("mark ready %s: GitHub refused — %s", pr, refused)
-            self.notify(refused)
+            self.notify(Notice(NoticeCode.MARK_READY_REFUSED, refused))
             return
         log.info("Marked %s ready for review on GitHub", pr)
 
@@ -200,7 +190,7 @@ class ManagerCommands:
         facts = self._change_detection.facts(pr)
         if facts is None or not facts.is_author:
             log.info("assign reviewers %s: refused — not yours", pr)
-            self.notify(NOT_YOURS_TO_ASSIGN)
+            self.notify(Notice(NoticeCode.NOT_YOURS_TO_ASSIGN))
             return False
         return True
 
@@ -211,6 +201,6 @@ class ManagerCommands:
         refused = self._pull_requests.assign_reviewers(pr, reviewers, detailed)
         if refused is not None:
             log.warning("assign reviewers %s: GitHub refused — %s", pr, refused)
-            self.notify(refused)
+            self.notify(Notice(NoticeCode.ASSIGN_REVIEWERS_REFUSED, refused))
             return
         log.info("Asked %s to review %s on GitHub", ", ".join(reviewers), pr)

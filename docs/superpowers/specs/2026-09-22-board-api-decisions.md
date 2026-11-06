@@ -44,8 +44,9 @@ reviewers and counts the detail was worded from, `pr.author` and
 `dashboardOf` words all of it. `move` and `group` stay a fold the server
 makes, for the reason the thread's `state` does: the hub orders the wall by
 group and tracks moves between polls, and a verb worked out apart from its
-group could disagree with it. `notice` stays a sentence, because it carries
-what GitHub said when it refused.
+group could disagree with it. `notice` was a sentence until 2026-11-06,
+because it carried what GitHub said when it refused; now it is a code the
+front end words, with what GitHub or the system said beside it as `detail`.
 
 **The back end refuses; it does not enumerate.** There is no list of what a
 thread will accept. The front end draws the buttons its own view of a state

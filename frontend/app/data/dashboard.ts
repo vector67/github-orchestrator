@@ -4,6 +4,8 @@ import type {
   FinishedRun,
   FixChecks,
   FrozenWorktree,
+  Notice,
+  NoticeCode,
   PrFacts,
   WallGroup,
 } from 'frontend/data/api';
@@ -1180,6 +1182,26 @@ export function threadsWaitingOf(summaries: Summaries): string | null {
   return parts.length ? parts.join(', ') : null;
 }
 
+const NOTICES: Record<NoticeCode, (detail: string | null) => string> = {
+  'worktree-frozen': () => "The worktree holds another pull request's branch.",
+  'agents-disabled': () => 'Agents are switched off in config.toml.',
+  'agent-running': () => 'An agent is already running for this pull request.',
+  'agent-wont-start': (detail) => `The agent would not start: ${detail ?? ''}`,
+  'not-your-draft': () => 'Mark ready is only for your own draft.',
+  'not-yours-to-assign': () =>
+    'Assigning reviewers is only for your own pull request.',
+  'close-refused': (detail) =>
+    `GitHub would not close the pull request: ${detail ?? ''}`,
+  'mark-ready-refused': (detail) =>
+    `GitHub would not mark the pull request ready: ${detail ?? ''}`,
+  'assign-reviewers-refused': (detail) =>
+    `GitHub would not ask those reviewers: ${detail ?? ''}`,
+};
+
+function noticeOf(notice: Notice): string {
+  return NOTICES[notice.code](notice.detail);
+}
+
 export interface Reading {
   number: number;
   code: Move;
@@ -1252,7 +1274,7 @@ export function dashboardOf(
       : null,
     onHold: shown.drawn.system.on_hold,
     unpolled: shown.drawn.polled ? null : FIRST_POLL,
-    notice: shown.drawn.notice,
+    notice: shown.drawn.notice ? noticeOf(shown.drawn.notice) : null,
     status: shown.drawn.polled ? statusRows(shown, summaries, now) : [],
     system: systemRows(shown, summaries, now),
     since: frozen ? null : since,

@@ -2881,7 +2881,7 @@
     "notice": {
      "anyOf": [
       {
-       "type": "string"
+       "$ref": "#/components/schemas/Notice"
       },
       {
        "type": "null"
@@ -4851,6 +4851,42 @@
     "newer"
    ],
    "type": "object"
+  },
+  "Notice": {
+   "properties": {
+    "code": {
+     "$ref": "#/components/schemas/NoticeCode"
+    },
+    "detail": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "code",
+    "detail"
+   ],
+   "type": "object"
+  },
+  "NoticeCode": {
+   "enum": [
+    "worktree-frozen",
+    "agents-disabled",
+    "agent-running",
+    "agent-wont-start",
+    "not-your-draft",
+    "not-yours-to-assign",
+    "close-refused",
+    "mark-ready-refused",
+    "assign-reviewers-refused"
+   ],
+   "type": "string"
   },
   "OperationKind": {
    "enum": [

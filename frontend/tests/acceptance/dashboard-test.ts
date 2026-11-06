@@ -410,12 +410,28 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-status]').doesNotExist();
   });
 
-  test('the manager’s notice is shown with the band', async function (assert) {
-    onTheHub({ notice: 'an agent is already running' });
+  test('the manager’s notice is worded from its code with the band', async function (assert) {
+    onTheHub({ notice: { code: 'agent-running', detail: null } });
 
     await visit('/pr/o/r/7/dashboard');
 
-    assert.dom('[data-test-notice]').hasText('an agent is already running');
+    assert
+      .dom('[data-test-notice]')
+      .hasText('An agent is already running for this pull request.');
+  });
+
+  test('a refusal from GitHub is worded with what GitHub said', async function (assert) {
+    onTheHub({
+      notice: { code: 'close-refused', detail: 'gh: Not Found (HTTP 404)' },
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-notice]')
+      .hasText(
+        'GitHub would not close the pull request: gh: Not Found (HTTP 404)',
+      );
   });
 
   test("the agent's notes are drawn as markdown beside the blocks, and C turns to Claude's output and back", async function (assert) {

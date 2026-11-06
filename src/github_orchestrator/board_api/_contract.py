@@ -8,6 +8,7 @@ from github_orchestrator.board_api.interface import (
     CloneState,
     DismissUntil,
     ManagerStanding,
+    NoticeCode,
     WallGroup,
     WriteState,
 )
@@ -1610,6 +1611,23 @@ class DashboardSystem(BaseModel):
                     "while GitHub says no rebase is needed, or where git could not say.")
 
 
+class Notice(BaseModel):
+    """Why the manager refused or could not carry out a command, for the page to word."""
+
+    code: NoticeCode = Field(
+        description="Which refusal it is. `worktree-frozen`, `agents-disabled` "
+                    "and `agent-running` are a command the manager ruled out "
+                    "when it drained it; `agent-wont-start` is an agent that "
+                    "would not start; `not-your-draft` and `not-yours-to-assign` "
+                    "are mark ready and assign reviewers on a pull request that "
+                    "is not yours; `close-refused`, `mark-ready-refused` and "
+                    "`assign-reviewers-refused` are GitHub refusing the command.")
+    detail: str | None = Field(
+        description="What GitHub or the system said, where it said something: "
+                    "set for `agent-wont-start` and the three GitHub refusals, "
+                    "null otherwise.")
+
+
 class FrozenWorktree(BaseModel):
     """The manager froze because the worktree holds another branch."""
 
@@ -1744,9 +1762,9 @@ class Dashboard(BaseModel):
     undismiss_command: str = Field(
         description="The command that reverses dismissing this pull request "
                     "forever.")
-    notice: str | None = Field(
-        description="The sentence the dashboard is showing for a few seconds, "
-                    "such as why a command was refused.")
+    notice: Notice | None = Field(
+        description="What the dashboard is showing for a few seconds, such as "
+                    "why a command was refused.")
     standing: ManagerStanding = Field(
         description="What the PR manager's status file says of it: `starting` "
                     "before its first tick has written the file, `answering` "
