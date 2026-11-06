@@ -91,9 +91,9 @@ class ResetToOrigin:
         try:
             fields = json.loads(document)
             read = [fields.get("queued_at"), fields.get("ran_at"), fields.get("refused")]
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, RecursionError):
             return None
-        if not all(field is None or isinstance(field, str) for field in read):
+        if not all(field is None or (isinstance(field, str) and field) for field in read):
             return None
         return ResetToOrigin(*read)
 

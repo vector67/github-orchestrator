@@ -113,10 +113,18 @@ def test_a_worktree_only_ahead_of_origin_keeps_its_unpushed_commits(operation, w
 @pytest.mark.parametrize("fields", [
     {"queued_at": 5}, {"queued_at": False}, {"queued_at": 0}, {"queued_at": []},
     {"queued_at": {}}, {"queued_at": None, "ran_at": 1}, {"queued_at": None, "refused": True},
+    {"queued_at": ""}, {"ran_at": ""}, {"ran_at": "2026-01-01T00:00:00Z", "refused": ""},
 ])
-def test_a_kept_reset_with_a_field_that_is_not_text_reads_as_none_kept(fields):
+def test_a_kept_reset_with_a_field_that_is_not_text_or_is_empty_reads_as_none_kept(fields):
     shelf = FakeThreadRecords().of(THE_PR)
     shelf.save("reset", "state", json.dumps(fields).encode())
+
+    assert ResetToOrigin.kept(shelf) is None
+
+
+def test_a_kept_reset_nested_too_deep_to_parse_reads_as_none_kept():
+    shelf = FakeThreadRecords().of(THE_PR)
+    shelf.save("reset", "state", b"[" * 100_000 + b"]" * 100_000)
 
     assert ResetToOrigin.kept(shelf) is None
 

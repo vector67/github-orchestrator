@@ -290,3 +290,19 @@ def test_a_pr_whose_records_will_not_go_says_so(tmp_path):
         assert store.forget(THE_PR) is False
     finally:
         records.chmod(0o700)
+
+
+def test_a_document_left_as_a_directory_is_deleted_as_nothing_kept(tmp_path):
+    records = _records(tmp_path)
+    (thread_dir(tmp_path, THE_PR) / f"{disk_name('state')}.reset").mkdir(parents=True)
+
+    records.delete("reset", "state")
+
+    assert records.list("reset") == {"state": None}
+
+
+def test_a_twin_spelled_with_a_quoted_letter_never_stands_for_the_key(tmp_path):
+    _records(tmp_path).save("reset", "state", b"mine")
+    _write(thread_dir(tmp_path, THE_PR) / "%73tate-0.reset", b"twin")
+
+    assert _records(tmp_path).list("reset") == {"state": b"mine"}

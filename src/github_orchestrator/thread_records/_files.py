@@ -136,7 +136,14 @@ class DiskPrRecords:
             yield
 
     def delete(self, kind: str, key: str) -> None:
-        self._named(kind, key).unlink(missing_ok=True)
+        named = self._named(kind, key)
+        try:
+            if stat.S_ISDIR(named.lstat().st_mode):
+                log.warning("Leaving %s, which reads as nothing kept: it is a directory", named)
+                return
+        except FileNotFoundError:
+            return
+        named.unlink(missing_ok=True)
 
 
 class DiskThreadRecords:
