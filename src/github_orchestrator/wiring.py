@@ -106,7 +106,7 @@ from github_orchestrator.github._traffic import Traffic
 from github_orchestrator.harvest import BoardExtension
 from github_orchestrator.harvest._chrome import Run as ChromeRun
 from github_orchestrator.harvest._extension import CopiedExtension
-from github_orchestrator.mentions import MentionsInbox
+from github_orchestrator.mentions import MentionsInbox, StartLine
 from github_orchestrator.mentions._inbox import GitHubMentionsInbox
 from github_orchestrator.mentions._listing import ListingFile
 from github_orchestrator.notifications import (
@@ -315,10 +315,18 @@ class SettingsProvider(Provider):
         return wiring.settings
 
     @provide
-    def config_file(self, wiring: SettingsWiring) -> ConfigFile:
+    def toml_config_file(self, wiring: SettingsWiring) -> TomlConfigFile:
         settings = wiring.settings
         return TomlConfigFile(settings.config_path, settings.problem, setup_line(),
                               restart_line(), settings.data_dir)
+
+    @provide
+    def config_file(self, toml_config_file: TomlConfigFile) -> ConfigFile:
+        return toml_config_file
+
+    @provide
+    def start_line(self, toml_config_file: TomlConfigFile) -> StartLine:
+        return toml_config_file
 
 
 @dataclass(frozen=True)
@@ -812,9 +820,9 @@ class MentionsProvider(Provider):
     @provide
     def mentions_inbox(self, settings: Settings, pull_requests: PullRequests, threads: Threads,
                        conversation_managers: ConversationManagerFactory,
-                       config_file: ConfigFile, clock: UtcClock) -> MentionsInbox:
+                       start_line: StartLine, clock: UtcClock) -> MentionsInbox:
         return GitHubMentionsInbox(tuple(settings.repos), pull_requests, threads,
-                                   conversation_managers, config_file, clock,
+                                   conversation_managers, start_line, clock,
                                    settings.data_dir / MENTIONS_FILE)
 
     @provide

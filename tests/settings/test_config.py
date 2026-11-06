@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from github_orchestrator.domain import Clone, HubState, Repo
+from github_orchestrator.mentions import StartLine
 from github_orchestrator.settings import ConfigFile
 from github_orchestrator.settings.fake import OrchestratorConfig, Tracker
 from tests.settings.support import (
@@ -603,7 +604,7 @@ def test_a_config_with_no_mentions_start_is_stamped_now_above_what_it_already_sa
     toml_file = write_config(tmp_path, "# the hub's own words\nhub_port = 8721\n")
     before = toml_file.read_text()
 
-    started = read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+    started = read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
     assert started == FIRST_START
     assert toml_file.read_text() == f'mentions_start = "{FIRST_START.isoformat()}"\n' + before
@@ -612,14 +613,14 @@ def test_a_config_with_no_mentions_start_is_stamped_now_above_what_it_already_sa
 
 def test_a_stamped_mentions_start_is_read_back_and_not_stamped_again(tmp_path):
     toml_file = write_config(tmp_path)
-    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
-    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == FIRST_START
 
 
 def test_moving_the_mentions_start_rewrites_its_one_line(tmp_path):
     toml_file = write_config(tmp_path)
-    config_file = read_from(toml_file).get(ConfigFile)
+    config_file = read_from(toml_file).get(StartLine)
     config_file.mentions_start(FIRST_START)
 
     config_file.move_mentions_start(LATER)
@@ -632,7 +633,7 @@ def test_stamping_the_mentions_start_keeps_the_config_private(tmp_path):
     toml_file = write_config(tmp_path)
     toml_file.chmod(0o600)
 
-    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
     assert stat.S_IMODE(toml_file.stat().st_mode) == 0o600
 
@@ -644,18 +645,18 @@ def test_stamping_the_mentions_start_writes_through_a_symlinked_config(tmp_path)
     toml_file = tmp_path / "config.toml"
     toml_file.symlink_to(kept)
 
-    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
     assert toml_file.readlink() == kept
     assert load_config(kept).hub_port == 8721
-    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == FIRST_START
 
 
 def test_an_empty_mentions_start_is_stamped_in_its_own_line(tmp_path):
     toml_file = write_config(tmp_path, 'mentions_start = ""\nhub_port = 8721\n')
 
-    assert read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START) == FIRST_START
-    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+    assert read_from(toml_file).get(StartLine).mentions_start(FIRST_START) == FIRST_START
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == FIRST_START
     assert toml_file.read_text().count("mentions_start") == 1
 
 
@@ -663,7 +664,7 @@ def test_an_empty_mentions_start_is_stamped_in_its_own_line(tmp_path):
 def test_a_mentions_start_written_without_a_time_zone_is_read_in_local_time(tmp_path, written):
     toml_file = write_config(tmp_path, f'mentions_start = "{written}"\n')
 
-    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == datetime.fromisoformat(
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == datetime.fromisoformat(
         written).astimezone()
 
 
@@ -679,9 +680,9 @@ def test_a_mentions_start_that_is_not_a_moment_is_refused(tmp_path):
 def test_an_empty_mentions_start_written_indented_or_quoted_is_stamped_in_place(tmp_path, line):
     toml_file = write_config(tmp_path, f"{line}\nhub_port = 8721\n")
 
-    read_from(toml_file).get(ConfigFile).mentions_start(FIRST_START)
+    read_from(toml_file).get(StartLine).mentions_start(FIRST_START)
 
-    assert read_from(toml_file).get(ConfigFile).mentions_start(LATER) == FIRST_START
+    assert read_from(toml_file).get(StartLine).mentions_start(LATER) == FIRST_START
     assert toml_file.read_text().count("mentions_start") == 1
 
 
