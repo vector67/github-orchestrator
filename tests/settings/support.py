@@ -1,3 +1,7 @@
+import contextlib
+import fcntl
+import threading
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -27,6 +31,23 @@ from github_orchestrator.wiring import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+@contextlib.contextmanager
+def _saving(config: Path) -> Iterator[None]:
+    with open(config.with_name(f"{config.name}.lock"), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def run_during_a_save(config: Path, action: Callable[[], object],
+                      save: Callable[[], object]) -> None:
+    with _saving(config):
+        running = threading.Thread(target=action)
+        running.start()
+        running.join(timeout=0.2)
+        save()
+    running.join()
 
 
 def _switches(data_dir: Path) -> dishka.Container:
