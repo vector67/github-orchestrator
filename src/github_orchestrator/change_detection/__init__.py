@@ -14,7 +14,6 @@ from github_orchestrator.change_detection.interface import (
     ReviewDecisionChanged,
     ReviewerStatus,
     ReviewRequested,
-    SinceReview,
 )
 
 __all__ = [
@@ -33,5 +32,4 @@ __all__ = [
     "ReviewDecisionChanged",
     "ReviewRequested",
     "ReviewerStatus",
-    "SinceReview",
 ]

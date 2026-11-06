@@ -244,7 +244,7 @@ PACKAGES = {
             "BecameMergeable", "BecameUnmergeable", "ChangeDetection", "CiFailed",
             "CiStatus", "CiSucceeded", "Facts", "HeadChanged", "Poll",
             "PrClosed", "PrEvent", "PushedSinceReview", "ReviewDecisionChanged",
-            "ReviewRequested", "ReviewerStatus", "SinceReview",
+            "ReviewRequested", "ReviewerStatus",
         }),
         may_import=("github",),
         role="change detection is handed what GitHub says and hands back events, and knows nothing of the watcher, the windows or the review threads that read its snapshots",

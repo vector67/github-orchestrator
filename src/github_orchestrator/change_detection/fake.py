@@ -26,6 +26,9 @@ from github_orchestrator.change_detection.interface import (
     ReviewDecision as ReviewDecision,
 )
 from github_orchestrator.change_detection.interface import (
+    SinceReview as SinceReview,
+)
+from github_orchestrator.change_detection.interface import (
     UnmergeableReason as UnmergeableReason,
 )
 from github_orchestrator.domain import Pr, Repo

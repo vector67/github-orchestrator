@@ -1,9 +1,8 @@
 from github_orchestrator.change_detection import (
     CiStatus,
     ReviewerStatus,
-    SinceReview,
 )
-from github_orchestrator.change_detection.fake import ReviewDecision
+from github_orchestrator.change_detection.fake import ReviewDecision, SinceReview
 from github_orchestrator.domain import CiCheck, Mention
 from github_orchestrator.github import ReviewState
 from github_orchestrator.github.fake import Check, PushEvent, Review

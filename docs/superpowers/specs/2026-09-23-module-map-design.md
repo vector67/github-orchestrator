@@ -323,7 +323,11 @@ what counts as a change. New-comment detection belongs to conversation.
   and `Blocker`, `CiStatus`, `ReviewDecision`, `ReviewerStatus`,
   `SinceReview` and `Want` by the dashboard alone, which keys its labels and
   colours by them. Candidates to go: those six, if change detection kept the
-  dashboard's labels.
+  dashboard's labels. By 2026-11 the list was 16: `Blocker`, `Want` and
+  `ReviewDecision` had gone, and `ReviewerStatus` is written by conversation
+  too. **Done** (the commit that records this): the dashboard reads
+  `facts.since_review` inline rather than through a helper typed by
+  `SinceReview`, which left the exports: 15.
 - **Done** (`d42219da`): `PushedSinceReview.pushes` is the one
   pushed-since-review sentence; notifications shows it and the PR manager's
   agent-changes note adds a full stop.

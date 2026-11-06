@@ -7,7 +7,6 @@ from github_orchestrator.change_detection import (
     CiStatus,
     Facts,
     ReviewerStatus,
-    SinceReview,
 )
 from github_orchestrator.conversation import ConversationManager
 from github_orchestrator.domain import ReviewerPick
@@ -40,12 +39,6 @@ def _ci(facts: Facts | None) -> CiStatus:
     return facts.ci_status
 
 
-def _since_review(state: Facts | None) -> SinceReview | None:
-    if state is None or state.is_author is True:
-        return None
-    return state.since_review
-
-
 def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  last_run: LastRun | None, queue: tuple[QueuedEvent, ...], on_hold: bool,
                  threads: ConversationManager, wrong: WrongBranch | None,
@@ -53,7 +46,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  assign_when_ready: ReviewerPick | None) -> Dashboard:
     counts = threads.counts()
     facts = None if facts is None else _as_sent(facts, threads)
-    since = _since_review(facts)
+    since = None if facts is None or facts.is_author is True else facts.since_review
     return Dashboard(
         pr=config.pr,
         worktree=config.worktree,
