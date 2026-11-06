@@ -19,7 +19,7 @@ from github_orchestrator.change_detection import (
 from github_orchestrator.conversation import ConversationManager, ThreadActivity
 from github_orchestrator.domain import LocalClock, Pr
 from github_orchestrator.notifications import PrStatus, Runs
-from github_orchestrator.pr_event_queue import Intake, Launching, Response
+from github_orchestrator.pr_event_queue import Intake, Response
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._next_move import reviewed_before
 from github_orchestrator.pr_processes import AgentChanges
@@ -27,6 +27,8 @@ from github_orchestrator.pr_summaries import PrSummaries
 from github_orchestrator.working_copies import WorkingCopies
 
 log = logging.getLogger(__name__)
+
+Launch = CiFailed | BecameUnmergeable | ReviewRequested
 
 
 def exit_word(exit_code: int | None) -> str:
@@ -85,7 +87,7 @@ def _status_note(event: Noted) -> str | None:
     return None
 
 
-def _launch_note(pr: Pr, launch: Launching) -> str:
+def _launch_note(pr: Pr, launch: Launch) -> str:
     match launch:
         case CiFailed():
             return f"CI check '{launch.check}' failed. See diagnosis output below."
@@ -184,7 +186,7 @@ class EventCarryOut:
         self._runs.agent_skipped(self._pr, kind)
         self._note(_disabled_note(kind))
 
-    def _launch(self, launch: Launching, *, push: bool,
+    def _launch(self, launch: Launch, *, push: bool,
                 conversations: ConversationManager) -> Run | str:
         pr, worktree, kind = self._pr, self._worktree, launch.kind
         match launch:

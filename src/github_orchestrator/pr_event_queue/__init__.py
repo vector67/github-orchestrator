@@ -1,6 +1,5 @@
 from github_orchestrator.pr_event_queue.interface import (
     Intake,
-    Launching,
     Queues,
     Response,
     Taken,
@@ -9,7 +8,6 @@ from github_orchestrator.pr_event_queue.interface import (
 
 __all__ = [
     "Intake",
-    "Launching",
     "Queues",
     "Response",
     "Taken",

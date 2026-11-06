@@ -403,9 +403,11 @@ recovered, and which events start a run for which role.
   refresh, start a verdict run, tear down, notify, note in the changes pane).
   It counts what it would have held per PR, for the watcher's would-placement.
   It is not exported: wiring builds it, as it builds the disk queue.
-- Exports: 5, within the budget: the three roles, `Response` and
-  `Launching`, the union of the three events that can start a run, which
-  the PR manager's carry-out types its launches by.
+- Exports: 5, within the budget: the three roles, `Response` and `Taken`,
+  the event the PR manager is working on. `Launching`, the union of the
+  three events that can start a run, left: the PR manager's carry-out
+  spells its own union of the three events it matches, and mypy holds it
+  to `Response.launch`.
 
 ### Git working copies
 

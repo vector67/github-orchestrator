@@ -306,7 +306,7 @@ PACKAGES = {
     ),
     "pr_event_queue": Package(
         pinned=frozenset({
-            "Intake", "Launching", "Queues", "Response", "Taken", "Worklist",
+            "Intake", "Queues", "Response", "Taken", "Worklist",
         }),
         may_import=("notifications", "desktop", "change_detection", "conversation"),
         role="the PrEventQueue holds change detection's events and review threads' thread activity, decides the response and the PR manager carries it out, so it never reaches agent runs or the manager",
