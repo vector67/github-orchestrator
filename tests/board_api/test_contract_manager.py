@@ -8,6 +8,8 @@ from github_orchestrator.board_api.interface import (
     DismissUntil,
     ManagerRefusal,
     ManagerStanding,
+    Notice,
+    NoticeCode,
     QueuedEvent,
     ResetToOrigin,
     UnpushedCommit,
@@ -28,7 +30,7 @@ WORKING = replace(
     last_run_event="ci-failed",
     last_run_exit_code=1, last_run_ended_at="2026-09-26T21:40:00+00:00", threads_queued=1,
     threads_live=frozenset({"PRRT_one", "PRRT_two"}), threads_proposed=4, threads_drafts=0, needs_rebase=True,
-    notice="an agent is already running")
+    notice=Notice(NoticeCode.CLOSE_REFUSED, "gh: Not Found (HTTP 404)"))
 
 FROZEN = replace(IDLE, frozen_on="PROJ-31-split-2", expected_branch="PROJ-34-remove-changes",
                  seconds_left=2280.0, run_working=True, release_requested=False)
@@ -68,7 +70,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
         },
         "frozen": None,
         "undismiss_command": "github-orchestrator undismiss --repo o/n 1",
-        "notice": "an agent is already running",
+        "notice": {"code": "close-refused", "detail": "gh: Not Found (HTTP 404)"},
         "standing": "answering",
         "facts": {"polled_at": "2026-06-10T10:30:00Z", "ended": False, "is_author": True,
                   "changes_requested_by": [], "pending_reviewers": ["carol"],

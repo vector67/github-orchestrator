@@ -13,6 +13,7 @@ from github_orchestrator.agent_runs.fake import (
     Rereviewing,
     Reviewing,
 )
+from github_orchestrator.board_api.interface import NoticeCode
 from github_orchestrator.change_detection.fake import (
     MergeableReason,
     ReviewDecision,
@@ -149,7 +150,9 @@ def test_a_fix_run_claude_will_not_start_for_fails_its_event_and_says_why(
     assert manager.agent_runs.started == []
     assert [entry.event.kind for entry in manager.event_queue.failed_since(
         datetime(1970, 1, 1, tzinfo=timezone.utc))] == ["ci-failed"]
-    assert "could not start the agent" in manager.board.panel.dashboard().notice
+    notice = manager.board.panel.dashboard().notice
+    assert notice is not None and notice.code is NoticeCode.AGENT_WONT_START
+    assert "No such file or directory" in (notice.detail or "")
 
 
 def test_nothing_is_taken_from_the_queue_while_the_prs_role_is_unknown(settings, tmp_path):

@@ -5,6 +5,7 @@ from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
+    Notice,
     QueuedEvent,
     ResetToOrigin,
     Shelves,
@@ -73,7 +74,7 @@ class DashboardSource:
             manager=self._told.held().managers.get(pr))
 
     def drawn(self, config: ManagerConfig, threads: ConversationManager, *,
-              wrong: WrongBranch | None, run: Run | None, notice: str | None) -> Dashboard:
+              wrong: WrongBranch | None, run: Run | None, notice: Notice | None) -> Dashboard:
         pr = config.pr
         facts = self._change_detection.facts(pr)
         queued = self._worklist.waiting(pr).count

@@ -209,7 +209,7 @@ export interface Dashboard {
   system: DashboardSystem;
   frozen: FrozenWorktree | null;
   undismiss_command: string;
-  notice: string | null;
+  notice: Notice | null;
   standing: ManagerStanding;
   facts: PrFacts | null;
   manager: ManagerFlags;
@@ -571,6 +571,13 @@ export interface NewestRelease {
   checked_at: string;
   newer: boolean;
 }
+
+export interface Notice {
+  code: NoticeCode;
+  detail: string | null;
+}
+
+export type NoticeCode = 'worktree-frozen' | 'agents-disabled' | 'agent-running' | 'agent-wont-start' | 'not-your-draft' | 'not-yours-to-assign' | 'close-refused' | 'mark-ready-refused' | 'assign-reviewers-refused';
 
 export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
 

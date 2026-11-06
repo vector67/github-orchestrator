@@ -1,11 +1,16 @@
 import json
 import logging
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.board_api.interface import Dashboard, ManagerStanding
+from github_orchestrator.board_api.interface import (
+    Dashboard,
+    ManagerStanding,
+    Notice,
+    NoticeCode,
+)
 from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._refusals import DOWN, Conditions
@@ -33,7 +38,7 @@ class StatusFiles:
         status = {
             "written_at": now.strftime(STAMP),
             "active_run": _active_run(dashboard, now),
-            "notice": dashboard.notice,
+            "notice": None if dashboard.notice is None else asdict(dashboard.notice),
             "threads_live": sorted(dashboard.threads_live),
             "frozen_on": dashboard.frozen_on,
             "expected_branch": dashboard.expected_branch,
@@ -118,6 +123,12 @@ def _later(one: str | None, other: str | None) -> str | None:
     return max((stamp for stamp in (one, other) if stamp is not None), default=None)
 
 
+def _notice(notice: dict[str, Any] | None) -> Notice | None:
+    if notice is None:
+        return None
+    return Notice(NoticeCode(notice["code"]), notice["detail"])
+
+
 def _over(dashboard: Dashboard, status: dict[str, Any], now: datetime) -> Dashboard:
     run = status["active_run"]
     return replace(
@@ -126,7 +137,7 @@ def _over(dashboard: Dashboard, status: dict[str, Any], now: datetime) -> Dashbo
         working_on=None if run is None else run["event"],
         elapsed_seconds=None if run is None else _seconds_since(now, run["started_at"]),
         silent_seconds=None if run is None else _seconds_since(now, run["last_output_at"]),
-        notice=status["notice"],
+        notice=_notice(status["notice"]),
         threads_live=frozenset(status["threads_live"]),
         frozen_on=status["frozen_on"],
         expected_branch=status["expected_branch"],

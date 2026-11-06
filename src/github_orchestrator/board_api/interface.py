@@ -51,6 +51,24 @@ class ManagerRefusal(StrEnum):
     AGENT_RUNNING = "agent-running"
 
 
+class NoticeCode(StrEnum):
+    WORKTREE_FROZEN = "worktree-frozen"
+    AGENTS_DISABLED = "agents-disabled"
+    AGENT_RUNNING = "agent-running"
+    AGENT_WONT_START = "agent-wont-start"
+    NOT_YOUR_DRAFT = "not-your-draft"
+    NOT_YOURS_TO_ASSIGN = "not-yours-to-assign"
+    CLOSE_REFUSED = "close-refused"
+    MARK_READY_REFUSED = "mark-ready-refused"
+    ASSIGN_REVIEWERS_REFUSED = "assign-reviewers-refused"
+
+
+@dataclass(frozen=True)
+class Notice:
+    code: NoticeCode
+    detail: str | None = None
+
+
 @dataclass(frozen=True)
 class BaseStanding:
     behind_by: int
@@ -174,7 +192,7 @@ class Dashboard:
     unreadable_threads: tuple[str, ...]
     threads_listed_at: str | None
     undismiss_command: str
-    notice: str | None
+    notice: Notice | None
     standing: ManagerStanding
 
 

@@ -26,6 +26,7 @@ import type {
   ManagerChanges,
   ManagerFlags,
   ManagerStanding,
+  Notice,
   MentionableList,
   Mentions,
   Operation,
@@ -189,7 +190,7 @@ export interface Drawn {
   system: DashboardSystem;
   frozen: FrozenWorktree | null;
   undismiss_command: string;
-  notice: string | null;
+  notice: Notice | null;
   standing: ManagerStanding;
   drawn_at: string | null;
 }
@@ -357,8 +358,10 @@ function unshelved(): HeldPullRequests | null {
     SHELVED_WALL,
     (kept) => {
       const held = kept as HeldPullRequests | ShelvedBeforeManyRepos;
-      const threaded = held.pull_requests.every((row) =>
-        Array.isArray(row.dashboard.threads as unknown),
+      const threaded = held.pull_requests.every(
+        (row) =>
+          Array.isArray(row.dashboard.threads as unknown) &&
+          typeof (row.dashboard.notice as unknown) !== 'string',
       );
       if (!threaded) return null;
       const { watching } = held;

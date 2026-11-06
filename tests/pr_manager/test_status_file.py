@@ -158,7 +158,7 @@ def test_the_notice_a_refused_command_leaves_is_written(settings, tmp_path):
     _manager(settings, lambda: (board.panel.carry_on(), board.panel.start_review()),
              worktree=tmp_path, board=board, agent_runs=agent_runs, is_author=True).run()
 
-    assert _status(settings)["notice"] == "an agent is already running"
+    assert _status(settings)["notice"] == {"code": "agent-running", "detail": None}
 
 
 def test_a_status_file_that_cannot_be_written_leaves_the_tick_to_do_its_work(settings, tmp_path):

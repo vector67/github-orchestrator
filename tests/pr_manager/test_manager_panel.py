@@ -10,7 +10,12 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
-from github_orchestrator.board_api.interface import DismissUntil, ManagerRefusal
+from github_orchestrator.board_api.interface import (
+    DismissUntil,
+    ManagerRefusal,
+    Notice,
+    NoticeCode,
+)
 from github_orchestrator.domain import ReviewerPick
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
@@ -351,7 +356,7 @@ def test_a_start_review_handed_over_beside_a_carry_on_is_refused_when_the_manage
                  agent_runs=runs)
     assert answers == [None, None]
     assert [run.work for run in runs.started] == [CarryingOn(yours=False)]
-    assert seen == ["an agent is already running"]
+    assert seen == [Notice(NoticeCode.AGENT_RUNNING)]
 
 
 def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings, tmp_path):
@@ -395,7 +400,8 @@ def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.close(),
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
-    assert notice is not None and "Not Found" in notice
+    assert notice is not None and notice.code is NoticeCode.CLOSE_REFUSED
+    assert "Not Found" in (notice.detail or "")
 
 
 def test_mark_ready_from_the_board_marks_the_draft_ready_on_github(settings, tmp_path):
@@ -421,7 +427,7 @@ def test_mark_ready_is_refused_for_anything_but_your_own_draft(settings, tmp_pat
                 lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
                 is_author=is_author, board=board, github=github)
     assert github.pr_state(THE_PR).draft is True
-    assert seen == ["mark ready is only for your own draft"]
+    assert seen == [Notice(NoticeCode.NOT_YOUR_DRAFT)]
 
 
 def test_a_mark_ready_github_refuses_says_why_in_the_notice(settings, tmp_path):
@@ -431,7 +437,8 @@ def test_a_mark_ready_github_refuses_says_why_in_the_notice(settings, tmp_path):
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.mark_ready(),
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
-    assert notice is not None and "Not Found" in notice
+    assert notice is not None and notice.code is NoticeCode.MARK_READY_REFUSED
+    assert "Not Found" in (notice.detail or "")
 
 
 def test_reviewers_assigned_from_the_board_are_asked_on_github_with_the_detailed_one_named(
@@ -471,7 +478,7 @@ def test_assigning_reviewers_is_refused_on_someone_elses_pr(settings, tmp_path):
                 lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
                 is_author=False, board=board, github=github)
     assert github.pr_state(THE_PR).pending_reviewers == ()
-    assert seen == ["assigning reviewers is only for your own pull request"]
+    assert seen == [Notice(NoticeCode.NOT_YOURS_TO_ASSIGN)]
 
 
 def test_assigning_reviewers_github_refuses_says_why_in_the_notice(settings, tmp_path):
@@ -482,7 +489,8 @@ def test_assigning_reviewers_github_refuses_says_why_in_the_notice(settings, tmp
                           lambda: board.panel.assign_reviewers(("anna",), None),
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
-    assert notice is not None and "Not Found" in notice
+    assert notice is not None and notice.code is NoticeCode.ASSIGN_REVIEWERS_REFUSED
+    assert "Not Found" in (notice.detail or "")
 
 
 def test_reviewers_picked_for_when_a_draft_is_ready_wait_on_disk_and_show_on_its_dashboard(
@@ -530,7 +538,8 @@ def test_a_waiting_pick_github_refuses_says_why_in_the_notice_and_is_forgotten(
     _on_the_browser_front(settings, tmp_path,
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
-    assert notice is not None and "Not Found" in notice
+    assert notice is not None and notice.code is NoticeCode.ASSIGN_REVIEWERS_REFUSED
+    assert "Not Found" in (notice.detail or "")
     assert disk_picks(settings.data_dir).saved(THE_PR) is None
 
 
@@ -542,7 +551,7 @@ def test_reviewers_cannot_wait_for_someone_elses_pr_to_be_ready(settings, tmp_pa
                 lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
                 is_author=False, board=board)
     assert disk_picks(settings.data_dir).saved(THE_PR) is None
-    assert seen == ["assigning reviewers is only for your own pull request"]
+    assert seen == [Notice(NoticeCode.NOT_YOURS_TO_ASSIGN)]
 
 
 def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_branch(

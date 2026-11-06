@@ -140,6 +140,31 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(rows(), ['o/r#8']);
   });
 
+  test('a wall shelved while notices were sentences does not stop the hub opening', async function (assert) {
+    const shelved = heldPr();
+    localStorage.setItem(
+      'hub-pull-requests',
+      JSON.stringify({
+        watching: ['o/r'],
+        groups: [],
+        pull_requests: [
+          {
+            ...shelved,
+            dashboard: {
+              ...shelved.dashboard,
+              notice: 'an agent is already running',
+            },
+          },
+        ],
+      }),
+    );
+    onTheHub(heldPr({ number: 8 }));
+
+    await visit('/');
+
+    assert.deepEqual(rows(), ['o/r#8']);
+  });
+
   test('the hub opens on the wall, its groups in the feed’s order and each row led by its verb', async function (assert) {
     onTheHub(
       heldPr(),

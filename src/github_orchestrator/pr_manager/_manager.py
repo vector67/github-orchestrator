@@ -3,6 +3,7 @@ from threading import Thread
 
 from github_orchestrator.agent_runs import History, LastRun, Run, ThreadWork
 from github_orchestrator.board_api import Dashboard
+from github_orchestrator.board_api.interface import Notice, NoticeCode
 from github_orchestrator.change_detection import ChangeDetection, CiFailed, Facts
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -125,7 +126,7 @@ class ManagerLoop:
             return True
         if isinstance(run, str):
             log.error("loop %s: %s for %s", pr, run, kind)
-            self._commands.notify(run)
+            self._commands.notify(Notice(NoticeCode.AGENT_WONT_START, run))
             taken.failed()
             return True
         if run is not None:
