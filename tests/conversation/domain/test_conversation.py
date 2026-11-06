@@ -77,10 +77,7 @@ class LaterSummaries(FakeAgentRuns):
 
 
 class ResolveRefused(FakeGitHub):
-    def resolve_thread(self, key):
-        raise GhError("gh: 403")
-
-    def unresolve_thread(self, key):
+    def set_resolved(self, key, resolved):
         raise GhError("gh: 403")
 
 

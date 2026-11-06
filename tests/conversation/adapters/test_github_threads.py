@@ -14,12 +14,17 @@ from github_orchestrator.domain import Location, Side
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
-    ReactionContent,
     ReviewState,
     Thread,
     ThreadComment,
 )
-from github_orchestrator.github.fake import FAKE_NOW, FakeGitHub, Reaction, ThreadAnchor
+from github_orchestrator.github.fake import (
+    FAKE_NOW,
+    FakeGitHub,
+    Reaction,
+    ReactionContent,
+    ThreadAnchor,
+)
 from tests.builders import a_pr
 from tests.conversation.support import (
     PR,

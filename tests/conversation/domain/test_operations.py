@@ -62,10 +62,7 @@ class RefusingGitHub(FakeGitHub):
     def delete_comment(self, pr, kind: str, comment_id: int) -> None:
         raise GhError("HTTP 403")
 
-    def resolve_thread(self, key: str) -> None:
-        raise GhError("HTTP 403")
-
-    def unresolve_thread(self, key: str) -> None:
+    def set_resolved(self, key: str, resolved: bool) -> None:
         raise GhError("HTTP 403")
 
 

@@ -1,7 +1,6 @@
 from dataclasses import replace
 
-from github_orchestrator.github import ReactionContent
-from github_orchestrator.github.fake import Reaction
+from github_orchestrator.github.fake import Reaction, ReactionContent
 from tests.board_api.support import (
     BODY,
     COMMENT_ID,

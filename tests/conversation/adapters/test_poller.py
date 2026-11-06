@@ -7,7 +7,6 @@ from github_orchestrator.agent_runs.fake import HeldVerdicts
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
-    ReactionContent,
     Thread,
     ThreadComment,
 )
@@ -217,7 +216,7 @@ def test_a_dry_run_poll_moves_no_cursor(settings):
 def test_a_stale_thread_alone_is_thread_activity(settings):
     built = _world(settings, _thread())
     _heard(built)
-    built.github.resolve_thread("PRRT_one")
+    built.github.set_resolved("PRRT_one", True)
 
     polled = _heard(built)
 
@@ -228,7 +227,7 @@ def test_a_stale_thread_alone_is_thread_activity(settings):
 def test_a_reaction_on_github_reaches_the_record_without_being_new_work(settings):
     built = _world(settings, _thread(comments=[replace(_comment(1), node_id="PRRC_1")]))
     _heard(built)
-    built.github.add_reaction("PRRC_1", ReactionContent.HEART)
+    built.github.set_reaction("PRRC_1", "HEART", mine=True)
 
     polled = _heard(built)
 
@@ -281,7 +280,7 @@ def test_a_resolve_on_github_reaches_my_prs_record_while_claude_is_disabled(sett
     built = _world(settings, _thread())
     threads = built.threads(is_author=True, agents_enabled=False)
     hear(threads)
-    built.github.resolve_thread("PRRT_one")
+    built.github.set_resolved("PRRT_one", True)
 
     hear(threads)
 
@@ -314,7 +313,7 @@ def _recorded(settings, root, *, is_author=None):
 
 def _resolved(settings):
     built = _recorded(settings, _comment(1))
-    built.github.resolve_thread("PRRT_one")
+    built.github.set_resolved("PRRT_one", True)
     hear(built.threads())
     return built
 

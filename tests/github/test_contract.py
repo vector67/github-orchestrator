@@ -7,7 +7,6 @@ from github_orchestrator.domain import Location, Repo, Side
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
-    ReactionContent,
     ReviewState,
     Thread,
     ThreadComment,
@@ -20,6 +19,7 @@ from github_orchestrator.github.fake import (
     GhError,
     PushEvent,
     Reaction,
+    ReactionContent,
     Relevance,
     Review,
     ThreadAnchor,
@@ -383,10 +383,10 @@ def test_my_reaction_joins_the_others_and_leaves_again(world, github):
         1, node_id="PRRC_one",
         reactions=(Reaction(ReactionContent.ROCKET, 1, mine=False),))))
 
-    github.add_reaction("PRRC_one", ReactionContent.ROCKET)
-    github.add_reaction("PRRC_one", ReactionContent.THUMBS_UP)
+    github.set_reaction("PRRC_one", "ROCKET", mine=True)
+    github.set_reaction("PRRC_one", "THUMBS_UP", mine=True)
     joined = _thread(github, "PRRT_one").comments[0].reactions
-    github.remove_reaction("PRRC_one", ReactionContent.ROCKET)
+    github.set_reaction("PRRC_one", "ROCKET", mine=False)
     left = _thread(github, "PRRT_one").comments[0].reactions
 
     assert joined == (Reaction(ReactionContent.THUMBS_UP, 1, mine=True),
@@ -399,7 +399,7 @@ def test_a_reaction_on_a_comment_github_does_not_know_is_an_error(world, github)
     world.add_pr(a_pr(7, REPO), _state())
 
     with pytest.raises(GhError):
-        github.add_reaction("PRRC_gone", ReactionContent.HEART)
+        github.set_reaction("PRRC_gone", "HEART", mine=True)
 
 
 def test_an_outdated_range_keeps_what_it_was_written_against(world, github):
@@ -477,9 +477,9 @@ def test_a_thread_is_resolved_by_me_and_unresolved_again(world, github):
     world.add_pr(a_pr(7, REPO), _state())
     world.add_thread(a_pr(7, REPO), _review_thread("PRRT_one"))
 
-    github.resolve_thread("PRRT_one")
+    github.set_resolved("PRRT_one", True)
     resolved = _thread(github, "PRRT_one")
-    github.unresolve_thread("PRRT_one")
+    github.set_resolved("PRRT_one", False)
     unresolved = _thread(github, "PRRT_one")
 
     assert (resolved.is_resolved, resolved.resolved_by) == (True, ME)
@@ -488,9 +488,9 @@ def test_a_thread_is_resolved_by_me_and_unresolved_again(world, github):
 
 def test_resolving_a_thread_github_does_not_know_is_an_error(github):
     with pytest.raises(GhError):
-        github.resolve_thread("PRRT_gone")
+        github.set_resolved("PRRT_gone", True)
     with pytest.raises(GhError):
-        github.unresolve_thread("PRRT_gone")
+        github.set_resolved("PRRT_gone", False)
 
 
 def test_a_thumbs_up_lands_on_the_comment_it_is_given(world, github):

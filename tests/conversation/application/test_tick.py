@@ -556,7 +556,7 @@ def test_a_stand_in_for_an_unreadable_record_never_stops_the_pr_scheduling(setti
 def test_a_queued_fix_of_a_conversation_that_is_not_open_is_never_started(settings):
     agent_runs = _agent_runs()
     here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
-    here.github.resolve_thread("PRRT_1")
+    here.github.set_resolved("PRRT_1", True)
     hear(threads)
     here.github.delete_comment(THE_PR, here.github.thread("PRRT_2").kind, 102)
     lost(threads, "PRRT_2")

@@ -387,10 +387,10 @@ def _unresolved_ticked(settings, tmp_path, polled_at):
     threads = fake.of(THE_PR)
     _on_github(fake.github, "PRRT_one", said(1, "rename this", author=fake.github.account))
     hear(threads)
-    fake.github.resolve_thread("PRRT_one")
+    fake.github.set_resolved("PRRT_one", True)
     moment.iso = "2026-09-21T09:30:00Z"
     _polled(threads)
-    fake.github.unresolve_thread("PRRT_one")
+    fake.github.set_resolved("PRRT_one", False)
 
     def resolved_by_the_board():
         moment.iso = RESOLVED_AT
@@ -400,7 +400,7 @@ def _unresolved_ticked(settings, tmp_path, polled_at):
 
     if polled_at > RESOLVED_AT:
         resolved_by_the_board()
-        fake.github.unresolve_thread("PRRT_one")
+        fake.github.set_resolved("PRRT_one", False)
     moment.iso = polled_at
     found = _polled(threads)
     if polled_at < RESOLVED_AT:

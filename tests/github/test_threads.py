@@ -311,8 +311,8 @@ def test_a_thread_write_github_refuses_reaches_the_caller(write):
     gh = ScriptedGh().answer("graphql", Failure("gh: viewer cannot resolve"))
     github = real_github(gh=gh)
     call = {"reply_to_thread": lambda: github.reply_to_thread("PRRT_one", "on it"),
-            "resolve_thread": lambda: github.resolve_thread("PRRT_one"),
-            "unresolve_thread": lambda: github.unresolve_thread("PRRT_one")}[write]
+            "resolve": lambda: github.set_resolved("PRRT_one", True),
+            "unresolve": lambda: github.set_resolved("PRRT_one", False)}[write]
 
     with pytest.raises(GhError, match="viewer cannot resolve"):
         call()

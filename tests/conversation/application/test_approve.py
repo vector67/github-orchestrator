@@ -164,10 +164,10 @@ class ResolveForbidden(FakeGitHub):
         super().__init__()
         self.refusing = True
 
-    def resolve_thread(self, key: str) -> None:
+    def set_resolved(self, key: str, resolved: bool) -> None:
         if self.refusing:
             raise GhError("gh: Forbidden (HTTP 403)")
-        super().resolve_thread(key)
+        super().set_resolved(key, resolved)
 
 
 class DeleteForbidden(FakeGitHub):
@@ -180,11 +180,11 @@ class AnsweredBeforeResolved(FakeGitHub):
         super().__init__()
         self.answers_at_resolve: int | None = None
 
-    def resolve_thread(self, key: str) -> None:
+    def set_resolved(self, key: str, resolved: bool) -> None:
         thread = self.thread(key)
         assert thread is not None
         self.answers_at_resolve = len(thread.comments) - 1
-        super().resolve_thread(key)
+        super().set_resolved(key, resolved)
 
 
 def test_an_approve_lands_the_fix_pushes_it_and_answers_the_comment(settings):

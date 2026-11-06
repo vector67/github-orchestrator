@@ -279,7 +279,7 @@ PACKAGES = {
     "github": Package(
         pinned=frozenset({
             "Access", "CommentKind", "PullRequestState", "PullRequests",
-            "ReactionContent", "ReviewState", "Reviews", "Thread", "ThreadComment",
+            "ReviewState", "Reviews", "Thread", "ThreadComment",
             "Threads", "Verdict",
         }),
         may_import=(),

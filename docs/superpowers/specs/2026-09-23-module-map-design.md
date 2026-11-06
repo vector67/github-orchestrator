@@ -280,6 +280,14 @@ wire vocabulary, and GitHub's own rules.
   (`mine` and `review_requests` answer PRs, and the watcher takes a new
   review request's title and url from the poll), `DraftComment` became plain
   parameters, and `PushEvent`, `Review` and `ThreadAnchor` are only read.
+- **Done** (the commit that records this): reactions on any comment made
+  `ReactionContent` an eleventh export and `Threads` twelve methods.
+  `set_reaction(node_id, content, mine=)` takes the reaction's word and
+  turns it into `ReactionContent` inside, where `add_reaction` and
+  `remove_reaction` took the enum, and `set_resolved(key, resolved)`
+  replaces `resolve_thread` and `unresolve_thread`. `ReactionContent` is
+  only read now (`Reaction.content`), so it left: ten exports, and
+  `Threads` has ten methods.
 
 ### PR change detection
 

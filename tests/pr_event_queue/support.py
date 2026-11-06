@@ -135,7 +135,7 @@ def activity(*keys: str, stale: tuple[str, ...] = (), cutoff: str = CUTOFF) -> T
         on_github(conversation_managers.github, key, said(1, "please fix"), pr=POLLED_PR)
     conversations.poll(PullRequestState()).commit()
     for key in stale:
-        conversation_managers.github.resolve_thread(key)
+        conversation_managers.github.set_resolved(key, True)
     for key in keys:
         on_github(conversation_managers.github, key, said(1, "please fix"), pr=POLLED_PR)
     found = conversations.poll(PullRequestState()).activity

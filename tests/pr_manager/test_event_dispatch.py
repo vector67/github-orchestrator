@@ -429,7 +429,7 @@ def test_the_dashboard_counts_queued_working_and_ready_threads(settings, tmp_pat
                            worktree=tmp_path, agent_runs=runs, working_copies=_in_a_repo(tmp_path))
     for key in ("PRRT_ready", "PRRT_gone"):
         propose(manager, _heard(manager, key), key, pr=THE_PR)
-    manager.github.resolve_thread("PRRT_gone")
+    manager.github.set_resolved("PRRT_gone", True)
     _heard(manager, "PRRT_queued")
     _heard(manager, "PRRT_waiting")
     runs.script(Outcome(finishes=False))

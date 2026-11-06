@@ -14,8 +14,8 @@ from github_orchestrator.conversation import (
 )
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Location, Pr, Side
-from github_orchestrator.github import CommentKind, PullRequestState, ReactionContent
-from github_orchestrator.github.fake import FakeGitHub, Reaction
+from github_orchestrator.github import CommentKind, PullRequestState
+from github_orchestrator.github.fake import FakeGitHub, Reaction, ReactionContent
 from github_orchestrator.notifications.fake import FakeNotifications, FixReady, Posted
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.working_copies.fake import FakeWorkingCopies

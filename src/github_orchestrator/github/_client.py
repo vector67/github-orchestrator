@@ -198,20 +198,20 @@ class GhCliGitHub:
     def comment_on_pr(self, pr: Pr, body: str) -> PostedComment:
         return _threads.comment_on_pr(self._gh, pr, body)
 
-    def resolve_thread(self, key: str) -> None:
-        _threads.resolve_thread(self._gh, key)
-
-    def unresolve_thread(self, key: str) -> None:
-        _threads.unresolve_thread(self._gh, key)
+    def set_resolved(self, key: str, resolved: bool) -> None:
+        if resolved:
+            _threads.resolve_thread(self._gh, key)
+        else:
+            _threads.unresolve_thread(self._gh, key)
 
     def react(self, repo: Repo, comment_id: int) -> None:
         _threads.react(self._gh, repo, comment_id)
 
-    def add_reaction(self, node_id: str, content: ReactionContent) -> None:
-        _threads.add_reaction(self._gh, node_id, content)
-
-    def remove_reaction(self, node_id: str, content: ReactionContent) -> None:
-        _threads.remove_reaction(self._gh, node_id, content)
+    def set_reaction(self, node_id: str, content: str, *, mine: bool) -> None:
+        if mine:
+            _threads.add_reaction(self._gh, node_id, ReactionContent(content))
+        else:
+            _threads.remove_reaction(self._gh, node_id, ReactionContent(content))
 
     def post_review_comment(self, pr: Pr, head: str, location: Location,
                             body: str) -> ThreadComment:

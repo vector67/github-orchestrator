@@ -239,7 +239,7 @@ def test_a_refresh_finds_the_record_that_carries_the_node_id_too(settings):
     here, threads = _reviewing(settings)
     draft = _posted_draft(threads)
     hear(threads)
-    here.github.resolve_thread(draft.github_node_id)
+    here.github.set_resolved(draft.github_node_id, True)
 
     assert hear(threads).refreshed == (draft.github_node_id,)
 
@@ -272,7 +272,7 @@ def test_a_thread_finds_the_posted_draft_github_had_not_listed_by_its_comment(se
 def test_a_refresh_finds_the_posted_draft_by_its_comment_too(settings):
     here, threads, draft, node = _posted_before_github_listed_it(settings)
     hear(threads)
-    here.github.resolve_thread(node)
+    here.github.set_resolved(node, True)
 
     hear(threads)
 
@@ -329,7 +329,7 @@ def test_a_poll_carries_what_github_said_about_the_thread_and_when_it_said_it(se
     here = _world(settings, clock=at("2026-08-30T10:00:10Z"))
     threads = here.threads()
     _heard(here, threads)
-    here.github.resolve_thread(KEY)
+    here.github.set_resolved(KEY, True)
 
     hear(threads)
 
@@ -499,7 +499,7 @@ def test_a_refresh_moves_no_status_and_spends_no_attempt(settings):
     threads = here.threads()
     landed = _landed(here, threads)
     agent_runs.asked.clear()
-    here.github.unresolve_thread(KEY)
+    here.github.set_resolved(KEY, False)
 
     assert hear(threads).refreshed == (KEY,)
 

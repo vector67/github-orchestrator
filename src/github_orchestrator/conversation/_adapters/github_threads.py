@@ -25,7 +25,6 @@ from github_orchestrator.domain import Location, Pr, Repo, Sha
 from github_orchestrator.github import (
     CommentKind,
     PullRequests,
-    ReactionContent,
     Reviews,
     Thread,
     ThreadComment,
@@ -157,18 +156,17 @@ class GitHubThreads:
         return PostedReply(_posted_comment(on_pr.comment), on_pr.key)
 
     def resolve_thread(self, conversation: Conversation) -> None:
-        self._github.resolve_thread(_thread_id(conversation))
+        self._github.set_resolved(_thread_id(conversation), True)
 
     def unresolve_thread(self, conversation: Conversation) -> None:
-        self._github.unresolve_thread(_thread_id(conversation))
+        self._github.set_resolved(_thread_id(conversation), False)
 
     def react(self, conversation: Conversation, comment_id: int) -> None:
         self._github.react(self._pr.repo, comment_id)
 
     def set_reaction(self, node_id: str, content: str, mine: bool) -> str | None:
-        write = self._github.add_reaction if mine else self._github.remove_reaction
         try:
-            write(node_id, ReactionContent(content))
+            self._github.set_reaction(node_id, content, mine=mine)
         except RuntimeError as error:
             return str(error)
         return None

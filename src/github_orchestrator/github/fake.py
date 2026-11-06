@@ -16,7 +16,6 @@ from github_orchestrator.github.interface import (
     Listed,
     PostedComment,
     PullRequestState,
-    ReactionContent,
     Relevance,
     ReviewComment,
     ReviewState,
@@ -33,6 +32,9 @@ from github_orchestrator.github.interface import (
 )
 from github_orchestrator.github.interface import (
     Reaction as Reaction,
+)
+from github_orchestrator.github.interface import (
+    ReactionContent as ReactionContent,
 )
 from github_orchestrator.github.interface import (
     Review as Review,
@@ -325,13 +327,10 @@ class FakeGitHub:
                                      anchor=ThreadAnchor()))
         return PostedComment(comment, key)
 
-    def resolve_thread(self, key: str) -> None:
+    def set_resolved(self, key: str, resolved: bool) -> None:
         record, thread = self._review_thread(key)
-        self._put(record, replace(thread, is_resolved=True, resolved_by=self.account))
-
-    def unresolve_thread(self, key: str) -> None:
-        record, thread = self._review_thread(key)
-        self._put(record, replace(thread, is_resolved=False, resolved_by=None))
+        self._put(record, replace(thread, is_resolved=resolved,
+                                  resolved_by=self.account if resolved else None))
 
     def react(self, repo: Repo, comment_id: int) -> None:
         if not self._holds(repo, None, CommentKind.REVIEW, comment_id):
@@ -339,11 +338,8 @@ class FakeGitHub:
                           f"reactions failed (exit 1): gh: Not Found (HTTP 404)")
         self.reactions.setdefault(comment_id, []).append("+1")
 
-    def add_reaction(self, node_id: str, content: ReactionContent) -> None:
-        self._react_by_node(node_id, content, mine=True)
-
-    def remove_reaction(self, node_id: str, content: ReactionContent) -> None:
-        self._react_by_node(node_id, content, mine=False)
+    def set_reaction(self, node_id: str, content: str, *, mine: bool) -> None:
+        self._react_by_node(node_id, ReactionContent(content), mine=mine)
 
     def _react_by_node(self, node_id: str, content: ReactionContent, *, mine: bool) -> None:
         for record in self.prs.values():

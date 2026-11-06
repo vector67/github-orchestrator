@@ -9,12 +9,17 @@ from typing import Any
 from github_orchestrator.domain import Location, Repo, Side
 from github_orchestrator.github import (
     CommentKind,
-    ReactionContent,
     Thread,
     ThreadComment,
     Verdict,
 )
-from github_orchestrator.github.fake import SEARCH_REFUSED, FakeGitHub, GhError, Whose
+from github_orchestrator.github.fake import (
+    SEARCH_REFUSED,
+    FakeGitHub,
+    GhError,
+    ReactionContent,
+    Whose,
+)
 from tests.builders import a_pr
 
 NOT_FOUND = "gh: Not Found (HTTP 404)"
@@ -552,10 +557,10 @@ class _World:
         if "addReaction" in query or "removeReaction" in query:
             return self._reaction(query, variables)
         if "unresolveReviewThread" in query:
-            return self._mutation(lambda: self.world.unresolve_thread(variables["threadId"]),
+            return self._mutation(lambda: self.world.set_resolved(variables["threadId"], False),
                                   "unresolveReviewThread")
         if "resolveReviewThread" in query:
-            return self._mutation(lambda: self.world.resolve_thread(variables["threadId"]),
+            return self._mutation(lambda: self.world.set_resolved(variables["threadId"], True),
                                   "resolveReviewThread")
         if "addPullRequestReviewThreadReply" in query:
             try:
@@ -590,9 +595,9 @@ class _World:
     def _reaction(self, query: str, variables: dict[str, Any]) -> Any:
         name = "addReaction" if "addReaction" in query else "removeReaction"
         content = ReactionContent(variables["content"])
-        write = self.world.add_reaction if name == "addReaction" else self.world.remove_reaction
         try:
-            write(variables["subjectId"], content)
+            self.world.set_reaction(variables["subjectId"], content.value,
+                                    mine=name == "addReaction")
         except GhError as error:
             return _graphql_failure(error)
         return {"data": {name: {"reaction": {"content": content.value}}}}
