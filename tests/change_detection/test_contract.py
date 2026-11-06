@@ -260,6 +260,17 @@ def test_a_pr_taken_over_then_forgotten_is_still_yours_when_found_again(detectio
     assert detection.facts(THE_PR).is_author is True
 
 
+def test_a_pr_whose_take_over_ended_then_forgotten_is_not_yours_when_found_again(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+    detection.end_take_over(THE_PR)
+    detection.forget(THE_PR)
+
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(THE_PR).is_author is False
+
+
 def test_a_forgotten_pr_is_no_longer_known(detection):
     detection.advance(THE_PR, poll(), set())
 

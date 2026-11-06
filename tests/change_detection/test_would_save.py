@@ -29,3 +29,15 @@ def test_a_close_that_would_be_saved_leaves_the_pr_open(tmp_path):
 
     assert disk_change_detection(tmp_path).closing(THE_PR) is False
     assert said == [f"would save state for {THE_PR}"]
+
+
+def test_ending_a_take_over_that_would_be_saved_keeps_the_pr_yours(tmp_path):
+    disk_change_detection(tmp_path).take_over(THE_PR)
+    said: list[str] = []
+
+    would_save_change_detection(tmp_path, said).end_take_over(THE_PR)
+
+    detection = disk_change_detection(tmp_path)
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    assert detection.facts(THE_PR).is_author is True
+    assert said == [f"would end the take-over of {THE_PR}"]

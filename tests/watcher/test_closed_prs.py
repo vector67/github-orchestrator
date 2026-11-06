@@ -13,7 +13,9 @@ from tests.builders import a_pr
 from tests.change_detection.support import (
     disk_change_detection,
     passing,
+    poll,
     polled_on_disk,
+    pr_state,
     seen,
 )
 from tests.pr_event_queue.support import closed, disk_event_queue, pending_of
@@ -153,6 +155,19 @@ def test_a_closed_pr_dismissed_forever_is_forgotten_not_queued(settings, capsys)
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert disk_change_detection(settings.state_dir).facts(a_pr(57, REPO)) is None
     assert disk_dismissals(settings.data_dir).dismissal(a_pr(57, REPO)) is None
+
+
+def test_a_closed_pr_i_took_over_is_not_mine_once_torn_down_and_found_again(settings, capsys):
+    _polled(settings, REPO, 56)
+    disk_change_detection(settings.state_dir).take_over(a_pr(56, REPO))
+    github = _github(settings, (REPO, 56, "CLOSED", False, False))
+    _cycle(settings, capsys, github)
+    _cycle(settings, capsys, github)
+
+    detection = disk_change_detection(settings.state_dir)
+    detection.advance(a_pr(56, REPO), poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(a_pr(56, REPO)).is_author is False
 
 
 def test_a_pr_waiting_for_teardown_is_reaped_without_queueing_again(settings, capsys):

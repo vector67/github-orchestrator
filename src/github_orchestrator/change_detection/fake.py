@@ -89,6 +89,9 @@ class FakeChangeDetection:
         if snapshot is not None:
             self._held[pr] = json.dumps(taking_over(snapshot))
 
+    def end_take_over(self, pr: Pr) -> None:
+        self._taken_over.discard(pr)
+
     def forget(self, pr: Pr) -> bool:
         self._held.pop(pr, None)
         return True

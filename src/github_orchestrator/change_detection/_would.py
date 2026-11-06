@@ -17,3 +17,6 @@ class WouldSaveChangeDetection(DiskChangeDetection):
 
     def _mark_taken_over(self, pr: Pr) -> None:
         self._say(f"would mark {pr} taken over")
+
+    def end_take_over(self, pr: Pr) -> None:
+        self._say(f"would end the take-over of {pr}")

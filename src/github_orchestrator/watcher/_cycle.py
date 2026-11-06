@@ -346,6 +346,7 @@ class PollingWatcher:
                     log.info("PR no longer relevant: %s", pr)
                 else:
                     log.info("PR closed: %s", pr)
+                    self._change_detection.end_take_over(pr)
 
                 if self._enqueue_unless_dismissed_forever(pr, ending):
                     self._change_detection.close(pr)

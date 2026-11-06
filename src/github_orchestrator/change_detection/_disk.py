@@ -157,6 +157,9 @@ class DiskChangeDetection:
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.touch()
 
+    def end_take_over(self, pr: Pr) -> None:
+        self._taken_over_marker(pr).unlink(missing_ok=True)
+
     def forget(self, pr: Pr) -> bool:
         path = self._file(pr)
         try:
