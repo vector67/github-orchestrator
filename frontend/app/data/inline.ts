@@ -120,12 +120,8 @@ function foldOf(conversation: Conversation, role: Role): Fold | null {
 }
 
 function outdated(conversation: Conversation): boolean {
-  const { path, line, is_outdated } = conversation.anchor;
-  return (
-    conversation.kind === 'review' &&
-    path !== null &&
-    (is_outdated || line === null)
-  );
+  const { path, line } = conversation.anchor;
+  return conversation.kind === 'review' && path !== null && line === null;
 }
 
 export function inlineOf(

@@ -159,6 +159,7 @@ export interface Code {
   from_line: number;
   to_line: number;
   outdated: string | null;
+  in_diff: number;
 }
 
 export interface DraftView {
@@ -526,6 +527,7 @@ function codeOf(conversation: Conversation, context: Context): Code | null {
     from_line: Math.max(1, first - CONTEXT_LINES),
     to_line: last + CONTEXT_LINES,
     outdated: anchor.is_outdated ? `Outdated · at ${short(sha)}` : null,
+    in_diff: anchor.line === null ? first : (anchor.start_line ?? anchor.line),
   };
 }
 

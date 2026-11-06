@@ -1160,6 +1160,26 @@ module('Acceptance | pr diff', function (hooks) {
       assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k3');
     });
 
+    test('an outdated thread GitHub still places on a line of the diff shows under that line', async function (assert) {
+      board().conversations.push(
+        thread({
+          key: 'k6',
+          anchor: anchored(20, {
+            is_outdated: true,
+            original_line: 14,
+            original_commit: 'a1b2c3d',
+          }),
+        }),
+      );
+      board().comments['k6'] = [comment({ body: 'still applies' })];
+      await visit('/pr/o/r/7/diff');
+
+      assert
+        .dom(`${under('+20')} [data-test-card="k6"] [data-test-entry-body]`)
+        .hasText('still applies');
+      assert.dom(`${FILE} [data-test-outdated]`).hasText('2 outdated');
+    });
+
     test('drafts show as cards, open or in the review, each linking to its conversation on the board', async function (assert) {
       await visit('/pr/o/r/7/diff');
 
