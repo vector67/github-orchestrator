@@ -578,22 +578,31 @@ def test_an_incomplete_config_skips_github_and_the_repo(machine, run_cli):
 CONNECTED = "atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - ✔ Connected\n"
 
 
-def _skill(machine):
-    return machine.home / ".claude" / "skills" / "rebase-on-main"
+SKILLS = ("create-pr", "rebase-on-main")
 
 
-def test_the_rebase_skill_in_place_is_ok(machine, run_cli):
-    _skill(machine).mkdir(parents=True)
+def _skills_in_place(machine, *names):
+    for name in names:
+        (machine.home / ".claude" / "skills" / name).mkdir(parents=True)
+
+
+@pytest.mark.parametrize("name", SKILLS)
+def test_each_shipped_skill_in_place_is_ok(machine, run_cli, name):
+    _skills_in_place(machine, name)
 
     ran = run_cli("doctor")
 
-    assert _finding(ran.out, "rebase-on-main skill is in").level == "ok"
+    assert _finding(ran.out, f"{name} skill is in").level == "ok"
 
 
-def test_a_missing_rebase_skill_is_a_warning_fixed_by_the_skill_command(machine, run_cli):
+@pytest.mark.parametrize("name", SKILLS)
+def test_each_missing_shipped_skill_is_a_warning_fixed_by_the_skill_command(
+        machine, run_cli, name):
+    _skills_in_place(machine, *(other for other in SKILLS if other != name))
+
     ran = run_cli("doctor")
 
-    missing = _finding(ran.out, "rebase-on-main skill is not in")
+    missing = _finding(ran.out, f"{name} skill is not in")
     assert missing.level == "warn"
     assert missing.fix == "github-orchestrator skill"
 
@@ -849,7 +858,7 @@ def test_a_healthy_install_is_all_ok_and_exits_0(machine, run_cli, tmp_path, clo
     machine.answering_hubs.add(HUB)
     assert run_cli("start").code == 0
     machine.server.start(SERVER_PID)
-    _skill(machine).mkdir(parents=True)
+    _skills_in_place(machine, *SKILLS)
     machine.system.mcp_list = CONNECTED
     _beat(machine, 34)
 

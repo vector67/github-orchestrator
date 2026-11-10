@@ -16,7 +16,7 @@ from github_orchestrator.cli._install_checks import (
     requirements_for,
 )
 from github_orchestrator.cli._service import RESTART, Service
-from github_orchestrator.cli._skill import skill_finding
+from github_orchestrator.cli._skill import skill_findings
 from github_orchestrator.cli._status import ago
 from github_orchestrator.cli._tool_install import (
     PACKAGE,
@@ -228,7 +228,7 @@ class MachineChecks:
             self._install(install),
             *([] if newer is None else [warn(f"github-orchestrator {newer} is out", UPDATE)]),
             self._command(install),
-            skill_finding(self._config.agent.skill_folder(self._config.home)),
+            *skill_findings(self._config.agent.skill_folder(self._config.home)),
             *agent_findings(self._config.agent, self._config.agent_argv, self._run),
             self._notifications(),
         ]

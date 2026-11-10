@@ -180,19 +180,24 @@ def test_every_notifier_app_the_build_makes_matches_what_uninstall_removes(
     assert sorted(path.name for path in apps.iterdir()) == ["Other.app"]
 
 
-def test_uninstall_keeps_the_rebase_skill_and_says_how_to_remove_it(machine, run_cli, two_instances):
+def test_uninstall_keeps_each_shipped_skill_and_says_how_to_remove_it(
+        machine, run_cli, two_instances):
     run_cli("skill")
-    skill = machine.home / ".claude" / "skills" / "rebase-on-main"
+    skills = [machine.home / ".claude" / "skills" / name for name in ("create-pr", "rebase-on-main")]
 
     ran = run_cli("uninstall", "--yes")
 
     assert ran.code == 0, ran.out
-    assert skill.is_dir()
-    assert f"rm -rf {skill}" in ran.out
+    for skill in skills:
+        assert skill.is_dir()
+        assert f"rm -rf {skill}" in ran.out
 
 
-def test_uninstall_says_nothing_of_the_rebase_skill_when_it_is_not_there(
+def test_uninstall_says_nothing_of_a_shipped_skill_that_is_not_there(
         machine, run_cli, two_instances):
+    (machine.home / ".claude" / "skills" / "create-pr").mkdir(parents=True)
+
     ran = run_cli("uninstall", "--yes")
 
+    assert "create-pr" in ran.out
     assert "rebase-on-main" not in ran.out

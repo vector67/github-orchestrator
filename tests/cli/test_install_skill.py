@@ -1,11 +1,17 @@
+import shutil
 from pathlib import Path
 
-PACKAGED = (Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
-            / "rebase-on-main")
+SHIPPED = Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
+PACKAGED = SHIPPED / "rebase-on-main"
+CREATE_PR = SHIPPED / "create-pr"
 
 
 def _skill(machine) -> Path:
     return machine.home / ".claude" / "skills" / "rebase-on-main"
+
+
+def _create_pr(machine) -> Path:
+    return machine.home / ".claude" / "skills" / "create-pr"
 
 
 def _contents(folder: Path) -> dict[str, bytes]:
@@ -13,45 +19,50 @@ def _contents(folder: Path) -> dict[str, bytes]:
             for path in folder.rglob("*") if path.is_file()}
 
 
-def test_skill_copies_the_packaged_skill_into_claudes_skills(machine, run_cli):
+def test_skill_copies_every_packaged_skill_into_claudes_skills(machine, run_cli):
     ran = run_cli("skill")
 
     assert ran.code == 0, ran.out
     assert _contents(_skill(machine)) == _contents(PACKAGED)
+    assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
     assert f"Installed the rebase-on-main skill in {_skill(machine)}" in ran.out
+    assert f"Installed the create-pr skill in {_create_pr(machine)}" in ran.out
 
 
-def test_status_says_missing_before_the_skill_is_there(machine, run_cli):
+def test_status_says_missing_for_each_skill_before_any_is_there(machine, run_cli):
     ran = run_cli("skill", "--status")
 
-    assert (ran.code, ran.out) == (0, "missing\n")
+    assert (ran.code, ran.out) == (0, "create-pr missing\nrebase-on-main missing\n")
 
 
-def test_status_says_current_once_the_packaged_skill_is_there(machine, run_cli):
+def test_status_says_current_for_each_once_the_packaged_skills_are_there(machine, run_cli):
     run_cli("skill")
 
     ran = run_cli("skill", "--status")
 
-    assert (ran.code, ran.out) == (0, "current\n")
+    assert (ran.code, ran.out) == (0, "create-pr current\nrebase-on-main current\n")
 
 
-def test_status_says_different_when_the_skill_there_was_edited(machine, run_cli):
-    run_cli("skill")
-    (_skill(machine) / "SKILL.md").write_text("my own rebase rules\n")
-
-    ran = run_cli("skill", "--status")
-
-    assert (ran.code, ran.out) == (0, "different\n")
-
-
-def test_skill_leaves_an_edited_skill_alone_and_names_the_replace_option(machine, run_cli):
+def test_status_says_different_for_the_skill_there_that_was_edited(machine, run_cli):
     run_cli("skill")
     (_skill(machine) / "SKILL.md").write_text("my own rebase rules\n")
+
+    ran = run_cli("skill", "--status")
+
+    assert (ran.code, ran.out) == (0, "create-pr current\nrebase-on-main different\n")
+
+
+def test_skill_leaves_an_edited_skill_alone_installs_a_missing_one_and_names_the_replace_option(
+        machine, run_cli):
+    run_cli("skill")
+    (_skill(machine) / "SKILL.md").write_text("my own rebase rules\n")
+    shutil.rmtree(_create_pr(machine))
 
     ran = run_cli("skill")
 
     assert ran.code == 1
     assert (_skill(machine) / "SKILL.md").read_text() == "my own rebase rules\n"
+    assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
     assert "github-orchestrator skill --replace" in ran.out
 
 

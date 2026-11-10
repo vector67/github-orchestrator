@@ -61,18 +61,19 @@ without asking. It installs claude when it is missing, but never codex: it
 uses the `codex` on `PATH` or the one the ChatGPT app carries, and otherwise
 says where to get it and stops.
 
-The installer then offers to copy the `rebase-on-main` skill into the agent's
-skills folder, `~/.claude/skills/rebase-on-main` for Claude Code or
-`~/.agents/skills/rebase-on-main` for Codex; the agents run it when a branch
-stops merging. It runs `github-orchestrator skill`, which
-copies this version's skill there, and `doctor` names the same command while
-the skill is missing. `-y` installs it, `--no-skill` (or
-`GITHUB_ORCHESTRATOR_SKILL=no`) leaves it out, and `--skill` installs it without
-asking. A skill already there that differs from this version's, because you
-edited it or an older release put it there, is never overwritten unasked: the
-installer asks, `-y` leaves it alone, and `github-orchestrator skill --replace`
-puts this version's in its place. `github-orchestrator skill --status` prints
-`missing`, `current` or `different`.
+The installer then offers to copy the skills the orchestrator ships into the
+agent's skills folder, `~/.claude/skills` for Claude Code or `~/.agents/skills`
+for Codex: `rebase-on-main`, which the agents run when a branch stops merging,
+and `create-pr`, which opens a new PR from a branch, such as one a split carries
+code into. It runs `github-orchestrator skill`, which copies this version's
+skills there, and `doctor` names the same command for each skill that is
+missing. `-y` installs them, `--no-skill` (or `GITHUB_ORCHESTRATOR_SKILL=no`)
+leaves them out, and `--skill` installs them without asking. A skill already
+there that differs from this version's, because you edited it or an older
+release put it there, is never overwritten unasked: the installer asks, `-y`
+leaves it alone, and `github-orchestrator skill --replace` puts this version's
+in its place. `github-orchestrator skill --status` prints one line per skill,
+its name and then `missing`, `current` or `different`.
 
 A dry run names every consequence a real cycle would have: each event it would
 queue, which of them would launch a Claude run, and the worktrees it would cut

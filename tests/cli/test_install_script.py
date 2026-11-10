@@ -113,6 +113,10 @@ def test_help_lists_the_skill_flags_and_their_environment_twin():
 _STUBS = Path(__file__).resolve().parent / "install_stubs"
 
 
+def _status(state: str) -> str:
+    return state if " " in state else f"create-pr {state}\nrebase-on-main {state}"
+
+
 def _installed(tmp_path: Path, *argv: str, state: str, **environment: str) -> tuple[str, list[str]]:
     stubs = tmp_path / "stubs"
     tool_bin = tmp_path / "tool-bin"
@@ -130,7 +134,7 @@ def _installed(tmp_path: Path, *argv: str, state: str, **environment: str) -> tu
         capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL,
         start_new_session=True,
         env={"HOME": str(home), "PATH": f"{stubs}:{tool_bin}:/usr/bin:/bin",
-             "TOOL_BIN": str(tool_bin), "CALLS": str(calls), "SKILL_STATE": state,
+             "TOOL_BIN": str(tool_bin), "CALLS": str(calls), "SKILL_STATE": _status(state),
              **environment})
     assert ran.returncode == 0, ran.stdout + ran.stderr
     return ran.stdout, calls.read_text().splitlines()
@@ -142,11 +146,13 @@ _ON_A_MAC = pytest.mark.skipif(
 
 @_REPLAYED
 @_ON_A_MAC
-def test_yes_installs_a_missing_rebase_skill(tmp_path):
-    said, calls = _installed(tmp_path, "-y", state="missing")
+def test_yes_installs_the_missing_skills_and_names_them(tmp_path):
+    said, calls = _installed(tmp_path, "-y",
+                             state="create-pr missing\nrebase-on-main current")
 
     assert "skill" in calls
-    assert "rebase-on-main" in said
+    assert "create-pr" in said
+    assert "rebase-on-main" not in said
 
 
 @_REPLAYED
@@ -165,9 +171,22 @@ def test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it(
 @_ON_A_MAC
 @pytest.mark.parametrize("argv", [(), ("--skill",)])
 def test_yes_leaves_a_different_skill_alone_and_says_so(tmp_path, argv):
-    said, calls = _installed(tmp_path, "-y", *argv, state="different")
+    said, calls = _installed(tmp_path, "-y", *argv,
+                             state="create-pr current\nrebase-on-main different")
 
     assert [call for call in calls if call.startswith("skill") and call != "skill --status"] == []
+    assert "rebase-on-main" in said
+    assert "github-orchestrator skill --replace" in said
+
+
+@_REPLAYED
+@_ON_A_MAC
+def test_yes_installs_a_missing_skill_beside_a_different_one_it_leaves_alone(tmp_path):
+    said, calls = _installed(tmp_path, "-y",
+                             state="create-pr missing\nrebase-on-main different")
+
+    assert "skill" in calls
+    assert "skill --replace" not in calls
     assert "github-orchestrator skill --replace" in said
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from github_orchestrator.cli._config import CliConfig, Run, Which
 from github_orchestrator.cli._restart_all import Instance
 from github_orchestrator.cli._setup import ReadLine
-from github_orchestrator.cli._skill import SKILL, skill_folder, skill_state
+from github_orchestrator.cli._skill import shipped_skills, skill_state
 from github_orchestrator.cli._stop import agreed, stop
 
 PACKAGE = "github-orchestrator"
@@ -46,10 +46,10 @@ def uninstall(config: CliConfig, run: Run, which: Which, read_line: ReadLine,
         for path in kept:
             print(f"  {path}")
     skills = config.agent.skill_folder(config.home)
-    skill = skill_folder(skills)
-    if skill_state(skills) != "missing":
-        print(f"It leaves the {SKILL} skill in {skill}, which {config.agent.described} uses without the "
-              f"orchestrator too; rm -rf {skill} removes it.")
+    for name in shipped_skills():
+        if skill_state(skills, name) != "missing":
+            print(f"It leaves the {name} skill in {skills / name}, which {config.agent.described} "
+                  f"uses without the orchestrator too; rm -rf {skills / name} removes it.")
     print("Your clones are never touched.", flush=True)
     everything = yes or (bool(kept) and agreed(read_line, "Remove the config and data too? [y/N] "))
     for instance in instances:

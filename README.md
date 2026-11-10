@@ -57,10 +57,11 @@ install what is missing:
 
 It asks which agent to use; `--agent codex` (or `GITHUB_ORCHESTRATOR_AGENT=codex`)
 chooses Codex without asking, `-y` keeps Claude, and the choice goes into the
-config as `agent = "codex"`. It also offers to copy the `rebase-on-main` skill
-into that agent's skills folder (`~/.claude/skills` or `~/.agents/skills`),
-which the agents run when a branch stops merging; `github-orchestrator skill`
-installs it later.
+config as `agent = "codex"`. It also offers to copy the skills it ships into
+that agent's skills folder (`~/.claude/skills` or `~/.agents/skills`):
+`rebase-on-main`, which the agents run when a branch stops merging, and
+`create-pr`, which opens a new PR; `github-orchestrator skill` installs them
+later.
 
 Desktop notifications are optional. On macOS the installer asks whether to
 build the notification apps, which needs the Command Line Tools. On Linux they

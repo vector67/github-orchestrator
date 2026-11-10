@@ -36,8 +36,8 @@ Usage: install.sh [options]
                      Code, the default) or codex (the Codex CLI)
   --notifier         build the macOS notification apps without asking
   --linger           keep the watcher running after you log out (Linux)
-  --skill            install the rebase-on-main skill for the agent without asking
-  --no-skill         leave the rebase-on-main skill out
+  --skill            install the orchestrator's skills for the agent without asking
+  --no-skill         leave the orchestrator's skills out
   --version X        install release X, not the newest
   --no-modify-path   never edit shell profiles; print the line to add
   --no-open          start the service but do not open the browser
@@ -49,7 +49,7 @@ GITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,
 GITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,
 GITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,
 GITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.
-Under -y the agent is claude unless chosen, the skill is installed when it is
+Under -y the agent is claude unless chosen, each skill is installed when it is
 missing, one that differs from this version's is left alone, and a terminal
 session in a folder the thread names migration moves is closed.
 GITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that
@@ -585,26 +585,32 @@ elif [ -n "$LINGER" ] || { [ -z "$YES" ] && asked "Keep the watcher running afte
         || say "loginctl enable-linger needs more rights here; run: sudo loginctl enable-linger $(id -un)"
 fi
 
+skills_in() {
+    printf '%s\n' "$2" | sed -n "s/ $1\$//p" | tr '\n' ' ' | sed 's/ $//'
+}
+
 offer_skill() {
-    case "$("$COMMAND" skill --status 2>/dev/null)" in
-        missing)
-            if [ "$SKILL" != no ] && { [ "$SKILL" = yes ] \
-                || agreed "Install the rebase-on-main skill for $AGENT_NAME (agents use it to rebase PRs)?"; }; then
-                step "Installing the rebase-on-main skill into $SKILLS_DIR"
-                "$COMMAND" skill || say "The skill was not installed; github-orchestrator skill tries again."
-            else
-                say "No rebase-on-main skill; github-orchestrator skill installs it later."
-            fi
-            ;;
-        different)
-            say "The rebase-on-main skill in $SKILLS_DIR differs from this version's."
-            if [ "$SKILL" != no ] && [ -z "$YES" ] && asked "Replace it with this version's? [y/N]" n; then
-                "$COMMAND" skill --replace
-            else
-                say "It was left alone; github-orchestrator skill --replace puts this version's in its place."
-            fi
-            ;;
-    esac
+    status=$("$COMMAND" skill --status 2>/dev/null)
+    missing=$(skills_in missing "$status")
+    different=$(skills_in different "$status")
+    if [ -n "$missing" ]; then
+        if [ "$SKILL" != no ] && { [ "$SKILL" = yes ] \
+            || agreed "Install the orchestrator's skills for $AGENT_NAME ($missing; agents run them to rebase and open PRs)?"; }; then
+            step "Installing $missing into $SKILLS_DIR"
+            "$COMMAND" skill || [ -n "$different" ] \
+                || say "The skills were not installed; github-orchestrator skill tries again."
+        else
+            say "Skills left out: $missing; github-orchestrator skill installs them later."
+        fi
+    fi
+    if [ -n "$different" ]; then
+        say "Skills in $SKILLS_DIR that differ from this version's: $different."
+        if [ "$SKILL" != no ] && [ -z "$YES" ] && asked "Replace them with this version's? [y/N]" n; then
+            "$COMMAND" skill --replace
+        else
+            say "They were left alone; github-orchestrator skill --replace puts this version's in their place."
+        fi
+    fi
 }
 
 offer_skill
