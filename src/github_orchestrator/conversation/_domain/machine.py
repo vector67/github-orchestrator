@@ -196,7 +196,23 @@ def _state_code(conversation: Conversation) -> ErrorCode:
 
 
 def _fix_code(conversation: Conversation) -> ErrorCode:
+    if conversation.fix.state == LANDING and not landing_under_way(conversation):
+        return ErrorCode.LANDING_STALLED
     return _CODE_OF_FIX.get(conversation.fix.state, ErrorCode.NO_PROPOSAL)
+
+
+def _may_send_back(conversation: Conversation) -> bool:
+    fix = conversation.fix
+    if fix.state == LANDING:
+        return not (landing_under_way(conversation) or fix.pushed or fix.filed)
+    return fix.state in IDLE_FIX
+
+
+def _a_fix_to_send_back(conversation: Conversation, command: Rework) -> Refused | None:
+    if _may_send_back(conversation):
+        return None
+    return _refuse_decision(conversation, _fix_code(conversation),
+                            f"{_a(conversation.fix.state)} fix is not yours to send back")
 
 
 def _a(word: object) -> str:
@@ -1028,8 +1044,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     First: (_wanting_a_first_run,),
     Rebase: (_waiting_to_be_caught_up,),
     Rework: (_agents_enabled_for_a_rework, _open_to("sends nothing back"),
-             _a_fix_in((PROPOSED, DECLINED, FAILED), "is not yours to send back"),
-             _a_part_to_rework, _a_brief),
+             _a_fix_to_send_back, _a_part_to_rework, _a_brief),
     StartSession: (_agents_enabled_for_a_session, _open_to("opens no session"),
                    _a_fix_in((PROPOSED, ASKING, DECLINED, FAILED), "is not waiting for anyone")),
     OpenShell: (_open_to("opens no shell"),),

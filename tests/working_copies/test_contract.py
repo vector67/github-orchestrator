@@ -768,6 +768,29 @@ def test_a_fix_that_conflicts_leaves_the_pr_branch_where_it_was(world, pr_worktr
     assert pr_checkout.is_clean() is True
 
 
+def test_a_fix_lands_on_what_origin_gained_since_the_checkout_last_fetched(
+        world, pr_worktree, cut):
+    tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix"))
+    pushed = Sha(world.push_to_branch({"h": "pushed elsewhere\n"}, "pushed elsewhere"))
+
+    landed = cut.pick(tip)
+
+    assert landed.landed_base == pushed
+    assert Sha(world.head_of(pr_worktree)) == landed.landed_sha
+
+
+def test_a_fix_is_not_picked_onto_a_branch_origin_rewrote(world, pr_worktree, cut):
+    tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix"))
+    before = world.head_of(pr_worktree)
+    _, rewritten = world.advance_base()
+
+    refused = cut.pick(tip)
+
+    assert refused.refusal is not None
+    assert rewritten[:12] in refused.refusal and before[:12] in refused.refusal
+    assert world.head_of(pr_worktree) == before
+
+
 def test_a_landed_fix_can_be_pushed(world, pr_worktree, cut, pr_checkout):
     tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix"))
     landed = cut.pick(tip)

@@ -167,7 +167,7 @@ def test_cancelling_a_queued_reset_forgets_it():
 
 
 def test_a_fix_picked_but_not_pushed_keeps_the_worktree_from_a_reset():
-    copies, _ = diverged()
+    copies, _, _ = branched_from_main()
     copies.refuse_pushes("rejected: non-fast-forward")
     board = board_on(fake_threads(working_copies=copies), base_branch="main", branch="feature",
                      manager=FakeManagerPanel(now=DIVERGED))
@@ -180,6 +180,8 @@ def test_a_fix_picked_but_not_pushed_keeps_the_worktree_from_a_reset():
     board.threads.tick(FakeNotifications(), on_hold=False)
     landed = board.threads.get(KEY).fix.landed_sha
     assert landed is not None and copies.head_of(WORKTREE) == str(landed)
+    copies.publish("feature", copies.origin["main"], {"src/foo.py": "rewritten\n"},
+                   "check first")
 
     answer = client.post(RESET, json=shown(copies))
 

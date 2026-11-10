@@ -137,8 +137,29 @@ class BoundWorkspace:
         if located.path is None:
             return Picked(refusal=located.missing)
         with self.git._serialized(self.pr):
+            landable = (self._branch and Sha.parse(_text(self.base_sha)) is not None
+                        and Sha.parse(_text(thread_sha)) is not None)
+            behind = self._caught_up_with_origin(located.path) if landable else None
+            if behind is not None:
+                return Picked(refusal=behind)
             return self.git._pick(located.path, self._branch, _text(self.base_sha),
                                   _text(thread_sha), message)
+
+    def _caught_up_with_origin(self, path: str) -> str | None:
+        failed = self.git._fetch(path, None)
+        if failed is not None:
+            return f"the PR branch would not fetch before landing, so nothing landed: {failed}"
+        origin, head = self.git._origin_head(path), self.git._head_sha(path)
+        if origin is None or head is None or self.git._descends(path, origin, head):
+            return None
+        if not self.git._descends(path, head, origin):
+            return (f"origin's PR branch was rewritten: it is at {origin[:12]}, and the PR "
+                    f"worktree at {head[:12]} holds commits origin lacks, so nothing landed; "
+                    "reset the worktree to origin, then approve again")
+        if not self.git._is_clean(path):
+            return ("the PR worktree has changes of its own, so it was not caught up with "
+                    "origin and nothing landed")
+        return self.git._reset(path, origin)
 
     def head_sha(self) -> Sha | None:
         return Sha.parse(self.git._head_sha(self.path))

@@ -3938,6 +3938,7 @@
    "enum": [
     "not-found",
     "operation-outstanding",
+    "landing-stalled",
     "nothing-in-flight",
     "work-in-flight",
     "no-proposal",

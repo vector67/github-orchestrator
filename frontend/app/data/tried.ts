@@ -11,6 +11,9 @@ const SAID: Record<string, string> = {
   'operation-outstanding':
     'Something is already on its way for this thread; wait for the board ' +
     'to take it.',
+  'landing-stalled':
+    'This fix was accepted, but its landing stopped part way; approve it ' +
+    'again to finish landing it.',
   'agents-disabled':
     'Agents are switched off on this board, so there is no agent to send ' +
     'this to.',

@@ -20,15 +20,23 @@ QUEUED_AT = "2026-10-23T09:00:00Z"
 KEY = "PRRT_kwDOqueued"
 
 
-def _diverged(worktree):
+def _branched(worktree):
     copies = FakeWorkingCopies()
     base = copies.add_repo(Path("/nonexistent/repo"), {"f": "one\n"}, "first")
     copies.publish(BRANCH, base, {"f": "two\n"}, "the pull request's work")
     copies.add_worktree(worktree, None)
     copies.check_out(worktree, BRANCH)
+    return copies, base
+
+
+def _rewritten(copies, base):
+    return copies.publish(BRANCH, base, {"f": "rewritten\n"}, "the work, rewritten")
+
+
+def _diverged(worktree):
+    copies, base = _branched(worktree)
     copies.commit(worktree, {"f": "local\n"}, "local work")
-    rewritten = copies.publish(BRANCH, base, {"f": "rewritten\n"}, "the work, rewritten")
-    return copies, rewritten
+    return copies, _rewritten(copies, base)
 
 
 def _manager(settings, worktree, copies, *script, conversation_managers=None):
@@ -218,7 +226,7 @@ def test_a_queued_reset_that_dies_while_it_resets_does_not_read_as_having_run_cl
 
 def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(settings, tmp_path):
     seed(settings, POLLED)
-    copies, _ = _diverged(tmp_path)
+    copies, base = _branched(tmp_path)
     threads = fake_conversation_managers(working_copies=copies)
     copies.place(THE_PR, tmp_path)
     threads.watch(THE_PR, is_author=True)
@@ -232,6 +240,7 @@ def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(setting
     drain(conversations)
     landed = conversations.get(KEY).fix
     assert landed.picked and landed.push_error
+    _rewritten(copies, base)
     manager = _manager(settings, tmp_path, copies, lambda: _queue(manager),
                        conversation_managers=threads)
 

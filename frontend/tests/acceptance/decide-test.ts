@@ -124,6 +124,25 @@ module('Acceptance | decide', function (hooks) {
       .containsText('already on its way');
   });
 
+  test('a refusal over a stalled landing says to approve again, not to wait', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    board().refusal = {
+      status: 409,
+      code: 'landing-stalled',
+      detail: 'a landing fix is not yours to send back',
+    };
+
+    await click('[data-test-decision="resolve"]');
+    await click('[data-test-dialog-submit]');
+
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('approve it again');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .doesNotIncludeText('already on its way');
+  });
+
   test('a decision is pending on the footer and its rail row from the click, the pressed button saying what it does, until the board answers', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     const release = board().hold(/operations:approve$/);

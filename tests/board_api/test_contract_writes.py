@@ -579,7 +579,7 @@ def test_defer_refuses_a_landing_it_cannot_park():
     answer = asked(client_of(board), "defer", until="manual")
 
     assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "operation-outstanding"
+    assert answer.json()["errors"][0]["code"] == "landing-stalled"
 
 
 def test_unpark_brings_a_deferred_thread_back(ready):

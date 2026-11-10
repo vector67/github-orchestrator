@@ -176,8 +176,8 @@ def _in_a_thread(act):
 @pytest.mark.parametrize("step", ["_pick", "_push"])
 def test_a_reset_waits_for_a_pick_or_push_under_way_and_then_refuses_the_head_it_moved(
         world, pr_worktree, pr_checkout, monkeypatch, step):
-    seen = Sha(world.commit(pr_worktree, {"h": "x\n"}, "local work"))
-    world.advance_base()
+    seen = Sha(world.head_of(pr_worktree))
+    world.push_to_branch({"h": "x\n"}, "pushed elsewhere")
     cut = pr_checkout.workspace(KEY, None).ensure().workspace
     tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix the middle"))
     if step == "_push":

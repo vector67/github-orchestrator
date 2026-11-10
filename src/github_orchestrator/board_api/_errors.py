@@ -71,9 +71,11 @@ NOT_TEXT = {"description": "The file is not text, so it cannot be returned "
 OUTSTANDING = {
     "description": "The domain will not take this operation. "
                    "`operation-outstanding` when the thread already has one "
-                   "in flight and this is a second; otherwise the code names "
-                   "what about the state forbids this particular verb, and "
-                   "is one of the twelve the transition table refuses with. "
+                   "in flight and this is a second; `landing-stalled` when an "
+                   "accepted fix stopped part way through landing; otherwise "
+                   "the code names what about the state forbids this "
+                   "particular verb, and is one of the thirteen the "
+                   "transition table refuses with. "
                    "The sentence beside the code is the domain's own.",
     "model": Errors}
 
