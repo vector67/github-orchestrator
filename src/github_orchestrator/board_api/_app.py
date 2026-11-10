@@ -45,6 +45,7 @@ from github_orchestrator.board_api._contract import (
     DiffSource,
     DismissRequest,
     DraftBody,
+    EditPartRequest,
     ErrorCode,
     Errors,
     FileLines,
@@ -1289,6 +1290,28 @@ def approve_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
             ticket_title="" if ticket is None else ticket.title,
             ticket_body="" if ticket is None else ticket.body,
             part=None if asked.part is None else asked.part.value))
+
+
+@writes.post("/conversations/{key}/operations:edit-part", status_code=202,
+             response_model=Outcome, operation_id="editPart",
+             summary="Save new words for a split's ticket or reply without accepting it.",
+             responses=ACCEPTED)
+def edit_part(key: ThreadKey, board: Serving, if_match: IfMatch,
+              asked: EditPartRequest) -> Response:
+    """The part keeps its state: a proposed part stays proposed and a queued
+    reply stays queued, now with the new words. Refused on a part that has run,
+    which is locked, and while the split is being reworked.
+    """
+    ticket = asked.ticket
+    if asked.reply is not None:
+        _within_githubs_limit(board, asked.reply)
+    return _queued(
+        board, _thread(board, key), if_match,
+        lambda editable: editable.edit_part(
+            asked.part.value, reply=asked.reply or "",
+            ticket_project=None if ticket is None else ticket.project,
+            ticket_title="" if ticket is None else ticket.title,
+            ticket_body="" if ticket is None else ticket.body))
 
 
 @writes.post("/conversations/{key}/operations:rework", status_code=202,

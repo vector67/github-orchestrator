@@ -12,6 +12,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     Fail,
     MoveBase,
@@ -1031,6 +1032,13 @@ def _start_session(conversation: Conversation, command: StartSession) -> Accepte
     )
 
 
+def _edit_part(conversation: Conversation, command: EditPart) -> Accepted:
+    if command.part == SplitPart.TICKET:
+        split = replace(_the_split(conversation.fix), ticket=command.ticket)
+        return Accepted(with_fix(conversation, split=split, decision_error=None))
+    return Accepted(with_fix(conversation, reply=command.reply, decision_error=None))
+
+
 def _rework(conversation: Conversation, command: Rework) -> Accepted:
     brief = Brief(note=command.note, pointed=command.pointed,
                   include=command.include, part=command.part)
@@ -1486,6 +1494,8 @@ def _dispatch(conversation: Conversation, command: Change,
                 conversation, reply_note=f"thumbs-up failed: {command.error}"))
         case EditDraft():
             return Accepted(_edited(conversation, command))
+        case EditPart():
+            return _edit_part(conversation, command)
         case Enrol():
             return Accepted(replace(conversation, state=ENROLLED))
         case WithdrawFromReview():

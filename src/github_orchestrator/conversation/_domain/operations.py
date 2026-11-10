@@ -9,6 +9,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     OpenShell,
     Place,
@@ -125,6 +126,7 @@ VERB_KINDS: dict[type, OperationKind] = {
     Place: OperationKind.PLACE,
     Reply: OperationKind.REPLY,
     EditDraft: OperationKind.EDIT_DRAFT,
+    EditPart: OperationKind.EDIT_PART,
     Enrol: OperationKind.ENROL,
     WithdrawFromReview: OperationKind.WITHDRAW_FROM_REVIEW,
     Discard: OperationKind.DISCARD,
@@ -322,6 +324,8 @@ def _carried(command: Change) -> dict[str, Any]:
             return {"text": command.note, "until": _wake_word(command.wake_on)}
         case EditDraft():
             return {"text": command.body, "anchor": command.anchor}
+        case EditPart():
+            return {"text": command.reply}
         case Posted():
             return {"review": command.review,
                     "posted_comment": command.comment.id,

@@ -12,6 +12,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     OpenShell,
     Place,
@@ -233,6 +234,10 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
                 return _Refusal(ErrorCode.MALFORMED_REQUEST,
                                 "the edit names nowhere to hang the draft")
             return EditDraft(body=payload, anchor=intent.anchor)
+        case "edit-part":
+            if intent.part is None:
+                return _Refusal(ErrorCode.MALFORMED_REQUEST, "the edit names no part of a split")
+            return EditPart(part=intent.part, reply=payload, ticket=intent.ticket)
         case "enrol":
             return Enrol()
         case "withdraw-from-review":

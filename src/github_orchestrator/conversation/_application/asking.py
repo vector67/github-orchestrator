@@ -18,6 +18,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     OpenShell,
     Place,
@@ -81,6 +82,7 @@ KIND_OF_DECISION = {
     "confirm": OperationKind.CONFIRM,
     "place": OperationKind.PLACE,
     "edit-draft": OperationKind.EDIT_DRAFT,
+    "edit-part": OperationKind.EDIT_PART,
     "enrol": OperationKind.ENROL,
     "withdraw-from-review": OperationKind.WITHDRAW_FROM_REVIEW,
     "discard": OperationKind.DISCARD,
@@ -165,6 +167,9 @@ def _intent_of(command: Command) -> Intent:
         case EditDraft():
             return Intent(decision="edit-draft", payload=command.body,
                           anchor=command.anchor)
+        case EditPart():
+            return Intent(decision="edit-part", payload=command.reply or None,
+                          ticket=command.ticket, part=command.part)
         case Stop():
             return Intent(decision="stop")
         case DropQuestion():

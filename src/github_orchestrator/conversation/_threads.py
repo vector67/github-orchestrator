@@ -68,6 +68,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     Fail,
     MoveBase,
@@ -364,6 +365,11 @@ class _Editable:
                       for file, line, text in pointed)
         return self._ask(Rework(note=note, pointed=lines, include=tuple(include),
                                 part=None if part is None else SplitPart(part)))
+
+    def edit_part(self, part: str, *, reply: str = "", ticket_project: str | None = None,
+                  ticket_title: str = "", ticket_body: str = "") -> Conversation | Denied:
+        return self._ask(EditPart(part=SplitPart(part), reply=reply,
+                                  ticket=_ticket(ticket_project, ticket_title, ticket_body)))
 
     def start_session(self, *, steer: str = "",
                       pointed: Sequence[tuple[str, int | None, str]] = (),

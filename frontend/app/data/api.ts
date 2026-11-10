@@ -346,6 +346,24 @@ export interface DropQuestionOperation {
   settled_at: string | null;
 }
 
+export interface EditPartOperation {
+  id: string;
+  conversation: string | null;
+  kind: 'edit-part';
+  state: OperationState;
+  reason: string | null;
+  reason_code: ReasonCode | null;
+  requested_at: string | null;
+  settled_at: string | null;
+  reply: string | null;
+}
+
+export interface EditPartRequest {
+  part: 'ticket' | 'reply';
+  reply?: string | null;
+  ticket?: Ticket | null;
+}
+
 export interface Emoji {
   name: string;
   picture: string;
@@ -590,9 +608,9 @@ export interface OpenOperation {
   settled_at: string | null;
 }
 
-export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'edit-part' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
 
-export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
 
 export type OperationList = Operation[];
 
@@ -615,7 +633,7 @@ export interface OperationSummary {
 }
 
 export interface Outcome {
-  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
   conversation: Conversation;
 }
 

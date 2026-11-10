@@ -13,6 +13,7 @@ from github_orchestrator.conversation._domain.commands import (
     Discard,
     DropQuestion,
     EditDraft,
+    EditPart,
     Enrol,
     Fail,
     MoveBase,
@@ -60,6 +61,7 @@ from github_orchestrator.conversation._domain.conversation import (
     LANDING,
     NOT_MINE,
     OPEN,
+    PART_RUNS,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -493,6 +495,37 @@ def _a_part_still_open(conversation: Conversation, part: SplitPart) -> Refused |
     if has_run(fix.steps, part):
         return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
                                 f"the {part} part has run, so it is locked")
+    return None
+
+
+def _a_part_to_edit(conversation: Conversation, command: EditPart) -> Refused | None:
+    fix = conversation.fix
+    part = command.part
+    if fix.kind != ProposalKind.SPLIT or fix.split is None:
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                f"only a split has parts to edit, not {_a(fix.kind)}")
+    if part not in (SplitPart.TICKET, SplitPart.REPLY):
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                f"only the ticket and the reply are edited; send the {part} "
+                                f"back for rework instead")
+    refused = _a_part_still_open(conversation, part)
+    if refused is not None:
+        return refused
+    if fix.state not in (PROPOSED, LANDING) and fix.run.kind not in PART_RUNS:
+        return _refuse_decision(conversation, _fix_code(conversation),
+                                f"{_a(fix.state)} split is not open to edits")
+    return _an_edit_with_words(conversation, command)
+
+
+def _an_edit_with_words(conversation: Conversation, command: EditPart) -> Refused | None:
+    ticket = command.ticket
+    if command.part == SplitPart.REPLY and _blank(command.reply):
+        return _refuse_decision(conversation, ErrorCode.EMPTY_BODY, NOTHING_TO_POST)
+    if command.part == SplitPart.TICKET and (
+            ticket is None or not all(field.strip()
+                                      for field in (ticket.project, ticket.title, ticket.body))):
+        return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
+                                "the ticket needs a project, a title and a body")
     return None
 
 
@@ -1016,6 +1049,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Confirm: (_assumed_done_to_confirm,),
     Place: (_an_outcome_of_the_role, _placed_by_an_agent),
     EditDraft: (_drafting(DRAFT, ENROLLED),),
+    EditPart: (_open_to("edits nothing"), _a_part_to_edit),
     Enrol: (_drafting(DRAFT),),
     WithdrawFromReview: (_drafting(ENROLLED),),
     Discard: (_drafting(DRAFT),),
@@ -1028,6 +1062,7 @@ _REFUSED_ON_A_DRAFT: dict[type, ErrorCode] = {
     First: ErrorCode.STILL_A_DRAFT,
     Rebase: ErrorCode.STILL_A_DRAFT,
     Rework: ErrorCode.NO_PROPOSAL,
+    EditPart: ErrorCode.NO_PROPOSAL,
     Retry: ErrorCode.STILL_A_DRAFT,
     WriteFix: ErrorCode.STILL_A_DRAFT,
     StartSession: ErrorCode.STILL_A_DRAFT,

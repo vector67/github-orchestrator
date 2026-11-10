@@ -176,6 +176,7 @@ const DETAILS: {
   },
   file: {},
   open: {},
+  'edit-part': { reply: null },
   stop: { stopped: null },
   'drop-question': {},
   unpark: {},

@@ -44,6 +44,7 @@ class OperationKind(StrEnum):
     REPLY = "reply"
     CREATE_DRAFT = "create-draft"
     EDIT_DRAFT = "edit-draft"
+    EDIT_PART = "edit-part"
     ENROL = "enrol"
     WITHDRAW_FROM_REVIEW = "withdraw-from-review"
     DISCARD = "discard"

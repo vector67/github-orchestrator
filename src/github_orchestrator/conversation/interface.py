@@ -98,6 +98,9 @@ class EditableConversation(Protocol):
                include: Sequence[str] = (),
                part: str | None = None) -> Conversation | Denied: ...
 
+    def edit_part(self, part: str, *, reply: str = "", ticket_project: str | None = None,
+                  ticket_title: str = "", ticket_body: str = "") -> Conversation | Denied: ...
+
     def start_session(self, *, steer: str = "",
                       pointed: Sequence[tuple[str, int | None, str]] = (),
                       include: Sequence[str] = ()) -> Conversation | Denied: ...

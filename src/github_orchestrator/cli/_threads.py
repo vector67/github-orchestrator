@@ -221,6 +221,14 @@ def thread_approve(args: argparse.Namespace, *, conversation_managers: Conversat
         "approved")
 
 
+def thread_edit_part(args: argparse.Namespace, *,
+                     conversation_managers: ConversationManagerFactory,
+                     gist_model: str | None) -> None:
+    _directed_or_die(args, conversation_managers, lambda conversation: conversation.edit_part(
+        args.part, reply=args.reply, ticket_project=args.ticket_project,
+        ticket_title=args.ticket_title, ticket_body=args.ticket_body), "edited")
+
+
 def thread_rework(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                   gist_model: str | None) -> None:
     pointed = _pointed(args)
@@ -392,6 +400,7 @@ THREAD_COMMANDS = {
     "unpark": thread_unpark,
     "approve": thread_approve,
     "rework": thread_rework,
+    "edit-part": thread_edit_part,
     "session": thread_session,
     "fix": thread_fix,
     "retry": thread_retry,
@@ -493,6 +502,17 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
     approve_parser.add_argument("--part", default=None, choices=SPLIT_PARTS,
                                 help="The part of a split to accept; every part not yet "
                                      "accepted where none is given")
+
+    edit_part_parser = _human_only(thread_sub, "edit-part",
+                                   "save new words for a split's ticket or reply without "
+                                   "accepting it.")
+    edit_part_parser.add_argument("--part", required=True, choices=("ticket", "reply"),
+                                  help="The part of the split to edit")
+    edit_part_parser.add_argument("--reply", default="", help="The reply, for --part reply")
+    edit_part_parser.add_argument("--ticket-project", default=None,
+                                  help="The ticket's project, for --part ticket")
+    edit_part_parser.add_argument("--ticket-title", default="", help="The ticket's title")
+    edit_part_parser.add_argument("--ticket-body", default="", help="The ticket's description")
 
     rework_parser = _human_only(thread_sub, "rework",
                                 "send the agent's proposal back with a note on what to change.")

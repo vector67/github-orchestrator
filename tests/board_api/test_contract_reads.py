@@ -891,6 +891,55 @@ def test_a_rework_of_a_split_names_the_part_it_sends_back():
         "call it TaxRateCache", "new-pr")
 
 
+def test_editing_a_splits_reply_saves_it_and_leaves_every_part_proposed():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "edit-part", part="reply", reply="Moved to its own PR, renamed.")
+    drain(board)
+
+    assert answer.status_code == 202, answer.json()
+    assert answer.json()["operation"]["kind"] == "edit-part"
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    assert proposal["reply"] == "Moved to its own PR, renamed."
+    assert {part["state"] for part in proposal["split"]["parts"]} == {"proposed"}
+
+
+def test_editing_a_splits_ticket_saves_the_ticket():
+    board = board_for()
+    card(board)
+    start_run(board.stage, board.threads)
+    sha = commit_fix(board.stage, KEY, {"src/foo.py": "removed\n"}, pr=THE_PR)
+    board.stage.working_copies.branches["split/cache"] = sha
+    with board.threads.editing(KEY) as editable:
+        editable.split(sha, branch="split/cache", base="main", base_reason="it stands alone",
+                       reply="This moved.", ticket_project="PROJ", ticket_title="Cache",
+                       ticket_body="Share it.")
+    drain(board)
+    client = client_of(board)
+
+    answer = asked(client, "edit-part", part="ticket",
+                   ticket={"project": "WEB", "title": "Cache the rates", "body": "Once."})
+    drain(board)
+
+    assert answer.status_code == 202, answer.json()
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    assert proposal["split"]["ticket"] == {"project": "WEB", "title": "Cache the rates",
+                                           "body": "Once."}
+
+
+def test_an_edit_of_a_part_that_is_neither_ticket_nor_reply_is_a_bad_request():
+    board = board_for()
+    card(board)
+    _split(board)
+
+    answer = asked(client_of(board), "edit-part", part="changes", reply="anything")
+
+    assert answer.status_code == 400
+
+
 def test_a_thread_no_agent_has_finished_has_no_proposals():
     answer = spoke().get(f"/api/conversations/{KEY}/proposals")
 

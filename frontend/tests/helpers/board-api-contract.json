@@ -115,6 +115,7 @@
        "discard": "#/components/schemas/DraftOperation",
        "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
@@ -152,6 +153,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -367,6 +371,28 @@
      "$ref": "#/components/schemas/Errors"
     },
     "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:edit-part": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
      "$ref": "#/components/schemas/Errors"
     },
     "500": {
@@ -1020,6 +1046,7 @@
        "discard": "#/components/schemas/DraftOperation",
        "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
@@ -1057,6 +1084,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -1114,6 +1144,7 @@
        "discard": "#/components/schemas/DraftOperation",
        "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
@@ -1151,6 +1182,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -1207,6 +1241,7 @@
        "discard": "#/components/schemas/DraftOperation",
        "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
@@ -1244,6 +1279,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -3744,6 +3782,129 @@
    ],
    "type": "object"
   },
+  "EditPartOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "maxLength": 128,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "edit-part",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "reply"
+   ],
+   "type": "object"
+  },
+  "EditPartRequest": {
+   "properties": {
+    "part": {
+     "enum": [
+      "ticket",
+      "reply"
+     ],
+     "type": "string"
+    },
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "ticket": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Ticket"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "part"
+   ],
+   "type": "object"
+  },
   "Emoji": {
    "properties": {
     "name": {
@@ -5015,6 +5176,7 @@
     "reply",
     "create-draft",
     "edit-draft",
+    "edit-part",
     "enrol",
     "withdraw-from-review",
     "discard",
@@ -5035,6 +5197,7 @@
       "discard": "#/components/schemas/DraftOperation",
       "drop-question": "#/components/schemas/DropQuestionOperation",
       "edit-draft": "#/components/schemas/DraftOperation",
+      "edit-part": "#/components/schemas/EditPartOperation",
       "enrol": "#/components/schemas/DraftOperation",
       "file": "#/components/schemas/FileOperation",
       "first": "#/components/schemas/FixOperation",
@@ -5072,6 +5235,9 @@
      },
      {
       "$ref": "#/components/schemas/OpenOperation"
+     },
+     {
+      "$ref": "#/components/schemas/EditPartOperation"
      },
      {
       "$ref": "#/components/schemas/StopOperation"
@@ -5264,6 +5430,7 @@
        "discard": "#/components/schemas/DraftOperation",
        "drop-question": "#/components/schemas/DropQuestionOperation",
        "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
@@ -5301,6 +5468,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"

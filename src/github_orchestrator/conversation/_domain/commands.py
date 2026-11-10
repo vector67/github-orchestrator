@@ -224,6 +224,13 @@ class EditDraft:
 
 
 @dataclass(frozen=True)
+class EditPart:
+    part: SplitPart
+    reply: str = ""
+    ticket: Ticket | None = None
+
+
+@dataclass(frozen=True)
 class Enrol:
     pass
 
@@ -275,6 +282,7 @@ Command = (
     | Resolve
     | Reply
     | EditDraft
+    | EditPart
     | Enrol
     | WithdrawFromReview
     | Discard

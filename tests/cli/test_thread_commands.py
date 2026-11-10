@@ -566,6 +566,27 @@ def test_rework_sends_back_the_part_of_a_split_it_names(fixed, store, threads, r
     assert (rework.brief.note, rework.brief.part) == ("call it TaxRateCache", "new-pr")
 
 
+def test_edit_part_saves_a_splits_reply_and_ticket_without_accepting_them(fixed, store, threads,
+                                                                         run_cli):
+    _branched(store, fixed)
+    assert run_cli(*_split_argv(fixed, project="PROJ", title="Cache tax rates",
+                                body="Each export reads its model again.")).code == 0
+
+    reply = _directed(run_cli, threads, "edit-part", OperationKind.EDIT_PART, part="reply",
+                      reply="Moved to its own PR, renamed.")
+    _directed(run_cli, threads, "edit-part", OperationKind.EDIT_PART, part="ticket",
+              ticket_project="WEB", ticket_title="Cache the tax rates",
+              ticket_body="Read the rates once per export.")
+
+    stored = _stored(threads)
+    assert reply.state is OperationState.APPLIED
+    assert stored.fix.reply == "Moved to its own PR, renamed."
+    ticket = stored.fix.split.ticket
+    assert (ticket.project, ticket.title, ticket.body) == (
+        "WEB", "Cache the tax rates", "Read the rates once per export.")
+    assert {view.state for view in stored.proposal.parts} == {"proposed"}
+
+
 def test_approve_refuses_a_part_no_split_has(run_cli):
     ran = run_cli(*_human("approve", thread_id=THREAD_KEY, part="everything"))
 

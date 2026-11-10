@@ -684,3 +684,123 @@ def test_a_part_rework_that_ends_without_reporting_leaves_the_split_as_it_was(he
     assert "without reporting" in stored.fix.reason
     [rework] = [one for one in stored.operations if one.kind == "rework"]
     assert (rework.state, rework.reason) == ("refused", stored.fix.reason)
+
+
+EDITED_TICKET = {"ticket_project": "WEB", "ticket_title": "Cache the tax rates",
+                 "ticket_body": "Read the rates once per export."}
+
+
+def _edited(threads, part, **fields):
+    return _asked(threads, "edit_part", part, **fields)
+
+
+def test_editing_the_reply_saves_the_new_text_and_accepts_nothing(here, threads):
+    _split_with_a_ticket(here, threads)
+    before = _content(threads.get(KEY).fix)
+
+    outcome = _edited(threads, "reply", reply="Moved to its own PR, renamed.")
+
+    assert not isinstance(outcome, Denied), outcome
+    stored = threads.get(KEY)
+    assert _changed(before, _content(stored.fix)) == {"reply"}
+    assert stored.fix.reply == "Moved to its own PR, renamed."
+    assert set(_states(stored).values()) == {"proposed"}
+    assert stored.standing is ConversationState.READY
+    assert here.github.thread(KEY).comments[1:] == ()
+
+
+def test_editing_the_ticket_saves_the_new_ticket_and_files_nothing(here, threads):
+    _split_with_a_ticket(here, threads)
+    before = _content(threads.get(KEY).fix)
+
+    _edited(threads, "ticket", **EDITED_TICKET)
+
+    stored = threads.get(KEY)
+    assert _changed(before, _content(stored.fix)) == {"ticket"}
+    ticket = stored.fix.split.ticket
+    assert (ticket.project, ticket.title, ticket.body) == (
+        "WEB", "Cache the tax rates", "Read the rates once per export.")
+    assert set(_states(stored).values()) == {"proposed"}
+    assert _filings(here) == []
+
+
+def test_an_edited_ticket_is_the_one_filed(here, threads):
+    _split_with_a_ticket(here, threads)
+    _edited(threads, "ticket", **EDITED_TICKET)
+
+    _asked(threads, "approve", part="ticket")
+
+    [filed] = _filings(here)
+    assert (filed.fix.ticket_project, filed.fix.ticket_title) == ("WEB", "Cache the tax rates")
+
+
+def test_editing_a_queued_reply_keeps_it_queued(here, threads):
+    _split(threads, _removed(here))
+    _accepted(threads, "reply")
+
+    _edited(threads, "reply", reply="Moved to its own PR, renamed.")
+
+    stored = threads.get(KEY)
+    assert _states(stored)["reply"] == "queued"
+    assert stored.fix.reply == "Moved to its own PR, renamed."
+
+
+def test_editing_a_part_that_has_run_is_refused(here, threads):
+    _split_with_a_ticket(here, threads)
+    _accepted(threads, "ticket")
+
+    outcome = _edited(threads, "ticket", **EDITED_TICKET)
+
+    assert isinstance(outcome, Denied)
+    assert "locked" in outcome.reason
+
+
+def test_editing_the_ticket_while_it_is_filed_is_refused(here, threads):
+    _split_with_a_ticket(here, threads)
+    here.agent_runs.script(Outcome(finishes=False))
+    _asked(threads, "approve", part="ticket")
+
+    outcome = _edited(threads, "ticket", **EDITED_TICKET)
+
+    assert isinstance(outcome, Denied)
+    assert threads.get(KEY).fix.split.ticket.project == "PROJ"
+
+
+def test_editing_the_reply_while_the_split_is_reworked_is_refused(here, threads):
+    _split(threads, _removed(here))
+    _reworked(here, threads, "new-pr")
+
+    outcome = _edited(threads, "reply", reply="Moved to its own PR, renamed.")
+
+    assert isinstance(outcome, Denied)
+    assert threads.get(KEY).fix.reply == REPLY
+
+
+@pytest.mark.parametrize("part", ["changes", "new-pr"])
+def test_only_the_ticket_and_the_reply_are_edited(here, threads, part):
+    _split(threads, _removed(here))
+
+    outcome = _edited(threads, part, reply="anything")
+
+    assert isinstance(outcome, Denied)
+    assert outcome.code is ErrorCode.MALFORMED_REQUEST
+
+
+def test_an_edit_that_leaves_the_reply_or_the_ticket_blank_is_refused(here, threads):
+    _split_with_a_ticket(here, threads)
+
+    blank_reply = _edited(threads, "reply", reply="  ")
+    half_a_ticket = _edited(threads, "ticket", ticket_project="WEB", ticket_title="Cache")
+
+    assert isinstance(blank_reply, Denied) and isinstance(half_a_ticket, Denied)
+    assert (blank_reply.code, half_a_ticket.code) == (ErrorCode.EMPTY_BODY, ErrorCode.EMPTY_BODY)
+
+
+def test_editing_a_part_of_a_proposal_that_is_no_split_is_refused(here, threads):
+    with threads.editing(KEY) as editable:
+        editable.not_a_fix(Classification.QUESTION, "It runs once per poll.")
+
+    outcome = _edited(threads, "reply", reply="It runs once per poll, on the hub.")
+
+    assert isinstance(outcome, Denied)
+    assert outcome.code is ErrorCode.MALFORMED_REQUEST

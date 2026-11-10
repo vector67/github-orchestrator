@@ -29,13 +29,15 @@ BRIEF_MODIFIER = "brief"
 
 EDIT_DRAFT = "edit-draft"
 
+EDIT_PART = "edit-part"
+
 PLACE = "place"
 
 DECISIONS = (APPROVE, REWORK, SESSION, "shell", "resolve", "retry", "fix", "reject",
              "defer", "unpark", "confirm", "place", "not_fixed", "stop", "reply", EDIT_DRAFT,
-             "enrol", "withdraw-from-review", "discard", "post-now", "drop-question")
+             "enrol", "withdraw-from-review", "discard", "post-now", "drop-question", EDIT_PART)
 
-WORDS_ONLY = (REWORK, "not_fixed", "reply", EDIT_DRAFT)
+WORDS_ONLY = (REWORK, "not_fixed", "reply", EDIT_DRAFT, EDIT_PART)
 
 ASKED = "@operation"
 
@@ -79,6 +81,16 @@ def _approve_payload(payload: str | None, resolve: bool, message: str,
     if part is not None:
         approve["part"] = part.value
     return json.dumps(approve)
+
+
+def _part_payload(intent: Intent) -> str:
+    if intent.part is None:
+        raise ValueError("an edit names the part of a split it changes")
+    edit: dict[str, Any] = {"part": intent.part.value, "reply": intent.payload or ""}
+    if intent.ticket is not None:
+        edit["ticket"] = {"project": intent.ticket.project, "title": intent.ticket.title,
+                          "body": intent.ticket.body}
+    return json.dumps(edit)
 
 
 def _draft_payload(payload: str | None, anchor: Location | None) -> str:
@@ -137,6 +149,8 @@ def format_intent(intent: Intent) -> str:
         payload = _brief_payload(payload, intent.pointed, intent.include, intent.part)
     if decision == EDIT_DRAFT:
         payload = _draft_payload(payload, intent.anchor)
+    if decision == EDIT_PART:
+        payload = _part_payload(intent)
     first = f"{decision} {slot}" if slot else decision
     if intent.direction:
         first = f"{DIRECTED} {json.dumps(intent.direction)}\n{first}"
@@ -257,6 +271,23 @@ def _draft_intent(payload: str | None) -> Intent | None:
     return Intent(decision=EDIT_DRAFT, payload=body, anchor=anchor)
 
 
+def _part_intent(payload: str | None) -> Intent | None:
+    try:
+        edit = json.loads(payload or "")
+    except ValueError:
+        return None
+    if not isinstance(edit, dict) or not isinstance(edit.get("reply", ""), str):
+        return None
+    try:
+        part = _part(edit.get("part"))
+        ticket = _ticket(edit.get("ticket"))
+    except ValueError:
+        return None
+    if part is None:
+        return None
+    return Intent(decision=EDIT_PART, payload=edit.get("reply", ""), ticket=ticket, part=part)
+
+
 def _resolve_intent(payload: str | None, modifier: str) -> Intent:
     words = modifier.split(" ")
     return Intent(decision=RESOLVE, payload=payload,
@@ -313,6 +344,8 @@ def _parsed(text: str) -> Intent | None:
         return _brief_intent(SESSION, payload if separator else None)
     if decision == EDIT_DRAFT:
         return _draft_intent(payload if separator else None)
+    if decision == EDIT_PART:
+        return _part_intent(payload if separator else None)
     if decision == RESOLVE:
         return _resolve_intent(payload if separator else None, modifier)
     return Intent(

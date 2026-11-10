@@ -902,6 +902,15 @@ class OpenOperation(OperationEnvelope):
     kind: Literal[OperationKind.OPEN]
 
 
+class EditPartOperation(OperationEnvelope):
+    """New words saved for a split's ticket or reply. Nothing is accepted,
+    filed or posted; the part stays as it was, with the new words."""
+
+    kind: Literal[OperationKind.EDIT_PART]
+    reply: str | None = Field(
+        description="The reply this edit saved. Null on an edit of the ticket.")
+
+
 class StopOperation(OperationEnvelope):
     """Halting whatever was in flight. Posts nothing and touches no comment.
     The operation it stopped settles as `refused` with `reason_code` of
@@ -1023,7 +1032,7 @@ class PostedOperation(OperationEnvelope):
 
 Operation = Annotated[
     FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation
-    | StopOperation
+    | EditPartOperation | StopOperation
     | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
     | DropQuestionOperation
     | ReplyOperation
@@ -1439,6 +1448,23 @@ class ApproveRequest(BaseModel):
         description="The part of a split to accept. Absent accepts every part "
                     "not yet accepted. Refused on a proposal that is no split, "
                     "and on a part that has run.")
+
+
+class EditPartRequest(BaseModel):
+    """The body of `:edit-part`. Saves new words for one part of a split
+    and accepts nothing."""
+
+    part: Literal[SplitPartName.TICKET, SplitPartName.REPLY] = Field(
+        description="The part to edit. Only the ticket and the reply have words of "
+                    "their own; the changes and the new PR are sent back for rework.")
+    reply: str | None = Field(
+        default=None,
+        description="The new reply, for the `reply` part. Refused `empty-body` when "
+                    "blank.")
+    ticket: Ticket | None = Field(
+        default=None,
+        description="The new ticket, for the `ticket` part. Refused `empty-body` "
+                    "without a project, a title and a body.")
 
 
 class CloseRequest(BaseModel):

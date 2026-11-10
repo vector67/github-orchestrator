@@ -259,6 +259,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
             return contract.FileOperation(**envelope, kind=filing)
         case OperationKind.OPEN as opening:
             return contract.OpenOperation(**envelope, kind=opening)
+        case OperationKind.EDIT_PART as edit:
+            return contract.EditPartOperation(**envelope, kind=edit, reply=view.text or None)
         case OperationKind.STOP as stop:
             return contract.StopOperation(**envelope, kind=stop, stopped=operation.stopped)
         case OperationKind.RESOLVE | OperationKind.REJECT as closing:
