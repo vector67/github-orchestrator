@@ -212,9 +212,16 @@ gh_account = "your-github-username"
 # from. An entry may set its own new_worktree_command, which replaces the
 # top-level one for that repo's worktrees. `has_tests = false` says the repo has
 # no tests an agent can run, so a rebased fix that reports its tests unverified
-# lands on the first Accept instead of asking for a second one.
+# lands on the first Accept instead of asking for a second one. `pr_skill`
+# names the skill an agent runs to open a new PR, such as the one a split
+# carries code into; it defaults to the create-pr skill the orchestrator ships,
+# and a repo can name its own team's instead. `draft` decides whether that new
+# PR is a draft: left unset, the skill decides (create-pr opens a draft); set,
+# it wins, and the orchestrator flips the PR to match once the skill is done.
 [[repos]]
 repo = "owner/repo"
 local_path = "~/repositories/repo"
 # new_worktree_command = "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env ."
 # has_tests = false
+# pr_skill = "create-pr"
+# draft = true

@@ -115,6 +115,19 @@ repo = "acme/gadgets"
 local_path = "~/repositories/gadgets"
 ```
 
+A `[[repos]]` entry may also set:
+
+- `new_worktree_command`, which replaces the top-level one for that repo's
+  worktrees
+- `has_tests = false`, when the repo has no tests an agent can run, so a
+  rebased fix that reports its tests unverified lands on the first Accept
+- `pr_skill`, the skill an agent runs to open a new PR, such as the one a split
+  carries code into; it defaults to the `create-pr` skill the orchestrator
+  ships, so a repo can name its own team's PR skill instead
+- `draft`, whether that new PR is a draft: left unset, the skill decides
+  (`create-pr` opens a draft); set to `true` or `false`, it wins, and the
+  orchestrator flips the PR to match once the skill returns
+
 A config an older release wrote is rewritten in the current shape the next time
 the watcher is started or restarted; the old file stays beside it as `.bak`.
 [Upgrading an older config](docs/how-to-use.md#upgrading-an-older-config) says

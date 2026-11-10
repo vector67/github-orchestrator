@@ -49,6 +49,8 @@ class RepoEntry:
     local_path: str
     new_worktree_command: str | None = None
     has_tests: bool = True
+    pr_skill: str | None = None
+    draft: bool | None = None
 
     def __str__(self) -> str:
         return f"{self.repo} at {self.local_path}"

@@ -91,6 +91,8 @@ def test_a_config_with_both_the_old_keys_and_repos_is_refused(tmp_path):
     ('repo = "acme/widgets"\n', "local_path"),
     ('repo = "acme/widgets"\nlocal_path = 3\n', "local_path"),
     ('repo = "acme/widgets"\nlocal_path = "/src/x"\nlocal_pth = "/src/y"\n', "local_pth"),
+    ('repo = "acme/widgets"\nlocal_path = "/src/x"\ndraft = "yes"\n', "draft"),
+    ('repo = "acme/widgets"\nlocal_path = "/src/x"\npr_skill = 3\n', "pr_skill"),
 ])
 def test_a_repos_entry_that_names_no_repo_and_clone_is_refused(tmp_path, entry, named):
     toml_file = write_config(tmp_path, f"[[repos]]\n{entry}")
@@ -568,6 +570,33 @@ def test_writing_the_repos_keeps_a_repo_s_has_tests(tmp_path):
         Repo("acme", "widgets"): Clone(Path("/src/widgets"), "")})
 
     assert [entry.has_tests for entry in load_config(toml_file).repos] == [False]
+
+
+def test_a_repo_can_name_its_pr_skill_and_whether_new_prs_are_drafts(tmp_path):
+    toml_file = write_config(tmp_path, (
+        '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+        'pr_skill = "open-acme-pr"\ndraft = false\n'
+        '\n[[repos]]\nrepo = "acme/gadgets"\nlocal_path = "/src/gadgets"\n'))
+
+    assert {entry.repo: (entry.pr_skill, entry.draft)
+            for entry in load_config(toml_file).repos} == {
+        Repo("acme", "widgets"): ("open-acme-pr", False),
+        Repo("acme", "gadgets"): (None, None)}
+
+
+def test_writing_the_repos_keeps_a_repo_s_pr_skill_and_draft_and_adds_neither_when_unset(tmp_path):
+    toml_file = write_config(tmp_path, (
+        '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+        'pr_skill = "open-acme-pr"\ndraft = true\n'
+        '\n[[repos]]\nrepo = "acme/gadgets"\nlocal_path = "/src/gadgets"\n'))
+
+    read_from(toml_file).get(ConfigFile).write({}, repos={
+        Repo("acme", "widgets"): Clone(Path("/src/widgets"), ""),
+        Repo("acme", "gadgets"): Clone(Path("/src/gadgets"), "")})
+
+    assert [(entry.pr_skill, entry.draft) for entry in load_config(toml_file).repos] == [
+        ("open-acme-pr", True), (None, None)]
+    assert toml_file.read_text().count("pr_skill") == 1
 
 
 def test_writing_true_false_and_numbers_reads_them_back_as_written(tmp_path):

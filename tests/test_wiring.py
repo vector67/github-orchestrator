@@ -6,11 +6,13 @@ from pathlib import Path
 from dishka import Provider, Scope, from_context, provide
 
 from github_orchestrator.domain import Repo
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from github_orchestrator.wiring import (
     SUMMARISE,
     FetchedEmojis,
     FetchedMentionable,
     Wiring,
+    conversation_config,
     utility_clamp,
     wire,
     wires,
@@ -173,3 +175,14 @@ def test_a_repo_github_counted_nobody_for_is_asked_again():
 
     assert [mentionable.asked_to_review(widgets),
             mentionable.asked_to_review(widgets)] == [{}, {"octocat": 1}]
+
+
+def test_each_repo_s_pr_skill_and_draft_reach_the_threads_and_an_unset_one_stays_out(tmp_path):
+    widgets, gadgets = Repo("acme", "widgets"), Repo("acme", "gadgets")
+    settings = fake_settings(tmp_path, repos=(
+        RepoEntry(widgets, "/src/widgets", pr_skill="open-acme-pr", draft=False),
+        RepoEntry(gadgets, "/src/gadgets")))
+
+    config = conversation_config(settings)
+
+    assert (config.pr_skills, config.drafts) == ({widgets: "open-acme-pr"}, {widgets: False})

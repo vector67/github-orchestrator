@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 
 from github_orchestrator.domain import Repo
 
@@ -14,3 +15,5 @@ class ThreadsConfig:
     tracker_project: str | None = None
     untested_repos: frozenset[Repo] = frozenset()
     has_tests: bool = True
+    pr_skills: Mapping[Repo, str] = field(default_factory=dict)
+    drafts: Mapping[Repo, bool] = field(default_factory=dict)

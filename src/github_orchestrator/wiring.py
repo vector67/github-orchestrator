@@ -1502,6 +1502,9 @@ def conversation_config(settings: Settings) -> ThreadsConfig:
         tracker=None if config.tracker is Tracker.NONE else config.tracker.value,
         tracker_project=config.tracker_project or None,
         untested_repos=frozenset(entry.repo for entry in config.repos if not entry.has_tests),
+        pr_skills={entry.repo: entry.pr_skill for entry in config.repos
+                   if entry.pr_skill is not None},
+        drafts={entry.repo: entry.draft for entry in config.repos if entry.draft is not None},
     )
 
 
