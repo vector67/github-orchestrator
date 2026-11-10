@@ -165,6 +165,19 @@ def test_answering_a_question_resumes_codex_s_newest_session_in_the_worktree(run
     assert session.kept
 
 
+def test_answering_a_question_resumes_the_thread_that_thread_s_run_started(
+        runs, world, tmp_path):
+    world.script(Outcome(events=({"type": "thread.started", "thread_id": THREAD},)))
+    fix = ThreadFix(pr=THE_PR, key="2313088871", worktree=str(tmp_path), author="reviewer",
+                    path="src/foo.py", line=4, body="rename this")
+    finish(runs.fix(fix))
+
+    assert runs.answer_in_session(fix) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["codex", "resume", THREAD]
+
+
 def test_a_codex_turn_reads_on_the_board_as_what_it_said_and_ran(runs, world, tmp_path):
     world.script(Outcome(events=A_TURN))
 

@@ -202,6 +202,16 @@ def display_rows(newest_first: Iterable[str], limit: int) -> list[tuple[str, boo
     return rows[1:] if rows and rows[0][1] else rows
 
 
+def session_started_by(event: dict[str, Any]) -> str | None:
+    if event.get("type") == "system" and event.get("subtype") == "init":
+        session = event.get("session_id")
+    elif event.get("type") == "thread.started":
+        session = event.get("thread_id")
+    else:
+        return None
+    return session if isinstance(session, str) and session else None
+
+
 def last_thread_in(path: Path) -> str | None:
     for raw in iter_lines_reverse(path, max_bytes=SCAN_MAX_BYTES):
         try:
