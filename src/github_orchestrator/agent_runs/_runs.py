@@ -533,7 +533,7 @@ class AgentRuns:
 
     def summarize_comments(self, bodies: Sequence[str],
                            done: Callable[[tuple[str, ...]], None], *, chars: int) -> None:
-        self._summaries.summarize(comments_prompt(bodies, chars),
+        self._verdicts.summarize(comments_prompt(bodies, chars),
                                   lambda answer: done(gists_in(answer, len(bodies))),
                                   label=NOTIFICATIONS)
 

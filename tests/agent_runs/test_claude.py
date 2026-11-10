@@ -456,6 +456,16 @@ def test_a_verdict_is_asked_of_sonnet_with_no_tools(runs, world, claude):
     assert asked.argv == ["claude", "--print", "--model", "sonnet", "--tools", "", "--strict-mcp-config"]
 
 
+def test_a_notifications_batched_comments_are_summarised_on_sonnet(runs, world, claude):
+    world.answer("rename it || add a test")
+
+    runs.summarize_comments(["rename this", "add a test"], lambda gists: None, chars=60)
+    assert runs.drain_summaries(10)
+
+    [asked] = claude.asked
+    assert asked.argv == ["claude", "--print", "--model", "sonnet", "--tools", "", "--strict-mcp-config"]
+
+
 def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell_and_none_of_its_settings(
         runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")
