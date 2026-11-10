@@ -208,6 +208,11 @@ TICKET_UNFILED = Card(9000024, "PRRT_ticket_unfiled",
                       "the CLI should report export progress, not only the result",
                       "cli/billing.py", 8)
 
+SPLIT_PROPOSED = Card(9000027, "PRRT_split_proposed",
+                      "this rounding change isn't part of the invoice ticket; "
+                      "can it go in a separate PR?",
+                      "billing/rounding.py", 9)
+
 ASKING = Card(9000025, "PRRT_asking",
                "stamp both bounds of the export window with the same clock",
                "billing/window.py", 14)
@@ -218,7 +223,7 @@ STOPPED_SILENT = Card(9000026, "PRRT_stopped_silent",
 AUTHOR_CARDS = (READY, REPLY_PROPOSED, TICKET_PROPOSED, REOPENED, DECLINED, ASSUMED_DONE, FAILED,
                 REMOVED, WORKING, QUEUED, IN_SESSION, REWORKING, REBASING, WAITING, DEFERRED,
                 REJECTED, LANDED, RESOLVED, PUSH_REJECTED, REPLY_REFUSED, TICKET_FILING,
-                TICKET_FILED, TICKET_UNFILED, ASKING, STOPPED_SILENT)
+                TICKET_FILED, TICKET_UNFILED, ASKING, STOPPED_SILENT, SPLIT_PROPOSED)
 
 PR_AUTHOR = "mei"
 PR_AUTHOR_NAME = "Mei Placeholder"
@@ -594,6 +599,15 @@ class _Seeding:
             sha, tests=tests, tests_note=tests_note, note=agent_note, summary=summary,
             confidence=confidence, confidence_note=confidence_note))
 
+    def split(self, card: Card, branch: str) -> None:
+        self.open(card)
+        self.run()
+        sha = self.commit(card)
+        _git(self._worktree_of(card), "branch", branch, sha)
+        self.report(card, lambda conversation: conversation.split(
+            sha, branch=branch, base="main", base_reason="the rounding change stands alone",
+            reply="Agreed; I've moved the rounding change into its own PR."))
+
     def stop_silent(self, card: Card, last_words: str) -> None:
         self.open(card)
         self.outside.agent_runs.script(RunOutcome(events=(
@@ -639,6 +653,7 @@ def _author_board(seeding: _Seeding) -> None:
         ticket_body="Each export builds its own cache of tax rates, so two exports "
                     "of the same month look every rate up twice.\n\nRaised on the "
                     "review of the invoice writer."))
+    seeding.split(SPLIT_PROPOSED, "split/rounding")
     seeding.open(REPLY_PROPOSED)
     seeding.run()
     seeding.report(REPLY_PROPOSED, lambda conversation: conversation.not_a_fix(
