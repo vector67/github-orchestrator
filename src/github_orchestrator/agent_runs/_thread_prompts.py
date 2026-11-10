@@ -115,10 +115,20 @@ REPLY_ADVICE = (
     "that would settle what to change."
 )
 
-OUT_OF_SCOPE_UNTRACKED = " For out-of-scope, say the work belongs outside this pull request."
+OUT_OF_SCOPE_UNTRACKED = (" For out-of-scope work not in this PR's diff yet, say the work "
+                          "belongs outside this pull request.")
 
 OUT_OF_SCOPE_TRACKED = (" For out-of-scope, name the ticket that already covers the work "
                         "and link it.")
+
+SPLIT_WHEN = (
+    "- Out-of-scope code already in this PR's diff (\"not part of this ticket\", \"not in "
+    "the acceptance criteria\", \"move this to another PR\", \"put it under another "
+    "ticket\") is taken out of this pull request, never only answered in words. Judge "
+    "what it deserves: working code someone will want gets a pull request of its own, "
+    "split out as \"Step 3 for a split\" says; a few lines nobody needs elsewhere are "
+    "**safe**, and one commit removes them."
+)
 
 TICKET_ADVICE = (
     "`--title` and `--body` are the ticket as it will be filed: a title that "
@@ -142,10 +152,17 @@ def _reply_advice(fix: ThreadFix) -> str:
                            else OUT_OF_SCOPE_TRACKED)
 
 
+def _project(fix: ThreadFix) -> str:
+    match fix.tracker:
+        case None:
+            return '"<project>"'
+        case "github":
+            return str(fix.pr.repo)
+    return f'"<{fix.tracker_project}, or {JIRA_PROJECT_CHOICE}>"'
+
+
 def _ticket(commands: ReportCommands, fix: ThreadFix) -> str:
-    project = (str(fix.pr.repo) if fix.tracker == "github"
-               else f'"<{fix.tracker_project}, or {JIRA_PROJECT_CHOICE}>"')
-    return commands.ticket(fix.pr, fix.key, project=project,
+    return commands.ticket(fix.pr, fix.key, project=_project(fix),
                            title='"<the ticket\'s title>"', body='"<the ticket\'s description>"',
                            reply='"<the reply to post on the comment>"')
 
@@ -178,7 +195,8 @@ def _out_of_scope(commands: ReportCommands, fix: ThreadFix) -> list[str]:
     if fix.tracker is None:
         return []
     return [
-        "If the comment is **out-of-scope**, change no code. Search the tracker "
+        "If the comment is **out-of-scope** and the work is not in this PR's diff yet, "
+        "change no code. Search the tracker "
         f"for a ticket that already covers the work: {_search(fix)}. If one you "
         "judge to be the same work exists, reply as above, classified "
         "out-of-scope, naming and linking it. If none does, propose a ticket and "
@@ -323,6 +341,80 @@ def _anchor(fix: ThreadFix) -> tuple[str, str]:
             str(line) if line is not None else "(none)")
 
 
+def _pr_base(fix: ThreadFix) -> str:
+    return fix.pr_base or "main"
+
+
+def _split_ticket_choice(fix: ThreadFix) -> list[str]:
+    if fix.tracker is None:
+        return ["5. Pass `--same-ticket`: no tracker is set up for this repository, so the new "
+                "PR goes under this PR's own ticket, or under none when this PR names none."]
+    return [
+        "5. Choose the new PR's ticket. Pass `--same-ticket` when the work is still part of "
+        "this PR's ticket and only belongs in a pull request of its own. When the comment "
+        "says it is not part of this PR's ticket, search the tracker for one that already "
+        f"covers it: {_search(fix)}. If one does, pass `--same-ticket` and name and link "
+        "that ticket in `--reply`. If none does, draft one with `--project`, `--title` and "
+        "`--body`: a title that names the work, and a body that says what was asked, why it "
+        "belongs outside this pull request, and which comment raised it. It is filed only "
+        "once the author accepts it, so never file it yourself.",
+    ]
+
+
+def _split_new(commands: ReportCommands, fix: ThreadFix) -> str:
+    return commands.split(fix.pr, fix.key, sha="<the removal's full 40-character sha>",
+                          branch="<branch>", base='"<the base>"',
+                          base_reason='"<one line: why that base>"',
+                          project=_project(fix), title='"<the ticket\'s title>"',
+                          body='"<the ticket\'s description>"',
+                          reply='"<the reply to post on the comment>"')
+
+
+def _split_out(commands: ReportCommands, fix: ThreadFix, heading: str) -> list[str]:
+    base = _pr_base(fix)
+    branch = f"`{fix.pr_branch}`" if fix.pr_branch else "this PR's branch"
+    return [
+        f"## {heading}",
+        "",
+        "The comment asks for code that is already in this PR's diff "
+        f"(`git diff origin/{base}...HEAD` shows it) to leave this pull request. Take it "
+        "out here, and carry it to a branch of its own for a new pull request. Nothing is "
+        "pushed or opened until the author accepts. If what stays in this PR still needs "
+        "the code, it cannot leave: ask instead, as \"If you cannot do what was asked\" says.",
+        "",
+        "1. Take it out: remove exactly that code in this worktree, run the project's linter "
+        "and the tests for the files you touched, and commit once. That commit is the "
+        "removal; `git rev-parse HEAD` prints its full sha.",
+        "2. Choose the new PR's base, and say why in one line:",
+        f"   - `{base}` when the code stands alone and works without anything else this "
+        "PR adds;",
+        f"   - {branch} when it uses something this PR adds, so the new PR stacks on "
+        "this one.",
+        "3. Build the branch, named `split/<a few words naming the work>`, from the base "
+        "you chose:",
+        f"   - onto `{base}`: `git switch -c <branch> origin/{base}`;",
+        "   - stacked: `git switch -c <branch> <removal>`.",
+        "   Bring the code back with `git diff <removal> <removal>^ | git apply --3way`, "
+        "finishing by hand where it does not apply cleanly. Make anything else the "
+        "comment asks of the moved code (a rename, say) here, on this branch, not in the "
+        "removal. Run the linter and the tests for the files on this branch, and commit "
+        "with messages describing the code, matching the repo's convention from recent "
+        "`git log`. No co-authors.",
+        "4. Come back with `git switch -`: the tip of this worktree is the removal again.",
+        *_split_ticket_choice(fix),
+        "6. Report:",
+        "",
+        f"    {_split_new(commands, fix)}",
+        "",
+        "`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and "
+        "`--base-reason` your one line. `--reply` is posted on the comment as the PR author "
+        "once the new PR is open; the board adds the new PR's link, and the ticket's, below "
+        "it, so leave links out. Pass either `--same-ticket`, or `--project`, `--title` and "
+        "`--body`.",
+        "",
+    ]
+
+
 def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int) -> str:
     pr = fix.pr
     worktree = fix.worktree
@@ -338,6 +430,9 @@ def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int) -> str
     ready_cmd = _ready(commands, fix, FULL_SHA, "<one line: what changed>")
     fail_cmd = _fail(commands, fix)
     asking = "".join(f"{line}\n" for line in _asking(commands, fix))
+    split_out = "".join(f"{line}\n" for line in _split_out(
+        commands, fix, "Step 3 for a split — take the code out and carry it to a branch of "
+                       "its own"))
 
     path, line_text = _anchor(fix)
     parallelism_note = test_parallelism_note(workers)
@@ -349,13 +444,13 @@ question asked in your last message goes unread: when you need the author, \
 ask through the report command for it.
 
 Work ONLY in `{worktree}` — an isolated git worktree created for this one \
-thread. Every file you read or change, every command you run, and the one \
-commit you may make happen there, never anywhere else.
+thread. Every file you read or change, every command you run, and every \
+commit you make happen there, never anywhere else.
 
 ## The thread
 - Opened by: {fix.author}
 - Path: {path}  (`general` means non-anchored: locate the relevant code from \
-the body, e.g. by grepping and reading `git diff main...HEAD`)
+the body, e.g. by grepping and reading `git diff origin/{_pr_base(fix)}...HEAD`)
 - Line: {line_text}
 - Every comment, oldest first:
 ```
@@ -398,6 +493,7 @@ Classification rules:
 - Be conservative on risk, not on action: when in doubt about WHAT to change,
   ask a clarifying question rather than guess; do not hold back a clear, simple
   change just because the author said "I'll".
+{SPLIT_WHEN}
 
 If the comment needs an answer and no code — {replied_as} — change no code, write the reply and report
 it, then stop:
@@ -411,7 +507,7 @@ no code and report, then stop:
 
     {skip_cmd}
 
-## Step 2 — if safe, write down the steps before you touch any code
+## Step 2 — if safe or a split, write down the steps before you touch any code
 
 {ONE_COMMIT} Say what you mean to do, one `--step` at a time, in the order you \
 mean to do them:
@@ -424,7 +520,7 @@ Mark each step the moment you finish it, so the board can watch the work go by:
 
     {step_cmd}
 
-## Step 3 — make the change
+## Step 3 — if safe, make the change
 
 1. Locate the relevant code in the worktree. If the path is a real file, read
    it and grep for the symbol or phrase the reviewer mentions.
@@ -443,10 +539,11 @@ Mark each step the moment you finish it, so the board can watch the work go by:
 
 {CONFIDENCE_ADVICE}
 
-{asking}## Real failure vs infrastructure failure — opposite handling
+{split_out}{asking}## Real failure vs infrastructure failure — opposite handling
 
 - Tests RAN and FAILED (your change is wrong) and you cannot trivially fix it:
-  revert your changes and report, committing nothing:
+  revert your changes and report, committing nothing (for a split, delete the
+  new branch too):
 
       {fail_cmd}
 
@@ -459,9 +556,12 @@ Mark each step the moment you finish it, so the board can watch the work go by:
 ## Hard rules
 
 - Never push — not this branch, not any branch.
-- Never commit to the PR branch. The only commit is the one in this worktree.
-- Exactly one commit when safe; zero commits when you reply, skip or fail;
-  as many as you have made when you ask.
+- Never commit to the PR branch. Commit only in this worktree: on its own
+  branch and, for a split, on the new branch.
+- Exactly one commit on this worktree's branch when safe or a split: the fix,
+  or for a split the removal. A split's new branch holds as many commits as its
+  work needs. Zero commits when you reply, skip or fail; as many as you have
+  made when you ask.
 """
 
 
@@ -708,7 +808,23 @@ def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
             f"skipped: {fix.skipped_because}",
             "",
         ]
-    if fix.ticket_title is not None:
+    if fix.split_branch is not None:
+        lines += [
+            f"The last attempt split code out of {pr} into a pull request of its own, part "
+            "by part:",
+            "",
+            *_split_parts(fix),
+            "",
+            f"Commit {fix.split_sha} is the removal, the tip of this worktree, and the branch "
+            f"{fix.split_branch} holds the new PR's code. To keep the split, rework whichever "
+            f"the author asks: the removal here, the new PR's code after `git switch "
+            f"{fix.split_branch}` (come back with `git switch -`), and report the split "
+            "again. If the code should stay in this PR after all, take the removal off with "
+            f"`git reset --hard {fix.split_sha}^`, delete {fix.split_branch} with "
+            f"`git branch -D {fix.split_branch}`, and report another way.",
+            "",
+        ]
+    elif fix.ticket_title is not None:
         lines += [
             "The last attempt proposed this ticket instead of a change:",
             "",
@@ -769,4 +885,6 @@ def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
     ]
     if fix.tracker is not None:
         lines += ["", *_out_of_scope(commands, fix)]
+    lines += ["", *_split_out(commands, fix, "If the code belongs in another pull request, "
+                                             "split it out")]
     return "\n".join(lines)

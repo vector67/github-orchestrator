@@ -464,6 +464,84 @@ def test_a_rework_of_the_changes_reports_the_new_tip(runs, claude, worktree):
     assert "git switch" not in prompt
 
 
+BRANCHES = {"pr_branch": "PROJ-12-export", "pr_base": "main"}
+
+
+def _section(prompt, heading):
+    start = prompt.index(heading)
+    end = prompt.find("\n## ", start + len(heading))
+    return prompt[start:] if end == -1 else prompt[start:end]
+
+
+@pytest.mark.parametrize("tracker", [{}, JIRA, GITHUB_ISSUES])
+def test_the_fix_and_rework_offer_a_split_through_a_command_the_cli_takes(
+        runs, claude, worktree, tracker):
+    for prompt in _tracked(runs, claude, worktree, {**BRANCHES, **tracker}):
+        found = invocations(prompt)
+        assert "split" in [verb for verb, _ in found]
+        for verb, flags in found:
+            assert_the_cli_takes(verb, flags)
+
+
+@pytest.mark.parametrize("tracker", [{}, JIRA])
+def test_out_of_scope_code_already_in_the_diff_is_split_out_not_answered_in_words(
+        runs, claude, worktree, tracker):
+    prompt = _fixed(runs, claude, worktree, **BRANCHES, **tracker)
+
+    rules = _section(prompt, "Classification rules:")
+    assert "already in this PR's diff" in rules
+    for asked in ("not in the acceptance criteria", "another PR", "another ticket"):
+        assert asked in rules
+    assert "a few lines" in rules and "**safe**" in rules
+    assert "not in this PR's diff yet" in prompt
+
+
+def test_a_split_builds_its_branch_onto_the_prs_base_or_stacks_it_on_the_prs_branch(
+        runs, claude, worktree):
+    split = _section(_fixed(runs, claude, worktree, **BRANCHES), "## Step 3 for a split")
+
+    assert "`git diff origin/main...HEAD`" in split
+    assert "git switch -c <branch> origin/main" in split
+    assert "git switch -c <branch> <removal>" in split
+    assert "`main` when" in split and "`PROJ-12-export` when" in split
+    assert "git switch -" in split
+    assert split.index("git switch -c") < split.index("thread split")
+
+
+def test_a_split_with_no_tracker_goes_under_this_prs_ticket(runs, claude, worktree):
+    split = _section(_fixed(runs, claude, worktree, **BRANCHES), "## Step 3 for a split")
+
+    assert "Pass `--same-ticket`" in split
+    assert "Search the tracker" not in split
+
+
+def test_a_split_with_a_tracker_searches_before_it_drafts_a_ticket_of_its_own(
+        runs, claude, worktree):
+    split = _section(_fixed(runs, claude, worktree, **BRANCHES, **JIRA),
+                     "## Step 3 for a split")
+
+    assert "`--same-ticket`" in split
+    assert split.index("project = PROJ AND text ~") < split.index("`--project`")
+
+
+def test_the_hard_rules_hold_one_commit_here_and_say_what_a_split_adds(runs, claude, worktree):
+    rules = _section(_fixed(runs, claude, worktree, **BRANCHES), "## Hard rules")
+
+    assert "Never push" in rules
+    assert "Never commit to the PR branch" in rules
+    assert "Exactly one commit on this worktree's branch when safe or a split" in rules
+    assert "the new branch" in rules
+
+
+def test_a_rework_of_a_whole_split_starts_from_the_split_it_proposed(runs, claude, worktree):
+    prompt = _reworked(runs, claude, worktree, **{**SPLIT, "note": "keep it in this PR"})
+
+    assert "proposed this reply instead of a change" not in prompt
+    for said in ("split/cache-tax-rates", "main (the cache stands alone)", REMOVAL,
+                 "This moved to its own PR.", "this PR's own ticket"):
+        assert prompt.index(said) < prompt.index("keep it in this PR")
+
+
 def test_a_split_part_rework_shows_the_drafted_ticket_or_this_prs_own(runs, claude, worktree):
     drafted = _part_reworked(runs, claude, worktree, "ticket", ticket_project="PROJ",
                              ticket_title="Cache tax rates", ticket_body="Each export reads it.")

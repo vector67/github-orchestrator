@@ -34,10 +34,31 @@ That command is re-runnable: if you amend the commit afterwards, run it again wi
 
 If the comment needs an answer and no code, change no code and report the reply instead:
 <python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
-`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope, say the work belongs outside this pull request.
+`--body` is the whole reply, written as the PR author and posted as it stands once the author accepts it; the author can edit it first. For already-done, say where the branch already does it. For a question, answer it. For unclear, ask the reviewer the one clarifying question that would settle what to change. For out-of-scope work not in this PR's diff yet, say the work belongs outside this pull request.
 
 ## If you cannot do what was asked
 
 Stop and ask the author instead of reporting when the brief cannot be met as stated, or when the way forward goes beyond what the comment and the brief asked for: a production change for a comment on a test, a change to another module, a change to a public signature. Anything else, decide yourself and say what you decided in `--confidence-note`. `--question` is the one thing the author must decide. `--context` says why you stopped: what you tried and what broke. Give `--option` once for each way forward, and only when you have narrowed it to concrete ones. Leave your work in the worktree as it is, committed or not, and stop once you have asked: the author answers in a session on this same conversation.
 
     <python> -m github_orchestrator.cli thread ask --repo acme/widgets --pr 7 --thread-id PRRT_1 --question "<one line: what the author must decide>" --context "<markdown: what you tried and what broke>" [--option "<one concrete way forward>"]
+
+
+## If the code belongs in another pull request, split it out
+
+The comment asks for code that is already in this PR's diff (`git diff origin/main...HEAD` shows it) to leave this pull request. Take it out here, and carry it to a branch of its own for a new pull request. Nothing is pushed or opened until the author accepts. If what stays in this PR still needs the code, it cannot leave: ask instead, as "If you cannot do what was asked" says.
+
+1. Take it out: remove exactly that code in this worktree, run the project's linter and the tests for the files you touched, and commit once. That commit is the removal; `git rev-parse HEAD` prints its full sha.
+2. Choose the new PR's base, and say why in one line:
+   - `main` when the code stands alone and works without anything else this PR adds;
+   - this PR's branch when it uses something this PR adds, so the new PR stacks on this one.
+3. Build the branch, named `split/<a few words naming the work>`, from the base you chose:
+   - onto `main`: `git switch -c <branch> origin/main`;
+   - stacked: `git switch -c <branch> <removal>`.
+   Bring the code back with `git diff <removal> <removal>^ | git apply --3way`, finishing by hand where it does not apply cleanly. Make anything else the comment asks of the moved code (a rename, say) here, on this branch, not in the removal. Run the linter and the tests for the files on this branch, and commit with messages describing the code, matching the repo's convention from recent `git log`. No co-authors.
+4. Come back with `git switch -`: the tip of this worktree is the removal again.
+5. Pass `--same-ticket`: no tracker is set up for this repository, so the new PR goes under this PR's own ticket, or under none when this PR names none.
+6. Report:
+
+    <python> -m github_orchestrator.cli thread split --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <the removal's full 40-character sha> --branch <branch> --base "<the base>" --base-reason "<one line: why that base>" --reply "<the reply to post on the comment>" [--same-ticket] [--project "<project>"] [--title "<the ticket's title>"] [--body "<the ticket's description>"]
+
+`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and `--base-reason` your one line. `--reply` is posted on the comment as the PR author once the new PR is open; the board adds the new PR's link, and the ticket's, below it, so leave links out. Pass either `--same-ticket`, or `--project`, `--title` and `--body`.

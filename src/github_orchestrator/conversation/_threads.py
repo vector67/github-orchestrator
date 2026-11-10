@@ -253,7 +253,7 @@ class _Pr:
                                     lambda: modules.history.live(pr),
                                     account=config.gh_account, tracker=config.tracker,
                                     tracker_project=config.tracker_project,
-                                    branch_ticket=self._pull_requests.ticket,
+                                    pull_requests=self._pull_requests,
                                     pr_skill=config.pr_skill, pages=self._github)
         self.runs = Runs()
         self.ports = self.built()

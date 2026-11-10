@@ -228,6 +228,16 @@ def test_a_thread_asks_for_its_fix_with_the_tracker_and_the_branch_s_ticket(sett
     assert (fix.tracker, fix.tracker_project, fix.branch_ticket) == ("jira", "PROJ", "PROJ-21")
 
 
+def test_a_thread_asks_for_its_fix_naming_the_pr_s_branch_and_the_branch_it_merges_into(
+        settings):
+    here, threads = _heard(settings)
+    here.polled(branch="PROJ-12-export", base_branch="develop")
+
+    fix = _started(here, threads).fix
+
+    assert (fix.pr_branch, fix.pr_base) == ("PROJ-12-export", "develop")
+
+
 def test_a_thread_on_github_issues_names_no_project(settings):
     here, threads = _heard(_tracking(settings, tracker=Tracker.GITHUB))
 

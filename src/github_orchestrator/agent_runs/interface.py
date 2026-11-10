@@ -78,6 +78,8 @@ class ThreadFix:
     tracker: str | None = None
     tracker_project: str | None = None
     branch_ticket: str | None = None
+    pr_branch: str | None = None
+    pr_base: str | None = None
     note: str = ""
     pointed: tuple[PointedAt, ...] = ()
     replies: tuple[FixComment, ...] = ()

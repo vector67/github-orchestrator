@@ -7,7 +7,11 @@ from github_orchestrator.agent_runs import (
     ThreadFix,
     ThreadWork,
 )
-from github_orchestrator.conversation._application.ports import GitHub, RunProgress
+from github_orchestrator.conversation._application.ports import (
+    GitHub,
+    PullRequests,
+    RunProgress,
+)
 from github_orchestrator.conversation._domain.conversation import (
     PROPOSED,
     Brief,
@@ -31,14 +35,14 @@ class ThreadAgents:
     def __init__(self, thread_work: ThreadWork, pr: Pr,
                  manager_run_alive: Callable[[], bool], *, account: str,
                  tracker: str | None, tracker_project: str | None,
-                 branch_ticket: Callable[[], str | None], pr_skill: str,
+                 pull_requests: PullRequests, pr_skill: str,
                  pages: GitHub) -> None:
         self.thread_work = thread_work
         self.pr = pr
         self.account = account
         self.tracker = tracker
         self.tracker_project = tracker_project
-        self.branch_ticket = branch_ticket
+        self.pull_requests = pull_requests
         self.pr_skill = pr_skill
         self.pages = pages
         self.manager_run_alive = manager_run_alive
@@ -77,7 +81,9 @@ class ThreadAgents:
             ticket_title=None if ticket is None else ticket.title,
             ticket_body=None if ticket is None else ticket.body,
             tracker=self.tracker, tracker_project=self.tracker_project,
-            branch_ticket=self.branch_ticket(),
+            branch_ticket=self.pull_requests.ticket(),
+            pr_branch=self.pull_requests.branch(),
+            pr_base=self.pull_requests.base_branch(),
             note=brief.note if brief else "",
             pointed=() if brief is None else tuple(
                 PointedAt(file=one.file, line=one.line, text=one.text) for one in brief.pointed),

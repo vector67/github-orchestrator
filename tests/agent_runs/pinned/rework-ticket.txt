@@ -51,8 +51,29 @@ Stop and ask the author instead of reporting when the brief cannot be met as sta
     <python> -m github_orchestrator.cli thread ask --repo acme/widgets --pr 7 --thread-id PRRT_1 --question "<one line: what the author must decide>" --context "<markdown: what you tried and what broke>" [--option "<one concrete way forward>"]
 
 
-If the comment is **out-of-scope**, change no code. Search the tracker for a ticket that already covers the work: a JQL search through the Atlassian MCP in the project you would file it in, such as `project = PROJ AND text ~ "<words that name the work>"`. If one you judge to be the same work exists, reply as above, classified out-of-scope, naming and linking it. If none does, propose a ticket and the reply that goes with it, then stop:
+If the comment is **out-of-scope** and the work is not in this PR's diff yet, change no code. Search the tracker for a ticket that already covers the work: a JQL search through the Atlassian MCP in the project you would file it in, such as `project = PROJ AND text ~ "<words that name the work>"`. If one you judge to be the same work exists, reply as above, classified out-of-scope, naming and linking it. If none does, propose a ticket and the reply that goes with it, then stop:
 
     <python> -m github_orchestrator.cli thread ticket --repo acme/widgets --pr 7 --thread-id PRRT_1 --project "<PROJ, or the key of the project the work plainly belongs to>" --title "<the ticket's title>" --body "<the ticket's description>" --reply "<the reply to post on the comment>"
 
 `--title` and `--body` are the ticket as it will be filed: a title that names the work, and a body that says what was asked, why it belongs outside this pull request, and which comment raised it. `--reply` is posted on the comment once the author accepts; the ticket is filed first and its link is added below the reply, so leave the link out. The author can edit all four first. Never file the ticket yourself: nothing is created until the author accepts.
+
+
+## If the code belongs in another pull request, split it out
+
+The comment asks for code that is already in this PR's diff (`git diff origin/main...HEAD` shows it) to leave this pull request. Take it out here, and carry it to a branch of its own for a new pull request. Nothing is pushed or opened until the author accepts. If what stays in this PR still needs the code, it cannot leave: ask instead, as "If you cannot do what was asked" says.
+
+1. Take it out: remove exactly that code in this worktree, run the project's linter and the tests for the files you touched, and commit once. That commit is the removal; `git rev-parse HEAD` prints its full sha.
+2. Choose the new PR's base, and say why in one line:
+   - `main` when the code stands alone and works without anything else this PR adds;
+   - this PR's branch when it uses something this PR adds, so the new PR stacks on this one.
+3. Build the branch, named `split/<a few words naming the work>`, from the base you chose:
+   - onto `main`: `git switch -c <branch> origin/main`;
+   - stacked: `git switch -c <branch> <removal>`.
+   Bring the code back with `git diff <removal> <removal>^ | git apply --3way`, finishing by hand where it does not apply cleanly. Make anything else the comment asks of the moved code (a rename, say) here, on this branch, not in the removal. Run the linter and the tests for the files on this branch, and commit with messages describing the code, matching the repo's convention from recent `git log`. No co-authors.
+4. Come back with `git switch -`: the tip of this worktree is the removal again.
+5. Choose the new PR's ticket. Pass `--same-ticket` when the work is still part of this PR's ticket and only belongs in a pull request of its own. When the comment says it is not part of this PR's ticket, search the tracker for one that already covers it: a JQL search through the Atlassian MCP in the project you would file it in, such as `project = PROJ AND text ~ "<words that name the work>"`. If one does, pass `--same-ticket` and name and link that ticket in `--reply`. If none does, draft one with `--project`, `--title` and `--body`: a title that names the work, and a body that says what was asked, why it belongs outside this pull request, and which comment raised it. It is filed only once the author accepts it, so never file it yourself.
+6. Report:
+
+    <python> -m github_orchestrator.cli thread split --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <the removal's full 40-character sha> --branch <branch> --base "<the base>" --base-reason "<one line: why that base>" --reply "<the reply to post on the comment>" [--same-ticket] [--project "<PROJ, or the key of the project the work plainly belongs to>"] [--title "<the ticket's title>"] [--body "<the ticket's description>"]
+
+`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and `--base-reason` your one line. `--reply` is posted on the comment as the PR author once the new PR is open; the board adds the new PR's link, and the ticket's, below it, so leave links out. Pass either `--same-ticket`, or `--project`, `--title` and `--body`.
