@@ -212,6 +212,19 @@ SPLIT_PROPOSED = Card(9000027, "PRRT_split_proposed",
                       "this rounding change isn't part of the invoice ticket; "
                       "can it go in a separate PR?",
                       "billing/rounding.py", 9)
+SPLIT_TICKETED = Card(9000028, "PRRT_split_ticketed",
+                      "the currency alerts aren't in the acceptance criteria; "
+                      "they need a ticket of their own",
+                      "billing/alerts.py", 6)
+SPLIT_LANDING = Card(9000029, "PRRT_split_landing",
+                     "move the retry wrapper into its own PR, it stands alone",
+                     "billing/retry.py", 4)
+SPLIT_OPEN_FAILED = Card(9000030, "PRRT_split_open_failed",
+                         "the audit log belongs in another PR",
+                         "billing/audit.py", 11)
+SPLIT_DONE = Card(9000031, "PRRT_split_done",
+                  "this cache warm-up is a separate change; split it out",
+                  "billing/warmup.py", 3)
 
 ASKING = Card(9000025, "PRRT_asking",
                "stamp both bounds of the export window with the same clock",
@@ -223,7 +236,8 @@ STOPPED_SILENT = Card(9000026, "PRRT_stopped_silent",
 AUTHOR_CARDS = (READY, REPLY_PROPOSED, TICKET_PROPOSED, REOPENED, DECLINED, ASSUMED_DONE, FAILED,
                 REMOVED, WORKING, QUEUED, IN_SESSION, REWORKING, REBASING, WAITING, DEFERRED,
                 REJECTED, LANDED, RESOLVED, PUSH_REJECTED, REPLY_REFUSED, TICKET_FILING,
-                TICKET_FILED, TICKET_UNFILED, ASKING, STOPPED_SILENT, SPLIT_PROPOSED)
+                TICKET_FILED, TICKET_UNFILED, ASKING, STOPPED_SILENT, SPLIT_PROPOSED,
+                SPLIT_TICKETED, SPLIT_LANDING, SPLIT_OPEN_FAILED, SPLIT_DONE)
 
 PR_AUTHOR = "mei"
 PR_AUTHOR_NAME = "Mei Placeholder"
@@ -599,14 +613,31 @@ class _Seeding:
             sha, tests=tests, tests_note=tests_note, note=agent_note, summary=summary,
             confidence=confidence, confidence_note=confidence_note))
 
-    def split(self, card: Card, branch: str) -> None:
+    def split(self, card: Card, branch: str, *, ticket_title: str | None = None) -> None:
         self.open(card)
         self.run()
         sha = self.commit(card)
-        _git(self._worktree_of(card), "branch", branch, sha)
+        worktree = self._worktree_of(card)
+        _git(worktree, "switch", "-q", "-c", branch, BASE_BRANCH)
+        name = branch.rsplit("/", 1)[-1].replace("-", "_")
+        moved = Path(worktree, card.path).with_name(f"{name}.py")
+        moved.write_text(f"def {name}(line_items):\n    return sorted(line_items, key=str)\n")
+        _git(worktree, "add", "-A")
+        _git(worktree, "commit", "-qm", f"carry {name} into its own PR")
+        _git(worktree, "switch", "-q", "-")
+        ticket = {} if ticket_title is None else {
+            "ticket_project": "PROJ", "ticket_title": ticket_title,
+            "ticket_body": f"{card.gist}.\n\nRaised on the review of the invoice writer."}
         self.report(card, lambda conversation: conversation.split(
-            sha, branch=branch, base="main", base_reason="the rounding change stands alone",
-            reply="Agreed; I've moved the rounding change into its own PR."))
+            sha, branch=branch, base=BASE_BRANCH, base_reason="the change stands alone",
+            reply="Agreed; I've moved it into its own PR.", **ticket))
+
+    def accept_part(self, card: Card, part: str, *, settles: bool = True) -> None:
+        if part in ("ticket", "new-pr"):
+            self.outside.agent_runs.script(RunOutcome())
+        self.ask(card, lambda conversation: conversation.approve(part=part))
+        if settles:
+            self.conversations.tick(self.news, on_hold=False)
 
     def stop_silent(self, card: Card, last_words: str) -> None:
         self.open(card)
@@ -654,6 +685,19 @@ def _author_board(seeding: _Seeding) -> None:
                     "of the same month look every rate up twice.\n\nRaised on the "
                     "review of the invoice writer."))
     seeding.split(SPLIT_PROPOSED, "split/rounding")
+    seeding.split(SPLIT_TICKETED, "split/currency-alerts",
+                  ticket_title="Alert on currency mismatches")
+    seeding.split(SPLIT_LANDING, "split/retry-wrapper")
+    seeding.accept_part(SPLIT_LANDING, "changes")
+    seeding.accept_part(SPLIT_LANDING, "reply")
+    seeding.split(SPLIT_OPEN_FAILED, "split/audit-log")
+    seeding.accept_part(SPLIT_OPEN_FAILED, "new-pr")
+    seeding.split(SPLIT_DONE, "split/cache-warmup")
+    seeding.accept_part(SPLIT_DONE, "changes")
+    seeding.accept_part(SPLIT_DONE, "reply")
+    seeding.accept_part(SPLIT_DONE, "new-pr", settles=False)
+    seeding.filing_ends(SPLIT_DONE, lambda conversation: conversation.opened(
+        "https://github.com/acme/widgets/pull/12"))
     seeding.open(REPLY_PROPOSED)
     seeding.run()
     seeding.report(REPLY_PROPOSED, lambda conversation: conversation.not_a_fix(

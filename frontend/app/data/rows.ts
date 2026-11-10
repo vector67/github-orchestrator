@@ -182,6 +182,7 @@ function authorMeta(
 function landedMeta(conversation: Conversation): string {
   const approve = newestOf(conversation, ['approve']);
   if (approve?.lands === 'reply') return 'Replied';
+  if (approve?.lands === 'split') return 'Moved to a new PR';
   if (approve?.lands === 'ticket') {
     return `Filed ${approve.ticket_key ?? 'the ticket'}`;
   }

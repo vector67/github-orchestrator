@@ -4,7 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import DiffSlot from 'frontend/components/diff-slot';
 import modal from 'frontend/modifiers/modal';
-import type { Fold, ReworkView } from 'frontend/data/panel';
+import { PART_KICKERS, type Fold, type ReworkView } from 'frontend/data/panel';
 import type ReworkService from 'frontend/services/rework';
 
 export interface ReworkDialogSignature {
@@ -22,6 +22,11 @@ const CHIPS_SHOWN = 3;
 
 export default class ReworkDialog extends Component<ReworkDialogSignature> {
   @service declare rework: ReworkService;
+
+  get partName(): string | null {
+    const part = this.rework.part;
+    return part ? PART_KICKERS[part] : null;
+  }
 
   get counted(): string {
     const count = this.rework.count;
@@ -71,7 +76,9 @@ export default class ReworkDialog extends Component<ReworkDialogSignature> {
       >
         <header class="dialog-head">
           <p class="question" id="rework-dialog-kicker" data-test-rework-kicker>
-            {{@rework.kicker}}
+            {{@rework.kicker}}{{#if this.partName}}
+              ·
+              {{this.partName}}{{/if}}
           </p>
           <button
             type="button"
@@ -120,15 +127,17 @@ export default class ReworkDialog extends Component<ReworkDialogSignature> {
             </label>
           {{/each}}
         </div>
-        <label class="composer-tick" data-test-rework-visible>
-          <input
-            type="checkbox"
-            class="checkbox"
-            checked={{this.rework.visible}}
-            {{on "change" this.showIt}}
-          />
-          Do rework in visible terminal session
-        </label>
+        {{#unless this.partName}}
+          <label class="composer-tick" data-test-rework-visible>
+            <input
+              type="checkbox"
+              class="checkbox"
+              checked={{this.rework.visible}}
+              {{on "change" this.showIt}}
+            />
+            Do rework in visible terminal session
+          </label>
+        {{/unless}}
         {{#if @fold}}
           <section class="rework-diff">
             <p class="dialog-kicker" data-test-pointing-title>

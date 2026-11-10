@@ -11,6 +11,10 @@ import type {
   Proposal,
   ProposalKind,
   Reaction,
+  Split,
+  SplitPart,
+  SplitPartName,
+  SplitPartState,
   Ticket,
 } from 'frontend/data/api';
 import { causeOf } from 'frontend/data/failure';
@@ -39,8 +43,10 @@ import {
 import {
   inFlight,
   offered,
+  partOffers,
   writtenOn,
   type Offer,
+  type PartOffer,
 } from 'frontend/data/decisions';
 import type { PrEntity } from 'frontend/services/store';
 
@@ -75,6 +81,7 @@ export interface WorktreeOf {
   number: number;
   key: string;
   version: string;
+  read: 'worktree-diff' | 'split-diff';
 }
 
 export type FoldRange = Commits & { worktree?: WorktreeOf };
@@ -237,6 +244,41 @@ export interface Panel {
   commit_check: CommitCheckView | null;
   question: QuestionView | null;
   stopped: string | null;
+  split: SplitView | null;
+}
+
+export interface NewPrView {
+  branch: string;
+  base: string;
+  base_reason: string;
+}
+
+export interface PartResultView {
+  lead: string;
+  text: string;
+  url: string | null;
+}
+
+export interface SplitCard {
+  part: SplitPartName;
+  kicker: string;
+  state: SplitPartState;
+  banner: FixBanner | null;
+  result: PartResultView | null;
+  failure: string | null;
+  ticket: Ticket | null;
+  files: FileStat[];
+  new_pr: NewPrView | null;
+  reply: string | null;
+  offers: PartOffer[];
+}
+
+export interface SplitView {
+  cards: SplitCard[];
+  resolving: boolean;
+  changes: Fold | null;
+  new_pr: Fold | null;
+  opened: PartResultView | null;
 }
 
 export interface Details {
@@ -326,6 +368,8 @@ const KIND_PHRASES: Record<ProposalKind, Partial<Record<Phase, string>>> = {
   },
   split: {
     proposed: 'Agent proposes moving this into a new PR',
+    landing: 'Accepted · running a part',
+    landed: 'Accepted · every part has run',
   },
 };
 
@@ -732,6 +776,7 @@ function bannerOf(
   proposal: Proposal | undefined,
 ): FixBanner | null {
   const phase = phaseOf(conversation);
+  if (phase === 'landed' && proposal?.split) return null;
   if (phase === 'landed' && withoutCode(proposal)) {
     const filed = newest(operations, ['approve'])?.ticket_key;
     const edited = sentReplyOf(proposal, operations) !== proposal?.reply;
@@ -944,6 +989,7 @@ function questionFoldsOf(
           number: pr.number,
           key: conversation.key,
           version: conversation.etag,
+          read: 'worktree-diff',
         },
       },
       title: last ? 'Since the last proposal' : 'Changes so far',
@@ -1055,6 +1101,181 @@ function failureOf(
   };
 }
 
+export const PART_KICKERS: Record<SplitPartName, string> = {
+  ticket: 'Ticket',
+  changes: 'Changes to this PR',
+  'new-pr': 'New PR',
+  reply: 'Reply',
+};
+
+const WAITED_FOR: Record<SplitPartName, string> = {
+  ticket: 'ticket',
+  changes: 'changes',
+  'new-pr': 'new PR',
+  reply: 'reply',
+};
+
+const WAITED_UNTIL: Record<SplitPartName, string> = {
+  ticket: 'the ticket is filed',
+  changes: 'the changes are pushed',
+  'new-pr': 'the new PR is open',
+  reply: 'the reply is posted',
+};
+
+const RUNNING_TITLES: Record<SplitPartName, string> = {
+  ticket: 'Filing the ticket',
+  changes: 'Pushing the changes to this PR',
+  'new-pr': 'Opening the new PR',
+  reply: 'Posting the reply',
+};
+
+const RESULT_LEADS: Record<SplitPartName, string> = {
+  ticket: 'Filed',
+  changes: 'Pushed',
+  'new-pr': 'Opened',
+  reply: 'Replied',
+};
+
+function partBannerOf(one: SplitPart): FixBanner | null {
+  if (one.state === 'running') {
+    return { title: RUNNING_TITLES[one.part], body: '', tone: 'working' };
+  }
+  if (one.state === 'queued' && one.waits_for) {
+    return {
+      title: `Accepted · waiting for ${WAITED_FOR[one.waits_for]}`,
+      body: `It runs once ${WAITED_UNTIL[one.waits_for]}.`,
+      tone: 'queued',
+    };
+  }
+  if (one.state === 'accepted') {
+    return {
+      title: 'Accepted · waiting its turn',
+      body: 'It runs once the part running now has run.',
+      tone: 'queued',
+    };
+  }
+  return null;
+}
+
+const FAILED_PARTS: Partial<Record<string, SplitPartName>> = {
+  'file-failed': 'ticket',
+  'push-failed': 'changes',
+  'open-failed': 'new-pr',
+  'reply-failed': 'reply',
+};
+
+function failedPartOf(
+  operations: Operation[],
+): { part: SplitPartName; reason: string } | null {
+  const approve = newest(operations, ['approve']);
+  const part = FAILED_PARTS[approve?.reason_code ?? ''];
+  if (approve?.state !== 'refused' || !part) return null;
+  return { part, reason: approve.reason ?? '' };
+}
+
+function partResultOf(one: SplitPart): PartResultView | null {
+  if (one.state !== 'run' || !one.result) return null;
+  const { text, url } = one.result;
+  return {
+    lead: RESULT_LEADS[one.part],
+    text: one.part === 'changes' ? short(text) : text,
+    url,
+  };
+}
+
+function changesFoldOf(
+  proposal: Proposal,
+  pushed: SplitPart | undefined,
+  files: FileStat[],
+): Fold | null {
+  if (!proposal.commits) return null;
+  const sha = pushed?.state === 'run' ? pushed.result?.text : null;
+  return {
+    commits: proposal.commits,
+    title: sha
+      ? `Pushed as ${short(sha)}`
+      : `Proposed diff${files.length ? ` · ${counted(files.length, 'file')}` : ''}`,
+    pointing_title: '',
+  };
+}
+
+function newPrFoldOf(
+  conversation: Conversation,
+  split: Split,
+  pullRequest: PrEntity | null,
+): Fold | null {
+  if (!pullRequest || phaseOf(conversation) === 'landed') return null;
+  return {
+    commits: {
+      base: '',
+      head: '',
+      worktree: {
+        repo: pullRequest.repo,
+        number: pullRequest.number,
+        key: conversation.key,
+        version: conversation.etag,
+        read: 'split-diff',
+      },
+    },
+    title: `${split.branch} into ${split.base}`,
+    pointing_title: '',
+  };
+}
+
+function splitOf(
+  conversation: Conversation,
+  proposal: Proposal | undefined,
+  files: FileStat[],
+  operations: Operation[],
+  pullRequest: PrEntity | null,
+): SplitView | null {
+  const split = proposal?.split;
+  if (!split) return null;
+  const failed = failedPartOf(operations);
+  const { branch, base, base_reason } = split;
+  const running = split.parts.some((one) => one.state === 'running');
+  const phase = phaseOf(conversation);
+  const cards = split.parts.map((one) => {
+    const open = one.state !== 'run';
+    const is = (name: SplitPartName) => open && one.part === name;
+    return {
+      part: one.part,
+      kicker: PART_KICKERS[one.part],
+      state: one.state,
+      banner: partBannerOf(one),
+      result: partResultOf(one),
+      failure:
+        one.state === 'proposed' && failed?.part === one.part
+          ? failed.reason
+          : null,
+      ticket: is('ticket') ? split.ticket : null,
+      files: is('changes') ? files : [],
+      new_pr: is('new-pr') ? { branch, base, base_reason } : null,
+      reply: is('reply') ? proposal.reply : null,
+      offers: partOffers(one, running, phase),
+    };
+  });
+  return {
+    cards,
+    resolving: conversation.author_kind === 'bot',
+    changes: changesFoldOf(
+      proposal,
+      split.parts.find((one) => one.part === 'changes'),
+      files,
+    ),
+    new_pr: newPrFoldOf(conversation, split, pullRequest),
+    opened:
+      cards.find((card) => card.part === 'new-pr' && card.result)?.result ??
+      null,
+  };
+}
+
+function reworksAPart(split: SplitView | null): boolean {
+  return (split?.cards ?? []).some((card) =>
+    card.offers.some((offer) => offer.act === 'rework'),
+  );
+}
+
 const NO_FIX = {
   fix_label: '',
   fix_directory: null,
@@ -1080,6 +1301,7 @@ const NO_FIX = {
   rework: null,
   agent_words: null,
   commit_check: null,
+  split: null,
 };
 
 const COMMIT_VERDICTS: Record<CommitVerdict, string> = {
@@ -1210,13 +1432,14 @@ export function panelOf(
   const decides = (decision: string) =>
     actions.some((one) => one.decision === decision);
   const folds = questionFoldsOf(shown, context);
+  const split = splitOf(shown, proposal, files, settled, context.pullRequest);
   return {
     ...top,
     fix_label: fixLabelOf(shown, plan, proposal),
     fix_directory: proposal?.directory ?? null,
     in_session: phase === 'session',
     banner: bannerOf(shown, plan, settled, files, proposal),
-    proposed_reply: replying ? sentReplyOf(proposal, settled) : null,
+    proposed_reply: replying && !split ? sentReplyOf(proposal, settled) : null,
     proposed_ticket: proposal?.ticket ?? null,
     summary: proposal?.summary || proposal?.agent_note || '',
     failure: failure ? failureOf(phase, failure, settled, replying) : null,
@@ -1241,13 +1464,15 @@ export function panelOf(
     accept: decides('approve')
       ? acceptOf(shown, proposal, plan, files, reviewer, comments, context)
       : null,
-    rework: decides('rework')
-      ? { ...REWORK, reviewers: repliersOf(comments, context) }
-      : null,
+    rework:
+      decides('rework') || reworksAPart(split)
+        ? { ...REWORK, reviewers: repliersOf(comments, context) }
+        : null,
     agent_words:
       phase === 'declined'
         ? (newest(settled, RUN_KINDS)?.reason ?? null)
         : null,
     commit_check: null,
+    split,
   };
 }

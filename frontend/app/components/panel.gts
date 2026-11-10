@@ -12,6 +12,7 @@ import PanelActions from 'frontend/components/panel-actions';
 import PanelHeader from 'frontend/components/panel-header';
 import QuestionMoved from 'frontend/components/question-moved';
 import ReplyBoxComponent from 'frontend/components/reply-box';
+import SplitCards from 'frontend/components/split-cards';
 import Waiting from 'frontend/components/waiting';
 import type { Panel } from 'frontend/data/panel';
 import didChange from 'frontend/modifiers/did-change';
@@ -32,6 +33,10 @@ function offersAnything(panel: Panel) {
 
 function replies(panel: Panel) {
   return Boolean(panel.reply);
+}
+
+function pressed(panel: Panel) {
+  return panel.footer.pressed !== null;
 }
 
 function reviewing(panel: Panel) {
@@ -194,6 +199,13 @@ const PanelView: TOC<PanelSignature> = <template>
               </span>
             </aside>
           {{/if}}
+          {{#if @panel.split}}
+            <SplitCards
+              @conversationId={{@panel.id}}
+              @split={{@panel.split}}
+              @pending={{pressed @panel}}
+            />
+          {{/if}}
           {{#if @panel.proposed_ticket}}
             <div class="proposed-ticket" data-test-proposed-ticket>
               <p class="ticket-head">
@@ -275,7 +287,9 @@ const PanelView: TOC<PanelSignature> = <template>
                 {{/if}}
               </div>
             {{/if}}
-            <FixMeta @panel={{@panel}} />
+            {{#unless @panel.split}}
+              <FixMeta @panel={{@panel}} />
+            {{/unless}}
           {{/if}}
         {{/if}}
         {{#if @panel.notes}}
@@ -293,6 +307,40 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
       <div id="panel-diff">
+        {{#if @panel.split}}
+          <details class="split-diff" data-test-split-diff="changes">
+            <summary class="split-diff-head">Changes to this PR</summary>
+            {{#if @panel.split.changes}}
+              <DiffFold
+                @conversationId={{@panel.id}}
+                @fold={{@panel.split.changes}}
+                @anchor={{@panel.anchor}}
+              />
+            {{/if}}
+          </details>
+          {{#if @panel.split.new_pr}}
+            <details class="split-diff" data-test-split-diff="new-pr">
+              <summary class="split-diff-head">New PR</summary>
+              <DiffFold
+                @conversationId={{@panel.id}}
+                @fold={{@panel.split.new_pr}}
+                @anchor={{@panel.anchor}}
+              />
+            </details>
+          {{else if @panel.split.opened}}
+            <div class="split-diff" data-test-split-diff="new-pr">
+              <p class="split-diff-head">New PR</p>
+              <p class="diff-placeholder" data-test-fold-placeholder>
+                Opened as
+                <a
+                  href={{@panel.split.opened.url}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{@panel.split.opened.text}}</a>; its diff is there now.
+              </p>
+            </div>
+          {{/if}}
+        {{/if}}
         {{#if @panel.last_fold}}
           <details class="last-proposal" data-test-last-proposal>
             <summary

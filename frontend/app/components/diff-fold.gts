@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import DiffSlot from 'frontend/components/diff-slot';
-import didInsert from 'frontend/modifiers/did-insert';
+import { modifier } from 'ember-modifier';
 import type { Fold } from 'frontend/data/panel';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
@@ -24,16 +24,28 @@ export default class DiffFold extends Component<DiffFoldSignature> {
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
 
-  load = () => {
+  private frame: Element | null = null;
+
+  load = (frame: Element) => {
+    this.frame = frame;
     this.keys.push('board', this.keymap);
   };
+
+  inserted = modifier((frame: Element) => {
+    this.load(frame);
+  });
 
   willDestroy(): void {
     super.willDestroy();
     this.keys.drop(this.keymap);
   }
 
+  private get folded(): boolean {
+    return Boolean(this.frame?.closest('details:not([open])'));
+  }
+
   private takes(key: string): boolean {
+    if (this.folded) return false;
     if (key === 'Escape') return this.close();
     if (key !== 'z') return false;
     this.toggle();
@@ -55,7 +67,7 @@ export default class DiffFold extends Component<DiffFoldSignature> {
       class="diff-frame"
       data-test-frame
       data-expanded={{if this.expanded "1"}}
-      {{didInsert this.load}}
+      {{this.inserted}}
       ...attributes
     >
       <div class="diff-frame-head">

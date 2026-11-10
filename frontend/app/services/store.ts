@@ -316,8 +316,14 @@ function keyOf(repo: string, number: number): string {
   return `${repo}#${number}`;
 }
 
-function worktreeDiffOf({ repo, number, key, version }: WorktreeOf): string {
-  return `worktree ${repo}#${number} ${key} ${version}`;
+function worktreeDiffOf({
+  repo,
+  number,
+  key,
+  version,
+  read,
+}: WorktreeOf): string {
+  return `${read} ${repo}#${number} ${key} ${version}`;
 }
 
 export function commitsOf(commits: DiffRange): string {
@@ -1057,7 +1063,7 @@ export default class StoreService extends Service {
     return this.once(`diff ${key}`, async () => {
       const worktree = commits.worktree;
       const path = worktree
-        ? `${this.here.prefixOf(worktree)}${under(worktree.key)}/worktree-diff`
+        ? `${this.here.prefixOf(worktree)}${under(worktree.key)}/${worktree.read}`
         : this.here.api(`/api/diffs/${key}`);
       try {
         this.takeDiff(await fetched<Diff>(path), key);

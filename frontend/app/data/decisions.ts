@@ -4,6 +4,8 @@ import type {
   PrFacts,
   Proposal,
   ProposalKind,
+  SplitPart,
+  SplitPartName,
   Ticket,
 } from 'frontend/data/api';
 import type { Role } from 'frontend/data/groups';
@@ -96,9 +98,11 @@ export interface Brief {
   note: string;
   pointed: { file: string; line: number; text: string }[];
   include: string[];
+  part?: SplitPartName;
 }
 
 export interface Gathered {
+  part?: SplitPartName;
   body?: string;
   modifier?: string;
   delete?: boolean;
@@ -277,6 +281,7 @@ const ENTRIES = {
         resolve: Boolean(gathered.resolve),
         ...(gathered.message ? { message: gathered.message } : {}),
         ...(gathered.ticket ? { ticket: gathered.ticket } : {}),
+        ...(gathered.part ? { part: gathered.part } : {}),
       },
     }),
     doing: 'accepting',
@@ -1054,6 +1059,7 @@ const CARRIED: Record<
   | Decision
   | PrVerb
   | 'edit-draft'
+  | 'edit-part'
   | 'create-draft'
   | 'send-review'
   | 'prepare-harvest-extension'
@@ -1068,6 +1074,14 @@ const CARRIED: Record<
   },
   'edit-draft': {
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
+    doing: 'saving',
+    square: null,
+  },
+  'edit-part': {
+    request: ({ part, body, ticket }) => ({
+      verb: 'edit-part',
+      body: part === 'ticket' ? { part, ticket } : { part, reply: body ?? '' },
+    }),
     doing: 'saving',
     square: null,
   },
@@ -1374,6 +1388,8 @@ function offeredOn(
     return offers.map((decision) => reviewerOffer(decision, phase));
   }
   const phase = phaseOf(conversation);
+  const split = proposal?.split;
+  if (split) return splitOffers(conversation, proposal, split.parts, phase);
   return AUTHOR_OFFERS[phase]
     .filter((decision) => {
       const entry: Entry = ENTRIES[decision];
@@ -1382,8 +1398,58 @@ function offeredOn(
     .map((decision) => authorOffer(decision, conversation, proposal, unsent));
 }
 
+const GONE_ONCE_A_PART_RAN: Decision[] = ['reject', 'rework'];
+
+const ACCEPT_ALL_TITLE =
+  'accepts every part not yet accepted; each runs in turn, the ticket, the ' +
+  'changes, the new PR, then the reply — public, and the board has no way ' +
+  'to undo a part once it has run';
+
+function acceptAllAsks(conversation: Conversation): DialogSpec {
+  return {
+    question: 'Accept every part not yet accepted?',
+    note:
+      'Each runs in turn: the ticket is filed, the changes are pushed to ' +
+      'this PR, the new PR is opened, and the reply is posted naming it. A ' +
+      'part that has run cannot be undone.',
+    reply: false,
+    resolves: conversation.kind === 'review' && !conversation.github_removed,
+    resolving: conversation.author_kind === 'bot',
+    submit: () => 'Accept all',
+  };
+}
+
+function splitOffers(
+  conversation: Conversation,
+  proposal: Proposal,
+  parts: SplitPart[],
+  phase: Phase,
+): Offer[] {
+  const ran = parts.some((one) => one.state === 'run');
+  const unaccepted =
+    DECIDING_PARTS.includes(phase) &&
+    parts.some((one) => one.state === 'proposed');
+  const acceptAll = unaccepted
+    ? [
+        offerOf(
+          'approve',
+          { label: 'Accept all' },
+          ACCEPT_ALL_TITLE,
+          acceptAllAsks(conversation),
+        ),
+      ]
+    : [];
+  return [
+    ...acceptAll,
+    ...AUTHOR_OFFERS[phase]
+      .filter((decision) => decision !== 'approve')
+      .filter((decision) => !(ran && GONE_ONCE_A_PART_RAN.includes(decision)))
+      .map((decision) => authorOffer(decision, conversation, proposal, null)),
+  ];
+}
+
 export function carriedOut(
-  decision: Decision | 'edit-draft',
+  decision: Decision | 'edit-draft' | 'edit-part',
   gathered: Gathered,
 ): Carried {
   const carrying = CARRIED[decision];
@@ -1397,6 +1463,92 @@ export function carriedOut(
             square: carrying.square,
           },
     opensTerminal: opensTerminal(decision),
+  };
+}
+
+export type PartAct = 'accept' | 'edit' | 'rework';
+
+export interface PartOffer {
+  act: PartAct;
+  label: string;
+  title: string;
+  weight: Weight;
+}
+
+const ACCEPT_TITLES: Record<SplitPartName, string> = {
+  ticket: 'files this ticket now, through an agent',
+  changes:
+    'pushes the commit that takes this code out of the PR — public, and ' +
+    'the board has no way to undo it',
+  'new-pr': 'opens the new PR now, through an agent, once its ticket is filed',
+  reply: 'posts this reply once the new PR is open, naming it',
+};
+
+const WORDED: SplitPartName[] = ['ticket', 'reply'];
+
+const DECIDING_PARTS: Phase[] = ['proposed', 'landing'];
+
+export function partOffers(
+  part: SplitPart,
+  running: boolean,
+  phase: Phase,
+): PartOffer[] {
+  if (!DECIDING_PARTS.includes(phase)) return [];
+  if (part.state === 'run' || part.state === 'running') return [];
+  const offers: PartOffer[] = [];
+  if (part.state === 'proposed') {
+    offers.push({
+      act: 'accept',
+      label: 'Accept',
+      title: ACCEPT_TITLES[part.part],
+      weight: 'primary',
+    });
+  }
+  if (WORDED.includes(part.part)) {
+    offers.push({
+      act: 'edit',
+      label: 'Edit',
+      title: 'changes its words and saves them; nothing is accepted',
+      weight: 'secondary',
+    });
+  }
+  if (!running) {
+    offers.push({
+      act: 'rework',
+      label: 'Rework',
+      title:
+        'sends this part back to the agent with your note; the other parts ' +
+        'keep what they have',
+      weight: 'secondary',
+    });
+  }
+  return offers;
+}
+
+export function editAsks(
+  part: SplitPartName,
+  words: { reply: string | null; ticket: Ticket | null },
+): DialogSpec {
+  if (part === 'ticket' && words.ticket) {
+    return {
+      question: 'Edit the ticket',
+      note:
+        'Saved for when you accept the ticket. Nothing is accepted or ' +
+        'filed now.',
+      reply: false,
+      ticket: words.ticket,
+      submit: () => 'Save',
+    };
+  }
+  return {
+    question: 'Edit the reply',
+    note:
+      'Saved for when the reply is posted, with the new PR linked under it. ' +
+      'Nothing is accepted or posted now.',
+    reply: true,
+    prefill: words.reply ?? '',
+    placeholder: '',
+    submit: () => 'Save',
   };
 }
 

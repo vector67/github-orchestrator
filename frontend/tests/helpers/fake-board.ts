@@ -756,6 +756,7 @@ export class FakeBoard {
   proposals: Record<string, Proposal[]> = {};
   diffs: Record<string, Diff & { merged?: string }> = {};
   worktreeDiffs: Record<string, Diff> = {};
+  splitDiffs: Record<string, Diff> = {};
   anchors: Record<string, DiffAnchors> = {};
   pullRequestDiff: Diff = { base: 'ba5e000', head: 'c0ffee1', files: [] };
   localDiff: Diff | null = null;
@@ -1419,6 +1420,7 @@ export class FakeBoard {
       return (this.proposals[key] ?? []).map((one) => this.proposed(key, one));
     }
     if (rest === '/worktree-diff') return this.worktreeDiffs[key];
+    if (rest === '/split-diff') return this.splitDiffs[key];
     return undefined;
   }
 

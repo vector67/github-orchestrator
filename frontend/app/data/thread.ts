@@ -202,7 +202,8 @@ function runAskedAfter(
 
 function landingFailureOf(conversation: Conversation): Phase | undefined {
   const approve = newestOf(conversation, ['approve']);
-  if (approve?.state !== 'refused') return undefined;
+  if (approve?.state !== 'refused' || approve.lands === 'split')
+    return undefined;
   if (runAskedAfter(conversation, approve)) return undefined;
   return LANDING_FAILURES[approve.reason_code ?? ''];
 }

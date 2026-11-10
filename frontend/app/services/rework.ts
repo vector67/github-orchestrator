@@ -1,5 +1,6 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import type { SplitPartName } from 'frontend/data/api';
 import type { Brief } from 'frontend/data/decisions';
 
 export interface Pointed {
@@ -14,17 +15,19 @@ export default class ReworkService extends Service {
   @tracked pointed: Pointed[] = [];
   @tracked included: string[] = [];
   @tracked visible = false;
+  @tracked part: SplitPartName | null = null;
 
   isOpen(key: string): boolean {
     return this.openFor === key;
   }
 
-  open(key: string): void {
+  open(key: string, part: SplitPartName | null = null): void {
     this.openFor = key;
     this.note = '';
     this.pointed = [];
     this.included = [];
     this.visible = false;
+    this.part = part;
   }
 
   cancel(): void {
@@ -33,6 +36,7 @@ export default class ReworkService extends Service {
     this.pointed = [];
     this.included = [];
     this.visible = false;
+    this.part = null;
   }
 
   idOf(one: Pointed): string {
@@ -76,6 +80,7 @@ export default class ReworkService extends Service {
       note: this.note.trim(),
       pointed: this.pointed,
       include: this.included,
+      ...(this.part ? { part: this.part } : {}),
     };
   }
 }
