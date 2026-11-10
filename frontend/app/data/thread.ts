@@ -177,14 +177,41 @@ export function closedBy(conversation: Conversation): string | null {
   return closes.at(-1)?.kind ?? null;
 }
 
+function partOfLanding(
+  run: OperationSummary,
+  approve: OperationSummary,
+): boolean {
+  return (
+    Date.parse(run.requested_at ?? '') < Date.parse(approve.settled_at ?? '')
+  );
+}
+
+function runAskedAfter(
+  conversation: Conversation,
+  approve: OperationSummary,
+): boolean {
+  const after = conversation.operations.slice(
+    conversation.operations.indexOf(approve) + 1,
+  );
+  return after.some(
+    (one) =>
+      (RUN_KINDS as string[]).includes(one.kind) &&
+      !partOfLanding(one, approve),
+  );
+}
+
+function landingFailureOf(conversation: Conversation): Phase | undefined {
+  const approve = newestOf(conversation, ['approve']);
+  if (approve?.state !== 'refused') return undefined;
+  if (runAskedAfter(conversation, approve)) return undefined;
+  return LANDING_FAILURES[approve.reason_code ?? ''];
+}
+
 function readyPhase(conversation: Conversation): Phase {
   if (conversation.github_removed) return 'removed';
   if (conversation.question) return 'asking';
-  const landing = newestOf(conversation, [...RUN_KINDS, 'approve']);
-  if (landing?.kind === 'approve' && landing.state === 'refused') {
-    const failure = LANDING_FAILURES[landing.reason_code ?? ''];
-    if (failure) return failure;
-  }
+  const failure = landingFailureOf(conversation);
+  if (failure) return failure;
   if (proposalWaiting(conversation)) return 'proposed';
   const run = newestOf(conversation, RUN_KINDS);
   if (run?.state === 'refused') {

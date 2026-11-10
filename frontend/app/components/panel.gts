@@ -231,6 +231,13 @@ const PanelView: TOC<PanelSignature> = <template>
                 >{{@panel.failure.summary}}</p>
               {{/if}}
               <p class="land-standing">{{@panel.failure.standing}}</p>
+              {{#if @panel.failure.unsent}}
+                <p class="land-standing">Your reply, not posted:</p>
+                <blockquote
+                  class="proposed-reply"
+                  data-test-failure-reply
+                >{{@panel.failure.unsent}}</blockquote>
+              {{/if}}
               {{#if @panel.failure.machine}}
                 <details class="land-output">
                   <summary>{{@panel.failure.output_label}}</summary>
