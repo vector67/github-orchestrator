@@ -589,14 +589,13 @@ def test_a_head_that_will_not_read_leaves_the_landing_alone_and_says_so(
 ):
     cut, tip = _two_commit_fix(git, pr_worktree)
     before = _git(pr_worktree, "rev-parse", "HEAD").stdout.strip()
-    reads = []
+    picked = []
 
     def fake_git(cwd, args):
-        if args[:2] == ("rev-parse", "HEAD"):
-            reads.append(args)
-            if len(reads) > 1:
-                raise subprocess.TimeoutExpired(["git", "rev-parse"],
-                                                GIT_TIMEOUT)
+        if args[0] == "cherry-pick":
+            picked.append(args)
+        if picked and args[:2] == ("rev-parse", "HEAD"):
+            raise subprocess.TimeoutExpired(["git", "rev-parse"], GIT_TIMEOUT)
         return None
 
     _git_answers(monkeypatch, fake_git)
