@@ -24,6 +24,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportAsk,
     ReportDeclined,
     ReportFiled,
+    ReportOpened,
     ReportReady,
     ReportReply,
     ReportSplit,
@@ -90,7 +91,7 @@ from github_orchestrator.conversation._domain.events import (
     SessionRefused,
     Wake,
 )
-from github_orchestrator.conversation._domain.operations import Asked
+from github_orchestrator.conversation._domain.operations import Asked, joins
 from github_orchestrator.conversation._domain.parts import (
     ANSWER,
     PICK,
@@ -354,6 +355,13 @@ def _a_filing_run(conversation: Conversation, command: ReportFiled) -> Refused |
     return None
 
 
+def _an_opening_run(conversation: Conversation, command: ReportOpened) -> Refused | None:
+    if conversation.fix.run.kind != OperationKind.OPEN:
+        return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
+                       f"{_a(conversation.fix.run.kind)} run opens no PR")
+    return None
+
+
 def _running_only(conversation: Conversation, change: Any) -> Refused | None:
     if conversation.state != OPEN:
         return Refused(conversation, _state_code(conversation),
@@ -404,7 +412,7 @@ def _not_parked_to_land(conversation: Conversation, command: Approve) -> Refused
 
 
 def _no_landing_under_way(conversation: Conversation, command: Approve) -> Refused | None:
-    if landing_under_way(conversation):
+    if landing_under_way(conversation) and not joins(conversation, command):
         return Refused(conversation, ErrorCode.OPERATION_OUTSTANDING,
                        "a landing is already under way")
     return None
@@ -434,8 +442,12 @@ def _a_reply_to_post(conversation: Conversation, command: Approve) -> Refused | 
 
 def _filing(conversation: Conversation, command: Approve) -> Deferred | None:
     fix = conversation.fix
-    if fix.run.kind == OperationKind.FILE and fix.state in (QUEUED, RUNNING):
+    if joins(conversation, command) or fix.state not in (QUEUED, RUNNING):
+        return None
+    if fix.run.kind == OperationKind.FILE:
         return Deferred(conversation, "the ticket is still being filed")
+    if fix.run.kind == OperationKind.OPEN:
+        return Deferred(conversation, "the new PR is still being opened")
     return None
 
 
@@ -481,9 +493,11 @@ def _a_part_to_accept(conversation: Conversation, command: Approve) -> Refused |
         return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
                                 f"the {part} part has run, so it is locked")
     newly = newly_accepted(split, part)
-    if SplitPart.NEW_PR in newly:
-        return _refuse_decision(conversation, ErrorCode.NO_PROPOSAL,
-                                "opening the new PR arrives in a later step")
+    if SplitPart.NEW_PR in newly and not command.filing_allowed:
+        return _refuse_decision(
+            conversation, ErrorCode.AGENTS_DISABLED,
+            "Agents are disabled (agents_enabled=false), and an agent opens the new PR, "
+            "so nothing was opened")
     if SplitPart.TICKET in newly:
         return _a_split_ticket_to_file(conversation, command)
     return None
@@ -515,7 +529,7 @@ def _a_split_turned_down_before_any_part_ran(conversation: Conversation,
 
 def _a_fix_to_land(conversation: Conversation, command: Approve) -> Refused | None:
     fix = conversation.fix
-    if fix.state != LANDING and not _may_land(conversation):
+    if fix.state != LANDING and not _may_land(conversation) and not joins(conversation, command):
         return Refused(conversation, _fix_code(conversation),
                        f"{_a(fix.state)} fix cannot be landed")
     return None
@@ -579,6 +593,8 @@ def _ready_to_pick(conversation: Conversation, command: Approve) -> Deferred | N
     fix = conversation.fix
     split = fix.split
     if fix.kind == ProposalKind.SPLIT and split is not None:
+        if joins(conversation, command):
+            return None
         accepting_now = with_fix(conversation, split=accepting(split, command.part))
         if picks_next(accepting_now.fix):
             return _unready(accepting_now, command)
@@ -933,6 +949,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
                   _a_commit, _on_the_base, _a_branch_the_worktree_has),
     ReportAsk: (_reported_on((RUNNING, IN_SESSION), "nobody is working on"),),
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
+    ReportOpened: (_reported_on((RUNNING,), "nobody is opening a PR for"), _an_opening_run),
     Fail: (_running_only,),
     SetCommitVerdict: (_a_commit_checked,),
     CheckForFixes: (_waiting_on_the_author,),

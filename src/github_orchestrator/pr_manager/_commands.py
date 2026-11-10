@@ -160,7 +160,7 @@ class ManagerCommands:
             log.info("mark ready %s: refused — not your draft", pr)
             self.notify(Notice(NoticeCode.NOT_YOUR_DRAFT))
             return
-        refused = self._pull_requests.mark_ready(pr)
+        refused = self._pull_requests.set_draft(pr, False)
         if refused is not None:
             log.warning("mark ready %s: GitHub refused — %s", pr, refused)
             self.notify(Notice(NoticeCode.MARK_READY_REFUSED, refused))

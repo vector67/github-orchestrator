@@ -18,6 +18,7 @@ _REQUIRED = {
     "ask": frozenset({"--pr", "--thread-id", "--question", "--context"}),
     "fail": frozenset({"--pr", "--thread-id", "--reason"}),
     "filed": frozenset({"--pr", "--thread-id", "--key", "--url"}),
+    "opened": frozenset({"--pr", "--thread-id", "--url"}),
     "draft": frozenset({"--pr", "--path", "--line", "--body-file"}),
 }
 
@@ -86,6 +87,9 @@ class CliReportCommands:
 
     def filed(self, pr: Pr, key: str, *, ticket: str, url: str) -> str:
         return self._command("filed", pr, key, [("--key", ticket), ("--url", url)])
+
+    def opened(self, pr: Pr, key: str, *, url: str) -> str:
+        return self._command("opened", pr, key, [("--url", url)])
 
     def draft(self, pr: Pr, *, path: str, line: str, start_line: str, body_file: str) -> str:
         return self._command("draft", pr, None, [

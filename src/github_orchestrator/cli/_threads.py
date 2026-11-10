@@ -121,6 +121,12 @@ def thread_filed(args: argparse.Namespace, *, conversation_managers: Conversatio
         Classification.OUT_OF_SCOPE, "", filed_key=args.key, filed_url=args.url), "filed")
 
 
+def thread_opened(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                  gist_model: str | None) -> None:
+    _report_or_die(args, conversation_managers,
+                   lambda conversation: conversation.opened(args.url), "opened")
+
+
 def _paired_steps(args: argparse.Namespace) -> tuple[tuple[str, str | None], ...]:
     files = args.file or []
     if files and len(files) != len(args.step):
@@ -373,6 +379,7 @@ THREAD_COMMANDS = {
     "ticket": thread_ticket,
     "split": thread_split,
     "filed": thread_filed,
+    "opened": thread_opened,
     "ready": thread_ready,
     "ask": thread_ask,
     "base": thread_base,
@@ -661,6 +668,14 @@ def add_thread_parsers(
     filed_parser.add_argument("--key", required=True,
                               help="The key the tracker gave the ticket, such as PROJ-12 or #12")
     filed_parser.add_argument("--url", required=True, help="The ticket's link")
+
+    opened_parser = thread_sub.add_parser(
+        "opened",
+        help="The new PR the author accepted is open: the board posts the reply with its link.",
+    )
+    _common(opened_parser)
+    opened_parser.add_argument("--thread-id", required=True)
+    opened_parser.add_argument("--url", required=True, help="The new PR's link")
 
     ready_parser = thread_sub.add_parser(
         "ready", help="The subagent committed in its worktree: status=ready."

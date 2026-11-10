@@ -175,6 +175,7 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
                 account=ports.config.gh_account,
                 tests_required=ports.config.has_tests,
                 part=intent.part,
+                draft=ports.config.draft,
             )
         case "rework":
             return Rework(

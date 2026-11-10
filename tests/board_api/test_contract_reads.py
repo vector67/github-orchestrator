@@ -809,19 +809,20 @@ def test_a_proposed_split_waits_under_ready_for_you_with_its_reply():
         ("reply", "proposed", "new-pr")]
 
 
-def test_accepting_all_of_a_split_is_refused_until_the_new_pr_can_open_and_says_why():
+def test_accepting_all_of_a_split_pushes_then_opens_the_new_pr_with_the_reply_queued():
     board = board_for()
     card(board)
     _split(board)
     client = client_of(board)
 
-    answer = asked(client, "approve", reply="This moved to its own PR.")
+    answer = asked(client, "approve")
+    drain(board)
 
-    assert answer.status_code == 409
-    [error] = answer.json()["errors"]
-    assert error["code"] == "no-proposal"
-    assert "opening the new PR arrives in a later step" in error["detail"]
-    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+    assert answer.status_code == 202, answer.json()
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    assert [(part["part"], part["state"]) for part in proposal["split"]["parts"]] == [
+        ("changes", "run"), ("new-pr", "running"), ("reply", "queued")]
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "landing"
 
 
 def test_accepting_one_part_of_a_split_runs_it_and_the_proposal_says_so():
@@ -838,6 +839,29 @@ def test_accepting_one_part_of_a_split_runs_it_and_the_proposal_says_so():
     assert [(part["part"], part["state"]) for part in proposal["split"]["parts"]] == [
         ("changes", "run"), ("new-pr", "proposed"), ("reply", "proposed")]
     assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+
+
+def test_a_split_whose_parts_have_run_shows_each_result_and_its_link():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    asked(client, "approve")
+    drain(board)
+    with board.threads.editing(KEY) as editable:
+        editable.opened("https://github.com/acme/widgets/pull/12")
+    drain(board)
+
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    results = {part["part"]: part["result"] for part in proposal["split"]["parts"]}
+    assert results["new-pr"] == {"text": "https://github.com/acme/widgets/pull/12",
+                                 "url": "https://github.com/acme/widgets/pull/12"}
+    assert results["reply"] == {
+        "text": "This moved to its own PR.\n\nhttps://github.com/acme/widgets/pull/12",
+        "url": None}
+    assert len(results["changes"]["text"]) == 40
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "done"
 
 
 def test_a_part_that_names_nothing_a_split_has_is_a_bad_request():

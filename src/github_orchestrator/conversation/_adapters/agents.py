@@ -7,7 +7,7 @@ from github_orchestrator.agent_runs import (
     ThreadFix,
     ThreadWork,
 )
-from github_orchestrator.conversation._application.ports import RunProgress
+from github_orchestrator.conversation._application.ports import GitHub, RunProgress
 from github_orchestrator.conversation._domain.conversation import (
     PROPOSED,
     Brief,
@@ -30,13 +30,16 @@ class ThreadAgents:
     def __init__(self, thread_work: ThreadWork, pr: Pr,
                  manager_run_alive: Callable[[], bool], *, account: str,
                  tracker: str | None, tracker_project: str | None,
-                 branch_ticket: Callable[[], str | None]) -> None:
+                 branch_ticket: Callable[[], str | None], pr_skill: str,
+                 pages: GitHub) -> None:
         self.thread_work = thread_work
         self.pr = pr
         self.account = account
         self.tracker = tracker
         self.tracker_project = tracker_project
         self.branch_ticket = branch_ticket
+        self.pr_skill = pr_skill
+        self.pages = pages
         self.manager_run_alive = manager_run_alive
         self.runs: dict[str, Run] = {}
 
@@ -55,6 +58,7 @@ class ThreadAgents:
                brief: Brief | None) -> ThreadFix:
         fix = conversation.fix
         ticket = fix.ticket if fix.kind in (ProposalKind.TICKET, ProposalKind.SPLIT) else None
+        split = fix.split
         return ThreadFix(
             pr=self.pr, key=conversation.key, worktree=worktree,
             author=conversation.author, path=conversation.path, line=conversation.line,
@@ -78,7 +82,20 @@ class ThreadAgents:
             replies=() if brief is None else tuple(
                 self._said(comment) for comment in conversation.comments[1:]
                 if comment.author in brief.include),
+            split_branch=None if split is None else split.branch,
+            split_base=None if split is None else split.base,
+            split_base_reason=None if split is None else split.base_reason,
+            pr_skill=self.pr_skill,
+            pr_url=self.pages.page(),
+            thread_url=self._thread_url(conversation),
+            ticket_key=fix.ticket_key,
+            ticket_url=fix.ticket_url,
         )
+
+    def _thread_url(self, conversation: Conversation) -> str | None:
+        if conversation.comment_id is None:
+            return None
+        return self.pages.comment_page(conversation, conversation.comment_id)
 
     def start_run(self, conversation: Conversation, worktree: str | None, kind: str,
                   onto: Sha | None) -> str | None:
@@ -93,6 +110,8 @@ class ThreadAgents:
             run = self.thread_work.rework(asked)
         elif kind == OperationKind.FILE:
             run = self.thread_work.file_ticket(asked)
+        elif kind == OperationKind.OPEN:
+            run = self.thread_work.open_pr(asked)
         else:
             run = self.thread_work.fix(asked)
         if isinstance(run, str):

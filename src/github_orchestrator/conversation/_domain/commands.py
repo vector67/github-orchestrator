@@ -119,6 +119,11 @@ class ReportFiled:
 
 
 @dataclass(frozen=True)
+class ReportOpened:
+    url: str
+
+
+@dataclass(frozen=True)
 class Fail:
     reason: str
 
@@ -153,6 +158,7 @@ class Approve:
     account: str = ""
     tests_required: bool = True
     part: SplitPart | None = None
+    draft: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -252,6 +258,7 @@ Command = (
     | ReportSplit
     | ReportAsk
     | ReportFiled
+    | ReportOpened
     | Fail
     | SessionGone
     | SetCommitVerdict

@@ -257,6 +257,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
                 ticket_key=landing.ticket_key, ticket_url=landing.ticket_url)
         case OperationKind.FILE as filing:
             return contract.FileOperation(**envelope, kind=filing)
+        case OperationKind.OPEN as opening:
+            return contract.OpenOperation(**envelope, kind=opening)
         case OperationKind.STOP as stop:
             return contract.StopOperation(**envelope, kind=stop, stopped=operation.stopped)
         case OperationKind.RESOLVE | OperationKind.REJECT as closing:
@@ -420,7 +422,9 @@ def proposal_of(git: PrCheckout,
                 part=contract.SplitPartName(view.part),
                 state=contract.SplitPartState(view.state),
                 waits_for=None if view.waits_for is None
-                else contract.SplitPartName(view.waits_for))
+                else contract.SplitPartName(view.waits_for),
+                result=None if view.result is None else contract.SplitPartResult(
+                    text=view.result.text, url=view.result.url))
                 for view in proposal.parts]),
     )
 

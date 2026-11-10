@@ -81,6 +81,14 @@ class ThreadFix:
     note: str = ""
     pointed: tuple[PointedAt, ...] = ()
     replies: tuple[FixComment, ...] = ()
+    split_branch: str | None = None
+    split_base: str | None = None
+    split_base_reason: str | None = None
+    pr_skill: str = ""
+    pr_url: str | None = None
+    thread_url: str | None = None
+    ticket_key: str | None = None
+    ticket_url: str | None = None
 
 
 Replied = Sequence[tuple[str | None, int | None, Sequence[FixComment]]]
@@ -171,6 +179,8 @@ class ThreadWork(Protocol):
     def carry_on_thread(self, fix: ThreadFix) -> Run | str: ...
 
     def file_ticket(self, fix: ThreadFix) -> Run | str: ...
+
+    def open_pr(self, fix: ThreadFix) -> Run | str: ...
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None: ...
 

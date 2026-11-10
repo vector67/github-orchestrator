@@ -23,6 +23,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportAsk,
     ReportDeclined,
     ReportFiled,
+    ReportOpened,
     ReportReady,
     ReportReply,
     ReportSplit,
@@ -64,6 +65,7 @@ from github_orchestrator.conversation._domain.conversation import (
     MAX_ATTEMPTS,
     NOT_MINE,
     OPEN,
+    PART_RUNS,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -107,6 +109,7 @@ from github_orchestrator.conversation._domain.effects import (
     CutWorkspace,
     DeleteComment,
     DropWorkspace,
+    MatchDraft,
     OpenLoginShell,
     OpenSession,
     Pick,
@@ -131,6 +134,7 @@ from github_orchestrator.conversation._domain.events import (
     ClosingReplyPosted,
     CommitCheckDue,
     CommitChecked,
+    DraftMatched,
     DraftPosted,
     DraftPostFailed,
     GistWritten,
@@ -178,18 +182,24 @@ from github_orchestrator.conversation._domain.machine import (
     ticket_to_file,
     with_fix,
 )
-from github_orchestrator.conversation._domain.operations import Asked
+from github_orchestrator.conversation._domain.operations import Asked, joins
 from github_orchestrator.conversation._domain.parts import (
     ANSWER,
     FILE,
     MARK_RESOLVED,
+    MATCH_DRAFT,
     PICK,
     PUSH,
     Split,
     SplitPart,
     accepting,
     dropped,
+    has_run,
     next_part,
+    parts,
+)
+from github_orchestrator.conversation._domain.parts import (
+    OPEN as OPEN_PR,
 )
 from github_orchestrator.conversation._domain.steps import First, Land
 from github_orchestrator.conversation._domain.verdict import (
@@ -695,14 +705,24 @@ def _filing_run_failed(conversation: Conversation) -> bool:
     return fix.run.kind == OperationKind.FILE and bool(fix.file_error)
 
 
+_PART_RUN_BY = {OperationKind.FILE: SplitPart.TICKET, OperationKind.OPEN: SplitPart.NEW_PR}
+
+_RUN_NAMED = {OperationKind.FILE: "the filing run", OperationKind.OPEN: "the run opening the new PR"}
+
+
+def _part_run_failed(fix: Fix) -> bool:
+    return fix.state == LANDING and fix.run.kind in PART_RUNS and bool(fix.file_error)
+
+
 def _approve(conversation: Conversation, command: Approve) -> Accepted | Deferred:
-    split = conversation.fix.kind == ProposalKind.SPLIT
-    if _filing_run_failed(conversation) and split:
-        return Accepted(_part_failed(conversation, SplitPart.TICKET, run=Run()))
-    if _filing_run_failed(conversation):
-        return Accepted(with_fix(conversation, run=Run()))
+    fix = conversation.fix
+    split = fix.kind == ProposalKind.SPLIT
+    if split and _part_run_failed(fix):
+        return Accepted(_part_failed(conversation, _PART_RUN_BY[fix.run.kind]))
     if split:
         return _accept_parts(conversation, command)
+    if _filing_run_failed(conversation):
+        return Accepted(with_fix(conversation, run=Run()))
     prepared = prepared_to_land(conversation, command)
     if prepared.fix.kind == ProposalKind.TICKET and not prepared.fix.filed:
         return _file(prepared, command)
@@ -723,15 +743,27 @@ def _the_split(fix: Fix) -> Split:
 
 
 def _accept_parts(conversation: Conversation, command: Approve) -> Accepted | Deferred:
-    split = _the_split(conversation.fix)
-    return _run_next_part(with_fix(conversation, split=accepting(split, command.part),
-                                   reason=None, decision_error=None, file_error=None,
-                                   push_error=None), command)
+    fix = conversation.fix
+    split = _the_split(fix)
+    accepted = with_fix(conversation, split=accepting(split, command.part),
+                        resolve_on_land=fix.resolve_on_land or command.resolve)
+    if joins(conversation, command):
+        return Accepted(accepted)
+    return _run_next_part(with_fix(accepted, reason=None, decision_error=None,
+                                   file_error=None, push_error=None, reply_error=None),
+                          command)
 
 
 def _run_next_part(conversation: Conversation, command: Approve) -> Accepted | Deferred:
     fix = conversation.fix
-    match next_part(_the_split(fix), fix.steps):
+    split = _the_split(fix)
+    if (command.draft is not None and split.pr_url is not None
+            and MATCH_DRAFT not in fix.steps):
+        return Accepted(with_fix(conversation, state=LANDING),
+                        (MatchDraft(url=split.pr_url, draft=command.draft),))
+    if all(has_run(fix.steps, part) for part in parts(split)):
+        return _after_the_answer(conversation)
+    match next_part(split, fix.steps):
         case SplitPart.TICKET:
             return _file(conversation, command)
         case SplitPart.CHANGES if PICK not in fix.steps:
@@ -739,7 +771,42 @@ def _run_next_part(conversation: Conversation, command: Approve) -> Accepted | D
                             (Pick(message=command.message),))
         case SplitPart.CHANGES:
             return Accepted(with_fix(conversation, state=LANDING), (Push(),))
+        case SplitPart.NEW_PR:
+            return _open(conversation)
+        case SplitPart.REPLY:
+            return _answer_the_split(with_fix(conversation, state=LANDING))
     return Accepted(with_fix(conversation, state=PROPOSED))
+
+
+def _draft_matched(conversation: Conversation, command: DraftMatched) -> Accepted:
+    steps = conversation.fix.steps | {MATCH_DRAFT}
+    if command.error is None:
+        return Accepted(with_fix(conversation, steps=steps))
+    return Accepted(with_fix(conversation, steps=steps,
+                             reply_note=f"the new PR's draft state was left as the skill set "
+                                        f"it: {command.error}"))
+
+
+def _answer_the_split(conversation: Conversation) -> Accepted:
+    if conversation.comment_deleted:
+        return _answered(conversation, reply_note="no reply: the comment was deleted")
+    fix = conversation.fix
+    links = (_the_split(fix).pr_url, fix.ticket_url)
+    body = "\n\n".join(text for text in (fix.reply, *links) if text)
+    return Accepted(conversation, (PostReply(body=body, commit=None),))
+
+
+def _open(conversation: Conversation) -> Deferred:
+    return Deferred(with_fix(conversation, state=QUEUED, run=Run(kind=OperationKind.OPEN),
+                             attempts=0, started_at=None, reason=None, decision_error=None),
+                    "the approve waits for the new PR to be opened")
+
+
+def _report_opened(conversation: Conversation, command: ReportOpened) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(conversation, state=LANDING, steps=fix.steps | {OPEN_PR},
+                             split=replace(_the_split(fix), pr_url=command.url),
+                             started_at=None))
 
 
 def _part_failed(conversation: Conversation, part: SplitPart, **fields: Any) -> Conversation:
@@ -774,16 +841,16 @@ def _filing_failed(conversation: Conversation, reason: str, at: str | None,
 
 def _filing_ended(conversation: Conversation, command: Fail | RunExited | RunTimedOut | RunLost,
                   at: str | None) -> Accepted:
+    run = _RUN_NAMED[conversation.fix.run.kind]
     match command:
         case Fail():
             return _filing_failed(conversation, command.reason, at)
         case RunTimedOut():
             return _filing_failed(conversation, command.reason, command.at, (StopRun(),))
         case RunExited():
-            return _filing_failed(conversation, f"the filing run {UNREPORTED}", command.at)
+            return _filing_failed(conversation, f"{run} {UNREPORTED}", command.at)
         case RunLost():
-            return _filing_failed(conversation, f"the board lost the filing run, which {UNREPORTED}",
-                                  at)
+            return _filing_failed(conversation, f"the board lost {run}, which {UNREPORTED}", at)
 
 
 def _lands_a_commit(fix: Fix) -> bool:
@@ -815,6 +882,8 @@ def _after_the_answer(conversation: Conversation) -> Accepted:
 def _answered(conversation: Conversation, **fields: Any) -> Accepted:
     answered = with_fix(conversation, steps=conversation.fix.steps | {ANSWER},
                          reply_error=None, pending_reply="", **fields)
+    if answered.fix.kind == ProposalKind.SPLIT:
+        return Accepted(answered)
     if _lands_a_commit(answered.fix) and PUSH not in answered.fix.steps:
         return Accepted(answered)
     return _after_the_answer(answered)
@@ -1286,8 +1355,10 @@ def _dispatch(conversation: Conversation, command: Change,
             return _report_ask(conversation, command, at)
         case ReportFiled():
             return _report_filed(conversation, command)
+        case ReportOpened():
+            return _report_opened(conversation, command)
         case Fail() | RunExited() | RunTimedOut() | RunLost() if (
-                conversation.fix.run.kind == OperationKind.FILE):
+                conversation.fix.run.kind in PART_RUNS):
             return _filing_ended(conversation, command, at)
         case Fail():
             return _fail_or_retry(conversation, command.reason, at)
@@ -1403,6 +1474,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return Accepted(replace(conversation, comments=tuple(
                 reacted(c, THUMBS_UP, True) if c.id == command.comment_id else c
                 for c in conversation.comments)))
+        case DraftMatched():
+            return _draft_matched(conversation, command)
         case ReactionFailed():
             return Accepted(with_fix(
                 conversation, reply_note=f"thumbs-up failed: {command.error}"))

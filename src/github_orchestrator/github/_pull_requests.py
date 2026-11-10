@@ -307,18 +307,27 @@ def head_branch(gh: Gh, pr: Pr) -> str | None:
     return branch if isinstance(branch, str) and branch else None
 
 
-_MARK_READY_MUTATION = """
+_SET_DRAFT_MUTATIONS = {
+    False: """
 mutation($id: ID!) {
   markPullRequestReadyForReview(input: {pullRequestId: $id}) {
     pullRequest { isDraft }
   }
 }
-"""
+""",
+    True: """
+mutation($id: ID!) {
+  convertPullRequestToDraft(input: {pullRequestId: $id}) {
+    pullRequest { isDraft }
+  }
+}
+""",
+}
 
 
-def mark_ready(gh: Gh, pr: Pr) -> None:
+def set_draft(gh: Gh, pr: Pr, draft: bool) -> None:
     pull = gh.api(f"repos/{pr.repo}/pulls/{pr.number}")
-    gh.graphql_mutate(_MARK_READY_MUTATION, {"id": pull["node_id"]})
+    gh.graphql_mutate(_SET_DRAFT_MUTATIONS[draft], {"id": pull["node_id"]})
 
 
 RECENT = 50

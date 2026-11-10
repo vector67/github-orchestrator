@@ -260,12 +260,12 @@ class FakeGitHub:
         record.status = "CLOSED"
         return None
 
-    def mark_ready(self, pr: Pr) -> str | None:
+    def set_draft(self, pr: Pr, draft: bool) -> str | None:
         record = self.prs.get(pr)
         if record is None:
             return (f"gh api repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
                     "gh: Not Found (HTTP 404)")
-        record.state = replace(record.state, draft=False)
+        record.state = replace(record.state, draft=draft)
         return None
 
     def assign_reviewers(self, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> str | None:

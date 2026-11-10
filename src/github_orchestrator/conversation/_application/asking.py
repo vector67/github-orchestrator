@@ -49,6 +49,7 @@ from github_orchestrator.conversation._domain.operations import (
     Asked,
     adopted,
     in_flight,
+    joins,
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
 from github_orchestrator.conversation._domain.standing import ErrorCode
@@ -262,6 +263,17 @@ def _stops_a_landing(conversation: Conversation, command: Command, intent: Inten
             and conversation.fix.state == LANDING)
 
 
+def _joined(ports: Ports, conversation: Conversation, command: Command, held: Update,
+            direction: str) -> Conversation | Denied:
+    requested_at = ports.clock.now()
+    outcome = apply(conversation, command, requested_at,
+                    Asked(id=_operation_id(), requested_at=requested_at, direction=direction))
+    if isinstance(outcome, Refused):
+        return Denied(outcome.code, outcome.reason)
+    held.conversation = outcome.conversation
+    return outcome.conversation
+
+
 def ask(ports: Ports, conversation: Conversation, command: Command,
         held: Update, direction: str = "") -> Conversation | Denied:
     """The refusals the rules can give now, the write into the pending decisions
@@ -276,6 +288,8 @@ def ask(ports: Ports, conversation: Conversation, command: Command,
     """
     key = conversation.key
     records = ports.records
+    if joins(conversation, command):
+        return _joined(ports, conversation, command, held, direction)
     pending = records.pending_on(key)
     if pending.reply is not None or (pending.intent is not None
                                      and not _stops_a_landing(conversation, command, pending.intent)):

@@ -115,13 +115,18 @@ class FilingTicket:
 
 
 @dataclass(frozen=True)
+class OpeningPr:
+    fix: ThreadFix
+
+
+@dataclass(frozen=True)
 class Session:
     fix: ThreadFix
     steer: str | None
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
-        | Reworking | CarryingOnThread | FilingTicket)
+        | Reworking | CarryingOnThread | FilingTicket | OpeningPr)
 
 
 @dataclass(frozen=True)
@@ -382,6 +387,9 @@ class FakeAgentRuns:
 
     def file_ticket(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, FilingTicket(fix))
+
+    def open_pr(self, fix: ThreadFix) -> FakeRun | str:
+        return self._fix_thread(fix, OpeningPr(fix))
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         refused = open_session_in(self.pr_processes, fix.pr, fix.worktree, ["claude"],

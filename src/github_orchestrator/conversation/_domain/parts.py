@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
@@ -6,6 +7,7 @@ PICK = "pick"
 PUSH = "push"
 OPEN = "open"
 ANSWER = "answer"
+MATCH_DRAFT = "match-draft"
 MARK_RESOLVED = "resolve"
 
 
@@ -38,6 +40,13 @@ class Split:
     base_reason: str
     ticket: Ticket | None = None
     accepted: frozenset[SplitPart] = frozenset()
+    pr_url: str | None = None
+
+
+@dataclass(frozen=True)
+class PartResult:
+    text: str
+    url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -45,6 +54,7 @@ class PartView:
     part: SplitPart
     state: PartState
     waits_for: SplitPart | None
+    result: PartResult | None = None
 
 
 _RUNS_AS = {SplitPart.TICKET: FILE, SplitPart.CHANGES: PUSH, SplitPart.NEW_PR: OPEN,
@@ -110,7 +120,9 @@ def _state(split: Split, steps: frozenset[str], part: SplitPart, under_way: bool
     return PartState.ACCEPTED
 
 
-def views(split: Split, steps: frozenset[str], under_way: bool) -> tuple[PartView, ...]:
+def views(split: Split, steps: frozenset[str], under_way: bool,
+          results: Mapping[SplitPart, PartResult]) -> tuple[PartView, ...]:
     return tuple(PartView(part=part, state=_state(split, steps, part, under_way),
-                          waits_for=waits_for(split, part))
+                          waits_for=waits_for(split, part),
+                          result=results.get(part) if has_run(steps, part) else None)
                  for part in parts(split))

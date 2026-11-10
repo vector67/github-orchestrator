@@ -1,14 +1,16 @@
 import pytest
 
-from github_orchestrator.agent_runs.fake import FilingTicket
+from github_orchestrator.agent_runs.fake import FilingTicket, OpeningPr, Outcome
 from github_orchestrator.conversation import (
     Classification,
     ConversationState,
     Denied,
     ErrorCode,
 )
-from github_orchestrator.domain import Sha
-from github_orchestrator.settings.fake import fake_settings
+from github_orchestrator.domain import Repo, Sha
+from github_orchestrator.github import PullRequestState
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
+from tests.builders import a_pr
 from tests.conversation.support import (
     WORKTREE,
     commit_fix,
@@ -210,6 +212,181 @@ def test_every_order_of_accepting_the_three_parts_runs_two_and_queues_the_reply(
     assert here.github.thread(KEY).comments[1:] == ()
 
 
+def test_a_part_accepted_while_the_ticket_is_filed_joins_and_runs_in_its_turn(here, threads):
+    _split_with_a_ticket(here, threads)
+    here.agent_runs.script(Outcome(finishes=False))
+    _asked(threads, "approve", part="ticket")
+
+    joined = _asked(threads, "approve", part="changes")
+    waiting = threads.get(KEY)
+    _filed(threads)
+    stored = threads.get(KEY)
+
+    assert not isinstance(joined, Denied), joined
+    assert _states(waiting) == {"ticket": "running", "changes": "accepted",
+                                "new-pr": "proposed", "reply": "proposed"}
+    assert waiting.operations[-1].state == "applied"
+    assert _states(stored) == {"ticket": "run", "changes": "run", "new-pr": "proposed",
+                               "reply": "proposed"}
+    assert here.working_copies.commits[here.working_copies.origin["main"]].tree["f"] == (
+        "removed\n")
+    assert stored.standing is ConversationState.READY
+    assert len(_filings(here)) == 1
+
+
+def _all_run(threads, **approve):
+    _asked(threads, "approve", **approve)
+    _filed(threads)
+    _opened(threads)
+    return threads.get(KEY)
+
+
+def test_accepting_all_files_pushes_opens_answers_naming_both_links_and_lands(here, threads):
+    _split_with_a_ticket(here, threads)
+
+    stored = _all_run(threads)
+
+    [reply] = here.github.thread(KEY).comments[1:]
+    assert reply.body == f"{REPLY}\n\n{NEW_PR_URL}\n\n{FILED_URL}"
+    assert here.working_copies.commits[here.working_copies.origin["main"]].tree["f"] == (
+        "removed\n")
+    assert len(_filings(here)) == len(_openings(here)) == 1
+    assert _states(stored) == {"ticket": "run", "changes": "run", "new-pr": "run",
+                               "reply": "run"}
+    assert stored.standing is ConversationState.DONE
+    assert not here.github.thread(KEY).is_resolved
+
+
+def test_each_part_that_has_run_shows_its_result(here, threads):
+    _split_with_a_ticket(here, threads)
+    _accepted(threads, "ticket")
+    halfway = threads.get(KEY)
+
+    _asked(threads, "approve")
+    _opened(threads)
+    stored = threads.get(KEY)
+
+    assert _results(halfway) == {"ticket": ("PROJ-12", FILED_URL), "changes": None,
+                                 "new-pr": None, "reply": None}
+    assert _results(stored) == {
+        "ticket": ("PROJ-12", FILED_URL), "changes": (str(stored.fix.landed_sha), None),
+        "new-pr": (NEW_PR_URL, NEW_PR_URL),
+        "reply": (f"{REPLY}\n\n{NEW_PR_URL}\n\n{FILED_URL}", None)}
+
+
+def _results(conversation):
+    return {view.part: None if view.result is None else (view.result.text, view.result.url)
+            for view in conversation.proposal.parts}
+
+
+def test_accepting_all_with_resolve_resolves_the_thread_once_the_last_part_runs(here, threads):
+    _split_with_a_ticket(here, threads)
+
+    stored = _all_run(threads, resolve=True)
+
+    assert here.github.thread(KEY).is_resolved
+    assert stored.standing is ConversationState.DONE
+
+
+def test_the_reply_under_this_prs_ticket_names_only_the_new_pr(here, threads):
+    _split(threads, _removed(here))
+
+    _asked(threads, "approve")
+    _opened(threads)
+
+    [reply] = here.github.thread(KEY).comments[1:]
+    assert reply.body == f"{REPLY}\n\n{NEW_PR_URL}"
+    assert threads.get(KEY).standing is ConversationState.DONE
+
+
+def test_the_new_pr_waits_for_the_ticket_and_the_reply_for_the_new_pr(here, threads):
+    _split_with_a_ticket(here, threads)
+
+    stored = _accepted(threads, "reply")
+    stored = _accepted(threads, "new-pr")
+
+    assert [(view.part, view.state, view.waits_for) for view in stored.proposal.parts
+            if view.part in ("new-pr", "reply")] == [("new-pr", "queued", "ticket"),
+                                                      ("reply", "queued", "new-pr")]
+    assert _openings(here) == []
+    assert stored.standing is ConversationState.READY
+
+
+NEW_PR = a_pr(12, "acme/widgets")
+
+
+def _drafting(tmp_path, draft):
+    entries = () if draft is None else (
+        RepoEntry(Repo("acme", "widgets"), "/tmp/widgets", draft=draft),)
+    built = world(fake_settings(tmp_path / "data", repos=entries))
+    repo_at(built.working_copies, WORKTREE, {"f": "old\n", "README": "hello"})
+    threads = built.threads()
+    on_github(built.github, KEY, said(101, "this isn't part of PROJ-12, can it go in a separate PR?"))
+    hear(threads)
+    start_run(built, threads)
+    built.github.add_pr(NEW_PR, PullRequestState(draft=True))
+    return built, threads
+
+
+@pytest.mark.parametrize(("draft", "left_a_draft"), [(None, True), (True, True), (False, False)])
+def test_the_new_pr_is_flipped_to_match_the_repos_draft_setting(tmp_path, draft, left_a_draft):
+    here, threads = _drafting(tmp_path, draft)
+    _split(threads, _removed(here))
+
+    _asked(threads, "approve", part="new-pr")
+    _opened(threads)
+
+    assert here.github.prs[NEW_PR].state.draft is left_a_draft
+    assert _states(threads.get(KEY))["new-pr"] == "run"
+
+
+def test_the_open_run_invokes_the_pr_skill_the_repo_names(tmp_path):
+    built = world(fake_settings(tmp_path / "data", repos=(
+        RepoEntry(Repo("acme", "widgets"), "/tmp/widgets", pr_skill="team-pr"),)))
+    repo_at(built.working_copies, WORKTREE, {"f": "old\n", "README": "hello"})
+    threads = built.threads()
+    on_github(built.github, KEY, said(101, "can this go in a separate PR?"))
+    hear(threads)
+    start_run(built, threads)
+    _split(threads, _removed(built))
+
+    _asked(threads, "approve", part="new-pr")
+
+    [opening] = _openings(built)
+    assert opening.fix.pr_skill == "team-pr"
+
+
+def test_a_set_draft_pr_flipped_from_ready_is_made_a_draft(tmp_path):
+    here, threads = _drafting(tmp_path, True)
+    here.github.prs[NEW_PR].state = PullRequestState(draft=False)
+    _split(threads, _removed(here))
+
+    _asked(threads, "approve", part="new-pr")
+    _opened(threads)
+
+    assert here.github.prs[NEW_PR].state.draft is True
+
+
+def test_a_failed_opening_leaves_the_new_pr_to_accept_again(here, threads):
+    _split(threads, _removed(here))
+    _asked(threads, "approve", part="new-pr")
+    with threads.editing(KEY) as editable:
+        editable.fail("the remote refused the branch")
+    drain(threads)
+    drain(threads)
+    failed = threads.get(KEY)
+
+    _asked(threads, "approve", part="new-pr")
+    _opened(threads)
+
+    assert failed.standing is ConversationState.READY
+    assert _states(failed)["new-pr"] == "proposed"
+    assert (failed.latest_approval.state, failed.latest_approval.reason_code) == (
+        "refused", "open-failed")
+    assert len(_openings(here)) == 2
+    assert _states(threads.get(KEY))["new-pr"] == "run"
+
+
 def test_a_split_under_this_prs_ticket_has_no_ticket_to_accept(here, threads):
     _split(threads, _removed(here))
 
@@ -221,16 +398,36 @@ def test_a_split_under_this_prs_ticket_has_no_ticket_to_accept(here, threads):
         "changes", "new-pr", "reply"]
 
 
-@pytest.mark.parametrize("part", ["new-pr", None])
-def test_accepting_the_new_pr_is_refused_until_a_later_step_and_says_so(here, threads, part):
+NEW_PR_URL = "https://github.com/acme/widgets/pull/12"
+
+
+def _opened(threads, url=NEW_PR_URL):
+    with threads.editing(KEY) as editable:
+        opened = editable.opened(url)
+    assert not isinstance(opened, Denied), opened
+    drain(threads)
+
+
+def _openings(here):
+    return [started.work for started in here.agent_runs.started
+            if isinstance(started.work, OpeningPr)]
+
+
+def test_accepting_the_new_pr_opens_it_through_an_open_run(here, threads):
     _split(threads, _removed(here))
 
-    outcome = _asked(threads, "approve", part=part)
+    _asked(threads, "approve", part="new-pr")
+    opening = threads.get(KEY)
+    _opened(threads)
 
-    assert isinstance(outcome, Denied)
-    assert outcome.code is ErrorCode.NO_PROPOSAL
-    assert "opening the new PR arrives in a later step" in outcome.reason
-    assert threads.get(KEY).standing is ConversationState.READY
+    [opened] = _openings(here)
+    assert (opened.fix.split_branch, opened.fix.split_base, opened.fix.pr_skill) == (
+        BRANCH, "main", "create-pr")
+    assert _states(opening)["new-pr"] == "running"
+    stored = threads.get(KEY)
+    assert stored.fix.split.pr_url == NEW_PR_URL
+    assert _states(stored) == {"changes": "proposed", "new-pr": "run", "reply": "proposed"}
+    assert stored.standing is ConversationState.READY
 
 
 def test_a_part_that_has_run_is_locked(here, threads):

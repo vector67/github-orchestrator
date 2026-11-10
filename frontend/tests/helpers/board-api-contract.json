@@ -118,6 +118,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
        "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
@@ -148,6 +149,9 @@
       },
       {
        "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -1019,6 +1023,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
        "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
@@ -1049,6 +1054,9 @@
       },
       {
        "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -1109,6 +1117,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
        "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
@@ -1139,6 +1148,9 @@
       },
       {
        "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -1198,6 +1210,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
        "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
@@ -1228,6 +1241,9 @@
       },
       {
        "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -4880,11 +4896,89 @@
    ],
    "type": "string"
   },
+  "OpenOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "maxLength": 128,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "open",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at"
+   ],
+   "type": "object"
+  },
   "OperationKind": {
    "enum": [
     "first",
     "rebase",
     "file",
+    "open",
     "rework",
     "retry",
     "start-session",
@@ -4924,6 +5018,7 @@
       "enrol": "#/components/schemas/DraftOperation",
       "file": "#/components/schemas/FileOperation",
       "first": "#/components/schemas/FixOperation",
+      "open": "#/components/schemas/OpenOperation",
       "open-shell": "#/components/schemas/ShellOperation",
       "place": "#/components/schemas/PlaceOperation",
       "post-now": "#/components/schemas/DraftOperation",
@@ -4954,6 +5049,9 @@
      },
      {
       "$ref": "#/components/schemas/FileOperation"
+     },
+     {
+      "$ref": "#/components/schemas/OpenOperation"
      },
      {
       "$ref": "#/components/schemas/StopOperation"
@@ -5149,6 +5247,7 @@
        "enrol": "#/components/schemas/DraftOperation",
        "file": "#/components/schemas/FileOperation",
        "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
        "open-shell": "#/components/schemas/ShellOperation",
        "place": "#/components/schemas/PlaceOperation",
        "post-now": "#/components/schemas/DraftOperation",
@@ -5179,6 +5278,9 @@
       },
       {
        "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
       },
       {
        "$ref": "#/components/schemas/StopOperation"
@@ -6522,6 +6624,7 @@
     "push-failed",
     "reply-failed",
     "file-failed",
+    "open-failed",
     "comment-gone",
     "github-rejected",
     "git-failed",
@@ -7627,6 +7730,16 @@
     "part": {
      "$ref": "#/components/schemas/SplitPartName"
     },
+    "result": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartResult"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "state": {
      "$ref": "#/components/schemas/SplitPartState"
     },
@@ -7644,7 +7757,8 @@
    "required": [
     "part",
     "state",
-    "waits_for"
+    "waits_for",
+    "result"
    ],
    "type": "object"
   },
@@ -7656,6 +7770,28 @@
     "reply"
    ],
    "type": "string"
+  },
+  "SplitPartResult": {
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "text",
+    "url"
+   ],
+   "type": "object"
   },
   "SplitPartState": {
    "enum": [

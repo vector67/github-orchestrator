@@ -287,12 +287,20 @@ def test_assigning_reviewers_on_a_pr_github_does_not_know_says_why(github):
 def test_a_draft_i_mark_ready_is_no_longer_a_draft(world, github):
     world.add_pr(a_pr(1, REPO), _state(draft=True))
 
-    assert github.mark_ready(a_pr(1, REPO)) is None
+    assert github.set_draft(a_pr(1, REPO), False) is None
     assert github.pr_state(a_pr(1, REPO)).draft is False
 
 
-def test_marking_ready_a_pr_github_does_not_know_says_why(github):
-    assert "Not Found" in (github.mark_ready(a_pr(40, REPO)) or "")
+def test_a_ready_pr_i_make_a_draft_is_a_draft(world, github):
+    world.add_pr(a_pr(1, REPO), _state(draft=False))
+
+    assert github.set_draft(a_pr(1, REPO), True) is None
+    assert github.pr_state(a_pr(1, REPO)).draft is True
+
+
+@pytest.mark.parametrize("draft", [True, False])
+def test_setting_the_draft_of_a_pr_github_does_not_know_says_why(github, draft):
+    assert "Not Found" in (github.set_draft(a_pr(40, REPO), draft) or "")
 
 
 def test_relevance_says_how_the_pr_stands_and_whether_i_wrote_or_reviewed_it(world, github):
