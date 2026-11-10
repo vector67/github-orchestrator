@@ -228,8 +228,8 @@ MANUAL_REBASE_ADVICE = f"; {REWORK_ADVICE} and rebase the thread there"
 
 UNDER_WAY = (RUNNING, IN_SESSION, LANDING)
 
-UNREPORTED = ("ended without reporting a filed ticket; look for it in the tracker before "
-              "filing it again")
+FILING_UNREPORTED = ("ended without reporting a filed ticket; look for it in the tracker before "
+                     "filing it again")
 
 REOPENED_BY_A_REPLY = (WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE, CONFIRMED, REMOVED,
                        DEFERRED, REJECTED, RESOLVED)
@@ -867,18 +867,26 @@ def _filing_failed(conversation: Conversation, reason: str, at: str | None,
                              started_at=None), effects)
 
 
+def _unreported(fix: Fix) -> str:
+    if fix.run.kind == OperationKind.OPEN:
+        return ("ended without reporting the new PR's link; accepting it again first looks "
+                f"for a pull request already open from {_the_split(fix).branch}")
+    return FILING_UNREPORTED
+
+
 def _filing_ended(conversation: Conversation, command: Fail | RunExited | RunTimedOut | RunLost,
                   at: str | None) -> Accepted:
     run = _RUN_NAMED[conversation.fix.run.kind]
+    unreported = _unreported(conversation.fix)
     match command:
         case Fail():
             return _filing_failed(conversation, command.reason, at)
         case RunTimedOut():
             return _filing_failed(conversation, command.reason, command.at, (StopRun(),))
         case RunExited():
-            return _filing_failed(conversation, f"{run} {UNREPORTED}", command.at)
+            return _filing_failed(conversation, f"{run} {unreported}", command.at)
         case RunLost():
-            return _filing_failed(conversation, f"the board lost {run}, which {UNREPORTED}", at)
+            return _filing_failed(conversation, f"the board lost {run}, which {unreported}", at)
 
 
 def _lands_a_commit(fix: Fix) -> bool:

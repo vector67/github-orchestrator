@@ -392,6 +392,20 @@ def test_a_failed_opening_leaves_the_new_pr_to_accept_again(here, threads):
     assert _states(threads.get(KEY))["new-pr"] == "run"
 
 
+def test_an_opening_that_ends_without_a_word_says_so_in_its_own_terms(here, threads):
+    _split(threads, _removed(here))
+    _asked(threads, "approve", part="new-pr")
+    drain(threads)
+    drain(threads)
+
+    failed = threads.get(KEY)
+
+    assert _states(failed)["new-pr"] == "proposed"
+    assert failed.fix.file_error == (
+        "the run opening the new PR ended without reporting the new PR's link; accepting "
+        f"it again first looks for a pull request already open from {BRANCH}")
+
+
 def test_a_split_under_this_prs_ticket_has_no_ticket_to_accept(here, threads):
     _split(threads, _removed(here))
 
