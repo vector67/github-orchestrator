@@ -183,6 +183,8 @@ def thread_check(args: argparse.Namespace, *, conversation_managers: Conversatio
         CommitVerdict(args.verdict), args.reason), args.verdict)
 
 
+SPLIT_PARTS = ("ticket", "changes", "new-pr", "reply")
+
 PLACEABLE = (ConversationState.READY, ConversationState.WAITING, ConversationState.NOT_MINE,
              ConversationState.QUEUED, ConversationState.DEFERRED, ConversationState.DONE)
 
@@ -223,7 +225,8 @@ def thread_rework(args: argparse.Namespace, *, conversation_managers: Conversati
                   gist_model: str | None) -> None:
     pointed = _pointed(args)
     _directed_or_die(args, conversation_managers, lambda conversation: conversation.rework(
-        note=args.note, pointed=pointed, include=args.include or ()), "reworked")
+        note=args.note, pointed=pointed, include=args.include or (), part=args.part),
+        "reworked")
 
 
 def thread_session(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
@@ -487,14 +490,16 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
                                 help="The ticket's project, in place of the agent's")
     approve_parser.add_argument("--ticket-title", default="", help="The ticket's title")
     approve_parser.add_argument("--ticket-body", default="", help="The ticket's description")
-    approve_parser.add_argument("--part", default=None,
-                                choices=("ticket", "changes", "new-pr", "reply"),
+    approve_parser.add_argument("--part", default=None, choices=SPLIT_PARTS,
                                 help="The part of a split to accept; every part not yet "
                                      "accepted where none is given")
 
     rework_parser = _human_only(thread_sub, "rework",
                                 "send the agent's proposal back with a note on what to change.")
     rework_parser.add_argument("--note", default="", help="What to change")
+    rework_parser.add_argument("--part", default=None, choices=SPLIT_PARTS,
+                               help="The part of a split to send back; the whole proposal "
+                                    "where none is given, until a part has run")
     _brief_fields(rework_parser)
 
     session_parser = _human_only(thread_sub, "session",

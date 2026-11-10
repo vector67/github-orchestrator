@@ -359,11 +359,11 @@ class _Editable:
 
     def rework(self, *, note: str = "",
                pointed: Sequence[tuple[str, int | None, str]] = (),
-               include: Sequence[str] = ()) -> Conversation | Denied:
+               include: Sequence[str] = (), part: str | None = None) -> Conversation | Denied:
         lines = tuple(PointedLine(file=file, line=line, text=text)
                       for file, line, text in pointed)
-        return self._ask(Rework(note=note, pointed=lines,
-                                              include=tuple(include)))
+        return self._ask(Rework(note=note, pointed=lines, include=tuple(include),
+                                part=None if part is None else SplitPart(part)))
 
     def start_session(self, *, steer: str = "",
                       pointed: Sequence[tuple[str, int | None, str]] = (),

@@ -556,6 +556,16 @@ def test_approve_accepts_the_part_of_a_split_it_names(fixed, store, threads, run
     assert reply.state == "queued"
 
 
+def test_rework_sends_back_the_part_of_a_split_it_names(fixed, store, threads, run_cli):
+    _branched(store, fixed)
+    assert run_cli(*_split_argv(fixed, same_ticket=None)).code == 0
+
+    rework = _directed(run_cli, threads, "rework", OperationKind.REWORK,
+                       note="call it TaxRateCache", part="new-pr")
+
+    assert (rework.brief.note, rework.brief.part) == ("call it TaxRateCache", "new-pr")
+
+
 def test_approve_refuses_a_part_no_split_has(run_cli):
     ran = run_cli(*_human("approve", thread_id=THREAD_KEY, part="everything"))
 

@@ -182,7 +182,8 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
                 note=payload,
                 pointed=intent.pointed,
                 include=intent.include,
-                reworks_allowed=ports.config.agents_enabled)
+                reworks_allowed=ports.config.agents_enabled,
+                part=intent.part)
         case "session":
             return StartSession(
                 steer=payload,

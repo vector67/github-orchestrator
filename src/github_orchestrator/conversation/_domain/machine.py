@@ -469,13 +469,10 @@ def _a_part_to_accept(conversation: Conversation, command: Approve) -> Refused |
         return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
                                 f"only a split has parts to accept, not {_a(fix.kind)}")
     part = command.part
-    if part is not None and part not in parts(split):
-        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
-                                "this split files no ticket: the new PR goes under this "
-                                "PR's ticket")
-    if part is not None and has_run(fix.steps, part):
-        return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
-                                f"the {part} part has run, so it is locked")
+    if part is not None:
+        refused = _a_part_still_open(conversation, part)
+        if refused is not None:
+            return refused
     newly = newly_accepted(split, part)
     if SplitPart.NEW_PR in newly and not command.filing_allowed:
         return _refuse_decision(
@@ -485,6 +482,51 @@ def _a_part_to_accept(conversation: Conversation, command: Approve) -> Refused |
     if SplitPart.TICKET in newly:
         return _a_split_ticket_to_file(conversation, command)
     return None
+
+
+def _a_part_still_open(conversation: Conversation, part: SplitPart) -> Refused | None:
+    fix = conversation.fix
+    if fix.split is None or part not in parts(fix.split):
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                "this split files no ticket: the new PR goes under this "
+                                "PR's ticket")
+    if has_run(fix.steps, part):
+        return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
+                                f"the {part} part has run, so it is locked")
+    return None
+
+
+def _a_part_to_rework(conversation: Conversation, command: Rework) -> Refused | None:
+    fix = conversation.fix
+    part = command.part
+    if fix.kind != ProposalKind.SPLIT or fix.split is None:
+        if part is None:
+            return None
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                f"only a split has parts to rework, not {_a(fix.kind)}")
+    if part is None:
+        if any_run(fix.steps):
+            return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                    "part of this split has run, so name the part to send "
+                                    "back for rework")
+        return None
+    return _a_part_still_open(conversation, part)
+
+
+def reports_only_a_split(fix: Fix) -> bool:
+    brief = fix.run.brief
+    reworking_a_part = (fix.run.kind == OperationKind.REWORK and brief is not None
+                        and brief.part is not None and fix.state in (QUEUED, RUNNING))
+    return fix.kind == ProposalKind.SPLIT and (any_run(fix.steps) or reworking_a_part)
+
+
+def _a_split_report(conversation: Conversation, command: Any) -> Refused | None:
+    if not reports_only_a_split(conversation.fix):
+        return None
+    return Refused(conversation, ErrorCode.INTERNAL_REFUSAL,
+                   "this split is being reworked a part at a time, so report it with "
+                   "`thread split`, every part as it stands but the one you were sent back "
+                   "to rework")
 
 
 def _a_split_ticket_to_file(conversation: Conversation, command: Approve) -> Refused | None:
@@ -923,12 +965,15 @@ RULES: dict[type, tuple[Rule, ...]] = {
     StepDone: (_planning((QUEUED, RUNNING, IN_SESSION, PROPOSED), "marks no step"),
                _step_in_the_plan),
     ReportReady: (_reported_on((ABSENT, RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
-                  _a_commit, _on_the_base, _a_known_confidence),
+                  _a_split_report, _a_commit, _on_the_base, _a_known_confidence),
     MoveBase: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                _a_commit),
-    ReportDeclined: (_reported_on((QUEUED, RUNNING, IN_SESSION), "no agent holds"),),
-    ReportReply: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),),
-    ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),),
+    ReportDeclined: (_reported_on((QUEUED, RUNNING, IN_SESSION), "no agent holds"),
+                     _a_split_report),
+    ReportReply: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
+                  _a_split_report),
+    ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
+                   _a_split_report),
     ReportSplit: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                   _a_commit, _on_the_base, _a_branch_the_worktree_has),
     ReportAsk: (_reported_on((RUNNING, IN_SESSION), "nobody is working on"),),
@@ -950,7 +995,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     First: (_wanting_a_first_run,),
     Rebase: (_waiting_to_be_caught_up,),
     Rework: (_agents_enabled_for_a_rework, _open_to("sends nothing back"),
-             _a_fix_in((PROPOSED, DECLINED, FAILED), "is not yours to send back"), _a_brief),
+             _a_fix_in((PROPOSED, DECLINED, FAILED), "is not yours to send back"),
+             _a_part_to_rework, _a_brief),
     StartSession: (_agents_enabled_for_a_session, _open_to("opens no session"),
                    _a_fix_in((PROPOSED, ASKING, DECLINED, FAILED), "is not waiting for anyone")),
     OpenShell: (_open_to("opens no shell"),),

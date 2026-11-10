@@ -875,6 +875,22 @@ def test_a_part_that_names_nothing_a_split_has_is_a_bad_request():
     assert answer.status_code == 400
 
 
+def test_a_rework_of_a_split_names_the_part_it_sends_back():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "rework", note="call it TaxRateCache", part="new-pr")
+    drain(board)
+
+    assert answer.status_code == 202, answer.json()
+    [rework] = [one for one in client.get(f"/api/conversations/{KEY}/operations").json()
+                if one["kind"] == "rework"]
+    assert (rework["brief"]["note"], rework["brief"]["part"]) == (
+        "call it TaxRateCache", "new-pr")
+
+
 def test_a_thread_no_agent_has_finished_has_no_proposals():
     answer = spoke().get(f"/api/conversations/{KEY}/proposals")
 

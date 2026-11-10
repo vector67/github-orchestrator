@@ -167,6 +167,7 @@ class Rework:
     pointed: tuple[PointedLine, ...] = ()
     include: tuple[str, ...] = ()
     reworks_allowed: bool = True
+    part: SplitPart | None = None
 
 
 @dataclass(frozen=True)

@@ -104,7 +104,7 @@ def _asked_for(conversation: Conversation, intent: Intent) -> Operation:
         until=(intent.modifier or WAKE_MANUAL if kind == OperationKind.DEFER else None),
         stopped=(running.id if kind == OperationKind.STOP and running else None),
         brief=(Brief(note=intent.payload or "", pointed=intent.pointed,
-                     include=intent.include)
+                     include=intent.include, part=intent.part)
                if kind == OperationKind.REWORK else None),
         anchor=intent.anchor,
         direction=intent.direction,
@@ -142,7 +142,8 @@ def _intent_of(command: Command) -> Intent:
                           ticket=command.ticket, part=command.part)
         case Rework():
             return Intent(decision="rework", payload=command.note,
-                          pointed=command.pointed, include=command.include)
+                          pointed=command.pointed, include=command.include,
+                          part=command.part)
         case StartSession():
             return Intent(decision="session", payload=command.steer or None,
                           pointed=command.pointed, include=command.include)

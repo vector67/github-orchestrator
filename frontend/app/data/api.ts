@@ -82,12 +82,14 @@ export interface Brief {
   note: string;
   pointed: PointedLine[];
   include: string[];
+  part: SplitPartName | null;
 }
 
 export interface BriefRequest {
   note?: string;
   pointed?: PointedLine[];
   include?: string[];
+  part?: SplitPartName | null;
 }
 
 export type CapturedGit = 'f' | 'p' | 'pra' | 's' | 'l' | 'd';

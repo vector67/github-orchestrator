@@ -17,6 +17,7 @@ from github_orchestrator.conversation._domain.conversation import (
     OperationKind,
     ProposalKind,
 )
+from github_orchestrator.conversation._domain.parts import has_run, parts
 from github_orchestrator.domain import Pr, Sha
 
 
@@ -57,8 +58,9 @@ class ThreadAgents:
     def _asked(self, conversation: Conversation, worktree: str, skipped: bool,
                brief: Brief | None) -> ThreadFix:
         fix = conversation.fix
-        ticket = fix.ticket if fix.kind in (ProposalKind.TICKET, ProposalKind.SPLIT) else None
         split = fix.split
+        ticket = (fix.ticket if fix.kind == ProposalKind.TICKET
+                  else fix.ticket or split.ticket if split is not None else None)
         return ThreadFix(
             pr=self.pr, key=conversation.key, worktree=worktree,
             author=conversation.author, path=conversation.path, line=conversation.line,
@@ -85,6 +87,10 @@ class ThreadAgents:
             split_branch=None if split is None else split.branch,
             split_base=None if split is None else split.base,
             split_base_reason=None if split is None else split.base_reason,
+            split_sha=None if split is None or fix.thread_sha is None else str(fix.thread_sha),
+            reworks_part=None if brief is None or brief.part is None else brief.part.value,
+            parts_run=() if split is None else tuple(
+                part.value for part in parts(split) if has_run(fix.steps, part)),
             pr_skill=self.pr_skill,
             pr_url=self.pages.page(),
             thread_url=self._thread_url(conversation),

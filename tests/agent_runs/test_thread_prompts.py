@@ -400,3 +400,59 @@ def test_a_rework_from_a_ticket_starts_from_the_ticket_it_proposed(runs, claude,
                  "I've proposed a ticket."):
         assert prompt.index(said) < prompt.index("it belongs in WEB")
     assert "proposed this reply instead of a change" not in prompt
+
+
+REMOVAL = "c" * 40
+SPLIT = {"split_branch": "split/cache-tax-rates", "split_base": "main",
+         "split_base_reason": "the cache stands alone", "split_sha": REMOVAL,
+         "reply": "This moved to its own PR.", "note": "call the cache TaxRateCache"}
+
+
+def _part_reworked(runs, claude, worktree, part, **fields):
+    return _reworked(runs, claude, worktree, reworks_part=part, **{**SPLIT, **fields})
+
+
+def test_a_split_part_rework_reports_the_split_again_through_commands_the_cli_takes(
+        runs, claude, worktree):
+    found = invocations(_part_reworked(runs, claude, worktree, "new-pr"))
+
+    assert sorted({verb for verb, _ in found}) == ["ask", "fail", "split"]
+    for verb, flags in found:
+        assert_the_cli_takes(verb, flags)
+
+
+def test_a_split_part_rework_names_the_part_and_the_parts_that_have_run_as_fixed(
+        runs, claude, worktree):
+    prompt = _part_reworked(runs, claude, worktree, "new-pr", parts_run=("changes",))
+
+    assert "You are reworking the new PR, and only the new PR." in prompt
+    assert "Fixed, because it has run: the changes to this PR." in prompt
+    for said in ("split/cache-tax-rates", "main (the cache stands alone)", REMOVAL,
+                 "This moved to its own PR.", "call the cache TaxRateCache"):
+        assert said in prompt
+
+
+def test_a_rework_of_the_new_pr_changes_its_branch_and_leaves_the_removal_at_the_tip(
+        runs, claude, worktree):
+    prompt = _part_reworked(runs, claude, worktree, "new-pr")
+
+    assert "git switch split/cache-tax-rates" in prompt
+    assert "git switch -`" in prompt
+    assert f"--sha {REMOVAL}" in _line_with(prompt, "thread split")
+
+
+def test_a_rework_of_the_changes_reports_the_new_tip(runs, claude, worktree):
+    prompt = _part_reworked(runs, claude, worktree, "changes")
+
+    assert "--sha <full 40-character sha" in _line_with(prompt, "thread split")
+    assert "git switch" not in prompt
+
+
+def test_a_split_part_rework_shows_the_drafted_ticket_or_this_prs_own(runs, claude, worktree):
+    drafted = _part_reworked(runs, claude, worktree, "ticket", ticket_project="PROJ",
+                             ticket_title="Cache tax rates", ticket_body="Each export reads it.")
+    same = _part_reworked(runs, claude, worktree, "reply")
+
+    for said in ("PROJ", "Cache tax rates", "Each export reads it."):
+        assert said in drafted
+    assert "this PR's own ticket" in same

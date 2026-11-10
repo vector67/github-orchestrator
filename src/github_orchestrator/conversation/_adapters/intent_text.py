@@ -91,13 +91,16 @@ def _draft_payload(payload: str | None, anchor: Location | None) -> str:
 
 
 def _brief_payload(payload: str | None, pointed: tuple[PointedLine, ...],
-                   include: tuple[str, ...]) -> str:
-    return json.dumps({
+                   include: tuple[str, ...], part: SplitPart | None) -> str:
+    brief: dict[str, Any] = {
         "note": payload or "",
         "pointed": [{"file": one.file, "line": one.line, "text": one.text}
                     for one in pointed],
         "include": list(include),
-    })
+    }
+    if part is not None:
+        brief["part"] = part.value
+    return json.dumps(brief)
 
 
 def format_intent(intent: Intent) -> str:
@@ -131,7 +134,7 @@ def format_intent(intent: Intent) -> str:
     if decision == APPROVE:
         payload = _approve_payload(payload, resolve, message, intent.ticket, intent.part)
     if decision == REWORK or briefed:
-        payload = _brief_payload(payload, intent.pointed, intent.include)
+        payload = _brief_payload(payload, intent.pointed, intent.include, intent.part)
     if decision == EDIT_DRAFT:
         payload = _draft_payload(payload, intent.anchor)
     first = f"{decision} {slot}" if slot else decision
@@ -179,8 +182,12 @@ def _brief_intent(decision: str, payload: str | None) -> Intent | None:
     include = _strings(brief, "include")
     if pointed is None or include is None:
         return None
+    try:
+        part = _part(brief.get("part"))
+    except ValueError:
+        return None
     return Intent(decision=decision, payload=brief.get("note", ""),
-                  pointed=pointed, include=include)
+                  pointed=pointed, include=include, part=part)
 
 
 def _approve_intent(payload: str | None, modifier: str) -> Intent | None:

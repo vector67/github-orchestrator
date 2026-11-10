@@ -179,6 +179,7 @@ from github_orchestrator.conversation._domain.machine import (
     Refused,
     prepared_to_land,
     refusal,
+    reports_only_a_split,
     ticket_to_file,
     with_fix,
 )
@@ -197,6 +198,8 @@ from github_orchestrator.conversation._domain.parts import (
     has_run,
     next_part,
     parts,
+    reported,
+    taken_from_a_report,
 )
 from github_orchestrator.conversation._domain.parts import (
     OPEN as OPEN_PR,
@@ -593,10 +596,34 @@ def _report_ticket(conversation: Conversation, command: ReportTicket,
 
 def _report_split(conversation: Conversation, command: ReportSplit,
                   at: str | None) -> Accepted:
+    fix = conversation.fix
+    held = fix.split if fix.kind == ProposalKind.SPLIT else None
+    reworked = None if fix.run.brief is None else fix.run.brief.part
+    taken = (frozenset(SplitPart) if held is None
+             else taken_from_a_report(fix.steps, reworked))
     return Accepted(with_fix(
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.SPLIT,
-        reply=command.reply, ticket=None, classification=None,
-        **(NO_COMMIT | {"split": command.split, "thread_sha": Sha.parse(command.sha)})))
+        classification=None,
+        **(NO_COMMIT | {
+            "split": command.split if held is None else reported(held, command.split, taken),
+            "thread_sha": Sha.parse(command.sha) if SplitPart.CHANGES in taken else fix.thread_sha,
+            "reply": command.reply if SplitPart.REPLY in taken else fix.reply,
+            "ticket": None if held is None else fix.ticket})))
+
+
+def _split_rework_ended(conversation: Conversation, command: Fail | RunExited | RunTimedOut,
+                        at: str | None) -> Accepted:
+    effects: tuple[Any, ...]
+    match command:
+        case Fail():
+            reason, effects, when = command.reason, (), at
+        case RunTimedOut():
+            reason, effects, when = command.reason, (StopRun(),), command.at
+        case RunExited():
+            reason = _with_detail("the rework ended without reporting a split", command.last_words)
+            effects, when = (), command.at
+    return Accepted(with_fix(_decidable(conversation, when), state=PROPOSED, reason=reason,
+                             started_at=None), effects)
 
 
 def _report_ask(conversation: Conversation, command: ReportAsk, at: str | None) -> Accepted:
@@ -1006,7 +1033,7 @@ def _start_session(conversation: Conversation, command: StartSession) -> Accepte
 
 def _rework(conversation: Conversation, command: Rework) -> Accepted:
     brief = Brief(note=command.note, pointed=command.pointed,
-                  include=command.include)
+                  include=command.include, part=command.part)
     return Accepted(
         with_fix(conversation, state=QUEUED, attempts=0, started_at=None,
                   plan=(), decision_error=None,
@@ -1334,6 +1361,8 @@ def _dispatch(conversation: Conversation, command: Change,
         case Fail() | RunExited() | RunTimedOut() | RunLost() if (
                 conversation.fix.run.kind in PART_RUNS):
             return _filing_ended(conversation, command, at)
+        case Fail() | RunExited() | RunTimedOut() if reports_only_a_split(conversation.fix):
+            return _split_rework_ended(conversation, command, at)
         case Fail():
             return _fail_or_retry(conversation, command.reason, at)
         case SessionRefused():

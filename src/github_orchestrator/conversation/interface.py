@@ -95,7 +95,8 @@ class EditableConversation(Protocol):
 
     def rework(self, *, note: str = "",
                pointed: Sequence[tuple[str, int | None, str]] = (),
-               include: Sequence[str] = ()) -> Conversation | Denied: ...
+               include: Sequence[str] = (),
+               part: str | None = None) -> Conversation | Denied: ...
 
     def start_session(self, *, steer: str = "",
                       pointed: Sequence[tuple[str, int | None, str]] = (),

@@ -47,6 +47,7 @@ from github_orchestrator.conversation._domain.parts import (
     ANSWER,
     PICK,
     PUSH,
+    SplitPart,
 )
 from github_orchestrator.domain import Location, Sha, Side
 
@@ -264,8 +265,11 @@ def _brief(document: Document, field: str = "rework_brief") -> Document | None:
     if note is not None and not isinstance(note, str):
         raise ValueError(f"a rework brief notes a {type(note).__name__} where "
                          f"it should note what to change")
+    part = brief.get("part")
+    if part is not None and part not in frozenset(SplitPart):
+        raise ValueError(f"a rework brief names {part!r}, which is no part of a split")
     return {"note": note or "", "pointed": _pointed(brief),
-            "include": list(_list_of(brief, "include"))}
+            "include": list(_list_of(brief, "include")), "part": part}
 
 
 def _plan(document: Document) -> list[Document]:

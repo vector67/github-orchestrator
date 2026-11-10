@@ -84,6 +84,9 @@ class ThreadFix:
     split_branch: str | None = None
     split_base: str | None = None
     split_base_reason: str | None = None
+    split_sha: str | None = None
+    reworks_part: str | None = None
+    parts_run: tuple[str, ...] = ()
     pr_skill: str = ""
     pr_url: str | None = None
     thread_url: str | None = None

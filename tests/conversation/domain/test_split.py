@@ -1,6 +1,11 @@
 import pytest
 
-from github_orchestrator.agent_runs.fake import FilingTicket, OpeningPr, Outcome
+from github_orchestrator.agent_runs.fake import (
+    FilingTicket,
+    OpeningPr,
+    Outcome,
+    Reworking,
+)
 from github_orchestrator.conversation import (
     Classification,
     ConversationState,
@@ -532,3 +537,150 @@ def test_a_reply_reported_after_a_split_leaves_no_split_behind(here, threads):
 
     fix = threads.get(KEY).fix
     assert (fix.kind, fix.split, fix.thread_sha) == ("reply", None, None)
+
+
+OTHER_BRANCH = "split/tax-rate-cache"
+
+
+def _reworked(here, threads, part, note="call it TaxRateCache", finishes=False):
+    here.agent_runs.script(Outcome(finishes=finishes))
+    outcome = _asked(threads, "rework", note=note, part=part)
+    assert not isinstance(outcome, Denied), outcome
+    return threads.get(KEY)
+
+
+def _reported_again(here, threads):
+    sha = commit_fix(here, KEY, {"f": "removed again\n"}, message="Take the cache out again")
+    here.working_copies.branches[OTHER_BRANCH] = sha
+    outcome = _split(threads, sha, branch=OTHER_BRANCH, base="feature/tax",
+                     base_reason="it needs the tax table", reply="Moved, and renamed.",
+                     ticket_project="WEB", ticket_title="Rename the cache",
+                     ticket_body="A new body.")
+    assert not isinstance(outcome, Denied), outcome
+    drain(threads)
+    return threads.get(KEY)
+
+
+def _content(fix):
+    return {"ticket": fix.split.ticket, "changes": fix.thread_sha,
+            "new-pr": (fix.split.branch, fix.split.base, fix.split.base_reason),
+            "reply": fix.reply}
+
+
+def _changed(before, after):
+    return {name for name in after if after[name] != before[name]}
+
+
+def test_a_rework_names_the_part_it_sends_back(here, threads):
+    _split(threads, _removed(here))
+
+    reworking = _reworked(here, threads, "new-pr")
+
+    assert (reworking.fix.run.brief.note, reworking.fix.run.brief.part) == (
+        "call it TaxRateCache", "new-pr")
+    assert reworking.standing is ConversationState.REWORK
+
+
+def test_a_part_rework_run_is_told_the_part_the_split_and_the_parts_that_have_run(here,
+                                                                                  threads):
+    sha = _split_with_a_ticket(here, threads)
+    _accepted(threads, "changes")
+
+    _reworked(here, threads, "new-pr")
+
+    [reworking] = [started.work.fix for started in here.agent_runs.started
+                   if isinstance(started.work, Reworking)]
+    assert (reworking.reworks_part, reworking.parts_run, reworking.split_sha) == (
+        "new-pr", ("changes",), sha)
+    assert (reworking.split_branch, reworking.ticket_title, reworking.reply) == (
+        BRANCH, "Cache tax rates", REPLY)
+
+
+@pytest.mark.parametrize("part", ["ticket", "new-pr", "reply"])
+def test_a_rework_report_changes_only_the_reworked_part(here, threads, part):
+    _split_with_a_ticket(here, threads)
+    before = _content(_accepted(threads, "changes").fix)
+    _reworked(here, threads, part)
+
+    stored = _reported_again(here, threads)
+
+    assert _changed(before, _content(stored.fix)) == {part}
+    assert _states(stored)["changes"] == "run"
+    assert stored.standing is ConversationState.READY
+
+
+def test_a_rework_of_the_changes_takes_the_new_removal_and_nothing_else(here, threads):
+    _split_with_a_ticket(here, threads)
+    before = _content(threads.get(KEY).fix)
+    _reworked(here, threads, "changes")
+
+    stored = _reported_again(here, threads)
+
+    assert _changed(before, _content(stored.fix)) == {"changes"}
+
+
+def test_a_reworked_part_is_proposed_again(here, threads):
+    _split(threads, _removed(here))
+    _accepted(threads, "reply")
+    _reworked(here, threads, "reply")
+
+    stored = _reported_again(here, threads)
+
+    assert _states(stored)["reply"] == "proposed"
+
+
+def test_a_part_that_has_run_cannot_be_reworked(here, threads):
+    _split(threads, _removed(here))
+    _accepted(threads, "changes")
+
+    outcome = _asked(threads, "rework", note="split it differently", part="changes")
+
+    assert isinstance(outcome, Denied)
+    assert "locked" in outcome.reason
+
+
+def test_once_a_part_has_run_a_rework_names_the_part_it_sends_back(here, threads):
+    _split(threads, _removed(here))
+    _accepted(threads, "changes")
+
+    outcome = _asked(threads, "rework", note="split it differently")
+
+    assert isinstance(outcome, Denied)
+    assert "name the part" in outcome.reason
+
+
+def test_a_part_named_in_a_rework_of_a_proposal_that_is_no_split_is_refused(here, threads):
+    with threads.editing(KEY) as editable:
+        editable.not_a_fix(Classification.QUESTION, "It runs once per poll.")
+
+    outcome = _asked(threads, "rework", note="say more", part="reply")
+
+    assert isinstance(outcome, Denied)
+    assert outcome.code is ErrorCode.MALFORMED_REQUEST
+
+
+def test_once_a_part_has_run_only_a_split_is_reported(here, threads):
+    _split(threads, _removed(here))
+    _accepted(threads, "changes")
+    _reworked(here, threads, "reply")
+
+    with threads.editing(KEY) as editable:
+        outcome = editable.not_a_fix(Classification.QUESTION, "It runs once per poll.")
+
+    assert isinstance(outcome, Denied)
+    assert "thread split" in outcome.reason
+
+
+def test_a_part_rework_that_ends_without_reporting_leaves_the_split_as_it_was(here, threads):
+    _split(threads, _removed(here))
+    before = _content(_accepted(threads, "changes").fix)
+    _reworked(here, threads, "new-pr", finishes=True)
+    drain(threads)
+
+    stored = threads.get(KEY)
+    assert (stored.fix.kind, _content(stored.fix)) == ("split", before)
+    assert _states(stored)["changes"] == "run"
+    assert stored.standing is ConversationState.READY
+    assert "without reporting" in stored.fix.reason
+    [rework] = [one for one in stored.operations if one.kind == "rework"]
+    assert (rework.state, rework.reason) == ("refused", stored.fix.reason)

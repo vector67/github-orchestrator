@@ -321,7 +321,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
                     pointed=[contract.PointedLine(file=line.file, line=line.line,
                                                   text=line.text)
                              for line in brief.pointed],
-                    include=list(brief.include)),
+                    include=list(brief.include),
+                    part=None if brief.part is None else contract.SplitPartName(brief.part)),
                 proposal=view.proposal, classification=view.classification,
             )
 

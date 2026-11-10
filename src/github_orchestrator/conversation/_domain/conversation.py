@@ -338,6 +338,7 @@ class Brief:
     note: str = ""
     pointed: tuple[PointedLine, ...] = ()
     include: tuple[str, ...] = ()
+    part: SplitPart | None = None
 
     @property
     def is_empty(self) -> bool:

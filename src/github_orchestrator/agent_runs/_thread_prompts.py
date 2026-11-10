@@ -569,8 +569,111 @@ def carry_on_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
     ])
 
 
+PART_NAMES = {"ticket": "the ticket", "changes": "the changes to this PR",
+              "new-pr": "the new PR", "reply": "the reply"}
+
+
+def _split_ticket(fix: ThreadFix) -> list[str]:
+    if fix.ticket_title is None:
+        return ["- Ticket: none of its own; the new PR goes under this PR's own ticket."]
+    return [f"- Ticket: a new one in {fix.ticket_project}, titled {fix.ticket_title}:",
+            "```", fix.ticket_body or "", "```"]
+
+
+def _split_parts(fix: ThreadFix) -> list[str]:
+    return [
+        *_split_ticket(fix),
+        f"- Changes to this PR: commit {fix.split_sha}, the tip of this worktree, which "
+        f"takes the code out of {fix.pr}.",
+        f"- New PR: the branch {fix.split_branch}, onto {fix.split_base} "
+        f"({fix.split_base_reason}).",
+        "- Reply on the comment, posted once the new PR is open:",
+        "```", fix.reply or "", "```",
+    ]
+
+
+def _rework_of(fix: ThreadFix) -> str:
+    sha = fix.split_sha
+    branch = fix.split_branch
+    match fix.reworks_part:
+        case "ticket":
+            return ("Change the ticket's project, title or body. If the new PR belongs "
+                    "under this PR's own ticket after all, report `--same-ticket` instead.")
+        case "changes":
+            return (f"The changes to this PR are commit {sha}, the tip of this worktree. "
+                    "Amend it here, run the project's linter and the tests for the files "
+                    "it touches, and report the new tip.")
+        case "new-pr":
+            return (f"The new PR's code is the branch {branch}. Switch to it with "
+                    f"`git switch {branch}`, make the change, run the project's linter and "
+                    "the tests for the files it touches, and commit. Then come back with "
+                    f"`git switch -`: the tip of this worktree is {sha} again, and that "
+                    "commit stays as it is. A new base goes in `--base`, with its reason "
+                    "in `--base-reason`.")
+    return "Rewrite the reply, written as the PR author."
+
+
+def _split_report(commands: ReportCommands, fix: ThreadFix) -> str:
+    sha = FULL_SHA if fix.reworks_part == "changes" else str(fix.split_sha)
+    return commands.split(fix.pr, fix.key, sha=sha, branch=str(fix.split_branch),
+                          base='"<the base>"', base_reason='"<why that base>"',
+                          project='"<project>"', title='"<title>"', body='"<body>"',
+                          reply='"<the reply>"')
+
+
+def _split_rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str) -> str:
+    part = PART_NAMES[fix.reworks_part or ""]
+    fixed = ", ".join(PART_NAMES[one] for one in fix.parts_run)
+    lines = [
+        f"Rework one part of a split proposal on {fix.pr}, in this worktree.",
+        "",
+        f"The comment, by {fix.author or 'unknown'}:",
+        "",
+        fix.body,
+        "",
+        f"The last attempt split code out of {fix.pr} into a pull request of its own. "
+        "The split, part by part:",
+        "",
+        *_split_parts(fix),
+        "",
+        f"You are reworking {part}, and only {part}. Why it was sent back, in the words "
+        f"of the author of {fix.pr}:",
+        "",
+        steer,
+        "",
+    ]
+    if fixed:
+        lines += [f"Fixed, because it has run: {fixed}. Fixed parts stay exactly as they "
+                  "are.", ""]
+    lines += [
+        f"## Rework {part}",
+        "",
+        _rework_of(fix),
+        "",
+        "## Report",
+        "",
+        f"Once {part} is reworked, report the split again. The board takes only {part} "
+        "from this report and keeps every other part as listed above, so pass the others "
+        "as they stand:",
+        "",
+        f"    {_split_report(commands, fix)}",
+        "",
+        "Pass `--same-ticket` where the new PR goes under this PR's own ticket, and "
+        "`--project`, `--title` and `--body` where it has a ticket of its own.",
+        "",
+        *_asking(commands, fix),
+        f"If {part} cannot be reworked as asked, report why and stop; the split stays as "
+        "it was:",
+        "",
+        f"    {_fail(commands, fix)}",
+    ]
+    return "\n".join(lines)
+
+
 def rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str | None,
                   workers: int) -> str:
+    if fix.reworks_part is not None:
+        return _split_rework_prompt(commands, fix, steer or fix.note)
     pr = fix.pr
     anchor = ""
     if fix.path:

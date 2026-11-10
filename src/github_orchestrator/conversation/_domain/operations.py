@@ -205,7 +205,8 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
     if fix.state == PROPOSED:
         if operation.kind == OperationKind.APPROVE and fix.kind == ProposalKind.SPLIT:
             return _split_approve_outcome(fix)
-        if operation.kind == OperationKind.APPROVE:
+        if operation.kind == OperationKind.APPROVE or (
+                operation.kind == OperationKind.REWORK and fix.reason):
             return OperationState.REFUSED, fix.reason, None
         return OperationState.APPLIED, None, None
     if fix.state == DECLINED:
@@ -316,7 +317,7 @@ def _carried(command: Change) -> dict[str, Any]:
             return {"text": command.steer}
         case Rework():
             return {"brief": Brief(note=command.note, pointed=command.pointed,
-                                   include=command.include)}
+                                   include=command.include, part=command.part)}
         case Defer():
             return {"text": command.note, "until": _wake_word(command.wake_on)}
         case EditDraft():

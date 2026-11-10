@@ -766,6 +766,10 @@ class Brief(BaseModel):
     include: list[str] = Field(
         description="Logins whose comments go into the agent's context along "
                     "with the note.")
+    part: SplitPartName | None = Field(
+        description="The part of a split sent back, whose content alone the "
+                    "agent's next report changes. Null where the whole "
+                    "proposal was sent back.")
 
 
 class LandingSteps(BaseModel):
@@ -1481,6 +1485,12 @@ class BriefRequest(BaseModel):
         default_factory=list,
         description="Logins whose comments go into the agent's context along "
                     "with the note.")
+    part: SplitPartName | None = Field(
+        default=None,
+        description="The part of a split to send back; the agent reports the "
+                    "split again and only this part's content changes. Absent "
+                    "sends the whole proposal back, which a split refuses once "
+                    "any part has run. Refused on a part that has run.")
 
 
 class StartSessionRequest(BaseModel):

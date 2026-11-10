@@ -83,6 +83,7 @@ def _brief_document(brief: Brief | None) -> dict[str, Any] | None:
         "pointed": [{"file": one.file, "line": one.line, "text": one.text}
                     for one in brief.pointed],
         "include": list(brief.include),
+        "part": None if brief.part is None else brief.part.value,
     }
 
 
@@ -300,7 +301,8 @@ def _brief(brief: Document | None) -> Brief | None:
                  pointed=tuple(PointedLine(file=one["file"], line=one["line"],
                                            text=one["text"])
                                for one in brief["pointed"]),
-                 include=tuple(brief["include"]))
+                 include=tuple(brief["include"]),
+                 part=None if brief.get("part") is None else SplitPart(brief["part"]))
 
 
 def _anchor(anchor: Document | None) -> Location | None:

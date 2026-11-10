@@ -1309,8 +1309,8 @@ def rework_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
     include = tuple(brief.include)
     return _queued(
         board, _thread(board, key), if_match,
-        lambda editable: editable.rework(note=brief.note, pointed=pointed,
-                                           include=include))
+        lambda editable: editable.rework(note=brief.note, pointed=pointed, include=include,
+                                         part=None if brief.part is None else brief.part.value))
 
 
 @writes.post("/conversations/{key}/operations:start-session", status_code=202,

@@ -2191,6 +2191,16 @@
     "note": {
      "type": "string"
     },
+    "part": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartName"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "pointed": {
      "items": {
       "$ref": "#/components/schemas/PointedLine"
@@ -2201,7 +2211,8 @@
    "required": [
     "note",
     "pointed",
-    "include"
+    "include",
+    "part"
    ],
    "type": "object"
   },
@@ -2215,6 +2226,16 @@
     },
     "note": {
      "type": "string"
+    },
+    "part": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartName"
+      },
+      {
+       "type": "null"
+      }
+     ]
     },
     "pointed": {
      "items": {

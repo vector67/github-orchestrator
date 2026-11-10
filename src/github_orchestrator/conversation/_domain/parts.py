@@ -97,6 +97,19 @@ def dropped(split: Split, part: SplitPart) -> Split:
     return replace(split, accepted=split.accepted - {part})
 
 
+def taken_from_a_report(steps: frozenset[str], reworked: SplitPart | None) -> frozenset[SplitPart]:
+    if reworked is not None:
+        return frozenset({reworked})
+    return frozenset(part for part in SplitPart if not has_run(steps, part))
+
+
+def reported(split: Split, report: Split, taken: frozenset[SplitPart]) -> Split:
+    new_pr = report if SplitPart.NEW_PR in taken else split
+    return replace(split, branch=new_pr.branch, base=new_pr.base, base_reason=new_pr.base_reason,
+                   ticket=report.ticket if SplitPart.TICKET in taken else split.ticket,
+                   accepted=split.accepted - taken)
+
+
 def _waiting(split: Split, steps: frozenset[str], part: SplitPart) -> bool:
     prerequisite = waits_for(split, part)
     return prerequisite is not None and not has_run(steps, prerequisite)
