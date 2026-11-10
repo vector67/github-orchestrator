@@ -102,6 +102,7 @@ class ProposalKind(StrEnum):
     COMMIT = "commit"
     REPLY = "reply"
     TICKET = "ticket"
+    SPLIT = "split"
 
 
 @dataclass(frozen=True)
@@ -109,6 +110,14 @@ class Ticket:
     project: str
     title: str
     body: str
+
+
+@dataclass(frozen=True)
+class Split:
+    branch: str
+    base: str
+    base_reason: str
+    ticket: Ticket | None = None
 
 
 class ThreadVerdict(StrEnum):
@@ -381,6 +390,7 @@ class Fix:
     kind: ProposalKind = ProposalKind.COMMIT
     reply: str | None = None
     ticket: Ticket | None = None
+    split: Split | None = None
     ticket_key: str | None = None
     ticket_url: str | None = None
     file_error: str | None = None

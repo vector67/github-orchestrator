@@ -19,6 +19,8 @@ from github_orchestrator.github import PullRequestState, ThreadComment
 from github_orchestrator.github import ReviewState as GitHubReviewState
 from github_orchestrator.github.fake import ThreadAnchor
 from github_orchestrator.notifications.fake import FakeNotifications
+from github_orchestrator.wiring import ReportCommands, ReportCommandsWiring, wire
+from tests.agent_runs.cli_flags import assert_the_cli_takes, invocations
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
 from tests.cli.support import ACCOUNT
@@ -140,7 +142,7 @@ def _report_argv(verb, **fields):
     for name, value in fields.items():
         flag = f"--{name.replace('_', '-')}"
         for one in value if isinstance(value, list) else [value]:
-            argv.append(f"{flag}={one}")
+            argv.append(flag if one is None else f"{flag}={one}")
     return argv
 
 
@@ -498,6 +500,85 @@ def test_ticket_proposes_the_agents_ticket_and_reply(pr_worktree, running, threa
         "ticket", "That belongs outside this PR, so I've proposed a ticket.")
     assert (proposal.ticket.project, proposal.ticket.title, proposal.ticket.body) == (
         "PROJ", "Cache tax rates across exports", "Each export reads its model again.")
+
+
+SPLIT_BRANCH = "split/cache-tax-rates"
+
+
+def _split_argv(sha, **fields):
+    return _report_argv("split", thread_id=THREAD_KEY, **{
+        "sha": sha, "branch": SPLIT_BRANCH, "base": "main",
+        "base_reason": "the cache stands alone",
+        "reply": "That moved to its own PR.", **fields})
+
+
+def _branched(store, sha):
+    workspace = thread_worktree(store.worktrees, THE_PR, THREAD_KEY)
+    made = _git(workspace, "branch", SPLIT_BRANCH, sha)
+    assert made.returncode == 0, made.stderr
+
+
+def test_split_proposes_the_agents_split_under_this_prs_ticket(fixed, store, threads, run_cli):
+    _branched(store, fixed)
+
+    ran = run_cli(*_split_argv(fixed, same_ticket=None))
+
+    assert ran.code == 0, ran.err
+    fix = _stored(threads).fix
+    assert fix.is_proposed
+    assert (fix.kind, fix.thread_sha, fix.reply) == ("split", Sha(fixed),
+                                                     "That moved to its own PR.")
+    assert (fix.split.branch, fix.split.base, fix.split.base_reason, fix.split.ticket) == (
+        SPLIT_BRANCH, "main", "the cache stands alone", None)
+
+
+def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, threads, run_cli):
+    _branched(store, fixed)
+
+    ran = run_cli(*_split_argv(fixed, project="PROJ", title="Cache tax rates",
+                               body="Each export reads its model again."))
+
+    assert ran.code == 0, ran.err
+    ticket = _stored(threads).fix.split.ticket
+    assert (ticket.project, ticket.title, ticket.body) == (
+        "PROJ", "Cache tax rates", "Each export reads its model again.")
+
+
+def test_split_refuses_a_branch_the_worktree_does_not_have(fixed, threads, run_cli):
+    ran = run_cli(*_split_argv(fixed, same_ticket=None))
+
+    assert ran.code != 0
+    assert SPLIT_BRANCH in ran.err
+    assert not _stored(threads).fix.is_proposed
+
+
+@pytest.mark.parametrize("ticket", [
+    {},
+    {"same_ticket": None, "project": "PROJ", "title": "Cache", "body": "Share it."},
+    {"project": "PROJ", "title": "Cache"},
+], ids=["neither", "both", "half a ticket"])
+def test_split_takes_either_this_prs_ticket_or_a_whole_new_one(fixed, store, threads, run_cli,
+                                                                ticket):
+    _branched(store, fixed)
+
+    ran = run_cli(*_split_argv(fixed, **ticket))
+
+    assert ran.code != 0
+    assert "--same-ticket" in ran.err
+    assert not _stored(threads).fix.is_proposed
+
+
+def test_the_split_command_an_agent_is_shown_is_one_the_cli_takes():
+    shown = wire(ReportCommandsWiring("python")).get(ReportCommands).split(
+        THE_PR, THREAD_KEY, sha="<sha>", branch="<branch>", base="<base>",
+        base_reason="<why that base>", project="<PROJ>", title="<title>", body="<body>",
+        reply="<reply>")
+
+    [(verb, flags)] = invocations(shown)
+
+    assert verb == "split"
+    assert "--same-ticket" in flags
+    assert_the_cli_takes(verb, flags)
 
 
 def _filed_argv(**fields):

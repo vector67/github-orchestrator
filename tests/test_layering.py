@@ -577,7 +577,8 @@ REVISIONS_MEMBERS = frozenset({
     "pr_base", "pr_diff", "pr_commits", "has_commit", "blob",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
-    "path", "base_sha", "ensure", "pick", "head_sha", "descends", "progress", "drop", "reset", "diff_since",
+    "path", "base_sha", "ensure", "pick", "head_sha", "descends", "has_branch", "progress", "drop",
+    "reset", "diff_since",
 })
 
 
@@ -691,7 +692,7 @@ ROLE_MEMBERS = {
     "EditableConversation": frozenset({
         "approve", "rework", "start_session", "open_shell", "retry", "fix", "stop", "drop_question", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "react", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "ask", "fail", "session_gone", "set_commit_verdict",
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "split", "ask", "fail", "session_gone", "set_commit_verdict",
         "check_for_fixes"}),
 }
 

@@ -69,6 +69,8 @@ class Git(Protocol):
 
     def _descends(self, path: str | None, onto: str, head: str) -> bool: ...
 
+    def _has_branch(self, path: str | None, branch: str) -> bool: ...
+
     def _progress_of(self, path: str | None, base_sha: str | None) -> str | None: ...
 
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
@@ -143,6 +145,9 @@ class BoundWorkspace:
 
     def descends(self, onto: Sha, head: Sha) -> bool:
         return self.git._descends(self.path, str(onto), str(head))
+
+    def has_branch(self, branch: str) -> bool:
+        return self.git._has_branch(self.path, branch)
 
     def progress(self) -> str | None:
         return self.git._progress_of(self.path, _text(self.base_sha))

@@ -29,6 +29,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Reaction,
     ReasonCode,
     Run,
+    Split,
     Step,
     ThreadVerdict,
     Ticket,
@@ -140,6 +141,20 @@ def _ticket(document: Document | None) -> Ticket | None:
     return Ticket(project=document["project"], title=document["title"], body=document["body"])
 
 
+def _split_document(split: Split | None) -> Document | None:
+    if split is None:
+        return None
+    return {"branch": split.branch, "base": split.base, "base_reason": split.base_reason,
+            "ticket": _ticket_document(split.ticket)}
+
+
+def _split(document: Document | None) -> Split | None:
+    if document is None:
+        return None
+    return Split(branch=document["branch"], base=document["base"],
+                 base_reason=document["base_reason"], ticket=_ticket(document["ticket"]))
+
+
 def _question_document(question: Question | None) -> Document | None:
     if question is None:
         return None
@@ -234,6 +249,7 @@ def encode(conversation: Conversation) -> Document:
         "proposal_kind": fix.kind,
         "proposed_reply": fix.reply,
         "proposed_ticket": _ticket_document(fix.ticket),
+        "proposed_split": _split_document(fix.split),
         "ticket_key": fix.ticket_key,
         "ticket_url": fix.ticket_url,
         "file_error": fix.file_error,
@@ -415,6 +431,7 @@ def _decoded(document: Document) -> Conversation:
             kind=ProposalKind(document["proposal_kind"]),
             reply=document["proposed_reply"],
             ticket=_ticket(document["proposed_ticket"]),
+            split=_split(document["proposed_split"]),
             ticket_key=document["ticket_key"],
             ticket_url=document["ticket_url"],
             file_error=document["file_error"],

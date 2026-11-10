@@ -733,7 +733,7 @@ export interface Proposal {
   last_words: string | null;
 }
 
-export type ProposalKind = 'commit' | 'reply' | 'ticket';
+export type ProposalKind = 'commit' | 'reply' | 'ticket' | 'split';
 
 export type ProposalList = Proposal[];
 

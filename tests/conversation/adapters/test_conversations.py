@@ -442,6 +442,39 @@ def test_a_ticket_the_agent_proposed_is_kept_on_disk(here):
         "PROJ", "Cache models", "Each export reads its model again.")
 
 
+@pytest.mark.parametrize("ticket", [
+    {},
+    {"ticket_project": "PROJ", "ticket_title": "Cache models",
+     "ticket_body": "Each export reads its model again."},
+], ids=["same ticket", "new ticket"])
+def test_a_split_the_agent_proposed_is_kept_on_disk(here, ticket):
+    threads = _heard(here)
+    start_run(here, threads, finishes=False)
+    sha = here.working_copies.commit(here.working_copies.thread_checkout(THE_PR, KEY),
+                                     {"f": "removed\n"}, "Take the cache out")
+    here.working_copies.branches["split/cache"] = sha
+    with threads.editing(KEY) as editable:
+        editable.split(sha, branch="split/cache", base="main", base_reason="it stands alone",
+                       reply="This moved to its own PR.", **ticket)
+
+    fix = here.threads().get(KEY).fix
+
+    assert (fix.kind, fix.reply, fix.thread_sha) == ("split", "This moved to its own PR.",
+                                                     Sha(sha))
+    assert (fix.split.branch, fix.split.base, fix.split.base_reason) == (
+        "split/cache", "main", "it stands alone")
+    drafted = fix.split.ticket
+    assert (None if drafted is None else (drafted.project, drafted.title, drafted.body)) == (
+        tuple(ticket.values()) or None)
+
+
+def test_a_record_written_before_splits_existed_proposes_no_split(here):
+    document = _proposed_document(here)
+    document.pop("proposed_split")
+
+    assert _read(here, document).fix.split is None
+
+
 def test_a_ticket_being_filed_and_then_filed_is_kept_on_disk(here):
     threads = _heard(here)
     start_run(here, threads)

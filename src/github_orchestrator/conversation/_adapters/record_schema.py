@@ -527,6 +527,7 @@ def _migrated(version: int, document: Document) -> Document:
         "proposal_kind": _proposal_kind(document),
         "proposed_reply": document.get("proposed_reply"),
         "proposed_ticket": document.get("proposed_ticket"),
+        "proposed_split": document.get("proposed_split"),
         "ticket_key": document.get("ticket_key"),
         "ticket_url": document.get("ticket_url"),
         "file_error": document.get("file_error"),

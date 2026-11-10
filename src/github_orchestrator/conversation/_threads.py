@@ -76,6 +76,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportAsk,
     ReportFiled,
     ReportReady,
+    ReportSplit,
     Resolve,
     Retry,
     Rework,
@@ -114,6 +115,7 @@ from github_orchestrator.conversation._domain.conversation import (
     OperationState,
     PointedLine,
     Question,
+    Split,
     Ticket,
     UnreadableRecord,
     reacted,
@@ -474,6 +476,21 @@ class _Editable:
             return self._answer(ReportFiled(key=filed_key, url=filed_url))
         return self._answer(report_without_code(
             classification, text, _ticket(ticket_project, ticket_title, ticket_body)))
+
+    def split(self, sha: str, *, branch: str, base: str, base_reason: str, reply: str,
+              ticket_project: str | None = None, ticket_title: str = "",
+              ticket_body: str = "") -> Conversation | Denied:
+        return self._answer(ReportSplit(
+            sha=sha, on_base=self._on_base(sha), reply=reply,
+            split=Split(branch=branch, base=base, base_reason=base_reason,
+                        ticket=_ticket(ticket_project, ticket_title, ticket_body)),
+            branch_exists=self._has_branch(branch)))
+
+    def _has_branch(self, branch: str) -> bool:
+        conversation = None if self._held is None else self._held.conversation
+        if conversation is None:
+            return False
+        return thread_workspace(self._pr.ports, conversation).has_branch(branch)
 
     def ask(self, question: str, context: str,
             options: Sequence[str] = ()) -> Conversation | Denied:

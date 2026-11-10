@@ -323,6 +323,9 @@ const KIND_PHRASES: Record<ProposalKind, Partial<Record<Phase, string>>> = {
     landed: 'Accepted · ticket filed',
     'reply failed': 'Accepted · ticket filed, the reply failed',
   },
+  split: {
+    proposed: 'Agent proposes moving this into a new PR',
+  },
 };
 
 function withoutCode(proposal: Proposal | undefined): boolean {

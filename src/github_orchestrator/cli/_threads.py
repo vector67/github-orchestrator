@@ -95,6 +95,26 @@ def thread_ticket(args: argparse.Namespace, *, conversation_managers: Conversati
         ticket_title=args.title, ticket_body=args.body), "ticketed")
 
 
+def _split_ticket(args: argparse.Namespace) -> dict[str, str]:
+    drafted = [args.project, args.title, args.body]
+    whole = all(part is not None for part in drafted)
+    if args.same_ticket == whole or (not whole and any(part is not None for part in drafted)):
+        _die("pass either --same-ticket, or --project, --title and --body for the new PR's "
+             "own ticket")
+    if args.same_ticket:
+        return {}
+    return {"ticket_project": args.project, "ticket_title": args.title,
+            "ticket_body": args.body}
+
+
+def thread_split(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
+                 gist_model: str | None) -> None:
+    ticket = _split_ticket(args)
+    _report_or_die(args, conversation_managers, lambda conversation: conversation.split(
+        args.sha, branch=args.branch, base=args.base, base_reason=args.base_reason,
+        reply=args.reply, **ticket), "split")
+
+
 def thread_filed(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
                  gist_model: str | None) -> None:
     _report_or_die(args, conversation_managers, lambda conversation: conversation.not_a_fix(
@@ -350,6 +370,7 @@ THREAD_COMMANDS = {
     "skip": thread_skip,
     "reply": thread_reply,
     "ticket": thread_ticket,
+    "split": thread_split,
     "filed": thread_filed,
     "ready": thread_ready,
     "ask": thread_ask,
@@ -596,6 +617,34 @@ def add_thread_parsers(
     ticket_parser.add_argument("--body", required=True, help="The ticket's description")
     ticket_parser.add_argument("--reply", required=True,
                                help="The reply to post on the comment once the ticket is filed")
+
+    split_parser = thread_sub.add_parser(
+        "split",
+        help="The comment's code is already in this pull request but belongs in another: "
+             "propose the commit that takes it out, the branch that carries it to a new PR, "
+             "and the reply that says where it went, for the author to accept.",
+    )
+    _common(split_parser)
+    split_parser.add_argument("--thread-id", required=True)
+    split_parser.add_argument("--sha", required=True,
+                              help="The commit that takes the code out of this PR")
+    split_parser.add_argument("--branch", required=True,
+                              help="The branch, in this worktree, that carries the code to "
+                                   "the new PR")
+    split_parser.add_argument("--base", required=True,
+                              help="The branch the new PR merges into: main when the code "
+                                   "stands alone, this PR's branch when it depends on it")
+    split_parser.add_argument("--base-reason", required=True,
+                              help="One line: why the new PR goes onto that base")
+    split_parser.add_argument("--same-ticket", action="store_true",
+                              help="The new PR goes under this PR's ticket")
+    split_parser.add_argument("--project", default=None,
+                              help="The new ticket's project: the Jira project key, or "
+                                   "owner/name for GitHub issues")
+    split_parser.add_argument("--title", default=None, help="The new ticket's title")
+    split_parser.add_argument("--body", default=None, help="The new ticket's description")
+    split_parser.add_argument("--reply", required=True,
+                              help="The reply to post on the comment once the new PR is open")
 
     filed_parser = thread_sub.add_parser(
         "filed",

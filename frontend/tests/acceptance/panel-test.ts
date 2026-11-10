@@ -375,6 +375,34 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-decision="approve"]').exists();
   });
 
+  test('a proposed split is drawn with its reply and offers reject and rework', async function (assert) {
+    board().operations[KEY] = [
+      operation({ id: `${KEY}.1`, conversation: KEY, plan: [] }),
+    ];
+    board().proposals[KEY] = [
+      proposal({
+        id: `${KEY}.1.proposal`,
+        kind: 'split',
+        reply: 'That moved to its own PR.',
+        ticket: null,
+        commits: null,
+        summary: null,
+        commit_message: null,
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-fix-label]')
+      .hasText('Agent proposes moving this into a new PR');
+    assert
+      .dom('[data-test-proposed-reply]')
+      .hasText('That moved to its own PR.');
+    assert.dom('[data-test-decision="reject"]').exists();
+    assert.dom('[data-test-decision="rework"]').exists();
+  });
+
   test('a step naming one long unbroken identifier wraps inside its row', async function (assert) {
     const identifier = 'test_' + 'an_invoice_voided_then_reissued_'.repeat(6);
     board().operations[KEY] = [

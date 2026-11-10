@@ -777,6 +777,44 @@ def test_an_accepted_ticket_is_filed_as_edited_and_its_landing_shows_the_filing(
     assert (summarised["lands"], summarised["ticket_key"]) == ("ticket", "WEB-12")
 
 
+def _split(board):
+    start_run(board.stage, board.threads)
+    sha = commit_fix(board.stage, KEY, {"src/foo.py": "removed\n"}, pr=THE_PR,
+                     message="Take the cache out")
+    board.stage.working_copies.branches["split/cache"] = sha
+    with board.threads.editing(KEY) as editable:
+        editable.split(sha, branch="split/cache", base="main", base_reason="it stands alone",
+                       reply="This moved to its own PR.")
+    drain(board)
+
+
+def test_a_proposed_split_waits_under_ready_for_you_with_its_reply():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+    assert (proposal["kind"], proposal["reply"]) == ("split", "This moved to its own PR.")
+
+
+def test_accepting_a_split_is_refused_until_a_later_step_and_says_why():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "approve", reply="This moved to its own PR.")
+
+    assert answer.status_code == 409
+    [error] = answer.json()["errors"]
+    assert error["code"] == "no-proposal"
+    assert "accepting a split arrives in a later step" in error["detail"]
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+
+
 def test_a_thread_no_agent_has_finished_has_no_proposals():
     answer = spoke().get(f"/api/conversations/{KEY}/proposals")
 

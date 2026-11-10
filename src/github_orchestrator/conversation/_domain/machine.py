@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportFiled,
     ReportReady,
     ReportReply,
+    ReportSplit,
     ReportTicket,
     Resolve,
     Retry,
@@ -241,7 +242,8 @@ def _reported_on(states: tuple[str, ...], nobody: str) -> Rule:
     return reported_on
 
 
-def _a_commit(conversation: Conversation, command: ReportReady | MoveBase) -> Refused | None:
+def _a_commit(conversation: Conversation,
+              command: ReportReady | ReportSplit | MoveBase) -> Refused | None:
     if Sha.parse(command.sha) is None:
         return Refused(conversation, ErrorCode.INTERNAL_REFUSAL,
                        f"{command.sha!r} is not a commit hash; pass the full or "
@@ -249,7 +251,8 @@ def _a_commit(conversation: Conversation, command: ReportReady | MoveBase) -> Re
     return None
 
 
-def _on_the_base(conversation: Conversation, command: ReportReady) -> Refused | None:
+def _on_the_base(conversation: Conversation,
+                 command: ReportReady | ReportSplit) -> Refused | None:
     if command.on_base:
         return None
     base = conversation.fix.base_sha
@@ -262,6 +265,16 @@ def _on_the_base(conversation: Conversation, command: ReportReady) -> Refused | 
                    f"--thread-id), then run this command again. Otherwise rebase "
                    f"your commit onto {base} and run this command again with the "
                    f"new sha")
+
+
+def _a_branch_the_worktree_has(conversation: Conversation,
+                               command: ReportSplit) -> Refused | None:
+    if command.branch_exists:
+        return None
+    return Refused(conversation, ErrorCode.INTERNAL_REFUSAL,
+                   f"you cannot split onto {command.split.branch}: the thread's worktree "
+                   f"has no branch of that name. Create it there with the code that "
+                   f"moves to the new PR, then run this command again")
 
 
 def _a_known_confidence(conversation: Conversation,
@@ -422,6 +435,13 @@ def _a_ticket_to_file(conversation: Conversation, command: Approve) -> Refused |
         return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
                                 NOTHING_TO_POST)
     return None
+
+
+def _a_split_to_accept(conversation: Conversation, command: Approve) -> Refused | None:
+    if conversation.fix.kind != ProposalKind.SPLIT:
+        return None
+    return _refuse_decision(conversation, ErrorCode.NO_PROPOSAL,
+                            "accepting a split arrives in a later step")
 
 
 def _a_fix_to_land(conversation: Conversation, command: Approve) -> Refused | None:
@@ -828,6 +848,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportDeclined: (_reported_on((QUEUED, RUNNING, IN_SESSION), "no agent holds"),),
     ReportReply: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),),
     ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),),
+    ReportSplit: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
+                  _a_commit, _on_the_base, _a_branch_the_worktree_has),
     ReportAsk: (_reported_on((RUNNING, IN_SESSION), "nobody is working on"),),
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     Fail: (_running_only,),
@@ -840,8 +862,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     RunTimedOut: (_running_only,),
     RunLost: (_running_only,),
     Land: (_landing, _ready_to_pick_while_landing),
-    Approve: (_not_parked_to_land, _no_landing_under_way, _rebase_gate, _filing,
-              _a_commit_to_land, _a_fix_to_land, _a_ticket_to_file, _a_reply_to_post,
+    Approve: (_not_parked_to_land, _no_landing_under_way, _a_split_to_accept, _rebase_gate,
+              _filing, _a_commit_to_land, _a_fix_to_land, _a_ticket_to_file, _a_reply_to_post,
               _resolvable, _yours_to_delete, _ready_to_pick),
     First: (_wanting_a_first_run,),
     Rebase: (_waiting_to_be_caught_up,),

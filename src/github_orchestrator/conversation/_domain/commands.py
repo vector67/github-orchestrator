@@ -7,6 +7,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     PointedLine,
     Question,
+    Split,
     Ticket,
 )
 from github_orchestrator.domain import Location, Sha
@@ -83,6 +84,15 @@ class ReportReply:
 class ReportTicket:
     ticket: Ticket
     reply: str
+
+
+@dataclass(frozen=True)
+class ReportSplit:
+    sha: str
+    on_base: bool
+    split: Split
+    reply: str
+    branch_exists: bool
 
 
 def report_without_code(classification: Classification, text: str,
@@ -235,6 +245,7 @@ Command = (
     | ReportDeclined
     | ReportReply
     | ReportTicket
+    | ReportSplit
     | ReportAsk
     | ReportFiled
     | Fail

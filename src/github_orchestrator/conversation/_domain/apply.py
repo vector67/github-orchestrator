@@ -25,6 +25,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportFiled,
     ReportReady,
     ReportReply,
+    ReportSplit,
     ReportTicket,
     Resolve,
     Retry,
@@ -540,7 +541,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
     reported = Sha.parse(command.sha)
     return Accepted(with_fix(
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.COMMIT, reply=None,
-        ticket=None, classification=None, question=None, thread_sha=reported, tests=command.tests,
+        ticket=None, split=None, classification=None, question=None, thread_sha=reported, tests=command.tests,
         tests_note=command.tests_note, agent_note=command.agent_note,
         summary=command.summary,
         confidence=(None if command.confidence is None
@@ -553,6 +554,7 @@ def _report_ready(conversation: Conversation, command: ReportReady,
 NO_COMMIT: dict[str, Any] = {
     "question": None, "thread_sha": None, "tests": None, "tests_note": None, "agent_note": None,
     "summary": None, "confidence": None, "confidence_note": None, "reason": None,
+    "split": None,
 }
 
 
@@ -570,6 +572,14 @@ def _report_ticket(conversation: Conversation, command: ReportTicket,
         _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.TICKET,
         reply=command.reply, ticket=command.ticket,
         classification=Classification.OUT_OF_SCOPE, **NO_COMMIT))
+
+
+def _report_split(conversation: Conversation, command: ReportSplit,
+                  at: str | None) -> Accepted:
+    return Accepted(with_fix(
+        _decidable(conversation, at), state=PROPOSED, kind=ProposalKind.SPLIT,
+        reply=command.reply, ticket=None, classification=None,
+        **(NO_COMMIT | {"split": command.split, "thread_sha": Sha.parse(command.sha)})))
 
 
 def _report_ask(conversation: Conversation, command: ReportAsk, at: str | None) -> Accepted:
@@ -633,7 +643,7 @@ def _proposed_by_exit(conversation: Conversation, head: Sha, note: str,
                       command: RunExited) -> Accepted:
     return Accepted(with_fix(_decidable(conversation, command.at), state=PROPOSED,
                               kind=ProposalKind.COMMIT, reply=None, ticket=None,
-                              thread_sha=head, tests="unverified",
+                              split=None, thread_sha=head, tests="unverified",
                               tests_note=note, reason=None, last_words=command.last_words))
 
 
@@ -1185,6 +1195,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _report_reply(conversation, command, at)
         case ReportTicket():
             return _report_ticket(conversation, command, at)
+        case ReportSplit():
+            return _report_split(conversation, command, at)
         case ReportAsk():
             return _report_ask(conversation, command, at)
         case ReportFiled():

@@ -172,6 +172,17 @@ def is_ancestor(worktree: str | None, ancestor: str, descendant: str) -> bool:
     return result.returncode == 0
 
 
+def has_branch(worktree: str | None, branch: str) -> bool:
+    if not worktree or not branch:
+        return False
+    try:
+        result = run_git(worktree, "rev-parse", "--verify", "--quiet",
+                         "--end-of-options", f"refs/heads/{branch}")
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
 def commits_between(pr_worktree: str, base: str, head: str) -> int | None:
     try:
         counted = run_git(pr_worktree, "rev-list", "--count",

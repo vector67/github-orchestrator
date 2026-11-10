@@ -567,6 +567,9 @@ class FakeWorkingCopies:
             return False
         return ancestor in self._ancestors(descendant)
 
+    def _has_branch(self, path: str | None, branch: str) -> bool:
+        return bool(path) and branch in self.branches
+
     def _progress_of(self, path: str | None, base_sha: str | None) -> str | None:
         if not path or not base_sha or Sha.parse(base_sha) is None:
             return None

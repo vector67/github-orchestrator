@@ -53,6 +53,14 @@ class CliReportCommands:
         return self._command("ticket", pr, key, [("--project", project), ("--title", title),
                                                  ("--body", body), ("--reply", reply)])
 
+    def split(self, pr: Pr, key: str, *, sha: str, branch: str, base: str, base_reason: str,
+              project: str, title: str, body: str, reply: str) -> str:
+        words = self._invocation("split", pr, key)
+        words += [f"--sha {sha}", f"--branch {branch}", f"--base {base}",
+                  f"--base-reason {base_reason}", f"--reply {reply}", "[--same-ticket]",
+                  f"[--project {project}]", f"[--title {title}]", f"[--body {body}]"]
+        return " ".join(words)
+
     def plan(self, pr: Pr, key: str, steps: Sequence[tuple[str, str]]) -> str:
         words = self._invocation("plan", pr, key)
         for text, path in steps:

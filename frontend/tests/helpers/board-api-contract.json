@@ -6088,7 +6088,8 @@
    "enum": [
     "commit",
     "reply",
-    "ticket"
+    "ticket",
+    "split"
    ],
    "type": "string"
   },

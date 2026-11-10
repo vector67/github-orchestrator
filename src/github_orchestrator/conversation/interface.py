@@ -154,6 +154,10 @@ class EditableConversation(Protocol):
                   ticket_body: str = "", filed_key: str | None = None,
                   filed_url: str = "") -> Conversation | Denied: ...
 
+    def split(self, sha: str, *, branch: str, base: str, base_reason: str, reply: str,
+              ticket_project: str | None = None, ticket_title: str = "",
+              ticket_body: str = "") -> Conversation | Denied: ...
+
     def ask(self, question: str, context: str,
             options: Sequence[str] = ()) -> Conversation | Denied: ...
 

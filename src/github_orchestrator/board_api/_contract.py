@@ -514,6 +514,7 @@ class ProposalKind(StrEnum):
     COMMIT = "commit"
     REPLY = "reply"
     TICKET = "ticket"
+    SPLIT = "split"
 
 
 class OperationSummary(BaseModel):
@@ -1257,7 +1258,9 @@ class Proposal(BaseModel):
         description="What accepting it does: `commit` lands the agent's commit "
                     "and answers the comment, `reply` posts `reply` and "
                     "nothing else, `ticket` files `ticket` and then posts "
-                    "`reply`. Only a commit has a diff, files or tests.")
+                    "`reply`, `split` moves code out of this PR into a new one "
+                    "and is not yet accepted. Only a commit has a diff, files "
+                    "or tests.")
     reply: str | None = Field(
         description="The reply the agent proposes to post. Null on a commit, "
                     "whose answer the viewer writes on accepting.")

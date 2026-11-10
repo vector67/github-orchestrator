@@ -9,7 +9,7 @@ from tests.cli.support import Machine
 
 _INVOCATION = re.compile(
     r"(?:github_orchestrator\.cli|…) thread "
-    r"(open|plan|step|skip|reply|ticket|filed|ready|ask|fail|draft)([^\n]*)"
+    r"(open|plan|step|skip|reply|ticket|split|filed|ready|ask|fail|draft)([^\n]*)"
 )
 
 
