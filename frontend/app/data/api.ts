@@ -577,9 +577,20 @@ export interface Notice {
 
 export type NoticeCode = 'worktree-frozen' | 'agents-disabled' | 'agent-running' | 'agent-wont-start' | 'not-your-draft' | 'not-yours-to-assign' | 'close-refused' | 'mark-ready-refused' | 'assign-reviewers-refused';
 
-export type OperationKind = 'first' | 'rebase' | 'file' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+export interface OpenOperation {
+  id: string;
+  conversation: string | null;
+  kind: 'open';
+  state: OperationState;
+  reason: string | null;
+  reason_code: ReasonCode | null;
+  requested_at: string | null;
+  settled_at: string | null;
+}
 
-export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+
+export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
 
 export type OperationList = Operation[];
 
@@ -602,7 +613,7 @@ export interface OperationSummary {
 }
 
 export interface Outcome {
-  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
   conversation: Conversation;
 }
 
@@ -822,7 +833,7 @@ export interface ReadMarks {
   marks: ReadMark[];
 }
 
-export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';
+export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'open-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';
 
 export type RecordState = 'open' | 'waiting_on_reviewer' | 'assumed_done' | 'not_mine' | 'confirmed' | 'deferred' | 'rejected' | 'resolved' | 'removed' | 'draft' | 'enrolled' | 'discarded';
 

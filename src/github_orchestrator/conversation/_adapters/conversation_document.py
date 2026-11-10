@@ -149,7 +149,8 @@ def _split_document(split: Split | None) -> Document | None:
         return None
     return {"branch": split.branch, "base": split.base, "base_reason": split.base_reason,
             "ticket": _ticket_document(split.ticket),
-            "accepted": sorted(part.value for part in split.accepted)}
+            "accepted": sorted(part.value for part in split.accepted),
+            "pr_url": split.pr_url}
 
 
 def _split(document: Document | None) -> Split | None:
@@ -157,7 +158,8 @@ def _split(document: Document | None) -> Split | None:
         return None
     return Split(branch=document["branch"], base=document["base"],
                  base_reason=document["base_reason"], ticket=_ticket(document["ticket"]),
-                 accepted=frozenset(SplitPart(part) for part in document.get("accepted", ())))
+                 accepted=frozenset(SplitPart(part) for part in document.get("accepted", ())),
+                 pr_url=document.get("pr_url"))
 
 
 def _question_document(question: Question | None) -> Document | None:

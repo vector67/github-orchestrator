@@ -6,6 +6,7 @@ PICK = "pick"
 PUSH = "push"
 OPEN = "open"
 ANSWER = "answer"
+MATCH_DRAFT = "match-draft"
 MARK_RESOLVED = "resolve"
 
 
@@ -38,6 +39,7 @@ class Split:
     base_reason: str
     ticket: Ticket | None = None
     accepted: frozenset[SplitPart] = frozenset()
+    pr_url: str | None = None
 
 
 @dataclass(frozen=True)

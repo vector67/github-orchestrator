@@ -17,15 +17,16 @@ from github_orchestrator.domain import Location, Sha, Side
 
 
 class OperationKind(StrEnum):
-    """What kind of work this is. `first`, `rebase` and `file` are the board's
-    own: a thread gets a run when it appears, another when the pull request's
-    head moves under a proposal, and one that files the ticket when a ticket
-    is accepted. The rest are asked for, and each has a custom method of its
+    """What kind of work this is. `first`, `rebase`, `file` and `open` are the
+    board's own: a thread gets a run when it appears, another when the pull
+    request's head moves under a proposal, one that files the ticket when a
+    ticket is accepted, and one that opens a split's new PR. The rest are asked for, and each has a custom method of its
     own."""
 
     FIRST = "first"
     REBASE = "rebase"
     FILE = "file"
+    OPEN = "open"
     REWORK = "rework"
     RETRY = "retry"
     START_SESSION = "start-session"
@@ -80,6 +81,7 @@ class ReasonCode(StrEnum):
     PUSH_FAILED = "push-failed"
     REPLY_FAILED = "reply-failed"
     FILE_FAILED = "file-failed"
+    OPEN_FAILED = "open-failed"
     COMMENT_GONE = "comment-gone"
     GITHUB_REJECTED = "github-rejected"
     GIT_FAILED = "git-failed"
@@ -227,7 +229,7 @@ MAX_ATTEMPTS = 3
 
 RUN_KINDS = (OperationKind.FIRST, OperationKind.REBASE, OperationKind.REWORK, OperationKind.RETRY)
 
-PART_RUNS = (OperationKind.FILE,)
+PART_RUNS = (OperationKind.FILE, OperationKind.OPEN)
 
 FIX_RUNS = (*RUN_KINDS, *PART_RUNS)
 
@@ -413,7 +415,7 @@ class Fix:
 
     @property
     def holds_a_proposal(self) -> bool:
-        return self.is_settled or (self.run.kind == OperationKind.FILE
+        return self.is_settled or (self.run.kind in PART_RUNS
                                    and self.state in (QUEUED, RUNNING))
 
     @property
@@ -754,6 +756,7 @@ _STATE_OF_FIX = {
 _STATE_OF_RUN = {
     OperationKind.REBASE: ConversationState.LANDING,
     OperationKind.FILE: ConversationState.LANDING,
+    OperationKind.OPEN: ConversationState.LANDING,
     OperationKind.REWORK: ConversationState.REWORK,
 }
 

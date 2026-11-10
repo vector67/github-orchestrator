@@ -245,6 +245,56 @@ If it cannot be filed, report why and stop:
 """
 
 
+def _new_prs_ticket(fix: ThreadFix) -> str:
+    if fix.ticket_key:
+        return f"{fix.ticket_key}, {fix.ticket_url}"
+    if fix.branch_ticket:
+        return f"{fix.branch_ticket}, the ticket of the original PR"
+    return ("the ticket of the original PR; take its key and link from that PR's title "
+            "and body, and leave the ticket out when it names none")
+
+
+def opening_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
+    branch = fix.split_branch
+    opened_cmd = commands.opened(fix.pr, fix.key, url='"<the new PR\'s link>"')
+    return f"""You are opening one pull request for the author of {fix.pr}, who accepted it \
+on the review board. A review comment on {fix.pr} asked for some of its code to move to a \
+pull request of its own, and that code is committed on the branch {branch} in this \
+worktree. Push the branch, open the pull request with the `{fix.pr_skill}` skill, report \
+its link by running exactly one of the report commands below, and stop. Nobody is \
+watching this run: decide for yourself and say what you decided in the PR body.
+
+## The new PR
+- Branch: {branch}
+- Base: {fix.split_base} ({fix.split_base_reason})
+- Original PR: {fix.pr_url}
+- Review thread the work came from: {fix.thread_url}
+- Ticket: {_new_prs_ticket(fix)}
+
+The branch holds exactly what the author accepted, so it goes up as it stands. {fix.pr} \
+and its review thread stay as they are: once you have reported, the board posts the reply \
+that names the new PR.
+
+## Open it
+
+1. Look for a pull request already open from the branch, so it is never opened twice: \
+`gh pr list --head {branch} --state open --json url`. If one is listed, report its link \
+and stop.
+2. Push the branch: `git push -u origin {branch}`.
+3. Invoke the `{fix.pr_skill}` skill to open a pull request from {branch} into \
+{fix.split_base}. Give it the branch, the base, the original PR's link, the review \
+thread's link and why the work moved, and the ticket above.
+
+The pull request is open when GitHub has given it a link. Report that link:
+
+    {opened_cmd}
+
+If it cannot be opened, report why and stop:
+
+    {_fail(commands, fix)}
+"""
+
+
 def _before_reply(fix: ThreadFix) -> str:
     if not fix.before_reply:
         return ""

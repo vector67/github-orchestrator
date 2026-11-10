@@ -79,6 +79,17 @@ def _filing(runs, claude, worktree, tracker):
         ticket_title="Cache models", ticket_body="Each export reads its model again.")))
 
 
+PR_URL = "https://github.com/acme/widgets/pull/7"
+THREAD_URL = "https://github.com/acme/widgets/pull/7#discussion_r101"
+
+
+def _opening(runs, claude, worktree, **fields):
+    return _ran(runs, claude, runs.open_pr(_fix(
+        worktree, split_branch="split/cache-tax-rates", split_base="main",
+        split_base_reason="the cache stands alone", pr_skill="create-pr", pr_url=PR_URL,
+        thread_url=THREAD_URL, **fields)))
+
+
 def _every(runs, claude, worktree):
     return [_fixed(runs, claude, worktree), _rebased(runs, claude, worktree),
             _reworked(runs, claude, worktree, note="do it again")]
@@ -116,6 +127,35 @@ def test_the_filing_prompt_reports_through_commands_that_name_the_flags_the_cli_
     assert sorted(verb for verb, _ in found) == ["fail", "filed"]
     for verb, flags in found:
         assert_the_cli_takes(verb, flags)
+
+
+def test_the_opening_prompt_reports_through_commands_that_name_the_flags_the_cli_requires(
+        runs, claude, worktree):
+    found = invocations(_opening(runs, claude, worktree))
+
+    assert sorted(verb for verb, _ in found) == ["fail", "opened"]
+    for verb, flags in found:
+        assert_the_cli_takes(verb, flags)
+
+
+def test_the_opening_prompt_pushes_the_branch_and_opens_it_into_its_base_with_the_skill(
+        runs, claude, worktree):
+    prompt = _opening(runs, claude, worktree)
+
+    assert "git push -u origin split/cache-tax-rates" in prompt
+    assert "`create-pr` skill" in prompt
+    assert "- Base: main (the cache stands alone)" in prompt
+    for link in (PR_URL, THREAD_URL):
+        assert link in prompt
+
+
+def test_the_opening_prompt_names_the_filed_ticket_or_this_prs_own(runs, claude, worktree):
+    filed = _opening(runs, claude, worktree, ticket_key="PROJ-12",
+                     ticket_url="https://example.atlassian.net/browse/PROJ-12")
+    same = _opening(runs, claude, worktree, branch_ticket="PROJ-7")
+
+    assert "- Ticket: PROJ-12, https://example.atlassian.net/browse/PROJ-12" in filed
+    assert "- Ticket: PROJ-7, the ticket of the original PR" in same
 
 
 def test_the_thread_prompt_is_self_contained(runs, claude, worktree):

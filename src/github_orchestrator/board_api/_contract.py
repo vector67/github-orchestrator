@@ -888,6 +888,16 @@ class FileOperation(OperationEnvelope):
     kind: Literal[OperationKind.FILE]
 
 
+class OpenOperation(OperationEnvelope):
+    """The agent run that pushes a split's new branch and opens its new PR. The
+    approve it serves waits for it and carries on with the split's next part
+    once it has reported the PR's link; one that ends without reporting
+    refuses the approve with `open-failed`, and the new PR can be accepted
+    again."""
+
+    kind: Literal[OperationKind.OPEN]
+
+
 class StopOperation(OperationEnvelope):
     """Halting whatever was in flight. Posts nothing and touches no comment.
     The operation it stopped settles as `refused` with `reason_code` of
@@ -1008,7 +1018,8 @@ class PostedOperation(OperationEnvelope):
 
 
 Operation = Annotated[
-    FixOperation | SessionOperation | ApproveOperation | FileOperation | StopOperation
+    FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation
+    | StopOperation
     | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
     | DropQuestionOperation
     | ReplyOperation

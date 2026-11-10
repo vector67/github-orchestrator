@@ -244,3 +244,9 @@ class GitHubThreads:
 
     def too_long(self, text: str) -> str | None:
         return self._github.too_long(text)
+
+    def set_draft(self, url: str, draft: bool) -> str | None:
+        number = url.rstrip("/").rsplit("/", 1)[-1]
+        if not number.isdigit():
+            return f"{url} names no pull request number"
+        return self._prs.set_draft(Pr(self._pr.repo, int(number)), draft)

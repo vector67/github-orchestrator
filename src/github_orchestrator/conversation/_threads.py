@@ -50,7 +50,10 @@ from github_orchestrator.conversation._application.report import (
     answered,
     not_a_key,
 )
-from github_orchestrator.conversation._application.settings import ThreadsConfig
+from github_orchestrator.conversation._application.settings import (
+    ThreadsConfig,
+    for_repo,
+)
 from github_orchestrator.conversation._application.tick import Runs
 from github_orchestrator.conversation._domain.apply import (
     apply,
@@ -75,6 +78,7 @@ from github_orchestrator.conversation._domain.commands import (
     Reply,
     ReportAsk,
     ReportFiled,
+    ReportOpened,
     ReportReady,
     ReportSplit,
     Resolve,
@@ -240,15 +244,16 @@ class _Pr:
     def __init__(self, modules: _Modules, pr: Pr) -> None:
         self.modules = modules
         self.pr = pr
-        self.config = replace(modules.config,
-                              has_tests=pr.repo not in modules.config.untested_repos)
+        self.config = for_repo(modules.config, pr.repo)
         self._pull_requests = PullRequests(modules.change_detection, pr, modules.github_prs)
-        config = modules.config
+        config = self.config
+        self._github = GitHubThreads(modules.github_prs, modules.threads, modules.reviews, pr)
         self._agents = ThreadAgents(modules.thread_work, pr,
                                     lambda: modules.history.live(pr),
                                     account=config.gh_account, tracker=config.tracker,
                                     tracker_project=config.tracker_project,
-                                    branch_ticket=self._pull_requests.ticket)
+                                    branch_ticket=self._pull_requests.ticket,
+                                    pr_skill=config.pr_skill, pages=self._github)
         self.runs = Runs()
         self.ports = self.built()
 
@@ -257,8 +262,7 @@ class _Pr:
         config = modules.config
         return Ports(
             records=_conversations(modules, self.pr),
-            github=GitHubThreads(modules.github_prs, modules.threads, modules.reviews,
-                                 self.pr),
+            github=self._github,
             git=modules.working_copies.checkout(self.pr),
             agents=self._agents,
             summaries=Gists(modules.summaries, config.agents_enabled, config.gh_account,
@@ -490,6 +494,9 @@ class _Editable:
             split=Split(branch=branch, base=base, base_reason=base_reason,
                         ticket=_ticket(ticket_project, ticket_title, ticket_body)),
             branch_exists=self._has_branch(branch)))
+
+    def opened(self, url: str) -> Conversation | Denied:
+        return self._answer(ReportOpened(url=url))
 
     def _has_branch(self, branch: str) -> bool:
         conversation = None if self._held is None else self._held.conversation

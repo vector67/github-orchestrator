@@ -34,6 +34,7 @@ from github_orchestrator.conversation._domain.conversation import (
     IN_SESSION,
     LANDED,
     LANDING,
+    PART_RUNS,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -84,12 +85,19 @@ from github_orchestrator.conversation._domain.events import (
 from github_orchestrator.conversation._domain.parts import (
     FILE,
 )
+from github_orchestrator.conversation._domain.parts import (
+    OPEN as OPEN_PR,
+)
 from github_orchestrator.conversation._domain.standing import ErrorCode
 from github_orchestrator.conversation._domain.steps import First, Land
 
 FIX_KINDS = (*FIX_RUNS, OperationKind.START_SESSION, OperationKind.APPROVE)
 
-RUNS_AN_APPROVE_WAITS_ON = (OperationKind.REBASE, OperationKind.FILE)
+RUNS_AN_APPROVE_WAITS_ON = (OperationKind.REBASE, *PART_RUNS)
+
+_STEP_OF_RUN = {OperationKind.FILE: FILE, OperationKind.OPEN: OPEN_PR}
+
+_FAILED_AS = {OperationKind.FILE: ReasonCode.FILE_FAILED, OperationKind.OPEN: ReasonCode.OPEN_FAILED}
 
 OUTSTANDING = (OperationState.PENDING, OperationState.RUNNING, OperationState.REQUEUED)
 
@@ -172,7 +180,7 @@ def _fix_kind(conversation: Conversation) -> OperationKind:
 def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
         OperationState, str | None, ReasonCode | None]:
     fix = conversation.fix
-    if operation.kind == OperationKind.FILE and FILE in fix.steps:
+    if operation.kind in _STEP_OF_RUN and _STEP_OF_RUN[operation.kind] in fix.steps:
         return OperationState.APPLIED, None, None
     if conversation.state in PUT_AWAY and fix.state in (QUEUED, RUNNING):
         return OperationState.REQUEUED, fix.reason, None
@@ -188,7 +196,7 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
         if fix.reply_error:
             return OperationState.REFUSED, fix.reply_error, ReasonCode.REPLY_FAILED
         if fix.file_error:
-            return OperationState.REFUSED, fix.file_error, ReasonCode.FILE_FAILED
+            return OperationState.REFUSED, fix.file_error, _failed_as(fix)
         return OperationState.RUNNING, None, None
     if fix.state == LANDED:
         return OperationState.APPLIED, None, None
@@ -209,9 +217,13 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
     return operation.state, operation.reason, operation.reason_code
 
 
+def _failed_as(fix: Fix) -> ReasonCode:
+    return _FAILED_AS.get(fix.run.kind, ReasonCode.FILE_FAILED)
+
+
 def _split_approve_outcome(fix: Fix) -> tuple[OperationState, str | None, ReasonCode | None]:
     if fix.file_error:
-        return OperationState.REFUSED, fix.file_error, ReasonCode.FILE_FAILED
+        return OperationState.REFUSED, fix.file_error, _failed_as(fix)
     if fix.push_error:
         return OperationState.REFUSED, fix.push_error, ReasonCode.PUSH_FAILED
     if fix.reason:

@@ -175,6 +175,7 @@ const DETAILS: {
     ticket_url: null,
   },
   file: {},
+  open: {},
   stop: { stopped: null },
   'drop-question': {},
   unpark: {},
@@ -1579,7 +1580,10 @@ export class FakeBoard {
         ],
       });
     }
-    const kind = verb === 'fix' ? 'first' : (verb as OperationKind);
+    const kind =
+      verb === 'fix'
+        ? 'first'
+        : (verb as Exclude<OperationKind, 'file' | 'open'>);
     const listed = verb === 'reply' ? this.listReply(asked, id) : asked;
     return this.json(202, {
       operation: operation({

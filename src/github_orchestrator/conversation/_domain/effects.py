@@ -79,6 +79,12 @@ class ResolveThread:
 
 
 @dataclass(frozen=True)
+class MatchDraft:
+    url: str
+    draft: bool
+
+
+@dataclass(frozen=True)
 class UnresolveThread:
     pass
 
@@ -119,6 +125,7 @@ class AskFixCheck:
 
 Effect = (
       StartRun
+    | MatchDraft
     | StopRun
     | OpenSession
     | OpenLoginShell

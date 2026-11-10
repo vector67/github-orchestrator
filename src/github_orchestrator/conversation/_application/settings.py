@@ -1,7 +1,9 @@
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from github_orchestrator.domain import Repo
+
+CREATE_PR = "create-pr"
 
 
 @dataclass(frozen=True)
@@ -17,3 +19,11 @@ class ThreadsConfig:
     has_tests: bool = True
     pr_skills: Mapping[Repo, str] = field(default_factory=dict)
     drafts: Mapping[Repo, bool] = field(default_factory=dict)
+    pr_skill: str = CREATE_PR
+    draft: bool | None = None
+
+
+def for_repo(config: ThreadsConfig, repo: Repo) -> ThreadsConfig:
+    return replace(config, has_tests=repo not in config.untested_repos,
+                   pr_skill=config.pr_skills.get(repo, CREATE_PR),
+                   draft=config.drafts.get(repo))

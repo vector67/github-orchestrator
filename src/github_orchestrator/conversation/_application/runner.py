@@ -31,6 +31,7 @@ from github_orchestrator.conversation._domain.effects import (
     DeleteComment,
     DropWorkspace,
     Effect,
+    MatchDraft,
     OpenLoginShell,
     OpenSession,
     Pick,
@@ -54,6 +55,7 @@ from github_orchestrator.conversation._domain.events import (
     ClosingFailed,
     ClosingReplyPosted,
     CommitChecked,
+    DraftMatched,
     DraftPosted,
     DraftPostFailed,
     GistWritten,
@@ -325,6 +327,8 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             except Exception as exc:
                 return ThreadUnresolveFailed(_failed(conversation, effect, exc))
             return ThreadUnresolved(at=ports.clock.now())
+        case MatchDraft():
+            return DraftMatched(ports.github.set_draft(effect.url, effect.draft))
         case React():
             refused = ports.github.set_reaction(effect.node_id, THUMBS_UP, True)
             if refused is not None:
@@ -417,7 +421,7 @@ def _carried_on(command: Approve) -> Land:
     return Land(reply=command.reply, delete_comment=command.delete_comment,
                 resolve=command.resolve, message=command.message,
                 run_alive=command.run_alive,
-                worktree_clean=command.worktree_clean)
+                worktree_clean=command.worktree_clean, draft=command.draft)
 
 
 def resume(ports: Ports, conversation: Conversation, command: Approve,

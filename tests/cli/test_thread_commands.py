@@ -627,6 +627,14 @@ def test_filed_from_a_run_that_files_no_ticket_exits_nonzero(running, threads, r
     assert not _stored(threads).fix.filed
 
 
+def test_opened_from_a_run_that_opens_no_pr_exits_nonzero(running, threads, run_cli):
+    ran = run_cli(*_report_argv("opened", thread_id=THREAD_KEY,
+                                url="https://github.com/acme/widgets/pull/12"))
+
+    assert ran.code != 0
+    assert "opens no PR" in ran.err
+
+
 def test_a_reply_after_a_ticket_leaves_no_ticket_behind(pr_worktree, running, threads, run_cli):
     run_cli(*_ticket_argv())
 

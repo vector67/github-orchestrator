@@ -156,9 +156,9 @@ class GhCliGitHub:
             return str(refused)
         return None
 
-    def mark_ready(self, pr: Pr) -> str | None:
+    def set_draft(self, pr: Pr, draft: bool) -> str | None:
         try:
-            _pull_requests.mark_ready(self._gh, pr)
+            _pull_requests.set_draft(self._gh, pr, draft)
         except GhError as refused:
             return str(refused)
         return None

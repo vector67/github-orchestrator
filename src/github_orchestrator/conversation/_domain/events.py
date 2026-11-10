@@ -235,6 +235,11 @@ class ReactionFailed:
 
 
 @dataclass(frozen=True)
+class DraftMatched:
+    error: str | None = None
+
+
+@dataclass(frozen=True)
 class DraftPosted:
     comment: Comment
     made_on: str
@@ -294,6 +299,7 @@ Event = (
     | ThreadUnresolveFailed
     | ReactionPosted
     | ReactionFailed
+    | DraftMatched
     | DraftPosted
     | DraftPostFailed
     | Posted

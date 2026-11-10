@@ -257,6 +257,8 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
                 ticket_key=landing.ticket_key, ticket_url=landing.ticket_url)
         case OperationKind.FILE as filing:
             return contract.FileOperation(**envelope, kind=filing)
+        case OperationKind.OPEN as opening:
+            return contract.OpenOperation(**envelope, kind=opening)
         case OperationKind.STOP as stop:
             return contract.StopOperation(**envelope, kind=stop, stopped=operation.stopped)
         case OperationKind.RESOLVE | OperationKind.REJECT as closing:

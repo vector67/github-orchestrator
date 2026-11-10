@@ -560,11 +560,12 @@ class _World:
             assert posted is not None
             return {"data": {"addPullRequestReviewThreadReply": {
                 "comment": _comment_node(posted, None)}}}
-        if "markPullRequestReadyForReview" in query:
-            repo, number = variables["id"].removeprefix("PR_").split("#")
-            self.world.mark_ready(a_pr(int(number), repo))
-            return {"data": {"markPullRequestReadyForReview": {
-                "pullRequest": {"isDraft": False}}}}
+        for mutation, draft in (("markPullRequestReadyForReview", False),
+                                ("convertPullRequestToDraft", True)):
+            if mutation in query:
+                repo, number = variables["id"].removeprefix("PR_").split("#")
+                self.world.set_draft(a_pr(int(number), repo), draft)
+                return {"data": {mutation: {"pullRequest": {"isDraft": draft}}}}
         if "addPullRequestReviewThread(" in query:
             return self._add_to_pending_review(variables)
         if "states: PENDING" in query:
