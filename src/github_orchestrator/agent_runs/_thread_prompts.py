@@ -275,6 +275,14 @@ The branch holds exactly what the author accepted, so it goes up as it stands. {
 and its review thread stay as they are: once you have reported, the board posts the reply \
 that names the new PR.
 
+## Why the code moved
+
+The review thread, every comment oldest first. It is the reason the new PR exists, so the \
+PR body says in its own words what the reviewer asked for and why:
+```
+{_render_thread(fix)}
+```
+
 ## Open it
 
 1. Look for a pull request already open from the branch, so it is never opened twice: \
@@ -283,7 +291,7 @@ and stop.
 2. Push the branch: `git push -u origin {branch}`.
 3. Invoke the `{fix.pr_skill}` skill to open a pull request from {branch} into \
 {fix.split_base}. Give it the branch, the base, the original PR's link, the review \
-thread's link and why the work moved, and the ticket above.
+thread's link, why the work moved as the thread above tells it, and the ticket above.
 
 The pull request is open when GitHub has given it a link. Report that link:
 
@@ -627,9 +635,10 @@ def _split_rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str) -
     lines = [
         f"Rework one part of a split proposal on {fix.pr}, in this worktree.",
         "",
-        f"The comment, by {fix.author or 'unknown'}:",
-        "",
-        fix.body,
+        "The review thread, every comment oldest first:",
+        "```",
+        _render_thread(fix),
+        "```",
         "",
         f"The last attempt split code out of {fix.pr} into a pull request of its own. "
         "The split, part by part:",

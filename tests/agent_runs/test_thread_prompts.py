@@ -158,6 +158,21 @@ def test_the_opening_prompt_names_the_filed_ticket_or_this_prs_own(runs, claude,
     assert "- Ticket: PROJ-7, the ticket of the original PR" in same
 
 
+def test_the_opening_prompt_carries_the_review_thread_as_the_reason_the_code_moved(
+        runs, claude, worktree):
+    prompt = _opening(runs, claude, worktree, comments=(
+        FixComment("reviewer", "This isn't part of PROJ-12, can it go in a separate PR?",
+                   "2026-08-28T10:00:00Z"),
+        FixComment("octocat", "Sure, and I'll rename it on the way.", "2026-08-28T11:00:00Z",
+                   by_pr_author=True)))
+
+    assert ("--- reviewer (2026-08-28T10:00:00Z)\n"
+            "This isn't part of PROJ-12, can it go in a separate PR?") in prompt
+    assert ("--- octocat, the PR author (2026-08-28T11:00:00Z)\n"
+            "Sure, and I'll rename it on the way.") in prompt
+    assert prompt.index("separate PR?") < prompt.index("## Open it")
+
+
 def test_the_thread_prompt_is_self_contained(runs, claude, worktree):
     prompt = _fixed(runs, claude, worktree, body="Please rename this helper.\nIt shadows a builtin.",
                     comments=(FixComment("reviewer",
