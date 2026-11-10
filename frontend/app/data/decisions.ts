@@ -1312,6 +1312,7 @@ function authorOffer(
   decision: Decision,
   conversation: Conversation,
   proposal: Proposal | undefined,
+  unsent: string | null,
 ): Offer {
   const entry: Entry = ENTRIES[decision];
   const phase = phaseOf(conversation);
@@ -1321,6 +1322,7 @@ function authorOffer(
       ? {
           ...entry.asks,
           ...forProposal(entry, proposal, phase),
+          ...(unsent && entry.asks.accept ? { prefill: unsent } : {}),
           ...entry.dialogFor?.(conversation),
           ...dialog,
           resolving: conversation.author_kind === 'bot',
@@ -1349,14 +1351,16 @@ export function offered(
   conversation: Conversation,
   role: Role,
   proposal?: Proposal,
+  unsent: string | null = null,
 ): Offer[] {
-  return offeredOn(confirmed(conversation), role, proposal);
+  return offeredOn(confirmed(conversation), role, proposal, unsent);
 }
 
 function offeredOn(
   conversation: Conversation,
   role: Role,
-  proposal?: Proposal,
+  proposal: Proposal | undefined,
+  unsent: string | null,
 ): Offer[] {
   if (busy(conversation)) return [];
   if (role === 'reviewer') {
@@ -1375,7 +1379,7 @@ function offeredOn(
       const entry: Entry = ENTRIES[decision];
       return entry.offeredWhen?.(conversation) ?? true;
     })
-    .map((decision) => authorOffer(decision, conversation, proposal));
+    .map((decision) => authorOffer(decision, conversation, proposal, unsent));
 }
 
 export function carriedOut(

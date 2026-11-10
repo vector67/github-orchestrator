@@ -535,6 +535,73 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-decision="approve"]').includesText('Push it');
   });
 
+  module(
+    'a push that failed after its accept rebased the fix',
+    function (hooks) {
+      const REPLY = 'Agreed, though the warning deserves its own discussion.';
+
+      hooks.beforeEach(function () {
+        const landed = board().threadIn('push failed', { key: KEY });
+        const [first, approve] = landed.operations;
+        const accepted = {
+          requested_at: '2026-09-12T11:00:00Z',
+          settled_at: '2026-09-12T11:02:00Z',
+        };
+        const rebased = {
+          requested_at: '2026-09-12T11:00:01Z',
+          settled_at: '2026-09-12T11:01:50Z',
+        };
+        landed.operations = [
+          first!,
+          { ...approve!, ...accepted },
+          { ...first!, id: `${KEY}.3`, kind: 'rebase', ...rebased },
+        ];
+        board().conversations = [landed];
+        board().proposals[KEY] = [proposal({ id: `${KEY}.3.proposal` })];
+        board().operations[KEY] = [
+          operation({ id: `${KEY}.1`, conversation: KEY }),
+          operation({
+            id: approve!.id,
+            conversation: KEY,
+            kind: 'approve',
+            state: 'refused',
+            reason_code: 'push-failed',
+            reason: approve!.reason,
+            reply: REPLY,
+            ...accepted,
+          }),
+          operation({
+            id: `${KEY}.3`,
+            conversation: KEY,
+            kind: 'rebase',
+            ...rebased,
+          }),
+        ];
+      });
+
+      test('reads the failure, not the proposal it rebased', async function (assert) {
+        await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+        assert.dom('[data-test-failure]').containsText('The push failed');
+        assert.dom('[data-test-decision="approve"]').includesText('Push it');
+      });
+
+      test('keeps the reply that was never posted', async function (assert) {
+        await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+        assert.dom('[data-test-failure-reply]').containsText(REPLY);
+      });
+
+      test('pushing again offers the reply that was never posted', async function (assert) {
+        await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+        await click('[data-test-decision="approve"]');
+
+        assert.dom('[data-test-dialog-body]').hasValue(REPLY);
+      });
+    },
+  );
+
   module('a landing that failed', function () {
     function refused(phase: Phase, reason: string) {
       const landed = board().threadIn(phase, { key: KEY });

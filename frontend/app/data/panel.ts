@@ -67,6 +67,7 @@ export interface LandingFailure {
   output_label: string;
   machine: string;
   standing: string;
+  unsent: string;
 }
 
 export interface WorktreeOf {
@@ -708,6 +709,12 @@ function fixLabelOf(
   return phrase ? phrase + changesClause(plan) : '';
 }
 
+function unsentReplyOf(operations: Operation[]): string | null {
+  const approve = newest(operations, ['approve']);
+  if (approve?.state !== 'refused') return null;
+  return approve.reply || null;
+}
+
 function sentReplyOf(
   proposal: Proposal | undefined,
   operations: Operation[],
@@ -1028,7 +1035,7 @@ function acceptOf(
 
 function failureOf(
   phase: Phase,
-  failure: Omit<LandingFailure, 'summary' | 'machine'>,
+  failure: Omit<LandingFailure, 'summary' | 'machine' | 'unsent'>,
   operations: Operation[],
   replying: boolean,
 ): LandingFailure {
@@ -1044,6 +1051,7 @@ function failureOf(
     standing,
     summary: causeOf(phase, machine)?.sentence ?? '',
     machine,
+    unsent: unsentReplyOf(operations) ?? '',
   };
 }
 
@@ -1126,7 +1134,12 @@ export function panelOf(
     context.names,
   );
   const { proposal } = fix;
-  const actions = offered(conversation, context.role, proposal);
+  const actions = offered(
+    conversation,
+    context.role,
+    proposal,
+    unsentReplyOf(operations),
+  );
   const reply = replyOf(conversation, comments, operations, context);
   const replyTo = replyToOf(conversation, context);
   const draft = draftOf(conversation, details, context.reviewSending);
