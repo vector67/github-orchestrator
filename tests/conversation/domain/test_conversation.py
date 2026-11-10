@@ -103,6 +103,9 @@ def first_push_refused(github):
     return copies
 
 
+LONG = "rename this to _reference, since the old name no longer says what it holds"
+
+
 def _comment(id=5001, author="reviewer", body="rename this to _reference",
              author_name="", review_state=None, created_at=COMMENTED_AT):
     return ThreadComment(id=id, author=author, body=body, created_at=created_at,
@@ -412,7 +415,7 @@ def test_taking_over_the_pr_leaves_a_resolved_thread_closed(settings):
 def test_a_reviewer_conversation_has_no_fix_to_run(settings):
     here = _here(settings)
 
-    threads = _reviewer(here, _comment(author="reviewer"),
+    threads = _reviewer(here, _comment(author="reviewer", body=LONG),
                         _comment(id=5002, author="jeffrey", body="have a look"))
     drain(threads)
 
@@ -685,7 +688,7 @@ def test_stopping_a_run_a_reply_arrived_during_starts_no_other(settings):
 def test_a_reopen_takes_the_roots_current_wording_and_re_reads_the_thread(settings):
     here, threads = _author(settings, _proposed)
     _shows(here, _comment(body="rename this to _target instead"),
-           _comment(id=5002, body="agreed"))
+           _comment(id=5002, body="agreed, and rename the one in the other module too"))
 
     hear(threads)
 
@@ -693,7 +696,7 @@ def test_a_reopen_takes_the_roots_current_wording_and_re_reads_the_thread(settin
     asked = here.agent_runs.asked[-1]
     assert isinstance(asked, ThreadAsked)
     assert ("reviewer", "rename this to _target instead") in asked.comments
-    assert ("reviewer", "agreed") in asked.comments
+    assert ("reviewer", "agreed, and rename the one in the other module too") in asked.comments
 
 
 def _a_poll(here, threads, root, anchor=None, **fields):
@@ -840,7 +843,7 @@ def test_a_reply_on_a_conversation_you_never_answered_leaves_it_unmarked(setting
 
 def test_a_reply_on_a_reviewer_conversation_lands_it_answered_and_regenerates_the_gist(settings):
     here = _here(settings)
-    threads = _reviewer(here)
+    threads = _reviewer(here, _comment(body=LONG))
 
     answered = _reply_arrives(here, threads,
                               _comment(id=5002, author="jeffrey", body="fixed in a9296db"))
@@ -1317,14 +1320,14 @@ def test_a_written_gist_replaces_the_first_line(settings):
 def test_a_gist_written_against_wording_that_has_moved_on_is_dropped(settings):
     here, agent_runs = _answering(settings)
     agent_runs.answer("what it says now, gisted", "what it used to say, gisted")
-    threads = _open(here)
-    _shows(here, _comment(body="what the comment says now"))
+    threads = _open(here, _comment(body=LONG))
+    _shows(here, _comment(body="what the comment says now, after the reviewer rewrote all of it"))
     hear(threads)
 
     agent_runs.settle_newest_first()
 
     stored = _held(threads)
-    assert stored.body == "what the comment says now"
+    assert stored.body == "what the comment says now, after the reviewer rewrote all of it"
     assert stored.gist == "what it says now, gisted"
 
 

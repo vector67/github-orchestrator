@@ -44,13 +44,13 @@ def _asked(runs, claude):
 
 def test_the_gist_of_a_comment_on_a_line(runs, claude):
     runs.summarize_comment("PRRT_1", "src/foo.py", 4, "rename this", lambda gist: None,
-                           chars=60)
+                           chars=45)
 
     assert_pinned("gist-comment", _asked(runs, claude))
 
 
 def test_the_gist_of_a_comment_on_the_pull_request(runs, claude):
-    runs.summarize_comment("PRRT_1", None, None, "rename this", lambda gist: None, chars=60)
+    runs.summarize_comment("PRRT_1", None, None, "rename this", lambda gist: None, chars=45)
 
     assert_pinned("gist-comment-on-the-pr", _asked(runs, claude))
 
@@ -58,7 +58,7 @@ def test_the_gist_of_a_comment_on_the_pull_request(runs, claude):
 def test_the_gist_of_a_thread(runs, claude):
     runs.summarize_thread("PRRT_1", "src/foo.py", 4,
                           [("reviewer", "rename this"), ("me", "which one?")],
-                          lambda gist: None, chars=60)
+                          lambda gist: None, chars=45)
 
     assert_pinned("gist-thread", _asked(runs, claude))
 

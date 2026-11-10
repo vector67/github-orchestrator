@@ -1,5 +1,8 @@
-Summarise this pull request review comment in one line of at most 60 characters: lowercase, no trailing period, say what the reviewer wants changed. Reply with the line alone.
+Review thread on the pull request:
 
-Comment on the pull request:
-
+<thread>
 rename this
+</thread>
+
+In at most 45 characters, say what the reviewer wants changed, as an instruction that starts with a verb. If the thread asks for nothing, say what it reports instead. Reply with exactly one line of the form
+gist: <the phrase>

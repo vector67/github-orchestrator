@@ -37,6 +37,7 @@ THE_PR = a_pr(PR, REPO)
 KEY = "PRRT_101"
 COMMENT_ID = 101
 BODY = "Please rename this helper."
+LONG_BODY = "Please rename this helper, since its name no longer says what it does."
 ROOT_AT = "2026-08-28T10:00:00Z"
 REPLY_AT = "2026-08-29T10:00:00Z"
 PATH = "src/foo.py"
@@ -410,17 +411,17 @@ def test_a_reopen_is_summarised_over_the_whole_thread_an_open_over_the_root(sett
     _landed(here, threads)
     agent_runs.asked.clear()
     _answered_on_github(here.github, KEY, _others_reply(303))
-    _on_github(here.github, "PRRT_2", (root(id=102),))
+    _on_github(here.github, "PRRT_2", (root(id=102, body=LONG_BODY),))
 
     hear(threads)
 
     posted = [comment for comment in here.github.thread(KEY).comments[1:-1]]
     assert sorted(agent_runs.asked, key=lambda asked: type(asked).__name__) == [
-        CommentAsked("PRRT_2", PATH, LINE, BODY, 60),
+        CommentAsked("PRRT_2", PATH, LINE, LONG_BODY, 45),
         ThreadAsked(KEY, PATH, LINE,
                     (("reviewer", BODY),
                      *((comment.author, comment.body) for comment in posted),
-                     ("anna", "and this one too")), 60),
+                     ("anna", "and this one too")), 45),
     ]
 
 
@@ -429,13 +430,13 @@ def test_a_thread_whose_workspace_will_not_cut_is_still_opened_and_summarised(se
     here = _world(settings, working_copies=refuses_to_cut("PRRT_2"), agent_runs=agent_runs)
     threads = here.threads()
     for number in (1, 2, 3):
-        _on_github(here.github, f"PRRT_{number}", (root(id=number),))
+        _on_github(here.github, f"PRRT_{number}", (root(id=number, body=LONG_BODY),))
 
     opened = hear(threads).created
 
     assert [c.key for c in opened] == ["PRRT_1", "PRRT_2", "PRRT_3"]
     assert threads.get("PRRT_2").standing is ConversationState.QUEUED
-    assert CommentAsked("PRRT_2", PATH, LINE, BODY, 60) in agent_runs.asked
+    assert CommentAsked("PRRT_2", PATH, LINE, LONG_BODY, 45) in agent_runs.asked
 
 
 def test_a_thread_whose_record_will_not_read_is_never_written_over(settings, tmp_path):

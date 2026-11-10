@@ -74,7 +74,7 @@ def test_claudes_answer_replaces_the_first_line(settings):
 
 
 def test_claudes_answer_is_clipped_to_the_cap_too(settings):
-    summary = _summary(settings, "rename this", "b" * 100)
+    summary = _summary(settings, "rename this\nplease", "b" * 100)
 
     assert len(summary) == GIST_CAP
     assert summary.endswith("…")

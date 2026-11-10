@@ -7,7 +7,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ThreadVerdict,
 )
 from github_orchestrator.conversation._domain.effects import GIST_ROOT, GIST_THREAD
-from github_orchestrator.conversation._domain.gist import GIST_MAX_CHARS, clip
+from github_orchestrator.conversation._domain.gist import GIST_ASK_CHARS, fits, gist_in
 from github_orchestrator.conversation._domain.verdict import MEANINGS, facts_of
 from github_orchestrator.domain import Sha
 
@@ -73,14 +73,18 @@ class Gists:
         if not self.enabled:
             return
         if source == GIST_ROOT:
+            if fits((conversation.body,)):
+                return
             self.summaries.summarize_comment(
                 conversation.key, conversation.path, conversation.line, conversation.body,
-                lambda gist: done(clip(gist)), chars=GIST_MAX_CHARS)
+                lambda answer: done(gist_in(answer)), chars=GIST_ASK_CHARS)
             return
         if source == GIST_THREAD:
+            if fits([comment.body for comment in conversation.comments]):
+                return
             self.summaries.summarize_thread(
                 conversation.key, conversation.path, conversation.line,
                 [(comment.author, comment.body) for comment in conversation.comments],
-                lambda gist: done(clip(gist)), chars=GIST_MAX_CHARS)
+                lambda answer: done(gist_in(answer)), chars=GIST_ASK_CHARS)
             return
         raise NotImplementedError(source)

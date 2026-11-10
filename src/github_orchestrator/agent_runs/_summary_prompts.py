@@ -6,10 +6,11 @@ SEPARATOR = "||"
 def comment_gist_prompt(body: str, path: str | None, line: int | None, chars: int) -> str:
     where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
     return (
-        "Summarise this pull request review comment in one line of at most "
-        f"{chars} characters: lowercase, no trailing period, say what "
-        "the reviewer wants changed. Reply with the line alone.\n\n"
-        f"Comment on {where}:\n\n{body}"
+        f"Review thread on {where}:\n\n<thread>\n{body}\n</thread>\n\n"
+        f"In at most {chars} characters, say what the reviewer wants changed, as an "
+        "instruction that starts with a verb. If the thread asks for nothing, say what "
+        "it reports instead. Reply with exactly one line of the form\n"
+        "gist: <the phrase>"
     )
 
 
