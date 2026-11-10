@@ -56,12 +56,15 @@ def _ask(commands: ReportCommands, fix: ThreadFix) -> str:
                         option='"<one concrete way forward>"')
 
 
-ASK_ADVICE = (
+ASK_WHEN = (
     "Stop and ask the author instead of reporting when the brief cannot be met as "
     "stated, or when the way forward goes beyond what the comment and the brief asked "
     "for: a production change for a comment on a test, a change to another module, a "
-    "change to a public signature. Anything else, decide yourself and say what you "
-    "decided in `--confidence-note`. `--question` is the one thing the author must "
+    "change to a public signature."
+)
+
+ASK_HOW = (
+    "`--question` is the one thing the author must "
     "decide. `--context` says why you stopped: what you tried and what broke. Give "
     "`--option` once for each way forward, and only when you have narrowed it to "
     "concrete ones. Leave your work in the worktree as it is, committed or not, and "
@@ -69,9 +72,11 @@ ASK_ADVICE = (
     "conversation."
 )
 
+DECIDED_IN_THE_NOTE = "Anything else, decide yourself and say what you decided in `--confidence-note`."
 
-def _asking(commands: ReportCommands, fix: ThreadFix) -> list[str]:
-    return ["## If you cannot do what was asked", "", ASK_ADVICE, "",
+def _asking(commands: ReportCommands, fix: ThreadFix,
+            decided: str = DECIDED_IN_THE_NOTE) -> list[str]:
+    return ["## If you cannot do what was asked", "", f"{ASK_WHEN} {decided} {ASK_HOW}", "",
             f"    {_ask(commands, fix)}", ""]
 
 
@@ -670,7 +675,7 @@ def _split_rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str) -
         "Pass `--same-ticket` where the new PR goes under this PR's own ticket, and "
         "`--project`, `--title` and `--body` where it has a ticket of its own.",
         "",
-        *_asking(commands, fix),
+        *_asking(commands, fix, "Anything else, decide yourself."),
         f"If {part} cannot be reworked as asked, report why and stop; the split stays as "
         "it was:",
         "",

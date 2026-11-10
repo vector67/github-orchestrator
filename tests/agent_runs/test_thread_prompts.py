@@ -434,6 +434,7 @@ def test_a_split_part_rework_reports_the_split_again_through_commands_the_cli_ta
     assert sorted({verb for verb, _ in found}) == ["ask", "fail", "split"]
     for verb, flags in found:
         assert_the_cli_takes(verb, flags)
+    assert "--confidence" not in _part_reworked(runs, claude, worktree, "new-pr")
 
 
 def test_a_split_part_rework_names_the_part_and_the_parts_that_have_run_as_fixed(
