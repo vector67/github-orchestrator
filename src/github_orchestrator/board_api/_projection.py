@@ -422,7 +422,9 @@ def proposal_of(git: PrCheckout,
                 part=contract.SplitPartName(view.part),
                 state=contract.SplitPartState(view.state),
                 waits_for=None if view.waits_for is None
-                else contract.SplitPartName(view.waits_for))
+                else contract.SplitPartName(view.waits_for),
+                result=None if view.result is None else contract.SplitPartResult(
+                    text=view.result.text, url=view.result.url))
                 for view in proposal.parts]),
     )
 

@@ -1056,9 +1056,15 @@ export interface SplitPart {
   part: SplitPartName;
   state: SplitPartState;
   waits_for: SplitPartName | null;
+  result: SplitPartResult | null;
 }
 
 export type SplitPartName = 'ticket' | 'changes' | 'new-pr' | 'reply';
+
+export interface SplitPartResult {
+  text: string;
+  url: string | null;
+}
 
 export type SplitPartState = 'proposed' | 'accepted' | 'queued' | 'running' | 'run';
 

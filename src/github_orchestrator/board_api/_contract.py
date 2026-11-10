@@ -1268,6 +1268,15 @@ class Ticket(BaseModel):
     body: str
 
 
+class SplitPartResult(BaseModel):
+    """One line saying what a part that has run did, and where to see it."""
+
+    text: str = Field(description="The ticket's key, the pushed commit's sha, the new PR's "
+                                  "link, or the reply as it was posted.")
+    url: str | None = Field(description="The ticket's or the new PR's link; null for the "
+                                        "commit and the reply.")
+
+
 class SplitPart(BaseModel):
     """One part of a split, and how far accepting it has got. A part runs
     once accepted and once the part it waits for has run; a part that has run
@@ -1286,6 +1295,10 @@ class SplitPart(BaseModel):
     waits_for: SplitPartName | None = Field(
         description="The part that must run first: the new PR waits for a drafted "
                     "ticket, the reply for the new PR. Null where it waits for none.")
+    result: SplitPartResult | None = Field(
+        description="What the part left behind once it has run: the ticket's key, the "
+                    "commit pushed to this PR, the new PR's link, the reply as posted. "
+                    "Null until the part has run.")
 
 
 class Split(BaseModel):

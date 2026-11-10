@@ -257,6 +257,28 @@ def test_accepting_all_files_pushes_opens_answers_naming_both_links_and_lands(he
     assert not here.github.thread(KEY).is_resolved
 
 
+def test_each_part_that_has_run_shows_its_result(here, threads):
+    _split_with_a_ticket(here, threads)
+    _accepted(threads, "ticket")
+    halfway = threads.get(KEY)
+
+    _asked(threads, "approve")
+    _opened(threads)
+    stored = threads.get(KEY)
+
+    assert _results(halfway) == {"ticket": ("PROJ-12", FILED_URL), "changes": None,
+                                 "new-pr": None, "reply": None}
+    assert _results(stored) == {
+        "ticket": ("PROJ-12", FILED_URL), "changes": (str(stored.fix.landed_sha), None),
+        "new-pr": (NEW_PR_URL, NEW_PR_URL),
+        "reply": (f"{REPLY}\n\n{NEW_PR_URL}\n\n{FILED_URL}", None)}
+
+
+def _results(conversation):
+    return {view.part: None if view.result is None else (view.result.text, view.result.url)
+            for view in conversation.proposal.parts}
+
+
 def test_accepting_all_with_resolve_resolves_the_thread_once_the_last_part_runs(here, threads):
     _split_with_a_ticket(here, threads)
 

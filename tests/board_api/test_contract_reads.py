@@ -841,6 +841,29 @@ def test_accepting_one_part_of_a_split_runs_it_and_the_proposal_says_so():
     assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
 
 
+def test_a_split_whose_parts_have_run_shows_each_result_and_its_link():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    asked(client, "approve")
+    drain(board)
+    with board.threads.editing(KEY) as editable:
+        editable.opened("https://github.com/acme/widgets/pull/12")
+    drain(board)
+
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    results = {part["part"]: part["result"] for part in proposal["split"]["parts"]}
+    assert results["new-pr"] == {"text": "https://github.com/acme/widgets/pull/12",
+                                 "url": "https://github.com/acme/widgets/pull/12"}
+    assert results["reply"] == {
+        "text": "This moved to its own PR.\n\nhttps://github.com/acme/widgets/pull/12",
+        "url": None}
+    assert len(results["changes"]["text"]) == 40
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "done"
+
+
 def test_a_part_that_names_nothing_a_split_has_is_a_bad_request():
     board = board_for()
     card(board)

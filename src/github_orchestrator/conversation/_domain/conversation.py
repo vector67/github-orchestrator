@@ -6,6 +6,7 @@ from github_orchestrator.conversation._domain.parts import (
     FILE,
     PICK,
     PUSH,
+    PartResult,
     PartView,
     Split,
     SplitPart,
@@ -668,7 +669,8 @@ class Conversation:
             confidence=fix.confidence, confidence_note=fix.confidence_note,
             tests=fix.tests, tests_note=fix.tests_note, last_words=fix.last_words,
             split=fix.split,
-            parts=() if fix.split is None else views(fix.split, fix.steps, _under_way(fix)))
+            parts=() if fix.split is None else views(fix.split, fix.steps, _under_way(fix),
+                                                     _results(self, fix.split)))
 
     @property
     def posted_by_board(self) -> frozenset[int]:
@@ -684,6 +686,15 @@ class Conversation:
         approved = None if approval is None else approval.id
         return tuple(_view_of(self, operation, operation.id in (held, approved))
                      for operation in self.operations)
+
+
+def _results(conversation: Conversation, split: Split) -> dict[SplitPart, PartResult]:
+    fix = conversation.fix
+    found = {SplitPart.TICKET: (fix.ticket_key, fix.ticket_url),
+             SplitPart.CHANGES: (None if fix.landed_sha is None else str(fix.landed_sha), None),
+             SplitPart.NEW_PR: (split.pr_url, split.pr_url),
+             SplitPart.REPLY: (conversation.approved_reply or fix.reply_note, None)}
+    return {part: PartResult(text, url) for part, (text, url) in found.items() if text}
 
 
 def _proposal_producer(conversation: Conversation) -> Operation | None:

@@ -7729,6 +7729,16 @@
     "part": {
      "$ref": "#/components/schemas/SplitPartName"
     },
+    "result": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartResult"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "state": {
      "$ref": "#/components/schemas/SplitPartState"
     },
@@ -7746,7 +7756,8 @@
    "required": [
     "part",
     "state",
-    "waits_for"
+    "waits_for",
+    "result"
    ],
    "type": "object"
   },
@@ -7758,6 +7769,28 @@
     "reply"
    ],
    "type": "string"
+  },
+  "SplitPartResult": {
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "url": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "text",
+    "url"
+   ],
+   "type": "object"
   },
   "SplitPartState": {
    "enum": [
