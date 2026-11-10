@@ -12,7 +12,7 @@ Open a pull request from a branch that is already committed. The PR is done when
 Take these from whoever invoked you; read the rest from the repository.
 
 - **Branch**: the branch to open the PR from. Default: the current branch.
-- **Base**: the branch to merge into. Default: the repository's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, or `git symbolic-ref refs/remotes/origin/HEAD` without network).
+- **Base**: the branch to merge into. Default: the repository's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, or `git ls-remote --symref origin HEAD` when `gh` cannot reach GitHub).
 - **Origin**, when the work came from somewhere: the original PR's link, the review thread's link, and why the work moved.
 - **Ticket**, when there is one: its key and link.
 - **Ready**: open as ready for review only when the caller asks for it. Every other PR opens as a draft.
