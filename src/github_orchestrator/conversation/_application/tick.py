@@ -19,6 +19,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Conversation,
 )
 from github_orchestrator.conversation._domain.events import (
+    Rebase,
     RunExited,
     RunLost,
     RunStarted,
@@ -26,6 +27,7 @@ from github_orchestrator.conversation._domain.events import (
     Wake,
     WorkspaceCut,
 )
+from github_orchestrator.conversation._domain.machine import landing_under_way
 from github_orchestrator.domain import Pr
 
 log = logging.getLogger(__name__)
@@ -173,12 +175,23 @@ class Runs:
             if self.live_count(ports) >= cap:
                 return
             try:
+                if conversation.fix.run.is_rebase:
+                    if _a_rebase_is_under_way(ports):
+                        continue
+                    self._onto_the_head(conversation, ports)
                 if self._cut(pr, conversation.key, ports):
                     self._apply(ports, conversation.key,
                                 RunStarted(at=ports.clock.now()))
             except Exception:
                 log.exception("thread runs %s: starting a run for %s "
                               "failed", pr, conversation.key)
+
+    def _onto_the_head(self, conversation: Conversation, ports: Ports) -> None:
+        head = ports.git.revisions.local_head()
+        if head is None or head == conversation.fix.run.onto:
+            return
+        self._apply(ports, conversation.key,
+                    Rebase(onto=head, conflict=conversation.fix.run.conflict))
 
     def _cut(self, pr: Pr, key: str, ports: Ports) -> bool:
         with ports.records.update(key) as update:
@@ -238,3 +251,19 @@ class Runs:
 
 def _is_queued(conversation: Conversation) -> bool:
     return conversation.state == OPEN and conversation.fix.state == QUEUED
+
+
+def _a_rebase_is_under_way(ports: Ports) -> bool:
+    return any(_rebasing_or_landing(conversation, ports)
+               for conversation in ports.records.list())
+
+
+def _rebasing_or_landing(conversation: Conversation, ports: Ports) -> bool:
+    fix = conversation.fix
+    if landing_under_way(conversation):
+        return True
+    if not fix.run.is_rebase:
+        return False
+    return fix.state == RUNNING or (
+        fix.state == PROPOSED
+        and ports.records.pending_on(conversation.key).intent is not None)
