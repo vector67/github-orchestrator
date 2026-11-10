@@ -1,6 +1,6 @@
 import pytest
 
-from github_orchestrator.agent_runs.fake import FilingTicket
+from github_orchestrator.agent_runs.fake import FilingTicket, Outcome
 from github_orchestrator.conversation import (
     Classification,
     ConversationState,
@@ -208,6 +208,28 @@ def test_every_order_of_accepting_the_three_parts_runs_two_and_queues_the_reply(
     assert stored.standing is ConversationState.READY
     assert len(_filings(here)) == 1
     assert here.github.thread(KEY).comments[1:] == ()
+
+
+def test_a_part_accepted_while_the_ticket_is_filed_joins_and_runs_in_its_turn(here, threads):
+    _split_with_a_ticket(here, threads)
+    here.agent_runs.script(Outcome(finishes=False))
+    _asked(threads, "approve", part="ticket")
+
+    joined = _asked(threads, "approve", part="changes")
+    waiting = threads.get(KEY)
+    _filed(threads)
+    stored = threads.get(KEY)
+
+    assert not isinstance(joined, Denied), joined
+    assert _states(waiting) == {"ticket": "running", "changes": "accepted",
+                                "new-pr": "proposed", "reply": "proposed"}
+    assert waiting.operations[-1].state == "applied"
+    assert _states(stored) == {"ticket": "run", "changes": "run", "new-pr": "proposed",
+                               "reply": "proposed"}
+    assert here.working_copies.commits[here.working_copies.origin["main"]].tree["f"] == (
+        "removed\n")
+    assert stored.standing is ConversationState.READY
+    assert len(_filings(here)) == 1
 
 
 def test_a_split_under_this_prs_ticket_has_no_ticket_to_accept(here, threads):

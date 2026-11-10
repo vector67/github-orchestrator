@@ -51,6 +51,7 @@ from github_orchestrator.conversation._domain.conversation import (
     OperationState,
     ProposalKind,
     ReasonCode,
+    joins_the_split,
 )
 from github_orchestrator.conversation._domain.effects import (
     DeleteComment,
@@ -84,7 +85,7 @@ from github_orchestrator.conversation._domain.parts import (
     FILE,
 )
 from github_orchestrator.conversation._domain.standing import ErrorCode
-from github_orchestrator.conversation._domain.steps import First
+from github_orchestrator.conversation._domain.steps import First, Land
 
 FIX_KINDS = (*FIX_RUNS, OperationKind.START_SESSION, OperationKind.APPROVE)
 
@@ -470,11 +471,19 @@ def _opened(after: Conversation, operations: list[Operation], kind: OperationKin
         after, at))
 
 
+def joins(conversation: Conversation, command: Change) -> bool:
+    return (isinstance(command, Approve) and not isinstance(command, Land)
+            and joins_the_split(conversation.fix, command.part))
+
+
 def _verb(before: Conversation, after: Conversation,
           operations: list[Operation], command: Change,
           effects: tuple[Any, ...], asked: Asked | None, at: str | None,
           stopped: str | None) -> None:
     operation = asked_of(before, command, asked, at)
+    if joins(before, command):
+        _upserted(operations, replace(operation, state=OperationState.APPLIED, settled_at=at))
+        return
     if operation.kind in FIX_KINDS:
         _upserted(operations, _synced(operation, after, at))
         return

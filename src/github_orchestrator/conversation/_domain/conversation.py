@@ -8,7 +8,9 @@ from github_orchestrator.conversation._domain.parts import (
     PUSH,
     PartView,
     Split,
+    SplitPart,
     Ticket,
+    newly_accepted,
     views,
 )
 from github_orchestrator.domain import Location, Sha, Side
@@ -225,7 +227,9 @@ MAX_ATTEMPTS = 3
 
 RUN_KINDS = (OperationKind.FIRST, OperationKind.REBASE, OperationKind.REWORK, OperationKind.RETRY)
 
-FIX_RUNS = (*RUN_KINDS, OperationKind.FILE)
+PART_RUNS = (OperationKind.FILE,)
+
+FIX_RUNS = (*RUN_KINDS, *PART_RUNS)
 
 IN_FLIGHT = (OperationState.PENDING, OperationState.RUNNING)
 
@@ -760,7 +764,14 @@ def _landing_failed(fix: Fix) -> bool:
 
 
 def _under_way(fix: Fix) -> bool:
-    return fix.state in (QUEUED, RUNNING, LANDING) and not _landing_failed(fix)
+    if fix.state in (QUEUED, RUNNING):
+        return fix.run.kind in PART_RUNS
+    return fix.state == LANDING and not _landing_failed(fix)
+
+
+def joins_the_split(fix: Fix, part: SplitPart | None) -> bool:
+    return (fix.split is not None and _under_way(fix)
+            and bool(newly_accepted(fix.split, part)))
 
 
 def state_of(conversation: Conversation) -> ConversationState:

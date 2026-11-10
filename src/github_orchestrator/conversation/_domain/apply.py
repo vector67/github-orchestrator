@@ -178,7 +178,7 @@ from github_orchestrator.conversation._domain.machine import (
     ticket_to_file,
     with_fix,
 )
-from github_orchestrator.conversation._domain.operations import Asked
+from github_orchestrator.conversation._domain.operations import Asked, joins
 from github_orchestrator.conversation._domain.parts import (
     ANSWER,
     FILE,
@@ -724,6 +724,8 @@ def _the_split(fix: Fix) -> Split:
 
 def _accept_parts(conversation: Conversation, command: Approve) -> Accepted | Deferred:
     split = _the_split(conversation.fix)
+    if joins(conversation, command):
+        return Accepted(with_fix(conversation, split=accepting(split, command.part)))
     return _run_next_part(with_fix(conversation, split=accepting(split, command.part),
                                    reason=None, decision_error=None, file_error=None,
                                    push_error=None), command)
