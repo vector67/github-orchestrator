@@ -551,6 +551,25 @@ def test_writing_keeps_a_repo_s_own_new_worktree_command_and_leaves_an_empty_one
         Repo("acme", "gadgets"): Clone(Path("/src/gadgets"), "make")}
 
 
+def test_a_repo_can_say_it_has_no_tests(tmp_path):
+    toml_file = write_config(tmp_path, (
+        '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\nhas_tests = false\n'
+        '\n[[repos]]\nrepo = "acme/gadgets"\nlocal_path = "/src/gadgets"\n'))
+
+    assert {entry.repo: entry.has_tests for entry in load_config(toml_file).repos} == {
+        Repo("acme", "widgets"): False, Repo("acme", "gadgets"): True}
+
+
+def test_writing_the_repos_keeps_a_repo_s_has_tests(tmp_path):
+    toml_file = write_config(tmp_path, (
+        '[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\nhas_tests = false\n'))
+
+    read_from(toml_file).get(ConfigFile).write({}, repos={
+        Repo("acme", "widgets"): Clone(Path("/src/widgets"), "")})
+
+    assert [entry.has_tests for entry in load_config(toml_file).repos] == [False]
+
+
 def test_writing_true_false_and_numbers_reads_them_back_as_written(tmp_path):
     toml_file = write_config(tmp_path)
 

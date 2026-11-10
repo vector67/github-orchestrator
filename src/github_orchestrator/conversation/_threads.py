@@ -235,6 +235,8 @@ class _Pr:
     def __init__(self, modules: _Modules, pr: Pr) -> None:
         self.modules = modules
         self.pr = pr
+        self.config = replace(modules.config,
+                              has_tests=pr.repo not in modules.config.untested_repos)
         self._pull_requests = PullRequests(modules.change_detection, pr, modules.github_prs)
         config = modules.config
         self._agents = ThreadAgents(modules.thread_work, pr,
@@ -257,7 +259,7 @@ class _Pr:
             summaries=Gists(modules.summaries, config.agents_enabled, config.gh_account,
                             self._pull_requests.author),
             clock=modules.clock,
-            config=config,
+            config=self.config,
             pull_requests=self._pull_requests,
         )
 

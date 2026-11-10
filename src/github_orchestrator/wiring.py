@@ -1501,6 +1501,7 @@ def conversation_config(settings: Settings) -> ThreadsConfig:
         poll_interval=config.watcher_poll_interval,
         tracker=None if config.tracker is Tracker.NONE else config.tracker.value,
         tracker_project=config.tracker_project or None,
+        untested_repos=frozenset(entry.repo for entry in config.repos if not entry.has_tests),
     )
 
 

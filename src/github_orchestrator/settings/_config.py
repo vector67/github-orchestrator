@@ -186,7 +186,7 @@ def _zoned(written: str) -> datetime:
 
 
 _OLD_REPO_KEYS = {"watch_repo": "repo", "local_path": "local_path"}
-_ENTRY_KEYS = ("repo", "local_path", "new_worktree_command")
+_ENTRY_KEYS = ("repo", "local_path", "new_worktree_command", "has_tests")
 
 
 def _old_repo_table(data: dict[str, Any]) -> dict[str, Any] | None:
@@ -225,8 +225,15 @@ def _repo_entry(config_path: Path, table: Mapping[str, object]) -> RepoEntry:
             near = difflib.get_close_matches(key, _ENTRY_KEYS, n=1)
             hint = f"did you mean {near[0]!r}?" if near else f"(known keys: {', '.join(_ENTRY_KEYS)})"
             raise ConfigError(f"{config_path}: unknown key {key!r} in [[repos]] — {hint}")
+    has_tests = table.get("has_tests", True)
+    if not isinstance(has_tests, bool):
+        raise ConfigError(
+            f"{config_path}: [[repos]] has_tests must be bool, got {type(has_tests).__name__} "
+            f"({has_tests!r})")
     strings: dict[str, str] = {}
     for key, value in table.items():
+        if key == "has_tests":
+            continue
         if not isinstance(value, str):
             raise ConfigError(
                 f"{config_path}: [[repos]] {key} must be str, got {type(value).__name__} "
@@ -241,7 +248,7 @@ def _repo_entry(config_path: Path, table: Mapping[str, object]) -> RepoEntry:
         raise ConfigError(
             f"{config_path}: [[repos]] repo must be owner/name, got {strings['repo']!r}"
         ) from e
-    return RepoEntry(repo, strings["local_path"], strings.get("new_worktree_command"))
+    return RepoEntry(repo, strings["local_path"], strings.get("new_worktree_command"), has_tests)
 
 
 def _repos_unset(entries: tuple[RepoEntry, ...]) -> bool:
@@ -526,11 +533,14 @@ class TomlConfigFile:
 
     def _written(self, values: Mapping[str, str | int | bool],
                  repos: Mapping[Repo, Clone]) -> str:
-        kept = {key: value for key, value in _read(self._path).items() if key != "repos"}
+        read = _read(self._path)
+        kept = {key: value for key, value in read.items() if key != "repos"}
+        untested = {entry.repo for entry in read.get("repos", ()) if not entry.has_tests}
         return _rendered({**kept, **values}, [
             {"repo": str(repo), "local_path": str(clone.path),
              **({"new_worktree_command": clone.new_worktree_command}
-                if clone.new_worktree_command else {})}
+                if clone.new_worktree_command else {}),
+             **({"has_tests": False} if repo in untested else {})}
             for repo, clone in repos.items()])
 
     def mentions_start(self, now: datetime) -> datetime:

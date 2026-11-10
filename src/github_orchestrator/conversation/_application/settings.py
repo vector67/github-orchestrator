@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from github_orchestrator.domain import Repo
+
 
 @dataclass(frozen=True)
 class ThreadsConfig:
@@ -10,3 +12,5 @@ class ThreadsConfig:
     poll_interval: int
     tracker: str | None = None
     tracker_project: str | None = None
+    untested_repos: frozenset[Repo] = frozenset()
+    has_tests: bool = True

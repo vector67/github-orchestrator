@@ -340,7 +340,7 @@ def _rebase_gate(conversation: Conversation, command: Approve) -> Refused | Defe
         return Refused(with_fix(conversation, reason=reason,
                                 run=Run(kind=OperationKind.FIRST)),
                        ErrorCode.CONFIRM_AGAIN, reason)
-    if fix.state == PROPOSED and fix.tests != "passed":
+    if fix.state == PROPOSED and command.tests_required and fix.tests != "passed":
         reason = (f"the rebased fix reports tests {fix.tests}; approve again "
                   "to land it anyway")
         return Refused(with_fix(conversation, reason=reason,

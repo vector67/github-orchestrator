@@ -195,7 +195,8 @@ def _allowed(command: Command, config: ThreadsConfig) -> Command:
         return replace(command, sessions_allowed=config.agents_enabled)
     if isinstance(command, Approve):
         return replace(command, account=config.gh_account,
-                       filing_allowed=config.agents_enabled)
+                       filing_allowed=config.agents_enabled,
+                       tests_required=config.has_tests)
     if isinstance(command, Resolve | Reject):
         return replace(command, account=config.gh_account)
     return command

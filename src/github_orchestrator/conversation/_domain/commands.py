@@ -138,6 +138,7 @@ class Approve:
     worktree_clean: bool = True
     filing_allowed: bool = True
     account: str = ""
+    tests_required: bool = True
 
 
 @dataclass(frozen=True)

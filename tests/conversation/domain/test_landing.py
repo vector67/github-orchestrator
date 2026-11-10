@@ -11,9 +11,10 @@ from github_orchestrator.conversation import (
     OperationKind,
     OperationState,
 )
-from github_orchestrator.domain import Sha
+from github_orchestrator.domain import Repo, Sha
 from github_orchestrator.github import CommentKind, ThreadComment
 from github_orchestrator.github.fake import FakeGitHub, GhError
+from github_orchestrator.settings.fake import RepoEntry
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.conversation.support import (
@@ -436,6 +437,18 @@ def test_a_rebased_fix_whose_tests_did_not_pass_is_handed_back_once(settings, te
     )
     assert fix.run.kind is OperationKind.FIRST, "approving again lands it"
     assert landing.pr_tree()["f.py"] == "theirs\n"
+
+
+def test_a_rebased_fix_in_a_repo_without_tests_lands_on_the_first_approve(settings):
+    untested = replace(settings, config=replace(
+        settings.config, repos=(RepoEntry(Repo.parse(REPO), "/clone", has_tests=False),)))
+    landing = Landing(untested)
+    head = landing.rebasing()
+
+    landing.rebased(head, tests="unverified")
+
+    assert landing.stored().standing is ConversationState.DONE
+    assert landing.pr_tree()["f.py"] == "new\n"
 
 
 def test_approving_the_handed_back_rebase_again_lands_it(settings):
