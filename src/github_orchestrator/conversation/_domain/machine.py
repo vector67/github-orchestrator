@@ -45,7 +45,6 @@ from github_orchestrator.conversation._domain.commit_check import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
-    ANSWER,
     ASKING,
     ASSUMED_DONE,
     CONFIRMED,
@@ -60,7 +59,6 @@ from github_orchestrator.conversation._domain.conversation import (
     LANDING,
     NOT_MINE,
     OPEN,
-    PICK,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -74,10 +72,10 @@ from github_orchestrator.conversation._domain.conversation import (
     ConfidenceLevel,
     Conversation,
     ConversationState,
+    Fix,
     OperationKind,
     ProposalKind,
     Run,
-    Ticket,
 )
 from github_orchestrator.conversation._domain.diff import KIND_ISSUE, KIND_REVIEW
 from github_orchestrator.conversation._domain.events import (
@@ -93,6 +91,18 @@ from github_orchestrator.conversation._domain.events import (
     Wake,
 )
 from github_orchestrator.conversation._domain.operations import Asked
+from github_orchestrator.conversation._domain.parts import (
+    ANSWER,
+    PICK,
+    SplitPart,
+    Ticket,
+    accepting,
+    any_run,
+    has_run,
+    newly_accepted,
+    next_part,
+    parts,
+)
 from github_orchestrator.conversation._domain.standing import ErrorCode
 from github_orchestrator.conversation._domain.steps import First, Land
 from github_orchestrator.domain import Sha
@@ -414,7 +424,8 @@ def _filing(conversation: Conversation, command: Approve) -> Deferred | None:
 
 
 def ticket_to_file(conversation: Conversation, command: Approve) -> Ticket | None:
-    return command.ticket or conversation.fix.ticket
+    split = conversation.fix.split
+    return command.ticket or (conversation.fix.ticket if split is None else split.ticket)
 
 
 def _a_ticket_to_file(conversation: Conversation, command: Approve) -> Refused | None:
@@ -437,11 +448,53 @@ def _a_ticket_to_file(conversation: Conversation, command: Approve) -> Refused |
     return None
 
 
-def _a_split_to_accept(conversation: Conversation, command: Approve) -> Refused | None:
-    if conversation.fix.kind != ProposalKind.SPLIT:
+def _a_part_to_accept(conversation: Conversation, command: Approve) -> Refused | None:
+    fix = conversation.fix
+    split = fix.split
+    if fix.kind != ProposalKind.SPLIT or split is None:
+        if command.part is None:
+            return None
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                f"only a split has parts to accept, not {_a(fix.kind)}")
+    part = command.part
+    if part is not None and part not in parts(split):
+        return _refuse_decision(conversation, ErrorCode.MALFORMED_REQUEST,
+                                "this split files no ticket: the new PR goes under this "
+                                "PR's ticket")
+    if part is not None and has_run(fix.steps, part):
+        return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
+                                f"the {part} part has run, so it is locked")
+    newly = newly_accepted(split, part)
+    if SplitPart.NEW_PR in newly:
+        return _refuse_decision(conversation, ErrorCode.NO_PROPOSAL,
+                                "opening the new PR arrives in a later step")
+    if SplitPart.TICKET in newly:
+        return _a_split_ticket_to_file(conversation, command)
+    return None
+
+
+def _a_split_ticket_to_file(conversation: Conversation, command: Approve) -> Refused | None:
+    if not command.filing_allowed:
+        return _refuse_decision(
+            conversation, ErrorCode.AGENTS_DISABLED,
+            "Agents are disabled (agents_enabled=false), and an agent files the ticket, "
+            "so nothing was filed")
+    ticket = ticket_to_file(conversation, command)
+    if ticket is None or not all(part.strip() for part in (ticket.project, ticket.title,
+                                                            ticket.body)):
+        return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
+                                "the ticket needs a project, a title and a body to be filed")
+    return None
+
+
+def _a_split_turned_down_before_any_part_ran(conversation: Conversation,
+                                             command: Reject) -> Refused | None:
+    fix = conversation.fix
+    if fix.kind != ProposalKind.SPLIT or not any_run(fix.steps):
         return None
-    return _refuse_decision(conversation, ErrorCode.NO_PROPOSAL,
-                            "accepting a split arrives in a later step")
+    return _refuse_decision(conversation, ErrorCode.ALREADY_CLOSED,
+                            "part of this split has run, so it can no longer be rejected; "
+                            "accept the rest")
 
 
 def _a_fix_to_land(conversation: Conversation, command: Approve) -> Refused | None:
@@ -499,8 +552,21 @@ def prepared_to_land(conversation: Conversation, command: Approve) -> Conversati
                          else command.resolve))
 
 
+def picks_next(fix: Fix) -> bool:
+    if fix.kind == ProposalKind.COMMIT:
+        return PICK not in fix.steps
+    return (fix.split is not None and PICK not in fix.steps
+            and next_part(fix.split, fix.steps) == SplitPart.CHANGES)
+
+
 def _ready_to_pick(conversation: Conversation, command: Approve) -> Deferred | None:
     fix = conversation.fix
+    split = fix.split
+    if fix.kind == ProposalKind.SPLIT and split is not None:
+        accepting_now = with_fix(conversation, split=accepting(split, command.part))
+        if picks_next(accepting_now.fix):
+            return _unready(accepting_now, command)
+        return None
     if fix.kind != ProposalKind.COMMIT:
         return None
     if fix.state != LANDING:
@@ -520,8 +586,7 @@ def _landing(conversation: Conversation, step: Land) -> Refused | None:
 
 def _ready_to_pick_while_landing(conversation: Conversation,
                                  step: Land) -> Deferred | None:
-    fix = conversation.fix
-    if fix.kind == ProposalKind.COMMIT and PICK not in fix.steps:
+    if picks_next(conversation.fix):
         return _unready(conversation, step)
     return None
 
@@ -862,7 +927,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     RunTimedOut: (_running_only,),
     RunLost: (_running_only,),
     Land: (_landing, _ready_to_pick_while_landing),
-    Approve: (_not_parked_to_land, _no_landing_under_way, _a_split_to_accept, _rebase_gate,
+    Approve: (_not_parked_to_land, _no_landing_under_way, _a_part_to_accept, _rebase_gate,
               _filing, _a_commit_to_land, _a_fix_to_land, _a_ticket_to_file, _a_reply_to_post,
               _resolvable, _yours_to_delete, _ready_to_pick),
     First: (_wanting_a_first_run,),
@@ -879,7 +944,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Resolve: (_still_open_to_resolve, _the_operators_to_resolve,
               _a_comment_to_answer_on_resolving, _a_thread_left_to_resolve,
               _yours_to_delete, _no_blank_closing_reply),
-    Reject: (_still_open_to_reject, _a_fix_to_turn_down, _a_comment_to_answer_on_rejecting,
+    Reject: (_still_open_to_reject, _a_split_turned_down_before_any_part_ran,
+             _a_fix_to_turn_down, _a_comment_to_answer_on_rejecting,
              _yours_to_delete, _no_blank_closing_reply),
     Defer: (_open_to_park, _the_operators_to_park),
     Wake: (_deferred_to_wake,),

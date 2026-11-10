@@ -54,7 +54,7 @@ class ThreadAgents:
     def _asked(self, conversation: Conversation, worktree: str, skipped: bool,
                brief: Brief | None) -> ThreadFix:
         fix = conversation.fix
-        ticket = fix.ticket if fix.kind == ProposalKind.TICKET else None
+        ticket = fix.ticket if fix.kind in (ProposalKind.TICKET, ProposalKind.SPLIT) else None
         return ThreadFix(
             pr=self.pr, key=conversation.key, worktree=worktree,
             author=conversation.author, path=conversation.path, line=conversation.line,

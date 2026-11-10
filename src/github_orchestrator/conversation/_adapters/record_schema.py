@@ -8,7 +8,6 @@ from github_orchestrator.conversation._adapters.side_words import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
-    ANSWER,
     ASKING,
     ASSUMED_DONE,
     CONFIRMED,
@@ -25,9 +24,7 @@ from github_orchestrator.conversation._domain.conversation import (
     MAX_ATTEMPTS,
     NOT_MINE,
     OPEN,
-    PICK,
     PROPOSED,
-    PUSH,
     QUEUED,
     REJECTED,
     REMOVED,
@@ -45,6 +42,11 @@ from github_orchestrator.conversation._domain.conversation import (
     ReasonCode,
     ThreadVerdict,
     UnreadableRecord,
+)
+from github_orchestrator.conversation._domain.parts import (
+    ANSWER,
+    PICK,
+    PUSH,
 )
 from github_orchestrator.domain import Location, Sha, Side
 

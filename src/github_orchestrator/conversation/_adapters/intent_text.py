@@ -11,8 +11,11 @@ from github_orchestrator.conversation._application.ports import Intent
 from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     PointedLine,
-    Ticket,
     wakes_on,
+)
+from github_orchestrator.conversation._domain.parts import (
+    SplitPart,
+    Ticket,
 )
 from github_orchestrator.domain import Location, Side
 
@@ -68,11 +71,13 @@ def _modifier_allowed(decision: str, modifier: str) -> bool:
 
 
 def _approve_payload(payload: str | None, resolve: bool, message: str,
-                     ticket: Ticket | None) -> str:
+                     ticket: Ticket | None, part: SplitPart | None) -> str:
     approve: dict[str, Any] = {"reply": payload, "resolve": resolve, "message": message}
     if ticket is not None:
         approve["ticket"] = {"project": ticket.project, "title": ticket.title,
                              "body": ticket.body}
+    if part is not None:
+        approve["part"] = part.value
     return json.dumps(approve)
 
 
@@ -124,7 +129,7 @@ def format_intent(intent: Intent) -> str:
     if message and decision != APPROVE:
         raise ValueError(f"only an approve carries a message, not {decision!r}")
     if decision == APPROVE:
-        payload = _approve_payload(payload, resolve, message, intent.ticket)
+        payload = _approve_payload(payload, resolve, message, intent.ticket, intent.part)
     if decision == REWORK or briefed:
         payload = _brief_payload(payload, intent.pointed, intent.include)
     if decision == EDIT_DRAFT:
@@ -193,15 +198,24 @@ def _approve_intent(payload: str | None, modifier: str) -> Intent | None:
     message = approve.get("message", "")
     try:
         ticket = _ticket(approve.get("ticket"))
+        part = _part(approve.get("part"))
     except ValueError:
         return None
     if (not (reply is None or isinstance(reply, str))
             or not isinstance(resolve, bool) or not isinstance(message, str)):
         return None
     return Intent(decision=APPROVE, payload=reply, resolve=resolve,
-                  message=message, ticket=ticket,
+                  message=message, ticket=ticket, part=part,
                   delete_comment=modifier == DELETE_MODIFIER,
                   modifier=modifier)
+
+
+def _part(part: Any) -> SplitPart | None:
+    if part is None:
+        return None
+    if part not in frozenset(SplitPart):
+        raise ValueError(f"{part!r} names no part of a split")
+    return SplitPart(part)
 
 
 def _ticket(ticket: Any) -> Ticket | None:

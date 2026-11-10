@@ -90,7 +90,8 @@ class Absorbed:
 class EditableConversation(Protocol):
     def approve(self, *, reply: str = "", delete_comment: bool = False,
                 resolve: bool = False, message: str = "", ticket_project: str | None = None,
-                ticket_title: str = "", ticket_body: str = "") -> Conversation | Denied: ...
+                ticket_title: str = "", ticket_body: str = "",
+                part: str | None = None) -> Conversation | Denied: ...
 
     def rework(self, *, note: str = "",
                pointed: Sequence[tuple[str, int | None, str]] = (),

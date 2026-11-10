@@ -174,6 +174,7 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
                 filing_allowed=ports.config.agents_enabled,
                 account=ports.config.gh_account,
                 tests_required=ports.config.has_tests,
+                part=intent.part,
             )
         case "rework":
             return Rework(

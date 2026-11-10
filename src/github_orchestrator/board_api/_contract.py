@@ -517,6 +517,21 @@ class ProposalKind(StrEnum):
     SPLIT = "split"
 
 
+class SplitPartName(StrEnum):
+    TICKET = "ticket"
+    CHANGES = "changes"
+    NEW_PR = "new-pr"
+    REPLY = "reply"
+
+
+class SplitPartState(StrEnum):
+    PROPOSED = "proposed"
+    ACCEPTED = "accepted"
+    QUEUED = "queued"
+    RUNNING = "running"
+    RUN = "run"
+
+
 class OperationSummary(BaseModel):
     """An operation as a conversation carries it. The same shape whatever the
     kind; a rework's brief or a landing's progress is on the operation itself.
@@ -1242,6 +1257,39 @@ class Ticket(BaseModel):
     body: str
 
 
+class SplitPart(BaseModel):
+    """One part of a split, and how far accepting it has got. A part runs
+    once accepted and once the part it waits for has run; a part that has run
+    is locked."""
+
+    part: SplitPartName = Field(
+        description="`ticket` files the new PR's own ticket, `changes` pushes the "
+                    "commit that takes the code out of this PR, `new-pr` opens the "
+                    "new PR, `reply` answers the comment with where the code went.")
+    state: SplitPartState = Field(
+        description="`proposed` until it is accepted; `accepted` once accepted and "
+                    "waiting its turn; `queued` while the part it waits for has not "
+                    "run; `running` while its work is in flight; `run` once done. "
+                    "A part whose work failed is `proposed` again, and the approve "
+                    "that accepted it says why.")
+    waits_for: SplitPartName | None = Field(
+        description="The part that must run first: the new PR waits for a drafted "
+                    "ticket, the reply for the new PR. Null where it waits for none.")
+
+
+class Split(BaseModel):
+    """Where the code goes, and the parts accepting it is made of."""
+
+    branch: str = Field(description="The branch that carries the code to the new PR.")
+    base: str = Field(description="The branch the new PR merges into.")
+    base_reason: str = Field(description="Why the new PR goes onto that base.")
+    ticket: Ticket | None = Field(
+        description="The new PR's own ticket as the agent drafted it. Null where the "
+                    "new PR goes under this PR's ticket, which leaves no ticket part.")
+    parts: list[SplitPart] = Field(
+        description="Each part the split has, in the order they run.")
+
+
 class Proposal(BaseModel):
     """What one completed run or session left behind. Half of this comes from
     a record and half from git, which is why reading it costs subprocesses.
@@ -1258,9 +1306,8 @@ class Proposal(BaseModel):
         description="What accepting it does: `commit` lands the agent's commit "
                     "and answers the comment, `reply` posts `reply` and "
                     "nothing else, `ticket` files `ticket` and then posts "
-                    "`reply`, `split` moves code out of this PR into a new one "
-                    "and is not yet accepted. Only a commit has a diff, files "
-                    "or tests.")
+                    "`reply`, `split` moves code out of this PR into a new one, "
+                    "a part at a time. Only a commit has a diff, files or tests.")
     reply: str | None = Field(
         description="The reply the agent proposes to post. Null on a commit, "
                     "whose answer the viewer writes on accepting.")
@@ -1305,6 +1352,9 @@ class Proposal(BaseModel):
         description="The last thing the agent said, where its run stopped "
                     "without reporting and the board proposed the commit it "
                     "found. Null on every proposal an agent reported.")
+    split: Split | None = Field(
+        description="Where a split moves the code and how far each part has got. "
+                    "Null unless `kind` is `split`.")
 
 
 class ProposalList(RootModel[list[Proposal]]):
@@ -1356,6 +1406,11 @@ class ApproveRequest(BaseModel):
         description="The ticket to file, as the viewer edited it, when the "
                     "proposal is a ticket. Absent files the ticket as the "
                     "agent proposed it.")
+    part: SplitPartName | None = Field(
+        default=None,
+        description="The part of a split to accept. Absent accepts every part "
+                    "not yet accepted. Refused on a proposal that is no split, "
+                    "and on a part that has run.")
 
 
 class CloseRequest(BaseModel):

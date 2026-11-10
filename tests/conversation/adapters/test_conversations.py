@@ -475,6 +475,25 @@ def test_a_record_written_before_splits_existed_proposes_no_split(here):
     assert _read(here, document).fix.split is None
 
 
+SPLIT_ON_DISK = {"branch": "split/cache", "base": "main", "base_reason": "it stands alone",
+                 "ticket": None}
+
+
+def test_the_parts_of_a_split_already_accepted_are_read_back(here):
+    document = _proposed_document(here)
+    document.update(proposal_kind="split",
+                    proposed_split={**SPLIT_ON_DISK, "accepted": ["reply", "changes"]})
+
+    assert _read(here, document).fix.split.accepted == {"changes", "reply"}
+
+
+def test_a_split_written_before_parts_were_accepted_has_none_accepted(here):
+    document = _proposed_document(here)
+    document.update(proposal_kind="split", proposed_split=SPLIT_ON_DISK)
+
+    assert _read(here, document).fix.split.accepted == frozenset()
+
+
 def test_a_ticket_being_filed_and_then_filed_is_kept_on_disk(here):
     threads = _heard(here)
     start_run(here, threads)

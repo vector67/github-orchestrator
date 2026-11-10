@@ -276,6 +276,7 @@ export function proposal(over: Partial<Proposal> = {}): Proposal {
     tests_note: null,
     commit_message: 'Rename the helper',
     last_words: null,
+    split: null,
     ...over,
   };
 }

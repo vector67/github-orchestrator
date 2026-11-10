@@ -410,6 +410,18 @@ def proposal_of(git: PrCheckout,
         commit_message=(None if proposal.thread_sha is None
                         else git.revisions.commit_message(proposal.thread_sha)),
         last_words=proposal.last_words,
+        split=None if proposal.split is None else contract.Split(
+            branch=proposal.split.branch, base=proposal.split.base,
+            base_reason=proposal.split.base_reason,
+            ticket=None if proposal.split.ticket is None else contract.Ticket(
+                project=proposal.split.ticket.project, title=proposal.split.ticket.title,
+                body=proposal.split.ticket.body),
+            parts=[contract.SplitPart(
+                part=contract.SplitPartName(view.part),
+                state=contract.SplitPartState(view.state),
+                waits_for=None if view.waits_for is None
+                else contract.SplitPartName(view.waits_for))
+                for view in proposal.parts]),
     )
 
 

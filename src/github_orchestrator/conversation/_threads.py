@@ -115,8 +115,6 @@ from github_orchestrator.conversation._domain.conversation import (
     OperationState,
     PointedLine,
     Question,
-    Split,
-    Ticket,
     UnreadableRecord,
     reacted,
     wakes_on,
@@ -135,6 +133,11 @@ from github_orchestrator.conversation._domain.news import (
     opens_thread,
     reopens,
     replied_since,
+)
+from github_orchestrator.conversation._domain.parts import (
+    Split,
+    SplitPart,
+    Ticket,
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
 from github_orchestrator.conversation._domain.standing import ErrorCode
@@ -343,10 +346,12 @@ class _Editable:
 
     def approve(self, *, reply: str = "", delete_comment: bool = False,
                 resolve: bool = False, message: str = "", ticket_project: str | None = None,
-                ticket_title: str = "", ticket_body: str = "") -> Conversation | Denied:
+                ticket_title: str = "", ticket_body: str = "",
+                part: str | None = None) -> Conversation | Denied:
         return self._ask(Approve(reply=reply, delete_comment=delete_comment,
                                  resolve=resolve, message=message,
-                                 ticket=_ticket(ticket_project, ticket_title, ticket_body)))
+                                 ticket=_ticket(ticket_project, ticket_title, ticket_body),
+                                 part=None if part is None else SplitPart(part)))
 
     def rework(self, *, note: str = "",
                pointed: Sequence[tuple[str, int | None, str]] = (),

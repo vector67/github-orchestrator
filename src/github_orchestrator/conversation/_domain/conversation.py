@@ -1,6 +1,16 @@
 from dataclasses import dataclass, field, replace
 from enum import Enum, StrEnum
 
+from github_orchestrator.conversation._domain.parts import (
+    ANSWER,
+    FILE,
+    PICK,
+    PUSH,
+    PartView,
+    Split,
+    Ticket,
+    views,
+)
 from github_orchestrator.domain import Location, Sha, Side
 
 
@@ -103,21 +113,6 @@ class ProposalKind(StrEnum):
     REPLY = "reply"
     TICKET = "ticket"
     SPLIT = "split"
-
-
-@dataclass(frozen=True)
-class Ticket:
-    project: str
-    title: str
-    body: str
-
-
-@dataclass(frozen=True)
-class Split:
-    branch: str
-    base: str
-    base_reason: str
-    ticket: Ticket | None = None
 
 
 class ThreadVerdict(StrEnum):
@@ -225,12 +220,6 @@ ABSENT = "absent"
 
 WITHDRAWN = "stopped before it finished"
 SESSION_GONE = "the session ended without reporting back"
-
-FILE = "file"
-PICK = "pick"
-PUSH = "push"
-ANSWER = "answer"
-MARK_RESOLVED = "resolve"
 
 MAX_ATTEMPTS = 3
 
@@ -557,6 +546,8 @@ class Proposal:
     tests: str | None
     tests_note: str | None
     last_words: str | None
+    split: Split | None = None
+    parts: tuple[PartView, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -669,7 +660,9 @@ class Conversation:
             base_sha=fix.base_sha, thread_sha=fix.thread_sha, commits=fix.commits,
             summary=fix.summary, agent_note=fix.agent_note,
             confidence=fix.confidence, confidence_note=fix.confidence_note,
-            tests=fix.tests, tests_note=fix.tests_note, last_words=fix.last_words)
+            tests=fix.tests, tests_note=fix.tests_note, last_words=fix.last_words,
+            split=fix.split,
+            parts=() if fix.split is None else views(fix.split, fix.steps, _under_way(fix)))
 
     @property
     def posted_by_board(self) -> frozenset[int]:
@@ -764,6 +757,10 @@ _STATE_OF_RUN = {
 def _landing_failed(fix: Fix) -> bool:
     return fix.state == LANDING and bool(fix.push_error or fix.reply_error
                                          or fix.file_error)
+
+
+def _under_way(fix: Fix) -> bool:
+    return fix.state in (QUEUED, RUNNING, LANDING) and not _landing_failed(fix)
 
 
 def state_of(conversation: Conversation) -> ConversationState:

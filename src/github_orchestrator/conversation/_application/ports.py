@@ -11,6 +11,9 @@ from github_orchestrator.conversation._domain.conversation import (
     Conversation,
     PointedLine,
     ThreadVerdict,
+)
+from github_orchestrator.conversation._domain.parts import (
+    SplitPart,
     Ticket,
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
@@ -64,6 +67,7 @@ class Intent:
     message: str = ""
     ticket: Ticket | None = None
     direction: str = ""
+    part: SplitPart | None = None
 
 
 @dataclass(frozen=True)

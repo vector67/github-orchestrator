@@ -30,7 +30,6 @@ from github_orchestrator.conversation._domain.conversation import (
     DECLINED,
     DEFERRED,
     FAILED,
-    FILE,
     FIX_RUNS,
     IN_SESSION,
     LANDED,
@@ -46,9 +45,11 @@ from github_orchestrator.conversation._domain.conversation import (
     WITHDRAWN,
     Brief,
     Conversation,
+    Fix,
     Operation,
     OperationKind,
     OperationState,
+    ProposalKind,
     ReasonCode,
 )
 from github_orchestrator.conversation._domain.effects import (
@@ -78,6 +79,9 @@ from github_orchestrator.conversation._domain.events import (
     ThreadUnresolveFailed,
     Unpicked,
     UnpickFailed,
+)
+from github_orchestrator.conversation._domain.parts import (
+    FILE,
 )
 from github_orchestrator.conversation._domain.standing import ErrorCode
 from github_orchestrator.conversation._domain.steps import First
@@ -190,6 +194,8 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
     if fix.state == ASKING:
         return OperationState.APPLIED, None, None
     if fix.state == PROPOSED:
+        if operation.kind == OperationKind.APPROVE and fix.kind == ProposalKind.SPLIT:
+            return _split_approve_outcome(fix)
         if operation.kind == OperationKind.APPROVE:
             return OperationState.REFUSED, fix.reason, None
         return OperationState.APPLIED, None, None
@@ -200,6 +206,16 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
                                      if fix.reason == WITHDRAWN
                                      else ReasonCode.MAX_ATTEMPTS)
     return operation.state, operation.reason, operation.reason_code
+
+
+def _split_approve_outcome(fix: Fix) -> tuple[OperationState, str | None, ReasonCode | None]:
+    if fix.file_error:
+        return OperationState.REFUSED, fix.file_error, ReasonCode.FILE_FAILED
+    if fix.push_error:
+        return OperationState.REFUSED, fix.push_error, ReasonCode.PUSH_FAILED
+    if fix.reason:
+        return OperationState.REFUSED, fix.reason, None
+    return OperationState.APPLIED, None, None
 
 
 def _settled_at(before: Operation, state: OperationState, at: str | None) -> str | None:

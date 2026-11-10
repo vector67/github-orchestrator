@@ -1287,7 +1287,8 @@ def approve_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
             resolve=asked.resolve, message=asked.message or "",
             ticket_project=None if ticket is None else ticket.project,
             ticket_title="" if ticket is None else ticket.title,
-            ticket_body="" if ticket is None else ticket.body))
+            ticket_body="" if ticket is None else ticket.body,
+            part=None if asked.part is None else asked.part.value))
 
 
 @writes.post("/conversations/{key}/operations:rework", status_code=202,

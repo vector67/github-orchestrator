@@ -12,6 +12,7 @@ from github_orchestrator.conversation import (
     ConfidenceLevel,
     ConversationState,
     OperationKind,
+    OperationState,
     ReviewState,
 )
 from github_orchestrator.domain import Sha, Side
@@ -542,6 +543,24 @@ def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, threads, 
     ticket = _stored(threads).fix.split.ticket
     assert (ticket.project, ticket.title, ticket.body) == (
         "PROJ", "Cache tax rates", "Each export reads its model again.")
+
+
+def test_approve_accepts_the_part_of_a_split_it_names(fixed, store, threads, run_cli):
+    _branched(store, fixed)
+    assert run_cli(*_split_argv(fixed, same_ticket=None)).code == 0
+
+    approve = _directed(run_cli, threads, "approve", OperationKind.APPROVE, part="reply")
+
+    assert approve.state is OperationState.APPLIED
+    [reply] = [view for view in _stored(threads).proposal.parts if view.part == "reply"]
+    assert reply.state == "queued"
+
+
+def test_approve_refuses_a_part_no_split_has(run_cli):
+    ran = run_cli(*_human("approve", thread_id=THREAD_KEY, part="everything"))
+
+    assert ran.code == 2
+    assert "--part" in ran.err
 
 
 def test_split_refuses_a_branch_the_worktree_does_not_have(fixed, threads, run_cli):

@@ -653,6 +653,7 @@ def test_the_proposals_read_carries_what_the_run_left_behind():
         "tests_note": "ran the unit suite",
         "commit_message": "Rename the helper\n\nIt said the wrong thing.\n",
         "last_words": None,
+        "split": None,
     }]
     assert answer.headers["ETag"]
 
@@ -798,9 +799,17 @@ def test_a_proposed_split_waits_under_ready_for_you_with_its_reply():
 
     assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
     assert (proposal["kind"], proposal["reply"]) == ("split", "This moved to its own PR.")
+    assert {key: proposal["split"][key] for key in ("branch", "base", "base_reason",
+                                                     "ticket")} == {
+        "branch": "split/cache", "base": "main", "base_reason": "it stands alone",
+        "ticket": None}
+    assert [(part["part"], part["state"], part["waits_for"])
+            for part in proposal["split"]["parts"]] == [
+        ("changes", "proposed", None), ("new-pr", "proposed", None),
+        ("reply", "proposed", "new-pr")]
 
 
-def test_accepting_a_split_is_refused_until_a_later_step_and_says_why():
+def test_accepting_all_of_a_split_is_refused_until_the_new_pr_can_open_and_says_why():
     board = board_for()
     card(board)
     _split(board)
@@ -811,8 +820,35 @@ def test_accepting_a_split_is_refused_until_a_later_step_and_says_why():
     assert answer.status_code == 409
     [error] = answer.json()["errors"]
     assert error["code"] == "no-proposal"
-    assert "accepting a split arrives in a later step" in error["detail"]
+    assert "opening the new PR arrives in a later step" in error["detail"]
     assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+
+
+def test_accepting_one_part_of_a_split_runs_it_and_the_proposal_says_so():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "approve", part="changes")
+    drain(board)
+
+    assert answer.status_code == 202, answer.json()
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    assert [(part["part"], part["state"]) for part in proposal["split"]["parts"]] == [
+        ("changes", "run"), ("new-pr", "proposed"), ("reply", "proposed")]
+    assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+
+
+def test_a_part_that_names_nothing_a_split_has_is_a_bad_request():
+    board = board_for()
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "approve", part="everything")
+
+    assert answer.status_code == 400
 
 
 def test_a_thread_no_agent_has_finished_has_no_proposals():

@@ -7,7 +7,10 @@ from github_orchestrator.conversation._domain.conversation import (
     ConversationState,
     PointedLine,
     Question,
+)
+from github_orchestrator.conversation._domain.parts import (
     Split,
+    SplitPart,
     Ticket,
 )
 from github_orchestrator.domain import Location, Sha
@@ -149,6 +152,7 @@ class Approve:
     filing_allowed: bool = True
     account: str = ""
     tests_required: bool = True
+    part: SplitPart | None = None
 
 
 @dataclass(frozen=True)

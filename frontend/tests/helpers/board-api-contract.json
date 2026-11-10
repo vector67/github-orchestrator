@@ -2036,6 +2036,16 @@
       }
      ]
     },
+    "part": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartName"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "reply": {
      "anyOf": [
       {
@@ -6011,6 +6021,16 @@
       }
      ]
     },
+    "split": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Split"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "summary": {
      "anyOf": [
       {
@@ -6080,7 +6100,8 @@
     "tests",
     "tests_note",
     "commit_message",
-    "last_words"
+    "last_words",
+    "split"
    ],
    "type": "object"
   },
@@ -7562,6 +7583,88 @@
     "reason"
    ],
    "type": "object"
+  },
+  "Split": {
+   "properties": {
+    "base": {
+     "type": "string"
+    },
+    "base_reason": {
+     "type": "string"
+    },
+    "branch": {
+     "type": "string"
+    },
+    "parts": {
+     "items": {
+      "$ref": "#/components/schemas/SplitPart"
+     },
+     "type": "array"
+    },
+    "ticket": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Ticket"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "branch",
+    "base",
+    "base_reason",
+    "ticket",
+    "parts"
+   ],
+   "type": "object"
+  },
+  "SplitPart": {
+   "properties": {
+    "part": {
+     "$ref": "#/components/schemas/SplitPartName"
+    },
+    "state": {
+     "$ref": "#/components/schemas/SplitPartState"
+    },
+    "waits_for": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/SplitPartName"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "part",
+    "state",
+    "waits_for"
+   ],
+   "type": "object"
+  },
+  "SplitPartName": {
+   "enum": [
+    "ticket",
+    "changes",
+    "new-pr",
+    "reply"
+   ],
+   "type": "string"
+  },
+  "SplitPartState": {
+   "enum": [
+    "proposed",
+    "accepted",
+    "queued",
+    "running",
+    "run"
+   ],
+   "type": "string"
   },
   "Stack": {
    "properties": {

@@ -52,6 +52,7 @@ export interface ApproveRequest {
   resolve?: boolean;
   message?: string | null;
   ticket?: Ticket | null;
+  part?: SplitPartName | null;
 }
 
 export interface AskedReviewer {
@@ -731,6 +732,7 @@ export interface Proposal {
   tests_note: string | null;
   commit_message: string | null;
   last_words: string | null;
+  split: Split | null;
 }
 
 export type ProposalKind = 'commit' | 'reply' | 'ticket' | 'split';
@@ -1030,6 +1032,24 @@ export interface SkippedFixCheck {
   where: string;
   reason: string;
 }
+
+export interface Split {
+  branch: string;
+  base: string;
+  base_reason: string;
+  ticket: Ticket | null;
+  parts: SplitPart[];
+}
+
+export interface SplitPart {
+  part: SplitPartName;
+  state: SplitPartState;
+  waits_for: SplitPartName | null;
+}
+
+export type SplitPartName = 'ticket' | 'changes' | 'new-pr' | 'reply';
+
+export type SplitPartState = 'proposed' | 'accepted' | 'queued' | 'running' | 'run';
 
 export interface Stack {
   branch: string;

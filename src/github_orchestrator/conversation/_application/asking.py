@@ -138,7 +138,7 @@ def _intent_of(command: Command) -> Intent:
             return Intent(decision="approve", payload=command.reply or None,
                           delete_comment=command.delete_comment,
                           resolve=command.resolve, message=command.message,
-                          ticket=command.ticket)
+                          ticket=command.ticket, part=command.part)
         case Rework():
             return Intent(decision="rework", payload=command.note,
                           pointed=command.pointed, include=command.include)

@@ -209,7 +209,8 @@ def thread_approve(args: argparse.Namespace, *, conversation_managers: Conversat
     _directed_or_die(args, conversation_managers, lambda conversation: conversation.approve(
         reply=args.reply, delete_comment=args.delete_comment, resolve=args.resolve,
         message=args.message, ticket_project=args.ticket_project,
-        ticket_title=args.ticket_title, ticket_body=args.ticket_body), "approved")
+        ticket_title=args.ticket_title, ticket_body=args.ticket_body, part=args.part),
+        "approved")
 
 
 def thread_rework(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
@@ -479,6 +480,10 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
                                 help="The ticket's project, in place of the agent's")
     approve_parser.add_argument("--ticket-title", default="", help="The ticket's title")
     approve_parser.add_argument("--ticket-body", default="", help="The ticket's description")
+    approve_parser.add_argument("--part", default=None,
+                                choices=("ticket", "changes", "new-pr", "reply"),
+                                help="The part of a split to accept; every part not yet "
+                                     "accepted where none is given")
 
     rework_parser = _human_only(thread_sub, "rework",
                                 "send the agent's proposal back with a note on what to change.")

@@ -49,7 +49,6 @@ from github_orchestrator.conversation._domain.commit_check import (
 )
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
-    ANSWER,
     ASKING,
     ASSUMED_DONE,
     CONFIRMED,
@@ -59,17 +58,13 @@ from github_orchestrator.conversation._domain.conversation import (
     DRAFT,
     ENROLLED,
     FAILED,
-    FILE,
     IN_SESSION,
     LANDED,
     LANDING,
-    MARK_RESOLVED,
     MAX_ATTEMPTS,
     NOT_MINE,
     OPEN,
-    PICK,
     PROPOSED,
-    PUSH,
     QUEUED,
     REJECTED,
     REMOVED,
@@ -184,6 +179,18 @@ from github_orchestrator.conversation._domain.machine import (
     with_fix,
 )
 from github_orchestrator.conversation._domain.operations import Asked
+from github_orchestrator.conversation._domain.parts import (
+    ANSWER,
+    FILE,
+    MARK_RESOLVED,
+    PICK,
+    PUSH,
+    Split,
+    SplitPart,
+    accepting,
+    dropped,
+    next_part,
+)
 from github_orchestrator.conversation._domain.steps import First, Land
 from github_orchestrator.conversation._domain.verdict import (
     PLACED_BY_A_VERDICT,
@@ -689,8 +696,13 @@ def _filing_run_failed(conversation: Conversation) -> bool:
 
 
 def _approve(conversation: Conversation, command: Approve) -> Accepted | Deferred:
+    split = conversation.fix.kind == ProposalKind.SPLIT
+    if _filing_run_failed(conversation) and split:
+        return Accepted(_part_failed(conversation, SplitPart.TICKET, run=Run()))
     if _filing_run_failed(conversation):
         return Accepted(with_fix(conversation, run=Run()))
+    if split:
+        return _accept_parts(conversation, command)
     prepared = prepared_to_land(conversation, command)
     if prepared.fix.kind == ProposalKind.TICKET and not prepared.fix.filed:
         return _file(prepared, command)
@@ -702,6 +714,51 @@ def _file(conversation: Conversation, command: Approve) -> Deferred:
                              attempts=0, started_at=None, reason=None, decision_error=None,
                              ticket=ticket_to_file(conversation, command)),
                     "the approve waits for the ticket to be filed")
+
+
+def _the_split(fix: Fix) -> Split:
+    if fix.split is None:
+        raise ValueError("a split proposal holds no split")
+    return fix.split
+
+
+def _accept_parts(conversation: Conversation, command: Approve) -> Accepted | Deferred:
+    split = _the_split(conversation.fix)
+    return _run_next_part(with_fix(conversation, split=accepting(split, command.part),
+                                   reason=None, decision_error=None, file_error=None,
+                                   push_error=None), command)
+
+
+def _run_next_part(conversation: Conversation, command: Approve) -> Accepted | Deferred:
+    fix = conversation.fix
+    match next_part(_the_split(fix), fix.steps):
+        case SplitPart.TICKET:
+            return _file(conversation, command)
+        case SplitPart.CHANGES if PICK not in fix.steps:
+            return Accepted(with_fix(conversation, state=LANDING),
+                            (Pick(message=command.message),))
+        case SplitPart.CHANGES:
+            return Accepted(with_fix(conversation, state=LANDING), (Push(),))
+    return Accepted(with_fix(conversation, state=PROPOSED))
+
+
+def _part_failed(conversation: Conversation, part: SplitPart, **fields: Any) -> Conversation:
+    return with_fix(conversation, state=PROPOSED,
+                    split=dropped(_the_split(conversation.fix), part), **fields)
+
+
+def _changes_failed(conversation: Conversation,
+                    command: PickRefused | PickConflicted | PushFailed) -> Accepted:
+    match command:
+        case PushFailed():
+            return Accepted(_part_failed(_decidable(conversation, command.at),
+                                         SplitPart.CHANGES, push_error=command.error))
+        case PickConflicted():
+            return Accepted(_part_failed(conversation, SplitPart.CHANGES,
+                                         reason=command.conflict + MANUAL_REBASE_ADVICE))
+        case PickRefused():
+            return Accepted(_part_failed(conversation, SplitPart.CHANGES,
+                                         reason=command.reason))
 
 
 def _report_filed(conversation: Conversation, command: ReportFiled) -> Accepted:
@@ -733,8 +790,10 @@ def _lands_a_commit(fix: Fix) -> bool:
     return fix.kind == ProposalKind.COMMIT
 
 
-def _land(conversation: Conversation, command: Approve) -> Accepted:
+def _land(conversation: Conversation, command: Approve) -> Accepted | Deferred:
     fix = conversation.fix
+    if fix.kind == ProposalKind.SPLIT:
+        return _run_next_part(conversation, command)
     if _lands_a_commit(fix) and PICK not in fix.steps:
         return Accepted(conversation, (Pick(message=command.message),))
     if _lands_a_commit(fix) and PUSH not in fix.steps:
@@ -1231,6 +1290,9 @@ def _dispatch(conversation: Conversation, command: Change,
             return _rebase(conversation, command)
         case Picked():
             return _picked(conversation, command)
+        case PickRefused() | PickConflicted() | PushFailed() if (
+                conversation.fix.kind == ProposalKind.SPLIT):
+            return _changes_failed(conversation, command)
         case PickRefused():
             return _handed_back(conversation, command.reason)
         case PickConflicted():

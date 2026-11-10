@@ -29,9 +29,12 @@ from github_orchestrator.conversation._domain.conversation import (
     Reaction,
     ReasonCode,
     Run,
-    Split,
     Step,
     ThreadVerdict,
+)
+from github_orchestrator.conversation._domain.parts import (
+    Split,
+    SplitPart,
     Ticket,
 )
 from github_orchestrator.conversation._domain.review import Review
@@ -145,14 +148,16 @@ def _split_document(split: Split | None) -> Document | None:
     if split is None:
         return None
     return {"branch": split.branch, "base": split.base, "base_reason": split.base_reason,
-            "ticket": _ticket_document(split.ticket)}
+            "ticket": _ticket_document(split.ticket),
+            "accepted": sorted(part.value for part in split.accepted)}
 
 
 def _split(document: Document | None) -> Split | None:
     if document is None:
         return None
     return Split(branch=document["branch"], base=document["base"],
-                 base_reason=document["base_reason"], ticket=_ticket(document["ticket"]))
+                 base_reason=document["base_reason"], ticket=_ticket(document["ticket"]),
+                 accepted=frozenset(SplitPart(part) for part in document.get("accepted", ())))
 
 
 def _question_document(question: Question | None) -> Document | None:
