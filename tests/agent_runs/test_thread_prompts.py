@@ -4,7 +4,7 @@ import shlex
 import pytest
 
 from github_orchestrator.agent_runs import FixComment, ThreadFix
-from github_orchestrator.agent_runs.fake import FakeAgentRuns
+from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.cli_flags import assert_the_cli_takes, invocations
 from tests.agent_runs.scripted_claude import ScriptedClaude
@@ -161,6 +161,19 @@ def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_wor
     [session] = world.pr_processes.sessions[THE_PR]
     assert (session.worktree, session.argv) == (worktree, ["claude", "--continue"])
     assert session.kept
+
+
+def test_answering_a_question_resumes_the_session_that_thread_s_run_started(
+        world, runs, worktree):
+    world.script(Outcome(events=({"type": "system", "subtype": "init", "session_id": "asked"},)),
+                 Outcome(events=({"type": "system", "subtype": "init", "session_id": "other"},)))
+    finish(runs.fix(_fix(worktree)))
+    finish(runs.fix(_fix(worktree, key="PRRT_2")))
+
+    assert runs.answer_in_session(_fix(worktree)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["claude", "--resume", "asked"]
 
 
 def test_a_reply_while_asking_continues_the_agent_s_conversation_with_the_reply(

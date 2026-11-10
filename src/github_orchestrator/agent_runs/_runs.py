@@ -60,6 +60,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
 from github_orchestrator.agent_runs._transcript import (
     last_thread_in,
     last_words_after,
+    session_started_by,
     summarize_event,
     tail_display_lines,
 )
@@ -132,8 +133,10 @@ class AgentRun:
         runs_log: Path,
         clock: Monotonic,
         in_flight: Path | None = None,
+        session_file: Path | None = None,
     ) -> None:
         self.proc = proc
+        self._session_file = session_file
         self.pr = pr
         self.event_type = event_type
         self.transcript_path = transcript_path
@@ -254,11 +257,23 @@ class AgentRun:
         except OSError as exc:
             log.warning("agent_run %s: could not write the transcript to %s: %s",
                         self.pr, self.transcript_path, exc)
+        self._keep_session(event)
         lines = summarize_event(event)
         if lines:
             self.last_action = lines[-1]
         self.last_words = last_words_after(event, self.last_words)
         self._outcome = outcome_after(event, self._outcome)
+
+    def _keep_session(self, event: Any) -> None:
+        session = session_started_by(event) if isinstance(event, dict) else None
+        if session is None or self._session_file is None:
+            return
+        try:
+            self._session_file.parent.mkdir(parents=True, exist_ok=True)
+            self._session_file.write_text(session)
+        except OSError as exc:
+            log.warning("agent_run %s: could not keep the session at %s: %s",
+                        self.pr, self._session_file, exc)
 
     def interrupt(self) -> None:
         self._interrupted = not self._end_recorded
@@ -319,9 +334,13 @@ class AgentRuns:
     def _in_flight(self, pr: Pr) -> Path:
         return _repo_dir(self._transcripts_dir, pr.repo) / f"{pr.number}.running"
 
+    def _session_file(self, fix: ThreadFix) -> Path:
+        return _repo_dir(self._transcripts_dir, fix.pr.repo) / f"{fix.pr.number}-{fix.key}.session"
+
     def _start(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
                project_settings: bool, continuing: bool = False,
-               in_flight: Path | None = None) -> AgentRun | str:
+               in_flight: Path | None = None,
+               session_file: Path | None = None) -> AgentRun | str:
         thread = last_thread_in(self._transcript(pr)) if continuing else None
         argv = [*self._clamp, *self._command,
                 *self._lines.headless(self._model, carrying_on=continuing, thread=thread,
@@ -366,6 +385,7 @@ class AgentRuns:
             runs_log=self._runs_log,
             clock=self._clock,
             in_flight=in_flight,
+            session_file=session_file,
         )
 
     def _pr_run(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
@@ -414,7 +434,8 @@ class AgentRuns:
     def _fix_thread(self, fix: ThreadFix, prompt: str, *,
                     continuing: bool = False) -> AgentRun | str:
         run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
-                          project_settings=True, continuing=continuing)
+                          project_settings=True, continuing=continuing,
+                          session_file=self._session_file(fix))
         if not isinstance(run, str):
             self._thread_runs = [*(one for one in self._thread_runs if not one.over), run]
         return run
@@ -444,8 +465,12 @@ class AgentRuns:
                         rework_prompt(self._commands, fix, steer, self._workers))
 
     def answer_in_session(self, fix: ThreadFix) -> str | None:
+        try:
+            session: str | None = self._session_file(fix).read_text().strip() or None
+        except OSError:
+            session = None
         return self._pr_processes.split_kept(fix.pr, fix.worktree,
-                                             [*self._command, *self._lines.answering()])
+                                             [*self._command, *self._lines.answering(session)])
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split_kept(pr, worktree, shell_argv())

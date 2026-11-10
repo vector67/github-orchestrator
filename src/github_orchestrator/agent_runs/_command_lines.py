@@ -17,7 +17,7 @@ class CommandLines(Protocol):
 
     def rebase_session(self) -> list[str]: ...
 
-    def answering(self) -> list[str]: ...
+    def answering(self, session: str | None) -> list[str]: ...
 
     def env(self) -> dict[str, str]: ...
 
@@ -45,8 +45,8 @@ class ClaudeCommandLines:
     def rebase_session(self) -> list[str]:
         return [REBASE_ON_MAIN]
 
-    def answering(self) -> list[str]:
-        return ["--continue"]
+    def answering(self, session: str | None) -> list[str]:
+        return ["--resume", session] if session else ["--continue"]
 
     def env(self) -> dict[str, str]:
         return _without("ANTHROPIC_API_KEY")
@@ -70,8 +70,8 @@ class CodexCommandLines:
     def rebase_session(self) -> list[str]:
         return ["$" + REBASE_ON_MAIN.removeprefix("/")]
 
-    def answering(self) -> list[str]:
-        return ["resume", "--last"]
+    def answering(self, session: str | None) -> list[str]:
+        return ["resume", session or "--last"]
 
     def env(self) -> dict[str, str]:
         return _without("OPENAI_API_KEY")
