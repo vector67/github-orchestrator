@@ -326,6 +326,55 @@ def test_a_failed_push_keeps_the_commit_local_and_says_why(settings):
         "a failed push is yours to decide from the moment it failed")
 
 
+def _sent_back(landing, note="rebase it on the PR's head"):
+    landing.without_runs()
+    with landing.threads.editing(landing.key) as editable:
+        asked = editable.rework(note=note)
+    assert not isinstance(asked, Denied), asked
+    drain(landing.threads)
+    return landing.stored()
+
+
+def test_a_fix_whose_push_failed_goes_back_for_rework_off_the_pr_branch(settings):
+    landing = Landing(settings)
+    base, _ = _push_refused(landing).fix.commits
+
+    reworked = _sent_back(landing)
+
+    fix = reworked.fix
+    assert fix.run.kind is OperationKind.REWORK
+    assert fix.run.brief.note == "rebase it on the PR's head"
+    assert not fix.picked and fix.push_error is None
+    assert Sha(landing.working_copies.branches["main"]) == base, (
+        "the unpushed pick came off the PR branch")
+
+
+def test_a_rework_still_goes_back_when_its_pick_cannot_come_off_the_branch(settings):
+    landing = Landing(settings)
+    _, picked = _push_refused(landing).fix.commits
+    landing.working_copies.commit(WORKTREE, {"g.py": "later\n"}, "another fix on top")
+
+    reworked = _sent_back(landing)
+
+    assert reworked.fix.run.kind is OperationKind.REWORK
+    assert str(picked)[:12] in reworked.fix.reason
+    assert "still on the PR branch" in reworked.fix.reason
+
+
+def test_a_fix_already_pushed_is_not_sent_back_and_says_its_landing_stalled(settings):
+    landing = Landing(settings)
+    landing.propose()
+    landing.github.refusing = True
+    landing.approve("renamed it")
+    assert landing.stored().fix.pushed
+
+    with landing.threads.editing(landing.key) as editable:
+        asked = editable.rework(note="narrow it")
+
+    assert isinstance(asked, Denied)
+    assert asked.code is ErrorCode.LANDING_STALLED
+
+
 def _with_a_reply(settings):
     return Landing(settings, replies=(said(2, "and the test too"),))
 

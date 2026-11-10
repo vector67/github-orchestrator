@@ -111,6 +111,7 @@ class ErrorCode(StrEnum):
 
     NOT_FOUND = "not-found"
     OPERATION_OUTSTANDING = "operation-outstanding"
+    LANDING_STALLED = "landing-stalled"
     NOTHING_IN_FLIGHT = "nothing-in-flight"
     WORK_IN_FLIGHT = "work-in-flight"
     NO_PROPOSAL = "no-proposal"

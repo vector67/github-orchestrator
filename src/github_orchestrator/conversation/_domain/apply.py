@@ -938,11 +938,16 @@ def _start_session(conversation: Conversation, command: StartSession) -> Accepte
 def _rework(conversation: Conversation, command: Rework) -> Accepted:
     brief = Brief(note=command.note, pointed=command.pointed,
                   include=command.include)
+    fix = conversation.fix
+    unpicking = fix.state == LANDING and fix.picked
+    if fix.state == LANDING and not unpicking:
+        conversation = _off_the_branch(conversation)
     return Accepted(
         with_fix(conversation, state=QUEUED, attempts=0, started_at=None,
-                  plan=(), decision_error=None,
+                  plan=(), decision_error=None, push_error=None, reply_error=None,
+                  file_error=None, pending_reply="",
                   run=Run(kind=OperationKind.REWORK, brief=brief)),
-        (CutWorkspace(),),
+        ((Unpick(),) if unpicking else ()) + (CutWorkspace(),),
     )
 
 
@@ -974,10 +979,31 @@ def _landing_withdrawn(conversation: Conversation, reason: str = WITHDRAWN) -> A
                              pending_reply=""))
 
 
-def _left_on_the_branch(conversation: Conversation, command: UnpickFailed) -> str:
-    return (f"{WITHDRAWN}, but {str(conversation.fix.landed_sha)[:12]} is still on the PR "
+SENT_BACK = "sent back for rework"
+
+
+def _left_on_the_branch(conversation: Conversation, command: UnpickFailed,
+                        done: str = WITHDRAWN) -> str:
+    return (f"{done}, but {str(conversation.fix.landed_sha)[:12]} is still on the PR "
             f"branch, unpushed, because {command.error}; take it off by hand before "
             f"approving again")
+
+
+def _off_the_branch(conversation: Conversation, reason: str | None = None) -> Conversation:
+    fields = {} if reason is None else {"reason": reason}
+    return with_fix(conversation, steps=frozenset(), landed_base=None, landed_sha=None,
+                    **fields)
+
+
+def _unpicked(conversation: Conversation, command: Unpicked | UnpickFailed) -> Accepted:
+    if conversation.fix.state == LANDING:
+        if isinstance(command, Unpicked):
+            return _landing_withdrawn(conversation)
+        return _landing_withdrawn(conversation, _left_on_the_branch(conversation, command))
+    if isinstance(command, Unpicked):
+        return Accepted(_off_the_branch(conversation))
+    return Accepted(_off_the_branch(
+        conversation, _left_on_the_branch(conversation, command, SENT_BACK)))
 
 
 def _stop(conversation: Conversation) -> Accepted:
@@ -1301,10 +1327,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return Accepted(with_fix(conversation,
                                       steps=conversation.fix.steps | {PUSH},
                                       push_error=None))
-        case Unpicked():
-            return _landing_withdrawn(conversation)
-        case UnpickFailed():
-            return _landing_withdrawn(conversation, _left_on_the_branch(conversation, command))
+        case Unpicked() | UnpickFailed():
+            return _unpicked(conversation, command)
         case PushFailed():
             return Accepted(
                 _decidable(with_fix(conversation, push_error=command.error),
