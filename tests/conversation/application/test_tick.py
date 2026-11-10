@@ -152,6 +152,74 @@ def _rebasing(here, threads) -> Sha:
     return Sha(head)
 
 
+def _all_conflicting(here, threads, *keys: str) -> Sha:
+    for key in keys:
+        propose(here, threads, key, {"f": f"base\n{key}\n"})
+    head = here.working_copies.commit(WORKTREE, {"f": "moved on\n"}, "moved")
+    for key in keys:
+        with threads.editing(key) as editable:
+            editable.approve()
+    return Sha(head)
+
+
+def _rebase_runs(agent_runs) -> list[RebasingFix]:
+    return [started.work for started in agent_runs.started
+            if isinstance(started.work, RebasingFix)]
+
+
+def test_only_one_rebase_runs_on_a_pr_at_a_time(settings):
+    agent_runs = _agent_runs()
+    here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
+    _all_conflicting(here, threads, "PRRT_1", "PRRT_2")
+
+    agent_runs.script(KEEPS_GOING, KEEPS_GOING)
+    drain(threads)
+
+    assert len(_rebase_runs(agent_runs)) == 1
+    assert threads.counts().queued == 1
+
+
+def test_the_next_rebase_waits_for_the_rebased_fix_to_land_and_starts_onto_its_head(settings):
+    agent_runs = _agent_runs()
+    here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
+    head = _all_conflicting(here, threads, "PRRT_1", "PRRT_2")
+    agent_runs.script(Outcome())
+    drain(threads)
+    [first] = _rebase_runs(agent_runs)
+    checkout = _checkout(here, first.fix.key)
+    here.working_copies.branches[here.working_copies.branch_at(checkout)] = str(head)
+    with threads.editing(first.fix.key) as editable:
+        editable.ready(commit_fix(here, first.fix.key, {"f": "moved on\nrebased\n"}),
+                       tests="passed")
+
+    agent_runs.script(KEEPS_GOING)
+    drain(threads)
+
+    assert _read(threads, first.fix.key).fix.state == "landed"
+    landed = here.working_copies.head_of(WORKTREE)
+    assert [run.onto for run in _rebase_runs(agent_runs)] == [str(head), landed]
+
+
+def test_no_rebase_starts_while_a_rebased_fix_waits_to_land(settings):
+    agent_runs = _agent_runs()
+    here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
+    head = _all_conflicting(here, threads, "PRRT_1", "PRRT_2")
+    agent_runs.script(Outcome())
+    drain(threads)
+    [first] = _rebase_runs(agent_runs)
+    checkout = _checkout(here, first.fix.key)
+    here.working_copies.branches[here.working_copies.branch_at(checkout)] = str(head)
+    with threads.editing(first.fix.key) as editable:
+        editable.ready(commit_fix(here, first.fix.key, {"f": "moved on\nrebased\n"}),
+                       tests="passed")
+    here.working_copies.edit(WORKTREE, "README", "changed")
+
+    drain(threads)
+
+    assert _read(threads, first.fix.key).fix.is_proposed
+    assert _rebase_runs(agent_runs) == [first]
+
+
 def test_the_cap_holds_and_the_next_starts_when_a_slot_frees(tmp_path):
     agent_runs = _agent_runs().script(Outcome(), *[KEEPS_GOING] * 4)
     keys = [f"PRRT_{n}" for n in (1, 2, 3, 4, 5)]

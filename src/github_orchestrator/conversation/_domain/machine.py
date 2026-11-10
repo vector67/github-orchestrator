@@ -522,11 +522,12 @@ def _waiting_to_be_caught_up(conversation: Conversation, event: Rebase) -> Refus
     if conversation.state in PARKED:
         return Refused(conversation, _state_code(conversation),
                        f"{_a(conversation.state)} conversation rebases nothing")
-    if fix.state in (QUEUED, RUNNING, IN_SESSION, LANDED) or (
-            fix.state == LANDING and PICK in fix.steps):
+    if (fix.state in (RUNNING, IN_SESSION, LANDED)
+            or (fix.state == QUEUED and not fix.run.is_rebase)
+            or (fix.state == LANDING and PICK in fix.steps)):
         return Refused(conversation, _fix_code(conversation),
                        f"{_a(fix.state)} fix is not waiting to be caught up")
-    if fix.state not in (PROPOSED, LANDING):
+    if fix.state not in (PROPOSED, LANDING, QUEUED):
         return Refused(conversation, ErrorCode.NO_PROPOSAL,
                        f"{_a(fix.state)} fix left nothing to rebase")
     return None
