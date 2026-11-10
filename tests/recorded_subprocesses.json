@@ -83320,6 +83320,269 @@
     }
    ]
   },
+  "tests/working_copies/test_contract.py::test_a_workspace_names_the_head_of_a_branch_it_holds_and_none_for_one_it_lacks[git]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_kwDOabc-798\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "branch",
+      "-D",
+      "orchestrator/thread/7/PRRT_kwDOabc-798"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "error: branch 'orchestrator/thread/7/PRRT_kwDOabc-798' not found\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"worktree\", \"add\", \"-b\", \"orchestrator/thread/7/PRRT_kwDOabc-798\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "worktree",
+      "add",
+      "-b",
+      "orchestrator/thread/7/PRRT_kwDOabc-798",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "971346d94231895fcf62bd66bb9b198edde3cf67"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc-798": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc-798/HEAD": {
+       "text": "ref: refs/heads/orchestrator/thread/7/PRRT_kwDOabc-798\n"
+      },
+      "repo/.git/worktrees/PRRT_kwDOabc-798/commondir": {
+       "text": "../..\n"
+      },
+      "thread-worktrees": {
+       "dir": true
+      },
+      "thread-worktrees/owner": {
+       "dir": true
+      },
+      "thread-worktrees/owner/name": {
+       "dir": true
+      },
+      "thread-worktrees/owner/name/7": {
+       "dir": true
+      },
+      "thread-worktrees/owner/name/7/PRRT_kwDOabc-798": {
+       "dir": true
+      },
+      "thread-worktrees/owner/name/7/PRRT_kwDOabc-798/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/PRRT_kwDOabc-798\n"
+      },
+      "thread-worktrees/owner/name/7/PRRT_kwDOabc-798/f": {
+       "text": "1\n"
+      },
+      "thread-worktrees/owner/name/7/PRRT_kwDOabc-798/g": {
+       "text": "one\ntwo\nthree\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'orchestrator/thread/7/PRRT_kwDOabc-798')\n",
+     "stdout": "HEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/repo\nHEAD 7e39035e431d1b7d75cde4b06d0a4d7c922f104f\nbranch refs/heads/main\n\nworktree <TMP>/feature\nHEAD 971346d94231895fcf62bd66bb9b198edde3cf67\nbranch refs/heads/feature\n\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"add\", \"g\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "add",
+      "g"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"commit\", \"-q\", \"-m\", \"fix\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "commit",
+      "-q",
+      "-m",
+      "fix"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/orchestrator/thread/7/PRRT_kwDOabc-798": {
+       "text": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"refs/heads/orchestrator/thread/7/PRRT_kwDOabc-798\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "refs/heads/orchestrator/thread/7/PRRT_kwDOabc-798"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"rev-parse\", \"--verify\", \"--quiet\", \"--end-of-options\", \"refs/heads/split/nowhere\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "refs/heads/split/nowhere"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/thread-worktrees/owner/name/7/PRRT_kwDOabc-798",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "75c86c543ca1885fefa292032eefefc1f3700856\n"
+    }
+   ]
+  },
   "tests/working_copies/test_contract.py::test_a_workspace_with_nothing_done_has_no_progress[git]": {
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"branch\", \"-D\", \"orchestrator/thread/7/PRRT_kwDOabc-798\"], null, null]": [
     {

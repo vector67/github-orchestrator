@@ -508,7 +508,7 @@ class _Editable:
         conversation = None if self._held is None else self._held.conversation
         if conversation is None:
             return False
-        return thread_workspace(self._pr.ports, conversation).has_branch(branch)
+        return thread_workspace(self._pr.ports, conversation).branch_head(branch) is not None
 
     def ask(self, question: str, context: str,
             options: Sequence[str] = ()) -> Conversation | Denied:

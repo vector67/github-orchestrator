@@ -629,6 +629,32 @@ def read_worktree_diff(key: ThreadKey, board: Serving) -> Diff:
     return diff_of(str(since), str(head), files, lambda path: None)
 
 
+@reads.get("/conversations/{key}/split-diff", response_model=Diff, tags=["conversations"],
+           operation_id="readSplitDiff",
+           summary="The new PR a split opens, from where its branch left its base to its head.",
+           responses={**ONE_THREAD, 500: DIFF_FAILED})
+def read_split_diff(key: ThreadKey, board: Serving) -> Diff:
+    """What the new PR's "Files changed" will show: `git diff <merge base> <branch>`, the
+    merge base of `origin/<base>` and the split's branch as the thread's worktree holds
+    it. Read fresh every time: a rework moves the branch, so there is no etag to keep it
+    by. `404` with `no-proposal` where the thread's proposal is no split.
+    """
+    conversation = _thread(board, key)
+    fix = conversation.fix
+    split = fix.split
+    if split is None:
+        raise Refusal(404, ErrorCode.NO_PROPOSAL, f"thread {key} proposes no split")
+    head = board.git.workspace(conversation.key, fix.base_sha).branch_head(split.branch)
+    diff = None if head is None else board.git.revisions.pr_diff(split.base, head)
+    if diff is None:
+        raise Refusal(500, ErrorCode.GIT_FAILED,
+                      board.git.no_worktree()
+                      or f"git could not diff {split.branch} against its merge base with "
+                         f"{split.base}")
+    return diff_of(str(diff.base), str(diff.head), diff.files,
+                   lambda path: board.git.revisions.blob(diff.head, path))
+
+
 @reads.get("/conversations/{key}/proposals/{proposal_id}",
            response_model=Proposal, tags=["proposals"],
            operation_id="readProposal", summary="One proposal.",

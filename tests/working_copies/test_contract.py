@@ -768,6 +768,12 @@ def test_a_fix_that_conflicts_leaves_the_pr_branch_where_it_was(world, pr_worktr
     assert pr_checkout.is_clean() is True
 
 
+def test_a_workspace_names_the_head_of_a_branch_it_holds_and_none_for_one_it_lacks(world, cut):
+    tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix"))
+
+    assert (cut.branch_head(THREAD_BRANCH), cut.branch_head("split/nowhere")) == (tip, None)
+
+
 def test_a_fix_lands_on_what_origin_gained_since_the_checkout_last_fetched(
         world, pr_worktree, cut):
     tip = Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix"))

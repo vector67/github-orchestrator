@@ -577,7 +577,7 @@ REVISIONS_MEMBERS = frozenset({
     "pr_base", "pr_diff", "pr_commits", "has_commit", "blob",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
-    "path", "base_sha", "ensure", "pick", "head_sha", "descends", "has_branch", "progress", "drop",
+    "path", "base_sha", "ensure", "pick", "head_sha", "descends", "branch_head", "progress", "drop",
     "reset", "diff_since",
 })
 

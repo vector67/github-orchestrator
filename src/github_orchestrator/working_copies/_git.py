@@ -345,8 +345,8 @@ class GitWorkingCopies:
     def _descends(self, path: str | None, onto: str, head: str) -> bool:
         return _threads.is_ancestor(path, onto, head)
 
-    def _has_branch(self, path: str | None, branch: str) -> bool:
-        return _threads.has_branch(path, branch)
+    def _branch_head(self, path: str | None, branch: str) -> str | None:
+        return _threads.branch_head(path, branch)
 
     def _progress_of(self, path: str | None, base_sha: str | None) -> str | None:
         return self._progress.line(path, base_sha)

@@ -765,6 +765,22 @@
     }
    }
   },
+  "/api/conversations/{key}/split-diff": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/Diff"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/worktree-diff": {
    "get": {
     "200": {

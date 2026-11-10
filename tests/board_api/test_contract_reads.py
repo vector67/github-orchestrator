@@ -940,6 +940,45 @@ def test_an_edit_of_a_part_that_is_neither_ticket_nor_reply_is_a_bad_request():
     assert answer.status_code == 400
 
 
+def _split_off_main(board):
+    copies = board.stage.working_copies
+    start_run(board.stage, board.threads)
+    removal = commit_fix(board.stage, KEY, {"src/foo.py": "removed\n"}, pr=THE_PR,
+                         message="Take the cache out")
+    fork = copies.fetched["main"]
+    head = copies.branches["split/cache"] = copies.publish(
+        "split/cache", fork, {"src/cache.py": "cached\n"}, "Cache the rates")
+    copies.fetched["main"] = copies.publish("main", fork, {"g": "moved on\n"}, "someone else's")
+    with board.threads.editing(KEY) as editable:
+        editable.split(removal, branch="split/cache", base="main", base_reason="it stands alone",
+                       reply="This moved to its own PR.")
+    drain(board)
+    return fork, head
+
+
+def test_the_new_prs_diff_runs_from_where_its_branch_left_its_base_to_its_head():
+    board = board_for()
+    card(board)
+    fork, head = _split_off_main(board)
+
+    answer = client_of(board).get(f"/api/conversations/{KEY}/split-diff")
+
+    assert answer.status_code == 200, answer.json()
+    assert (answer.json()["base"], answer.json()["head"]) == (fork, head)
+    assert [file["path"] for file in answer.json()["files"]] == ["src/cache.py"]
+
+
+def test_a_thread_with_no_split_has_no_new_prs_diff():
+    board = board_for()
+    card(board)
+    left(board)
+
+    answer = client_of(board).get(f"/api/conversations/{KEY}/split-diff")
+
+    assert answer.status_code == 404
+    assert answer.json()["errors"][0]["code"] == "no-proposal"
+
+
 def test_a_thread_no_agent_has_finished_has_no_proposals():
     answer = spoke().get(f"/api/conversations/{KEY}/proposals")
 
