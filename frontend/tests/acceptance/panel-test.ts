@@ -636,6 +636,49 @@ module('Acceptance | panel', function (hooks) {
     },
   );
 
+  module('a failed push stopped once its pick came off', function (hooks) {
+    const REPLY = 'Renamed it, and the docstring with it.';
+
+    hooks.beforeEach(function () {
+      const landed = board().threadIn('push failed', { key: KEY });
+      const [first, approve] = landed.operations;
+      const withdrawn = {
+        state: 'refused' as const,
+        reason_code: 'withdrawn' as const,
+        reason: 'withdrawn',
+        requested_at: '2026-09-12T11:00:00Z',
+        settled_at: '2026-09-12T11:02:00Z',
+      };
+      landed.operations = [first!, { ...approve!, ...withdrawn }];
+      board().conversations = [landed];
+      board().operations[KEY] = [
+        operation({ id: `${KEY}.1`, conversation: KEY }),
+        operation({
+          id: approve!.id,
+          conversation: KEY,
+          kind: 'approve',
+          reply: REPLY,
+          ...withdrawn,
+        }),
+      ];
+    });
+
+    test('reads as proposed again, not as a failed push', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.dom('[data-test-failure]').doesNotExist();
+      assert.dom('[data-test-decision="approve"]').doesNotIncludeText('Push it');
+    });
+
+    test('accepting it offers the reply that was never posted', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-decision="approve"]');
+
+      assert.dom('[data-test-dialog-body]').hasValue(REPLY);
+    });
+  });
+
   module('a rework the board would not take', function (hooks) {
     const NOTE = 'Narrow the rename to the public name.';
 

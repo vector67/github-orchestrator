@@ -462,6 +462,17 @@ def _sync_fix(operations: list[Operation], after: Conversation,
     operations[index] = synced
 
 
+def _withdraw_the_failed_landing(operations: list[Operation], before: Conversation,
+                                 after: Conversation) -> None:
+    if before.fix.state != LANDING or after.fix.state != PROPOSED:
+        return
+    for index in range(len(operations) - 1, -1, -1):
+        if operations[index].kind == OperationKind.APPROVE:
+            operations[index] = replace(operations[index], reason=after.fix.reason,
+                                        reason_code=ReasonCode.WITHDRAWN)
+            return
+
+
 def _refuse_the_shell(operations: list[Operation], reason: str, at: str | None) -> None:
     for index in range(len(operations) - 1, -1, -1):
         if operations[index].kind == OperationKind.OPEN_SHELL:
@@ -557,6 +568,8 @@ def accepted(before: Conversation, after: Conversation, command: Change,
         _requeue_the_approve(operations)
         _opened(after, operations, after.fix.run.kind, at)
     _sync_fix(operations, after, command, at)
+    if isinstance(command, Unpicked):
+        _withdraw_the_failed_landing(operations, before, after)
     if (before.fix.run.kind == OperationKind.RECONCILE
             and after.fix.run.kind != OperationKind.RECONCILE):
         _settle_the_reconcile(operations, command, after, at)

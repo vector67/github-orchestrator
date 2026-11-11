@@ -10,6 +10,7 @@ from github_orchestrator.conversation import (
     ErrorCode,
     OperationKind,
     OperationState,
+    ReasonCode,
 )
 from github_orchestrator.domain import Repo, Sha
 from github_orchestrator.github import CommentKind, ThreadComment
@@ -380,6 +381,34 @@ def test_a_stopped_landing_offers_back_the_reply_it_never_posted(settings):
 
     assert landing.stored().fix.is_proposed
     _offered_back(landing, "renamed it")
+
+
+def test_a_failed_push_stopped_once_its_pick_is_off_the_branch_reads_as_withdrawn(settings):
+    landing = Landing(settings)
+    base, _ = _push_refused(landing, "renamed it").fix.commits
+
+    with landing.threads.editing(landing.key) as editable:
+        editable.stop()
+    drain(landing.threads)
+
+    assert Sha(landing.working_copies.branches["main"]) == base
+    approval = landing.stored().latest_approval
+    assert approval.reason_code is ReasonCode.WITHDRAWN
+
+
+def test_a_failed_push_stopped_with_its_pick_stuck_on_the_branch_still_reads_as_a_failed_push(
+        settings):
+    landing = Landing(settings)
+    _push_refused(landing, "renamed it")
+    landing.working_copies.commit(WORKTREE, {"g.py": "later\n"}, "another fix on top")
+
+    with landing.threads.editing(landing.key) as editable:
+        editable.stop()
+    drain(landing.threads)
+
+    assert "still on the PR branch" in landing.stored().fix.reason
+    approval = landing.stored().latest_approval
+    assert approval.reason_code is ReasonCode.PUSH_FAILED
 
 
 def test_a_landing_sent_back_offers_its_unposted_reply_against_the_reworked_fix(settings):
