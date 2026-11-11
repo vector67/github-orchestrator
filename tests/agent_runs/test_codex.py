@@ -16,6 +16,14 @@ SUMMARY_MODEL = "gpt-test-mini"
 THREAD = "0f3c2a10-1111-4222-8333-944455556666"
 
 
+@pytest.fixture(autouse=True)
+def codex_home(tmp_path, monkeypatch):
+    home = tmp_path / "codex-home"
+    home.mkdir()
+    monkeypatch.setenv("CODEX_HOME", str(home))
+    return home
+
+
 @pytest.fixture
 def world():
     return FakeAgentRuns(FakePrProcesses())
@@ -184,6 +192,22 @@ def test_a_commit_check_treats_the_checkout_as_an_untrusted_project(
     assert asked.argv == ["codex", "exec", "--ephemeral", "-s", "read-only", "-m", MODEL,
                           *_untrusted(tmp_path), "-"]
     assert asked.cwd == str(tmp_path)
+
+
+def test_a_commit_check_turns_off_every_mcp_server_the_user_configured(
+        runs, world, codex, codex_home, tmp_path):
+    (codex_home / "config.toml").write_text(
+        '[mcp_servers.notes]\ncommand = "notes"\n\n[mcp_servers."acme.tracker"]\nurl = "x"\n')
+    world.answer("addressed || it renames the helper")
+
+    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+                      sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
+                      answers={"addressed": "yes"}, done=lambda word, reasoning: None)
+    assert runs.drain_summaries(10)
+
+    [asked] = codex.asked
+    assert asked.argv[-3:] == [
+        "-c", 'mcp_servers={"notes"={enabled=false},"acme.tracker"={enabled=false}}', "-"]
 
 
 def test_a_run_never_sees_the_platform_api_key(runs, codex, tmp_path, monkeypatch):

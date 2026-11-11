@@ -1,5 +1,6 @@
 import json
 import os
+import tomllib
 from pathlib import Path
 from typing import Protocol
 
@@ -64,6 +65,17 @@ def _untrusted_project(cwd: str) -> list[str]:
     return argv
 
 
+def _user_mcp_servers_off() -> list[str]:
+    config = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex") / "config.toml"
+    if not config.is_file():
+        return []
+    servers = tomllib.loads(config.read_text()).get("mcp_servers", {})
+    if not servers:
+        return []
+    off = ",".join(f"{json.dumps(name)}={{enabled=false}}" for name in servers)
+    return ["-c", f"mcp_servers={{{off}}}"]
+
+
 class CodexCommandLines:
     def headless(self, model: str, *, carrying_on: bool, thread: str | None,
                  project_settings: bool, cwd: str) -> list[str]:
@@ -80,7 +92,7 @@ class CodexCommandLines:
 
     def read_only(self, model: str, cwd: str) -> list[str]:
         return ["exec", "--ephemeral", "-s", "read-only", "-m", model,
-                *_untrusted_project(cwd), "-"]
+                *_untrusted_project(cwd), *_user_mcp_servers_off(), "-"]
 
     def rebase_session(self) -> list[str]:
         return ["$" + REBASE_ON_MAIN.removeprefix("/")]
