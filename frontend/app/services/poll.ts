@@ -304,11 +304,11 @@ export default class PollService extends Service {
   }
 
   held(): Promise<void> {
-    if (this.store.wall.length) return Promise.resolve();
+    const kept = this.store.wall.length > 0;
     this.walling ??= this.refreshHub().finally(() => {
       this.walling = null;
     });
-    return this.walling;
+    return kept ? Promise.resolve() : this.walling;
   }
 
   follow(): Promise<void> {

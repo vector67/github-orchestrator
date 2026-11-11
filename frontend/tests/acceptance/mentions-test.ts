@@ -16,6 +16,7 @@ import {
   setupFakeBoard,
   thread,
   threadRow,
+  WALL_GROUPS,
 } from 'frontend/tests/helpers/fake-board';
 import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
 
@@ -368,6 +369,30 @@ module('Acceptance | mentions', function (hooks) {
     await visit('/pr/o/r/7');
 
     assert.dom('[data-top-bar] [data-test-mentions-count]').hasText('1');
+  });
+
+  test('a pull request’s page opened on a wall kept from an earlier visit counts the mentions at once, as the hub does', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1' })];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k2', comment_id: 2 }),
+    ];
+    localStorage.setItem(
+      'hub-pull-requests',
+      JSON.stringify({
+        watching: ['o/r'],
+        groups: WALL_GROUPS,
+        pull_requests: [heldPr()],
+      }),
+    );
+
+    try {
+      await visit('/pr/o/r/7/conversations/k1');
+
+      assert.dom('[data-top-bar] [data-test-mentions-count]').hasText('1');
+    } finally {
+      localStorage.removeItem('hub-pull-requests');
+    }
   });
 
   test('a mention leaves the counter once the board holds your reply after it, before the next search', async function (assert) {
