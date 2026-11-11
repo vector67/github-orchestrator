@@ -22,10 +22,14 @@ class CountedSearches:
         self.searches = 0
         self._failure = failure
         self.unbuilt_cards: list = []
+        self.opened_prs: list = []
         self.settled: list = []
 
     def unbuilt(self):
         return self.unbuilt_cards
+
+    def opened(self):
+        return self.opened_prs
 
     def settle_deferrals(self, prs) -> None:
         self.settled.append(dict(prs))
@@ -102,6 +106,33 @@ def test_the_mention_thread_of_a_pr_the_inbox_repairs_is_queued_to_become_a_card
     [queued] = [event for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
                 if event.kind == "thread-activity"]
     assert [thread.key for thread in queued.threads] == ["IC_1"]
+
+
+def test_a_pr_opened_for_a_mention_is_tracked_and_its_mention_queued_to_become_a_card(settings):
+    inbox = CountedSearches()
+    inbox.opened_prs = [UNBUILT]
+
+    watcher_over(settings, github=_off_the_search(settings), mentions_inbox=inbox).run_cycle()
+
+    [queued] = [event for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
+                if event.kind == "thread-activity"]
+    assert ([thread.key for thread in queued.threads],
+            disk_change_detection(settings.state_dir).facts(UNBUILT).mentioned) == (["IC_1"], True)
+
+
+def test_a_merged_pr_opened_for_a_mention_is_kept_and_not_closed(settings, capsys):
+    polled_on_disk(settings.state_dir, UNBUILT, seen(settings.config.gh_account))
+    github = _off_the_search(settings)
+    github.prs[UNBUILT].status = "MERGED"
+    inbox = CountedSearches()
+    inbox.opened_prs = [UNBUILT]
+
+    watcher_over(settings, github=github, mentions_inbox=inbox).run_cycle()
+
+    assert "0 torn down" in capsys.readouterr().out
+    assert disk_change_detection(settings.state_dir).closing(UNBUILT) is False
+    assert [event.kind for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
+            if event.kind == "pr-closed"] == []
 
 
 def test_each_cycle_hands_the_inbox_what_it_polled_of_each_pr_to_settle_deferrals(settings):

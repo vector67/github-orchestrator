@@ -582,6 +582,7 @@ export function outstandingMention(
     on_board: true,
     building: false,
     deferred: null,
+    ended: null,
     ...over,
   };
 }
@@ -816,7 +817,7 @@ export class FakeBoard {
   setup = new FakeSetup();
   held: HeldPullRequest[] = [heldPr()];
   ledger: RunLedger = runLedger();
-  mentions: Mentions = { searched_at: null, mentions: [] };
+  mentions: Mentions = { searched_at: null, mentions: [], opened: [] };
   dismissedMentions: DismissMentionRequest[] = [];
   deferredMentions: DeferMentionRequest[] = [];
   undeferredMentions: DismissMentionRequest[] = [];

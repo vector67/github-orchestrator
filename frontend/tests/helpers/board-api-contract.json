@@ -1046,6 +1046,14 @@
     "304": null
    }
   },
+  "/api/mentions:add-to-wall": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/mentions:defer": {
    "post": {
     "204": null,
@@ -1055,6 +1063,14 @@
    }
   },
   "/api/mentions:dismiss": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/mentions:open": {
    "post": {
     "204": null,
     "400": {
@@ -1783,6 +1799,22 @@
   }
  },
  "schemas": {
+  "AddToWallRequest": {
+   "properties": {
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number"
+   ],
+   "type": "object"
+  },
   "AgentActivity": {
    "properties": {
     "elapsed_seconds": {
@@ -5179,6 +5211,12 @@
      },
      "type": "array"
     },
+    "opened": {
+     "items": {
+      "$ref": "#/components/schemas/OpenedPr"
+     },
+     "type": "array"
+    },
     "searched_at": {
      "anyOf": [
       {
@@ -5192,7 +5230,8 @@
    },
    "required": [
     "searched_at",
-    "mentions"
+    "mentions",
+    "opened"
    ],
    "type": "object"
   },
@@ -5348,6 +5387,36 @@
     "reason_code",
     "requested_at",
     "settled_at"
+   ],
+   "type": "object"
+  },
+  "OpenedPr": {
+   "properties": {
+    "comment_id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "number": {
+     "type": "integer"
+    },
+    "outside_wall": {
+     "type": "boolean"
+    },
+    "repo": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "comment_id",
+    "outside_wall"
    ],
    "type": "object"
   },
@@ -5776,6 +5845,16 @@
       }
      ]
     },
+    "ended": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/PrEnded"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "kind": {
      "type": "string"
     },
@@ -5814,7 +5893,8 @@
     "url",
     "on_board",
     "building",
-    "deferred"
+    "deferred",
+    "ended"
    ],
    "type": "object"
   },
@@ -6104,6 +6184,13 @@
     "github_node_id"
    ],
    "type": "object"
+  },
+  "PrEnded": {
+   "enum": [
+    "merged",
+    "closed"
+   ],
+   "type": "string"
   },
   "PrFacts": {
    "properties": {

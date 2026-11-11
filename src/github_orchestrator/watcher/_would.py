@@ -95,6 +95,9 @@ class WouldSearchMentions:
     def unbuilt(self) -> list[Pr]:
         return []
 
+    def opened(self) -> list[Pr]:
+        return []
+
     def settle_deferrals(self, prs: Mapping[Pr, PrNow]) -> None:
         pass
 

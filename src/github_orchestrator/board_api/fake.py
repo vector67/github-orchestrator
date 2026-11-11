@@ -174,12 +174,20 @@ class FakeMentionsList:
     dismissed: list[tuple[Pr, int | None]] = field(default_factory=list)
     deferred: list[tuple[Pr, int | None, MentionDeferral]] = field(default_factory=list)
     undeferred: list[tuple[Pr, int | None]] = field(default_factory=list)
+    opened_for: list[tuple[Pr, int | None]] = field(default_factory=list)
+    on_the_wall: list[Pr] = field(default_factory=list)
 
     def listed(self) -> MentionsListing:
         return self.now
 
     def dismiss(self, pr: Pr, comment_id: int | None) -> None:
         self.dismissed.append((pr, comment_id))
+
+    def open(self, pr: Pr, comment_id: int | None) -> None:
+        self.opened_for.append((pr, comment_id))
+
+    def add_to_wall(self, pr: Pr) -> None:
+        self.on_the_wall.append(pr)
 
     def defer(self, pr: Pr, comment_id: int | None, deferral: MentionDeferral) -> None:
         self.deferred.append((pr, comment_id, deferral))

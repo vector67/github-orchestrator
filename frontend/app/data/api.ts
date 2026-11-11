@@ -1,3 +1,8 @@
+export interface AddToWallRequest {
+  repo: string;
+  number: number;
+}
+
 export interface AgentActivity {
   name: string;
   enabled: boolean;
@@ -602,6 +607,7 @@ export interface MentionableList {
 export interface Mentions {
   searched_at: string | null;
   mentions: OutstandingMention[];
+  opened: OpenedPr[];
 }
 
 export type MergeState = 'clean' | 'conflicts' | 'behind' | 'blocked' | 'checks-failing' | 'unknown' | 'other';
@@ -632,6 +638,13 @@ export interface OpenOperation {
   reason_code: ReasonCode | null;
   requested_at: string | null;
   settled_at: string | null;
+}
+
+export interface OpenedPr {
+  repo: string;
+  number: number;
+  comment_id: number | null;
+  outside_wall: boolean;
 }
 
 export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'reconcile' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'edit-part' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
@@ -681,6 +694,7 @@ export interface OutstandingMention {
   on_board: boolean;
   building: boolean;
   deferred: MentionDeferred | null;
+  ended: PrEnded | null;
 }
 
 export interface Person {
@@ -730,6 +744,8 @@ export interface PostedOperation {
   posted_comment: number | null;
   github_node_id: string | null;
 }
+
+export type PrEnded = 'merged' | 'closed';
 
 export interface PrFacts {
   polled_at: string | null;

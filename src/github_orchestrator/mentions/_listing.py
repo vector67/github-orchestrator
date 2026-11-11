@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -14,6 +14,8 @@ from github_orchestrator.board_api.interface import (
     ListedMention,
     MentionDeferral,
     MentionsListing,
+    OpenedForMention,
+    PrEnded,
     PrMilestone,
 )
 from github_orchestrator.domain import Mention, Pr, Repo, UtcClock
@@ -23,10 +25,11 @@ log = logging.getLogger(__name__)
 
 
 def listed(pr: Pr, mention: Mention, *, url: str, on_board: bool,
-           building: bool) -> ListedMention:
+           building: bool, ended: PrEnded | None) -> ListedMention:
     return ListedMention(pr=pr, thread=mention.thread, comment_id=mention.comment_id,
                          kind=mention.kind, author=mention.author, at=mention.at,
-                         body=mention.body, url=url, on_board=on_board, building=building)
+                         body=mention.body, url=url, on_board=on_board, building=building,
+                         ended=ended)
 
 
 def started_before(path: Path) -> dict[str, str] | None:
@@ -129,6 +132,67 @@ def _deferral(entry: Mapping[str, Any]) -> MentionDeferral:
         head_sha=entry.get("head_sha"))
 
 
+@dataclass(frozen=True)
+class _Opening:
+    pr: Pr
+    comment_id: int | None
+    on_wall: bool
+
+
+def _openings_at(path: Path) -> Path:
+    return path.with_name(f"{path.stem}-opened{path.suffix}")
+
+
+def _openings(path: Path) -> dict[Pr, _Opening]:
+    at = _openings_at(path)
+    try:
+        stored = json.loads(at.read_text())
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as damaged:
+        log.warning("%s will not read, so no pull request is open for a mention: %s", at, damaged)
+        return {}
+    try:
+        openings = [_opening(entry) for entry in stored]
+    except (KeyError, TypeError, ValueError) as damaged:
+        log.warning("%s is damaged, so no pull request is open for a mention: %r", at, damaged)
+        return {}
+    return {opening.pr: opening for opening in openings}
+
+
+def _opening(entry: Mapping[str, Any]) -> _Opening:
+    if type(entry["number"]) is not int or type(entry["on_wall"]) is not bool:
+        raise TypeError(f"the opening {entry!r} is not a number and a flag")
+    return _Opening(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
+                    comment_id=entry["comment_id"], on_wall=entry["on_wall"])
+
+
+def _change_openings(path: Path, change: Callable[[dict[Pr, _Opening]], None]) -> None:
+    at = _openings_at(path)
+    at.parent.mkdir(parents=True, exist_ok=True)
+    with at.with_name(f"{at.name}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        held = _openings(path)
+        change(held)
+        writing = at.with_name(f"{at.name}.writing")
+        writing.write_text(json.dumps([
+            {"repo": str(opening.pr.repo), "number": opening.pr.number,
+             "comment_id": opening.comment_id, "on_wall": opening.on_wall}
+            for opening in held.values()]))
+        os.replace(writing, at)
+
+
+def _opened(openings: Mapping[Pr, _Opening],
+            mentions: Sequence[ListedMention]) -> tuple[OpenedForMention, ...]:
+    return tuple(
+        OpenedForMention(pr=opening.pr, comment_id=opening.comment_id,
+                         outside_wall=not opening.on_wall and any(
+                             mention.ended is not None for mention in mentions
+                             if mention.pr == opening.pr))
+        for opening in openings.values()
+        if opening.on_wall or any(mention.pr == opening.pr for mention in mentions))
+
+
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
                   mentions: Sequence[ListedMention], building: Mapping[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -165,6 +229,21 @@ class ListingFile:
                                                  | {dismissal(pr, comment_id)})))
             os.replace(writing, at)
 
+    def open(self, pr: Pr, comment_id: int | None) -> None:
+        def opening(held: dict[Pr, _Opening]) -> None:
+            before = held.get(pr)
+            held[pr] = _Opening(pr=pr, comment_id=comment_id,
+                                on_wall=before is not None and before.on_wall)
+
+        _change_openings(self._path, opening)
+
+    def add_to_wall(self, pr: Pr) -> None:
+        def walled(held: dict[Pr, _Opening]) -> None:
+            if pr in held:
+                held[pr] = replace(held[pr], on_wall=True)
+
+        _change_openings(self._path, walled)
+
     def listed(self) -> MentionsListing:
         try:
             document = json.loads(self._path.read_text())
@@ -177,11 +256,13 @@ class ListingFile:
         held = deferrals(self._path)
         now = self._clock()
         try:
-            return MentionsListing(searched_at=document["searched_at"], mentions=tuple(
+            mentions = tuple(
                 replace(mention, deferred=_holding(held.get(
                     dismissal(mention.pr, mention.comment_id)), now))
                 for mention in map(_listed_mention, document["mentions"])
-                if dismissal(mention.pr, mention.comment_id) not in gone))
+                if dismissal(mention.pr, mention.comment_id) not in gone)
+            return MentionsListing(searched_at=document["searched_at"], mentions=mentions,
+                                   opened=_opened(_openings(self._path), mentions))
         except (KeyError, TypeError, ValueError) as damaged:
             log.warning("%s is damaged, so no mentions are listed: %r", self._path, damaged)
             return NO_MENTIONS_LISTED
@@ -195,14 +276,17 @@ def _entry(mention: ListedMention) -> dict[str, Any]:
     return {"repo": str(mention.pr.repo), "number": mention.pr.number,
             "thread": mention.thread, "comment_id": mention.comment_id, "kind": mention.kind,
             "author": mention.author, "at": mention.at, "body": mention.body,
-            "url": mention.url, "on_board": mention.on_board, "building": mention.building}
+            "url": mention.url, "on_board": mention.on_board, "building": mention.building,
+            "ended": mention.ended}
 
 
 def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
     if type(entry["number"]) is not int:
         raise TypeError(f"the PR number {entry['number']!r} is not a number")
+    ended = entry.get("ended")
     return ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
                          thread=entry["thread"], comment_id=entry["comment_id"],
                          kind=entry["kind"], author=entry["author"], at=entry["at"],
                          body=entry["body"], url=entry["url"], on_board=entry["on_board"],
-                         building=entry["building"])
+                         building=entry["building"],
+                         ended=None if ended is None else PrEnded(ended))

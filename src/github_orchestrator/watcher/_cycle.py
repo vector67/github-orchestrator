@@ -252,10 +252,11 @@ class PollingWatcher:
 
     def _cards_to_build(self) -> list[Pr]:
         try:
-            return [pr for pr in self._mentions_inbox.unbuilt() if pr.repo in self._config.repos]
+            wanted = self._mentions_inbox.unbuilt() + self._mentions_inbox.opened()
         except Exception:
             log.exception("Could not read which mentions still need a card")
             return []
+        return [pr for pr in dict.fromkeys(wanted) if pr.repo in self._config.repos]
 
     def _tracked_in_watched_repos(self) -> list[Pr]:
         return [pr for pr in self._change_detection.tracked() if pr.repo in self._config.repos]

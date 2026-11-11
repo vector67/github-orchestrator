@@ -15,6 +15,7 @@ from github_orchestrator.board_api.interface import (
     CloneState,
     ManagerStanding,
     NoticeCode,
+    PrEnded,
     PrMilestone,
     ResetRefusalCode,
     WallGroup,
@@ -2464,6 +2465,9 @@ class OutstandingMention(BaseModel):
                                        "within two hours, or the pull request is closed.")
     deferred: MentionDeferred | None = Field(description="Until when or what you deferred "
                                                          "it; null while it counts.")
+    ended: PrEnded | None = Field(description="`merged` or `closed` when the pull request "
+                                              "had ended at the search; null while open or "
+                                              "where GitHub did not say.")
 
 
 class DismissMentionRequest(BaseModel):
@@ -2474,12 +2478,33 @@ class DismissMentionRequest(BaseModel):
                                                "null for the pull request's description.")
 
 
+class AddToWallRequest(BaseModel):
+    repo: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+                      description="The pull request's repository, as owner/name.")
+    number: int
+
+
+class OpenedPr(BaseModel):
+    """A pull request the watcher holds because you opened one of its mentions in context."""
+
+    repo: str = Field(description="The pull request's repository, as owner/name.")
+    number: int
+    comment_id: int | None = Field(description="The mention it was opened for; null for the "
+                                               "pull request's description.")
+    outside_wall: bool = Field(description="It ended and you have not added it to the Wall, "
+                                           "so the Wall leaves it out though its page is "
+                                           "served.")
+
+
 class Mentions(BaseModel):
     searched_at: str | None = Field(description="When the watcher last searched GitHub for "
                                                 "mentions; null before its first search.")
     mentions: list[OutstandingMention] = Field(description="Every mention found by that "
                                                            "search that its card was not "
                                                            "closed on the board after.")
+    opened: list[OpenedPr] = Field(description="Every pull request held for a mention you "
+                                               "opened in context and still outstanding, or "
+                                               "added to the Wall.")
 
 
 class SessionInTheWay(BaseModel):

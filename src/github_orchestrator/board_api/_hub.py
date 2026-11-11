@@ -19,6 +19,7 @@ from github_orchestrator.board_api._app import (
     report_client_error,
 )
 from github_orchestrator.board_api._contract import (
+    AddToWallRequest,
     AwaitedPr,
     DeferMentionRequest,
     DismissMentionRequest,
@@ -32,6 +33,7 @@ from github_orchestrator.board_api._contract import (
     MentionDeferred,
     Mentions,
     NewestRelease,
+    OpenedPr,
     OutstandingMention,
     RunLedger,
     SessionInTheWay,
@@ -150,7 +152,9 @@ def list_pull_requests(request: Request, desk: Serving) -> Response:
     held = desk.told.held()
     if not held.told:
         raise _unheld(desk)
-    return etag.answered(request, desk.wall.read(held))
+    outside = {opened.pr for opened in desk.mentions.listed().opened if opened.outside_wall}
+    return etag.answered(request, desk.wall.read(dataclasses.replace(held, managers={
+        pr: manager for pr, manager in held.managers.items() if pr not in outside})))
 
 
 def _unheld(desk: Desk) -> Refusal:
@@ -216,8 +220,11 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            body=mention.body, url=mention.url,
                            on_board=mention.on_board and mention.pr in held,
                            building=mention.building,
-                           deferred=_deferred(mention.deferred))
-        for mention in listing.mentions]))
+                           deferred=_deferred(mention.deferred), ended=mention.ended)
+        for mention in listing.mentions], opened=[
+        OpenedPr(repo=str(opened.pr.repo), number=opened.pr.number,
+                 comment_id=opened.comment_id, outside_wall=opened.outside_wall)
+        for opened in listing.opened]))
 
 
 def _deferred(deferral: MentionDeferral | None) -> MentionDeferred | None:
@@ -257,6 +264,24 @@ def dismiss_mention(body: DismissMentionRequest, desk: Serving) -> None:
     it too, as before.
     """
     desk.mentions.dismiss(Pr(Repo.parse(body.repo), body.number), body.comment_id)
+
+
+@writes.post("/mentions:open", status_code=204, operation_id="openMention",
+             summary="Hold a mention's pull request so its page and card are built.")
+def open_mention(body: DismissMentionRequest, desk: Serving) -> None:
+    """The counter's See in context for a mention with no card. The watcher
+    holds the pull request from its next cycle, whatever its state, and builds
+    its cards as for any pull request it tracks. One that has ended stays off
+    the Wall until added to it, and is let go once none of its mentions is
+    outstanding.
+    """
+    desk.mentions.open(Pr(Repo.parse(body.repo), body.number), body.comment_id)
+
+
+@writes.post("/mentions:add-to-wall", status_code=204, operation_id="addMentionedPrToWall",
+             summary="Put a pull request opened for a mention on the Wall, and keep it held.")
+def add_to_wall(body: AddToWallRequest, desk: Serving) -> None:
+    desk.mentions.add_to_wall(Pr(Repo.parse(body.repo), body.number))
 
 
 def _migration_read(desk: Desk, held: list[FolderInUse]) -> ThreadNamesMigration:

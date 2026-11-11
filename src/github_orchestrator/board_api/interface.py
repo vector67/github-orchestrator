@@ -308,6 +308,11 @@ class MentionDeferral:
     head_sha: str | None = None
 
 
+class PrEnded(StrEnum):
+    MERGED = "merged"
+    CLOSED = "closed"
+
+
 @dataclass(frozen=True)
 class ListedMention:
     pr: Pr
@@ -321,12 +326,21 @@ class ListedMention:
     on_board: bool
     building: bool
     deferred: MentionDeferral | None = None
+    ended: PrEnded | None = None
+
+
+@dataclass(frozen=True)
+class OpenedForMention:
+    pr: Pr
+    comment_id: int | None
+    outside_wall: bool
 
 
 @dataclass(frozen=True)
 class MentionsListing:
     searched_at: str | None
     mentions: tuple[ListedMention, ...]
+    opened: tuple[OpenedForMention, ...] = ()
 
 
 NO_MENTIONS_LISTED = MentionsListing(searched_at=None, mentions=())
@@ -336,6 +350,10 @@ class MentionsList(Protocol):
     def listed(self) -> MentionsListing: ...
 
     def dismiss(self, pr: Pr, comment_id: int | None) -> None: ...
+
+    def open(self, pr: Pr, comment_id: int | None) -> None: ...
+
+    def add_to_wall(self, pr: Pr) -> None: ...
 
     def defer(self, pr: Pr, comment_id: int | None, deferral: MentionDeferral) -> None: ...
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from github_orchestrator.board_api.interface import (
     ListedMention,
     MentionDeferral,
+    PrEnded,
     PrMilestone,
 )
 from github_orchestrator.conversation import (
@@ -41,6 +42,9 @@ log = logging.getLogger(__name__)
 SEARCH_EVERY = timedelta(minutes=30)
 CARD_BUILT_WITHIN = timedelta(hours=2)
 KIND_PR_BODY = "pr-body"
+OPEN = "OPEN"
+UNKNOWN = "UNKNOWN"
+ENDINGS = {"MERGED": PrEnded.MERGED, "CLOSED": PrEnded.CLOSED}
 
 
 class _Unread(Exception):
@@ -68,6 +72,9 @@ class GitHubMentionsInbox:
     def unbuilt(self) -> list[Pr]:
         return list(dict.fromkeys(mention.pr for mention in self._listing().listed().mentions
                                   if mention.building))
+
+    def opened(self) -> list[Pr]:
+        return [opened.pr for opened in self._listing().listed().opened]
 
     def settle_deferrals(self, prs: Mapping[Pr, PrNow]) -> None:
         if not deferrals(self._path):
@@ -172,33 +179,37 @@ class GitHubMentionsInbox:
         dated = [replace(mention, at=_latest(mention.at or state.created_at, mention.edited_at))
                  for mention in found]
         outstanding = []
+        github_state: str | None = None
         for mention in dated:
             if mention.answered or dismissal(pr, mention.comment_id) in self._dismissed:
                 continue
             card = _card(manager, mention)
             if mention.at is not None and _moment(mention.at) >= start and not _closed(card,
                                                                                          mention):
+                github_state = github_state or self._state(pr)
                 outstanding.append(listed(pr, mention, url=self._url(pr, mention),
                                           on_board=card is not None,
                                           building=card is None and self._still_building(
-                                              pr, mention, began)))
+                                              pr, mention, began, github_state),
+                                          ended=ENDINGS.get(github_state)))
         return outstanding
 
-    def _still_building(self, pr: Pr, mention: Mention, began: datetime) -> bool:
-        if not self._open(pr):
+    def _still_building(self, pr: Pr, mention: Mention, began: datetime,
+                        github_state: str) -> bool:
+        if github_state != OPEN:
             return False
         key = f"{pr}:{mention.thread}:{mention.comment_id}"
         since = self._building_before.get(key, began.isoformat())
         self._building[key] = since
         return began - _moment(since) < CARD_BUILT_WITHIN
 
-    def _open(self, pr: Pr) -> bool:
+    def _state(self, pr: Pr) -> str:
         try:
             relevance = self._pull_requests.relevance(pr)
         except Exception:
             log.exception("whether %s is open will not read; its mention cards stay building", pr)
-            return True
-        return relevance is not None and relevance.is_open
+            return OPEN
+        return UNKNOWN if relevance is None or relevance.state is None else relevance.state
 
     def _url(self, pr: Pr, mention: Mention) -> str:
         if mention.comment_id is None or mention.kind == KIND_PR_BODY:

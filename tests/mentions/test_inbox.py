@@ -13,6 +13,8 @@ from github_orchestrator.board_api.interface import (
     MentionDeferral,
     MentionsList,
     MentionsListing,
+    OpenedForMention,
+    PrEnded,
     PrMilestone,
 )
 from github_orchestrator.change_detection import Poll
@@ -260,7 +262,7 @@ def test_an_unanswered_mention_on_a_merged_pr_is_listed(tmp_path):
         mentions=(ListedMention(pr=THE_PR, thread="IC_1", comment_id=1, kind="issue",
                                 author="anna", at="2026-10-22T10:00:00Z", body="@octocat ping",
                                 url="https://github.com/acme/widgets/pull/7#issuecomment-1",
-                                on_board=False, building=False),))
+                                on_board=False, building=False, ended=PrEnded.MERGED),))
     assert here.container.get(MentionsInbox).unbuilt() == []
 
 
@@ -779,3 +781,99 @@ def test_a_deferral_for_a_time_leaves_the_disk_once_it_lapses(tmp_path):
     _settled(here)
 
     assert json.loads((here.settings.data_dir / "mentions-deferred.json").read_text()) == {}
+
+
+@pytest.mark.parametrize(("status", "ended"), [("OPEN", None), ("MERGED", PrEnded.MERGED),
+                                               ("CLOSED", PrEnded.CLOSED)])
+def test_a_listed_mention_says_whether_its_pr_merged_or_closed(tmp_path, status, ended):
+    here = _here(tmp_path)
+    _cardless(here, status=status)
+
+    here.container.get(MentionsInbox).search_if_due()
+
+    assert [mention.ended for mention in here.container.get(MentionsList).listed().mentions] == [
+        ended]
+
+
+def _opened_now(here):
+    return here.container.get(MentionsList).listed().opened
+
+
+def _open(here, status="MERGED"):
+    _cardless(here, status=status)
+    here.container.get(MentionsInbox).search_if_due()
+    here.container.get(MentionsList).open(THE_PR, 1)
+
+
+def test_a_mention_opened_in_context_holds_its_pr(tmp_path):
+    here = _here(tmp_path)
+
+    _open(here)
+
+    assert here.container.get(MentionsInbox).opened() == [THE_PR]
+
+
+def test_a_pr_that_ended_opened_for_a_mention_is_outside_the_wall(tmp_path):
+    here = _here(tmp_path)
+
+    _open(here)
+
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=True),)
+
+
+def test_an_open_pr_opened_for_a_mention_stays_inside_the_wall(tmp_path):
+    here = _here(tmp_path)
+
+    _open(here, status="OPEN")
+
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False),)
+
+
+def test_a_pr_added_to_the_wall_is_inside_it(tmp_path):
+    here = _here(tmp_path)
+    _open(here)
+
+    here.container.get(MentionsList).add_to_wall(THE_PR)
+
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False),)
+
+
+def test_a_pr_opened_for_a_mention_is_let_go_once_none_of_its_mentions_is_outstanding(tmp_path):
+    here = _here(tmp_path)
+    _open(here)
+
+    _dismissed(here, 1)
+
+    assert (_opened_now(here), here.container.get(MentionsInbox).opened()) == ((), [])
+
+
+def test_a_pr_added_to_the_wall_stays_held_once_its_mentions_are_gone(tmp_path):
+    here = _here(tmp_path)
+    _open(here)
+    here.container.get(MentionsList).add_to_wall(THE_PR)
+
+    _dismissed(here, 1)
+
+    assert here.container.get(MentionsInbox).opened() == [THE_PR]
+
+
+def test_adding_a_pr_no_mention_opened_to_the_wall_holds_nothing(tmp_path):
+    here = _here(tmp_path)
+    _cardless(here)
+    here.container.get(MentionsInbox).search_if_due()
+
+    here.container.get(MentionsList).add_to_wall(THE_PR)
+
+    assert here.container.get(MentionsInbox).opened() == []
+
+
+@pytest.mark.parametrize("on_disk", ["", "{not json", "[]", json.dumps({str(THE_PR): "x"}),
+                                     json.dumps({"nonsense": {"comment_id": 1,
+                                                              "on_wall": False}})])
+def test_a_damaged_record_of_opened_prs_opens_none(tmp_path, on_disk):
+    here = _here(tmp_path)
+    _cardless(here)
+    here.container.get(MentionsInbox).search_if_due()
+    (here.settings.data_dir / "mentions-opened.json").write_text(on_disk)
+
+    assert (_opened_now(here), here.container.get(MentionsInbox).opened()) == ((), [])
