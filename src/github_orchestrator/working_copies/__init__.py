@@ -1,4 +1,5 @@
 from github_orchestrator.working_copies.interface import (
+    Diverged,
     FileDiff,
     PrCheckout,
     ThreadWorkspace,
@@ -7,6 +8,7 @@ from github_orchestrator.working_copies.interface import (
 )
 
 __all__ = [
+    "Diverged",
     "FileDiff",
     "PrCheckout",
     "ThreadWorkspace",

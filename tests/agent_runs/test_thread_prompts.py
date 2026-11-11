@@ -90,6 +90,44 @@ def _opening(runs, claude, worktree, **fields):
         thread_url=THREAD_URL, **fields)))
 
 
+DIVERGED = ("origin's PR branch was rewritten: it is at aaaaaaaaaaaa, and the PR worktree at "
+            "cccccccccccc holds commits origin has no equivalent of (dddddddddddd), so "
+            "nothing was pushed")
+
+
+def _reconciling(runs, claude, worktree, **fields):
+    return _ran(runs, claude, runs.reconcile(_fix(
+        worktree, conflict=DIVERGED, pr_branch="fix-the-widget", pr_url=PR_URL,
+        thread_url=THREAD_URL, **fields)))
+
+
+def test_the_reconcile_prompt_reports_through_commands_that_name_the_flags_the_cli_requires(
+        runs, claude, worktree):
+    found = invocations(_reconciling(runs, claude, worktree))
+
+    assert sorted(verb for verb, _ in found) == ["fail", "list", "reconciled"]
+    for verb, flags in found:
+        assert_the_cli_takes(verb, flags)
+
+
+def test_the_reconcile_prompt_says_how_the_worktree_diverged_and_where_to_look_for_why(
+        runs, claude, worktree):
+    prompt = _reconciling(runs, claude, worktree)
+
+    assert DIVERGED in prompt
+    assert "HeadRefForcePushedEvent" in prompt
+    assert "projects" in prompt and ".jsonl" in prompt
+    assert PR_URL in prompt
+
+
+def test_the_reconcile_prompt_names_the_landed_fix_it_must_carry_onto_origin(
+        runs, claude, worktree):
+    prompt = _reconciling(runs, claude, worktree, landed_sha="e" * 40)
+
+    assert "e" * 40 in prompt
+    assert "--landed-sha" in prompt
+
+
 def _every(runs, claude, worktree):
     return [_fixed(runs, claude, worktree), _rebased(runs, claude, worktree),
             _reworked(runs, claude, worktree, note="do it again")]

@@ -87,6 +87,7 @@ const VERDICTS: Partial<Record<Phase, string>> = {
   failed: 'failed',
   stopped: 'stopped',
   'push failed': 'push failed',
+  'landing failed': 'did not land',
   'reply failed': 'reply failed',
   'filing failed': 'filing failed',
 };

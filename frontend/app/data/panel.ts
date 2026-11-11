@@ -338,6 +338,7 @@ const FIX_PHRASES: Partial<Record<Phase, string>> = {
   landing: 'Accepted · landing',
   landed: 'Accepted · pushed',
   'push failed': 'Accepted · the push failed',
+  'landing failed': 'Accepted · it did not land',
   'reply failed': 'Accepted · pushed, the reply failed',
   'filing failed': 'Accepted · the filing failed',
   declined: 'Agent declined',
@@ -380,6 +381,13 @@ function withoutCode(proposal: Proposal | undefined): boolean {
 const FAILURES: Partial<
   Record<Phase, { headline: string; output_label: string; standing: string }>
 > = {
+  'landing failed': {
+    headline: 'The accept did not land',
+    output_label: 'What stopped it',
+    standing:
+      'Nothing was pushed and the comment is unanswered. The fix is still ' +
+      'proposed: accept it again, or send it back.',
+  },
   'push failed': {
     headline: 'The push failed',
     output_label: 'What git said',
@@ -904,11 +912,35 @@ function workNotes(
       detail: fix.conflict,
     });
   }
+  notes.push(...reconcileNotes(operations));
   const note = proposal?.agent_note;
   if (note && note !== proposal?.summary) {
     notes.push({ kind: 'agent-note', text: note });
   }
   return notes;
+}
+
+function reconcileNotes(operations: Operation[]): Note[] {
+  const reconcile = newest(operations, ['reconcile']);
+  if (reconcile && unsettled(reconcile)) {
+    return [
+      {
+        kind: 'landing-failure',
+        text: 'Reconciling the PR worktree with origin: it lands on its own once done',
+        ...(reconcile.diverged ? { detail: reconcile.diverged } : {}),
+      },
+    ];
+  }
+  if (reconcile?.story) {
+    return [
+      {
+        kind: 'reconciled',
+        text: 'Reconciled the PR worktree with origin',
+        detail: reconcile.story,
+      },
+    ];
+  }
+  return [];
 }
 
 function foldOf(
@@ -919,7 +951,7 @@ function foldOf(
 ): Fold | null {
   const phase = phaseOf(conversation);
   const commits = proposal?.kind === 'commit' ? proposal.commits : null;
-  if (!commits || FAILURES[phase]) return null;
+  if (!commits || (FAILURES[phase] && phase !== 'landing failed')) return null;
   const landed = phase === 'landed';
   let title = `Proposed diff${files.length ? ` · ${counted(files.length, 'file')}` : ''}`;
   if (landed) {

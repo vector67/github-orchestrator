@@ -27,6 +27,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportFiled,
     ReportOpened,
     ReportReady,
+    ReportReconciled,
     ReportReply,
     ReportSplit,
     ReportTicket,
@@ -364,6 +365,13 @@ def _an_opening_run(conversation: Conversation, command: ReportOpened) -> Refuse
     return None
 
 
+def _a_reconcile_run(conversation: Conversation, command: ReportReconciled) -> Refused | None:
+    if conversation.fix.run.kind != OperationKind.RECONCILE:
+        return Refused(conversation, ErrorCode.NOTHING_IN_FLIGHT,
+                       f"{_a(conversation.fix.run.kind)} run reconciles no worktree")
+    return None
+
+
 def _running_only(conversation: Conversation, change: Any) -> Refused | None:
     if conversation.state != OPEN:
         return Refused(conversation, _state_code(conversation),
@@ -450,6 +458,8 @@ def _filing(conversation: Conversation, command: Approve) -> Deferred | None:
         return Deferred(conversation, "the ticket is still being filed")
     if fix.run.kind == OperationKind.OPEN:
         return Deferred(conversation, "the new PR is still being opened")
+    if fix.run.kind == OperationKind.RECONCILE:
+        return Deferred(conversation, "the PR worktree is still being reconciled with origin")
     return None
 
 
@@ -1028,6 +1038,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportAsk: (_reported_on((RUNNING, IN_SESSION), "nobody is working on"),),
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     ReportOpened: (_reported_on((RUNNING,), "nobody is opening a PR for"), _an_opening_run),
+    ReportReconciled: (_reported_on((RUNNING,), "nobody is reconciling the worktree for"),
+                       _a_reconcile_run),
     Fail: (_running_only,),
     SetCommitVerdict: (_a_commit_checked,),
     CheckForFixes: (_waiting_on_the_author,),

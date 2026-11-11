@@ -28,6 +28,7 @@ class OperationKind(StrEnum):
     REBASE = "rebase"
     FILE = "file"
     OPEN = "open"
+    RECONCILE = "reconcile"
     REWORK = "rework"
     RETRY = "retry"
     START_SESSION = "start-session"
@@ -233,7 +234,9 @@ RUN_KINDS = (OperationKind.FIRST, OperationKind.REBASE, OperationKind.REWORK, Op
 
 PART_RUNS = (OperationKind.FILE, OperationKind.OPEN)
 
-FIX_RUNS = (*RUN_KINDS, *PART_RUNS)
+LANDING_RUNS = (*PART_RUNS, OperationKind.RECONCILE)
+
+FIX_RUNS = (*RUN_KINDS, *LANDING_RUNS)
 
 IN_FLIGHT = (OperationState.PENDING, OperationState.RUNNING)
 
@@ -418,7 +421,7 @@ class Fix:
 
     @property
     def holds_a_proposal(self) -> bool:
-        return self.is_settled or (self.run.kind in PART_RUNS
+        return self.is_settled or (self.run.kind in LANDING_RUNS
                                    and self.state in (QUEUED, RUNNING))
 
     @property
@@ -770,6 +773,7 @@ _STATE_OF_RUN = {
     OperationKind.REBASE: ConversationState.LANDING,
     OperationKind.FILE: ConversationState.LANDING,
     OperationKind.OPEN: ConversationState.LANDING,
+    OperationKind.RECONCILE: ConversationState.LANDING,
     OperationKind.REWORK: ConversationState.REWORK,
 }
 
@@ -781,7 +785,7 @@ def _landing_failed(fix: Fix) -> bool:
 
 def _under_way(fix: Fix) -> bool:
     if fix.state in (QUEUED, RUNNING):
-        return fix.run.kind in PART_RUNS
+        return fix.run.kind in LANDING_RUNS
     return fix.state == LANDING and not _landing_failed(fix)
 
 

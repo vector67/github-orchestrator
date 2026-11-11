@@ -81,6 +81,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportFiled,
     ReportOpened,
     ReportReady,
+    ReportReconciled,
     ReportSplit,
     Resolve,
     Retry,
@@ -503,6 +504,9 @@ class _Editable:
 
     def opened(self, url: str) -> Conversation | Denied:
         return self._answer(ReportOpened(url=url))
+
+    def reconciled(self, note: str, landed_sha: Sha | None = None) -> Conversation | Denied:
+        return self._answer(ReportReconciled(note=note, landed_sha=landed_sha))
 
     def _has_branch(self, branch: str) -> bool:
         conversation = None if self._held is None else self._held.conversation

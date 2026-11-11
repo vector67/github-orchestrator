@@ -27,6 +27,13 @@ class WrongBranch(Verdict):
     expected: str
 
 
+@dataclass(frozen=True)
+class Diverged:
+    origin: Sha
+    head: Sha
+    unmatched: tuple[Sha, ...]
+
+
 @dataclass(frozen=True, kw_only=True)
 class Picked:
     landed_base: Sha | None = None
@@ -38,6 +45,7 @@ class Picked:
     not_commits: bool = False
     changed_since_review: bool = False
     refusal: str | None = None
+    diverged: Diverged | None = None
 
 
 @dataclass(frozen=True)
@@ -187,7 +195,9 @@ class PrCheckout(Protocol):
 
     def is_clean(self) -> bool: ...
 
-    def push(self) -> str | None: ...
+    def path(self) -> str | None: ...
+
+    def push(self) -> str | Diverged | None: ...
 
     def unpick(self, landed_base: Sha, landed_sha: Sha) -> str | None: ...
 

@@ -648,6 +648,19 @@ class _Seeding:
         self.commit(card)
         self.conversations.tick(self.news, on_hold=False)
 
+    def _declining(self) -> Path:
+        return _origin(Path(self.repo.worktree)) / "hooks" / "pre-receive"
+
+    def decline_pushes(self) -> None:
+        hook = self._declining()
+        hook.parent.mkdir(parents=True, exist_ok=True)
+        hook.write_text("#!/bin/sh\necho 'the branch is protected: pushes are declined'\n"
+                        "exit 1\n")
+        hook.chmod(0o755)
+
+    def accept_pushes(self) -> None:
+        self._declining().unlink(missing_ok=True)
+
     def push_elsewhere(self) -> None:
         worktree = Path(self.repo.worktree)
         elsewhere = worktree.with_name(f"{worktree.name}-elsewhere")
@@ -657,6 +670,7 @@ class _Seeding:
         _git(elsewhere, "add", "-A")
         _git(elsewhere, "commit", "-qm", "a teammate's push")
         _git(elsewhere, "push", "-q")
+        _git(worktree, "fetch", "-q", "origin")
 
     def move_the_pr(self, card: Card) -> None:
         worktree = Path(self.repo.worktree)
@@ -773,10 +787,12 @@ def _author_board(seeding: _Seeding) -> None:
     seeding.ask(REBASING, lambda conversation: conversation.approve(
         reply="Rebase it onto the new head."))
     seeding.run(stays=True)
-    seeding.push_elsewhere()
+    seeding.decline_pushes()
     seeding.propose(PUSH_REJECTED)
     seeding.ask(PUSH_REJECTED, lambda conversation: conversation.approve(
         reply="Good catch — dropped it."))
+    seeding.accept_pushes()
+    seeding.push_elsewhere()
     seeding.accept_a_ticket(TICKET_FILING, "Read units from one table in the reader and writer",
                             filing=True)
     seeding.accept_a_ticket(TICKET_FILED, "One helper for every exporter's header")

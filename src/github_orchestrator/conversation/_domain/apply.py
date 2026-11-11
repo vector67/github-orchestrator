@@ -26,6 +26,7 @@ from github_orchestrator.conversation._domain.commands import (
     ReportFiled,
     ReportOpened,
     ReportReady,
+    ReportReconciled,
     ReportReply,
     ReportSplit,
     ReportTicket,
@@ -130,6 +131,7 @@ from github_orchestrator.conversation._domain.events import (
     AnswerDeleted,
     AnswerFailed,
     AnswerPosted,
+    CheckoutDiverged,
     ClosingCommentDeleted,
     ClosingFailed,
     ClosingReplyPosted,
@@ -979,6 +981,48 @@ def _handed_back(conversation: Conversation, reason: str,
                               **fields))
 
 
+def _diverged_reason(command: CheckoutDiverged, outcome: str) -> str:
+    named = ", ".join(str(sha)[:12] for sha in command.unmatched)
+    return (f"origin's PR branch was rewritten: it is at {str(command.origin)[:12]}, and the "
+            f"PR worktree at {str(command.head)[:12]} holds commits origin has no equivalent "
+            f"of ({named}), so {outcome}")
+
+
+def _checkout_diverged(conversation: Conversation,
+                       command: CheckoutDiverged) -> Accepted | Deferred:
+    picked = PICK in conversation.fix.steps
+    reason = _diverged_reason(command, "nothing was pushed" if picked else "nothing landed")
+    if not command.reconciles_allowed or conversation.state == REMOVED:
+        if picked:
+            return Accepted(_decidable(with_fix(conversation, push_error=reason), command.at))
+        return _handed_back(conversation, reason)
+    return Deferred(with_fix(conversation, state=QUEUED, attempts=0, started_at=None,
+                             run=Run(kind=OperationKind.RECONCILE, onto=command.origin,
+                                     conflict=reason),
+                             reason=None, decision_error=None, push_error=None),
+                    "the approve waits for the checkout to be reconciled")
+
+
+def _report_reconciled(conversation: Conversation, command: ReportReconciled) -> Accepted:
+    fix = conversation.fix
+    if PICK in fix.steps and command.landed_sha is not None:
+        return Accepted(with_fix(conversation, state=LANDING, run=Run(), started_at=None,
+                                 landed_base=fix.run.onto, landed_sha=command.landed_sha))
+    return Accepted(with_fix(conversation, state=PROPOSED, run=Run(), started_at=None,
+                             steps=fix.steps - {PICK}, landed_base=None, landed_sha=None))
+
+
+def _reconcile_ended(conversation: Conversation, reason: str,
+                     effects: tuple[Any, ...] = ()) -> Accepted:
+    fix = conversation.fix
+    said = f"the run reconciling the PR worktree with origin {reason}"
+    if PICK in fix.steps:
+        return Accepted(with_fix(conversation, state=LANDING, run=Run(), started_at=None,
+                                 push_error=said), effects)
+    return Accepted(with_fix(conversation, state=PROPOSED, reason=said, run=Run(),
+                             started_at=None), effects)
+
+
 def _pick_conflicted(conversation: Conversation, command: PickConflicted) -> Accepted | Deferred:
     if conversation.fix.run.onto == command.head:
         return _handed_back(
@@ -1400,6 +1444,14 @@ def _dispatch(conversation: Conversation, command: Change,
             return _report_filed(conversation, command)
         case ReportOpened():
             return _report_opened(conversation, command)
+        case ReportReconciled():
+            return _report_reconciled(conversation, command)
+        case Fail() if conversation.fix.run.kind == OperationKind.RECONCILE:
+            return _reconcile_ended(conversation, command.reason)
+        case RunExited() if conversation.fix.run.kind == OperationKind.RECONCILE:
+            return _reconcile_ended(conversation, "ended without reporting")
+        case RunTimedOut() if conversation.fix.run.kind == OperationKind.RECONCILE:
+            return _reconcile_ended(conversation, command.reason, (StopRun(),))
         case Fail() | RunExited() | RunTimedOut() | RunLost() if (
                 conversation.fix.run.kind in PART_RUNS):
             return _filing_ended(conversation, command, at)
@@ -1439,6 +1491,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _handed_back(conversation, command.reason)
         case PickConflicted():
             return _pick_conflicted(conversation, command)
+        case CheckoutDiverged():
+            return _checkout_diverged(conversation, command)
         case Pushed():
             return Accepted(with_fix(conversation,
                                       steps=conversation.fix.steps | {PUSH},

@@ -326,6 +326,67 @@ If it cannot be opened, report why and stop:
 """
 
 
+def _landed_fix(fix: ThreadFix) -> str:
+    if fix.landed_sha is None:
+        return ("No fix for this thread is on the PR branch yet: once you report, the board "
+                "picks it onto the worktree as it stands and pushes it.")
+    return (f"The fix the author accepted for this thread is already on the PR branch here as "
+            f"{fix.landed_sha}, and is one of the commits origin lacks. Carry it onto origin's "
+            f"branch, and report the sha it ends up as with `--landed-sha`; leave "
+            f"`--landed-sha` out only if you dropped it, and the board picks it again.")
+
+
+def reconcile_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
+    branch = fix.pr_branch
+    reconciled_cmd = commands.reconciled(
+        fix.pr, fix.key, note='"<what you found and did>"',
+        landed_sha="<the sha the accepted fix ended up as>")
+    return f"""You are reconciling the PR worktree of {fix.pr} with origin, for its author, \
+who accepted a fix on the review board. The accept cannot land: origin's branch {branch} was \
+rewritten from somewhere other than this worktree, and this worktree holds commits origin has \
+no equivalent of. Nobody is watching this run. Find out what happened, make this worktree \
+origin's branch plus whatever of its own commits still belongs on the PR, report what you \
+did, and stop. Once you report, the board carries the accept on and lands it.
+
+## How they diverged
+{fix.conflict}
+
+{_landed_fix(fix)}
+
+## Find out why
+- The pull request: {fix.pr_url}, and the review thread the accept is for: {fix.thread_url}.
+- When origin's branch was force-pushed, by whom, and from which commit to which: \
+`gh api graphql -f query='query {{ repository(owner: "{fix.pr.repo.owner}", name: \
+"{fix.pr.repo.name}") {{ pullRequest(number: {fix.pr.number}) {{ timelineItems(last: 20, \
+itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {{ nodes {{ ... on HeadRefForcePushedEvent {{ \
+createdAt actor {{ login }} beforeCommit {{ oid }} afterCommit {{ oid }} }} }} }} }} }} }}'`
+- Every thread the board holds for this PR, and what each is doing: `{commands.listing(fix.pr)}`
+- Who rewrote it and why: an agent run often did, from a worktree of its own. Claude Code \
+keeps each session as a `.jsonl` transcript under `$CLAUDE_CONFIG_DIR/projects/` (or \
+`~/.claude/projects/` when that is unset), one folder per working directory. Search them \
+for the sha origin's branch now points at, newest first, and read what that session was \
+asked and what it did around its push.
+- `git log --oneline` and `git range-diff` between origin's branch and this worktree's \
+head show which local commits origin rewrote and which it never had.
+
+## Reconcile
+Make this worktree's branch origin's {branch} plus each local commit that still belongs on the \
+PR, as a fast-forward of origin. You may overwrite or drop local commits, but only once you \
+know why each one goes: a commit origin carries in another form is already there, and one \
+the rewrite meant to remove stays removed. Do not push: the board pushes when it lands. \
+Leave the worktree clean.
+
+Then report what you found and did: who rewrote origin and why, and each local commit you \
+kept, carried over or dropped, with the reason:
+
+    {reconciled_cmd}
+
+If you cannot reconcile it safely, put the worktree back as you found it, report why and stop:
+
+    {_fail(commands, fix)}
+"""
+
+
 def _before_reply(fix: ThreadFix) -> str:
     if not fix.before_reply:
         return ""
