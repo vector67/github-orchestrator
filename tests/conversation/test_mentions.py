@@ -171,12 +171,14 @@ def test_the_first_poll_of_someone_elses_pr_opens_a_conversation_for_each_unansw
                                                                     "cc @octocat")
 
 
-def test_the_first_poll_of_my_own_pr_opens_nothing_for_a_comment_naming_me(settings):
+def test_the_first_poll_of_my_own_pr_opens_a_conversation_for_each_unanswered_mention(settings):
     here, state = _watching(
         settings, _issue("IC_1", _said(1, "anna", "@octocat ping", "2026-09-01T10:00:00Z")),
-        author=ME)
+        _review_body("PRR_1", _said(3, "bob", "and @octocat this", "2026-09-01T12:00:00Z")),
+        body="cc @octocat", author=ME)
 
-    assert _heard(here, state).all() == []
+    assert sorted(conversation.key for conversation in _heard(here, state).all()) == [
+        "IC_1", "PRR_1"]
 
 
 def test_a_conversation_holding_a_mention_i_have_not_answered_is_marked_a_mention(settings):

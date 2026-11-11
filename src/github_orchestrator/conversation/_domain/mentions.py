@@ -79,10 +79,8 @@ def unanswered_threads(found: Sequence[Mention]) -> frozenset[str]:
 def mentioning_threads(threads: Sequence[FetchedThread], found: Sequence[Mention], *,
                        account: str, pr_body: str, pr_author: str | None) -> list[FetchedThread]:
     author = _someone_else(pr_author, account)
-    if author is None:
-        return []
     keys = unanswered_threads(found)
     opening = [FetchedThread(key=PR_BODY_KEY, kind=KIND_PR_BODY,
                              comments=(Comment(author=author, body=pr_body),))
-               ] if PR_BODY_KEY in keys else []
+               ] if author is not None and PR_BODY_KEY in keys else []
     return opening + [thread for thread in threads if thread.key in keys]
