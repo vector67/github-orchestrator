@@ -1,6 +1,6 @@
 ---
 name: frontend-work
-description: Must be invoked for any requested front-end change in this repository — anything under `frontend/`, the board's look, layout, styles or behaviour in the browser — and for mockups or design drafts of a board screen
+description: Must be invoked for any requested front-end change in this repository — anything under `frontend/`, the board's look, layout, styles or behaviour in the browser, a message for a new server error code — and for mockups or design drafts of a board screen
 ---
 
 # Frontend work

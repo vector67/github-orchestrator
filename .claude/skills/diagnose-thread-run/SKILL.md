@@ -1,13 +1,14 @@
 ---
 name: diagnose-thread-run
-description: Use when a thread's fix run did something unexpected — ignored a rework, proposed a stale diff, stopped, failed or never reported — to find out what the agent actually did before reading the orchestrator's code
+description: Use when a thread's fix run did something unexpected — ignored a rework, proposed a stale diff, stopped, failed or never reported — or the board refused an action, an accepted fix's push failed or a thread is stuck landing, to find out what actually happened before reading the orchestrator's code or running any verb on the thread
 ---
 
 # Diagnose a thread run
 
-What the agent did lives in three places outside this repository. Read them in this
-order; the orchestrator's code comes last, and only explains how that output reached
-(or missed) the board.
+What happened lives in places outside this repository: the first three for a run, the
+fourth too for a refused action or a landing. Read them in this order; the
+orchestrator's code comes last, and only explains how that output reached (or missed)
+the board.
 
 1. **The thread's state.** `$XDG_DATA_HOME/github-orchestrator/threads/<owner>/<repo>/<pr>/`
    (`~/.local/share` when the variable is unset) holds one `<thread>.json` per thread,
@@ -32,5 +33,24 @@ order; the orchestrator's code comes last, and only explains how that output rea
    jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text' <run>.jsonl | tail -n 40
    ```
 
-The diagnosis is done when you can say, from these three, what the run changed, what
-it reported (or that it reported nothing), and what the board therefore showed.
+4. **The PR checkout**, for a refused action or a landing whose push failed. It is not
+   under `thread-worktrees/`: its path ends the last
+   `Agent manager started for <owner>/<repo>#<pr> in <path>` line of
+   `logs/agent-manager.log`. There, `git reflog show --date=iso origin/<branch>` lists
+   every push; an `update by push` the landing did not make means something else
+   pushed the branch, often another thread's run on the same PR, so read
+   `git -C <tree> reflog` for each tree in `git worktree list --porcelain` to find
+   which. The refused request itself is a `POST …/operations:<verb> -> 409` line in
+   `logs/server.log`.
+
+The diagnosis is done when you can say what the run changed, what it reported (or that
+it reported nothing), what the board therefore showed, and, for a landing, what moved
+the PR branch.
+
+## Before you repair through the board's verbs
+
+Stop, rework and reset-to-origin discard what the operator queued. Before sending one,
+read the thread's `pending_reply` and the `text` and `brief` of each `operations[]`
+entry with `jq`, and quote them back to the operator. A request the board refused left
+no text in the record; read it from the board tab in the browser before asking the
+operator to type it again.

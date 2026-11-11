@@ -45,7 +45,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    as its own issue before the push, with the same release pick as the original.
    What is left includes every gap you noticed yourself against what was asked
    (a reference UI's behaviour you did not match, a case you did not check): file
-   each, or write `Refs`, never a `Closes` that reports it in passing.
+   each, or write `Refs`, never a `Closes` that reports it in passing. Two gaps hide
+   easily: when the fix only catches a broken invariant downstream, whatever broke it
+   is still a gap, and so is anything the user lost that you recovered by hand on the
+   way.
 
 5. Check the branch for private information before it reaches the target: the
    repo is public, and whatever merges is pushed. Read `git diff <target>...<branch>`
@@ -89,7 +92,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    `server.log`, `launchd.log`) are in `$XDG_DATA_HOME/github-orchestrator/logs/`
    and all but `launchd.log`, which holds raw process output, stamp each line in
    ISO 8601 with its UTC offset, so note the restart with
-   `date -Iseconds` and compare instants, not wall-clock digits. When the request names who will use the result (a
+   `date -Iseconds` and compare instants, not wall-clock digits. A new code in the
+   live API or a new string in the served bundle proves the deploy, not the
+   behaviour: for a new refusal or recovery path, cause that state on a throwaway PR
+   and watch the board show it. When the request names who will use the result (a
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
    fresh agent diagnose it from what the change produced.
