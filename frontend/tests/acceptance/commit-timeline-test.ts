@@ -21,6 +21,7 @@ import {
   prCommit,
   prDiff,
   setupFakeBoard,
+  thread,
 } from 'frontend/tests/helpers/fake-board';
 import type { PullRequestCommits } from 'frontend/data/api';
 import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
@@ -1918,7 +1919,22 @@ module(
         );
     });
 
+    function holding() {
+      board().conversations = [
+        thread({
+          key: 'PRRT_held',
+          anchor: {
+            ...thread().anchor,
+            path: 'src/held.py',
+            line: 7,
+            original_line: 7,
+          },
+        }),
+      ];
+    }
+
     test('a reset refused over an unpushed pick names the thread holding it and what clears it', async function (assert) {
+      holding();
       await openLocal();
       await click('[data-test-reset-to-origin]');
       board().refusal = {
@@ -1932,7 +1948,7 @@ module(
       assert
         .dom('[data-test-reset-refused]')
         .hasText(
-          'Not reset: the fix for thread PRRT_held is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+          'Not reset: the fix for src/held.py:7 is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
         );
     });
 
@@ -2100,7 +2116,12 @@ module(
       [
         'fix-awaits-push',
         'PRRT_held',
-        'the fix for thread PRRT_held is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+        'the fix for src/held.py:7 is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+      ],
+      [
+        'fix-awaits-push',
+        'PRRT_gone',
+        'the fix for thread PRRT_gone is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
       ],
       [
         'head-unreadable',
@@ -2161,6 +2182,7 @@ module(
 
     for (const [code, detail, words] of queuedResetRefusals) {
       test(`the page words a queued reset that didn't run for ${code} with ${detail ?? 'no detail'}`, async function (assert) {
+        holding();
         reviewedWith({
           queued_at: null,
           ran_at: '2026-10-23T09:30:00Z',
