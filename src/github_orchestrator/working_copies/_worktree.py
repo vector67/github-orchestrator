@@ -87,6 +87,15 @@ def _gone_from_origin(worktree: Path, branch: str) -> bool:
     return listed is not None and listed.returncode == NO_MATCHING_REF
 
 
+def _fetched_pull_head(repo_dir: Path, branch: str, pr: int) -> bool:
+    fetched = _git("-C", str(repo_dir), "fetch", "origin",
+                   f"+refs/pull/{pr}/head:refs/remotes/origin/{branch}")
+    if fetched is None or fetched.returncode != 0:
+        return False
+    log.info("%s is gone from origin; cut its worktree from pull request %d's head", branch, pr)
+    return True
+
+
 def fetch_base(worktree: Path, base_branch: str | None) -> None:
     if not base_branch:
         return
@@ -103,7 +112,11 @@ def fetch_base(worktree: Path, base_branch: str | None) -> None:
 def create_worktree(repo_dir: Path, branch: str, base_branch: str | None,
                     pr: int | None = None, *, notifications: Worktrees,
                     new_worktree_command: str) -> Path:
-    fetch_branch(repo_dir, branch)
+    try:
+        fetch_branch(repo_dir, branch)
+    except RuntimeError:
+        if pr is None or not _fetched_pull_head(repo_dir, branch, pr):
+            raise
     fetch_base(repo_dir, base_branch)
     _git("-C", str(repo_dir), "worktree", "prune")
 

@@ -10828,6 +10828,477 @@
     }
    ]
   },
+  "tests.working_copies.test_create_worktree._build_a_merged_pr": {
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"add\", \"f\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "add",
+      "f"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"checkout\", \"-q\", \"-b\", \"feature-x\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "checkout",
+      "-q",
+      "-b",
+      "feature-x"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature-x\n"
+      },
+      "seed/.git/refs/heads/feature-x": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"checkout\", \"-q\", \"-b\", \"feature-y\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "checkout",
+      "-q",
+      "-b",
+      "feature-y"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/feature-y\n"
+      },
+      "seed/.git/refs/heads/feature-y": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"checkout\", \"-q\", \"-b\", \"merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "checkout",
+      "-q",
+      "-b",
+      "merged-away"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/merged-away\n"
+      },
+      "seed/.git/refs/heads/merged-away": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"checkout\", \"-q\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "checkout",
+      "-q",
+      "main"
+     ],
+     "fs": {
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"commit\", \"-q\", \"-am\", \"the merged change\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "commit",
+      "-q",
+      "-am",
+      "the merged change"
+     ],
+     "fs": {
+      "seed/.git/refs/heads/merged-away": {
+       "text": "1b01cc97f0bb3fc5aa96f1255fd122e6ddf85106\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"commit\", \"-q\", \"-m\", \"first\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "commit",
+      "-q",
+      "-m",
+      "first"
+     ],
+     "fs": {
+      "seed/.git/refs/heads/main": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "config",
+      "user.email",
+      "t@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"config\", \"user.name\", \"T\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "config",
+      "user.name",
+      "T"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"push\", \"-q\", \"origin\", \"feature-x\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "push",
+      "-q",
+      "origin",
+      "feature-x"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"push\", \"-q\", \"origin\", \"feature-y\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "push",
+      "-q",
+      "origin",
+      "feature-y"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"push\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "push",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\", \"push\", \"-q\", \"origin\", \"merged-away:refs/pull/83/head\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed",
+      "push",
+      "-q",
+      "origin",
+      "merged-away:refs/pull/83/head"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work\", \"branch\", \"feature-x\", \"origin/feature-x\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work",
+      "branch",
+      "feature-x",
+      "origin/feature-x"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature-x": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YnJhbmNoICdmZWF0dXJlLXgnIHNldCB1cCB0byB0cmFjayAnb3JpZ2luL2ZlYXR1cmUteCcuCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work\", \"branch\", \"feature-y\", \"origin/feature-y\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work",
+      "branch",
+      "feature-y",
+      "origin/feature-y"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature-y": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YnJhbmNoICdmZWF0dXJlLXknIHNldCB1cCB0byB0cmFjayAnb3JpZ2luL2ZlYXR1cmUteScuCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work\", \"config\", \"user.email\", \"t@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work",
+      "config",
+      "user.email",
+      "t@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work\", \"config\", \"user.name\", \"T\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work",
+      "config",
+      "user.name",
+      "T"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/seed"
+     ],
+     "fs": {
+      "seed": {
+       "dir": true
+      },
+      "seed/.git": {
+       "dir": true
+      },
+      "seed/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/feature-x\n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/feature-y\n856ffec8209ba4d59a882ebb8e11fded21b6222c refs/remotes/origin/main\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "856ffec8209ba4d59a882ebb8e11fded21b6222c\n"
+      },
+      "work/f": {
+       "text": "1"
+      }
+     },
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ],
+   "[[\"git\", \"init\", \"-q\", \"--bare\", \"-b\", \"main\", \"<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "init",
+      "-q",
+      "--bare",
+      "-b",
+      "main",
+      "<TPL:tests.working_copies.test_create_worktree._build_a_merged_pr>/origin.git"
+     ],
+     "fs": {
+      "origin.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ]
+  },
   "tests.working_copies.test_create_worktree._build_clones": {
    "[[\"git\", \"-C\", \"<TPL:tests.working_copies.test_create_worktree._build_clones>/seed\", \"add\", \"f\"], null, null]": [
     {
@@ -99895,6 +100366,26 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/pull/8/head:refs/remotes/origin/not-on-origin\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/pull/8/head:refs/remotes/origin/not-on-origin"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
+     "returncode": 128,
+     "stderr": "fatal: couldn't find remote ref refs/pull/8/head\n",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"ls-remote\", \"--exit-code\", \"origin\", \"refs/heads/not-on-origin\"], null, null]": [
     {
      "argv": [
@@ -111946,6 +112437,26 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"fetch\", \"origin\", \"+refs/pull/83/head:refs/remotes/origin/no-such-branch\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "+refs/pull/83/head:refs/remotes/origin/no-such-branch"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
+     "returncode": 128,
+     "stderr": "fatal: couldn't find remote ref refs/pull/83/head\n",
+     "stdout": ""
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/work\", \"ls-remote\", \"--exit-code\", \"origin\", \"refs/heads/no-such-branch\"], null, null]": [
     {
      "argv": [
@@ -112177,6 +112688,132 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "worktree <TMP>/work\nHEAD 5488b53b1441de920813682491bf3db478579351\nbranch refs/heads/feature-x\n\n"
+    }
+   ]
+  },
+  "tests/working_copies/test_create_worktree.py::test_a_pr_whose_branch_is_gone_from_the_remote_is_cut_from_its_pull_head": {
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"fetch\", \"origin\", \"+refs/heads/merged-away:refs/remotes/origin/merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "+refs/heads/merged-away:refs/remotes/origin/merged-away"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
+     "returncode": 128,
+     "stderr": "fatal: couldn't find remote ref refs/heads/merged-away\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"fetch\", \"origin\", \"+refs/pull/83/head:refs/remotes/origin/merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "+refs/pull/83/head:refs/remotes/origin/merged-away"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": "1b01cc97f0bb3fc5aa96f1255fd122e6ddf85106\t\t'refs/pull/83/head' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "From <TMP>/origin\n * [new ref]         refs/pull/83/head -> origin/merged-away\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"ls-remote\", \"--exit-code\", \"origin\", \"refs/heads/merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "ls-remote",
+      "--exit-code",
+      "origin",
+      "refs/heads/merged-away"
+     ],
+     "fs": {},
+     "returncode": 2,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"update-ref\", \"-d\", \"refs/remotes/origin/merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "update-ref",
+      "-d",
+      "refs/remotes/origin/merged-away"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"add\", \"<TMP>/merged-away\", \"merged-away\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "add",
+      "<TMP>/merged-away",
+      "merged-away"
+     ],
+     "fs": {
+      "merged-away": {
+       "dir": true
+      },
+      "merged-away/.git": {
+       "text": "gitdir: <TMP>/work/.git/worktrees/merged-away\n"
+      },
+      "merged-away/f": {
+       "text": "merged"
+      },
+      "work/.git/refs/heads/merged-away": {
+       "text": "1b01cc97f0bb3fc5aa96f1255fd122e6ddf85106\n"
+      },
+      "work/.git/worktrees/merged-away/HEAD": {
+       "text": "ref: refs/heads/merged-away\n"
+      },
+      "work/.git/worktrees/merged-away/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'merged-away')\n",
+     "stdout": "branch 'merged-away' set up to track 'origin/merged-away'.\nHEAD is now at 1b01cc9 the merged change\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
@@ -113325,6 +113962,26 @@
      },
      "returncode": 128,
      "stderr": "fatal: couldn't find remote ref refs/heads/no-such-branch\n",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"fetch\", \"origin\", \"+refs/pull/83/head:refs/remotes/origin/no-such-branch\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "fetch",
+      "origin",
+      "+refs/pull/83/head:refs/remotes/origin/no-such-branch"
+     ],
+     "fs": {
+      "work/.git/FETCH_HEAD": {
+       "text": ""
+      }
+     },
+     "returncode": 128,
+     "stderr": "fatal: couldn't find remote ref refs/pull/83/head\n",
      "stdout": ""
     }
    ],

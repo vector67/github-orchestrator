@@ -134,6 +134,28 @@ def test_a_branch_the_remote_does_not_have_fails_with_gits_reason(repo, settings
     assert not (repo.parent / "no-such-branch").exists()
 
 
+def _build_a_merged_pr(root):
+    _build_clones(root)
+    seed = root / "seed"
+    _git(seed, "checkout", "-q", "-b", "merged-away")
+    (seed / "f").write_text("merged")
+    _git(seed, "commit", "-q", "-am", "the merged change")
+    _git(seed, "push", "-q", "origin", f"merged-away:refs/pull/{PR}/head")
+
+
+@pytest.fixture
+def merged(tmp_path, git_template):
+    git_template(_build_a_merged_pr)
+    return tmp_path / "work"
+
+
+def test_a_pr_whose_branch_is_gone_from_the_remote_is_cut_from_its_pull_head(merged, settings):
+    created = _create(settings, merged, "merged-away")
+
+    assert created == merged.parent / "merged-away"
+    assert (created / "f").read_text() == "merged"
+
+
 def test_the_new_worktree_command_initialises_the_worktree_it_just_cut(repo, settings):
     created = _create(settings, repo, "feature-x", command=(
         'printf %s "$GITHUB_ORCHESTRATOR_SOURCE_REPO" > initialised'))
@@ -215,7 +237,8 @@ def test_nothing_is_added_when_the_fetch_fails(
     assert _create(settings, repo, "feature-x") is None
 
     assert [argv[:4] for argv, _ in ran] == [["git", "-C", str(repo), "fetch"],
-                                             ["git", "-C", str(repo), "ls-remote"]]
+                                             ["git", "-C", str(repo), "ls-remote"],
+                                             ["git", "-C", str(repo), "fetch"]]
     assert not (repo.parent / "feature-x").exists()
 
 
