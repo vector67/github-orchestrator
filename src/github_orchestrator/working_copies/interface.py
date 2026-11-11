@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
@@ -25,6 +26,25 @@ class WrongBranch(Verdict):
     worktree: str
     here: str
     expected: str
+
+
+class ResetRefusedCode(StrEnum):
+    WORKTREE_MISSING = "worktree-missing"
+    NO_ORIGIN_BRANCH = "no-origin-branch"
+    ON_ANOTHER_BRANCH = "on-another-branch"
+    UNCOMMITTED_CHANGES = "uncommitted-changes"
+    HEAD_UNREADABLE = "head-unreadable"
+    WORKTREE_MOVED = "worktree-moved"
+    NOT_DIVERGED = "not-diverged"
+    ORIGIN_ADDS_UNKNOWN = "origin-adds-unknown"
+    UNTRACKED_IN_THE_WAY = "untracked-in-the-way"
+    RESET_REFUSED = "reset-refused"
+
+
+@dataclass(frozen=True)
+class ResetRefused:
+    code: ResetRefusedCode
+    detail: str | None = None
 
 
 @dataclass(frozen=True)
@@ -203,7 +223,7 @@ class PrCheckout(Protocol):
 
     def fetch(self, base_branch: str | None) -> str | None: ...
 
-    def reset_to_origin(self, branch: str, seen: Sha) -> str | None: ...
+    def reset_to_origin(self, branch: str, seen: Sha) -> ResetRefused | None: ...
 
     def base_standing(self, base_branch: str | None) -> BaseStanding | None: ...
 

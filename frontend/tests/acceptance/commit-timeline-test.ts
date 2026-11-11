@@ -1900,6 +1900,24 @@ module(
       assert.dom('[data-test-diverged]').exists();
     });
 
+    test('a reset refused because the worktree moved says where it moved to', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'worktree-moved',
+        detail: 'c0ffee1234567890abcdef1234567890abcdef12',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the worktree moved to c0ffee123456 since the page showed it, so it was left as it is',
+        );
+    });
+
     test('a reset refused over an unpushed pick names the thread holding it and what clears it', async function (assert) {
       await openLocal();
       await click('[data-test-reset-to-origin]');
@@ -2056,11 +2074,7 @@ module(
       reviewedWith({
         queued_at: null,
         ran_at: '2026-10-23T09:30:00Z',
-        refused: {
-          code: 'reset-refused',
-          detail:
-            'the worktree has uncommitted changes, so it was left as it is',
-        },
+        refused: { code: 'uncommitted-changes', detail: null },
       });
       await openLocal();
 
@@ -2098,10 +2112,55 @@ module(
         null,
         'the reset was under way when the manager stopped, so how it ended is not known',
       ],
+      [
+        'worktree-missing',
+        null,
+        "no worktree holds the pull request's branch, so there was nothing to reset",
+      ],
+      [
+        'no-origin-branch',
+        null,
+        'origin holds no branch for the worktree to reset to',
+      ],
+      [
+        'on-another-branch',
+        'hotfix',
+        "the worktree holds hotfix, not the pull request's branch, so it was left as it is",
+      ],
+      [
+        'on-another-branch',
+        null,
+        "the worktree holds no branch, not the pull request's branch, so it was left as it is",
+      ],
+      [
+        'worktree-moved',
+        'c0ffee1234567890abcdef1234567890abcdef12',
+        'the worktree moved to c0ffee123456 since the page showed it, so it was left as it is',
+      ],
+      [
+        'not-diverged',
+        null,
+        "origin's branch has nothing the worktree lacks, so its own commits are only unpushed and it was left as it is",
+      ],
+      [
+        'origin-adds-unknown',
+        null,
+        "git could not say what origin's branch adds, so the worktree was left as it is",
+      ],
+      [
+        'untracked-in-the-way',
+        'secret.env, notes.md',
+        "origin's branch adds secret.env, notes.md, which the worktree holds untracked or ignored, so it was left as it is",
+      ],
+      [
+        'reset-refused',
+        'error: Entry not uptodate. Cannot merge.',
+        'git would not reset the worktree: error: Entry not uptodate. Cannot merge.',
+      ],
     ];
 
     for (const [code, detail, words] of queuedResetRefusals) {
-      test(`the page words a queued reset that didn't run for ${code}`, async function (assert) {
+      test(`the page words a queued reset that didn't run for ${code} with ${detail ?? 'no detail'}`, async function (assert) {
         reviewedWith({
           queued_at: null,
           ran_at: '2026-10-23T09:30:00Z',

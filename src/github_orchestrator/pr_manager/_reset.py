@@ -64,7 +64,8 @@ class QueuedReset:
                       refused=ResetRefusal(ResetRefusalCode.RESET_INTERRUPTED)).keep(shelf)
         refused = checkout.reset_to_origin(facts.branch, seen)
         if refused is not None:
-            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.RESET_REFUSED, refused))
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode(refused.code.value),
+                                                      refused.detail))
             return
         ResetToOrigin(ran_at=self._now()).keep(shelf)
         log.info("%s: the agent's run ended, so the worktree was reset to origin", pr)

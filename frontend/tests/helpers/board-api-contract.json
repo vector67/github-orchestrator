@@ -4027,6 +4027,15 @@
     "uncommitted-changes",
     "not-diverged",
     "fix-awaits-push",
+    "branch-unknown",
+    "worktree-missing",
+    "no-origin-branch",
+    "on-another-branch",
+    "head-unreadable",
+    "worktree-moved",
+    "origin-adds-unknown",
+    "untracked-in-the-way",
+    "reset-refused",
     "server-error"
    ],
    "type": "string"
@@ -7114,8 +7123,16 @@
     "branch-unknown",
     "fetch-failed",
     "fix-awaits-push",
-    "head-unreadable",
     "reset-interrupted",
+    "worktree-missing",
+    "no-origin-branch",
+    "on-another-branch",
+    "uncommitted-changes",
+    "head-unreadable",
+    "worktree-moved",
+    "not-diverged",
+    "origin-adds-unknown",
+    "untracked-in-the-way",
     "reset-refused"
    ],
    "type": "string"

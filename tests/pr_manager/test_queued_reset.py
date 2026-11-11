@@ -103,8 +103,7 @@ def test_a_queued_reset_finding_uncommitted_changes_does_not_run_and_says_why(
     assert copies.head_of(tmp_path) == before
     kept = _kept(manager)
     assert kept is not None and kept.ran_at is not None
-    assert kept.refused is not None and kept.refused.code is ResetRefusalCode.RESET_REFUSED
-    assert kept.refused.detail is not None and "uncommitted changes" in kept.refused.detail
+    assert kept.refused == ResetRefusal(ResetRefusalCode.UNCOMMITTED_CHANGES)
     assert manager.container.get(Dashboards).dashboard(THE_PR).reset_to_origin == kept
 
 
@@ -190,9 +189,7 @@ def test_a_queued_reset_keeps_work_that_is_only_unpushed_when_the_run_ends(setti
 
     assert copies.head_of(tmp_path) == merged[0]
     kept = _kept(manager)
-    assert kept is not None and kept.refused is not None
-    assert kept.refused.code is ResetRefusalCode.RESET_REFUSED
-    assert kept.refused.detail is not None and "only unpushed" in kept.refused.detail
+    assert kept is not None and kept.refused == ResetRefusal(ResetRefusalCode.NOT_DIVERGED)
 
 
 def test_a_queued_reset_cancelled_while_it_resets_says_it_ran(settings, tmp_path):

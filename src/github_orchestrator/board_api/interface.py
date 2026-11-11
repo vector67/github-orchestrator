@@ -96,8 +96,16 @@ class ResetRefusalCode(StrEnum):
     BRANCH_UNKNOWN = "branch-unknown"
     FETCH_FAILED = "fetch-failed"
     FIX_AWAITS_PUSH = "fix-awaits-push"
-    HEAD_UNREADABLE = "head-unreadable"
     RESET_INTERRUPTED = "reset-interrupted"
+    WORKTREE_MISSING = "worktree-missing"
+    NO_ORIGIN_BRANCH = "no-origin-branch"
+    ON_ANOTHER_BRANCH = "on-another-branch"
+    UNCOMMITTED_CHANGES = "uncommitted-changes"
+    HEAD_UNREADABLE = "head-unreadable"
+    WORKTREE_MOVED = "worktree-moved"
+    NOT_DIVERGED = "not-diverged"
+    ORIGIN_ADDS_UNKNOWN = "origin-adds-unknown"
+    UNTRACKED_IN_THE_WAY = "untracked-in-the-way"
     RESET_REFUSED = "reset-refused"
 
 

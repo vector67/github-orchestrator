@@ -217,5 +217,7 @@ def test_a_worktree_that_moved_since_the_page_drew_it_keeps_its_new_commit():
 
     answer = reset_board(copies).post(RESET, json=drawn)
 
-    assert answer.status_code != 204
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "worktree-moved"
+    assert answer.json()["errors"][0]["detail"] == moved
     assert copies.head_of(WORKTREE) == moved

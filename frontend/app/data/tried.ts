@@ -47,7 +47,29 @@ const SAID: Record<string, string | ((detail: string | null) => string)> = {
   'reset-interrupted':
     'the reset was under way when the manager stopped, so how it ended is ' +
     'not known',
-  'reset-refused': (detail) => detail ?? '',
+  'worktree-missing':
+    "no worktree holds the pull request's branch, so there was nothing to " +
+    'reset',
+  'no-origin-branch': 'origin holds no branch for the worktree to reset to',
+  'on-another-branch': (branch) =>
+    `the worktree holds ${branch || 'no branch'}, not the pull request's ` +
+    'branch, so it was left as it is',
+  'uncommitted-changes':
+    'the worktree has uncommitted changes, so it was left as it is',
+  'worktree-moved': (head) =>
+    `the worktree moved to ${(head ?? '').slice(0, 12)} since the page ` +
+    'showed it, so it was left as it is',
+  'not-diverged':
+    "origin's branch has nothing the worktree lacks, so its own commits " +
+    'are only unpushed and it was left as it is',
+  'origin-adds-unknown':
+    "git could not say what origin's branch adds, so the worktree was left " +
+    'as it is',
+  'untracked-in-the-way': (paths) =>
+    `origin's branch adds ${paths ?? ''}, which the worktree holds ` +
+    'untracked or ignored, so it was left as it is',
+  'reset-refused': (detail) =>
+    `git would not reset the worktree: ${detail ?? ''}`,
 };
 
 export function saidOf(code: string, detail: string | null): string | null {
