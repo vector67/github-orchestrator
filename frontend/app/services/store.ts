@@ -14,6 +14,7 @@ import type {
   DashboardSystem,
   Diff,
   DiffAnchors,
+  DismissMentionRequest,
   Emoji,
   EmojiList,
   FileLines,
@@ -1375,6 +1376,25 @@ export default class StoreService extends Service {
     if (!answer.done) return answer;
     this.takeThread(pr, answer.body.body);
     return { done: true, body: undefined };
+  }
+
+  async dismissMention(asked: DismissMentionRequest): Promise<Tried<void>> {
+    const answer = await tried(
+      'dismiss mention',
+      handed('/api/mentions:dismiss', asked),
+    );
+    if (!answer.done) return answer;
+    if (this.mentions)
+      this.mentions = {
+        ...this.mentions,
+        mentions: this.mentions.mentions.filter(
+          (one) =>
+            one.repo !== asked.repo ||
+            one.number !== asked.number ||
+            one.comment_id !== asked.comment_id,
+        ),
+      };
+    return answer;
   }
 
   async createDraft(pr: Numbered, draft: unknown): Promise<string | null> {

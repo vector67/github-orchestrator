@@ -45,6 +45,7 @@ import type {
   WallGroupName,
   WatcherHealth,
   HubState,
+  DismissMentionRequest,
   Mentions,
   NewestRelease,
   OutstandingMention,
@@ -813,6 +814,7 @@ export class FakeBoard {
   held: HeldPullRequest[] = [heldPr()];
   ledger: RunLedger = runLedger();
   mentions: Mentions = { searched_at: null, mentions: [] };
+  dismissedMentions: DismissMentionRequest[] = [];
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
   sessionGoneTo: Conversation | null = null;
@@ -1486,6 +1488,11 @@ export class FakeBoard {
     if (side === 'hub' && url.endsWith('/api/harvest-extension:prepare')) {
       return this.prepareHarvestExtension(url);
     }
+    if (side === 'hub' && url.endsWith('/api/mentions:dismiss')) {
+      return this.dismissMention(
+        JSON.parse(init.body as string) as DismissMentionRequest,
+      );
+    }
     if (side === 'hub') return this.hubWrite(url, headers);
     if (url.endsWith('/api/manager/git')) return this.git(url, init, headers);
     if (url.endsWith('/api/terminal/sessions')) {
@@ -1739,6 +1746,25 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     return this.json(200, { folder: this.harvestExtensionFolder });
+  }
+
+  private dismissMention(asked: DismissMentionRequest): Response {
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.dismissedMentions.push(asked);
+    this.mentions = {
+      ...this.mentions,
+      mentions: this.mentions.mentions.filter(
+        (one) =>
+          one.repo !== asked.repo ||
+          one.number !== asked.number ||
+          one.comment_id !== asked.comment_id,
+      ),
+    };
+    return respond(null, { status: 204 });
   }
 
   private hubWrite(url: string, headers: Headers): Response {
