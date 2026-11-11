@@ -25,7 +25,9 @@ Either aggregate stops at the first stage that fails. `lint-python`,
 every subprocess for real, and `make record` rewrites the recording after a
 change to what the code runs. To record only some tests, select them with
 `uv run pytest tests/ -k '<tests>' --record`, never by file path: a path-limited
-run wipes every other test's entry.
+run wipes every other test's entry. Prefer the full `make record`: it brings every
+entry up to what the code runs now, and a test that goes red after it may be a
+real bug to look into, not one to record around.
 
 Before a commit, `make lint-python` and `make test-python` are enough when
 nothing under `frontend/` changed since the last full run. Run the full `make lint` and `make test` before
