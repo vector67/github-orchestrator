@@ -2494,6 +2494,9 @@ class OpenedPr(BaseModel):
     outside_wall: bool = Field(description="It ended and you have not added it to the Wall, "
                                            "so the Wall leaves it out though its page is "
                                            "served.")
+    opened_at: str = Field(description="When you last opened it in context: a poll after this "
+                                       "and a little more without the mention's card means "
+                                       "the card could not be made.")
 
 
 class Mentions(BaseModel):

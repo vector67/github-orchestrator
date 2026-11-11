@@ -193,7 +193,30 @@ export default class MentionsCounter extends Component {
                 {{if mention.deferredUntil 'deferred'}}"
               data-test-mention={{mention.thread}}
             >
-              {{#if mention.thread}}
+              {{#if mention.opensOnGitHub}}
+                <a
+                  href={{mention.url}}
+                  class="mention-open"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-test-mention-github
+                >
+                  <span class="mention-head">{{mention.author}}
+                    on
+                    {{mention.repo}}#{{mention.number}}</span>
+                  <span
+                    class="mention-body"
+                    data-test-mention-body
+                  >{{mention.body}}</span>
+                  <span class="mention-off">{{mention.offTheBoard}}</span>
+                  {{#if mention.deferredUntil}}
+                    <span
+                      class="mention-deferred"
+                      data-test-mention-deferred
+                    >deferred {{mention.deferredUntil}}</span>
+                  {{/if}}
+                </a>
+              {{else}}
                 <a
                   href={{this.hrefOf mention}}
                   class="mention-open"
@@ -210,29 +233,6 @@ export default class MentionsCounter extends Component {
                   {{#if mention.offTheBoard}}
                     <span class="mention-off">{{mention.offTheBoard}}</span>
                   {{/if}}
-                  {{#if mention.deferredUntil}}
-                    <span
-                      class="mention-deferred"
-                      data-test-mention-deferred
-                    >deferred {{mention.deferredUntil}}</span>
-                  {{/if}}
-                </a>
-              {{else}}
-                <a
-                  href={{mention.url}}
-                  class="mention-open"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-test-mention-github
-                >
-                  <span class="mention-head">{{mention.author}}
-                    on
-                    {{mention.repo}}#{{mention.number}}</span>
-                  <span
-                    class="mention-body"
-                    data-test-mention-body
-                  >{{mention.body}}</span>
-                  <span class="mention-off">opens on GitHub</span>
                   {{#if mention.deferredUntil}}
                     <span
                       class="mention-deferred"

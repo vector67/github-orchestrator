@@ -137,6 +137,7 @@ class _Opening:
     pr: Pr
     comment_id: int | None
     on_wall: bool
+    opened_at: str
 
 
 def _openings_at(path: Path) -> Path:
@@ -164,7 +165,8 @@ def _opening(entry: Mapping[str, Any]) -> _Opening:
     if type(entry["number"]) is not int or type(entry["on_wall"]) is not bool:
         raise TypeError(f"the opening {entry!r} is not a number and a flag")
     return _Opening(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
-                    comment_id=entry["comment_id"], on_wall=entry["on_wall"])
+                    comment_id=entry["comment_id"], on_wall=entry["on_wall"],
+                    opened_at=str(entry["opened_at"]))
 
 
 def _change_openings(path: Path, change: Callable[[dict[Pr, _Opening]], None]) -> None:
@@ -177,7 +179,8 @@ def _change_openings(path: Path, change: Callable[[dict[Pr, _Opening]], None]) -
         writing = at.with_name(f"{at.name}.writing")
         writing.write_text(json.dumps([
             {"repo": str(opening.pr.repo), "number": opening.pr.number,
-             "comment_id": opening.comment_id, "on_wall": opening.on_wall}
+             "comment_id": opening.comment_id, "on_wall": opening.on_wall,
+             "opened_at": opening.opened_at}
             for opening in held.values()]))
         os.replace(writing, at)
 
@@ -188,7 +191,8 @@ def _opened(openings: Mapping[Pr, _Opening],
         OpenedForMention(pr=opening.pr, comment_id=opening.comment_id,
                          outside_wall=not opening.on_wall and any(
                              mention.ended is not None for mention in mentions
-                             if mention.pr == opening.pr))
+                             if mention.pr == opening.pr),
+                         opened_at=opening.opened_at)
         for opening in openings.values()
         if opening.on_wall or any(mention.pr == opening.pr for mention in mentions))
 
@@ -233,7 +237,8 @@ class ListingFile:
         def opening(held: dict[Pr, _Opening]) -> None:
             before = held.get(pr)
             held[pr] = _Opening(pr=pr, comment_id=comment_id,
-                                on_wall=before is not None and before.on_wall)
+                                on_wall=before is not None and before.on_wall,
+                                opened_at=self._clock().isoformat())
 
         _change_openings(self._path, opening)
 

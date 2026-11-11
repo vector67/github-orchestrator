@@ -13,6 +13,7 @@ from github_orchestrator.board_api.interface import (
 from tests.board_api.support import holding, served_hub
 from tests.builders import a_pr
 
+OPENED = "2026-10-23T09:05:00+00:00"
 HELD = a_pr(7, "acme/widgets")
 GONE = a_pr(8, "acme/widgets")
 PING = ListedMention(pr=HELD, thread="IC_1", comment_id=1, kind="issue", author="anna",
@@ -196,10 +197,11 @@ def _opened(*opened, mentions=(PING,)):
 
 def test_the_mentions_list_names_each_pr_opened_for_a_mention_and_whether_it_is_off_the_wall():
     web = served_hub(told=holding(HELD), mentions=_opened(
-        OpenedForMention(pr=GONE, comment_id=3, outside_wall=True)))
+        OpenedForMention(pr=GONE, comment_id=3, outside_wall=True, opened_at=OPENED)))
 
     assert web.get("/api/mentions").json()["opened"] == [
-        {"repo": "acme/widgets", "number": 8, "comment_id": 3, "outside_wall": True}]
+        {"repo": "acme/widgets", "number": 8, "comment_id": 3, "outside_wall": True,
+         "opened_at": OPENED}]
 
 
 def test_opening_a_mention_in_context_hands_the_list_its_pr_and_comment():
@@ -227,13 +229,13 @@ def _walled(web):
 
 def test_the_wall_leaves_out_a_pr_opened_for_a_mention_outside_the_wall():
     web = served_hub(told=holding(HELD, GONE), mentions=_opened(
-        OpenedForMention(pr=GONE, comment_id=3, outside_wall=True)))
+        OpenedForMention(pr=GONE, comment_id=3, outside_wall=True, opened_at=OPENED)))
 
     assert _walled(web) == [7]
 
 
 def test_the_wall_shows_a_pr_opened_for_a_mention_that_is_inside_the_wall():
     web = served_hub(told=holding(HELD, GONE), mentions=_opened(
-        OpenedForMention(pr=GONE, comment_id=3, outside_wall=False)))
+        OpenedForMention(pr=GONE, comment_id=3, outside_wall=False, opened_at=OPENED)))
 
     assert _walled(web) == [7, 8]

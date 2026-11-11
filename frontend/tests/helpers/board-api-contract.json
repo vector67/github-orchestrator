@@ -5405,6 +5405,9 @@
     "number": {
      "type": "integer"
     },
+    "opened_at": {
+     "type": "string"
+    },
     "outside_wall": {
      "type": "boolean"
     },
@@ -5416,7 +5419,8 @@
     "repo",
     "number",
     "comment_id",
-    "outside_wall"
+    "outside_wall",
+    "opened_at"
    ],
    "type": "object"
   },

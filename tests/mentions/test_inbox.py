@@ -795,6 +795,9 @@ def test_a_listed_mention_says_whether_its_pr_merged_or_closed(tmp_path, status,
         ended]
 
 
+OPENED = datetime.fromisoformat(SEARCHED).isoformat()
+
+
 def _opened_now(here):
     return here.container.get(MentionsList).listed().opened
 
@@ -818,7 +821,7 @@ def test_a_pr_that_ended_opened_for_a_mention_is_outside_the_wall(tmp_path):
 
     _open(here)
 
-    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=True),)
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=True, opened_at=OPENED),)
 
 
 def test_an_open_pr_opened_for_a_mention_stays_inside_the_wall(tmp_path):
@@ -826,7 +829,7 @@ def test_an_open_pr_opened_for_a_mention_stays_inside_the_wall(tmp_path):
 
     _open(here, status="OPEN")
 
-    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False),)
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False, opened_at=OPENED),)
 
 
 def test_a_pr_added_to_the_wall_is_inside_it(tmp_path):
@@ -835,7 +838,7 @@ def test_a_pr_added_to_the_wall_is_inside_it(tmp_path):
 
     here.container.get(MentionsList).add_to_wall(THE_PR)
 
-    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False),)
+    assert _opened_now(here) == (OpenedForMention(pr=THE_PR, comment_id=1, outside_wall=False, opened_at=OPENED),)
 
 
 def test_a_pr_opened_for_a_mention_is_let_go_once_none_of_its_mentions_is_outstanding(tmp_path):

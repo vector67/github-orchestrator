@@ -223,7 +223,8 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            deferred=_deferred(mention.deferred), ended=mention.ended)
         for mention in listing.mentions], opened=[
         OpenedPr(repo=str(opened.pr.repo), number=opened.pr.number,
-                 comment_id=opened.comment_id, outside_wall=opened.outside_wall)
+                 comment_id=opened.comment_id, outside_wall=opened.outside_wall,
+                 opened_at=opened.opened_at)
         for opened in listing.opened]))
 
 

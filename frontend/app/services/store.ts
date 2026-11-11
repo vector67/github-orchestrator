@@ -121,10 +121,10 @@ import {
   heldOf,
   deferTargetsOf,
   landedDeferralsOf,
-  cardBuildingOf,
   mentionableOf,
   mentionPageOf,
   mentionRowsOf,
+  threadCardOf,
   needingYouOf,
   reviewersOf,
   outstandingOf,
@@ -146,8 +146,10 @@ import {
   wallOf,
   type DeferTarget,
   type Entered,
+  type MentionCardSeen,
   type MentionPage,
   type MentionRow,
+  type ThreadCard,
   type Outstanding,
   type Place,
   type PrHeader,
@@ -177,6 +179,7 @@ export type {
   Flag,
   MentionPage,
   MentionRow,
+  ThreadCard,
   Move,
   NextMove,
   Outstanding,
@@ -542,6 +545,7 @@ export default class StoreService extends Service {
       this.viewer,
       (repo, number) => this.conversations(repo, number),
       this.needingYou,
+      this.cardSeen,
     );
   }
 
@@ -549,9 +553,23 @@ export default class StoreService extends Service {
     return mentionPageOf(this.mentions, repo, number);
   }
 
-  cardBuilding(repo: string, number: number, thread: string): boolean {
-    return cardBuildingOf(this.mentions, repo, number, thread);
+  threadCard(repo: string, number: number, thread: string): ThreadCard | null {
+    return threadCardOf(
+      this.mentions,
+      repo,
+      number,
+      thread,
+      this.cardSeen(repo, number),
+    );
   }
+
+  private cardSeen = (repo: string, number: number): MentionCardSeen => {
+    const key = keyOf(repo, number);
+    return {
+      cardKeys: Object.keys(this.threads[key] ?? {}),
+      polledAt: this.prs[key]?.facts?.polled_at ?? null,
+    };
+  };
 
   get mentionCount(): number {
     return this.mentionRows.filter((row) => row.deferredUntil === null).length;

@@ -645,6 +645,7 @@ export interface OpenedPr {
   number: number;
   comment_id: number | null;
   outside_wall: boolean;
+  opened_at: string;
 }
 
 export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'reconcile' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'edit-part' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';

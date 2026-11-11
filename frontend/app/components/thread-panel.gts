@@ -5,6 +5,7 @@ import { panelOf, type Panel } from 'frontend/data/panel';
 import didChange from 'frontend/modifiers/did-change';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
+import type { ThreadCard } from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export const WAITING_FOR_FACTS =
@@ -46,11 +47,18 @@ export default class ThreadPanel extends Component<ThreadPanelSignature> {
     return this.threads.unreadable.includes(this.args.key);
   }
 
-  get building(): boolean {
+  get card(): ThreadCard | null {
     const pr = this.here.pr;
-    return (
-      pr !== null && this.store.cardBuilding(pr.repo, pr.number, this.args.key)
-    );
+    return pr && this.store.threadCard(pr.repo, pr.number, this.args.key);
+  }
+
+  get building(): boolean {
+    return this.card?.card === 'building';
+  }
+
+  get missing(): ThreadCard | null {
+    const card = this.card;
+    return card?.card === 'missing' ? card : null;
   }
 
   watch = (element: HTMLElement, key?: unknown) => {
@@ -75,6 +83,16 @@ export default class ThreadPanel extends Component<ThreadPanelSignature> {
       <p class="work-placeholder" data-test-card-building>
         Building the card for this mention. The watcher makes it on its next
         poll, and it opens here once it is ready.
+      </p>
+    {{else if this.missing}}
+      <p class="work-placeholder" data-test-card-missing>
+        No card could be made for this mention: the watcher polled the pull
+        request after it was asked for and none appeared.
+        <a
+          href={{this.missing.url}}
+          target="_blank"
+          rel="noopener noreferrer"
+        >See it on GitHub</a>.
       </p>
     {{else if this.unreadable}}
       <p class="work-placeholder" data-test-missing>

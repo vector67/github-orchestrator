@@ -1168,6 +1168,7 @@ export function mergeNoteOf(
 
 export interface MentionRow extends OutstandingMention {
   opensOnTheBoard: boolean;
+  opensOnGitHub: boolean;
   deferredUntil: string | null;
   offTheBoard: string | null;
 }
@@ -1201,23 +1202,68 @@ export function mentionPageOf(
   };
 }
 
-export function cardBuildingOf(
+export type MentionCard = 'on-board' | 'building' | 'missing';
+
+export interface MentionCardSeen {
+  cardKeys: string[];
+  polledAt: string | null;
+}
+
+const ONE_POLL_MS = 90_000;
+
+function laterOf(...moments: (string | null | undefined)[]): number | null {
+  const known = moments.filter((one): one is string => Boolean(one));
+  return known.length ? Math.max(...known.map((one) => Date.parse(one))) : null;
+}
+
+export function mentionCardOf(
+  mentions: Mentions | null,
+  mention: OutstandingMention,
+  seen: MentionCardSeen,
+): MentionCard {
+  if (
+    mention.on_board ||
+    (mention.thread !== null && seen.cardKeys.includes(mention.thread))
+  )
+    return 'on-board';
+  const opened = mentions?.opened.find(
+    (one) => one.repo === mention.repo && one.number === mention.number,
+  );
+  const since = laterOf(mentions?.searched_at, opened?.opened_at);
+  if (since === null || seen.polledAt === null) return 'building';
+  return Date.parse(seen.polledAt) - since > ONE_POLL_MS
+    ? 'missing'
+    : 'building';
+}
+
+export interface ThreadCard {
+  card: MentionCard;
+  url: string;
+}
+
+export function threadCardOf(
   mentions: Mentions | null,
   repo: string,
   number: number,
   thread: string,
-): boolean {
-  return (mentions?.mentions ?? []).some(
+  seen: MentionCardSeen,
+): ThreadCard | null {
+  const mention = (mentions?.mentions ?? []).find(
     (one) =>
-      one.repo === repo &&
-      one.number === number &&
-      one.thread === thread &&
-      !one.on_board,
+      one.repo === repo && one.number === number && one.thread === thread,
   );
+  return mention
+    ? { card: mentionCardOf(mentions, mention, seen), url: mention.url }
+    : null;
 }
 
-function offTheBoardOf(mention: OutstandingMention): string | null {
-  if (mention.on_board) return null;
+function offTheBoardOf(
+  mention: OutstandingMention,
+  card: MentionCard,
+): string | null {
+  if (mention.thread === null) return 'opens on GitHub';
+  if (card === 'on-board') return null;
+  if (card === 'missing') return 'no card could be made · opens on GitHub';
   if (mention.building) return 'card being built';
   if (mention.ended) return `${mention.ended} · page rebuilt when opened`;
   return 'card built when opened';
@@ -1230,16 +1276,20 @@ export interface DeferTarget {
   title: string | null;
 }
 
-const mentionRowsSoFar = new WeakMap<Mentions, MentionRow[]>();
+const mentionRowsSoFar = new WeakMap<
+  Mentions,
+  { cards: string; rows: MentionRow[] }
+>();
 
 export function mentionRowsOf(
   mentions: Mentions | null,
   viewer: string | null,
   conversationsOf: (repo: string, number: number) => Conversation[],
   needingYou: string[],
+  seenOf: (repo: string, number: number) => MentionCardSeen,
 ): MentionRow[] {
   if (!mentions) return [];
-  const rows = listedMentionRows(mentions).map((row) =>
+  const rows = listedMentionRows(mentions, seenOf).map((row) =>
     landed(row, needingYou) ? { ...row, deferredUntil: null } : row,
   );
   if (viewer === null) return rows;
@@ -1300,16 +1350,23 @@ function deferredUntilOf(deferred: MentionDeferred | null): string | null {
   return `until ${whenOf(new Date(deferred.until_at ?? ''))}`;
 }
 
-function listedMentionRows(mentions: Mentions): MentionRow[] {
+function listedMentionRows(
+  mentions: Mentions,
+  seenOf: (repo: string, number: number) => MentionCardSeen,
+): MentionRow[] {
+  const cards = mentions.mentions.map((mention) =>
+    mentionCardOf(mentions, mention, seenOf(mention.repo, mention.number)),
+  );
   const known = mentionRowsSoFar.get(mentions);
-  if (known) return known;
-  const rows = mentions.mentions.map((mention) => ({
+  if (known?.cards === cards.join()) return known.rows;
+  const rows = mentions.mentions.map((mention, at) => ({
     ...mention,
     opensOnTheBoard: mention.on_board && mention.thread !== null,
+    opensOnGitHub: mention.thread === null || cards[at] === 'missing',
     deferredUntil: deferredUntilOf(mention.deferred),
-    offTheBoard: offTheBoardOf(mention),
+    offTheBoard: offTheBoardOf(mention, cards[at]!),
   }));
-  mentionRowsSoFar.set(mentions, rows);
+  mentionRowsSoFar.set(mentions, { cards: cards.join(), rows });
   return rows;
 }
 

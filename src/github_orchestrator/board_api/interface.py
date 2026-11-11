@@ -334,6 +334,7 @@ class OpenedForMention:
     pr: Pr
     comment_id: int | None
     outside_wall: bool
+    opened_at: str
 
 
 @dataclass(frozen=True)

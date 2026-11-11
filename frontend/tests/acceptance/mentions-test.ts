@@ -328,7 +328,7 @@ module('Acceptance | mentions', function (hooks) {
 
   test('a mention not on the board says its card is built when opened, and opens in context', async function (assert) {
     board().held = [heldPr()];
-    board().conversations = [thread({ key: 'k1' })];
+    board().conversations = [];
     board().mentions.mentions = [
       outstandingMention({ thread: 'k1', on_board: false }),
     ];
@@ -810,12 +810,20 @@ module('Acceptance | mentions | in context', function (hooks) {
 
   const LIST = 5000;
 
+  const OPENED = '2026-09-12T08:29:50Z';
+
   function openedFor(outside_wall: boolean, ended: 'merged' | 'closed') {
     board().held = [heldPr()];
     board().conversations = [thread({ key: 'k1' })];
     board().mentions.mentions = [outstandingMention({ thread: 'k1', ended })];
     board().mentions.opened = [
-      { repo: 'o/r', number: 7, comment_id: 1, outside_wall },
+      {
+        repo: 'o/r',
+        number: 7,
+        comment_id: 1,
+        outside_wall,
+        opened_at: OPENED,
+      },
     ];
   }
 
@@ -825,7 +833,13 @@ module('Acceptance | mentions | in context', function (hooks) {
       outstandingMention({ thread: 'k1', on_board: false, ended: 'merged' }),
     ];
     board().mentions.opened = [
-      { repo: 'o/r', number: 7, comment_id: 1, outside_wall: true },
+      {
+        repo: 'o/r',
+        number: 7,
+        comment_id: 1,
+        outside_wall: true,
+        opened_at: OPENED,
+      },
     ];
     await visit('/pr/o/r/7/conversations/k1');
 
@@ -854,6 +868,61 @@ module('Acceptance | mentions | in context', function (hooks) {
     assert
       .dom('[data-test-card-building]')
       .includesText('Building the card for this mention');
+  });
+
+  function polledSince(searchedAt: string) {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k2' })];
+    board().mentions.searched_at = searchedAt;
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', on_board: false, building: true }),
+    ];
+  }
+
+  test('a mention the watcher polled past without making its card says so and opens on GitHub', async function (assert) {
+    polledSince('2026-09-12T08:00:00Z');
+    await visit('/');
+    await click('[data-test-mentions-count]');
+
+    assert
+      .dom('[data-test-mention="k1"]')
+      .includesText('no card could be made · opens on GitHub');
+    assert
+      .dom('[data-test-mention="k1"] [data-test-mention-github]')
+      .hasAttribute('href', 'https://github.com/o/r/pull/7#issuecomment-1');
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-card-building]').doesNotExist();
+    assert
+      .dom('[data-test-card-missing] a')
+      .hasAttribute('href', 'https://github.com/o/r/pull/7#issuecomment-1');
+  });
+
+  test('a mention asked for since the last poll still says its card is being built', async function (assert) {
+    polledSince('2026-09-12T08:29:50Z');
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-card-building]').exists();
+    assert.dom('[data-test-card-missing]').doesNotExist();
+  });
+
+  test('a mention opened in context after the last poll waits for the next one', async function (assert) {
+    polledSince('2026-09-12T08:00:00Z');
+    board().mentions.opened = [
+      {
+        repo: 'o/r',
+        number: 7,
+        comment_id: 1,
+        outside_wall: false,
+        opened_at: '2026-09-12T08:29:50Z',
+      },
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-card-building]').exists();
   });
 
   test('a merged pull request opened for a mention says so in a banner, off the Wall', async function (assert) {
