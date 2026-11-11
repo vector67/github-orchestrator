@@ -146,7 +146,11 @@ export default class PanelActions extends Component<PanelActionsSignature> {
 
   decide = (offered: Offer) => {
     if (offered.asks === 'rework') {
-      this.rework.open(this.args.conversationId);
+      this.rework.open(
+        this.args.conversationId,
+        null,
+        this.args.rework?.unsent ?? '',
+      );
     } else if (offered.asks === 'composer') {
       this.compose();
     } else if (offered.asks === null) {

@@ -588,7 +588,7 @@ def refused(before: Conversation, after: Conversation, command: Change,
     operations = list(adopted(after).operations)
     _upserted(operations, replace(asked_of(before, command, asked, at),
                                   state=OperationState.REFUSED, reason=reason,
-                                  settled_at=at))
+                                  reason_code=ReasonCode.NOT_TAKEN, settled_at=at))
     return replace(after, operations=tuple(operations))
 
 

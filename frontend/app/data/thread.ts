@@ -148,11 +148,23 @@ export function unsettled(operation: { state: string }): boolean {
   return OUTSTANDING.includes(operation.state);
 }
 
+export function heldARun(one: {
+  kind: string;
+  reason_code: string | null;
+}): boolean {
+  return (
+    !(RUN_KINDS as string[]).includes(one.kind) ||
+    one.reason_code !== 'not-taken'
+  );
+}
+
 export function newestOf(
   conversation: Conversation,
   kinds: string[],
 ): OperationSummary | undefined {
-  return conversation.operations.findLast((one) => kinds.includes(one.kind));
+  return conversation.operations.findLast(
+    (one) => kinds.includes(one.kind) && heldARun(one),
+  );
 }
 
 export function outstanding(
@@ -200,6 +212,7 @@ function runAskedAfter(
   return after.some(
     (one) =>
       (RUN_KINDS as string[]).includes(one.kind) &&
+      heldARun(one) &&
       !partOfLanding(one, approve),
   );
 }

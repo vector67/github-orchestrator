@@ -30,6 +30,7 @@ import {
   atWork,
   busy,
   confirmed,
+  heldARun,
   local,
   newestOf,
   outstanding,
@@ -132,6 +133,7 @@ export interface ReworkView {
   send_label: string;
   note: string;
   reviewers: Reviewer[];
+  unsent: string;
 }
 
 export interface Affordance {
@@ -421,7 +423,7 @@ const FOLD_PLACEHOLDERS: Partial<Record<Phase, string>> = {
   working: 'The diff appears when the agent finishes.',
 };
 
-const REWORK: Omit<ReworkView, 'reviewers'> = {
+const REWORK: Omit<ReworkView, 'reviewers' | 'unsent'> = {
   kicker: 'Send back for rework',
   placeholder: 'Tell the agent what to change and why…',
   send_label: 'Send to agent for rework',
@@ -516,9 +518,18 @@ function newest<K extends OperationKind>(
   operations: Operation[],
   kinds: K[],
 ): OperationOf<K> | undefined {
-  return operations.findLast((one): one is OperationOf<K> =>
-    kinds.some((kind) => kind === one.kind),
+  return operations.findLast(
+    (one): one is OperationOf<K> =>
+      kinds.some((kind) => kind === one.kind) && heldARun(one),
   );
+}
+
+function unsentNoteOf(operations: Operation[]): string {
+  const rework = operations.findLast((one) => one.kind === 'rework');
+  if (rework?.kind !== 'rework' || rework.reason_code !== 'not-taken') {
+    return '';
+  }
+  return rework.brief?.note ?? '';
 }
 
 function runningOf(operation: Operation | undefined) {
@@ -1502,7 +1513,11 @@ export function panelOf(
       : null,
     rework:
       decides('rework') || reworksAPart(split)
-        ? { ...REWORK, reviewers: repliersOf(comments, context) }
+        ? {
+            ...REWORK,
+            reviewers: repliersOf(comments, context),
+            unsent: unsentNoteOf(settled),
+          }
         : null,
     agent_words:
       phase === 'declined'

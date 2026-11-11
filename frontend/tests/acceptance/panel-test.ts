@@ -636,6 +636,72 @@ module('Acceptance | panel', function (hooks) {
     },
   );
 
+  module('a rework the board would not take', function (hooks) {
+    const NOTE = 'Narrow the rename to the public name.';
+
+    hooks.beforeEach(function () {
+      const landed = board().threadIn('push failed', { key: KEY });
+      const [first, approve] = landed.operations;
+      const accepted = {
+        requested_at: '2026-09-12T11:00:00Z',
+        settled_at: '2026-09-12T11:02:00Z',
+      };
+      const turnedDown = {
+        requested_at: '2026-09-12T11:05:00Z',
+        settled_at: '2026-09-12T11:05:00Z',
+      };
+      landed.operations = [
+        first!,
+        { ...approve!, ...accepted },
+        {
+          ...first!,
+          id: `${KEY}.3`,
+          kind: 'rework',
+          state: 'refused',
+          reason_code: 'not-taken',
+          ...turnedDown,
+        },
+      ];
+      board().conversations = [landed];
+      board().operations[KEY] = [
+        operation({ id: `${KEY}.1`, conversation: KEY }),
+        operation({
+          id: approve!.id,
+          conversation: KEY,
+          kind: 'approve',
+          state: 'refused',
+          reason_code: 'push-failed',
+          reason: approve!.reason,
+          ...accepted,
+        }),
+        operation({
+          id: `${KEY}.3`,
+          conversation: KEY,
+          kind: 'rework',
+          state: 'refused',
+          reason_code: 'not-taken',
+          reason: 'a landing fix is not yours to send back',
+          brief: { note: NOTE, pointed: [], include: [], part: null },
+          ...turnedDown,
+        }),
+      ];
+    });
+
+    test('leaves the thread where it was', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.dom('[data-test-failure]').containsText('The push failed');
+    });
+
+    test('sending it back again offers the note it would not take', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-decision="rework"]');
+
+      assert.dom('[data-test-rework-body]').hasValue(NOTE);
+    });
+  });
+
   module('a landing that failed', function () {
     function refused(phase: Phase, reason: string) {
       const landed = board().threadIn(phase, { key: KEY });

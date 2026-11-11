@@ -21,9 +21,9 @@ export default class ReworkService extends Service {
     return this.openFor === key;
   }
 
-  open(key: string, part: SplitPartName | null = null): void {
+  open(key: string, part: SplitPartName | null = null, note = ''): void {
     this.openFor = key;
-    this.note = '';
+    this.note = note;
     this.pointed = [];
     this.included = [];
     this.visible = false;

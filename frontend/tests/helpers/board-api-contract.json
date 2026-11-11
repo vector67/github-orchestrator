@@ -6862,7 +6862,8 @@
     "git-failed",
     "anchor-not-in-diff",
     "superseded",
-    "worktree-missing"
+    "worktree-missing",
+    "not-taken"
    ],
    "type": "string"
   },

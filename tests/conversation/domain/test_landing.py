@@ -410,6 +410,27 @@ def test_a_fix_already_pushed_is_not_sent_back_and_says_its_landing_stalled(sett
     assert asked.code is ErrorCode.LANDING_STALLED
 
 
+def test_a_refused_rework_keeps_its_note_to_offer_back_and_leaves_the_fix_as_it_was(settings):
+    landing = Landing(settings)
+    landing.propose()
+    landing.github.refusing = True
+    landing.approve("renamed it")
+    before = landing.stored()
+
+    with landing.threads.editing(landing.key) as editable:
+        asked = editable.rework(note="narrow it")
+    assert isinstance(asked, Denied)
+
+    after = landing.stored()
+    rework = after.operations[-1]
+    assert rework.kind is OperationKind.REWORK
+    assert rework.state is OperationState.REFUSED
+    assert rework.brief.note == "narrow it"
+    assert after.fix.state == before.fix.state
+    assert after.run_holder == before.run_holder
+    assert after.proposal == before.proposal
+
+
 def _with_a_reply(settings):
     return Landing(settings, replies=(said(2, "and the test too"),))
 

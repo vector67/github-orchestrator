@@ -72,7 +72,8 @@ class ReasonCode(StrEnum):
     An `ErrorCode` answers a request the domain would not take; one of these
     is written onto an operation the domain did take, when git, GitHub or the
     agent later said no. GIT_FAILED is git refusing the pick itself rather
-    than conflicting.
+    than conflicting. NOT_TAKEN marks a verb the domain would not take, kept
+    so what it carried can be offered back; it never ran.
     """
 
     WITHDRAWN = "withdrawn"
@@ -91,6 +92,7 @@ class ReasonCode(StrEnum):
     ANCHOR_NOT_IN_DIFF = "anchor-not-in-diff"
     SUPERSEDED = "superseded"
     WORKTREE_MISSING = "worktree-missing"
+    NOT_TAKEN = "not-taken"
 
 
 class Classification(StrEnum):
@@ -488,7 +490,8 @@ class Operation:
 
     @property
     def holds_a_run(self) -> bool:
-        return self.is_run or self.kind == OperationKind.START_SESSION
+        return ((self.is_run or self.kind == OperationKind.START_SESSION)
+                and self.reason_code != ReasonCode.NOT_TAKEN)
 
     @property
     def in_flight(self) -> bool:

@@ -311,6 +311,9 @@ def ask(ports: Ports, conversation: Conversation, command: Command,
     if isinstance(outcome, Refused):
         if outcome.code is ErrorCode.CONFIRM_AGAIN:
             _asked_again_next(held, command)
+        if isinstance(command, Rework):
+            held.conversation = replace(conversation,
+                                        operations=outcome.conversation.operations)
         return Denied(outcome.code, outcome.reason)
     if (isinstance(command, EditDraft) and conversation.state == ENROLLED
             and _going_out(records.reviews())):

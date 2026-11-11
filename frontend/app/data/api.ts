@@ -853,7 +853,7 @@ export interface ReadMarks {
   marks: ReadMark[];
 }
 
-export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'open-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';
+export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'open-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing' | 'not-taken';
 
 export interface ReconcileOperation {
   id: string;
