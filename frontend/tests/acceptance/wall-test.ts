@@ -2491,7 +2491,9 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-wall-row="o/r#7"]').hasAttribute('data-refused');
     assert
       .dom('[data-test-refusal="o/r#7"]')
-      .hasText('the watcher holds no pull request o/r#7');
+      .hasText(
+        'The board no longer holds that; it may have closed. Reload the page to see what it holds.',
+      );
     assert.dom('[data-test-toast]').doesNotExist();
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')

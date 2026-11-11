@@ -181,7 +181,7 @@ module('Acceptance | setup', function (hooks) {
 
     assert
       .dom('[data-test-setup-by-name-trouble]')
-      .hasText('octocat cannot see acme/typo');
+      .hasText('That login cannot see that repository, or it does not exist.');
     assert.dom('[data-test-clone="acme/typo"]').doesNotExist();
   });
 

@@ -281,7 +281,7 @@ module('Acceptance | git palette', function (hooks) {
     assert
       .dom('[data-test-git-output-status]')
       .hasText(
-        'git status did not run: the palette names no command for these keys',
+        'git status did not run: The board could not take that request: the palette names no command for these keys',
       )
       .hasAttribute('data-refused');
     assert.deepEqual(board().reported, []);

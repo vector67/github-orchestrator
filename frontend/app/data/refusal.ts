@@ -7,7 +7,7 @@ export type Refused = Omit<ErrorDetail, 'code'> & {
 
 export class Refusal extends Error {
   readonly status: number;
-  readonly code: string;
+  readonly code: Refused['code'];
   readonly detail: string;
   readonly fields: Record<string, string>;
 

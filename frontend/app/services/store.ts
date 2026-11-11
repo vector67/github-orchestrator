@@ -101,7 +101,7 @@ import {
 } from 'frontend/data/refusal';
 import { forget, keep, recall, recalledAs } from 'frontend/data/site-data';
 import { reportError } from 'frontend/data/report';
-import { MOVED, tried, type Tried } from 'frontend/data/tried';
+import { MOVED, saidOf, tried, type Tried } from 'frontend/data/tried';
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
@@ -901,7 +901,7 @@ export default class StoreService extends Service {
     if (Object.keys(trouble.fields).length) {
       return trouble.fields['config'] ?? null;
     }
-    return trouble.detail;
+    return saidOf(trouble.code, trouble.detail);
   }
 
   dropSetupOperation(): void {

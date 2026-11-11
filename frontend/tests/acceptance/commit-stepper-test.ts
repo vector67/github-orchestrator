@@ -254,7 +254,9 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-read-box]').hasAttribute('data-refused');
     assert
       .dom('[data-test-read-refused]')
-      .hasText('Not marked read: that commit is not in the pull request');
+      .hasText(
+        'Not marked read: The worktree holds no such commit; it may not have fetched it yet.',
+      );
     assert.dom('[data-test-toast]').doesNotExist();
     assert.deepEqual(board().readMarks, []);
   });

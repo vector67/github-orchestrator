@@ -644,7 +644,7 @@ module('Acceptance | terminal', function (hooks) {
     assert
       .dom('[data-test-toast]')
       .includesText(
-        'git commit did not open: could not start git: No such file or directory',
+        'git commit did not open: the system would not start it: could not start git: No such file or directory',
       );
   });
 

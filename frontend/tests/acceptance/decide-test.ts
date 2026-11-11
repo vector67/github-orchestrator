@@ -185,7 +185,7 @@ module('Acceptance | decide', function (hooks) {
     await clicking;
   });
 
-  test('a refusal the board has no words for is shown in its own on the footer, which is left as it was, with no toast', async function (assert) {
+  test('a refusal asking to confirm again says so in the board’s own words on the footer, which is left as it was, with no toast', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     board().refusal = {
       status: 409,
@@ -200,7 +200,9 @@ module('Acceptance | decide', function (hooks) {
     assert.dom('#panel-actions').doesNotHaveAttribute('data-pending');
     assert
       .dom('#panel-actions [data-test-refusal]')
-      .includesText('approve again to land it');
+      .hasText(
+        'Something changed on this fix since you looked. Read it again, then press once more to go ahead.',
+      );
     assert.dom('[data-test-decision="approve"]').includesText('Accept');
     assert.dom('[data-test-decision="approve"]').isNotDisabled();
     assert.dom('[data-test-toast]').doesNotExist();

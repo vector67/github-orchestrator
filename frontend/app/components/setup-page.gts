@@ -15,6 +15,7 @@ import type {
 } from 'frontend/data/api';
 import type { Pressed } from 'frontend/data/decisions';
 import { Refusal } from 'frontend/data/refusal';
+import { saidOf } from 'frontend/data/tried';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 
@@ -60,7 +61,9 @@ function checkedOf(event: Event): boolean {
 }
 
 function troubleOf(trouble: unknown): string {
-  return trouble instanceof Refusal ? trouble.detail : String(trouble);
+  return trouble instanceof Refusal
+    ? saidOf(trouble.code, trouble.detail)
+    : String(trouble);
 }
 
 function cloneSaid(pick: Pick, clone: SetupClone | undefined): string {

@@ -100,7 +100,9 @@ module('Acceptance | harvest timer', function (hooks) {
     assert
       .dom('[data-test-harvest-setup] [data-test-refusal]')
       .hasAttribute('data-refused')
-      .hasText('Chrome has no Harvest Time Tracker installed');
+      .hasText(
+        'Chrome has no Harvest Time Tracker to copy. Add it to Chrome, then try again.',
+      );
     assert.dom('[data-test-harvest-prepare]').isNotDisabled();
   });
 

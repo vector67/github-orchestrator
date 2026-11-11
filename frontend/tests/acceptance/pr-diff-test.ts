@@ -408,7 +408,7 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-diff-failed]').doesNotExist();
       assert
         .dom('[data-test-fetching]')
-        .hasText('Not fetched: git fetch origin feature failed')
+        .hasText('Not fetched: git failed: git fetch origin feature failed')
         .hasAttribute('data-refused')
         .doesNotHaveAttribute('data-pending');
     });
