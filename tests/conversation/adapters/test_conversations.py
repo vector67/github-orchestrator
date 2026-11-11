@@ -494,6 +494,13 @@ def test_a_split_written_before_parts_were_accepted_has_none_accepted(here):
     assert _read(here, document).fix.split.accepted == frozenset()
 
 
+def test_a_split_written_before_existing_tickets_names_none(here):
+    document = _proposed_document(here)
+    document.update(proposal_kind="split", proposed_split=SPLIT_ON_DISK)
+
+    assert _read(here, document).fix.split.existing_ticket is None
+
+
 def test_a_ticket_being_filed_and_then_filed_is_kept_on_disk(here):
     threads = _heard(here)
     start_run(here, threads)

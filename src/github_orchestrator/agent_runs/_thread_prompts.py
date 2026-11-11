@@ -350,14 +350,17 @@ def _split_ticket_choice(fix: ThreadFix) -> list[str]:
         return ["5. Pass `--same-ticket`: no tracker is set up for this repository, so the new "
                 "PR goes under this PR's own ticket, or under none when this PR names none."]
     return [
-        "5. Choose the new PR's ticket. Pass `--same-ticket` when the work is still part of "
-        "this PR's ticket and only belongs in a pull request of its own. When the comment "
-        "says it is not part of this PR's ticket, search the tracker for one that already "
-        f"covers it: {_search(fix)}. If one does, pass `--same-ticket` and name and link "
-        "that ticket in `--reply`. If none does, draft one with `--project`, `--title` and "
-        "`--body`: a title that names the work, and a body that says what was asked, why it "
-        "belongs outside this pull request, and which comment raised it. It is filed only "
-        "once the author accepts it, so never file it yourself.",
+        "5. Choose the new PR's ticket. First search the tracker for a ticket, other than "
+        f"this PR's own, that already covers the moved code: {_search(fix)}.",
+        "   - Found one you judge to be the same work: the new PR goes under it. Pass its "
+        "key as `--ticket-key` and its link as `--ticket-url`; nothing is filed.",
+        "   - Found none, and the work is still part of this PR's ticket and only belongs "
+        "in a pull request of its own: pass `--same-ticket`.",
+        "   - Found none, and the comment says the work is not part of this PR's ticket: "
+        "draft one with `--project`, `--title` and `--body`: a title that names the work, "
+        "and a body that says what was asked, why it belongs outside this pull request, and "
+        "which comment raised it. It is filed only once the author accepts it, so never "
+        "file it yourself.",
     ]
 
 
@@ -367,6 +370,8 @@ def _split_new(commands: ReportCommands, fix: ThreadFix) -> str:
                           base_reason='"<one line: why that base>"',
                           project=_project(fix), title='"<the ticket\'s title>"',
                           body='"<the ticket\'s description>"',
+                          ticket_key="<the existing ticket's key>",
+                          ticket_url='"<the existing ticket\'s link>"',
                           reply='"<the reply to post on the comment>"')
 
 
@@ -409,8 +414,8 @@ def _split_out(commands: ReportCommands, fix: ThreadFix, heading: str) -> list[s
         "`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and "
         "`--base-reason` your one line. `--reply` is posted on the comment as the PR author "
         "once the new PR is open; the board adds the new PR's link, and the ticket's, below "
-        "it, so leave links out. Pass either `--same-ticket`, or `--project`, `--title` and "
-        "`--body`.",
+        "it, so leave links out. Pass exactly one ticket choice: `--ticket-key` and "
+        "`--ticket-url`, `--same-ticket`, or `--project`, `--title` and `--body`.",
         "",
     ]
 
@@ -687,6 +692,9 @@ PART_NAMES = {"ticket": "the ticket", "changes": "the changes to this PR",
 
 
 def _split_ticket(fix: ThreadFix) -> list[str]:
+    if fix.ticket_title is None and fix.ticket_key:
+        return [f"- Ticket: the existing ticket {fix.ticket_key}, {fix.ticket_url}; the new "
+                "PR goes under it and nothing is filed."]
     if fix.ticket_title is None:
         return ["- Ticket: none of its own; the new PR goes under this PR's own ticket."]
     return [f"- Ticket: a new one in {fix.ticket_project}, titled {fix.ticket_title}:",
@@ -711,7 +719,8 @@ def _rework_of(fix: ThreadFix) -> str:
     match fix.reworks_part:
         case "ticket":
             return ("Change the ticket's project, title or body. If the new PR belongs "
-                    "under this PR's own ticket after all, report `--same-ticket` instead.")
+                    "under an existing ticket after all, report its `--ticket-key` and "
+                    "`--ticket-url` instead; if under this PR's own ticket, `--same-ticket`.")
         case "changes":
             return (f"The changes to this PR are commit {sha}, the tip of this worktree. "
                     "Amend it here, run the project's linter and the tests for the files "
@@ -731,7 +740,7 @@ def _split_report(commands: ReportCommands, fix: ThreadFix) -> str:
     return commands.split(fix.pr, fix.key, sha=sha, branch=str(fix.split_branch),
                           base='"<the base>"', base_reason='"<why that base>"',
                           project='"<project>"', title='"<title>"', body='"<body>"',
-                          reply='"<the reply>"')
+                          ticket_key="<key>", ticket_url='"<link>"', reply='"<the reply>"')
 
 
 def _split_rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str) -> str:
@@ -772,8 +781,9 @@ def _split_rework_prompt(commands: ReportCommands, fix: ThreadFix, steer: str) -
         "",
         f"    {_split_report(commands, fix)}",
         "",
-        "Pass `--same-ticket` where the new PR goes under this PR's own ticket, and "
-        "`--project`, `--title` and `--body` where it has a ticket of its own.",
+        "Pass `--ticket-key` and `--ticket-url` where the new PR goes under an existing "
+        "ticket, `--same-ticket` where it goes under this PR's own ticket, and "
+        "`--project`, `--title` and `--body` where it has a new ticket of its own.",
         "",
         *_asking(commands, fix, "Anything else, decide yourself."),
         f"If {part} cannot be reworked as asked, report why and stop; the split stays as "

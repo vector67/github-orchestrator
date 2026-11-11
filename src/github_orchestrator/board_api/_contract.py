@@ -1282,6 +1282,13 @@ class Ticket(BaseModel):
     body: str
 
 
+class TicketLink(BaseModel):
+    """A ticket that already exists in the tracker."""
+
+    key: str = Field(description="The ticket's key, such as PROJ-34 or #34.")
+    url: str = Field(description="The link to the ticket.")
+
+
 class SplitPartResult(BaseModel):
     """One line saying what a part that has run did, and where to see it."""
 
@@ -1323,7 +1330,11 @@ class Split(BaseModel):
     base_reason: str = Field(description="Why the new PR goes onto that base.")
     ticket: Ticket | None = Field(
         description="The new PR's own ticket as the agent drafted it. Null where the "
-                    "new PR goes under this PR's ticket, which leaves no ticket part.")
+                    "new PR goes under this PR's ticket or an existing one, which leaves "
+                    "no ticket part.")
+    existing_ticket: TicketLink | None = Field(
+        description="The existing ticket the new PR goes under, as the agent's tracker "
+                    "search found it. Nothing is filed for it. Null otherwise.")
     parts: list[SplitPart] = Field(
         description="Each part the split has, in the order they run.")
 
