@@ -1,6 +1,7 @@
-import type { ResetRefusalCode } from 'frontend/data/api';
+import type { ReasonCode, ResetRefusalCode } from 'frontend/data/api';
 import { Refusal, type Refused } from 'frontend/data/refusal';
 import { reportError } from 'frontend/data/report';
+import { local } from 'frontend/data/thread';
 import { DOWN } from 'frontend/services/reachability';
 
 export const MOVED = 'precondition-failed';
@@ -164,6 +165,36 @@ const SAID: Record<Code, Said> = {
     "The board answered in a way the page does not understand; the server's " +
     'log may say why.',
 };
+
+const REASONS: Record<ReasonCode, Said> = {
+  withdrawn: 'it was stopped before it finished',
+  'agent-declined': beside('the agent made no change'),
+  'max-attempts': beside('the agent gave up'),
+  'agent-unavailable': beside('no agent could start'),
+  conflict: beside('the fix would not apply cleanly'),
+  'nothing-committed': 'the agent committed nothing',
+  'push-failed': beside('git could not push the fix'),
+  'reply-failed': beside('GitHub refused the reply'),
+  'file-failed': beside('the ticket was not filed'),
+  'open-failed': beside('the new pull request was not opened'),
+  'comment-gone': 'the comment was deleted from GitHub',
+  'github-rejected': beside('GitHub refused it'),
+  'git-failed': beside('git failed'),
+  'anchor-not-in-diff': "that line is not in the pull request's diff",
+  superseded: 'a newer request took its place',
+  'worktree-missing': "no worktree holds the pull request's branch",
+  'not-taken': 'the board did not take it, so it never ran',
+};
+
+export function reasonOf(one: {
+  reason?: string | null;
+  reason_code?: string | null;
+}): string {
+  const reason = one.reason ?? '';
+  if (local(one) || !one.reason_code) return reason;
+  const said = REASONS[one.reason_code as ReasonCode];
+  return typeof said === 'function' ? said(reason, unnamed) : said;
+}
 
 export function saidOf(
   code: Code,

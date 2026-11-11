@@ -4,6 +4,7 @@ import type {
   OperationSummary,
 } from 'frontend/data/api';
 import { causeOf } from 'frontend/data/failure';
+import { reasonOf } from 'frontend/data/tried';
 import {
   alertOf,
   columnOf,
@@ -132,12 +133,13 @@ function counted(steps: boolean[]): { done: number; total: number } {
 }
 
 function verdict(conversation: Conversation, word: string): string {
-  const reason =
-    conversation.operations.findLast((one) => one.state === 'refused')
-      ?.reason ?? '';
-  const cause = causeOf(phaseOf(conversation), reason);
+  const refused = conversation.operations.findLast(
+    (one) => one.state === 'refused',
+  );
+  const cause = causeOf(phaseOf(conversation), refused?.reason ?? '');
   if (cause) return `${word}: ${cause.short}`;
-  return reason ? `${word}: ${reason.trim().split('\n').at(-1)}` : word;
+  const said = refused ? reasonOf(refused).trim() : '';
+  return said ? `${word}: ${said.split('\n').at(-1)}` : word;
 }
 
 function authorMeta(

@@ -388,7 +388,9 @@ module('Acceptance | rail | what a row says', function (hooks) {
 
     assert
       .dom(`${row} [data-test-meta]`)
-      .hasText('skipped: only the author can choose between the two');
+      .hasText(
+        'skipped: the agent made no change: only the author can choose between the two',
+      );
   });
 
   test('a refused push says why in words, not in git output', async function (assert) {

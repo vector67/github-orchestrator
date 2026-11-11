@@ -301,7 +301,7 @@ module('Acceptance | send review', function (hooks) {
     assert
       .dom('[data-test-review-trouble]')
       .hasText(
-        'GitHub refused the review: Validation Failed: ' +
+        'The review was not sent: GitHub refused it: Validation Failed: ' +
           'pull_request_review_thread.line is invalid. Every draft is ' +
           'still in it.',
       );

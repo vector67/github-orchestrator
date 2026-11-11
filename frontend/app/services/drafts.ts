@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import type { DiffSide } from 'frontend/data/api';
 import { inFlight } from 'frontend/data/decisions';
 import { sent } from 'frontend/data/thread';
+import { reasonOf } from 'frontend/data/tried';
 import type { Lines } from 'frontend/data/selection';
 import type BoardService from 'frontend/services/board';
 import type ThreadsService from 'frontend/services/threads';
@@ -145,7 +146,7 @@ export default class DraftsService extends Service {
     );
     return {
       pending: made && sent(made) ? inFlight(made.kind) : null,
-      refused: made?.state === 'refused' ? made.reason : null,
+      refused: made?.state === 'refused' ? reasonOf(made) : null,
     };
   }
 

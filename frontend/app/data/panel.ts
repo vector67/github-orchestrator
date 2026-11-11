@@ -19,6 +19,7 @@ import type {
   TicketLink,
 } from 'frontend/data/api';
 import { causeOf } from 'frontend/data/failure';
+import { reasonOf } from 'frontend/data/tried';
 import {
   groupOf,
   groupsFor,
@@ -485,7 +486,7 @@ function draftNotes(conversation: Conversation): Note[] {
   return [
     {
       kind: 'verdict',
-      text: `GitHub refused the post: ${posted.reason ?? posted.reason_code ?? ''}`,
+      text: `Not posted: ${reasonOf(posted)}`,
     },
   ];
 }
@@ -698,7 +699,7 @@ function replyingOf(
 function replyRefused(operations: Operation[]): ReplyBox['refused'] {
   const last = operations.findLast((one) => one.kind === 'reply');
   if (last?.kind !== 'reply' || last.state !== 'refused') return null;
-  return { reason: last.reason ?? '', body: last.body };
+  return { reason: reasonOf(last), body: last.body };
 }
 
 function replyOf(
@@ -913,7 +914,7 @@ function workNotes(
       (run.reason_code === 'agent-declined'
         ? VERDICTS.declined
         : 'previous attempt failed: ');
-    notes.push({ kind: 'verdict', text: `${verdict}${run.reason}` });
+    notes.push({ kind: 'verdict', text: `${verdict}${reasonOf(run)}` });
   }
   if (fix?.conflict) {
     notes.push({
@@ -1215,7 +1216,7 @@ function failedPartOf(
   const approve = newest(operations, ['approve']);
   const part = FAILED_PARTS[approve?.reason_code ?? ''];
   if (approve?.state !== 'refused' || !part) return null;
-  return { part, reason: approve.reason ?? '' };
+  return { part, reason: reasonOf(approve) };
 }
 
 function partResultOf(one: SplitPart): PartResultView | null {

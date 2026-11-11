@@ -962,7 +962,7 @@ module('Acceptance | panel', function (hooks) {
 
     assert
       .dom('[data-test-notes] .verdict')
-      .hasText('attempt 3 of 3 failed: tests failed twice');
+      .hasText('attempt 3 of 3 failed: the agent gave up: tests failed twice');
   });
 
   test('an assumed done thread on your PR says the agent skipped it, not that it failed', async function (assert) {
@@ -983,7 +983,9 @@ module('Acceptance | panel', function (hooks) {
 
     assert
       .dom('[data-test-notes] .verdict')
-      .hasText('skipped: thanks the author, asks for nothing');
+      .hasText(
+        'skipped: the agent made no change: thanks the author, asks for nothing',
+      );
   });
 
   test('a fix the agent is rebasing says it lands on its own, with the conflict folded away', async function (assert) {
@@ -1465,7 +1467,7 @@ module('Acceptance | panel | a draft', function (hooks) {
 
     assert
       .dom('[data-test-notes]')
-      .hasText('GitHub refused the post: line must be part of the diff');
+      .hasText('Not posted: GitHub refused it: line must be part of the diff');
   });
 
   test('a draft whose details have not arrived is not composed yet', async function (assert) {

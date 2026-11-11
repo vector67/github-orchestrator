@@ -11,6 +11,7 @@ import {
   type Review,
 } from 'frontend/data/review';
 import { local, sent } from 'frontend/data/thread';
+import { reasonOf } from 'frontend/data/tried';
 import type BoardService from 'frontend/services/board';
 import type PollService from 'frontend/services/poll';
 import type StoreService from 'frontend/services/store';
@@ -67,7 +68,7 @@ export default class ReviewService extends Service {
     if (going?.state !== 'refused') return null;
     if (local(going)) return going.reason;
     return (
-      `GitHub refused the review: ${going.reason ?? going.reason_code ?? ''}. ` +
+      `The review was not sent: ${reasonOf(going)}. ` +
       'Every draft is still in it.'
     );
   }

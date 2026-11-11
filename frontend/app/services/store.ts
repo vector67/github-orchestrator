@@ -101,7 +101,13 @@ import {
 } from 'frontend/data/refusal';
 import { forget, keep, recall, recalledAs } from 'frontend/data/site-data';
 import { reportError } from 'frontend/data/report';
-import { MOVED, saidOf, tried, type Tried } from 'frontend/data/tried';
+import {
+  MOVED,
+  reasonOf,
+  saidOf,
+  tried,
+  type Tried,
+} from 'frontend/data/tried';
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
@@ -1593,7 +1599,7 @@ export default class StoreService extends Service {
           ({ id: session }) => one.listed && !one.listed.includes(session),
         );
         if (answer?.state === 'refused') {
-          this.refuse(pr, one, answer.reason ?? '', answer.reason_code ?? null);
+          this.refuse(pr, one, reasonOf(answer), answer.reason_code ?? null);
         } else if (fresh || answer?.state === 'applied') {
           this.drop(pr, one);
         }
