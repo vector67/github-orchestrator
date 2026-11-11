@@ -5,8 +5,8 @@ from typing import Any
 
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
-from github_orchestrator.board_api.interface import DismissUntil, ManagerRefusal
-from github_orchestrator.domain import Monotonic, Pr
+from github_orchestrator.board_api.interface import ManagerRefusal
+from github_orchestrator.domain import DismissUntil, Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
 from github_orchestrator.pr_manager._files import locked

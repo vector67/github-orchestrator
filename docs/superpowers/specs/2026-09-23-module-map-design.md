@@ -203,6 +203,10 @@ takes `after|before`.
   case-insensitive disk. `ThreadName.parse` answers `None` for a name no key
   spells. Thread records, working copies and the thread names migration each
   carried a copy of the encoding and its inverse (#247).
+- `DismissUntil`: how long a dismissal lasts (`next-event`,
+  `ready-for-review`, `forever`), the one spelling on the board's wire and in
+  settings' flag files. The board and settings each carried their own enum,
+  with the manager translating between them (#159).
 
 ## Processes
 
@@ -1375,7 +1379,10 @@ how each setting is resolved, the log layout, and the switch files.
   lasts. **Done** (the commit that records this): `Dismissal.lasts` says
   it ("until the next event", "until ready for review", "forever"), the dry
   run reads it, and `Dismissal` left again: six, `ConfigFile`, `Dismissals`,
-  `Holds`, `Logs`, `Process` and `ReviewerPicks`.
+  `Holds`, `Logs`, `Process` and `ReviewerPicks`. Later (#159) `Dismissal`
+  and the board's `DismissUntil` became the kernel's one `DismissUntil`,
+  spelled on disk as on the wire; `Dismissals.migrate` rewrites the old
+  words at the watcher's start, and the dry run's wording moved into it.
 - **Done** (`d627d666`): `TMUX_SESSION` moved to PR windows. **Done**
   (`2e3a4eba`): `is_repo_spec` became `Repo.parse`.
 - **Done** (`d627d666`): `REPO_ROOT` and the `UNSET_*` words stay inside.

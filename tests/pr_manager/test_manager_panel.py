@@ -10,17 +10,11 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
     Reviewing,
 )
-from github_orchestrator.board_api.interface import (
-    DismissUntil,
-    ManagerRefusal,
-    Notice,
-    NoticeCode,
-)
-from github_orchestrator.domain import ReviewerPick
+from github_orchestrator.board_api.interface import ManagerRefusal, Notice, NoticeCode
+from github_orchestrator.domain import DismissUntil, ReviewerPick
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.settings.fake import Dismissal
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.pr_manager.scripted_terminal import ScriptEnded
@@ -375,18 +369,13 @@ def test_start_review_from_the_board_is_refused_when_claude_is_disabled(settings
     assert answers == [ManagerRefusal.AGENTS_DISABLED]
 
 
-@pytest.mark.parametrize(("until", "dismissal"), [
-    (DismissUntil.NEXT_EVENT, Dismissal.UNTIL_NEXT_EVENT),
-    (DismissUntil.READY_FOR_REVIEW, Dismissal.UNTIL_READY_FOR_REVIEW),
-    (DismissUntil.FOREVER, Dismissal.FOREVER),
-])
-def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_path, until,
-                                                                  dismissal):
+@pytest.mark.parametrize("until", list(DismissUntil))
+def test_dismiss_from_the_board_records_it_and_the_manager_exits(settings, tmp_path, until):
     board = ServerPanel()
     reached = []
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.dismiss(until),
               lambda: reached.append(True), board=board)
-    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is dismissal
+    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is until
     assert reached == []
 
 
@@ -635,5 +624,5 @@ def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):
         board.panel.set_on_hold(True)
 
     _on_the_browser_front(settings, tmp_path, dismiss_then_hold, None, board=board)
-    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is Dismissal.UNTIL_NEXT_EVENT
+    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is DismissUntil.NEXT_EVENT
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is False

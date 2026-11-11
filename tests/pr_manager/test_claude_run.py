@@ -8,7 +8,7 @@ from github_orchestrator.agent_runs.fake import (
     FakeAgentRuns,
     Outcome,
 )
-from github_orchestrator.board_api.interface import DismissUntil
+from github_orchestrator.domain import DismissUntil
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
 from tests.conversation.support import (

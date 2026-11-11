@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, RootModel, StringConstraints
 from github_orchestrator import conversation as domain
 from github_orchestrator.board_api.interface import (
     CloneState,
-    DismissUntil,
     ManagerStanding,
     NoticeCode,
     ResetRefusalCode,
@@ -21,7 +20,7 @@ from github_orchestrator.conversation import (
     OperationState,
     ReasonCode,
 )
-from github_orchestrator.domain import AuthorKind, HubState, Side
+from github_orchestrator.domain import AuthorKind, DismissUntil, HubState, Side
 
 
 class ErrorCode(StrEnum):

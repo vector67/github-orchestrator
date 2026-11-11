@@ -42,7 +42,7 @@ def test_a_dismissed_pr_names_the_mode_it_was_dismissed_with(status_dirs, run_cl
     disk_dismissals(settings.data_dir).dismiss_forever(a_pr(68, REPO))
     status = run_cli("status")
     out = status.out
-    assert pr_line(out, 67).endswith("[DISMISSED until-event]")
+    assert pr_line(out, 67).endswith("[DISMISSED next-event]")
     assert pr_line(out, 68).endswith("[DISMISSED forever]")
 
 

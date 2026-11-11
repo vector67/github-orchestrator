@@ -2,14 +2,13 @@ from collections.abc import Set
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.domain import Pr, Repo, ReviewerPick
+from github_orchestrator.domain import DismissUntil, Pr, Repo, ReviewerPick
 from github_orchestrator.settings._config import (
     OrchestratorConfig as OrchestratorConfig,
 )
 from github_orchestrator.settings._config import Tracker as Tracker
 from github_orchestrator.settings._settings import Settings as Settings
 from github_orchestrator.settings.interface import ConfigRow as ConfigRow
-from github_orchestrator.settings.interface import Dismissal as Dismissal
 from github_orchestrator.settings.interface import Process
 from github_orchestrator.settings.interface import RepoEntry as RepoEntry
 
@@ -73,32 +72,35 @@ class FakeReviewerPicks:
 
 class FakeDismissals:
     def __init__(self) -> None:
-        self._dismissed: dict[Pr, Dismissal] = {}
+        self._dismissed: dict[Pr, DismissUntil] = {}
 
-    def dismissal(self, pr: Pr) -> Dismissal | None:
+    def migrate(self) -> None:
+        pass
+
+    def dismissal(self, pr: Pr) -> DismissUntil | None:
         return self._dismissed.get(pr)
 
     def dismiss_forever(self, pr: Pr) -> None:
-        self._dismissed[pr] = Dismissal.FOREVER
+        self._dismissed[pr] = DismissUntil.FOREVER
 
     def dismiss_until_next_event(self, pr: Pr) -> None:
-        self._dismissed[pr] = Dismissal.UNTIL_NEXT_EVENT
+        self._dismissed[pr] = DismissUntil.NEXT_EVENT
 
     def dismiss_until_ready_for_review(self, pr: Pr) -> None:
-        self._dismissed[pr] = Dismissal.UNTIL_READY_FOR_REVIEW
+        self._dismissed[pr] = DismissUntil.READY_FOR_REVIEW
 
     def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool:
         dismissal = self._dismissed.get(pr)
-        if dismissal is Dismissal.UNTIL_NEXT_EVENT and events_waiting:
+        if dismissal is DismissUntil.NEXT_EVENT and events_waiting:
             del self._dismissed[pr]
             return False
-        if dismissal is Dismissal.UNTIL_READY_FOR_REVIEW and not draft:
+        if dismissal is DismissUntil.READY_FOR_REVIEW and not draft:
             del self._dismissed[pr]
             return False
         return dismissal is not None
 
     def is_dismissed_forever(self, pr: Pr) -> bool:
-        return self._dismissed.get(pr) is Dismissal.FOREVER
+        return self._dismissed.get(pr) is DismissUntil.FOREVER
 
     def undismiss(self, pr: Pr) -> bool:
         return self._dismissed.pop(pr, None) is not None

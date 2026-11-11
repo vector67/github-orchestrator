@@ -3,15 +3,12 @@ import logging
 from collections.abc import Set
 from pathlib import Path
 
-from github_orchestrator.domain import Pr, Repo, ReviewerPick
+from github_orchestrator.domain import DismissUntil, Pr, Repo, ReviewerPick
 from github_orchestrator.settings._paths import repo_subdir
-from github_orchestrator.settings.interface import Dismissal
 
 log = logging.getLogger(__name__)
 
-_STORED = {"until-event": Dismissal.UNTIL_NEXT_EVENT, "forever": Dismissal.FOREVER,
-           "until-ready": Dismissal.UNTIL_READY_FOR_REVIEW}
-_WORDS = {dismissal: word for word, dismissal in _STORED.items()}
+_OLD_WORDS = {"until-event": DismissUntil.NEXT_EVENT, "until-ready": DismissUntil.READY_FOR_REVIEW}
 
 
 def _flag_prs(flag_dir: Path) -> set[Pr]:
@@ -91,44 +88,55 @@ class FlagFileDismissals:
     def __init__(self, dismissed_dir: Path) -> None:
         self._dismissed_dir = dismissed_dir
 
-    def dismissal(self, pr: Pr) -> Dismissal | None:
+    def migrate(self) -> None:
+        for pr in self.dismissed_prs():
+            dismissal = _OLD_WORDS.get(self._word(pr) or "")
+            if dismissal is not None:
+                self._dismiss(pr, dismissal)
+
+    def _word(self, pr: Pr) -> str | None:
         path = _flag_file(self._dismissed_dir, pr)
         if not path.exists():
             return None
         try:
-            word = path.read_text().strip()
+            return path.read_text().strip()
         except (OSError, UnicodeDecodeError):
             return None
-        return _STORED.get(word)
 
-    def _dismiss(self, pr: Pr, dismissal: Dismissal) -> None:
+    def dismissal(self, pr: Pr) -> DismissUntil | None:
+        word = self._word(pr)
+        if word not in set(DismissUntil):
+            return None
+        return DismissUntil(word)
+
+    def _dismiss(self, pr: Pr, dismissal: DismissUntil) -> None:
         path = _flag_file(self._dismissed_dir, pr)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(_WORDS[dismissal])
+        path.write_text(dismissal)
 
     def dismiss_forever(self, pr: Pr) -> None:
-        self._dismiss(pr, Dismissal.FOREVER)
+        self._dismiss(pr, DismissUntil.FOREVER)
 
     def dismiss_until_next_event(self, pr: Pr) -> None:
-        self._dismiss(pr, Dismissal.UNTIL_NEXT_EVENT)
+        self._dismiss(pr, DismissUntil.NEXT_EVENT)
 
     def dismiss_until_ready_for_review(self, pr: Pr) -> None:
-        self._dismiss(pr, Dismissal.UNTIL_READY_FOR_REVIEW)
+        self._dismiss(pr, DismissUntil.READY_FOR_REVIEW)
 
     def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool:
         dismissal = self.dismissal(pr)
-        if dismissal is Dismissal.UNTIL_NEXT_EVENT and events_waiting:
+        if dismissal is DismissUntil.NEXT_EVENT and events_waiting:
             log.info("%s: an event is waiting — ending its dismissal until the next event", pr)
             self.undismiss(pr)
             return False
-        if dismissal is Dismissal.UNTIL_READY_FOR_REVIEW and not draft:
+        if dismissal is DismissUntil.READY_FOR_REVIEW and not draft:
             log.info("%s: no longer a draft — ending its dismissal until ready for review", pr)
             self.undismiss(pr)
             return False
         return dismissal is not None
 
     def is_dismissed_forever(self, pr: Pr) -> bool:
-        return self.dismissal(pr) is Dismissal.FOREVER
+        return self.dismissal(pr) is DismissUntil.FOREVER
 
     def undismiss(self, pr: Pr) -> bool:
         try:

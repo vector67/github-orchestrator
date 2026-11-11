@@ -222,11 +222,17 @@ class Sleep:
         self.wait(seconds)
 
 
+class DismissUntil(StrEnum):
+    NEXT_EVENT = "next-event"
+    READY_FOR_REVIEW = "ready-for-review"
+    FOREVER = "forever"
+
+
 class HubState(StrEnum):
     SETUP = "setup"
     WATCHING = "watching"
     BROKEN = "broken"
 
 
-__all__ = ["HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+__all__ = ["DismissUntil", "HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]
