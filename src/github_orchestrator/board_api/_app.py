@@ -965,6 +965,8 @@ def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
         raise Refusal(409, ErrorCode.AGENT_WORKING,
                       "an agent is working in the worktree, so it was left as it is")
     _refuse_unless_diverged(dashboard)
+    if board.git.no_worktree() is not None:
+        raise Refusal(409, ErrorCode.WORKTREE_MISSING, "")
     if not board.git.is_clean():
         raise Refusal(409, ErrorCode.UNCOMMITTED_CHANGES,
                       "the worktree has uncommitted changes, so it was left as it is")

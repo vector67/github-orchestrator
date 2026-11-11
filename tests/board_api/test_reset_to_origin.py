@@ -72,6 +72,19 @@ def test_a_worktree_with_uncommitted_changes_is_left_as_it_is():
     assert copies.head_of(WORKTREE) == before
 
 
+def test_a_missing_worktree_is_refused_as_missing_not_as_uncommitted_changes():
+    copies, _ = diverged()
+    head = shown(copies)
+    client = reset_board(copies)
+    copies.lose_worktree(WORKTREE)
+    copies.placed.pop(THE_PR)
+
+    answer = client.post(RESET, json=head)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "worktree-missing"
+
+
 def test_a_worktree_an_agent_is_working_in_is_left_as_it_is():
     copies, _ = diverged()
     before = copies.head_of(WORKTREE)
