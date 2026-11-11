@@ -510,6 +510,11 @@ worktrees live, how branch trouble is detected, and how long it may last.
   branch without diffing it, so `/pull-request` can name the merge base of
   the head a comment is posted against on every poll. `pr_diff` builds on
   it. `Revisions` has 11 methods.
+- **Done** (#297, #330): `Revisions.head_diff` answers the PR's diff from
+  origin's head or the worktree's, and `Revisions.line_count` a file's line
+  count at a commit, so the PR diff read and `/pull-request`'s merge base
+  are held per PR checkout while the head and base tips stand still, read
+  in one `rev-parse`. `Revisions` has 13 methods.
 
 ### PR windows
 
