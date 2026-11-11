@@ -692,7 +692,10 @@ class Conversation:
         holder, approval = self.run_holder, self.latest_approval
         held = None if holder is None else holder.id
         approved = None if approval is None else approval.id
-        return tuple(_view_of(self, operation, operation.id in (held, approved))
+        live = next((operation.id for operation in reversed(self.operations)
+                     if operation.kind == self.fix.run.kind), None)
+        return tuple(_view_of(self, operation, operation.id in (held, approved),
+                              operation.id == live)
                      for operation in self.operations)
 
 
@@ -718,13 +721,16 @@ def _proposal_id(conversation: Conversation) -> str:
     return f"{conversation.key if producer is None else producer.id}.proposal"
 
 
-def _view_of(conversation: Conversation, operation: Operation, current: bool) -> OperationView:
+def _view_of(conversation: Conversation, operation: Operation, current: bool,
+             live: bool) -> OperationView:
     fix = conversation.fix
+    onto, conflict = (fix.run.onto, fix.run.conflict) if live else (None, None)
     if not current:
         if operation.kind == OperationKind.APPROVE:
             return OperationView(operation, text=operation.text)
         return OperationView(operation, text=operation.text,
-                             posted_comment=operation.posted_comment, brief=operation.brief)
+                             posted_comment=operation.posted_comment, brief=operation.brief,
+                             onto=onto, conflict=conflict)
     if operation.kind == OperationKind.APPROVE:
         return OperationView(
             operation, current=True,
@@ -740,7 +746,7 @@ def _view_of(conversation: Conversation, operation: Operation, current: bool) ->
         operation, current=True, text=operation.text,
         posted_comment=operation.posted_comment,
         brief=operation.brief or fix.run.brief,
-        plan=fix.plan, onto=fix.run.onto, conflict=fix.run.conflict,
+        plan=fix.plan, onto=onto, conflict=conflict,
         classification=fix.classification,
         proposal=_proposal_id(conversation) if produced else None)
 

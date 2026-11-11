@@ -757,3 +757,13 @@ def test_a_diverged_checkout_hands_the_approve_back_when_no_agent_may_run(settin
     handed_back = unable.get(KEY)
     assert handed_back.fix.is_proposed
     assert str(unmatched)[:12] in handed_back.fix.reason
+
+
+def test_only_the_reconcile_run_carries_how_the_worktree_diverged(settings):
+    landing = Landing(settings)
+    _reconciling(landing)
+
+    conflicts = {view.operation.kind: view.conflict for view in landing.stored().views}
+
+    assert conflicts[OperationKind.RECONCILE] is not None
+    assert conflicts[OperationKind.FIRST] is None
