@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.agent_runs._agents import Agent
+from github_orchestrator.agent_runs._agents import Agent, is_setting
 from github_orchestrator.agent_runs._command_lines import CommandLines, command_lines_of
 from github_orchestrator.agent_runs._jev import Ask, choose
 from github_orchestrator.agent_runs._ledger import (
@@ -97,22 +97,18 @@ WONT_START = "could not start the agent"
 Popen = Callable[..., "subprocess.Popen[bytes]"]
 
 
-def _is_setting(word: str) -> bool:
-    return word.partition("=")[0].isidentifier() and "=" in word
-
-
 def _filled_in(setting: str) -> str:
     name, _, value = setting.partition("=")
     return f"{name}={os.path.expanduser(value)}"
 
 
 def command_program(command: str) -> str:
-    return next((word for word in shlex.split(command) if not _is_setting(word)), command)
+    return next((word for word in shlex.split(command) if not is_setting(word)), command)
 
 
 def command_argv(command: str) -> list[str]:
     words = shlex.split(command)
-    settings = list(itertools.takewhile(_is_setting, words))
+    settings = list(itertools.takewhile(is_setting, words))
     if not settings:
         return words
     return ["env", *map(_filled_in, settings), *words[len(settings):]]

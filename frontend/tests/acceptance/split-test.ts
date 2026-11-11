@@ -23,6 +23,7 @@ import type {
   SplitPart,
   SplitPartName,
   Ticket,
+  TicketLink,
 } from 'frontend/data/api';
 
 const KEY = 'PRRT_split';
@@ -53,9 +54,13 @@ function parts(ticket: boolean): SplitPart[] {
   ];
 }
 
-function splitProposal(
-  over: { ticket?: Ticket | null; parts?: SplitPart[] } = {},
-): Proposal {
+interface SplitOver {
+  ticket?: Ticket | null;
+  existing?: TicketLink | null;
+  parts?: SplitPart[];
+}
+
+function splitProposal(over: SplitOver = {}): Proposal {
   const ticket = over.ticket ?? null;
   return proposal({
     id: PROPOSAL,
@@ -69,15 +74,13 @@ function splitProposal(
       base: 'main',
       base_reason: 'the rounding change stands alone',
       ticket,
+      existing_ticket: over.existing ?? null,
       parts: over.parts ?? parts(ticket !== null),
     },
   });
 }
 
-function seed(
-  board: FakeBoard,
-  over: { ticket?: Ticket | null; parts?: SplitPart[] } = {},
-) {
+function seed(board: FakeBoard, over: SplitOver = {}) {
   board.conversations = [board.threadIn('proposed', { key: KEY })];
   board.comments[KEY] = [comment({ body: 'this belongs in its own PR' })];
   board.operations[KEY] = [
@@ -156,6 +159,37 @@ module('Acceptance | split', function (hooks) {
     assert
       .dom('[data-test-split-card="new-pr"] [data-test-part-base-reason]')
       .hasText('the rounding change stands alone');
+  });
+
+  test('a new PR under an existing ticket names it on the new PR card, with no ticket card', async function (assert) {
+    seed(board(), {
+      existing: {
+        key: 'PROJ-34',
+        url: 'https://example.atlassian.net/browse/PROJ-34',
+      },
+    });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(texts('[data-test-split-card] [data-test-part-kicker]'), [
+      'Changes to this PR',
+      'New PR',
+      'Reply',
+    ]);
+    assert
+      .dom('[data-test-split-card="new-pr"] [data-test-part-existing-ticket]')
+      .hasText('Existing ticket PROJ-34');
+    assert
+      .dom('[data-test-split-card="new-pr"] [data-test-part-existing-ticket] a')
+      .hasAttribute('href', 'https://example.atlassian.net/browse/PROJ-34');
+  });
+
+  test("a new PR under this PR's ticket names no existing ticket", async function (assert) {
+    seed(board());
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-part-existing-ticket]').doesNotExist();
   });
 
   test('each proposed part offers its own buttons, Edit only where it has words', async function (assert) {
@@ -302,6 +336,58 @@ module('Acceptance | split', function (hooks) {
     assert.strictEqual(posted.verb, 'approve');
     assert.propContains(posted.body, { resolve: true });
     assert.notOk('part' in (posted.body as object));
+  });
+
+  test('Accept all names every part in turn when the split files a ticket', async function (assert) {
+    seed(board(), { ticket: TICKET });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'Each runs in turn: the ticket is filed, the changes are pushed to ' +
+          'this PR, the new PR is opened, and the reply is posted naming it. ' +
+          'A part that has run cannot be undone.',
+      );
+  });
+
+  test('Accept all files no ticket when the new PR keeps this ticket', async function (assert) {
+    seed(board());
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'Each runs in turn: the changes are pushed to this PR, the new PR is ' +
+          'opened, and the reply is posted naming it. A part that has run ' +
+          'cannot be undone.',
+      );
+  });
+
+  test('Accept all names only the parts not yet accepted or run', async function (assert) {
+    seed(board(), {
+      ticket: TICKET,
+      parts: [
+        part('ticket', { state: 'run', result: { text: 'PROJ-1', url: null } }),
+        part('changes', { state: 'queued' }),
+        part('new-pr', { state: 'running', waits_for: 'ticket' }),
+        part('reply', { waits_for: 'new-pr' }),
+      ],
+    });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'The reply is posted naming the new PR. A part that has run cannot ' +
+          'be undone.',
+      );
   });
 
   test('Reject is offered while no part has run', async function (assert) {

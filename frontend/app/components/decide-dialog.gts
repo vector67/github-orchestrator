@@ -293,7 +293,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
             {{on "click" this.leave}}
           >×</button>
         </header>
-        <p class="note">{{this.note}}</p>
+        <p class="note" data-test-dialog-note>{{this.note}}</p>
         {{#if this.accepting}}
           {{#if this.accepting.message}}
             <div class="commit-head">

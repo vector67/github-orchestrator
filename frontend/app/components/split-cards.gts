@@ -140,6 +140,16 @@ export default class SplitCards extends Component<SplitCardsSignature> {
               class="part-note"
               data-test-part-base-reason
             >{{card.new_pr.base_reason}}</p>
+            {{#if card.new_pr.existing_ticket}}
+              <p class="part-note" data-test-part-existing-ticket>
+                Existing ticket
+                <a
+                  href={{card.new_pr.existing_ticket.url}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{card.new_pr.existing_ticket.key}}</a>
+              </p>
+            {{/if}}
           {{/if}}
           {{#if card.reply}}
             <blockquote

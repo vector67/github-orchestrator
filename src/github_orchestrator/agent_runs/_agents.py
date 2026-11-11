@@ -1,5 +1,7 @@
 import enum
+import itertools
 import os
+import shlex
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -8,6 +10,21 @@ CHATGPT_APP_CODEX = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/
 
 Which = Callable[[str], str | None]
 Exists = Callable[[str], bool]
+
+
+def is_setting(word: str) -> bool:
+    return word.partition("=")[0].isidentifier() and "=" in word
+
+
+def _config_dir(command: str) -> str | None:
+    settings = dict(word.split("=", 1) for word in itertools.takewhile(is_setting, shlex.split(command)))
+    return settings.get("CLAUDE_CONFIG_DIR")
+
+
+def _under(home: Path, path: str) -> Path:
+    if path == "~" or path.startswith("~/"):
+        return home / path[2:]
+    return Path(path)
 
 
 class Agent(enum.StrEnum):
@@ -47,5 +64,8 @@ class Agent(enum.StrEnum):
     def verdict_model(self) -> str:
         return {Agent.CLAUDE: "sonnet", Agent.CODEX: "gpt-6-luna"}[self]
 
-    def skill_folder(self, home: Path) -> Path:
+    def skill_folder(self, home: Path, command: str) -> Path:
+        config_dir = _config_dir(command) if self is Agent.CLAUDE else None
+        if config_dir is not None:
+            return _under(home, config_dir) / "skills"
         return home / {Agent.CLAUDE: ".claude", Agent.CODEX: ".agents"}[self] / "skills"

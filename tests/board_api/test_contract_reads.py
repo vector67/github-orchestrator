@@ -778,15 +778,29 @@ def test_an_accepted_ticket_is_filed_as_edited_and_its_landing_shows_the_filing(
     assert (summarised["lands"], summarised["ticket_key"]) == ("ticket", "WEB-12")
 
 
-def _split(board):
+def _split(board, **ticket):
     start_run(board.stage, board.threads)
     sha = commit_fix(board.stage, KEY, {"src/foo.py": "removed\n"}, pr=THE_PR,
                      message="Take the cache out")
     board.stage.working_copies.branches["split/cache"] = sha
     with board.threads.editing(KEY) as editable:
         editable.split(sha, branch="split/cache", base="main", base_reason="it stands alone",
-                       reply="This moved to its own PR.")
+                       reply="This moved to its own PR.", **ticket)
     drain(board)
+
+
+def test_a_split_under_an_existing_ticket_names_it_and_offers_no_ticket_part():
+    board = board_for()
+    card(board)
+    _split(board, ticket_key="PROJ-34",
+           ticket_url="https://example.atlassian.net/browse/PROJ-34")
+
+    [proposal] = client_of(board).get(f"/api/conversations/{KEY}/proposals").json()
+
+    assert (proposal["split"]["ticket"], proposal["split"]["existing_ticket"]) == (
+        None, {"key": "PROJ-34", "url": "https://example.atlassian.net/browse/PROJ-34"})
+    assert [part["part"] for part in proposal["split"]["parts"]] == [
+        "changes", "new-pr", "reply"]
 
 
 def test_a_proposed_split_waits_under_ready_for_you_with_its_reply():

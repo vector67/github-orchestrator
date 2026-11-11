@@ -139,3 +139,14 @@ def test_the_skill_finds_its_script_beside_itself_whichever_agent_reads_it():
 
     assert "~/" not in said
     assert "rebase-on-main.sh" in said
+
+
+def test_a_claude_instance_with_its_own_config_dir_installs_the_skill_there(machine, run_cli):
+    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n')
+    work_skill = machine.home / ".claude-work" / "skills" / "rebase-on-main"
+
+    ran = run_cli("skill")
+
+    assert ran.code == 0, ran.out
+    assert _contents(work_skill) == _contents(PACKAGED)
+    assert not _skill(machine).exists()

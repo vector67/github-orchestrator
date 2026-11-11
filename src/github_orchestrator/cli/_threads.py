@@ -95,16 +95,25 @@ def thread_ticket(args: argparse.Namespace, *, conversation_managers: Conversati
         ticket_title=args.title, ticket_body=args.body), "ticketed")
 
 
+def _given(*values: str | None) -> bool | None:
+    present = [value is not None for value in values]
+    if all(present):
+        return True
+    return None if any(present) else False
+
+
 def _split_ticket(args: argparse.Namespace) -> dict[str, str]:
-    drafted = [args.project, args.title, args.body]
-    whole = all(part is not None for part in drafted)
-    if args.same_ticket == whole or (not whole and any(part is not None for part in drafted)):
-        _die("pass either --same-ticket, or --project, --title and --body for the new PR's "
-             "own ticket")
-    if args.same_ticket:
-        return {}
-    return {"ticket_project": args.project, "ticket_title": args.title,
-            "ticket_body": args.body}
+    drafted = _given(args.project, args.title, args.body)
+    existing = _given(args.ticket_key, args.ticket_url)
+    if None in (drafted, existing) or [args.same_ticket, drafted, existing].count(True) != 1:
+        _die("pass exactly one of --same-ticket; --ticket-key and --ticket-url for an existing "
+             "ticket; or --project, --title and --body for a new ticket")
+    if existing:
+        return {"ticket_key": args.ticket_key, "ticket_url": args.ticket_url}
+    if drafted:
+        return {"ticket_project": args.project, "ticket_title": args.title,
+                "ticket_body": args.body}
+    return {}
 
 
 def thread_split(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
@@ -680,6 +689,11 @@ def add_thread_parsers(
                                    "owner/name for GitHub issues")
     split_parser.add_argument("--title", default=None, help="The new ticket's title")
     split_parser.add_argument("--body", default=None, help="The new ticket's description")
+    split_parser.add_argument("--ticket-key", default=None,
+                              help="The key of an existing ticket the new PR goes under; "
+                                   "nothing is filed")
+    split_parser.add_argument("--ticket-url", default=None,
+                              help="The link to that existing ticket")
     split_parser.add_argument("--reply", required=True,
                               help="The reply to post on the comment once the new PR is open")
 
