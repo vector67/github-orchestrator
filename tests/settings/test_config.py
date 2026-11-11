@@ -811,6 +811,23 @@ def test_a_broken_config_is_moved_aside_under_the_time_it_was_moved(tmp_path):
     assert not toml_file.exists()
 
 
+def test_moving_aside_a_symlinked_config_keeps_the_link_and_moves_the_file_it_points_at(
+        tmp_path):
+    dotfiles = tmp_path / "dotfiles"
+    dotfiles.mkdir()
+    kept = dotfiles / "orchestrator.toml"
+    kept.write_text('hub_port = 8721\ngh_acount = "octocat"\n')
+    toml_file = tmp_path / "config.toml"
+    toml_file.symlink_to(kept)
+
+    moved = read_from(toml_file).get(ConfigFile).move_aside(datetime(2026, 10, 9, 8, 30, 5))
+
+    assert moved == str(dotfiles / "orchestrator.toml.broken-20261009-083005")
+    assert Path(moved).read_text() == 'hub_port = 8721\ngh_acount = "octocat"\n'
+    assert toml_file.readlink() == kept
+    assert kept.read_text() == "hub_port = 8721\n"
+
+
 def test_a_missing_config_says_to_run_setup_in_the_cli_s_own_words(tmp_path):
     missing = tmp_path / "nonexistent.toml"
     with pytest.raises(ConfigProblem) as e:
