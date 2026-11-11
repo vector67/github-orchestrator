@@ -69,6 +69,8 @@ class Git(Protocol):
 
     def _descends(self, path: str | None, onto: str, head: str) -> bool: ...
 
+    def _unmatched(self, worktree: str, upstream: str, head: str) -> tuple[str, ...] | None: ...
+
     def _branch_head(self, path: str | None, branch: str) -> str | None: ...
 
     def _progress_of(self, path: str | None, base_sha: str | None) -> str | None: ...
@@ -101,6 +103,27 @@ class Git(Protocol):
 
 def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
+
+
+def _caught_up_with_origin(git: Git, path: str, outcome: str) -> str | None:
+    origin, head = git._origin_head(path), git._head_sha(path)
+    if origin is None or head is None or git._descends(path, origin, head):
+        return None
+    if not git._descends(path, head, origin):
+        unmatched = git._unmatched(path, origin, head)
+        if unmatched is None:
+            return (f"origin's PR branch was rewritten to {origin[:12]}, and the PR worktree "
+                    f"at {head[:12]} could not be compared with it, so {outcome}")
+        if unmatched:
+            named = ", ".join(sha[:12] for sha in unmatched)
+            return (f"origin's PR branch was rewritten: it is at {origin[:12]}, and the PR "
+                    f"worktree at {head[:12]} holds commits origin has no equivalent of "
+                    f"({named}), so {outcome}; reset the worktree to origin, then approve "
+                    "again")
+    if not git._is_clean(path):
+        return (f"the PR worktree has changes of its own, so it was not caught up with "
+                f"origin and {outcome}")
+    return git._reset(path, origin)
 
 
 @dataclass(frozen=True)
@@ -149,17 +172,7 @@ class BoundWorkspace:
         failed = self.git._fetch(path, None)
         if failed is not None:
             return f"the PR branch would not fetch before landing, so nothing landed: {failed}"
-        origin, head = self.git._origin_head(path), self.git._head_sha(path)
-        if origin is None or head is None or self.git._descends(path, origin, head):
-            return None
-        if not self.git._descends(path, head, origin):
-            return (f"origin's PR branch was rewritten: it is at {origin[:12]}, and the PR "
-                    f"worktree at {head[:12]} holds commits origin lacks, so nothing landed; "
-                    "reset the worktree to origin, then approve again")
-        if not self.git._is_clean(path):
-            return ("the PR worktree has changes of its own, so it was not caught up with "
-                    "origin and nothing landed")
-        return self.git._reset(path, origin)
+        return _caught_up_with_origin(self.git, path, "nothing landed")
 
     def head_sha(self) -> Sha | None:
         return Sha.parse(self.git._head_sha(self.path))
@@ -298,7 +311,10 @@ class BoundCheckout:
         if located.path is None:
             return located.missing
         with self.git._serialized(self.pr):
-            return self.git._push(located.path)
+            behind = (None if self.git._fetch(located.path, None) is not None
+                      else _caught_up_with_origin(self.git, located.path,
+                                                  "nothing was pushed"))
+            return behind if behind is not None else self.git._push(located.path)
 
     def unpick(self, landed_base: Sha, landed_sha: Sha) -> str | None:
         located = self.git._pr_worktree(self.pr)

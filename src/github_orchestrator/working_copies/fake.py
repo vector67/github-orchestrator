@@ -567,6 +567,17 @@ class FakeWorkingCopies:
             return False
         return ancestor in self._ancestors(descendant)
 
+    def _unmatched(self, worktree: str, upstream: str, head: str) -> tuple[str, ...] | None:
+        theirs = {self._patch(sha) for sha in self._range(head, upstream)}
+        return tuple(sha for sha in self._range(upstream, head)
+                     if self._patch(sha) not in theirs)
+
+    def _patch(self, sha: str) -> frozenset[tuple[str, str | None, str | None]]:
+        commit = self.commits[sha]
+        before = self.commits[commit.parents[0]].tree if commit.parents else {}
+        return frozenset((name, before.get(name), commit.tree.get(name))
+                         for name in _changed_paths(before, commit.tree))
+
     def _branch_head(self, path: str | None, branch: str) -> str | None:
         return self.branches.get(branch) if path else None
 

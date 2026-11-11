@@ -635,6 +635,24 @@ module('Acceptance | panel', function (hooks) {
         .containsText('PRRT_reply_refused');
     });
 
+    test('says a branch rewritten without the fix in words', async function (assert) {
+      refused(
+        'push failed',
+        "origin's PR branch was rewritten: it is at 3633d884b9fa, and the PR " +
+          'worktree at 78b3ba12002f holds commits origin has no equivalent of ' +
+          '(78b3ba12002f), so nothing was pushed; reset the worktree to origin, ' +
+          'then approve again',
+      );
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-failure-summary]')
+        .hasText(
+          'GitHub’s PR branch was rewritten elsewhere and lacks commits this machine holds, so nothing was pushed.',
+        );
+    });
+
     test('says what it can when the output is one it does not know', async function (assert) {
       refused('push failed', 'fatal: the remote end hung up unexpectedly');
 

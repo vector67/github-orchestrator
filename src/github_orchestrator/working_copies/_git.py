@@ -345,6 +345,16 @@ class GitWorkingCopies:
     def _descends(self, path: str | None, onto: str, head: str) -> bool:
         return _threads.is_ancestor(path, onto, head)
 
+    def _unmatched(self, worktree: str, upstream: str, head: str) -> tuple[str, ...] | None:
+        try:
+            cherry = _threads.run_git(worktree, "cherry", "--end-of-options", upstream, head)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if cherry.returncode != 0:
+            return None
+        return tuple(line[2:].strip() for line in cherry.stdout.splitlines()
+                     if line.startswith("+ "))
+
     def _branch_head(self, path: str | None, branch: str) -> str | None:
         return _threads.branch_head(path, branch)
 

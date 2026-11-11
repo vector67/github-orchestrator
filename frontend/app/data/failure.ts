@@ -15,6 +15,12 @@ const KNOWN: Partial<Record<Phase, { known: Known[]; otherwise: string }>> = {
   'push failed': {
     known: [
       {
+        seen: /PR branch was rewritten/,
+        short:
+          'GitHub’s PR branch was rewritten elsewhere and lacks commits this machine holds',
+        more: ', so nothing was pushed',
+      },
+      {
         seen: /fetch first|non-fast-forward|\[rejected\]/,
         short: 'GitHub has newer commits on the PR branch',
         more: ', so it refused the push',
