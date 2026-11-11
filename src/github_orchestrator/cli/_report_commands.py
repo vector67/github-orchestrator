@@ -19,6 +19,8 @@ _REQUIRED = {
     "fail": frozenset({"--pr", "--thread-id", "--reason"}),
     "filed": frozenset({"--pr", "--thread-id", "--key", "--url"}),
     "opened": frozenset({"--pr", "--thread-id", "--url"}),
+    "reconciled": frozenset({"--pr", "--thread-id", "--note"}),
+    "list": frozenset({"--pr"}),
     "draft": frozenset({"--pr", "--path", "--line", "--body-file"}),
 }
 
@@ -92,6 +94,13 @@ class CliReportCommands:
 
     def opened(self, pr: Pr, key: str, *, url: str) -> str:
         return self._command("opened", pr, key, [("--url", url)])
+
+    def reconciled(self, pr: Pr, key: str, *, note: str, landed_sha: str) -> str:
+        return self._command("reconciled", pr, key, [("--note", note),
+                                                     ("--landed-sha", landed_sha)])
+
+    def listing(self, pr: Pr) -> str:
+        return self._command("list", pr, None, [])
 
     def draft(self, pr: Pr, *, path: str, line: str, start_line: str, body_file: str) -> str:
         return self._command("draft", pr, None, [

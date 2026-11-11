@@ -25,6 +25,7 @@ const AT_WORK: ConversationState[] = [
 
 const LANDING_FAILURES: Record<string, Phase> = {
   'push-failed': 'push failed',
+  'git-failed': 'landing failed',
   'reply-failed': 'reply failed',
   'file-failed': 'filing failed',
 };
@@ -59,6 +60,7 @@ export type Phase =
   | 'answered'
   | 'removed'
   | 'push failed'
+  | 'landing failed'
   | 'reply failed'
   | 'filing failed'
   | 'waiting'
@@ -91,6 +93,8 @@ export const PHASE_HINTS: Record<Phase, string> = {
   answered: 'someone answered; yours to reply to or resolve',
   removed: 'the comment was deleted on GitHub before this row was finished',
   'push failed': 'accepted, but pushing the fix to the PR branch failed',
+  'landing failed':
+    'accepted, but the landing stopped before anything was pushed, and said why',
   'reply failed': 'pushed, but posting the reply on GitHub failed',
   'filing failed':
     'accepted, but filing the ticket failed; nothing was posted to GitHub',

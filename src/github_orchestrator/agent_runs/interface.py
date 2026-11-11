@@ -94,6 +94,7 @@ class ThreadFix:
     thread_url: str | None = None
     ticket_key: str | None = None
     ticket_url: str | None = None
+    landed_sha: str | None = None
 
 
 Replied = Sequence[tuple[str | None, int | None, Sequence[FixComment]]]
@@ -186,6 +187,8 @@ class ThreadWork(Protocol):
     def file_ticket(self, fix: ThreadFix) -> Run | str: ...
 
     def open_pr(self, fix: ThreadFix) -> Run | str: ...
+
+    def reconcile(self, fix: ThreadFix) -> Run | str: ...
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None: ...
 

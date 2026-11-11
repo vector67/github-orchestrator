@@ -103,6 +103,7 @@ class ThreadAgents:
             thread_url=self._thread_url(conversation),
             ticket_key=fix.ticket_key if existing is None else existing.key,
             ticket_url=fix.ticket_url if existing is None else existing.url,
+            landed_sha=None if fix.landed_sha is None else str(fix.landed_sha),
         )
 
     def _thread_url(self, conversation: Conversation) -> str | None:
@@ -125,6 +126,8 @@ class ThreadAgents:
             run = self.thread_work.file_ticket(asked)
         elif kind == OperationKind.OPEN:
             run = self.thread_work.open_pr(asked)
+        elif kind == OperationKind.RECONCILE:
+            run = self.thread_work.reconcile(asked)
         else:
             run = self.thread_work.fix(asked)
         if isinstance(run, str):

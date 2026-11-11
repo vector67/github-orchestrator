@@ -56,6 +56,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
     filing_prompt,
     fix_rebase_prompt,
     opening_prompt,
+    reconcile_prompt,
     rework_prompt,
     thread_prompt,
 )
@@ -456,6 +457,9 @@ class AgentRuns:
 
     def open_pr(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, opening_prompt(self._commands, fix))
+
+    def reconcile(self, fix: ThreadFix) -> AgentRun | str:
+        return self._fix_thread(fix, reconcile_prompt(self._commands, fix))
 
     def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, carry_on_prompt(self._commands, fix), continuing=True)
