@@ -16,6 +16,7 @@ from github_orchestrator.conversation._domain.commands import (
     PostNow,
     Reject,
     Reply,
+    ReportReconciled,
     Resolve,
     Retry,
     Rework,
@@ -35,7 +36,7 @@ from github_orchestrator.conversation._domain.conversation import (
     IN_SESSION,
     LANDED,
     LANDING,
-    PART_RUNS,
+    LANDING_RUNS,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -63,6 +64,7 @@ from github_orchestrator.conversation._domain.effects import (
     UnresolveThread,
 )
 from github_orchestrator.conversation._domain.events import (
+    CheckoutDiverged,
     ClosingCommentDeleted,
     ClosingFailed,
     ClosingReplyPosted,
@@ -94,7 +96,7 @@ from github_orchestrator.conversation._domain.steps import First, Land
 
 FIX_KINDS = (*FIX_RUNS, OperationKind.START_SESSION, OperationKind.APPROVE)
 
-RUNS_AN_APPROVE_WAITS_ON = (OperationKind.REBASE, *PART_RUNS)
+RUNS_AN_APPROVE_WAITS_ON = (OperationKind.REBASE, *LANDING_RUNS)
 
 _STEP_OF_RUN = {OperationKind.FILE: FILE, OperationKind.OPEN: OPEN_PR}
 
@@ -476,9 +478,29 @@ def _requeue_the_approve(operations: list[Operation]) -> None:
 
 def _queues_a_run_the_approve_waits_on(before: Conversation, after: Conversation,
                                        command: Change) -> bool:
-    return (isinstance(command, (Rebase, PickConflicted, Approve))
+    return (isinstance(command, (Rebase, PickConflicted, CheckoutDiverged, Approve))
             and before.fix.state != QUEUED and after.fix.state == QUEUED
             and after.fix.run.kind in RUNS_AN_APPROVE_WAITS_ON)
+
+
+def _settle_the_reconcile(operations: list[Operation], command: Change, after: Conversation,
+                          at: str | None) -> None:
+    index = next((index for index in range(len(operations) - 1, -1, -1)
+                  if operations[index].kind == OperationKind.RECONCILE), None)
+    if index is None:
+        return
+    if isinstance(command, ReportReconciled):
+        operations[index] = replace(operations[index], state=OperationState.APPLIED,
+                                    text=command.note, settled_at=at)
+        return
+    reason = after.fix.push_error or after.fix.reason
+    code = ReasonCode.PUSH_FAILED if after.fix.push_error else ReasonCode.GIT_FAILED
+    operations[index] = replace(operations[index], state=OperationState.REFUSED,
+                                reason=reason, reason_code=ReasonCode.GIT_FAILED, settled_at=at)
+    approve = _outstanding(operations, (OperationKind.APPROVE,))
+    if approve is not None:
+        operations[approve] = replace(operations[approve], state=OperationState.REFUSED,
+                                      reason=reason, reason_code=code, settled_at=at)
 
 
 def _opened(after: Conversation, operations: list[Operation], kind: OperationKind,
@@ -535,6 +557,9 @@ def accepted(before: Conversation, after: Conversation, command: Change,
         _requeue_the_approve(operations)
         _opened(after, operations, after.fix.run.kind, at)
     _sync_fix(operations, after, command, at)
+    if (before.fix.run.kind == OperationKind.RECONCILE
+            and after.fix.run.kind != OperationKind.RECONCILE):
+        _settle_the_reconcile(operations, command, after, at)
     if kind_of(command) is not None:
         _verb(before, after, operations, command, effects, asked, at, stopped)
     if isinstance(command, First) or (

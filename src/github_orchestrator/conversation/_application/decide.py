@@ -33,6 +33,7 @@ from github_orchestrator.conversation._domain.conversation import (
     WAKE_PUSH_PREFIX,
     Conversation,
     ConversationState,
+    OperationState,
 )
 from github_orchestrator.conversation._domain.machine import Accepted, Deferred, Refused
 from github_orchestrator.conversation._domain.operations import Asked
@@ -150,13 +151,23 @@ def _asked(intent: Intent) -> Asked | None:
                  direction=intent.direction)
 
 
+def _settled_refusal(conversation: Conversation, asked: Asked | None) -> Refused | None:
+    settled = next((one for one in conversation.operations
+                    if asked is not None and one.id == asked.id
+                    and one.state == OperationState.REFUSED), None)
+    if settled is None:
+        return None
+    return Refused(conversation, ErrorCode.GIT_FAILED, settled.reason or "it was refused")
+
+
 def _decided(ports: Ports, conversation: Conversation,
              intent: Intent) -> Accepted | Refused | Deferred:
     command = _command(ports, intent)
     if isinstance(command, _Refusal):
         return _refused(conversation, command.code, command.reason)
     if isinstance(command, Approve):
-        return resume(ports, conversation, command, _asked(intent))
+        return (_settled_refusal(conversation, _asked(intent))
+                or resume(ports, conversation, command, _asked(intent)))
     return run(ports, conversation, command, _asked(intent))
 
 

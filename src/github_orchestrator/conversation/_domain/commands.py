@@ -124,6 +124,12 @@ class ReportOpened:
 
 
 @dataclass(frozen=True)
+class ReportReconciled:
+    note: str
+    landed_sha: Sha | None = None
+
+
+@dataclass(frozen=True)
 class Fail:
     reason: str
 
@@ -267,6 +273,7 @@ Command = (
     | ReportAsk
     | ReportFiled
     | ReportOpened
+    | ReportReconciled
     | Fail
     | SessionGone
     | SetCommitVerdict

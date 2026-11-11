@@ -125,6 +125,7 @@
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
        "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
        "reject": "#/components/schemas/CloseOperation",
        "reply": "#/components/schemas/ReplyOperation",
        "resolve": "#/components/schemas/CloseOperation",
@@ -153,6 +154,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
       },
       {
        "$ref": "#/components/schemas/EditPartOperation"
@@ -1072,6 +1076,7 @@
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
        "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
        "reject": "#/components/schemas/CloseOperation",
        "reply": "#/components/schemas/ReplyOperation",
        "resolve": "#/components/schemas/CloseOperation",
@@ -1100,6 +1105,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
       },
       {
        "$ref": "#/components/schemas/EditPartOperation"
@@ -1170,6 +1178,7 @@
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
        "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
        "reject": "#/components/schemas/CloseOperation",
        "reply": "#/components/schemas/ReplyOperation",
        "resolve": "#/components/schemas/CloseOperation",
@@ -1198,6 +1207,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
       },
       {
        "$ref": "#/components/schemas/EditPartOperation"
@@ -1267,6 +1279,7 @@
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
        "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
        "reject": "#/components/schemas/CloseOperation",
        "reply": "#/components/schemas/ReplyOperation",
        "resolve": "#/components/schemas/CloseOperation",
@@ -1295,6 +1308,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
       },
       {
        "$ref": "#/components/schemas/EditPartOperation"
@@ -5178,6 +5194,7 @@
     "rebase",
     "file",
     "open",
+    "reconcile",
     "rework",
     "retry",
     "start-session",
@@ -5225,6 +5242,7 @@
       "post-now": "#/components/schemas/DraftOperation",
       "posted": "#/components/schemas/PostedOperation",
       "rebase": "#/components/schemas/FixOperation",
+      "reconcile": "#/components/schemas/ReconcileOperation",
       "reject": "#/components/schemas/CloseOperation",
       "reply": "#/components/schemas/ReplyOperation",
       "resolve": "#/components/schemas/CloseOperation",
@@ -5253,6 +5271,9 @@
      },
      {
       "$ref": "#/components/schemas/OpenOperation"
+     },
+     {
+      "$ref": "#/components/schemas/ReconcileOperation"
      },
      {
       "$ref": "#/components/schemas/EditPartOperation"
@@ -5458,6 +5479,7 @@
        "post-now": "#/components/schemas/DraftOperation",
        "posted": "#/components/schemas/PostedOperation",
        "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
        "reject": "#/components/schemas/CloseOperation",
        "reply": "#/components/schemas/ReplyOperation",
        "resolve": "#/components/schemas/CloseOperation",
@@ -5486,6 +5508,9 @@
       },
       {
        "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
       },
       {
        "$ref": "#/components/schemas/EditPartOperation"
@@ -6841,6 +6866,105 @@
     "worktree-missing"
    ],
    "type": "string"
+  },
+  "ReconcileOperation": {
+   "properties": {
+    "conversation": {
+     "anyOf": [
+      {
+       "maxLength": 128,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "diverged": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "reconcile",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    },
+    "story": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "diverged",
+    "story"
+   ],
+   "type": "object"
   },
   "RecordState": {
    "enum": [

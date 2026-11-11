@@ -8,6 +8,7 @@ import logging
 import os
 import select
 import shlex
+import signal
 import subprocess
 import threading
 from collections.abc import Callable, Mapping, Sequence, Set
@@ -55,6 +56,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
     filing_prompt,
     fix_rebase_prompt,
     opening_prompt,
+    reconcile_prompt,
     rework_prompt,
     thread_prompt,
 )
@@ -278,10 +280,8 @@ class AgentRun:
 
     def terminate(self) -> None:
         try:
-            if self.proc.poll() is not None:
-                return
             try:
-                self.proc.terminate()
+                os.killpg(self.proc.pid, signal.SIGTERM)
             except (ProcessLookupError, OSError):
                 return
             deadline = self._clock() + _TERMINATE_GRACE_SECONDS
@@ -292,7 +292,7 @@ class AgentRun:
                 except subprocess.TimeoutExpired:
                     pass
             try:
-                self.proc.kill()
+                os.killpg(self.proc.pid, signal.SIGKILL)
             except (ProcessLookupError, OSError):
                 pass
         finally:
@@ -351,6 +351,7 @@ class AgentRuns:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                start_new_session=True,
             )
         except OSError as exc:
             refused = f"{WONT_START}: {exc}"
@@ -456,6 +457,9 @@ class AgentRuns:
 
     def open_pr(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, opening_prompt(self._commands, fix))
+
+    def reconcile(self, fix: ThreadFix) -> AgentRun | str:
+        return self._fix_thread(fix, reconcile_prompt(self._commands, fix))
 
     def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, carry_on_prompt(self._commands, fix), continuing=True)

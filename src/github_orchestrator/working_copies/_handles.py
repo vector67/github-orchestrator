@@ -10,6 +10,7 @@ from github_orchestrator.working_copies.interface import (
     BaseStanding,
     Changes,
     Cut,
+    Diverged,
     FileDiff,
     NamedCommit,
     Picked,
@@ -105,7 +106,7 @@ def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
 
 
-def _caught_up_with_origin(git: Git, path: str, outcome: str) -> str | None:
+def _caught_up_with_origin(git: Git, path: str, outcome: str) -> str | Diverged | None:
     origin, head = git._origin_head(path), git._head_sha(path)
     if origin is None or head is None or git._descends(path, origin, head):
         return None
@@ -115,11 +116,8 @@ def _caught_up_with_origin(git: Git, path: str, outcome: str) -> str | None:
             return (f"origin's PR branch was rewritten to {origin[:12]}, and the PR worktree "
                     f"at {head[:12]} could not be compared with it, so {outcome}")
         if unmatched:
-            named = ", ".join(sha[:12] for sha in unmatched)
-            return (f"origin's PR branch was rewritten: it is at {origin[:12]}, and the PR "
-                    f"worktree at {head[:12]} holds commits origin has no equivalent of "
-                    f"({named}), so {outcome}; reset the worktree to origin, then approve "
-                    "again")
+            return Diverged(origin=Sha(origin), head=Sha(head),
+                            unmatched=tuple(Sha(sha) for sha in unmatched))
     if not git._is_clean(path):
         return (f"the PR worktree has changes of its own, so it was not caught up with "
                 f"origin and {outcome}")
@@ -163,12 +161,14 @@ class BoundWorkspace:
             landable = (self._branch and Sha.parse(_text(self.base_sha)) is not None
                         and Sha.parse(_text(thread_sha)) is not None)
             behind = self._caught_up_with_origin(located.path) if landable else None
+            if isinstance(behind, Diverged):
+                return Picked(diverged=behind)
             if behind is not None:
                 return Picked(refusal=behind)
             return self.git._pick(located.path, self._branch, _text(self.base_sha),
                                   _text(thread_sha), message)
 
-    def _caught_up_with_origin(self, path: str) -> str | None:
+    def _caught_up_with_origin(self, path: str) -> str | Diverged | None:
         failed = self.git._fetch(path, None)
         if failed is not None:
             return f"the PR branch would not fetch before landing, so nothing landed: {failed}"
@@ -306,7 +306,10 @@ class BoundCheckout:
         path = self._path()
         return path is not None and self.git._is_clean(path)
 
-    def push(self) -> str | None:
+    def path(self) -> str | None:
+        return self._path()
+
+    def push(self) -> str | Diverged | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing

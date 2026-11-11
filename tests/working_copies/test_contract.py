@@ -5,6 +5,7 @@ import pytest
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Sha
 from github_orchestrator.github import PullRequestState
+from github_orchestrator.working_copies import Diverged
 from tests.builders import a_pr
 from tests.disk_layout import thread_branch
 from tests.working_copies.support import (
@@ -802,22 +803,22 @@ def test_a_fix_is_not_picked_onto_a_rewrite_that_lacks_a_commit_the_checkout_hol
     local = world.commit(pr_worktree, {"x": "only here\n"}, "only here")
     _, rewritten = world.advance_base()
 
-    refused = cut.pick(tip)
+    held = cut.pick(tip)
 
-    assert refused.refusal is not None
-    assert rewritten[:12] in refused.refusal and local[:12] in refused.refusal
+    assert held.diverged == Diverged(origin=Sha(rewritten), head=Sha(local),
+                                     unmatched=(Sha(local),))
     assert world.head_of(pr_worktree) == local
 
 
-def test_a_push_is_refused_over_a_rewrite_that_lacks_the_landed_fix(
+def test_a_push_is_held_back_by_a_rewrite_that_lacks_the_landed_fix(
         world, pr_worktree, cut, pr_checkout):
     landed = cut.pick(Sha(world.commit(cut.path, {"g": "one\n2\nthree\n"}, "fix")))
     _, rewritten = world.advance_base()
 
-    refused = pr_checkout.push()
+    held = pr_checkout.push()
 
-    assert refused is not None
-    assert rewritten[:12] in refused and str(landed.landed_sha)[:12] in refused
+    assert held == Diverged(origin=Sha(rewritten), head=landed.landed_sha,
+                            unmatched=(landed.landed_sha,))
     assert Sha(world.head_of(pr_worktree)) == landed.landed_sha
 
 

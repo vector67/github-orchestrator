@@ -379,7 +379,7 @@ PACKAGES = {
     ),
     "working_copies": Package(
         pinned=frozenset({
-            "FileDiff", "PrCheckout", "ThreadWorkspace", "WorkingCopies", "WrongBranch",
+            "Diverged", "FileDiff", "PrCheckout", "ThreadWorkspace", "WorkingCopies", "WrongBranch",
         }),
         may_import=("github", "desktop", "notifications"),
         role="git working copies answer in their own types and review adapts them, never the reverse",
@@ -569,7 +569,7 @@ WORKING_COPIES_MEMBERS = frozenset({
     "checkout",
 })
 PR_CHECKOUT_MEMBERS = frozenset({
-    "workspace", "is_clean", "push", "unpick", "fetch", "reset_to_origin", "base_standing",
+    "workspace", "is_clean", "path", "push", "unpick", "fetch", "reset_to_origin", "base_standing",
     "no_worktree", "revisions",
 })
 REVISIONS_MEMBERS = frozenset({
@@ -692,7 +692,7 @@ ROLE_MEMBERS = {
     "EditableConversation": frozenset({
         "approve", "rework", "edit_part", "start_session", "open_shell", "retry", "fix", "stop", "drop_question", "resolve", "reject", "place",
         "unpark", "reply", "mark_seen", "react", "edit", "enrol", "withdraw", "discard", "post_now",
-        "plan", "step_done", "ready", "move_base", "not_a_fix", "split", "opened", "ask", "fail", "session_gone", "set_commit_verdict",
+        "plan", "step_done", "ready", "move_base", "not_a_fix", "split", "opened", "reconciled", "ask", "fail", "session_gone", "set_commit_verdict",
         "check_for_fixes"}),
 }
 

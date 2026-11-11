@@ -176,6 +176,7 @@ const DETAILS: {
   },
   file: {},
   open: {},
+  reconcile: { diverged: null, story: null },
   'edit-part': { reply: null },
   stop: { stopped: null },
   'drop-question': {},
@@ -1586,7 +1587,7 @@ export class FakeBoard {
     const kind =
       verb === 'fix'
         ? 'first'
-        : (verb as Exclude<OperationKind, 'file' | 'open'>);
+        : (verb as Exclude<OperationKind, 'file' | 'open' | 'reconcile'>);
     const listed = verb === 'reply' ? this.listReply(asked, id) : asked;
     return this.json(202, {
       operation: operation({

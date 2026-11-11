@@ -65,7 +65,7 @@ class ScriptedClaude:
         self.children: list[subprocess.Popen[bytes]] = []
 
     def popen(self, argv: list[str], *, cwd: str, env: dict[str, str], stdin: Any,
-              stdout: Any, stderr: Any) -> subprocess.Popen[bytes]:
+              stdout: Any, stderr: Any, start_new_session: bool) -> subprocess.Popen[bytes]:
         assert self.program in argv, argv
         outcome = self.world.next_outcome()
         if not outcome.starts:
@@ -79,7 +79,8 @@ class ScriptedClaude:
                        str(int(reads_prompt)), str(int(self.ignores_terminate)),
                        "".join(json.dumps(event) + "\n" for event in outcome.events),
                        str(int(outcome.finishes)), str(outcome.exit_code)]
-        child = subprocess.Popen(command, cwd=cwd, stdin=stdin, stdout=stdout, stderr=stderr)
+        child = subprocess.Popen(command, cwd=cwd, stdin=stdin, stdout=stdout, stderr=stderr,
+                                 start_new_session=start_new_session)
         self.children.append(child)
         if reads_prompt:
             setattr(child, "stdin", _Prompt(child.stdin, self.prompts.append))
