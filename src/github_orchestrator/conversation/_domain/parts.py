@@ -18,6 +18,12 @@ class Ticket:
     body: str
 
 
+@dataclass(frozen=True)
+class TicketLink:
+    key: str
+    url: str
+
+
 class SplitPart(StrEnum):
     TICKET = "ticket"
     CHANGES = "changes"
@@ -41,6 +47,7 @@ class Split:
     ticket: Ticket | None = None
     accepted: frozenset[SplitPart] = frozenset()
     pr_url: str | None = None
+    existing_ticket: TicketLink | None = None
 
 
 @dataclass(frozen=True)
@@ -105,8 +112,9 @@ def taken_from_a_report(steps: frozenset[str], reworked: SplitPart | None) -> fr
 
 def reported(split: Split, report: Split, taken: frozenset[SplitPart]) -> Split:
     new_pr = report if SplitPart.NEW_PR in taken else split
+    ticketed = report if SplitPart.TICKET in taken else split
     return replace(split, branch=new_pr.branch, base=new_pr.base, base_reason=new_pr.base_reason,
-                   ticket=report.ticket if SplitPart.TICKET in taken else split.ticket,
+                   ticket=ticketed.ticket, existing_ticket=ticketed.existing_ticket,
                    accepted=split.accepted - taken)
 
 

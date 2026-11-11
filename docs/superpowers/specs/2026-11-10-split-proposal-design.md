@@ -100,6 +100,15 @@ scope.
       decides (`create-pr` opens a draft). When set, it wins: after the skill
       returns, the orchestrator flips the PR to draft or ready to match.
 
+13. **An existing ticket is a third ticket choice** (issue #344). The agent
+    searches the tracker first; when it finds a ticket, other than this PR's,
+    that covers the moved code, it reports that ticket's key and link
+    (`--ticket-key`, `--ticket-url`) instead of "same ticket" or a draft.
+    Nothing is filed, so there is no ticket part and the new PR waits on
+    nothing. The open run names that ticket as the new PR's, the reply ends
+    with the new PR's link and the ticket's, and the board shows it as an
+    "Existing ticket PROJ-34" line on the New PR card, with no buttons.
+
 ## Out of scope
 
 - Splitting into another repository.

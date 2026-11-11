@@ -418,6 +418,47 @@ def test_a_split_under_this_prs_ticket_has_no_ticket_to_accept(here, threads):
 
 
 NEW_PR_URL = "https://github.com/acme/widgets/pull/12"
+EXISTING_URL = "https://example.atlassian.net/browse/PROJ-34"
+EXISTING = {"ticket_key": "PROJ-34", "ticket_url": EXISTING_URL}
+
+
+def test_a_split_under_an_existing_ticket_carries_its_key_and_link_and_files_nothing(here,
+                                                                                     threads):
+    _split(threads, _removed(here), **EXISTING)
+
+    stored = threads.get(KEY)
+    existing = stored.fix.split.existing_ticket
+    assert (existing.key, existing.url, stored.fix.split.ticket) == (
+        "PROJ-34", EXISTING_URL, None)
+    assert [view.part for view in stored.proposal.parts] == ["changes", "new-pr", "reply"]
+
+
+def test_a_new_pr_under_an_existing_ticket_is_opened_naming_it_and_the_reply_links_it(here,
+                                                                                      threads):
+    _split(threads, _removed(here), **EXISTING)
+
+    _asked(threads, "approve")
+    _opened(threads)
+
+    [opened] = _openings(here)
+    assert (opened.fix.ticket_key, opened.fix.ticket_url) == ("PROJ-34", EXISTING_URL)
+    [reply] = here.github.thread(KEY).comments[1:]
+    assert reply.body == f"{REPLY}\n\n{NEW_PR_URL}\n\n{EXISTING_URL}"
+    assert _filings(here) == []
+    assert threads.get(KEY).standing is ConversationState.DONE
+
+
+def test_a_rework_of_another_part_keeps_the_existing_ticket(here, threads):
+    _split(threads, _removed(here), **EXISTING)
+    _reworked(here, threads, "reply")
+
+    stored = _reported_again(here, threads)
+
+    assert stored.fix.split.existing_ticket.key == "PROJ-34"
+    assert stored.fix.split.ticket is None
+    [reworking] = [started.work.fix for started in here.agent_runs.started
+                   if isinstance(started.work, Reworking)]
+    assert (reworking.ticket_key, reworking.ticket_title) == ("PROJ-34", None)
 
 
 def _opened(threads, url=NEW_PR_URL):

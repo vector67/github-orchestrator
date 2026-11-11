@@ -161,7 +161,8 @@ class EditableConversation(Protocol):
 
     def split(self, sha: str, *, branch: str, base: str, base_reason: str, reply: str,
               ticket_project: str | None = None, ticket_title: str = "",
-              ticket_body: str = "") -> Conversation | Denied: ...
+              ticket_body: str = "", ticket_key: str | None = None,
+              ticket_url: str = "") -> Conversation | Denied: ...
 
     def opened(self, url: str) -> Conversation | Denied: ...
 

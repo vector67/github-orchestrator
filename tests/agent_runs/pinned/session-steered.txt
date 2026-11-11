@@ -52,7 +52,7 @@ The comment asks for code that is already in this PR'"'"'s diff (`git diff origi
 5. Pass `--same-ticket`: no tracker is set up for this repository, so the new PR goes under this PR'"'"'s own ticket, or under none when this PR names none.
 6. Report:
 
-    <python> -m github_orchestrator.cli thread split --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <the removal'"'"'s full 40-character sha> --branch <branch> --base "<the base>" --base-reason "<one line: why that base>" --reply "<the reply to post on the comment>" [--same-ticket] [--project "<project>"] [--title "<the ticket'"'"'s title>"] [--body "<the ticket'"'"'s description>"]
+    <python> -m github_orchestrator.cli thread split --repo acme/widgets --pr 7 --thread-id PRRT_1 --sha <the removal'"'"'s full 40-character sha> --branch <branch> --base "<the base>" --base-reason "<one line: why that base>" --reply "<the reply to post on the comment>" [--same-ticket] [--ticket-key <the existing ticket'"'"'s key>] [--ticket-url "<the existing ticket'"'"'s link>"] [--project "<project>"] [--title "<the ticket'"'"'s title>"] [--body "<the ticket'"'"'s description>"]
 
-`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and `--base-reason` your one line. `--reply` is posted on the comment as the PR author once the new PR is open; the board adds the new PR'"'"'s link, and the ticket'"'"'s, below it, so leave links out. Pass either `--same-ticket`, or `--project`, `--title` and `--body`.
+`--sha` is the removal, `--branch` the new branch, `--base` the base you chose and `--base-reason` your one line. `--reply` is posted on the comment as the PR author once the new PR is open; the board adds the new PR'"'"'s link, and the ticket'"'"'s, below it, so leave links out. Pass exactly one ticket choice: `--ticket-key` and `--ticket-url`, `--same-ticket`, or `--project`, `--title` and `--body`.
 '

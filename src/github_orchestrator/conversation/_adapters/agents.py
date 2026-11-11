@@ -65,6 +65,7 @@ class ThreadAgents:
         split = fix.split
         ticket = (fix.ticket if fix.kind == ProposalKind.TICKET
                   else fix.ticket or split.ticket if split is not None else None)
+        existing = None if split is None else split.existing_ticket
         return ThreadFix(
             pr=self.pr, key=conversation.key, worktree=worktree,
             author=conversation.author, path=conversation.path, line=conversation.line,
@@ -100,8 +101,8 @@ class ThreadAgents:
             pr_skill=self.pr_skill,
             pr_url=self.pages.page(),
             thread_url=self._thread_url(conversation),
-            ticket_key=fix.ticket_key,
-            ticket_url=fix.ticket_url,
+            ticket_key=fix.ticket_key if existing is None else existing.key,
+            ticket_url=fix.ticket_url if existing is None else existing.url,
             landed_sha=None if fix.landed_sha is None else str(fix.landed_sha),
         )
 

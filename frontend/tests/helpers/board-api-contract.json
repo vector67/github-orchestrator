@@ -8030,6 +8030,16 @@
     "branch": {
      "type": "string"
     },
+    "existing_ticket": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/TicketLink"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "parts": {
      "items": {
       "$ref": "#/components/schemas/SplitPart"
@@ -8052,6 +8062,7 @@
     "base",
     "base_reason",
     "ticket",
+    "existing_ticket",
     "parts"
    ],
    "type": "object"
@@ -8404,6 +8415,21 @@
     "project",
     "title",
     "body"
+   ],
+   "type": "object"
+  },
+  "TicketLink": {
+   "properties": {
+    "key": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "key",
+    "url"
    ],
    "type": "object"
   },

@@ -562,6 +562,16 @@ def test_a_split_with_a_tracker_searches_before_it_drafts_a_ticket_of_its_own(
     assert split.index("project = PROJ AND text ~") < split.index("`--project`")
 
 
+def test_a_split_whose_search_finds_a_ticket_goes_under_it_by_key_and_link(
+        runs, claude, worktree):
+    split = _section(_fixed(runs, claude, worktree, **BRANCHES, **JIRA),
+                     "## Step 3 for a split")
+
+    search = split.index("project = PROJ AND text ~")
+    found = split.index("Pass its key as `--ticket-key` and its link as `--ticket-url`")
+    assert search < found < split.index("`--same-ticket`")
+
+
 def test_the_hard_rules_hold_one_commit_here_and_say_what_a_split_adds(runs, claude, worktree):
     rules = _section(_fixed(runs, claude, worktree, **BRANCHES), "## Hard rules")
 
@@ -588,3 +598,13 @@ def test_a_split_part_rework_shows_the_drafted_ticket_or_this_prs_own(runs, clau
     for said in ("PROJ", "Cache tax rates", "Each export reads it."):
         assert said in drafted
     assert "this PR's own ticket" in same
+
+
+def test_a_split_part_rework_shows_the_existing_ticket_the_new_pr_goes_under(
+        runs, claude, worktree):
+    prompt = _part_reworked(runs, claude, worktree, "reply", ticket_key="PROJ-34",
+                            ticket_url="https://example.atlassian.net/browse/PROJ-34")
+
+    assert ("- Ticket: the existing ticket PROJ-34, "
+            "https://example.atlassian.net/browse/PROJ-34") in prompt
+    assert "this PR's own ticket;" not in prompt

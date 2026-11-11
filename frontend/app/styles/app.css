@@ -6478,6 +6478,11 @@ img.emoji-glyph {
   color: var(--muted);
 }
 
+.split-card .part-note a {
+  color: var(--link);
+  text-underline-offset: 2px;
+}
+
 .split-card .part-failure {
   padding-left: 12px;
   border-left: 3px solid var(--red);

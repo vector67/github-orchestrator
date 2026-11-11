@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import types
 from collections.abc import Callable, Iterator, Mapping
@@ -526,6 +527,12 @@ def _recorded_name(item: pytest.Item) -> str:
     return f"{name}#{contents_digest(unchanged.args)}" if unchanged else name
 
 
+def settle_progress() -> None:
+    for counting in threading.enumerate():
+        if counting.name.startswith("thread progress"):
+            counting.join(timeout=10)
+
+
 @pytest.fixture(autouse=True)
 def _recorded_subprocesses(request: pytest.FixtureRequest, tmp_path: Path,
                            monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
@@ -535,4 +542,7 @@ def _recorded_subprocesses(request: pytest.FixtureRequest, tmp_path: Path,
     monkeypatch.setattr(subprocess, "run", _guarded(recorder.run))
     monkeypatch.setattr(subprocess, "Popen", _guarded(_REAL_POPEN))
     yield
-    recorder.end_test()
+    settle_progress()
+    missed = recorder.end_test()
+    if missed:
+        pytest.fail("\n".join(missed), pytrace=False)

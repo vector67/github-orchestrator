@@ -425,6 +425,9 @@ def proposal_of(git: PrCheckout,
             ticket=None if proposal.split.ticket is None else contract.Ticket(
                 project=proposal.split.ticket.project, title=proposal.split.ticket.title,
                 body=proposal.split.ticket.body),
+            existing_ticket=None if proposal.split.existing_ticket is None
+            else contract.TicketLink(key=proposal.split.existing_ticket.key,
+                                     url=proposal.split.existing_ticket.url),
             parts=[contract.SplitPart(
                 part=contract.SplitPartName(view.part),
                 state=contract.SplitPartState(view.state),

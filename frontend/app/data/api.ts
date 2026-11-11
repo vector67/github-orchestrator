@@ -1082,6 +1082,7 @@ export interface Split {
   base: string;
   base_reason: string;
   ticket: Ticket | null;
+  existing_ticket: TicketLink | null;
   parts: SplitPart[];
 }
 
@@ -1159,6 +1160,11 @@ export interface Ticket {
   project: string;
   title: string;
   body: string;
+}
+
+export interface TicketLink {
+  key: string;
+  url: string;
 }
 
 export interface Tour {

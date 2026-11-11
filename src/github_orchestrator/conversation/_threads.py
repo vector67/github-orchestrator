@@ -144,6 +144,7 @@ from github_orchestrator.conversation._domain.parts import (
     Split,
     SplitPart,
     Ticket,
+    TicketLink,
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
 from github_orchestrator.conversation._domain.standing import ErrorCode
@@ -495,11 +496,14 @@ class _Editable:
 
     def split(self, sha: str, *, branch: str, base: str, base_reason: str, reply: str,
               ticket_project: str | None = None, ticket_title: str = "",
-              ticket_body: str = "") -> Conversation | Denied:
+              ticket_body: str = "", ticket_key: str | None = None,
+              ticket_url: str = "") -> Conversation | Denied:
         return self._answer(ReportSplit(
             sha=sha, on_base=self._on_base(sha), reply=reply,
             split=Split(branch=branch, base=base, base_reason=base_reason,
-                        ticket=_ticket(ticket_project, ticket_title, ticket_body)),
+                        ticket=_ticket(ticket_project, ticket_title, ticket_body),
+                        existing_ticket=None if ticket_key is None
+                        else TicketLink(key=ticket_key, url=ticket_url)),
             branch_exists=self._has_branch(branch)))
 
     def opened(self, url: str) -> Conversation | Denied:

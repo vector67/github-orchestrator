@@ -545,6 +545,19 @@ def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, threads, 
         "PROJ", "Cache tax rates", "Each export reads its model again.")
 
 
+def test_split_proposes_the_existing_ticket_the_new_pr_goes_under(fixed, store, threads,
+                                                                   run_cli):
+    _branched(store, fixed)
+
+    ran = run_cli(*_split_argv(fixed, ticket_key="PROJ-34",
+                               ticket_url="https://example.atlassian.net/browse/PROJ-34"))
+
+    assert ran.code == 0, ran.err
+    split = _stored(threads).fix.split
+    assert (split.existing_ticket.key, split.existing_ticket.url, split.ticket) == (
+        "PROJ-34", "https://example.atlassian.net/browse/PROJ-34", None)
+
+
 def test_approve_accepts_the_part_of_a_split_it_names(fixed, store, threads, run_cli):
     _branched(store, fixed)
     assert run_cli(*_split_argv(fixed, same_ticket=None)).code == 0
@@ -606,15 +619,21 @@ def test_split_refuses_a_branch_the_worktree_does_not_have(fixed, threads, run_c
     {},
     {"same_ticket": None, "project": "PROJ", "title": "Cache", "body": "Share it."},
     {"project": "PROJ", "title": "Cache"},
-], ids=["neither", "both", "half a ticket"])
-def test_split_takes_either_this_prs_ticket_or_a_whole_new_one(fixed, store, threads, run_cli,
-                                                                ticket):
+    {"same_ticket": None, "ticket_key": "PROJ-34", "ticket_url": "https://example.com/34"},
+    {"ticket_key": "PROJ-34", "ticket_url": "https://example.com/34", "project": "PROJ",
+     "title": "Cache", "body": "Share it."},
+    {"ticket_key": "PROJ-34"},
+], ids=["neither", "both", "half a ticket", "same and existing", "existing and new",
+        "half an existing ticket"])
+def test_split_takes_exactly_one_of_this_prs_ticket_an_existing_one_or_a_new_one(
+        fixed, store, threads, run_cli, ticket):
     _branched(store, fixed)
 
     ran = run_cli(*_split_argv(fixed, **ticket))
 
     assert ran.code != 0
     assert "--same-ticket" in ran.err
+    assert "--ticket-key" in ran.err
     assert not _stored(threads).fix.is_proposed
 
 
@@ -622,12 +641,12 @@ def test_the_split_command_an_agent_is_shown_is_one_the_cli_takes():
     shown = wire(ReportCommandsWiring("python")).get(ReportCommands).split(
         THE_PR, THREAD_KEY, sha="<sha>", branch="<branch>", base="<base>",
         base_reason="<why that base>", project="<PROJ>", title="<title>", body="<body>",
-        reply="<reply>")
+        ticket_key="<PROJ-34>", ticket_url="<link>", reply="<reply>")
 
     [(verb, flags)] = invocations(shown)
 
     assert verb == "split"
-    assert "--same-ticket" in flags
+    assert {"--same-ticket", "--ticket-key", "--ticket-url"} <= flags
     assert_the_cli_takes(verb, flags)
 
 

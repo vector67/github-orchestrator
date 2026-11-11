@@ -16,6 +16,7 @@ import type {
   SplitPartName,
   SplitPartState,
   Ticket,
+  TicketLink,
 } from 'frontend/data/api';
 import { causeOf } from 'frontend/data/failure';
 import {
@@ -251,6 +252,7 @@ export interface NewPrView {
   branch: string;
   base: string;
   base_reason: string;
+  existing_ticket: TicketLink | null;
 }
 
 export interface PartResultView {
@@ -1264,7 +1266,7 @@ function splitOf(
   const split = proposal?.split;
   if (!split) return null;
   const failed = failedPartOf(operations);
-  const { branch, base, base_reason } = split;
+  const { branch, base, base_reason, existing_ticket } = split;
   const running = split.parts.some((one) => one.state === 'running');
   const phase = phaseOf(conversation);
   const cards = split.parts.map((one) => {
@@ -1282,7 +1284,9 @@ function splitOf(
           : null,
       ticket: is('ticket') ? split.ticket : null,
       files: is('changes') ? files : [],
-      new_pr: is('new-pr') ? { branch, base, base_reason } : null,
+      new_pr: is('new-pr')
+        ? { branch, base, base_reason, existing_ticket }
+        : null,
       reply: is('reply') ? proposal.reply : null,
       offers: partOffers(one, running, phase),
     };

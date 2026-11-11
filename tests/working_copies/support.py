@@ -1,5 +1,4 @@
 import subprocess
-import threading
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -12,7 +11,9 @@ from github_orchestrator.wiring import WorkingCopiesWiring, wire
 from github_orchestrator.working_copies import PrCheckout, WorkingCopies
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
-from tests.conftest import fake_github, fake_notifications
+from tests.conftest import fake_github, fake_notifications, settle_progress
+
+__all__ = ["settle_progress"]
 
 REPO = "owner/name"
 PR = 7
@@ -71,12 +72,6 @@ def fetch_and_reset(checkout: PrCheckout, seen: Sha | None = None) -> str | None
     shown = seen or checkout.revisions.local_head()
     assert shown is not None
     return checkout.fetch("main") or checkout.reset_to_origin(BRANCH, shown)
-
-
-def settle_progress() -> None:
-    for counting in threading.enumerate():
-        if counting.name.startswith("thread progress"):
-            counting.join(timeout=10)
 
 
 def git(cwd: Path, *args: str) -> str:

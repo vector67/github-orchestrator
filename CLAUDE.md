@@ -22,12 +22,13 @@ Either aggregate stops at the first stage that fails. `lint-python`,
 
 `make test` replays recorded git and sh output from
 `tests/recorded_subprocesses.json`. `uv run pytest tests/ --no-replay` spawns
-every subprocess for real, and `make record` rewrites the recording after a
-change to what the code runs. To record only some tests, select them with
+every subprocess for real, and `make record` rewrites the whole recording. After
+a change to what the code runs, record only the tests it touched with
 `uv run pytest tests/ -k '<tests>' --record`, never by file path: a path-limited
-run wipes every other test's entry. Prefer the full `make record`: it brings every
-entry up to what the code runs now, and a test that goes red after it may be a
-real bug to look into, not one to record around.
+run wipes every other test's entry. A full `make record` takes minutes where the
+suite takes seconds, so it runs at release (`release` step 4). Re-recording is
+always safe: a test that goes red after it passed only against a stale entry, and
+may be a real bug to look into, not one to record around.
 
 Before a commit, `make lint-python` and `make test-python` are enough when
 nothing under `frontend/` changed since the last full run. Run the full `make lint` and `make test` before

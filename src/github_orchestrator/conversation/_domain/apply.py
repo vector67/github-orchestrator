@@ -821,7 +821,9 @@ def _answer_the_split(conversation: Conversation) -> Accepted:
     if conversation.comment_deleted:
         return _answered(conversation, reply_note="no reply: the comment was deleted")
     fix = conversation.fix
-    links = (_the_split(fix).pr_url, fix.ticket_url)
+    split = _the_split(fix)
+    existing = split.existing_ticket
+    links = (split.pr_url, fix.ticket_url if existing is None else existing.url)
     body = "\n\n".join(text for text in (fix.reply, *links) if text)
     return Accepted(conversation, (PostReply(body=body, commit=None),))
 

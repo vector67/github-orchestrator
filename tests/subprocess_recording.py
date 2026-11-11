@@ -77,7 +77,8 @@ def _encode(value: str | bytes | None, norm: Rewrite) -> str | dict[str, str] | 
     if value is None:
         return None
     if isinstance(value, bytes):
-        return {"b64": base64.b64encode(value).decode()}
+        rewritten = norm(value.decode("utf-8", "surrogateescape"))
+        return {"b64": base64.b64encode(rewritten.encode("utf-8", "surrogateescape")).decode()}
     return norm(value)
 
 
@@ -85,7 +86,8 @@ def _decode(value: str | dict[str, str] | None, denorm: Rewrite) -> str | bytes 
     if value is None:
         return None
     if isinstance(value, dict):
-        return base64.b64decode(value["b64"])
+        stored = base64.b64decode(value["b64"]).decode("utf-8", "surrogateescape")
+        return denorm(stored).encode("utf-8", "surrogateescape")
     return denorm(value)
 
 
@@ -195,12 +197,16 @@ class Recorder:
         self._scope: _Scope | None = None
         self._test_scope: _Scope | None = None
         self.live_tests: set[str] = set()
+        self._missed: list[str] = []
 
     def begin_test(self, nodeid: str, tmp_path: Path) -> None:
+        self._missed = []
         self._test_scope = self._scope = self._open("tests", nodeid, tmp_path, TMP)
 
-    def end_test(self) -> None:
+    def end_test(self) -> list[str]:
         self._scope = self._test_scope = None
+        missed, self._missed = self._missed, []
+        return missed
 
     @contextmanager
     def template_scope(self, name: str, root: str | Path) -> Iterator[None]:
@@ -273,12 +279,14 @@ class Recorder:
             entries = scope.bucket.get(key, [])
             index = scope.cursors.get(key, 0)
             if index >= len(entries):
-                raise RecordingMismatch(
+                missed = (
                     f"{scope.name} ran {json.loads(key)[0]} (call {index + 1}) but "
                     f"{RECORDING.name} has no result for it. The code under test runs "
-                    f"a subprocess the recording does not know; re-record with "
-                    f"`make record`, or run this test live with `--no-replay`."
+                    f"a subprocess the recording does not know; re-record it with "
+                    f"`--record`, or run this test live with `--no-replay`."
                 )
+                self._missed.append(missed)
+                raise RecordingMismatch(missed)
             scope.cursors[key] = index + 1
             entry = entries[index]
             _apply(entry.get("fs", {}), scope.root, scope.denorm)
