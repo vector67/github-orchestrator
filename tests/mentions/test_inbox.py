@@ -471,3 +471,67 @@ def test_a_pr_whose_openness_will_not_read_keeps_its_mention_listed_and_its_card
 
     assert _cards(here) == [(False, True)]
     assert "HTTP 502" in caplog.text
+
+
+def _dismissed(here, comment_id):
+    here.container.get(MentionsList).dismiss(THE_PR, comment_id)
+
+
+def _listed_now(here):
+    return [mention.thread for mention in here.container.get(MentionsList).listed().mentions]
+
+
+def test_a_dismissed_mention_leaves_the_list_before_the_next_search(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"),
+               _issue("IC_2", 2, "anna", "@octocat pong", "2026-10-22T10:01:00Z"))
+    here.container.get(MentionsInbox).search_if_due()
+
+    _dismissed(here, 1)
+
+    assert _listed_now(here) == ["IC_2"]
+
+
+def test_a_dismissed_mention_stays_gone_after_the_next_search(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"),
+               _issue("IC_2", 2, "anna", "@octocat pong", "2026-10-22T10:01:00Z"))
+    here.container.get(MentionsInbox).search_if_due()
+    _dismissed(here, 1)
+
+    _searched_again(here, now, timedelta(minutes=30))
+
+    assert [listed["thread"] for listed in json.loads(
+        (here.settings.data_dir / "mentions.json").read_text())["mentions"]] == ["IC_2"]
+
+
+def test_a_search_whose_only_mentions_are_dismissed_moves_the_start(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    _dismissed(here, 1)
+
+    _searched(here)
+
+    assert datetime.fromisoformat(_start(here)) == datetime.fromisoformat(SEARCHED)
+
+
+def test_a_dismissed_pr_body_mention_leaves_the_list(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"),
+               body="cc @octocat", created_at="2026-10-22T08:00:00Z")
+    here.container.get(MentionsInbox).search_if_due()
+
+    _dismissed(here, None)
+
+    assert _listed_now(here) == ["IC_1"]
+
+
+def test_dismissing_a_comment_on_one_pr_leaves_the_same_id_on_another_listed(tmp_path):
+    here = _here(tmp_path)
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.container.get(MentionsInbox).search_if_due()
+
+    here.container.get(MentionsList).dismiss(Pr(Repo.parse(REPO), 8), 1)
+
+    assert _listed_now(here) == ["IC_1"]

@@ -306,6 +306,12 @@ export type DiffSide = 'LEFT' | 'RIGHT';
 
 export type DiffSource = 'origin' | 'local';
 
+export interface DismissMentionRequest {
+  repo: string;
+  number: number;
+  comment_id: number | null;
+}
+
 export interface DismissRequest {
   until: DismissUntil;
 }

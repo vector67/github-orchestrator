@@ -1046,6 +1046,14 @@
     "304": null
    }
   },
+  "/api/mentions:dismiss": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/operations": {
    "get": {
     "200": {
@@ -3553,6 +3561,33 @@
     "local"
    ],
    "type": "string"
+  },
+  "DismissMentionRequest": {
+   "properties": {
+    "comment_id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "comment_id"
+   ],
+   "type": "object"
   },
   "DismissRequest": {
    "properties": {

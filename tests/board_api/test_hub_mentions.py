@@ -54,3 +54,32 @@ def test_no_mentions_are_listed_before_the_first_search():
     web = served_hub(told=holding(HELD), mentions=FakeMentionsList())
 
     assert web.get("/api/mentions").json() == {"searched_at": None, "mentions": []}
+
+
+def test_dismissing_a_mention_hands_its_pr_and_comment_to_the_list():
+    listing = _listed(PING)
+    web = served_hub(told=holding(HELD), mentions=listing)
+
+    answered = web.post("/api/mentions:dismiss",
+                        json={"repo": "acme/widgets", "number": 7, "comment_id": 1})
+
+    assert (answered.status_code, listing.dismissed) == (204, [(HELD, 1)])
+
+
+def test_dismissing_a_pr_body_mention_hands_no_comment_id():
+    listing = _listed(PING)
+    web = served_hub(told=holding(HELD), mentions=listing)
+
+    web.post("/api/mentions:dismiss", json={"repo": "acme/widgets", "number": 7, "comment_id": None})
+
+    assert listing.dismissed == [(HELD, None)]
+
+
+def test_dismissing_a_mention_in_a_malformed_repo_is_refused():
+    listing = _listed(PING)
+    web = served_hub(told=holding(HELD), mentions=listing)
+
+    answered = web.post("/api/mentions:dismiss",
+                        json={"repo": "not a repo", "number": 7, "comment_id": 1})
+
+    assert (answered.status_code, listing.dismissed) == (400, [])

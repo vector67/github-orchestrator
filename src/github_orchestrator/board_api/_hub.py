@@ -19,6 +19,7 @@ from github_orchestrator.board_api._app import (
     report_client_error,
 )
 from github_orchestrator.board_api._contract import (
+    DismissMentionRequest,
     Emoji,
     EmojiList,
     ErrorCode,
@@ -211,6 +212,15 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            on_board=mention.on_board and mention.pr in held,
                            building=mention.building)
         for mention in listing.mentions]))
+
+
+@writes.post("/mentions:dismiss", status_code=204, operation_id="dismissMention",
+             summary="Clear a mention for good, so the counter never lists it again.")
+def dismiss_mention(body: DismissMentionRequest, desk: Serving) -> None:
+    """The counter's Dismiss. A reply after the mention or a done card clears
+    it too, as before.
+    """
+    desk.mentions.dismiss(Pr(Repo.parse(body.repo), body.number), body.comment_id)
 
 
 def _migration_read(desk: Desk, held: list[FolderInUse]) -> ThreadNamesMigration:

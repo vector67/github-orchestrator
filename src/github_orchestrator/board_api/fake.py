@@ -170,9 +170,13 @@ class FakeTold:
 @dataclass
 class FakeMentionsList:
     now: MentionsListing = NO_MENTIONS_LISTED
+    dismissed: list[tuple[Pr, int | None]] = field(default_factory=list)
 
     def listed(self) -> MentionsListing:
         return self.now
+
+    def dismiss(self, pr: Pr, comment_id: int | None) -> None:
+        self.dismissed.append((pr, comment_id))
 
 
 @dataclass

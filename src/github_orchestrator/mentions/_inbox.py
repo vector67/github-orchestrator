@@ -21,6 +21,8 @@ from github_orchestrator.github import (
 from github_orchestrator.mentions._listing import (
     ListingFile,
     building_since,
+    dismissal,
+    dismissed,
     listed,
     started_before,
     write_listing,
@@ -54,6 +56,7 @@ class GitHubMentionsInbox:
         self._searched_at: datetime | None = None
         self._building_before: dict[str, str] = {}
         self._building: dict[str, str] = {}
+        self._dismissed: frozenset[str] = frozenset()
 
     def unbuilt(self) -> list[Pr]:
         return list(dict.fromkeys(mention.pr for mention in ListingFile(self._path).listed().mentions
@@ -71,6 +74,7 @@ class GitHubMentionsInbox:
         started = self._started(began, start)
         self._building_before = building_since(self._path)
         self._building = {}
+        self._dismissed = dismissed(self._path)
         mentions: list[ListedMention] = []
         held = False
         try:
@@ -127,7 +131,7 @@ class GitHubMentionsInbox:
                  for mention in found]
         outstanding = []
         for mention in dated:
-            if mention.answered:
+            if mention.answered or dismissal(pr, mention.comment_id) in self._dismissed:
                 continue
             card = _card(manager, mention)
             if mention.at is not None and _moment(mention.at) >= start and not _closed(card,

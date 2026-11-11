@@ -2410,6 +2410,14 @@ class OutstandingMention(BaseModel):
                                        "within two hours, or the pull request is closed.")
 
 
+class DismissMentionRequest(BaseModel):
+    repo: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+                      description="The pull request's repository, as owner/name.")
+    number: int
+    comment_id: int | None = Field(description="GitHub's id of the comment naming you; "
+                                               "null for the pull request's description.")
+
+
 class Mentions(BaseModel):
     searched_at: str | None = Field(description="When the watcher last searched GitHub for "
                                                 "mentions; null before its first search.")

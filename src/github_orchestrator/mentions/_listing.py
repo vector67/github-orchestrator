@@ -1,3 +1,4 @@
+import fcntl
 import json
 import logging
 import os
@@ -39,6 +40,29 @@ def building_since(path: Path) -> dict[str, str]:
     return building if isinstance(building, dict) else {}
 
 
+def dismissal(pr: Pr, comment_id: int | None) -> str:
+    return f"{pr}:{'pr-body' if comment_id is None else comment_id}"
+
+
+def _dismissals_at(path: Path) -> Path:
+    return path.with_name(f"{path.stem}-dismissed{path.suffix}")
+
+
+def dismissed(path: Path) -> frozenset[str]:
+    at = _dismissals_at(path)
+    try:
+        keys = json.loads(at.read_text())
+    except FileNotFoundError:
+        return frozenset()
+    except (OSError, ValueError) as damaged:
+        log.warning("%s will not read, so no mention is dismissed: %s", at, damaged)
+        return frozenset()
+    if not isinstance(keys, list):
+        log.warning("%s is not a list, so no mention is dismissed", at)
+        return frozenset()
+    return frozenset(key for key in keys if isinstance(key, str))
+
+
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
                   mentions: Sequence[ListedMention], building: Mapping[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -54,6 +78,16 @@ class ListingFile:
     def __init__(self, path: Path) -> None:
         self._path = path
 
+    def dismiss(self, pr: Pr, comment_id: int | None) -> None:
+        at = _dismissals_at(self._path)
+        at.parent.mkdir(parents=True, exist_ok=True)
+        with at.with_name(f"{at.name}.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            writing = at.with_name(f"{at.name}.writing")
+            writing.write_text(json.dumps(sorted(dismissed(self._path)
+                                                 | {dismissal(pr, comment_id)})))
+            os.replace(writing, at)
+
     def listed(self) -> MentionsListing:
         try:
             document = json.loads(self._path.read_text())
@@ -62,9 +96,11 @@ class ListingFile:
         except (OSError, ValueError) as damaged:
             log.warning("%s will not read, so no mentions are listed: %s", self._path, damaged)
             return NO_MENTIONS_LISTED
+        gone = dismissed(self._path)
         try:
             return MentionsListing(searched_at=document["searched_at"], mentions=tuple(
-                _listed_mention(entry) for entry in document["mentions"]))
+                mention for mention in map(_listed_mention, document["mentions"])
+                if dismissal(mention.pr, mention.comment_id) not in gone))
         except (KeyError, TypeError, ValueError) as damaged:
             log.warning("%s is damaged, so no mentions are listed: %r", self._path, damaged)
             return NO_MENTIONS_LISTED
