@@ -1,3 +1,4 @@
+from github_orchestrator.change_detection import PrClosed
 from tests.change_detection.support import (
     THE_PR,
     disk_change_detection,
@@ -25,7 +26,7 @@ def test_a_close_that_would_be_saved_leaves_the_pr_open(tmp_path):
     disk_change_detection(tmp_path).advance(THE_PR, poll(), set())
     said: list[str] = []
 
-    would_save_change_detection(tmp_path, said).close(THE_PR)
+    would_save_change_detection(tmp_path, said).close(THE_PR, PrClosed(merged=False))
 
     assert disk_change_detection(tmp_path).closing(THE_PR) is False
     assert said == [f"would save state for {THE_PR}"]

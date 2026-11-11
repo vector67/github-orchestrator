@@ -21,7 +21,8 @@ class PrNow:
     head_sha: str | None
     approved: bool
     last_event_at: str | None
-    ended: bool
+    closed: bool
+    merged: bool
 
 
 class MentionsInbox(Protocol):

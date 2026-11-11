@@ -99,6 +99,8 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         merge_state=words.mergeability,
         viewer_requested=_requested(snapshot, account),
         ended=is_closing(snapshot),
+        closed=snapshot.get("closed") is True,
+        merged=snapshot.get("merged") is True,
         mentions=mentions_of(snapshot),
         mentioned=snapshot.get("mentioned") is True,
         my_review_at=_text(snapshot, "my_review_at"),

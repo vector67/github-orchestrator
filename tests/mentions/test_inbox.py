@@ -549,7 +549,7 @@ def _defer(here, deferral):
 
 
 AN_HOUR_ON = MentionDeferral(deferred_at=SEARCHED, until_at="2026-10-23T10:00:00Z", until_pr=None)
-OPEN_PR = PrNow(head_sha="aaa", approved=False, last_event_at=None, ended=False)
+OPEN_PR = PrNow(head_sha="aaa", approved=False, last_event_at=None, closed=False, merged=False)
 
 
 def _one_mention(here):
@@ -654,16 +654,6 @@ def test_a_deferral_until_a_new_commit_ends_once_the_head_moves_after_it_was_see
     assert _deferred_now(here) == [None]
 
 
-def test_a_deferral_until_merged_ends_when_the_pr_ends(tmp_path):
-    here = _here(tmp_path)
-    _one_mention(here)
-    _defer(here, _until(PrMilestone.MERGED))
-
-    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
-
-    assert _deferred_now(here) == [None]
-
-
 def test_a_deferral_until_any_activity_ends_on_a_new_comment_anywhere_on_the_pr(tmp_path):
     here = _here(tmp_path)
     ping = _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z")
@@ -700,14 +690,42 @@ def test_a_deferral_holds_on_what_it_does_not_wait_for(tmp_path, state, polled):
     assert _deferred_now(here)[0] is not None
 
 
-def test_a_deferral_until_closed_ends_when_the_pr_ends(tmp_path):
+CLOSED_UNMERGED = replace(OPEN_PR, closed=True, merged=False)
+MERGED_PR = replace(OPEN_PR, closed=True, merged=True)
+
+
+@pytest.mark.parametrize(("state", "polled"), [
+    (PrMilestone.CLOSED, CLOSED_UNMERGED),
+    (PrMilestone.ANY_ACTIVITY, CLOSED_UNMERGED),
+    (PrMilestone.MERGED, MERGED_PR),
+    (PrMilestone.ANY_ACTIVITY, MERGED_PR),
+], ids=["closed-on-close", "activity-on-close", "merged-on-merge", "activity-on-merge"])
+def test_a_deferral_ends_when_its_pr_ends_the_way_it_waits_for(tmp_path, state, polled):
     here = _here(tmp_path)
     _one_mention(here)
-    _defer(here, _until(PrMilestone.CLOSED))
+    _defer(here, _until(state))
 
-    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
+    _settled(here, {THE_PR: polled})
 
     assert _deferred_now(here) == [None]
+
+
+@pytest.mark.parametrize(("state", "polled"), [
+    (PrMilestone.MERGED, CLOSED_UNMERGED),
+    (PrMilestone.APPROVED, CLOSED_UNMERGED),
+    (PrMilestone.NEW_COMMIT, CLOSED_UNMERGED),
+    (PrMilestone.NEEDS_YOU, CLOSED_UNMERGED),
+    (PrMilestone.CLOSED, MERGED_PR),
+], ids=["merged-on-close", "approved-on-close", "commit-on-close", "needs-you-on-close",
+        "closed-on-merge"])
+def test_a_deferral_holds_when_its_pr_ends_another_way(tmp_path, state, polled):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(state))
+
+    _settled(here, {THE_PR: polled})
+
+    assert _deferred_now(here)[0] is not None
 
 
 def test_a_deferral_until_any_activity_ends_on_an_event_the_watcher_saw_after_it(tmp_path):
@@ -720,24 +738,14 @@ def test_a_deferral_until_any_activity_ends_on_an_event_the_watcher_saw_after_it
     assert _deferred_now(here) == [None]
 
 
-def test_a_deferral_until_the_pr_lands_in_needs_you_ends_when_the_pr_ends(tmp_path):
+def test_a_deferral_on_a_pr_the_watcher_no_longer_tracks_holds_until_stopped_by_hand(tmp_path):
     here = _here(tmp_path)
     _one_mention(here)
-    _defer(here, _until(PrMilestone.NEEDS_YOU))
-
-    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
-
-    assert _deferred_now(here) == [None]
-
-
-def test_a_deferral_on_a_pr_the_watcher_no_longer_tracks_ends(tmp_path):
-    here = _here(tmp_path)
-    _one_mention(here)
-    _defer(here, _until(PrMilestone.APPROVED))
+    _defer(here, _until(PrMilestone.MERGED))
 
     _settled(here, {})
 
-    assert _deferred_now(here) == [None]
+    assert _deferred_now(here) == [_until(PrMilestone.MERGED)]
 
 
 def test_a_deferral_until_a_new_commit_keeps_the_head_it_first_saw(tmp_path):

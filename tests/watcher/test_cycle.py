@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from github_orchestrator.change_detection import Poll
+from github_orchestrator.change_detection import Poll, PrClosed
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Repo
 from github_orchestrator.github import (
@@ -182,7 +182,7 @@ def test_one_pr_that_cannot_be_polled_does_not_stop_the_rest(settings, pr_proces
 def test_a_cycle_polls_then_reaps_then_revives_then_tells_the_hub_each_managers_state(settings):
     github = watching(settings)
     _mine(github, 1)
-    disk_change_detection(settings.state_dir).close(a_pr(7, REPO))
+    disk_change_detection(settings.state_dir).close(a_pr(7, REPO), PrClosed(merged=False))
     disk_event_queue(settings.queues_dir).add(a_pr(9, REPO), ci_failed())
     windows = _Recording()
 
@@ -307,7 +307,7 @@ def test_a_closing_pr_of_a_repo_no_longer_watched_is_left_for_the_archive(settin
     dropped = a_pr(5, "acme/dropped")
     detection = disk_change_detection(settings.state_dir)
     detection.advance(dropped, Poll(_state(settings.config.gh_account), POLLED_AT), set())
-    detection.close(dropped)
+    detection.close(dropped, PrClosed(merged=False))
 
     watcher_over(settings, github=watching(settings)).run_cycle()
 
@@ -496,7 +496,7 @@ def test_dry_run_summary_counts_the_prs_the_events_and_the_teardowns(settings, c
     github = watching(settings)
     _theirs(github, 1)
     _mine(github, 2)
-    disk_change_detection(settings.state_dir).close(a_pr(7, REPO))
+    disk_change_detection(settings.state_dir).close(a_pr(7, REPO), PrClosed(merged=False))
 
     out = _dry_run(settings, capsys, github)
 

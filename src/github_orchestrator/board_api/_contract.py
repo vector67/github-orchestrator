@@ -2402,9 +2402,11 @@ class AwaitedPr(BaseModel):
     state: PrMilestone = Field(
         description="What ends the wait: `needs-you` when the board puts the pull request "
                     "in Needs you, which the page judges and ends by stopping the deferral; "
-                    "`approved`, `new-commit` and `any-activity` (an event the watcher saw or "
-                    "a comment on any of its cards) as the watcher next polls it; `merged` "
-                    "and `closed` when it ends, either way, since neither can come after.")
+                    "`approved` and `new-commit` while it is open, as the watcher next polls "
+                    "it; `merged` when it merges; `closed` when it closes without merging; "
+                    "`any-activity` on an event the watcher saw, a comment on any of its "
+                    "cards, or its merging or closing. A pull request the watcher lets go "
+                    "of ends none of them.")
 
 
 class MentionDeferred(BaseModel):

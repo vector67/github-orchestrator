@@ -201,6 +201,8 @@ class Facts:
     merge_state: Mergeability | None
     viewer_requested: bool
     ended: bool
+    closed: bool
+    merged: bool
     mentions: tuple[Mention, ...]
     mentioned: bool
     my_review_at: str | None
@@ -254,7 +256,7 @@ class ChangeDetection(Protocol):
 
     def closing(self, pr: Pr) -> bool: ...
 
-    def close(self, pr: Pr) -> None: ...
+    def close(self, pr: Pr, ending: PrClosed) -> None: ...
 
     def take_over(self, pr: Pr) -> None: ...
 

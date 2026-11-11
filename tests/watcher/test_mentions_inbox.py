@@ -10,9 +10,9 @@ from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.mentions import PrNow, StartUnread
 from github_orchestrator.watcher import Watcher
 from tests.builders import a_pr
-from tests.change_detection.support import disk_change_detection
+from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
 from tests.pr_event_queue.support import disk_event_queue, pending_of
-from tests.watcher.support import health, watcher_container, watcher_over
+from tests.watcher.support import health, watcher_container, watcher_over, watching
 
 UNBUILT = a_pr(82, "octocat/hello-world")
 
@@ -114,7 +114,20 @@ def test_each_cycle_hands_the_inbox_what_it_polled_of_each_pr_to_settle_deferral
     watcher_over(settings, github=github, mentions_inbox=inbox).run_cycle()
 
     assert inbox.settled == [{UNBUILT: PrNow(head_sha="abc", approved=True, last_event_at=None,
-                                             ended=False)}]
+                                             closed=False, merged=False)}]
+
+
+@pytest.mark.parametrize(("status", "said"), [("MERGED", (True, True)),
+                                              ("CLOSED", (True, False))])
+def test_a_pr_that_ends_reaches_the_inbox_closed_and_whether_merged(settings, status, said):
+    polled_on_disk(settings.state_dir, UNBUILT, seen(settings.config.gh_account))
+    github = watching(settings)
+    github.add_pr(UNBUILT, PullRequestState(author=settings.config.gh_account), status=status)
+    inbox = CountedSearches()
+
+    watcher_over(settings, github=github, mentions_inbox=inbox).run_cycle()
+
+    assert [(now.closed, now.merged) for now in inbox.settled[0].values()] == [said]
 
 
 def test_an_inbox_that_fails_to_settle_deferrals_does_not_fail_the_cycle(settings, caplog):

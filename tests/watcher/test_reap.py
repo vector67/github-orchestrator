@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.domain import Repo
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -48,7 +49,7 @@ BRANCH = "PROJ-33-foo"
 
 def _closing(settings):
     polled_on_disk(settings.state_dir, THE_PR, seen(settings.config.gh_account, branch=BRANCH))
-    disk_change_detection(settings.state_dir).close(THE_PR)
+    disk_change_detection(settings.state_dir).close(THE_PR, PrClosed(merged=False))
 
 
 def _tracked(settings):

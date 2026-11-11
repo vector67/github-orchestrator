@@ -349,8 +349,9 @@ def ended(*, still_open: bool, merged: bool) -> PrClosed:
     return PrClosed(merged=merged)
 
 
-def closing(snapshot: dict[str, Any] | None) -> dict[str, Any]:
-    return {**(snapshot or {}), "pending_teardown": True}
+def closing(snapshot: dict[str, Any] | None, ending: PrClosed) -> dict[str, Any]:
+    return {**(snapshot or {}), "pending_teardown": True,
+            "closed": not ending.no_longer_relevant, "merged": ending.merged}
 
 
 def taking_over(snapshot: dict[str, Any]) -> dict[str, Any]:

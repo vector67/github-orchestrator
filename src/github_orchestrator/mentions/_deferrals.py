@@ -18,15 +18,21 @@ def over(deferral: MentionDeferral, *, now: datetime, prs: Mapping[Pr, PrNow],
     if deferral.until_pr is None:
         return lapsed(deferral, now)
     awaited = prs.get(deferral.until_pr.pr)
-    if awaited is None or awaited.ended:
-        return True
+    if awaited is None:
+        return False
     match deferral.until_pr.state:
         case PrMilestone.APPROVED:
-            return awaited.approved
+            return awaited.approved and not awaited.closed
         case PrMilestone.NEW_COMMIT:
-            return deferral.head_sha is not None and awaited.head_sha != deferral.head_sha
+            return (not awaited.closed and deferral.head_sha is not None
+                    and awaited.head_sha != deferral.head_sha)
+        case PrMilestone.MERGED:
+            return awaited.merged
+        case PrMilestone.CLOSED:
+            return awaited.closed and not awaited.merged
         case PrMilestone.ANY_ACTIVITY:
-            return _since(deferral, [*pr_spoken, *filter(None, [awaited.last_event_at])])
+            return awaited.closed or _since(
+                deferral, [*pr_spoken, *filter(None, [awaited.last_event_at])])
         case _:
             return False
 

@@ -1,3 +1,4 @@
+from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.conversation import (
     ConversationState,
     Denied,
@@ -138,7 +139,7 @@ def test_a_pr_with_no_snapshot_has_no_role_yet(settings):
 
 def test_a_pr_closing_before_any_poll_said_whose_it_is_gives_no_role(settings):
     here = world(settings)
-    here.change_detection.close(THE_PR)
+    here.change_detection.close(THE_PR, PrClosed(merged=False))
 
     assert here.conversation_managers.of(THE_PR).facts().is_author is None
 

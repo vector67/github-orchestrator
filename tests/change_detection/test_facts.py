@@ -1,5 +1,6 @@
 from github_orchestrator.change_detection import (
     CiStatus,
+    PrClosed,
     ReviewerStatus,
 )
 from github_orchestrator.change_detection.fake import ReviewDecision, SinceReview
@@ -202,7 +203,7 @@ def test_the_facts_say_when_the_pr_has_ended(detection):
     detection.advance(THE_PR, poll(), set())
     before = detection.facts(THE_PR).ended
 
-    detection.close(THE_PR)
+    detection.close(THE_PR, PrClosed(merged=False))
 
     assert (before, detection.facts(THE_PR).ended) == (False, True)
 

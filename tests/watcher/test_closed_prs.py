@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.domain import Repo
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import Check
@@ -172,7 +173,7 @@ def test_a_closed_pr_i_took_over_is_not_mine_once_torn_down_and_found_again(sett
 
 def test_a_pr_waiting_for_teardown_is_reaped_without_queueing_again(settings, capsys):
     _polled(settings, REPO, 58)
-    disk_change_detection(settings.state_dir).close(a_pr(58, REPO))
+    disk_change_detection(settings.state_dir).close(a_pr(58, REPO), PrClosed(merged=False))
     github = _github(settings, (REPO, 58, "CLOSED", False, False))
 
     out = _cycle(settings, capsys, github)
@@ -195,7 +196,7 @@ def test_dry_run_names_the_teardown_a_closed_pr_would_get(settings, capsys):
 
 def test_dry_run_counts_the_reap_it_reports(settings, capsys):
     _polled(settings, REPO, 7)
-    disk_change_detection(settings.state_dir).close(a_pr(7, REPO))
+    disk_change_detection(settings.state_dir).close(a_pr(7, REPO), PrClosed(merged=False))
 
     out = _cycle(settings, capsys, watching(settings), dry_run=True)
 

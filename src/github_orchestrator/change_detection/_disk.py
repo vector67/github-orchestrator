@@ -143,8 +143,8 @@ class DiskChangeDetection:
     def closing(self, pr: Pr) -> bool:
         return is_closing(self._last(pr))
 
-    def close(self, pr: Pr) -> None:
-        self._save(pr, closing(self._last(pr)))
+    def close(self, pr: Pr, ending: PrClosed) -> None:
+        self._save(pr, closing(self._last(pr), ending))
 
     def take_over(self, pr: Pr) -> None:
         self._mark_taken_over(pr)

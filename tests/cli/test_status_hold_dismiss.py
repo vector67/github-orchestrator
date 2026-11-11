@@ -1,5 +1,6 @@
 import pytest
 
+from github_orchestrator.change_detection import PrClosed
 from tests.builders import a_pr
 from tests.change_detection.support import (
     disk_change_detection,
@@ -115,7 +116,7 @@ def test_an_unflagged_report_keeps_the_queue_block_where_it_was(status_dirs, run
 
 
 def test_a_state_file_missing_its_own_fields_is_identified_by_its_path(status_dirs, run_cli, settings):
-    disk_change_detection(settings.state_dir).close(a_pr(86, REPO))
+    disk_change_detection(settings.state_dir).close(a_pr(86, REPO), PrClosed(merged=False))
     disk_holds(settings.data_dir).set_on_hold(a_pr(86, REPO), True)
     status = run_cli("status")
     line = pr_line(status.out, 86)

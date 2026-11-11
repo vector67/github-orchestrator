@@ -80,8 +80,8 @@ class FakeChangeDetection:
     def closing(self, pr: Pr) -> bool:
         return is_closing(self._last(pr))
 
-    def close(self, pr: Pr) -> None:
-        self._held[pr] = json.dumps(closing(self._last(pr)))
+    def close(self, pr: Pr, ending: PrClosed) -> None:
+        self._held[pr] = json.dumps(closing(self._last(pr), ending))
 
     def take_over(self, pr: Pr) -> None:
         self._taken_over.add(pr)

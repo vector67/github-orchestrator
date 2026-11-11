@@ -286,7 +286,8 @@ class PollingWatcher:
         polled = {pr: self._change_detection.facts(pr) for pr in self._tracked_in_watched_repos()}
         return {pr: PrNow(head_sha=facts.head_sha,
                           approved=facts.approved,
-                          last_event_at=facts.last_event_at, ended=facts.ended)
+                          last_event_at=facts.last_event_at, closed=facts.closed,
+                          merged=facts.merged)
                 for pr, facts in polled.items() if facts is not None}
 
     def _mentioned_or_taken_over(self, pr: Pr) -> bool:
@@ -364,7 +365,7 @@ class PollingWatcher:
                     self._change_detection.end_take_over(pr)
 
                 if self._enqueue_unless_dismissed_forever(pr, ending):
-                    self._change_detection.close(pr)
+                    self._change_detection.close(pr, ending)
                 elif not self._teardown.reap(pr, Reason.CLOSED):
                     continue
                 closed += 1

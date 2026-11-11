@@ -27,6 +27,7 @@ from tests.change_detection.support import (
 )
 
 THE_PR = a_pr(PR, REPO)
+CLOSED = PrClosed(merged=False)
 
 
 @pytest.fixture(params=["fake", "disk"])
@@ -205,14 +206,35 @@ def test_a_reviewer_is_told_of_the_pushes_since_their_review(detection):
 def test_a_closing_pr_keeps_what_it_knew(detection):
     detection.advance(THE_PR, poll(), set())
 
-    detection.close(THE_PR)
+    detection.close(THE_PR, CLOSED)
 
     assert detection.closing(THE_PR) is True
     assert detection.facts(THE_PR).branch == "PROJ-7-widgets"
 
 
+@pytest.mark.parametrize(("ending", "said"), [
+    (PrClosed(merged=True), (True, True)),
+    (PrClosed(merged=False), (True, False)),
+    (PrClosed(merged=False, no_longer_relevant=True), (False, False)),
+], ids=["merged", "closed", "let-go"])
+def test_the_facts_say_whether_an_ended_pr_was_closed_and_merged(detection, ending, said):
+    detection.advance(THE_PR, poll(), set())
+
+    detection.close(THE_PR, ending)
+
+    facts = detection.facts(THE_PR)
+    assert (facts.closed, facts.merged) == said
+
+
+def test_an_open_pr_is_neither_closed_nor_merged(detection):
+    detection.advance(THE_PR, poll(), set())
+
+    facts = detection.facts(THE_PR)
+    assert (facts.closed, facts.merged) == (False, False)
+
+
 def test_a_pr_never_polled_can_still_be_closed(detection):
-    detection.close(THE_PR)
+    detection.close(THE_PR, CLOSED)
 
     assert detection.closing(THE_PR) is True
     assert detection.tracked() == [(THE_PR)]
