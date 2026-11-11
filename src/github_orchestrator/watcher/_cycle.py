@@ -77,6 +77,7 @@ class PollingWatcher:
         self._mentions_searched_at: datetime | None = None
         self._mentioned: list[Pr] = []
         self._unbuilt: list[Pr] = []
+        self._opened: list[Pr] = []
         self._intake = intake
         self._worklist = worklist
         self._pr_processes = pr_processes
@@ -186,8 +187,12 @@ class PollingWatcher:
         except Exception:
             log.exception("Could not deliver the notifications")
 
+    def _shut_out(self, pr: Pr) -> bool:
+        return self._dismissals.is_dismissed_forever(pr) and pr not in self._opened
+
     def _enqueue_unless_dismissed_forever(self, pr: Pr, item: PrEvent | ThreadActivity) -> bool:
-        if self._dismissals.is_dismissed_forever(pr):
+        if self._dismissals.is_dismissed_forever(pr) and not (
+                pr in self._opened and isinstance(item, ThreadActivity)):
             log.debug("Dropping %s for %s — dismissed forever", item.kind, pr)
             return False
         if isinstance(item, ThreadActivity):
@@ -252,11 +257,16 @@ class PollingWatcher:
 
     def _cards_to_build(self) -> list[Pr]:
         try:
-            wanted = self._mentions_inbox.unbuilt() + self._mentions_inbox.opened()
+            unbuilt = self._mentions_inbox.unbuilt()
+            self._opened = self._in_watched_repos(self._mentions_inbox.opened())
         except Exception:
             log.exception("Could not read which mentions still need a card")
+            self._opened = []
             return []
-        return [pr for pr in dict.fromkeys(wanted) if pr.repo in self._config.repos]
+        return self._in_watched_repos(list(dict.fromkeys(unbuilt + self._opened)))
+
+    def _in_watched_repos(self, prs: list[Pr]) -> list[Pr]:
+        return [pr for pr in prs if pr.repo in self._config.repos]
 
     def _tracked_in_watched_repos(self) -> list[Pr]:
         return [pr for pr in self._change_detection.tracked() if pr.repo in self._config.repos]
@@ -299,10 +309,10 @@ class PollingWatcher:
               engaged: list[Pr]) -> dict[Pr, bool]:
         held: dict[Pr, bool] = {}
         for pr in review_prs:
-            if not self._dismissals.is_dismissed_forever(pr):
+            if not self._shut_out(pr):
                 held[pr] = True
         for pr in my_prs + self._mentioned + self._unbuilt + engaged:
-            if not self._dismissals.is_dismissed_forever(pr) and pr not in held:
+            if not self._shut_out(pr) and pr not in held:
                 held[pr] = False
         return held
 
@@ -334,7 +344,8 @@ class PollingWatcher:
 
         for pr in to_poll:
             try:
-                self._placement.ensure(pr, fetch=pr in moved_heads)
+                self._placement.ensure(pr, fetch=pr in moved_heads,
+                                       for_a_mention=pr in self._opened)
             except Exception:
                 log.exception("Failed to ensure window for %s", pr)
 
@@ -378,7 +389,7 @@ class PollingWatcher:
     def _tear_down_dismissed(self, prs: list[Pr]) -> int:
         torn_down = 0
         for pr in dict.fromkeys(prs):
-            if not self._dismissals.is_dismissed_forever(pr):
+            if not self._shut_out(pr):
                 continue
             if self._pr_processes.manager(pr) is ManagerPane.NO_WINDOW:
                 continue

@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class Placement(Protocol):
-    def ensure(self, pr: Pr, *, fetch: bool = False) -> None: ...
+    def ensure(self, pr: Pr, *, fetch: bool = False, for_a_mention: bool = False) -> None: ...
 
     def revive_pending(self) -> None: ...
 
@@ -33,10 +33,11 @@ class WindowPlacement:
         self._change_detection = change_detection
         self._dismissals = dismissals
 
-    def ensure(self, pr: Pr, *, fetch: bool = False) -> None:
+    def ensure(self, pr: Pr, *, fetch: bool = False, for_a_mention: bool = False) -> None:
         facts = self._change_detection.facts(pr)
-        if self._dismissals.is_hidden(pr, events_waiting=bool(self._worklist.waiting(pr).count),
-                                      draft=facts is None or facts.draft):
+        if not for_a_mention and self._dismissals.is_hidden(
+                pr, events_waiting=bool(self._worklist.waiting(pr).count),
+                draft=facts is None or facts.draft):
             if (not self._dismissals.is_dismissed_forever(pr)
                     and self._pr_processes.manager(pr) is ManagerPane.EXITED):
                 log.info("ensure_pr_window %s: dismissed and its manager has exited; "

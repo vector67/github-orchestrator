@@ -27,11 +27,11 @@ class WouldPlace:
         self._enqueued = enqueued
         self._say = say
 
-    def ensure(self, pr: Pr, *, fetch: bool = False) -> None:
+    def ensure(self, pr: Pr, *, fetch: bool = False, for_a_mention: bool = False) -> None:
         waiting = self._worklist.waiting(pr).count + self._enqueued(pr)
         facts = self._change_detection.facts(pr)
-        if self._dismissals.is_hidden(pr, events_waiting=bool(waiting),
-                                      draft=facts is None or facts.draft):
+        if not for_a_mention and self._dismissals.is_hidden(
+                pr, events_waiting=bool(waiting), draft=facts is None or facts.draft):
             dismissal = self._dismissals.dismissal(pr)
             lasts = _LASTS[dismissal or DismissUntil.NEXT_EVENT]
             self._say(f"would leave PR {pr.number} alone (dismissed {lasts})")

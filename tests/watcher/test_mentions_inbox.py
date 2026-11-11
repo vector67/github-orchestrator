@@ -1,5 +1,8 @@
+from dataclasses import replace
+
 import pytest
 
+from github_orchestrator.board_api.interface import Told
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -8,10 +11,14 @@ from github_orchestrator.github import (
 )
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.mentions import PrNow, StartUnread
+from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.watcher import Watcher
+from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
 from tests.pr_event_queue.support import disk_event_queue, pending_of
+from tests.pr_processes.support import checked_out
+from tests.settings.support import disk_dismissals
 from tests.watcher.support import health, watcher_container, watcher_over, watching
 
 UNBUILT = a_pr(82, "octocat/hello-world")
@@ -135,6 +142,42 @@ def test_a_merged_pr_opened_for_a_mention_is_kept_and_not_closed(settings, capsy
     assert (detection.facts(UNBUILT).ended, detection.facts(UNBUILT).merged) == (True, True)
     assert [event.kind for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
             if event.kind == "pr-closed"] == []
+
+
+def _dismissed_forever_and_opened(settings, tmp_path, pr_processes):
+    github = _off_the_search(settings)
+    github.prs[UNBUILT].state = replace(github.prs[UNBUILT].state, branch="theirs")
+    copies = FakeWorkingCopies()
+    checked_out(copies, tmp_path / "theirs", "theirs")
+    disk_dismissals(settings.data_dir).dismiss_forever(UNBUILT)
+    inbox = CountedSearches()
+    inbox.opened_prs = [UNBUILT]
+    return watcher_over(settings, github=github, mentions_inbox=inbox,
+                        pr_processes=pr_processes, working_copies=copies)
+
+
+def test_a_pr_dismissed_forever_opened_for_a_mention_gets_its_mention_queued_and_a_manager(
+        settings, tmp_path, pr_processes):
+    watcher = _dismissed_forever_and_opened(settings, tmp_path, pr_processes)
+
+    watcher.run_cycle()
+
+    [queued] = [event for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
+                if event.kind == "thread-activity"]
+    assert [thread.key for thread in queued.threads] == ["IC_1"]
+    assert pr_processes.manager(UNBUILT) is ManagerPane.RUNNING
+
+
+def test_a_pr_dismissed_forever_opened_for_a_mention_stays_dismissed_and_held(
+        settings, tmp_path, pr_processes, capsys):
+    watcher = _dismissed_forever_and_opened(settings, tmp_path, pr_processes)
+
+    watcher.run_cycle()
+    watcher.run_cycle()
+
+    assert disk_dismissals(settings.data_dir).is_dismissed_forever(UNBUILT)
+    assert "0 torn down" in capsys.readouterr().out.splitlines()[-1]
+    assert UNBUILT in watcher_container(settings).get(Told).held().managers
 
 
 def test_each_cycle_hands_the_inbox_what_it_polled_of_each_pr_to_settle_deferrals(settings):
