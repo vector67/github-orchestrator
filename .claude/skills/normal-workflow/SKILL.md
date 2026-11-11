@@ -12,6 +12,9 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
 1. Open a GitHub issue for the task with `gh issue create`, unless the task already
    came from one (as through `next-issue`): a title naming the change, and a body
    that starts with 🤖 and restates the ask. Note its number for the last step.
+   Before proposing a design, read `git log main --since='3 days ago' -- <the area>`
+   and `gh issue list --search '<the area>'`: other sessions commit here too, and
+   part of what you would design may already be built.
 
 2. Cut an isolated workspace through the `using-git-worktrees` skill — never edit
    or commit on `main` or the target. It prefers the harness's own worktree tool, which puts the
@@ -48,7 +51,8 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    each, or write `Refs`, never a `Closes` that reports it in passing. Two gaps hide
    easily: when the fix only catches a broken invariant downstream, whatever broke it
    is still a gap, and so is anything the user lost that you recovered by hand on the
-   way.
+   way. A defect your own check of this change turns up is not left over: fix it in
+   this change before you report it done.
 
 5. Check the branch for private information before it reaches the target: the
    repo is public, and whatever merges is pushed. Read `git diff <target>...<branch>`
@@ -98,7 +102,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    and watch the board show it. When the request names who will use the result (a
    person, another agent, a runbook), put that consumer through its task on the
    real system: cause the failure the change should explain, say, and have a
-   fresh agent diagnose it from what the change produced.
+   fresh agent diagnose it from what the change produced. A check you report as
+   not done has not passed. When one stalls, its blocker is the task: trace it in
+   the code, and ask the user the moment you need them, before starting anything
+   else.
 
 8. Remove the workspace the way the `using-git-worktrees` skill made it, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once

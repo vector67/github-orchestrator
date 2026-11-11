@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from github_orchestrator.domain import HubState
-from github_orchestrator.settings import ConfigFile, Logs, Process
+from github_orchestrator.settings import ConfigFile, Dismissals, Logs, Process
 from github_orchestrator.thread_names import HeldFolder, NameMigration
 from github_orchestrator.watcher import Watcher
 from github_orchestrator.wiring import make_container
@@ -62,6 +62,8 @@ def main() -> None:
         print("Another watcher instance is running, skipping")
         sys.exit(0)
 
+    if not args.dry_run:
+        container.get(Dismissals).migrate()
     migration = container.get(NameMigration)
     held = migration.migrate() if not args.dry_run and state is HubState.WATCHING else []
     if held:

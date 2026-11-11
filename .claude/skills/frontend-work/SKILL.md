@@ -10,6 +10,11 @@ description: Must be invoked for any requested front-end change in this reposito
   inject the loader, `services/poll`. ESLint refuses the imports; a copy kept
   elsewhere drifts and the page contradicts itself.
 
+- **A failed action says so.** When an action the user started fails or is
+  refused, the page shows the failure and its cause and keeps the text they typed;
+  its state follows that operation, not whichever item in the thread is newest.
+  Falling back silently to the state before the click loses their work.
+
 - **Prove every front-end change in a real browser, with screenshots.** Use the
   Claude in Chrome plugin. When its tools are not in the session, drive headless
   Chrome with [`helper.sh`](helper.sh), whose commands mirror the plugin's tools:

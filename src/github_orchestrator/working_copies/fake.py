@@ -27,6 +27,7 @@ from github_orchestrator.working_copies._layout import (
     thread_branch_prefix,
     thread_worktree,
 )
+from github_orchestrator.working_copies._revisions import line_count
 from github_orchestrator.working_copies._threads import SQUASH_EMPTY
 from github_orchestrator.working_copies._trouble import (
     BranchTrouble,
@@ -39,6 +40,7 @@ from github_orchestrator.working_copies.interface import (
     FileDiff,
     Picked,
     PrCommit,
+    PrDiff,
     ThreadGitError,
     Verdict,
     WrongBranch,
@@ -651,6 +653,21 @@ class FakeWorkingCopies:
         fork = next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
         named = "main" if ref == "origin/HEAD" else ref.removeprefix("origin/")
         return None if fork is None else (fork, found, named)
+
+    def _merge_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
+        found = self._pr_base(worktree, base_branch, head)
+        return None if found is None else found[0]
+
+    def _head_diff(self, worktree: str, base_branch: str | None, local: bool) -> PrDiff | None:
+        head = self._head_sha(worktree) if local else self._origin_head(worktree)
+        base = None if head is None else self._merge_base(worktree, base_branch, head)
+        files = None if head is None or base is None else self._diff_files(worktree, base, head)
+        if head is None or base is None or files is None:
+            return None
+        return PrDiff(Sha(base), Sha(head), files)
+
+    def _line_count(self, worktree: str, sha: str, path: str) -> int | None:
+        return line_count(self._blob(worktree, sha, path))
 
     def _authored_at(self, worktree: str, sha: str) -> datetime | None:
         resolved = self._rev(worktree, sha)

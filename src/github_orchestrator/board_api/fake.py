@@ -7,7 +7,6 @@ from github_orchestrator.board_api.interface import (
     NOTHING_HELD,
     CloneSpot,
     Dashboard,
-    DismissUntil,
     FieldRefusal,
     FolderInUse,
     Held,
@@ -20,7 +19,14 @@ from github_orchestrator.board_api.interface import (
     SetupRead,
     SetupWrite,
 )
-from github_orchestrator.domain import CiCheck, HubState, Pr, Repo, ReviewerPick
+from github_orchestrator.domain import (
+    CiCheck,
+    DismissUntil,
+    HubState,
+    Pr,
+    Repo,
+    ReviewerPick,
+)
 
 IDLE = Dashboard(
     pr=Pr(Repo("o", "n"), 1), worktree="/wt", polled=True,

@@ -5,7 +5,14 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.domain import Clone, HubState, Pr, Repo, ReviewerPick
+from github_orchestrator.domain import (
+    Clone,
+    DismissUntil,
+    HubState,
+    Pr,
+    Repo,
+    ReviewerPick,
+)
 
 
 class Process(Enum):
@@ -19,20 +26,6 @@ class Logs(Protocol):
     def path(self, process: Process) -> Path: ...
 
     def configure_logging(self, process: Process, context: str = "") -> None: ...
-
-
-class Dismissal(Enum):
-    UNTIL_NEXT_EVENT = "until-event"
-    FOREVER = "forever"
-    UNTIL_READY_FOR_REVIEW = "until-ready"
-
-    @property
-    def lasts(self) -> str:
-        return _LASTS[self]
-
-
-_LASTS = {Dismissal.UNTIL_NEXT_EVENT: "until the next event", Dismissal.FOREVER: "forever",
-          Dismissal.UNTIL_READY_FOR_REVIEW: "until ready for review"}
 
 
 @dataclass(frozen=True)
@@ -99,7 +92,9 @@ class Holds(Protocol):
 
 
 class Dismissals(Protocol):
-    def dismissal(self, pr: Pr) -> Dismissal | None: ...
+    def migrate(self) -> None: ...
+
+    def dismissal(self, pr: Pr) -> DismissUntil | None: ...
 
     def dismiss_forever(self, pr: Pr) -> None: ...
 

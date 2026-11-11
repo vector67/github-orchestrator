@@ -90,6 +90,12 @@ class Git(Protocol):
     def _pr_base(self, worktree: str, base_branch: str | None,
                  head: str) -> tuple[str, str, str] | None: ...
 
+    def _merge_base(self, worktree: str, base_branch: str | None, head: str) -> str | None: ...
+
+    def _head_diff(self, worktree: str, base_branch: str | None, local: bool) -> PrDiff | None: ...
+
+    def _line_count(self, worktree: str, sha: str, path: str) -> int | None: ...
+
     def _authored_at(self, worktree: str, sha: str) -> datetime | None: ...
 
     def _commits_between(self, worktree: str, base: str,
@@ -245,8 +251,16 @@ class BoundRevisions:
 
     def pr_base(self, base_branch: str | None, head: Sha) -> Sha | None:
         path = self._path()
-        found = None if path is None else self.git._pr_base(path, base_branch, str(head))
-        return None if found is None else Sha.parse(found[0])
+        return None if path is None else Sha.parse(self.git._merge_base(path, base_branch,
+                                                                        str(head)))
+
+    def head_diff(self, base_branch: str | None, *, local: bool) -> PrDiff | None:
+        path = self._path()
+        return None if path is None else self.git._head_diff(path, base_branch, local)
+
+    def line_count(self, sha: Sha, path: str) -> int | None:
+        worktree = self._path()
+        return None if worktree is None else self.git._line_count(worktree, str(sha), path)
 
     def pr_diff(self, base_branch: str | None, head: Sha) -> PrDiff | None:
         base = self.pr_base(base_branch, head)

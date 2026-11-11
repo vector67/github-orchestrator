@@ -445,12 +445,12 @@ def proposals_of(git: PrCheckout,
     return contract.ProposalList([] if proposal is None else [proposal])
 
 
-def _changed(file: FileDiff, blob: bytes | None) -> contract.FileChange:
+def _changed(file: FileDiff, line_count: int | None) -> contract.FileChange:
     return contract.FileChange(
         path=file.path, old_path=file.old_path,
         status=contract.DiffFileStatus(file.status), added=file.added,
         removed=file.removed, is_binary=file.is_binary,
-        line_count=None if blob is None else len(blob.removesuffix(b"\n").split(b"\n")),
+        line_count=line_count,
         hunks=[contract.DiffHunk(
             old_start=hunk.old_start, old_lines=hunk.old_lines,
             new_start=hunk.new_start, new_lines=hunk.new_lines,
@@ -463,10 +463,10 @@ def _changed(file: FileDiff, blob: bytes | None) -> contract.FileChange:
 
 
 def diff_of(base: str, head: str, files: Sequence[FileDiff],
-            blob_of: Callable[[str], bytes | None]) -> contract.Diff:
+            line_count_of: Callable[[str], int | None]) -> contract.Diff:
     return contract.Diff(
         base=base, head=head,
-        files=[_changed(file, blob_of(file.path) if file.hunks else None)
+        files=[_changed(file, line_count_of(file.path) if file.hunks else None)
                for file in files])
 
 

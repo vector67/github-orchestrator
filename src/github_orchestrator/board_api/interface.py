@@ -10,6 +10,7 @@ from starlette.types import ASGIApp
 
 from github_orchestrator.domain import (
     CiCheck,
+    DismissUntil,
     HubState,
     Mention,
     Pr,
@@ -35,12 +36,6 @@ class ManagerStanding(StrEnum):
     STARTING = "starting"
     ANSWERING = "answering"
     GONE = "gone"
-
-
-class DismissUntil(StrEnum):
-    NEXT_EVENT = "next-event"
-    READY_FOR_REVIEW = "ready-for-review"
-    FOREVER = "forever"
 
 
 class ManagerRefusal(StrEnum):

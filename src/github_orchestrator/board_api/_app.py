@@ -308,20 +308,15 @@ def read_pull_request_diff(request: Request, board: Serving,
     `/diffs` answers.
     """
     facts = board.conversations.facts()
-    head = board.git.revisions.origin_head() if source is DiffSource.ORIGIN else board.git.revisions.local_head()
-    if head is None:
-        raise Refusal(500, ErrorCode.GIT_FAILED,
-                      board.git.no_worktree()
-                      or f"git could not find the pull request's {source} head")
-    diff = board.git.revisions.pr_diff(facts.base_branch, head)
+    diff = board.git.revisions.head_diff(facts.base_branch, local=source is DiffSource.LOCAL)
     if diff is None:
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree()
-                      or f"git could not diff {head} against its merge base with "
-                         f"{facts.base_branch or 'the default branch'}")
+                      or f"git could not diff the pull request's {source} head against its "
+                         f"merge base with {facts.base_branch or 'the default branch'}")
     return etag.answered(request, diff_of(
         str(diff.base), str(diff.head), diff.files,
-        lambda path: board.git.revisions.blob(diff.head, path)))
+        lambda path: board.git.revisions.line_count(diff.head, path)))
 
 
 @reads.get("/pull-request/commits", response_model=PullRequestCommits,
@@ -652,7 +647,7 @@ def read_split_diff(key: ThreadKey, board: Serving) -> Diff:
                       or f"git could not diff {split.branch} against its merge base with "
                          f"{split.base}")
     return diff_of(str(diff.base), str(diff.head), diff.files,
-                   lambda path: board.git.revisions.blob(diff.head, path))
+                   lambda path: board.git.revisions.line_count(diff.head, path))
 
 
 @reads.get("/conversations/{key}/proposals/{proposal_id}",
@@ -695,7 +690,7 @@ def read_diff(base: Sha, head: Sha, request: Request, board: Serving,
         raise Refusal(500, ErrorCode.GIT_FAILED,
                       board.git.no_worktree() or f"git could not diff {base}..{head}")
     return etag.answered(request, diff_of(
-        base, head, files, lambda path: board.git.revisions.blob(until, path)))
+        base, head, files, lambda path: board.git.revisions.line_count(until, path)))
 
 
 def _diffed(board: Board, since: CommitSha, until: CommitSha,

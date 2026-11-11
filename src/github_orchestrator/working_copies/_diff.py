@@ -118,14 +118,51 @@ def _named_branch(worktree: str, ref: str) -> str:
     return named.stdout.strip().removeprefix("origin/") if named.returncode == 0 else ref
 
 
-def resolve_pr_base(
-    worktree: str, base_branch: str | None, head: str
-) -> tuple[tuple[str, str, str] | None, str]:
+def _base_refs(base_branch: str | None) -> tuple[str, ...]:
     if base_branch and not is_branch_name(base_branch):
         log.warning("refusing to look for the PR base %r: it is not a branch "
                     "name", base_branch)
         base_branch = None
-    refs = (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
+    return (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
+
+
+def _commit_at(worktree: str, ref: str) -> str | None:
+    found = _run_git(worktree, "rev-parse", "--verify", "--quiet", "--end-of-options",
+                     f"{ref}^{{commit}}")
+    return found.stdout.strip() or None if found.returncode == 0 else None
+
+
+def tips(worktree: str, head: str, base_branch: str | None) -> tuple[str, str] | None:
+    refs = _base_refs(base_branch)
+    try:
+        both = _run_git(worktree, "rev-parse", "--end-of-options", f"{head}^{{commit}}",
+                        f"{refs[0]}^{{commit}}", "--")
+        shas = [line for line in both.stdout.split() if Sha.parse(line) is not None]
+        if both.returncode == 0 and len(shas) == 2:
+            return shas[0], shas[1]
+        head_sha = _commit_at(worktree, head)
+        tip = next((sha for ref in refs if (sha := _commit_at(worktree, ref))), None)
+    except _GitUnavailable:
+        return None
+    return None if head_sha is None or tip is None else (head_sha, tip)
+
+
+def merge_base(worktree: str, tip: str, head: str) -> str | None:
+    try:
+        found = _run_git(worktree, "merge-base", "--end-of-options", tip, head)
+    except _GitUnavailable:
+        return None
+    if found.returncode != 0 or Sha.parse(found.stdout.strip()) is None:
+        log.warning("git merge-base %s %s exited %d: %s", tip, head, found.returncode,
+                    _last_stderr_line(found))
+        return None
+    return found.stdout.strip()
+
+
+def resolve_pr_base(
+    worktree: str, base_branch: str | None, head: str
+) -> tuple[tuple[str, str, str] | None, str]:
+    refs = _base_refs(base_branch)
     found = tip = None
     for ref in refs:
         try:

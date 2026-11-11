@@ -15,6 +15,7 @@ from github_orchestrator.notifications import Worktrees
 from github_orchestrator.working_copies import (
     _git_status,
     _hunks,
+    _pr_reads,
     _revisions,
     _threads,
     _worktree,
@@ -34,6 +35,7 @@ from github_orchestrator.working_copies.interface import (
     FileDiff,
     Picked,
     PrCommit,
+    PrDiff,
     ThreadGitError,
     Verdict,
     WrongBranch,
@@ -69,6 +71,7 @@ class GitWorkingCopies:
         self._thread_worktrees_dir = thread_worktrees_dir
         self._cutting = threading.Lock()
         self._progress = Progress()
+        self._pr_reads = _pr_reads.PrReads()
 
     def _create_pr_worktree(self, repo_dir: Path, pr: Pr, base_branch: str | None) -> Path:
         return _worktree.create_pr_worktree(
@@ -379,6 +382,19 @@ class GitWorkingCopies:
                  head: str) -> tuple[str, str, str] | None:
         found, _ = resolve_pr_base(worktree, base_branch, head)
         return found
+
+    def _merge_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
+        return self._pr_reads.merge_base(worktree, base_branch, head)
+
+    def _head_diff(self, worktree: str, base_branch: str | None, local: bool) -> PrDiff | None:
+        branch = None if local else self._status.current_branch(worktree)
+        if not local and branch is None:
+            return None
+        head = "HEAD" if local else f"refs/remotes/origin/{branch}"
+        return self._pr_reads.diff(worktree, base_branch, head)
+
+    def _line_count(self, worktree: str, sha: str, path: str) -> int | None:
+        return self._pr_reads.line_count(worktree, sha, path)
 
     def _commits_between(self, worktree: str, base: str,
                          head: str) -> tuple[PrCommit, ...] | None:

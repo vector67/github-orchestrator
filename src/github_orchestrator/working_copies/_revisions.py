@@ -50,6 +50,10 @@ def blob(worktree: str, sha: str, path: str) -> bytes | None:
     return shown.stdout if shown.returncode == 0 else None
 
 
+def line_count(content: bytes | None) -> int | None:
+    return None if content is None else len(content.removesuffix(b"\n").split(b"\n"))
+
+
 def commits_between(worktree: str, base: str, head: str) -> tuple[PrCommit, ...] | None:
     if Sha.parse(base) is None or Sha.parse(head) is None or not os.path.isdir(worktree):
         return None

@@ -79,7 +79,7 @@ def _under(module, package):
 
 
 KERNEL = "github_orchestrator.domain"
-KERNEL_ENTRIES = frozenset({"HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo",
+KERNEL_ENTRIES = frozenset({"DismissUntil", "HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo",
                             "Sha", "Side", "Sleep", "ThreadName", "UtcClock"})
 
 
@@ -574,7 +574,7 @@ PR_CHECKOUT_MEMBERS = frozenset({
 })
 REVISIONS_MEMBERS = frozenset({
     "origin_head", "local_head", "commit_message", "diff_files", "named_commit", "changes",
-    "pr_base", "pr_diff", "pr_commits", "has_commit", "blob",
+    "pr_base", "pr_diff", "head_diff", "pr_commits", "has_commit", "blob", "line_count",
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
     "path", "base_sha", "ensure", "pick", "head_sha", "descends", "branch_head", "progress", "drop",
