@@ -667,7 +667,9 @@ module('Acceptance | panel', function (hooks) {
       await visit(`/pr/o/r/7/conversations/${KEY}`);
 
       assert.dom('[data-test-failure]').doesNotExist();
-      assert.dom('[data-test-decision="approve"]').doesNotIncludeText('Push it');
+      assert
+        .dom('[data-test-decision="approve"]')
+        .doesNotIncludeText('Push it');
     });
 
     test('accepting it offers the reply that was never posted', async function (assert) {
