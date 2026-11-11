@@ -1,7 +1,13 @@
 from pathlib import Path
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
-from github_orchestrator.board_api.interface import Dashboards, ResetToOrigin, Shelves
+from github_orchestrator.board_api.interface import (
+    Dashboards,
+    ResetRefusal,
+    ResetRefusalCode,
+    ResetToOrigin,
+    Shelves,
+)
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.conversation.support import (
@@ -97,7 +103,8 @@ def test_a_queued_reset_finding_uncommitted_changes_does_not_run_and_says_why(
     assert copies.head_of(tmp_path) == before
     kept = _kept(manager)
     assert kept is not None and kept.ran_at is not None
-    assert kept.refused is not None and "uncommitted changes" in kept.refused
+    assert kept.refused is not None and kept.refused.code is ResetRefusalCode.RESET_REFUSED
+    assert kept.refused.detail is not None and "uncommitted changes" in kept.refused.detail
     assert manager.container.get(Dashboards).dashboard(THE_PR).reset_to_origin == kept
 
 
@@ -183,7 +190,9 @@ def test_a_queued_reset_keeps_work_that_is_only_unpushed_when_the_run_ends(setti
 
     assert copies.head_of(tmp_path) == merged[0]
     kept = _kept(manager)
-    assert kept is not None and kept.refused is not None and "only unpushed" in kept.refused
+    assert kept is not None and kept.refused is not None
+    assert kept.refused.code is ResetRefusalCode.RESET_REFUSED
+    assert kept.refused.detail is not None and "only unpushed" in kept.refused.detail
 
 
 def test_a_queued_reset_cancelled_while_it_resets_says_it_ran(settings, tmp_path):
@@ -221,7 +230,8 @@ def test_a_queued_reset_that_dies_while_it_resets_does_not_read_as_having_run_cl
 
     assert copies.head_of(tmp_path) == before
     kept = _kept(manager)
-    assert kept is not None and kept.refused is not None
+    assert kept is not None
+    assert kept.refused == ResetRefusal(ResetRefusalCode.RESET_INTERRUPTED)
 
 
 def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(settings, tmp_path):
@@ -248,4 +258,5 @@ def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(setting
 
     assert copies.head_of(tmp_path) == str(landed.landed_sha)
     kept = _kept(manager)
-    assert kept is not None and kept.refused is not None and "not pushed" in kept.refused
+    assert kept is not None
+    assert kept.refused == ResetRefusal(ResetRefusalCode.FIX_AWAITS_PUSH, KEY)

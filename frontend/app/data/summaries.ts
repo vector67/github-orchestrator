@@ -32,6 +32,7 @@ import {
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
 import { atWork } from 'frontend/data/thread';
+import { saidOf } from 'frontend/data/tried';
 import { levelOf, type Level } from 'frontend/data/wall';
 import {
   dayOf,
@@ -1235,7 +1236,7 @@ export function resetStandingOf(
         ? null
         : kept.refused === null
           ? 'Reset to origin when the agent finished.'
-          : `The queued reset didn't run: ${kept.refused}`,
+          : `The queued reset didn't run: ${saidOf(kept.refused.code, kept.refused.detail) ?? ''}`,
     ranAt: kept.ran_at,
   };
 }

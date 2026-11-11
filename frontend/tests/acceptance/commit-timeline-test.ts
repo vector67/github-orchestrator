@@ -1,5 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
+import type { ResetRefusalCode } from 'frontend/data/api';
 import {
   click,
   currentURL,
@@ -1899,10 +1900,28 @@ module(
       assert.dom('[data-test-diverged]').exists();
     });
 
+    test('a reset refused over an unpushed pick names the thread holding it and what clears it', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'fix-awaits-push',
+        detail: 'PRRT_held',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the fix for thread PRRT_held is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+        );
+    });
+
     function reviewedWith(resetToOrigin: {
       queued_at: string | null;
       ran_at: string | null;
-      refused: string | null;
+      refused: { code: ResetRefusalCode; detail: string | null } | null;
     }) {
       board().manager = dashboard({
         facts: {
@@ -2037,8 +2056,11 @@ module(
       reviewedWith({
         queued_at: null,
         ran_at: '2026-10-23T09:30:00Z',
-        refused:
-          'the worktree has uncommitted changes, so it was left as it is',
+        refused: {
+          code: 'reset-refused',
+          detail:
+            'the worktree has uncommitted changes, so it was left as it is',
+        },
       });
       await openLocal();
 
@@ -2049,6 +2071,49 @@ module(
         );
       assert.dom('[data-test-reset-to-origin]').exists();
     });
+
+    const queuedResetRefusals: [ResetRefusalCode, string | null, string][] = [
+      [
+        'branch-unknown',
+        null,
+        "GitHub has not named the pull request's branch, so the worktree was left as it is",
+      ],
+      [
+        'fetch-failed',
+        'fatal: unable to access origin',
+        'git could not fetch origin: fatal: unable to access origin',
+      ],
+      [
+        'fix-awaits-push',
+        'PRRT_held',
+        'the fix for thread PRRT_held is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+      ],
+      [
+        'head-unreadable',
+        null,
+        "the worktree's HEAD will not read, so it was left as it is",
+      ],
+      [
+        'reset-interrupted',
+        null,
+        'the reset was under way when the manager stopped, so how it ended is not known',
+      ],
+    ];
+
+    for (const [code, detail, words] of queuedResetRefusals) {
+      test(`the page words a queued reset that didn't run for ${code}`, async function (assert) {
+        reviewedWith({
+          queued_at: null,
+          ran_at: '2026-10-23T09:30:00Z',
+          refused: { code, detail },
+        });
+        await openLocal();
+
+        assert
+          .dom('[data-test-reset-outcome]')
+          .hasText(`The queued reset didn't run: ${words} ×`);
+      });
+    }
 
     test('on origin there is no second lane and nothing about the worktree', async function (assert) {
       await visit('/pr/o/r/7/diff');

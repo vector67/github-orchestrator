@@ -57,7 +57,7 @@ RESET_REFUSED = {"description": "The worktree was left as it was: its manager "
                                  "is not answering or is frozen, an agent is working "
                                  "in it, it has not diverged from origin, it holds "
                                  "uncommitted changes, or a fix is picked onto it and "
-                                 "not pushed yet.",
+                                 "not pushed yet (`fix-awaits-push`, naming the thread).",
                   "model": Errors}
 
 FETCH_FAILED = {"description": "git could not fetch the pull request's branch.",

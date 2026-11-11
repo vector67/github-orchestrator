@@ -4010,6 +4010,7 @@
     "no-agent-working",
     "uncommitted-changes",
     "not-diverged",
+    "fix-awaits-push",
     "server-error"
    ],
    "type": "string"
@@ -6962,6 +6963,39 @@
    ],
    "type": "object"
   },
+  "ResetRefusal": {
+   "properties": {
+    "code": {
+     "$ref": "#/components/schemas/ResetRefusalCode"
+    },
+    "detail": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "code",
+    "detail"
+   ],
+   "type": "object"
+  },
+  "ResetRefusalCode": {
+   "enum": [
+    "branch-unknown",
+    "fetch-failed",
+    "fix-awaits-push",
+    "head-unreadable",
+    "reset-interrupted",
+    "reset-refused"
+   ],
+   "type": "string"
+  },
   "ResetRequest": {
    "properties": {
     "head": {
@@ -6999,7 +7033,7 @@
     "refused": {
      "anyOf": [
       {
-       "type": "string"
+       "$ref": "#/components/schemas/ResetRefusal"
       },
       {
        "type": "null"

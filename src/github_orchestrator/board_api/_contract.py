@@ -9,6 +9,7 @@ from github_orchestrator.board_api.interface import (
     DismissUntil,
     ManagerStanding,
     NoticeCode,
+    ResetRefusalCode,
     WallGroup,
     WriteState,
 )
@@ -105,6 +106,10 @@ class ErrorCode(StrEnum):
     agent's run ends, while the worktree has not diverged from origin; its
     commits are only unpushed, and a reset would drop them.
 
+    FIX_AWAITS_PUSH is a reset of the worktree asked for while a thread's fix
+    is picked onto the branch and not pushed yet; the detail is that thread's
+    key. Stopping its landing, or sending it back for rework, clears it.
+
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
     """
@@ -167,6 +172,7 @@ class ErrorCode(StrEnum):
     NO_AGENT_WORKING = "no-agent-working"
     UNCOMMITTED_CHANGES = "uncommitted-changes"
     NOT_DIVERGED = "not-diverged"
+    FIX_AWAITS_PUSH = "fix-awaits-push"
     SERVER_ERROR = "server-error"
 
 
@@ -1682,6 +1688,24 @@ class UnpushedCommit(BaseModel):
     subject: str = Field(description="The first line of its message.")
 
 
+class ResetRefusal(BaseModel):
+    """Why a queued reset did not run, for the page to word."""
+
+    code: ResetRefusalCode = Field(
+        description="Which refusal it is. `branch-unknown` is GitHub not having "
+                    "named the branch; `fetch-failed` is git failing to fetch "
+                    "origin; `fix-awaits-push` is a thread's fix picked onto the "
+                    "branch and not pushed yet; `head-unreadable` is the "
+                    "worktree's HEAD not reading; `reset-interrupted` is the "
+                    "manager stopping while the reset was under way, so how it "
+                    "ended is not known; `reset-refused` is the reset itself "
+                    "refused.")
+    detail: str | None = Field(
+        description="What git said for `fetch-failed` and `reset-refused`, the "
+                    "key of the thread holding the pick for `fix-awaits-push`, "
+                    "null otherwise.")
+
+
 class ResetToOrigin(BaseModel):
     """A reset of the worktree to origin, queued or carried out."""
 
@@ -1690,7 +1714,7 @@ class ResetToOrigin(BaseModel):
     ran_at: str | None = Field(
         description="When the agent's run ended and the reset was tried; null while "
                     "it waits.")
-    refused: str | None = Field(
+    refused: ResetRefusal | None = Field(
         description="Why the reset was not carried out when it was tried; null when "
                     "it was, or while it waits.")
 

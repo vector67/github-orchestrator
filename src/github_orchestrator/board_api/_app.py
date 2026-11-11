@@ -974,10 +974,10 @@ def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
                       "GitHub has not named the pull request's branch, so the worktree "
                       "was left as it is")
     seen = _commit(board, asked.head)
-    if any(conversation.fix.awaits_push for conversation in board.conversations.all()):
-        raise Refusal(409, ErrorCode.OPERATION_OUTSTANDING,
-                      "a fix was picked onto the branch and is not pushed yet, so the "
-                      "worktree was left as it is")
+    holding = next((conversation.key for conversation in board.conversations.all()
+                    if conversation.fix.awaits_push), None)
+    if holding is not None:
+        raise Refusal(409, ErrorCode.FIX_AWAITS_PUSH, holding)
     failed = board.git.fetch(facts.base_branch)
     if failed is not None:
         raise Refusal(500, ErrorCode.GIT_FAILED, failed)
