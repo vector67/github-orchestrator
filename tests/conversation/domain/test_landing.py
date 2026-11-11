@@ -361,6 +361,41 @@ def test_a_rework_still_goes_back_when_its_pick_cannot_come_off_the_branch(setti
     assert "still on the PR branch" in reworked.fix.reason
 
 
+def _offered_back(landing, reply):
+    approval = landing.stored().latest_approval
+    assert approval.state is OperationState.REFUSED
+    assert approval.text == reply, "the newest approve still holds the reply to offer back"
+    assert landing.stored().fix.pending_reply == "", "nothing is queued to post on its own"
+    assert landing.answers() == []
+
+
+def test_a_stopped_landing_offers_back_the_reply_it_never_posted(settings):
+    landing = Landing(settings)
+    _push_refused(landing, "renamed it")
+
+    with landing.threads.editing(landing.key) as editable:
+        stopped = editable.stop()
+    assert not isinstance(stopped, Denied), stopped
+    drain(landing.threads)
+
+    assert landing.stored().fix.is_proposed
+    _offered_back(landing, "renamed it")
+
+
+def test_a_landing_sent_back_offers_its_unposted_reply_against_the_reworked_fix(settings):
+    landing = Landing(settings)
+    _push_refused(landing, "renamed it")
+    with landing.threads.editing(landing.key) as editable:
+        reworked = editable.rework(note="narrow it")
+    assert not isinstance(reworked, Denied), reworked
+    drain(landing.threads)
+
+    landing.propose({"f.py": "narrower\n"})
+
+    assert landing.stored().fix.is_proposed
+    _offered_back(landing, "renamed it")
+
+
 def test_a_fix_already_pushed_is_not_sent_back_and_says_its_landing_stalled(settings):
     landing = Landing(settings)
     landing.propose()

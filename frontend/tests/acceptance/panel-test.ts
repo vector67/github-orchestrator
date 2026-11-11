@@ -574,6 +574,68 @@ module('Acceptance | panel', function (hooks) {
     },
   );
 
+  module(
+    'a failed landing sent back for rework that proposed again',
+    function (hooks) {
+      const REPLY = 'Renamed it, and the docstring with it.';
+
+      hooks.beforeEach(function () {
+        const landed = board().threadIn('push failed', { key: KEY });
+        const [first, approve] = landed.operations;
+        const accepted = {
+          requested_at: '2026-09-12T11:00:00Z',
+          settled_at: '2026-09-12T11:02:00Z',
+        };
+        const reworked = {
+          requested_at: '2026-09-12T11:05:00Z',
+          settled_at: '2026-09-12T11:09:00Z',
+        };
+        landed.operations = [
+          first!,
+          { ...approve!, ...accepted },
+          { ...first!, id: `${KEY}.3`, kind: 'rework', ...reworked },
+        ];
+        board().conversations = [landed];
+        board().proposals[KEY] = [
+          proposal({ id: `${KEY}.3.proposal`, reply: 'Narrowed the rename.' }),
+        ];
+        board().operations[KEY] = [
+          operation({ id: `${KEY}.1`, conversation: KEY }),
+          operation({
+            id: approve!.id,
+            conversation: KEY,
+            kind: 'approve',
+            state: 'refused',
+            reason_code: 'push-failed',
+            reason: approve!.reason,
+            reply: REPLY,
+            ...accepted,
+          }),
+          operation({
+            id: `${KEY}.3`,
+            conversation: KEY,
+            kind: 'rework',
+            ...reworked,
+          }),
+        ];
+      });
+
+      test('reads as the new proposal, not the old failure', async function (assert) {
+        await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+        assert.dom('[data-test-failure]').doesNotExist();
+      });
+
+      test('accepting it offers the reply that was never posted as the draft', async function (assert) {
+        await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+        await click('[data-test-decision="approve"]');
+
+        assert.dom('[data-test-dialog-body]').hasValue(REPLY);
+      });
+    },
+  );
+
   module('a landing that failed', function () {
     function refused(phase: Phase, reason: string) {
       const landed = board().threadIn(phase, { key: KEY });
