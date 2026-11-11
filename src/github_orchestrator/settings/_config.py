@@ -597,10 +597,11 @@ class TomlConfigFile:
         os.replace(writing, target)
 
     def move_aside(self, now: datetime) -> str:
-        moved = self._path.with_name(f"{self._path.name}.broken-{now:%Y%m%d-%H%M%S}")
+        target = self._path.resolve()
+        moved = target.with_name(f"{target.name}.broken-{now:%Y%m%d-%H%M%S}")
         with self._locked():
-            hub_port = _hub_port_of(self._path)
-            os.replace(self._path, moved)
+            hub_port = _hub_port_of(target)
+            os.replace(target, moved)
             if hub_port != OrchestratorConfig.hub_port:
                 self._replace(_rendered({"hub_port": hub_port}, []))
         return str(moved)
