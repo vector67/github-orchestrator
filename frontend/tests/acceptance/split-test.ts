@@ -304,6 +304,58 @@ module('Acceptance | split', function (hooks) {
     assert.notOk('part' in (posted.body as object));
   });
 
+  test('Accept all names every part in turn when the split files a ticket', async function (assert) {
+    seed(board(), { ticket: TICKET });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'Each runs in turn: the ticket is filed, the changes are pushed to ' +
+          'this PR, the new PR is opened, and the reply is posted naming it. ' +
+          'A part that has run cannot be undone.',
+      );
+  });
+
+  test('Accept all files no ticket when the new PR keeps this ticket', async function (assert) {
+    seed(board());
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'Each runs in turn: the changes are pushed to this PR, the new PR is ' +
+          'opened, and the reply is posted naming it. A part that has run ' +
+          'cannot be undone.',
+      );
+  });
+
+  test('Accept all names only the parts not yet accepted or run', async function (assert) {
+    seed(board(), {
+      ticket: TICKET,
+      parts: [
+        part('ticket', { state: 'run', result: { text: 'PROJ-1', url: null } }),
+        part('changes', { state: 'queued' }),
+        part('new-pr', { state: 'running', waits_for: 'ticket' }),
+        part('reply', { waits_for: 'new-pr' }),
+      ],
+    });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('#panel-actions [data-test-decision="approve"]');
+
+    assert
+      .dom('[data-test-dialog-note]')
+      .hasText(
+        'The reply is posted naming the new PR. A part that has run cannot ' +
+          'be undone.',
+      );
+  });
+
   test('Reject is offered while no part has run', async function (assert) {
     seed(board());
 
