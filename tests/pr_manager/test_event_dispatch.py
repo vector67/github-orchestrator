@@ -326,7 +326,7 @@ def test_a_ci_fix_its_last_manager_stopped_in_is_retried_instead_of_carried_on(s
             in manager.pr_processes.read(tmp_path))
 
 
-def test_on_hold_carries_out_nothing_even_with_a_live_run(settings, tmp_path):
+def test_on_hold_carries_out_nothing_that_runs_an_agent_but_still_makes_cards(settings, tmp_path):
     disk_holds(settings.data_dir).set_on_hold(a_pr(1, "o/n"), True)
     runs = _alive()
     manager = _over(settings, CARRY_ON, None, is_author=True, worktree=tmp_path, agent_runs=runs)
@@ -334,7 +334,7 @@ def test_on_hold_carries_out_nothing_even_with_a_live_run(settings, tmp_path):
     _activity(manager, "t1")
     manager.run()
     assert len(runs.started) == 1
-    assert _types(manager) == ["ci-failed", "thread-activity"]
+    assert _types(manager) == ["ci-failed"]
 
 
 def test_a_live_run_leaves_pr_closed_behind_the_events_before_it(settings, tmp_path):
