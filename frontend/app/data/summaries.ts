@@ -280,7 +280,7 @@ const GROUPS: Partial<Record<Move, WallGroup | null>> = {
   'agent-on-threads': 'agent-working',
   'agent-on-human-comments': 'agent-working',
   'agent-on-bot-comments': 'agent-working',
-  closed: null,
+  closed: 'parked',
   'not-reviewing': null,
   mentioned: 'waiting-on-others',
 };

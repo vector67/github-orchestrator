@@ -900,10 +900,10 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
-  test('a merged or closed pull request is off the wall', async function (assert) {
+  test('a merged or closed pull request the wall still holds is parked', async function (assert) {
     assert.deepEqual(await moveAndGroup({ facts: { ended: true } }), [
       'closed',
-      'off the wall',
+      'parked',
     ]);
   });
 });

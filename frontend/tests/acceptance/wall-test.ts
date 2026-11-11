@@ -225,7 +225,7 @@ module('Acceptance | wall', function (hooks) {
       heldPr(),
       heldPr({
         number: 8,
-        dashboard: { facts: factsFor('closed') },
+        dashboard: { facts: factsFor('not-reviewing') },
       }),
     );
 
