@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Protocol
 
+from github_orchestrator.domain import Pr
+
 
 class StartUnread(Exception):
     pass
@@ -14,3 +16,5 @@ class StartLine(Protocol):
 
 class MentionsInbox(Protocol):
     def search_if_due(self) -> None: ...
+
+    def unbuilt(self) -> list[Pr]: ...

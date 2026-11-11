@@ -2404,6 +2404,10 @@ class OutstandingMention(BaseModel):
     on_board: bool = Field(description="Whether the watcher holds the pull request and "
                                        "its board has a card for the thread, so the "
                                        "mention opens there.")
+    building: bool = Field(description="Whether the watcher is still tracking the pull "
+                                       "request and building the mention's card; false once "
+                                       "the card is on the board or has failed to appear "
+                                       "within two hours, or the pull request is closed.")
 
 
 class Mentions(BaseModel):

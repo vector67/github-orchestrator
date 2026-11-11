@@ -55,6 +55,10 @@ def _mentioned(here, *threads, status="OPEN", body="", created_at=None,
                        updated_at=updated_at, created_at=created_at)
     for thread in threads:
         here.github.add_thread(THE_PR, thread)
+    return _carded(here, state)
+
+
+def _carded(here, state):
     here.change_detection.advance(THE_PR, Poll(state, POLLED_AT), set())
     here.working_copies.place(THE_PR, WORKTREE)
     manager = here.conversation_managers.of(THE_PR)
@@ -253,7 +257,8 @@ def test_an_unanswered_mention_on_a_merged_pr_is_listed(tmp_path):
         mentions=(ListedMention(pr=THE_PR, thread="IC_1", comment_id=1, kind="issue",
                                 author="anna", at="2026-10-22T10:00:00Z", body="@octocat ping",
                                 url="https://github.com/acme/widgets/pull/7#issuecomment-1",
-                                on_board=False),))
+                                on_board=False, building=False),))
+    assert here.container.get(MentionsInbox).unbuilt() == []
 
 
 def test_a_listed_mention_says_its_card_is_on_the_board(tmp_path):
@@ -344,7 +349,7 @@ def _entry(**changed):
     return {"repo": REPO, "number": 7, "thread": "IC_1", "comment_id": 1, "kind": "issue",
             "author": "anna", "at": "2026-10-22T10:00:00Z", "body": "@octocat ping",
             "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "on_board": False,
-            **changed}
+            "building": False, **changed}
 
 
 @pytest.mark.parametrize("on_disk", [
@@ -388,3 +393,81 @@ def test_the_first_search_writes_its_listing_where_no_data_folder_is_yet(tmp_pat
     shutil.rmtree(settings.data_dir, ignore_errors=True)
 
     assert _listed_threads(here) == ["IC_1"]
+
+
+def _cardless(here, status="OPEN"):
+    here.github.add_pr(THE_PR, PullRequestState(author="anna"), status=status, mentioned=True,
+                       updated_at="2026-10-22T10:00:00Z")
+    here.github.add_thread(THE_PR, _issue("IC_1", 1, "anna", "@octocat ping",
+                                          "2026-10-22T10:00:00Z"))
+
+
+def _cards(here):
+    return [(mention.on_board, mention.building)
+            for mention in here.container.get(MentionsList).listed().mentions]
+
+
+def test_a_mention_on_an_open_pr_with_no_card_is_listed_while_its_card_is_built(tmp_path):
+    here = _here(tmp_path)
+    _cardless(here)
+    inbox = here.container.get(MentionsInbox)
+
+    inbox.search_if_due()
+
+    assert (_cards(here), inbox.unbuilt()) == ([(False, True)], [THE_PR])
+
+
+def _searched_again(here, now, after):
+    now[0] += after
+    here.container.get(MentionsInbox).search_if_due()
+
+
+def test_a_card_still_short_of_two_hours_in_the_building_is_still_being_built(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _cardless(here)
+    here.container.get(MentionsInbox).search_if_due()
+
+    _searched_again(here, now, timedelta(hours=1, minutes=59))
+
+    assert _cards(here) == [(False, True)]
+
+
+def test_a_card_that_has_not_appeared_two_hours_on_is_said_never_to_and_stays_listed(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _cardless(here)
+    inbox = here.container.get(MentionsInbox)
+    inbox.search_if_due()
+    _searched_again(here, now, timedelta(hours=1))
+
+    _searched_again(here, now, timedelta(hours=1))
+
+    assert (_cards(here), inbox.unbuilt()) == ([(False, False)], [])
+
+
+def test_a_card_that_appears_makes_the_mention_open_on_the_board(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _cardless(here)
+    here.container.get(MentionsInbox).search_if_due()
+    drain(_carded(here, PullRequestState(author="anna")))
+
+    _searched_again(here, now, timedelta(minutes=30))
+
+    assert _cards(here) == [(True, False)]
+
+
+def test_a_pr_whose_openness_will_not_read_keeps_its_mention_listed_and_its_card_building(
+        tmp_path, caplog):
+    here = _here(tmp_path)
+    _cardless(here)
+
+    def unreadable(pr):
+        raise GhError("gh api graphql failed (exit 1): HTTP 502")
+
+    here.github.relevance = unreadable
+    here.container.get(MentionsInbox).search_if_due()
+
+    assert _cards(here) == [(False, True)]
+    assert "HTTP 502" in caplog.text

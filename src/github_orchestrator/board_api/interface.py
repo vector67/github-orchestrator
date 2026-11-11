@@ -296,6 +296,7 @@ class ListedMention:
     body: str
     url: str
     on_board: bool
+    building: bool
 
 
 @dataclass(frozen=True)

@@ -9,7 +9,8 @@ HELD = a_pr(7, "acme/widgets")
 GONE = a_pr(8, "acme/widgets")
 PING = ListedMention(pr=HELD, thread="IC_1", comment_id=1, kind="issue", author="anna",
                      at="2026-10-22T10:00:00Z", body="@octocat ping",
-                     url="https://github.com/acme/widgets/pull/7#issuecomment-1", on_board=True)
+                     url="https://github.com/acme/widgets/pull/7#issuecomment-1", on_board=True,
+                     building=False)
 
 
 def _listed(*mentions):
@@ -26,7 +27,7 @@ def test_the_mentions_list_names_each_mention_and_where_it_is_on_github():
                       "kind": "issue", "author": "anna", "at": "2026-10-22T10:00:00Z",
                       "body": "@octocat ping",
                       "url": "https://github.com/acme/widgets/pull/7#issuecomment-1",
-                      "on_board": True}]}
+                      "on_board": True, "building": False}]}
 
 
 def test_a_mention_is_on_the_board_only_when_the_watcher_holds_its_pr_and_its_card_is_made():
@@ -37,6 +38,16 @@ def test_a_mention_is_on_the_board_only_when_the_watcher_holds_its_pr_and_its_ca
     assert [(mention["thread"], mention["on_board"])
             for mention in web.get("/api/mentions").json()["mentions"]] == [
         ("IC_1", True), ("IC_2", False), ("IC_3", False)]
+
+
+def test_a_mention_whose_card_is_being_built_says_so():
+    web = served_hub(told=holding(HELD), mentions=_listed(
+        replace(PING, on_board=False, building=True), replace(PING, thread="IC_2", comment_id=2,
+                                                                on_board=False)))
+
+    assert [(mention["thread"], mention["building"])
+            for mention in web.get("/api/mentions").json()["mentions"]] == [
+        ("IC_1", True), ("IC_2", False)]
 
 
 def test_no_mentions_are_listed_before_the_first_search():

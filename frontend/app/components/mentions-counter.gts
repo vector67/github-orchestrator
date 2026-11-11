@@ -90,7 +90,12 @@ export default class MentionsCounter extends Component {
                   {{navigates (fn this.go mention)}}
                 >Open on the board</a>
               {{else}}
-                <span class="mention-off">not on the board ·
+                <span class="mention-off">{{if
+                    mention.building
+                    "card being built"
+                    "not on the board"
+                  }}
+                  ·
                   <a
                     class="linkish"
                     href={{mention.url}}

@@ -653,6 +653,7 @@ export interface OutstandingMention {
   body: string;
   url: string;
   on_board: boolean;
+  building: boolean;
 }
 
 export interface Person {

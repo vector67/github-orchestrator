@@ -18,12 +18,19 @@ from github_orchestrator.github import (
     PullRequestState,
     Threads,
 )
-from github_orchestrator.mentions._listing import listed, started_before, write_listing
+from github_orchestrator.mentions._listing import (
+    ListingFile,
+    building_since,
+    listed,
+    started_before,
+    write_listing,
+)
 from github_orchestrator.mentions.interface import StartLine, StartUnread
 
 log = logging.getLogger(__name__)
 
 SEARCH_EVERY = timedelta(minutes=30)
+CARD_BUILT_WITHIN = timedelta(hours=2)
 KIND_PR_BODY = "pr-body"
 
 
@@ -45,6 +52,12 @@ class GitHubMentionsInbox:
         self._clock = clock
         self._path = path
         self._searched_at: datetime | None = None
+        self._building_before: dict[str, str] = {}
+        self._building: dict[str, str] = {}
+
+    def unbuilt(self) -> list[Pr]:
+        return list(dict.fromkeys(mention.pr for mention in ListingFile(self._path).listed().mentions
+                                  if mention.building))
 
     def search_if_due(self) -> None:
         began = self._clock()
@@ -56,6 +69,8 @@ class GitHubMentionsInbox:
             raise StartUnread(str(unread)) from unread
         self._searched_at = began
         started = self._started(began, start)
+        self._building_before = building_since(self._path)
+        self._building = {}
         mentions: list[ListedMention] = []
         held = False
         try:
@@ -68,7 +83,8 @@ class GitHubMentionsInbox:
                     held = True
                     continue
                 outstanding = self._outstanding(pr, state,
-                                                max(start, _moment(started[str(pr.repo)])))
+                                                max(start, _moment(started[str(pr.repo)])),
+                                                began)
                 if outstanding is None:
                     log.warning("GitHub says %s mentions you, but it names no gh_account the "
                                 "config gives; did your GitHub login change?", pr)
@@ -78,7 +94,7 @@ class GitHubMentionsInbox:
         except _Unread as unread:
             log.warning("mentions not searched: the threads of %s will not read", unread.pr)
             return
-        write_listing(self._path, began, started, mentions)
+        write_listing(self._path, began, started, mentions, self._building)
         if not mentions and not held:
             self._start_line.move_mentions_start(began)
 
@@ -99,8 +115,8 @@ class GitHubMentionsInbox:
             return {str(repo): start.isoformat() for repo in self._repos}
         return {str(repo): before.get(str(repo), began.isoformat()) for repo in self._repos}
 
-    def _outstanding(self, pr: Pr, state: PullRequestState,
-                     start: datetime) -> list[ListedMention] | None:
+    def _outstanding(self, pr: Pr, state: PullRequestState, start: datetime,
+                     began: datetime) -> list[ListedMention] | None:
         manager = self._conversation_managers.of(pr)
         found = manager.poll(state).mentions
         if found is None:
@@ -117,8 +133,26 @@ class GitHubMentionsInbox:
             if mention.at is not None and _moment(mention.at) >= start and not _closed(card,
                                                                                          mention):
                 outstanding.append(listed(pr, mention, url=self._url(pr, mention),
-                                          on_board=card is not None))
+                                          on_board=card is not None,
+                                          building=card is None and self._still_building(
+                                              pr, mention, began)))
         return outstanding
+
+    def _still_building(self, pr: Pr, mention: Mention, began: datetime) -> bool:
+        if not self._open(pr):
+            return False
+        key = f"{pr}:{mention.thread}:{mention.comment_id}"
+        since = self._building_before.get(key, began.isoformat())
+        self._building[key] = since
+        return began - _moment(since) < CARD_BUILT_WITHIN
+
+    def _open(self, pr: Pr) -> bool:
+        try:
+            relevance = self._pull_requests.relevance(pr)
+        except Exception:
+            log.exception("whether %s is open will not read; its mention cards stay building", pr)
+            return True
+        return relevance is not None and relevance.is_open
 
     def _url(self, pr: Pr, mention: Mention) -> str:
         if mention.comment_id is None or mention.kind == KIND_PR_BODY:

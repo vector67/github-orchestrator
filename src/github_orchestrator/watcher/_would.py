@@ -91,6 +91,9 @@ class WouldSearchMentions:
     def search_if_due(self) -> None:
         self._say("would search for mentions")
 
+    def unbuilt(self) -> list[Pr]:
+        return []
+
 
 class WouldSummarise:
     def __init__(self, summaries: PrSummaries, say: Callable[[str], None]) -> None:

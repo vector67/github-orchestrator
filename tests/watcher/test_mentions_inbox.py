@@ -1,14 +1,30 @@
 import pytest
 
+from github_orchestrator.github import (
+    CommentKind,
+    PullRequestState,
+    Thread,
+    ThreadComment,
+)
+from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.mentions import StartUnread
 from github_orchestrator.watcher import Watcher
+from tests.builders import a_pr
+from tests.change_detection.support import disk_change_detection
+from tests.pr_event_queue.support import disk_event_queue, pending_of
 from tests.watcher.support import health, watcher_container, watcher_over
+
+UNBUILT = a_pr(82, "octocat/hello-world")
 
 
 class CountedSearches:
     def __init__(self, failure: Exception | None = None) -> None:
         self.searches = 0
         self._failure = failure
+        self.unbuilt_cards: list = []
+
+    def unbuilt(self):
+        return self.unbuilt_cards
 
     def search_if_due(self) -> None:
         self.searches += 1
@@ -51,3 +67,34 @@ def test_a_dry_run_says_it_would_search_for_mentions_and_writes_nothing(settings
     assert "would search for mentions" in capsys.readouterr().out
     assert not (settings.data_dir / "mentions.json").exists()
     assert settings.config_path.read_text() == stamped
+
+
+def _off_the_search(settings):
+    github = FakeGitHub(account=settings.config.gh_account)
+    github.repos.update(settings.repos)
+    github.add_pr(UNBUILT, PullRequestState(author="anna", title="Theirs"), mentioned=False)
+    github.add_thread(UNBUILT, Thread(key="IC_1", kind=CommentKind.ISSUE, comments=(
+        ThreadComment(id=1, author="anna", body="@octocat ping",
+                      created_at="2026-10-22T10:00:00Z"),)))
+    return github
+
+
+def test_a_pr_whose_mention_the_inbox_has_no_card_for_is_tracked_as_mentioned(settings):
+    inbox = CountedSearches()
+    inbox.unbuilt_cards = [UNBUILT]
+
+    watcher_over(settings, github=_off_the_search(settings), mentions_inbox=inbox).run_cycle()
+
+    facts = disk_change_detection(settings.state_dir).facts(UNBUILT)
+    assert (facts.title, facts.mentioned) == ("Theirs", True)
+
+
+def test_the_mention_thread_of_a_pr_the_inbox_repairs_is_queued_to_become_a_card(settings):
+    inbox = CountedSearches()
+    inbox.unbuilt_cards = [UNBUILT]
+
+    watcher_over(settings, github=_off_the_search(settings), mentions_inbox=inbox).run_cycle()
+
+    [queued] = [event for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
+                if event.kind == "thread-activity"]
+    assert [thread.key for thread in queued.threads] == ["IC_1"]

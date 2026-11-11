@@ -16,10 +16,11 @@ from github_orchestrator.domain import Mention, Pr, Repo
 log = logging.getLogger(__name__)
 
 
-def listed(pr: Pr, mention: Mention, *, url: str, on_board: bool) -> ListedMention:
+def listed(pr: Pr, mention: Mention, *, url: str, on_board: bool,
+           building: bool) -> ListedMention:
     return ListedMention(pr=pr, thread=mention.thread, comment_id=mention.comment_id,
                          kind=mention.kind, author=mention.author, at=mention.at,
-                         body=mention.body, url=url, on_board=on_board)
+                         body=mention.body, url=url, on_board=on_board, building=building)
 
 
 def started_before(path: Path) -> dict[str, str] | None:
@@ -30,12 +31,21 @@ def started_before(path: Path) -> dict[str, str] | None:
     return started if isinstance(started, dict) else None
 
 
+def building_since(path: Path) -> dict[str, str]:
+    try:
+        building: dict[str, str] = json.loads(path.read_text())["building_since"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+    return building if isinstance(building, dict) else {}
+
+
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
-                  mentions: Sequence[ListedMention]) -> None:
+                  mentions: Sequence[ListedMention], building: Mapping[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     writing = path.with_name(f"{path.name}.writing")
     writing.write_text(json.dumps({"searched_at": searched_at.isoformat(),
                                    "started": dict(started),
+                                   "building_since": dict(building),
                                    "mentions": [_entry(mention) for mention in mentions]}))
     os.replace(writing, path)
 
@@ -64,7 +74,7 @@ def _entry(mention: ListedMention) -> dict[str, Any]:
     return {"repo": str(mention.pr.repo), "number": mention.pr.number,
             "thread": mention.thread, "comment_id": mention.comment_id, "kind": mention.kind,
             "author": mention.author, "at": mention.at, "body": mention.body,
-            "url": mention.url, "on_board": mention.on_board}
+            "url": mention.url, "on_board": mention.on_board, "building": mention.building}
 
 
 def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
@@ -73,4 +83,5 @@ def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
     return ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
                          thread=entry["thread"], comment_id=entry["comment_id"],
                          kind=entry["kind"], author=entry["author"], at=entry["at"],
-                         body=entry["body"], url=entry["url"], on_board=entry["on_board"])
+                         body=entry["body"], url=entry["url"], on_board=entry["on_board"],
+                         building=entry["building"])

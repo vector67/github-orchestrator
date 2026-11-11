@@ -5599,6 +5599,9 @@
     "body": {
      "type": "string"
     },
+    "building": {
+     "type": "boolean"
+    },
     "comment_id": {
      "anyOf": [
       {
@@ -5645,7 +5648,8 @@
     "at",
     "body",
     "url",
-    "on_board"
+    "on_board",
+    "building"
    ],
    "type": "object"
   },

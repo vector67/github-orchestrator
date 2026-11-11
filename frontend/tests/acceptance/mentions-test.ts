@@ -76,6 +76,29 @@ module('Acceptance | mentions', function (hooks) {
       .doesNotExist();
   });
 
+  test('a mention whose card is being built says so and links to the comment on GitHub meanwhile', async function (assert) {
+    board().mentions.mentions = [
+      outstandingMention({
+        thread: 'k1',
+        on_board: false,
+        building: true,
+        url: 'https://github.com/o/r/pull/7#issuecomment-1',
+      }),
+    ];
+    await visit('/');
+
+    await click('[data-test-mentions-count]');
+
+    assert.dom('[data-test-mentions-count]').hasText('1');
+    assert.dom('[data-test-mention="k1"]').includesText('card being built');
+    assert
+      .dom('[data-test-mention="k1"]')
+      .doesNotIncludeText('not on the board');
+    assert
+      .dom('[data-test-mention="k1"] [data-test-mention-github]')
+      .hasAttribute('href', 'https://github.com/o/r/pull/7#issuecomment-1');
+  });
+
   test('a mention on the board without a thread links to GitHub instead', async function (assert) {
     board().held = [heldPr()];
     board().mentions.mentions = [

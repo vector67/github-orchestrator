@@ -76,6 +76,7 @@ class PollingWatcher:
         self._polled_at: datetime | None = None
         self._mentions_searched_at: datetime | None = None
         self._mentioned: list[Pr] = []
+        self._unbuilt: list[Pr] = []
         self._intake = intake
         self._worklist = worklist
         self._pr_processes = pr_processes
@@ -208,7 +209,7 @@ class PollingWatcher:
         log.debug("Polling %s (review_requested=%s)", pr, review_requested)
         return fetch_pr_state(self._pull_requests, self._conversation_managers, pr,
                               review_requested=review_requested,
-                              mentioned=pr in self._mentioned)
+                              mentioned=pr in self._mentioned or pr in self._unbuilt)
 
     def _advance(self, pr: Pr, fetched: Fetched) -> tuple[int, bool]:
         pending_ci_checks = set(self._worklist.waiting(pr).failed_checks)
@@ -249,6 +250,13 @@ class PollingWatcher:
                     f"[[repos]] and gh_account in {config.config_location}; {exc}"
                 ) from exc
 
+    def _cards_to_build(self) -> list[Pr]:
+        try:
+            return [pr for pr in self._mentions_inbox.unbuilt() if pr.repo in self._config.repos]
+        except Exception:
+            log.exception("Could not read which mentions still need a card")
+            return []
+
     def _tracked_in_watched_repos(self) -> list[Pr]:
         return [pr for pr in self._change_detection.tracked() if pr.repo in self._config.repos]
 
@@ -284,7 +292,7 @@ class PollingWatcher:
         for pr in review_prs:
             if not self._dismissals.is_dismissed_forever(pr):
                 held[pr] = True
-        for pr in my_prs + self._mentioned + engaged:
+        for pr in my_prs + self._mentioned + self._unbuilt + engaged:
             if not self._dismissals.is_dismissed_forever(pr) and pr not in held:
                 held[pr] = False
         return held
@@ -377,10 +385,12 @@ class PollingWatcher:
         log.debug("--- watcher start ---")
         self._say(f"searching {self._watched()} for PRs by and for {config.gh_account}…")
         my_prs, review_prs = self._discover_prs()
+        self._unbuilt = self._cards_to_build()
         self._say(f"found {len(my_prs)} authored, {len(review_prs)} to review, "
                   f"{len(self._mentioned)} mentioning you")
-        engaged, endings = self._left_the_search(set(my_prs + review_prs + self._mentioned))
-        found = my_prs + review_prs + self._mentioned + engaged
+        mentioned = self._mentioned + self._unbuilt
+        engaged, endings = self._left_the_search(set(my_prs + review_prs + mentioned))
+        found = my_prs + review_prs + mentioned + engaged
         held = self._held(my_prs, review_prs, engaged)
         total_events = self._poll_all_prs(held)
         torn_down = (self._detect_closed_prs(set(found), endings)
