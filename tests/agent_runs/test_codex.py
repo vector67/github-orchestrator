@@ -112,7 +112,66 @@ def test_a_gist_is_a_read_only_ephemeral_exec_on_the_summary_model(runs, world, 
     assert written == ["rename it"]
 
 
-def test_a_commit_check_is_a_read_only_ephemeral_exec_in_the_checkout_on_the_model(
+def _untrusted(worktree):
+    return ["-c", f'projects={{"{worktree.resolve()}"={{trust_level="untrusted"}}}}']
+
+
+def _review(runs, worktree):
+    return runs.review(str(worktree), THE_PR, "review-requested", title="Fix bug", url="",
+                       branch="fix", additions=1, deletions=1)
+
+
+def test_a_review_treats_the_branch_as_an_untrusted_project(runs, codex, tmp_path):
+    finish(_review(runs, tmp_path))
+
+    [spawned] = codex.spawned
+    assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL,
+                            *_untrusted(tmp_path), "-"]
+
+
+def test_a_rereview_treats_the_branch_as_an_untrusted_project(runs, codex, tmp_path):
+    finish(runs.rereview(str(tmp_path), THE_PR, "review-requested", title="Fix bug", url="",
+                         branch="fix", verdict="commented", said=None, since=None,
+                         commits=None, replied=()))
+
+    [spawned] = codex.spawned
+    assert spawned.argv[6:8] == _untrusted(tmp_path)
+
+
+def test_carrying_on_on_someone_else_s_pr_treats_it_as_an_untrusted_project(
+        runs, codex, tmp_path):
+    finish(runs.carry_on(str(tmp_path), THE_PR, yours=False))
+
+    [spawned] = codex.spawned
+    assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL,
+                            *_untrusted(tmp_path), "resume", "--last", "-"]
+
+
+def test_untrusting_names_the_branch_by_its_real_path(runs, codex, tmp_path):
+    (tmp_path / "real").mkdir()
+    (tmp_path / "link").symlink_to(tmp_path / "real")
+
+    finish(_review(runs, tmp_path / "link"))
+
+    [spawned] = codex.spawned
+    assert spawned.argv[6:8] == _untrusted(tmp_path / "real")
+
+
+def test_a_review_turns_off_every_skill_the_branch_carries(runs, codex, tmp_path):
+    for skill in ("tidy", "group/ship"):
+        (tmp_path / ".agents" / "skills" / skill).mkdir(parents=True)
+        (tmp_path / ".agents" / "skills" / skill / "SKILL.md").write_text("---\n---\n")
+
+    finish(_review(runs, tmp_path))
+
+    [spawned] = codex.spawned
+    skills = tmp_path.resolve() / ".agents" / "skills"
+    assert spawned.argv[8:10] == [
+        "-c", f'skills.config=[{{path="{skills / "group" / "ship" / "SKILL.md"}",enabled=false}},'
+              f'{{path="{skills / "tidy" / "SKILL.md"}",enabled=false}}]']
+
+
+def test_a_commit_check_treats_the_checkout_as_an_untrusted_project(
         runs, world, codex, tmp_path):
     world.answer("addressed || it renames the helper")
 
@@ -122,7 +181,8 @@ def test_a_commit_check_is_a_read_only_ephemeral_exec_in_the_checkout_on_the_mod
     assert runs.drain_summaries(10)
 
     [asked] = codex.asked
-    assert asked.argv == ["codex", "exec", "--ephemeral", "-s", "read-only", "-m", MODEL, "-"]
+    assert asked.argv == ["codex", "exec", "--ephemeral", "-s", "read-only", "-m", MODEL,
+                          *_untrusted(tmp_path), "-"]
     assert asked.cwd == str(tmp_path)
 
 

@@ -89,7 +89,7 @@ class Summaries:
                 with tempfile.TemporaryDirectory() as scratch:
                     done = self._spawn(prompt, self._lines.gist(self._model), scratch)
             else:
-                done = self._spawn(prompt, self._lines.read_only(self._model), checkout)
+                done = self._spawn(prompt, self._lines.read_only(self._model, checkout), checkout)
         except (subprocess.TimeoutExpired, OSError) as exc:
             log.warning("comment summary spawn failed: %s", exc)
             return None
