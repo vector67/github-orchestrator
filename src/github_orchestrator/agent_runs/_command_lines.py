@@ -88,7 +88,7 @@ class CodexCommandLines:
 
     def gist(self, model: str) -> list[str]:
         return ["exec", "--ephemeral", "--skip-git-repo-check", "-s", "read-only",
-                "-m", model, "-"]
+                "-m", model, *_user_mcp_servers_off(), "-"]
 
     def read_only(self, model: str, cwd: str) -> list[str]:
         return ["exec", "--ephemeral", "-s", "read-only", "-m", model,

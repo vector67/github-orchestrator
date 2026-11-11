@@ -210,6 +210,17 @@ def test_a_commit_check_turns_off_every_mcp_server_the_user_configured(
         "-c", 'mcp_servers={"notes"={enabled=false},"acme.tracker"={enabled=false}}', "-"]
 
 
+def test_a_gist_turns_off_every_mcp_server_the_user_configured(runs, world, codex, codex_home):
+    (codex_home / "config.toml").write_text('[mcp_servers.notes]\ncommand = "notes"\n')
+    world.answer("rename it")
+
+    runs.summarize_comment("PRRT_x", None, None, "rename this", lambda text: None, chars=60)
+    assert runs.drain_summaries(10)
+
+    [asked] = codex.asked
+    assert asked.argv[-3:] == ["-c", 'mcp_servers={"notes"={enabled=false}}', "-"]
+
+
 def test_a_run_never_sees_the_platform_api_key(runs, codex, tmp_path, monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 
