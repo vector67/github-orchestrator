@@ -426,6 +426,32 @@ def test_terminating_a_run_also_stops_the_commands_it_started(runs, claude, tmp_
             os.kill(command, 9)
 
 
+LEAVES_A_COMMAND_BEHIND = r"""
+import json, subprocess, sys
+sys.stdin.read()
+command = subprocess.Popen(["sleep", "3600"], stdout=subprocess.DEVNULL)
+open(PID_FILE, "w").write(str(command.pid))
+print(json.dumps({"type": "result", "subtype": "success"}), flush=True)
+"""
+
+
+def test_terminating_a_run_that_ended_still_stops_the_commands_it_left_behind(runs, claude,
+                                                                              tmp_path):
+    started = tmp_path / "command.pid"
+    claude.scripts.append(LEAVES_A_COMMAND_BEHIND.replace("PID_FILE", repr(str(started))))
+    run = _start(runs, tmp_path)
+    finish(run)
+    command = int(started.read_text())
+
+    run.terminate()
+
+    try:
+        assert _eventually(lambda: _gone(command))
+    finally:
+        if not _gone(command):
+            os.kill(command, 9)
+
+
 def test_an_unwritable_ledger_does_not_stop_the_run_ending(world, claude, tmp_path):
     blocked = tmp_path / "not-a-dir"
     blocked.write_text("")

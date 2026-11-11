@@ -279,8 +279,6 @@ class AgentRun:
 
     def terminate(self) -> None:
         try:
-            if self.proc.poll() is not None:
-                return
             try:
                 os.killpg(self.proc.pid, signal.SIGTERM)
             except (ProcessLookupError, OSError):
