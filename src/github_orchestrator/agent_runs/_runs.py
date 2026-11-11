@@ -341,7 +341,7 @@ class AgentRuns:
         thread = last_thread_in(self._transcript(pr)) if continuing else None
         argv = [*self._clamp, *self._command,
                 *self._lines.headless(self._model, carrying_on=continuing, thread=thread,
-                                      project_settings=project_settings)]
+                                      project_settings=project_settings, cwd=worktree)]
 
         try:
             proc = self._popen(

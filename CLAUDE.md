@@ -96,4 +96,6 @@ a user's layout; `make install_hooks` turns on the pre-commit hook.
 - **Run live checks on [vector67/acme-widgets](https://github.com/vector67/acme-widgets)**,
   a public testbed that stays open, watched by the `testbed` instance
   (`~/.config/github-orchestrator/testbed.toml`, hub port 8723). Keep it
-  fictional (acme, octocat, PROJ): it is public, like this repo.
+  fictional (acme, octocat, PROJ): it is public, like this repo. Post its test
+  review comments as `vector67` without the 🤖 prefix: the watcher takes a 🤖
+  comment from its own account for its own post and never opens a thread.

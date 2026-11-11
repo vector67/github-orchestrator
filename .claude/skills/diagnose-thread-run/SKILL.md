@@ -1,6 +1,6 @@
 ---
 name: diagnose-thread-run
-description: Use when a thread's fix run did something unexpected — ignored a rework, proposed a stale diff, stopped, failed or never reported — or the board refused an action, an accepted fix's push failed or a thread is stuck landing, to find out what actually happened before reading the orchestrator's code or running any verb on the thread
+description: Use when a thread's fix run did something unexpected — ignored a rework, proposed a stale diff, stopped, failed or never reported — or the board refused an action, an accepted fix's push failed, a thread is stuck landing, or the operator's reply vanished after an accept or they ask whether their text survived, to find out what actually happened before reading the orchestrator's code or running any verb on the thread
 ---
 
 # Diagnose a thread run
@@ -14,7 +14,8 @@ the board.
    (`~/.local/share` when the variable is unset) holds one `<thread>.json` per thread,
    a `-<suffix>` copy per run worktree. Read it with `jq`: `fix_state`, `run_kind`,
    `attempts`, `rework_brief`, `plan`, `tests_note`, `fix_summary`, `agent_note`,
-   `thread_sha`, `base_sha` and `operations[]` (each request with its brief and state).
+   `thread_sha`, `base_sha`, `pending_reply` (the reply an accept has not posted yet),
+   `push_error` and `operations[]` (each request with its brief and state).
    A `fix_summary` or `agent_note` that answers an earlier brief means this run never
    reported. `tests_note` "run exited without reporting; commit found in worktree" is
    the salvage path: the proposed commit is whatever HEAD was, often the last attempt.
@@ -41,7 +42,8 @@ the board.
    pushed the branch, often another thread's run on the same PR, so read
    `git -C <tree> reflog` for each tree in `git worktree list --porcelain` to find
    which. The refused request itself is a `POST …/operations:<verb> -> 409` line in
-   `logs/server.log`.
+   `logs/server.log`. A push or landing that failed is in no log: read it from
+   `push_error` and the approve's `reason` in `operations[]`.
 
 The diagnosis is done when you can say what the run changed, what it reported (or that
 it reported nothing), what the board therefore showed, and, for a landing, what moved
