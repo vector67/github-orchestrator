@@ -12,6 +12,7 @@ from github_orchestrator.settings.fake import FakeLogs, fake_settings
 from github_orchestrator.thread_names import HeldFolder
 from github_orchestrator.thread_names.fake import FakeNameMigration
 from github_orchestrator.watcher import __main__ as watcher_main
+from tests.disk_layout import dismissed_file
 from tests.settings.support import settings_read_from
 from tests.watcher.support import ServerSpawns, watcher_container
 
@@ -234,6 +235,17 @@ def test_a_watcher_migrates_thread_names_before_its_first_cycle(tmp_path, monkey
     watcher_main.main()
 
     assert migrated_by_then and all(migrated_by_then)
+
+
+def test_a_watcher_rewrites_dismissals_stored_in_the_old_words_before_its_first_cycle(tmp_path, monkeypatch):
+    _prepared(monkeypatch, tmp_path, [])
+    flag = dismissed_file(fake_settings(tmp_path).dismissed_dir, Pr(Repo.parse("octocat/hello-world"), 7))
+    flag.parent.mkdir(parents=True)
+    flag.write_text("until-ready")
+
+    watcher_main.main()
+
+    assert flag.read_text() == "ready-for-review"
 
 
 IN_THE_WAY = HeldFolder(pr=Pr(Repo.parse("octocat/hello-world"), 7), thread="PRRT_a",

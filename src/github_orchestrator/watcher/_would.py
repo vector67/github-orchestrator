@@ -2,7 +2,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 
 from github_orchestrator.change_detection import ChangeDetection
-from github_orchestrator.domain import HubState, Pr
+from github_orchestrator.domain import DismissUntil, HubState, Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.pr_summaries import PrSummaries, SummaryRefusal
@@ -10,6 +10,9 @@ from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._poll import Fetched
 from github_orchestrator.watcher._teardown import Reason
+
+_LASTS = {DismissUntil.NEXT_EVENT: "until the next event", DismissUntil.FOREVER: "forever",
+          DismissUntil.READY_FOR_REVIEW: "until ready for review"}
 
 
 class WouldPlace:
@@ -29,7 +32,7 @@ class WouldPlace:
         if self._dismissals.is_hidden(pr, events_waiting=bool(waiting),
                                       draft=facts is None or facts.draft):
             dismissal = self._dismissals.dismissal(pr)
-            lasts = "until the next event" if dismissal is None else dismissal.lasts
+            lasts = _LASTS[dismissal or DismissUntil.NEXT_EVENT]
             self._say(f"would leave PR {pr.number} alone (dismissed {lasts})")
             return
         clone = self._repos[pr.repo]

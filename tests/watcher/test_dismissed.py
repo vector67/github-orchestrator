@@ -1,7 +1,7 @@
+from github_orchestrator.domain import DismissUntil
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.settings.fake import Dismissal
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
@@ -83,7 +83,7 @@ def test_a_pr_dismissed_forever_is_torn_down_but_keeps_its_dismissal_and_snapsho
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert not on_hold_file(settings.on_hold_dir, THE_PR).exists()
     assert reviewer_pick_file(settings.data_dir, THE_PR).exists()
-    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is Dismissal.FOREVER
+    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is DismissUntil.FOREVER
     assert disk_change_detection(settings.state_dir).tracked() == [THE_PR]
 
 
@@ -131,7 +131,7 @@ def test_a_pr_dismissed_until_its_next_event_has_its_window_closed_and_keeps_its
 
     assert world.managers == {}
     assert copies.branch_at(worktree) == BRANCH
-    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is Dismissal.UNTIL_NEXT_EVENT
+    assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is DismissUntil.NEXT_EVENT
 
 
 def test_a_pr_dismissed_until_its_next_event_keeps_its_window_while_its_manager_runs(

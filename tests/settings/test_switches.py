@@ -1,8 +1,7 @@
 
 import pytest
 
-from github_orchestrator.domain import Repo
-from github_orchestrator.settings.fake import Dismissal
+from github_orchestrator.domain import DismissUntil, Repo
 from tests.builders import a_pr
 from tests.disk_layout import (
     dismissed_file,
@@ -43,7 +42,7 @@ def test_a_hold_set_by_one_instance_is_seen_and_lifted_by_another(tmp_path):
 
 def test_a_dismissal_until_the_next_event_is_written_in_a_flag_file(switches, tmp_path):
     switches.dismissals.dismiss_until_next_event(a_pr(42, REPO))
-    assert dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)).read_bytes() == b"until-event"
+    assert dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)).read_bytes() == b"next-event"
 
 
 def test_a_dismissal_forever_is_written_in_a_flag_file(switches, tmp_path):
@@ -51,15 +50,23 @@ def test_a_dismissal_forever_is_written_in_a_flag_file(switches, tmp_path):
     assert dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)).read_bytes() == b"forever"
 
 
-def test_a_dismissal_until_the_next_event_written_before_still_reads(switches, tmp_path):
-    _write(dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)), "until-event")
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is True
-    assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
+@pytest.mark.parametrize(("old_word", "dismissal"), [
+    ("until-event", DismissUntil.NEXT_EVENT),
+    ("until-ready", DismissUntil.READY_FOR_REVIEW),
+    ("forever", DismissUntil.FOREVER),
+])
+def test_a_dismissal_written_in_the_old_words_reads_after_the_start_up_rewrite(switches, tmp_path, old_word,
+                                                                                dismissal):
+    _write(dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)), old_word)
+
+    switches.dismissals.migrate()
+
+    assert switches.dismissals.dismissal(a_pr(42, REPO)) is dismissal
 
 
 def test_a_dismissal_another_process_wrote_is_read_with_its_whitespace_trimmed(switches, tmp_path):
     _write(dismissed_file(tmp_path / "dismissed", a_pr(42, REPO)), "forever\n")
-    assert switches.dismissals.dismissal(a_pr(42, REPO)) is Dismissal.FOREVER
+    assert switches.dismissals.dismissal(a_pr(42, REPO)) is DismissUntil.FOREVER
 
 
 def test_a_flag_holding_no_known_mode_is_not_a_dismissal(switches, tmp_path):
@@ -120,6 +127,6 @@ def test_archiving_leaves_dismissals_in_place(switches, tmp_path):
 
     assert switches.holds.archive_other_repos({Repo.parse(REPO)}, tmp_path / "archive" / "on_hold") == []
 
-    assert switches.dismissals.dismissal(a_pr(2, "acme/other")) is Dismissal.FOREVER
+    assert switches.dismissals.dismissal(a_pr(2, "acme/other")) is DismissUntil.FOREVER
 
 
