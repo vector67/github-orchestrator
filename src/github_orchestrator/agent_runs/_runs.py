@@ -8,6 +8,7 @@ import logging
 import os
 import select
 import shlex
+import signal
 import subprocess
 import threading
 from collections.abc import Callable, Mapping, Sequence, Set
@@ -279,10 +280,8 @@ class AgentRun:
 
     def terminate(self) -> None:
         try:
-            if self.proc.poll() is not None:
-                return
             try:
-                self.proc.terminate()
+                os.killpg(self.proc.pid, signal.SIGTERM)
             except (ProcessLookupError, OSError):
                 return
             deadline = self._clock() + _TERMINATE_GRACE_SECONDS
@@ -293,7 +292,7 @@ class AgentRun:
                 except subprocess.TimeoutExpired:
                     pass
             try:
-                self.proc.kill()
+                os.killpg(self.proc.pid, signal.SIGKILL)
             except (ProcessLookupError, OSError):
                 pass
         finally:
@@ -352,6 +351,7 @@ class AgentRuns:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                start_new_session=True,
             )
         except OSError as exc:
             refused = f"{WONT_START}: {exc}"
