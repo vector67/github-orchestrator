@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import threading
+import time
 from datetime import datetime, timezone
 
 import pytest
@@ -380,6 +381,49 @@ def test_a_run_that_ignores_termination_is_killed(world, claude, tmp_path):
     run.terminate()
 
     assert claude.children[0].wait(timeout=5) == -9
+
+
+STARTS_A_COMMAND = r"""
+import json, subprocess, sys, time
+sys.stdin.read()
+command = subprocess.Popen(["sleep", "3600"])
+open(PID_FILE, "w").write(str(command.pid))
+print(json.dumps({"type": "system", "subtype": "init"}), flush=True)
+time.sleep(3600)
+"""
+
+
+def _eventually(condition, timeout: float = 5.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if condition():
+            return True
+        time.sleep(0.02)
+    return False
+
+
+def _gone(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    return False
+
+
+def test_terminating_a_run_also_stops_the_commands_it_started(runs, claude, tmp_path):
+    started = tmp_path / "command.pid"
+    claude.scripts.append(STARTS_A_COMMAND.replace("PID_FILE", repr(str(started))))
+    run = _start(runs, tmp_path)
+    pump_until(run, (tmp_path / "transcripts" / "o" / "n" / f"{PR}.jsonl").exists)
+    command = int(started.read_text())
+
+    run.terminate()
+
+    try:
+        assert _eventually(lambda: _gone(command))
+    finally:
+        if not _gone(command):
+            os.kill(command, 9)
 
 
 def test_an_unwritable_ledger_does_not_stop_the_run_ending(world, claude, tmp_path):
