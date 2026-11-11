@@ -77,9 +77,13 @@ the range is `LAST..REL`.
           `make restart-all` in the main checkout, which brings every instance back
           to `main` with whatever merged meanwhile. Then
           `git worktree remove .claude/worktrees/stress-X.Y.Z`.
+    8. A full `make record` on `REL`, through `normal-workflow` targeting `REL`,
+       then `make test`. It takes minutes, which is why it waits for a release.
+       A test that goes red against the fresh recording is a finding: it passed
+       only against a stale entry, and may hide a real bug.
 
-    Reviews 4 to 6 only read, so they can run in parallel. Run 7 on its own,
-    since it drives the running board.
+    Reviews 4 to 6 only read, so they can run in parallel, and 8 works in its own
+    tree. Run 7 on its own, since it drives the running board.
 
 05. Triage every finding. A finding is confirmed when it is reproduced or read in
     the code, when its trigger is shown reachable in real use (how a user gets there,
