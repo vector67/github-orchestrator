@@ -28,7 +28,9 @@ class Rail {
   readonly viewer: Polled;
   readonly people: Polled;
   readonly list: Polled;
+  readonly drawn: Polled;
   readonly inFlight: Polled;
+  readonly offTheWall: () => boolean;
   readonly summary: Polled;
 
   constructor(
@@ -47,6 +49,8 @@ class Rail {
     this.viewer = polled('rail', { kind: 'viewer', pr });
     this.people = polled('rail', { kind: 'people', pr });
     this.list = polled('rail', { kind: 'conversations', pr }, true);
+    this.drawn = polled('rail', { kind: 'dashboard', pr });
+    this.offTheWall = () => !store.pr(pr.repo, pr.number)?.place;
     this.inFlight = polled('refresh', { kind: 'in-flight', pr });
     this.summary = polled('summary', { kind: 'summary', pr });
   }
@@ -277,8 +281,16 @@ export default class PollService extends Service {
 
   private async readRail(rail: Rail): Promise<void> {
     if (!rail.loaded) return this.starting(rail);
-    const [, listed] = await Promise.all([rail.pull.poll(), rail.list.poll()]);
+    const [, listed] = await Promise.all([
+      rail.pull.poll(),
+      rail.list.poll(),
+      this.drawnOffTheWall(rail),
+    ]);
     if (listed) await rail.people.poll();
+  }
+
+  private async drawnOffTheWall(rail: Rail): Promise<void> {
+    if (rail.offTheWall()) await rail.drawn.poll();
   }
 
   async refreshOperations(): Promise<void> {

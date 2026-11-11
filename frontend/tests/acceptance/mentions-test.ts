@@ -939,6 +939,16 @@ module('Acceptance | mentions | in context', function (hooks) {
     assert.dom('[data-test-wall-row]').doesNotExist();
   });
 
+  test('a pull request off the Wall still shows its card, from its own dashboard', async function (assert) {
+    openedFor(true, 'merged');
+
+    await visit('/pr/o/r/7/conversations/k1');
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-board-waiting]').doesNotExist();
+    assert.dom('[data-test-missing]').doesNotExist();
+  });
+
   test('a closed pull request opened for a mention says it closed', async function (assert) {
     openedFor(true, 'closed');
 
