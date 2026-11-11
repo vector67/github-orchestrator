@@ -89,3 +89,8 @@ a user's layout; `make install_hooks` turns on the pre-commit hook.
   remove its tree yourself once it reports** (`normal-workflow` step 8), before
   the next dispatch. The agent cannot reach the main checkout to remove it, and
   40 trees piled up in one lane that skipped this.
+
+- **Run live checks on [vector67/acme-widgets](https://github.com/vector67/acme-widgets)**,
+  a public testbed that stays open, watched by the `testbed` instance
+  (`~/.config/github-orchestrator/testbed.toml`, hub port 8723). Keep it
+  fictional (acme, octocat, PROJ): it is public, like this repo.
