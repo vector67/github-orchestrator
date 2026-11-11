@@ -45,7 +45,7 @@ def uninstall(config: CliConfig, run: Run, which: Which, read_line: ReadLine,
         print("It keeps, unless you say otherwise:")
         for path in kept:
             print(f"  {path}")
-    skills = config.agent.skill_folder(config.home)
+    skills = config.agent.skill_folder(config.home, config.agent_command)
     for name in shipped_skills():
         if skill_state(skills, name) != "missing":
             print(f"It leaves the {name} skill in {skills / name}, which {config.agent.described} "

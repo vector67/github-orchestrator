@@ -45,6 +45,7 @@ class CliConfig:
     agent: Agent
     agent_argv: tuple[str, ...]
     agent_program: str
+    agent_command: str
     summary_model: str
     home: Path
     platform: str

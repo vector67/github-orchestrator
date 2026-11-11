@@ -28,5 +28,16 @@ def test_claudes_command_is_claude_wherever_it_is():
 def test_each_agent_keeps_its_skills_in_its_own_folder():
     home = Path("/home/me")
 
-    assert (Agent.CLAUDE.skill_folder(home), Agent.CODEX.skill_folder(home)) == (
+    assert (Agent.CLAUDE.skill_folder(home, "claude"), Agent.CODEX.skill_folder(home, "codex")) == (
         Path("/home/me/.claude/skills"), Path("/home/me/.agents/skills"))
+
+
+def test_claude_keeps_its_skills_under_the_config_dir_its_command_names():
+    home = Path("/home/me")
+
+    assert [Agent.CLAUDE.skill_folder(home, command) for command in (
+        "CLAUDE_CONFIG_DIR=~/.claude-work claude",
+        "FORCE_COLOR=1 CLAUDE_CONFIG_DIR=/srv/claude claude --verbose",
+        "claude CLAUDE_CONFIG_DIR=/srv/claude",
+    )] == [Path("/home/me/.claude-work/skills"), Path("/srv/claude/skills"),
+           Path("/home/me/.claude/skills")]

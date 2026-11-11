@@ -201,3 +201,15 @@ def test_uninstall_says_nothing_of_a_shipped_skill_that_is_not_there(
 
     assert "create-pr" in ran.out
     assert "rebase-on-main" not in ran.out
+
+
+def test_uninstall_names_the_skills_under_the_config_dir_the_agent_command_names(
+        machine, run_cli, two_instances):
+    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n')
+    run_cli("skill")
+    skill = machine.home / ".claude-work" / "skills" / "rebase-on-main"
+
+    ran = run_cli("uninstall", "--yes")
+
+    assert ran.code == 0, ran.out
+    assert f"rm -rf {skill}" in ran.out

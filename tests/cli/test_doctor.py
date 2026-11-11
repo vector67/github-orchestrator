@@ -958,3 +958,12 @@ def test_a_config_still_waiting_for_setup_is_a_warning_that_points_at_the_setup_
 
     assert found.level == "warn"
     assert found.fix == "github-orchestrator setup"
+
+
+def test_a_claude_instance_with_its_own_config_dir_looks_for_the_skill_there(machine, run_cli):
+    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n')
+
+    ran = run_cli("doctor")
+
+    missing = _finding(ran.out, "rebase-on-main skill is not in")
+    assert str(machine.home / ".claude-work" / "skills") in missing.reason
