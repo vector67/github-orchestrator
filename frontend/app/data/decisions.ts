@@ -1401,17 +1401,42 @@ function offeredOn(
 const GONE_ONCE_A_PART_RAN: Decision[] = ['reject', 'rework'];
 
 const ACCEPT_ALL_TITLE =
-  'accepts every part not yet accepted; each runs in turn, the ticket, the ' +
-  'changes, the new PR, then the reply — public, and the board has no way ' +
-  'to undo a part once it has run';
+  'accepts every part not yet accepted; they run one at a time, in order — ' +
+  'public, and the board has no way to undo a part once it has run';
 
-function acceptAllAsks(conversation: Conversation): DialogSpec {
+const PART_ORDER: SplitPartName[] = ['ticket', 'changes', 'new-pr', 'reply'];
+
+function runsWhenAccepted(part: SplitPartName, opening: boolean): string {
+  return {
+    ticket: 'the ticket is filed',
+    changes: 'the changes are pushed to this PR',
+    'new-pr': 'the new PR is opened',
+    reply: `the reply is posted naming ${opening ? 'it' : 'the new PR'}`,
+  }[part];
+}
+
+function acceptAllNote(parts: SplitPart[]): string {
+  const proposed = PART_ORDER.filter((name) =>
+    parts.some((one) => one.part === name && one.state === 'proposed'),
+  );
+  const steps = proposed.map((name) =>
+    runsWhenAccepted(name, proposed.includes('new-pr')),
+  );
+  const last = steps.at(-1) ?? '';
+  const sentence =
+    steps.length > 1
+      ? `Each runs in turn: ${steps.slice(0, -1).join(', ')}, and ${last}.`
+      : `${last.charAt(0).toUpperCase()}${last.slice(1)}.`;
+  return `${sentence} A part that has run cannot be undone.`;
+}
+
+function acceptAllAsks(
+  conversation: Conversation,
+  parts: SplitPart[],
+): DialogSpec {
   return {
     question: 'Accept every part not yet accepted?',
-    note:
-      'Each runs in turn: the ticket is filed, the changes are pushed to ' +
-      'this PR, the new PR is opened, and the reply is posted naming it. A ' +
-      'part that has run cannot be undone.',
+    note: acceptAllNote(parts),
     reply: false,
     resolves: conversation.kind === 'review' && !conversation.github_removed,
     resolving: conversation.author_kind === 'bot',
@@ -1435,7 +1460,7 @@ function splitOffers(
           'approve',
           { label: 'Accept all' },
           ACCEPT_ALL_TITLE,
-          acceptAllAsks(conversation),
+          acceptAllAsks(conversation, parts),
         ),
       ]
     : [];

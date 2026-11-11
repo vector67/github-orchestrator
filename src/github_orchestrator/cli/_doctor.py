@@ -228,7 +228,7 @@ class MachineChecks:
             self._install(install),
             *([] if newer is None else [warn(f"github-orchestrator {newer} is out", UPDATE)]),
             self._command(install),
-            *skill_findings(self._config.agent.skill_folder(self._config.home)),
+            *skill_findings(self._config.agent.skill_folder(self._config.home, self._config.agent_command)),
             *agent_findings(self._config.agent, self._config.agent_argv, self._run),
             self._notifications(),
         ]

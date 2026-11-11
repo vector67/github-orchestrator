@@ -215,7 +215,7 @@ class OperatorCli:
                 *(("Default instance" if instance.name is None else f"Instance {instance.name}",
                    instance.checks.findings()) for instance in self._every_instance())]),
             "setup": lambda a: setup(config.hub_url, self._open),
-            "skill": lambda a: skill(config.agent.skill_folder(config.home), status=a.status,
+            "skill": lambda a: skill(config.agent.skill_folder(config.home, config.agent_command), status=a.status,
                                     replace=a.replace),
             "open": lambda a: self._open(""),
             "tutorial": lambda a: tutorial(config.hub_url, self._open, terminal=a.terminal,
