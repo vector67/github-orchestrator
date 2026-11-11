@@ -148,6 +148,7 @@ const ALERTS: Partial<Record<Phase, string>> = {
   stopped: 'You stopped the agent',
   declined: 'Agent declined',
   'push failed': 'Push failed',
+  'landing failed': 'Did not land',
   'reply failed': 'Reply failed',
   'filing failed': 'Filing failed',
   removed: 'Comment removed',

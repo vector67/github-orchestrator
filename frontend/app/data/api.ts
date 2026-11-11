@@ -608,9 +608,9 @@ export interface OpenOperation {
   settled_at: string | null;
 }
 
-export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'edit-part' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
+export type OperationKind = 'first' | 'rebase' | 'file' | 'open' | 'reconcile' | 'rework' | 'retry' | 'start-session' | 'open-shell' | 'approve' | 'stop' | 'drop-question' | 'resolve' | 'reject' | 'defer' | 'unpark' | 'confirm' | 'place' | 'reply' | 'create-draft' | 'edit-draft' | 'edit-part' | 'enrol' | 'withdraw-from-review' | 'discard' | 'post-now' | 'send-review' | 'posted';
 
-export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+export type Operation = FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | ReconcileOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
 
 export type OperationList = Operation[];
 
@@ -633,7 +633,7 @@ export interface OperationSummary {
 }
 
 export interface Outcome {
-  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
+  operation: FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation | ReconcileOperation | EditPartOperation | StopOperation | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation | DropQuestionOperation | ReplyOperation | DraftOperation | ReviewOperation | PostedOperation;
   conversation: Conversation;
 }
 
@@ -854,6 +854,19 @@ export interface ReadMarks {
 }
 
 export type ReasonCode = 'withdrawn' | 'agent-declined' | 'max-attempts' | 'agent-unavailable' | 'conflict' | 'nothing-committed' | 'push-failed' | 'reply-failed' | 'file-failed' | 'open-failed' | 'comment-gone' | 'github-rejected' | 'git-failed' | 'anchor-not-in-diff' | 'superseded' | 'worktree-missing';
+
+export interface ReconcileOperation {
+  id: string;
+  conversation: string | null;
+  kind: 'reconcile';
+  state: OperationState;
+  reason: string | null;
+  reason_code: ReasonCode | null;
+  requested_at: string | null;
+  settled_at: string | null;
+  diverged: string | null;
+  story: string | null;
+}
 
 export type RecordState = 'open' | 'waiting_on_reviewer' | 'assumed_done' | 'not_mine' | 'confirmed' | 'deferred' | 'rejected' | 'resolved' | 'removed' | 'draft' | 'enrolled' | 'discarded';
 

@@ -587,3 +587,123 @@ def test_a_comment_during_a_landing_leaves_the_approve_and_its_words_alone(setti
     hear(landing.threads)
 
     assert landing.stored().fix == refused.fix
+
+
+STORY = "origin was rebased onto main elsewhere; dropped the local copy of the split commit"
+
+
+def _rewritten_elsewhere(landing):
+    copies = landing.working_copies
+    unmatched = copies.commit(WORKTREE, {"g.py": "only here\n"}, "only here")
+    copies.publish("main", copies.origin["main"], {"h.py": "pushed elsewhere\n"},
+                   "pushed elsewhere")
+    return Sha(unmatched)
+
+
+def _reconciling(landing):
+    landing.propose()
+    _rewritten_elsewhere(landing)
+    landing.here.agent_runs.script(RunOutcome(finishes=False))
+    landing.approve()
+    assert landing.stored().fix.run.kind is OperationKind.RECONCILE
+    drain(landing.threads)
+    return landing.stored()
+
+
+def _caught_up(landing):
+    copies = landing.working_copies
+    copies.branches["main"] = copies.origin["main"]
+
+
+def _reconciled(landing, **reported):
+    with landing.threads.editing(landing.key) as editable:
+        answered = editable.reconciled(note=STORY, **reported)
+    assert not isinstance(answered, Denied), answered
+    drain(landing.threads)
+    return landing.stored()
+
+
+def test_a_checkout_that_diverged_from_origin_queues_a_reconcile_and_keeps_the_approve(
+        settings):
+    landing = Landing(settings)
+    landing.propose()
+    landing.without_runs()
+    unmatched = _rewritten_elsewhere(landing)
+
+    landing.approve()
+
+    queued = landing.stored()
+    assert _approval(landing).state is OperationState.REQUEUED, "the approve waits for it"
+    assert queued.standing is ConversationState.LANDING
+    assert queued.fix.run.kind is OperationKind.RECONCILE
+    assert str(unmatched)[:12] in queued.fix.run.conflict
+    assert not queued.fix.picked
+    assert landing.pr_tree()["f.py"] == "old\n"
+
+
+def test_a_reconciled_checkout_carries_the_approve_on_and_lands_the_fix(settings):
+    landing = Landing(settings)
+    _reconciling(landing)
+    _caught_up(landing)
+
+    landed = _reconciled(landing)
+
+    assert landed.standing is ConversationState.DONE
+    assert Sha(landing.working_copies.origin["main"]) == landed.fix.commits[1]
+    assert landing.working_copies.commits[landed.fix.commits[1].hex].tree["h.py"] == (
+        "pushed elsewhere\n")
+    [reconcile] = [one for one in landed.operations if one.kind is OperationKind.RECONCILE]
+    assert reconcile.state is OperationState.APPLIED
+    assert reconcile.text == STORY
+
+
+def test_pushing_again_onto_a_branch_rewritten_since_reconciles_and_pushes_where_the_fix_went(
+        settings):
+    landing = Landing(settings)
+    _push_refused(landing, "renamed it")
+    copies = landing.working_copies
+    copies.publish("main", copies.origin["main"], {"h.py": "pushed elsewhere\n"},
+                   "pushed elsewhere")
+    landing.here.agent_runs.script(RunOutcome(finishes=False))
+
+    landing.approve("renamed it")
+
+    assert landing.stored().fix.run.kind is OperationKind.RECONCILE
+    drain(landing.threads)
+    _caught_up(landing)
+    moved = Sha(copies.commit(WORKTREE, {"f.py": "new\n"}, "Rename the helper"))
+    landed = _reconciled(landing, landed_sha=moved)
+    assert landed.standing is ConversationState.DONE
+    assert landed.fix.commits[1] == moved
+    assert Sha(copies.origin["main"]) == moved
+    assert landing.answers()[-1].startswith("renamed it")
+
+
+def test_a_reconcile_run_that_ends_without_reporting_hands_the_approve_back(settings):
+    landing = Landing(settings)
+    _reconciling(landing)
+
+    with landing.threads.editing(KEY) as editable:
+        editable.fail("the reconcile run exited without reporting")
+    drain(landing.threads)
+
+    handed_back = landing.stored()
+    assert handed_back.fix.is_proposed
+    assert "reconcile" in handed_back.fix.reason
+    assert _approval(landing).state is OperationState.REFUSED
+    assert landing.pr_tree()["f.py"] == "old\n"
+
+
+def test_a_diverged_checkout_hands_the_approve_back_when_no_agent_may_run(settings):
+    landing = Landing(settings)
+    landing.propose()
+    unmatched = _rewritten_elsewhere(landing)
+    unable = landing.here.threads(agents_enabled=False)
+
+    with unable.editing(KEY) as editable:
+        editable.approve()
+    drain(unable)
+
+    handed_back = unable.get(KEY)
+    assert handed_back.fix.is_proposed
+    assert str(unmatched)[:12] in handed_back.fix.reason

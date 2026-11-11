@@ -22,7 +22,7 @@ from github_orchestrator.conversation import (
     EditableConversation,
     Verdict,
 )
-from github_orchestrator.domain import Location, Pr, Repo, Side
+from github_orchestrator.domain import Location, Pr, Repo, Sha, Side
 
 
 def _die(message: str) -> NoReturn:
@@ -134,6 +134,17 @@ def thread_opened(args: argparse.Namespace, *, conversation_managers: Conversati
                   gist_model: str | None) -> None:
     _report_or_die(args, conversation_managers,
                    lambda conversation: conversation.opened(args.url), "opened")
+
+
+def thread_reconciled(args: argparse.Namespace, *,
+                      conversation_managers: ConversationManagerFactory,
+                      gist_model: str | None) -> None:
+    landed = None if args.landed_sha is None else Sha.parse(args.landed_sha)
+    if args.landed_sha is not None and landed is None:
+        _die(f"--landed-sha {args.landed_sha!r} is no commit sha")
+    _report_or_die(args, conversation_managers,
+                   lambda conversation: conversation.reconciled(args.note, landed),
+                   "reconciled")
 
 
 def _paired_steps(args: argparse.Namespace) -> tuple[tuple[str, str | None], ...]:
@@ -400,6 +411,7 @@ THREAD_COMMANDS = {
     "split": thread_split,
     "filed": thread_filed,
     "opened": thread_opened,
+    "reconciled": thread_reconciled,
     "ready": thread_ready,
     "ask": thread_ask,
     "base": thread_base,
@@ -715,6 +727,20 @@ def add_thread_parsers(
     _common(opened_parser)
     opened_parser.add_argument("--thread-id", required=True)
     opened_parser.add_argument("--url", required=True, help="The new PR's link")
+
+    reconciled_parser = thread_sub.add_parser(
+        "reconciled",
+        help="The PR worktree holds origin's branch plus what still belongs on the PR: "
+             "the board carries the accept on.",
+    )
+    _common(reconciled_parser)
+    reconciled_parser.add_argument("--thread-id", required=True)
+    reconciled_parser.add_argument("--note", required=True,
+                                   help="Who rewrote origin and why, and each local commit "
+                                        "kept, carried over or dropped")
+    reconciled_parser.add_argument("--landed-sha",
+                                   help="The sha the accepted fix ended up as, when it was "
+                                        "already on the PR branch and you carried it over")
 
     ready_parser = thread_sub.add_parser(
         "ready", help="The subagent committed in its worktree: status=ready."

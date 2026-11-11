@@ -28,6 +28,17 @@ const KNOWN: Partial<Record<Phase, { known: Known[]; otherwise: string }>> = {
     ],
     otherwise: 'git could not push the fix',
   },
+  'landing failed': {
+    known: [
+      {
+        seen: /reconciling the PR worktree with origin/,
+        short:
+          'The PR worktree could not be reconciled with GitHub’s rewritten branch',
+        more: ', so nothing landed',
+      },
+    ],
+    otherwise: 'the accept stopped before anything was pushed',
+  },
   'reply failed': {
     known: [
       {

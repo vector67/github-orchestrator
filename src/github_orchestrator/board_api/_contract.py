@@ -903,6 +903,22 @@ class OpenOperation(OperationEnvelope):
     kind: Literal[OperationKind.OPEN]
 
 
+class ReconcileOperation(OperationEnvelope):
+    """The agent run that reconciles the PR worktree with origin when origin's
+    branch was rewritten elsewhere and the worktree holds commits origin has no
+    equivalent of. The approve it serves waits for it and carries on landing once
+    it has reported; one that ends without reporting refuses the approve."""
+
+    kind: Literal[OperationKind.RECONCILE]
+    diverged: str | None = Field(
+        description="How the worktree and origin had diverged when the run was "
+                    "queued: both heads and the local commits origin lacked.")
+    story: str | None = Field(
+        description="What the run found and did, in its own words: who rewrote "
+                    "origin and why, and which local commits it overwrote. Null "
+                    "until it reports.")
+
+
 class EditPartOperation(OperationEnvelope):
     """New words saved for a split's ticket or reply. Nothing is accepted,
     filed or posted; the part stays as it was, with the new words."""
@@ -1033,6 +1049,7 @@ class PostedOperation(OperationEnvelope):
 
 Operation = Annotated[
     FixOperation | SessionOperation | ApproveOperation | FileOperation | OpenOperation
+    | ReconcileOperation
     | EditPartOperation | StopOperation
     | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
     | DropQuestionOperation

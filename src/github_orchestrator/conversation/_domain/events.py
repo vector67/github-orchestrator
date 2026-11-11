@@ -103,6 +103,15 @@ class PickConflicted:
 
 
 @dataclass(frozen=True)
+class CheckoutDiverged:
+    origin: Sha
+    head: Sha
+    unmatched: tuple[Sha, ...]
+    reconciles_allowed: bool = True
+    at: str | None = None
+
+
+@dataclass(frozen=True)
 class Pushed:
     pass
 
@@ -275,6 +284,7 @@ Event = (
     | Picked
     | PickRefused
     | PickConflicted
+    | CheckoutDiverged
     | Pushed
     | PushFailed
     | Unpicked

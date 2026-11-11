@@ -901,6 +901,123 @@ module('Acceptance | panel', function (hooks) {
       .hasText('error: could not apply 7208d66... rename the helper');
   });
 
+  test('a landing that is reconciling the worktree says so, with how it diverged folded away', async function (assert) {
+    const landing = board().threadIn('landing', { key: KEY });
+    landing.operations = [
+      ...landing.operations,
+      summary({ id: `${KEY}.3`, kind: 'reconcile', state: 'running' }),
+    ];
+    board().conversations = [landing];
+    board().operations[KEY] = [
+      operation({ id: `${KEY}.1`, conversation: KEY }),
+      operation({
+        id: `${KEY}.3`,
+        conversation: KEY,
+        kind: 'reconcile',
+        state: 'running',
+        diverged:
+          "origin's PR branch was rewritten: it is at aaaaaaaaaaaa, and the PR worktree at cccccccccccc holds commits origin has no equivalent of (dddddddddddd), so nothing landed",
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-notes] .landing-failure')
+      .hasText(
+        'Reconciling the PR worktree with origin: it lands on its own once done',
+      );
+    assert
+      .dom('[data-test-notes] details:not([open]) [data-test-note-detail]')
+      .containsText('dddddddddddd');
+  });
+
+  test('a landing that reconciled the worktree keeps the story of what it did', async function (assert) {
+    const landed = board().threadIn('landed', { key: KEY });
+    landed.operations = [
+      ...landed.operations,
+      summary({ id: `${KEY}.3`, kind: 'reconcile', state: 'applied' }),
+    ];
+    board().conversations = [landed];
+    board().operations[KEY] = [
+      operation({ id: `${KEY}.1`, conversation: KEY }),
+      operation({
+        id: `${KEY}.3`,
+        conversation: KEY,
+        kind: 'reconcile',
+        state: 'applied',
+        story:
+          'A rework run rebased the PR onto main and force-pushed; dropped the stale copies.',
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-notes] .reconciled')
+      .hasText('Reconciled the PR worktree with origin');
+    assert
+      .dom('[data-test-notes] [data-test-note-detail]')
+      .hasText(
+        'A rework run rebased the PR onto main and force-pushed; dropped the stale copies.',
+      );
+  });
+
+  test('an accept handed back because the worktree could not be reconciled says why', async function (assert) {
+    const why =
+      'the run reconciling the PR worktree with origin ended without reporting';
+    const proposed = board().threadIn('proposed', { key: KEY });
+    proposed.operations = [
+      ...proposed.operations,
+      summary({
+        id: `${KEY}.2`,
+        kind: 'approve',
+        state: 'refused',
+        reason: why,
+        reason_code: 'git-failed',
+        requested_at: '2026-09-12T11:00:00Z',
+        settled_at: '2026-09-12T11:05:00Z',
+      }),
+      summary({
+        id: `${KEY}.3`,
+        kind: 'reconcile',
+        state: 'refused',
+        reason: why,
+        reason_code: 'git-failed',
+        requested_at: '2026-09-12T11:00:01Z',
+        settled_at: '2026-09-12T11:05:00Z',
+      }),
+    ];
+    board().conversations = [proposed];
+    board().proposals[KEY] = [proposal({ id: `${KEY}.1.proposal` })];
+    board().operations[KEY] = [
+      operation({ id: `${KEY}.1`, conversation: KEY }),
+      operation({
+        id: `${KEY}.2`,
+        conversation: KEY,
+        kind: 'approve',
+        state: 'refused',
+        reason: why,
+        reason_code: 'git-failed',
+        reply: 'Agreed, renamed.',
+      }),
+      operation({
+        id: `${KEY}.3`,
+        conversation: KEY,
+        kind: 'reconcile',
+        state: 'refused',
+        reason: why,
+        reason_code: 'git-failed',
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-failure]').containsText('The accept did not land');
+    assert.dom('[data-test-failure]').containsText(why);
+    assert.dom('[data-test-failure-reply]').containsText('Agreed, renamed.');
+  });
+
   test('a deferred card says what wakes it', async function (assert) {
     board().conversations = [board().threadIn('deferred', { key: KEY })];
     board().operations[KEY] = [

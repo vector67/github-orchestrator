@@ -120,13 +120,18 @@ class OpeningPr:
 
 
 @dataclass(frozen=True)
+class Reconciling:
+    fix: ThreadFix
+
+
+@dataclass(frozen=True)
 class Session:
     fix: ThreadFix
     steer: str | None
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
-        | Reworking | CarryingOnThread | FilingTicket | OpeningPr)
+        | Reworking | CarryingOnThread | FilingTicket | OpeningPr | Reconciling)
 
 
 @dataclass(frozen=True)
@@ -390,6 +395,9 @@ class FakeAgentRuns:
 
     def open_pr(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, OpeningPr(fix))
+
+    def reconcile(self, fix: ThreadFix) -> FakeRun | str:
+        return self._fix_thread(fix, Reconciling(fix))
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         refused = open_session_in(self.pr_processes, fix.pr, fix.worktree, ["claude"],

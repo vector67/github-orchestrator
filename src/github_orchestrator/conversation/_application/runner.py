@@ -21,6 +21,7 @@ from github_orchestrator.conversation._domain.conversation import (
     CommitCheck,
     CommitVerdict,
     Conversation,
+    OperationKind,
     ThreadVerdict,
 )
 from github_orchestrator.conversation._domain.effects import (
@@ -51,6 +52,7 @@ from github_orchestrator.conversation._domain.events import (
     AnswerDeleted,
     AnswerFailed,
     AnswerPosted,
+    CheckoutDiverged,
     ClosingCommentDeleted,
     ClosingFailed,
     ClosingReplyPosted,
@@ -91,6 +93,7 @@ from github_orchestrator.conversation._domain.standing import ErrorCode
 from github_orchestrator.conversation._domain.steps import Land
 from github_orchestrator.conversation._domain.verdict import newest_said
 from github_orchestrator.domain import Sha
+from github_orchestrator.working_copies import Diverged
 
 MAX_RESUME_PASSES = 8
 
@@ -110,10 +113,19 @@ def _failed(conversation: Conversation, effect: Effect, exc: Exception) -> str:
     return str(exc) or type(exc).__name__
 
 
+def _diverged(ports: Ports, diverged: Diverged) -> CheckoutDiverged:
+    return CheckoutDiverged(origin=diverged.origin, head=diverged.head,
+                            unmatched=diverged.unmatched,
+                            reconciles_allowed=ports.config.agents_enabled,
+                            at=ports.clock.now())
+
+
 def _pick_outcome(ports: Ports, conversation: Conversation,
                   effect: Pick) -> Change:
     fix = conversation.fix
     picked = thread_workspace(ports, conversation).pick(fix.thread_sha, effect.message)
+    if picked.diverged is not None:
+        return _diverged(ports, picked.diverged)
     if picked.landed_base is not None and picked.landed_sha is not None:
         return Picked(landed_base=picked.landed_base, landed_sha=picked.landed_sha)
     if picked.conflict_head is not None and picked.conflict is not None:
@@ -271,6 +283,12 @@ def _check_recorder(ports: Ports, key: str, on: str, sha: Sha, parent: Sha, *,
     return record
 
 
+def _run_home(ports: Ports, conversation: Conversation, effect: StartRun) -> str | None:
+    if effect.kind == OperationKind.RECONCILE:
+        return ports.git.path()
+    return thread_workspace(ports, conversation).path
+
+
 def _unpick_outcome(ports: Ports, conversation: Conversation) -> Change:
     fix = conversation.fix
     if fix.landed_base is None or fix.landed_sha is None:
@@ -305,6 +323,8 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return _pick_outcome(ports, conversation, effect)
         case Push():
             error = ports.git.push()
+            if isinstance(error, Diverged):
+                return _diverged(ports, error)
             return (Pushed() if error is None
                     else PushFailed(error, at=ports.clock.now()))
         case Unpick():
@@ -347,7 +367,7 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
         case StartRun():
             try:
                 refused = ports.agents.start_run(conversation,
-                                                 thread_workspace(ports, conversation).path,
+                                                 _run_home(ports, conversation, effect),
                                                  effect.kind, effect.onto)
             except Exception as exc:
                 _failed(conversation, effect, exc)
