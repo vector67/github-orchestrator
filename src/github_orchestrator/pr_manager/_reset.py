@@ -43,6 +43,9 @@ class QueuedReset:
             self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.BRANCH_UNKNOWN))
             return
         checkout = self._working_copies.checkout(pr)
+        if checkout.no_worktree() is not None:
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.WORKTREE_MISSING))
+            return
         failed = checkout.fetch(facts.base_branch)
         if failed is not None:
             self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.FETCH_FAILED, failed))

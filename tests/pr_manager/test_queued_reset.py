@@ -55,6 +55,11 @@ def _manager(settings, worktree, copies, *script, conversation_managers=None):
                         conversation_managers=conversation_managers)
 
 
+def _lose(copies, worktree):
+    copies.lose_worktree(worktree)
+    copies.placed.pop(THE_PR)
+
+
 def _queue(manager):
     ResetToOrigin(queued_at=QUEUED_AT).keep(manager.container.get(Shelves).of(THE_PR))
 
@@ -257,3 +262,16 @@ def test_a_queued_reset_leaves_a_fix_picked_but_not_pushed_on_the_branch(setting
     kept = _kept(manager)
     assert kept is not None
     assert kept.refused == ResetRefusal(ResetRefusalCode.FIX_AWAITS_PUSH, KEY)
+
+
+def test_a_queued_reset_whose_worktree_is_gone_says_so_by_code(settings, tmp_path):
+    seed(settings, POLLED)
+    copies, _ = _diverged(tmp_path)
+    manager = _manager(settings, tmp_path, copies, lambda: _queue(manager),
+                       lambda: _lose(copies, tmp_path))
+
+    manager.run()
+
+    kept = _kept(manager)
+    assert kept is not None and kept.ran_at is not None
+    assert kept.refused == ResetRefusal(ResetRefusalCode.WORKTREE_MISSING)
