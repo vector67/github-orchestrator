@@ -285,6 +285,29 @@ class Told(Protocol):
     def state(self) -> HubState | None: ...
 
 
+class PrMilestone(StrEnum):
+    NEEDS_YOU = "needs-you"
+    APPROVED = "approved"
+    NEW_COMMIT = "new-commit"
+    MERGED = "merged"
+    CLOSED = "closed"
+    ANY_ACTIVITY = "any-activity"
+
+
+@dataclass(frozen=True)
+class DeferredUntilPr:
+    pr: Pr
+    state: PrMilestone
+
+
+@dataclass(frozen=True)
+class MentionDeferral:
+    deferred_at: str
+    until_at: str | None
+    until_pr: DeferredUntilPr | None
+    head_sha: str | None = None
+
+
 @dataclass(frozen=True)
 class ListedMention:
     pr: Pr
@@ -297,6 +320,7 @@ class ListedMention:
     url: str
     on_board: bool
     building: bool
+    deferred: MentionDeferral | None = None
 
 
 @dataclass(frozen=True)
@@ -312,6 +336,10 @@ class MentionsList(Protocol):
     def listed(self) -> MentionsListing: ...
 
     def dismiss(self, pr: Pr, comment_id: int | None) -> None: ...
+
+    def defer(self, pr: Pr, comment_id: int | None, deferral: MentionDeferral) -> None: ...
+
+    def stop_deferring(self, pr: Pr, comment_id: int | None) -> None: ...
 
 
 class Holdings(Protocol):

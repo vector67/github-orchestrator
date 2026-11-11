@@ -1,13 +1,21 @@
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, RootModel, StringConstraints
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    Field,
+    RootModel,
+    StringConstraints,
+    model_validator,
+)
 
 from github_orchestrator import conversation as domain
 from github_orchestrator.board_api.interface import (
     CloneState,
     ManagerStanding,
     NoticeCode,
+    PrMilestone,
     ResetRefusalCode,
     WallGroup,
     WriteState,
@@ -2385,6 +2393,50 @@ class MentionableList(BaseModel):
                     "and bots count for nobody. Empty when GitHub could not be asked.")
 
 
+class AwaitedPr(BaseModel):
+    """A pull request a deferred mention waits on, and what it waits for."""
+
+    repo: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+                      description="The pull request's repository, as owner/name.")
+    number: int
+    state: PrMilestone = Field(
+        description="What ends the wait: `needs-you` when the board puts the pull request "
+                    "in Needs you, which the page judges and ends by stopping the deferral; "
+                    "`approved`, `new-commit` and `any-activity` (an event the watcher saw or "
+                    "a comment on any of its cards) as the watcher next polls it; `merged` "
+                    "and `closed` when it ends, either way, since neither can come after.")
+
+
+class MentionDeferred(BaseModel):
+    """Why a mention is greyed in the counter's list and left out of its number."""
+
+    deferred_at: str = Field(description="When you deferred it. A comment in its thread after "
+                                          "this ends the deferral, whatever it waits for.")
+    until_at: str | None = Field(description="When it comes back; null when it waits on a "
+                                             "pull request instead.")
+    until_pr: AwaitedPr | None = Field(description="The pull request it waits on; null when it "
+                                                   "waits for a time instead.")
+
+
+class DeferMentionRequest(BaseModel):
+    repo: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+                      description="The mentioned pull request's repository, as owner/name.")
+    number: int
+    comment_id: int | None = Field(description="GitHub's id of the comment naming you; "
+                                               "null for the pull request's description.")
+    until_at: AwareDatetime | None = Field(
+        description="When the mention comes back, with its offset. Give this or `until_pr`.")
+    until_pr: AwaitedPr | None = Field(
+        description="The pull request to wait on and what to wait for. Give this or "
+                    "`until_at`.")
+
+    @model_validator(mode="after")
+    def _one_end(self) -> Self:
+        if (self.until_at is None) == (self.until_pr is None):
+            raise ValueError("a deferral ends at a time or on a pull request, exactly one")
+        return self
+
+
 class OutstandingMention(BaseModel):
     """A comment naming you that the board has not closed since it was written."""
 
@@ -2408,6 +2460,8 @@ class OutstandingMention(BaseModel):
                                        "request and building the mention's card; false once "
                                        "the card is on the board or has failed to appear "
                                        "within two hours, or the pull request is closed.")
+    deferred: MentionDeferred | None = Field(description="Until when or what you deferred "
+                                                         "it; null while it counts.")
 
 
 class DismissMentionRequest(BaseModel):

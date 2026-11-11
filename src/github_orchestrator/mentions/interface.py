@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -14,7 +16,17 @@ class StartLine(Protocol):
     def move_mentions_start(self, to: datetime) -> None: ...
 
 
+@dataclass(frozen=True)
+class PrNow:
+    head_sha: str | None
+    approved: bool
+    last_event_at: str | None
+    ended: bool
+
+
 class MentionsInbox(Protocol):
     def search_if_due(self) -> None: ...
 
     def unbuilt(self) -> list[Pr]: ...
+
+    def settle_deferrals(self, prs: Mapping[Pr, PrNow]) -> None: ...

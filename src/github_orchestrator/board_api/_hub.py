@@ -19,6 +19,8 @@ from github_orchestrator.board_api._app import (
     report_client_error,
 )
 from github_orchestrator.board_api._contract import (
+    AwaitedPr,
+    DeferMentionRequest,
     DismissMentionRequest,
     Emoji,
     EmojiList,
@@ -27,6 +29,7 @@ from github_orchestrator.board_api._contract import (
     HarvestExtensionFolder,
     Health,
     HeldPullRequests,
+    MentionDeferred,
     Mentions,
     NewestRelease,
     OutstandingMention,
@@ -46,10 +49,12 @@ from github_orchestrator.board_api._runs import ledger_read, watcher_read
 from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
+    DeferredUntilPr,
     Emojis,
     FolderInUse,
     HarvestSetup,
     Holdings,
+    MentionDeferral,
     MentionsList,
     NamesMigration,
     ReleaseRecord,
@@ -210,8 +215,39 @@ def list_mentions(request: Request, desk: Serving) -> Response:
                            kind=mention.kind, author=mention.author, at=mention.at,
                            body=mention.body, url=mention.url,
                            on_board=mention.on_board and mention.pr in held,
-                           building=mention.building)
+                           building=mention.building,
+                           deferred=_deferred(mention.deferred))
         for mention in listing.mentions]))
+
+
+def _deferred(deferral: MentionDeferral | None) -> MentionDeferred | None:
+    if deferral is None:
+        return None
+    awaited = deferral.until_pr
+    return MentionDeferred(deferred_at=deferral.deferred_at, until_at=deferral.until_at,
+                           until_pr=None if awaited is None else AwaitedPr(
+                               repo=str(awaited.pr.repo), number=awaited.pr.number,
+                               state=awaited.state))
+
+
+@writes.post("/mentions:defer", status_code=204, operation_id="deferMention",
+             summary="Grey a mention and leave it out of the count until a time or a PR's turn.")
+def defer_mention(body: DeferMentionRequest, desk: Serving) -> None:
+    """The counter's Defer. A comment in the mention's thread ends it early,
+    and stop-deferring ends it by hand.
+    """
+    awaited = body.until_pr
+    desk.mentions.defer(Pr(Repo.parse(body.repo), body.number), body.comment_id, MentionDeferral(
+        deferred_at=desk.clock().isoformat(),
+        until_at=None if body.until_at is None else body.until_at.isoformat(),
+        until_pr=None if awaited is None else DeferredUntilPr(
+            pr=Pr(Repo.parse(awaited.repo), awaited.number), state=awaited.state)))
+
+
+@writes.post("/mentions:stop-deferring", status_code=204, operation_id="stopDeferringMention",
+             summary="Count a deferred mention again now.")
+def stop_deferring_mention(body: DismissMentionRequest, desk: Serving) -> None:
+    desk.mentions.stop_deferring(Pr(Repo.parse(body.repo), body.number), body.comment_id)
 
 
 @writes.post("/mentions:dismiss", status_code=204, operation_id="dismissMention",

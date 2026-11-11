@@ -3,6 +3,7 @@ from datetime import datetime
 
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import DismissUntil, HubState, Pr
+from github_orchestrator.mentions import PrNow
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.pr_summaries import PrSummaries, SummaryRefusal
@@ -93,6 +94,9 @@ class WouldSearchMentions:
 
     def unbuilt(self) -> list[Pr]:
         return []
+
+    def settle_deferrals(self, prs: Mapping[Pr, PrNow]) -> None:
+        pass
 
 
 class WouldSummarise:

@@ -12,6 +12,7 @@ from github_orchestrator.board_api.interface import (
     Held,
     ManagerRefusal,
     ManagerStanding,
+    MentionDeferral,
     MentionsListing,
     RepoChoice,
     SetupOptions,
@@ -171,12 +172,20 @@ class FakeTold:
 class FakeMentionsList:
     now: MentionsListing = NO_MENTIONS_LISTED
     dismissed: list[tuple[Pr, int | None]] = field(default_factory=list)
+    deferred: list[tuple[Pr, int | None, MentionDeferral]] = field(default_factory=list)
+    undeferred: list[tuple[Pr, int | None]] = field(default_factory=list)
 
     def listed(self) -> MentionsListing:
         return self.now
 
     def dismiss(self, pr: Pr, comment_id: int | None) -> None:
         self.dismissed.append((pr, comment_id))
+
+    def defer(self, pr: Pr, comment_id: int | None, deferral: MentionDeferral) -> None:
+        self.deferred.append((pr, comment_id, deferral))
+
+    def stop_deferring(self, pr: Pr, comment_id: int | None) -> None:
+        self.undeferred.append((pr, comment_id))
 
 
 @dataclass

@@ -579,6 +579,7 @@ export function outstandingMention(
     url: 'https://github.com/o/r/pull/7#issuecomment-1',
     on_board: true,
     building: false,
+    deferred: null,
     ...over,
   };
 }

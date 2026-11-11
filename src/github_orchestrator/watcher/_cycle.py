@@ -15,7 +15,7 @@ from github_orchestrator.change_detection import (
 from github_orchestrator.conversation import ConversationManagerFactory, ThreadActivity
 from github_orchestrator.domain import HubState, Pr, Sleep, UtcClock
 from github_orchestrator.github import PullRequests
-from github_orchestrator.mentions import MentionsInbox, StartUnread
+from github_orchestrator.mentions import MentionsInbox, PrNow, StartUnread
 from github_orchestrator.notifications import Courier
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
@@ -282,6 +282,13 @@ class PollingWatcher:
                                                          merged=relevance.merged)
         return engaged, ended
 
+    def _polled_now(self) -> dict[Pr, PrNow]:
+        polled = {pr: self._change_detection.facts(pr) for pr in self._tracked_in_watched_repos()}
+        return {pr: PrNow(head_sha=facts.head_sha,
+                          approved=facts.approved,
+                          last_event_at=facts.last_event_at, ended=facts.ended)
+                for pr, facts in polled.items() if facts is not None}
+
     def _mentioned_or_taken_over(self, pr: Pr) -> bool:
         facts = self._change_detection.facts(pr)
         return facts is not None and (facts.mentioned or facts.is_author is True)
@@ -407,6 +414,10 @@ class PollingWatcher:
             raise
         except Exception:
             log.exception("Could not search for mentions")
+        try:
+            self._mentions_inbox.settle_deferrals(self._polled_now())
+        except Exception:
+            log.exception("Could not settle the deferred mentions")
         log.debug("--- watcher end ---")
 
         summary = (f"Polled {len(set(found))} PRs, {total_events} events queued, "

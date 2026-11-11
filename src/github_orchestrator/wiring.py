@@ -826,8 +826,8 @@ class MentionsProvider(Provider):
                                    settings.data_dir / MENTIONS_FILE)
 
     @provide
-    def mentions_list(self, settings: Settings) -> MentionsList:
-        return ListingFile(settings.data_dir / MENTIONS_FILE)
+    def mentions_list(self, settings: Settings, clock: UtcClock) -> MentionsList:
+        return ListingFile(settings.data_dir / MENTIONS_FILE, clock)
 
 
 @dataclass(frozen=True)

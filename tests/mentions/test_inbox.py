@@ -8,9 +8,12 @@ import pytest
 
 from github_orchestrator.board_api.interface import (
     NO_MENTIONS_LISTED,
+    DeferredUntilPr,
     ListedMention,
+    MentionDeferral,
     MentionsList,
     MentionsListing,
+    PrMilestone,
 )
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import ConversationState
@@ -22,7 +25,7 @@ from github_orchestrator.github import (
     ThreadComment,
 )
 from github_orchestrator.github.fake import GhError
-from github_orchestrator.mentions import MentionsInbox, StartUnread
+from github_orchestrator.mentions import MentionsInbox, PrNow, StartUnread
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.change_detection.support import POLLED_AT
 from tests.conversation.support import REPO, THE_PR, WORKTREE, at, drain, world
@@ -535,3 +538,236 @@ def test_dismissing_a_comment_on_one_pr_leaves_the_same_id_on_another_listed(tmp
     here.container.get(MentionsList).dismiss(Pr(Repo.parse(REPO), 8), 1)
 
     assert _listed_now(here) == ["IC_1"]
+
+
+def _deferred_now(here):
+    return [mention.deferred for mention in here.container.get(MentionsList).listed().mentions]
+
+
+def _defer(here, deferral):
+    here.container.get(MentionsList).defer(THE_PR, 1, deferral)
+
+
+AN_HOUR_ON = MentionDeferral(deferred_at=SEARCHED, until_at="2026-10-23T10:00:00Z", until_pr=None)
+OPEN_PR = PrNow(head_sha="aaa", approved=False, last_event_at=None, ended=False)
+
+
+def _one_mention(here):
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    here.container.get(MentionsInbox).search_if_due()
+
+
+def _until(state):
+    return MentionDeferral(deferred_at=SEARCHED, until_at=None,
+                           until_pr=DeferredUntilPr(pr=THE_PR, state=state))
+
+
+def _settled(here, prs=None):
+    here.container.get(MentionsInbox).settle_deferrals({THE_PR: OPEN_PR} if prs is None else prs)
+
+
+def test_a_deferred_mention_stays_listed_with_its_deferral(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+
+    _defer(here, AN_HOUR_ON)
+
+    assert _deferred_now(here) == [AN_HOUR_ON]
+
+
+def test_a_deferral_for_a_time_lapses_once_its_time_comes(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _one_mention(here)
+    _defer(here, AN_HOUR_ON)
+
+    now[0] += timedelta(hours=1)
+
+    assert _deferred_now(here) == [None]
+
+
+def test_stopping_a_deferral_by_hand_counts_the_mention_again(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, AN_HOUR_ON)
+
+    here.container.get(MentionsList).stop_deferring(THE_PR, 1)
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_stays_after_the_next_search(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _one_mention(here)
+    _defer(here, replace(AN_HOUR_ON, until_at="2026-10-24T09:00:00Z"))
+
+    _searched_again(here, now, timedelta(minutes=30))
+
+    assert [deferral is not None for deferral in _deferred_now(here)] == [True]
+
+
+def test_a_new_comment_in_the_mentioned_thread_ends_its_deferral(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.MERGED))
+    here.github.prs[THE_PR].threads.clear()
+    here.github.add_thread(THE_PR, Thread(key="IC_1", kind=CommentKind.ISSUE, comments=(
+        ThreadComment(id=1, author="anna", body="@octocat ping",
+                      created_at="2026-10-22T10:00:00Z"),
+        ThreadComment(id=3, author="bob", body="any news?", created_at="2026-10-23T09:30:00Z"))))
+    _carded(here, PullRequestState(author="anna", branch="widgets"))
+
+    _settled(here)
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_holds_while_nothing_it_waits_for_has_happened(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.APPROVED))
+
+    _settled(here)
+
+    assert _deferred_now(here) == [_until(PrMilestone.APPROVED)]
+
+
+def test_a_deferral_until_approved_ends_when_the_watcher_sees_the_approval(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.APPROVED))
+
+    _settled(here, {THE_PR: replace(OPEN_PR, approved=True)})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_a_new_commit_ends_once_the_head_moves_after_it_was_seen(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.NEW_COMMIT))
+    _settled(here)
+
+    _settled(here, {THE_PR: replace(OPEN_PR, head_sha="bbb")})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_merged_ends_when_the_pr_ends(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.MERGED))
+
+    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_any_activity_ends_on_a_new_comment_anywhere_on_the_pr(tmp_path):
+    here = _here(tmp_path)
+    ping = _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z")
+    _mentioned(here, ping, _review("PRRT_2", (2, "@octocat pong", "2026-10-22T10:01:00Z")))
+    here.container.get(MentionsInbox).search_if_due()
+    _defer(here, _until(PrMilestone.ANY_ACTIVITY))
+    here.github.prs[THE_PR].threads.clear()
+    here.github.add_thread(THE_PR, ping)
+    here.github.add_thread(THE_PR, _review("PRRT_2", (2, "@octocat pong", "2026-10-22T10:01:00Z"),
+                                           (3, "bump", "2026-10-23T09:30:00Z")))
+    _carded(here, PullRequestState(author="anna", branch="widgets"))
+
+    _settled(here)
+
+    assert _deferred_now(here)[0] is None
+
+
+@pytest.mark.parametrize(("state", "polled"), [
+    (PrMilestone.APPROVED, OPEN_PR),
+    (PrMilestone.NEW_COMMIT, replace(OPEN_PR, head_sha="bbb")),
+    (PrMilestone.MERGED, OPEN_PR),
+    (PrMilestone.CLOSED, OPEN_PR),
+    (PrMilestone.ANY_ACTIVITY, replace(OPEN_PR, last_event_at="2026-10-23T08:00:00Z")),
+    (PrMilestone.NEEDS_YOU, replace(OPEN_PR, approved=True, head_sha="bbb",
+                                    last_event_at="2026-10-23T10:00:00Z")),
+], ids=lambda value: getattr(value, "value", ""))
+def test_a_deferral_holds_on_what_it_does_not_wait_for(tmp_path, state, polled):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(state))
+
+    _settled(here, {THE_PR: polled})
+
+    assert _deferred_now(here)[0] is not None
+
+
+def test_a_deferral_until_closed_ends_when_the_pr_ends(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.CLOSED))
+
+    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_any_activity_ends_on_an_event_the_watcher_saw_after_it(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.ANY_ACTIVITY))
+
+    _settled(here, {THE_PR: replace(OPEN_PR, last_event_at="2026-10-23T09:05:00Z")})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_the_pr_lands_in_needs_you_ends_when_the_pr_ends(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.NEEDS_YOU))
+
+    _settled(here, {THE_PR: replace(OPEN_PR, ended=True)})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_on_a_pr_the_watcher_no_longer_tracks_ends(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.APPROVED))
+
+    _settled(here, {})
+
+    assert _deferred_now(here) == [None]
+
+
+def test_a_deferral_until_a_new_commit_keeps_the_head_it_first_saw(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, _until(PrMilestone.NEW_COMMIT))
+    _settled(here)
+
+    _settled(here)
+
+    assert _deferred_now(here) == [replace(_until(PrMilestone.NEW_COMMIT), head_sha="aaa")]
+
+
+def test_a_comment_from_before_the_deferral_leaves_it_held(tmp_path):
+    here = _here(tmp_path)
+    _one_mention(here)
+    _defer(here, AN_HOUR_ON)
+
+    _settled(here)
+
+    assert _deferred_now(here) == [AN_HOUR_ON]
+
+
+def test_a_deferral_for_a_time_leaves_the_disk_once_it_lapses(tmp_path):
+    now = [datetime.fromisoformat(SEARCHED)]
+    here = _here(tmp_path, clock=lambda: now[0])
+    _one_mention(here)
+    _defer(here, AN_HOUR_ON)
+    now[0] += timedelta(hours=1)
+
+    _settled(here)
+
+    assert json.loads((here.settings.data_dir / "mentions-deferred.json").read_text()) == {}

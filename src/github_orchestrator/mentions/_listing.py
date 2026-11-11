@@ -2,17 +2,22 @@ import fcntl
 import json
 import logging
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from github_orchestrator.board_api.interface import (
     NO_MENTIONS_LISTED,
+    DeferredUntilPr,
     ListedMention,
+    MentionDeferral,
     MentionsListing,
+    PrMilestone,
 )
-from github_orchestrator.domain import Mention, Pr, Repo
+from github_orchestrator.domain import Mention, Pr, Repo, UtcClock
+from github_orchestrator.mentions._deferrals import lapsed
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +68,67 @@ def dismissed(path: Path) -> frozenset[str]:
     return frozenset(key for key in keys if isinstance(key, str))
 
 
+def _deferrals_at(path: Path) -> Path:
+    return path.with_name(f"{path.stem}-deferred{path.suffix}")
+
+
+def deferrals(path: Path) -> dict[str, MentionDeferral]:
+    at = _deferrals_at(path)
+    try:
+        stored = json.loads(at.read_text())
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as damaged:
+        log.warning("%s will not read, so no mention is deferred: %s", at, damaged)
+        return {}
+    if not isinstance(stored, dict):
+        log.warning("%s is not a mapping, so no mention is deferred", at)
+        return {}
+    kept = {}
+    for key, entry in stored.items():
+        try:
+            kept[key] = _deferral(entry)
+        except (KeyError, TypeError, ValueError) as damaged:
+            log.warning("the deferral of %s in %s is damaged, so it is dropped: %r",
+                        key, at, damaged)
+    return kept
+
+
+def change_deferrals(path: Path,
+                     change: Callable[[dict[str, MentionDeferral]], None]) -> None:
+    at = _deferrals_at(path)
+    at.parent.mkdir(parents=True, exist_ok=True)
+    with at.with_name(f"{at.name}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        held = deferrals(path)
+        change(held)
+        writing = at.with_name(f"{at.name}.writing")
+        writing.write_text(json.dumps({key: _stored_deferral(deferral)
+                                       for key, deferral in sorted(held.items())}))
+        os.replace(writing, at)
+
+
+def _stored_deferral(deferral: MentionDeferral) -> dict[str, Any]:
+    awaited = deferral.until_pr
+    return {"deferred_at": deferral.deferred_at, "until_at": deferral.until_at,
+            "until_pr": None if awaited is None else {
+                "repo": str(awaited.pr.repo), "number": awaited.pr.number,
+                "state": awaited.state.value},
+            "head_sha": deferral.head_sha}
+
+
+def _deferral(entry: Mapping[str, Any]) -> MentionDeferral:
+    awaited = entry["until_pr"]
+    if awaited is not None and type(awaited["number"]) is not int:
+        raise TypeError(f"the PR number {awaited['number']!r} is not a number")
+    return MentionDeferral(
+        deferred_at=str(entry["deferred_at"]), until_at=entry["until_at"],
+        until_pr=None if awaited is None else DeferredUntilPr(
+            pr=Pr(Repo.parse(awaited["repo"]), awaited["number"]),
+            state=PrMilestone(awaited["state"])),
+        head_sha=entry.get("head_sha"))
+
+
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
                   mentions: Sequence[ListedMention], building: Mapping[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,8 +141,19 @@ def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
 
 
 class ListingFile:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, clock: UtcClock) -> None:
         self._path = path
+        self._clock = clock
+
+    def defer(self, pr: Pr, comment_id: int | None, deferral: MentionDeferral) -> None:
+        change_deferrals(self._path, lambda held: held.update(
+            {dismissal(pr, comment_id): deferral}))
+
+    def stop_deferring(self, pr: Pr, comment_id: int | None) -> None:
+        def stop(held: dict[str, MentionDeferral]) -> None:
+            held.pop(dismissal(pr, comment_id), None)
+
+        change_deferrals(self._path, stop)
 
     def dismiss(self, pr: Pr, comment_id: int | None) -> None:
         at = _dismissals_at(self._path)
@@ -97,13 +174,21 @@ class ListingFile:
             log.warning("%s will not read, so no mentions are listed: %s", self._path, damaged)
             return NO_MENTIONS_LISTED
         gone = dismissed(self._path)
+        held = deferrals(self._path)
+        now = self._clock()
         try:
             return MentionsListing(searched_at=document["searched_at"], mentions=tuple(
-                mention for mention in map(_listed_mention, document["mentions"])
+                replace(mention, deferred=_holding(held.get(
+                    dismissal(mention.pr, mention.comment_id)), now))
+                for mention in map(_listed_mention, document["mentions"])
                 if dismissal(mention.pr, mention.comment_id) not in gone))
         except (KeyError, TypeError, ValueError) as damaged:
             log.warning("%s is damaged, so no mentions are listed: %r", self._path, damaged)
             return NO_MENTIONS_LISTED
+
+
+def _holding(deferral: MentionDeferral | None, now: datetime) -> MentionDeferral | None:
+    return None if deferral is None or lapsed(deferral, now) else deferral
 
 
 def _entry(mention: ListedMention) -> dict[str, Any]:

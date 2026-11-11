@@ -1046,7 +1046,23 @@
     "304": null
    }
   },
+  "/api/mentions:defer": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/mentions:dismiss": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/mentions:stop-deferring": {
    "post": {
     "204": null,
     "400": {
@@ -2214,6 +2230,26 @@
    ],
    "type": "string"
   },
+  "AwaitedPr": {
+   "properties": {
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+     "type": "string"
+    },
+    "state": {
+     "$ref": "#/components/schemas/PrMilestone"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "state"
+   ],
+   "type": "object"
+  },
   "BaseFork": {
    "properties": {
     "at": {
@@ -3296,6 +3332,56 @@
     "reset_to_origin",
     "diverged",
     "base"
+   ],
+   "type": "object"
+  },
+  "DeferMentionRequest": {
+   "properties": {
+    "comment_id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+     "type": "string"
+    },
+    "until_at": {
+     "anyOf": [
+      {
+       "format": "date-time",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "until_pr": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/AwaitedPr"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "comment_id",
+    "until_at",
+    "until_pr"
    ],
    "type": "object"
   },
@@ -5005,6 +5091,39 @@
    ],
    "type": "string"
   },
+  "MentionDeferred": {
+   "properties": {
+    "deferred_at": {
+     "type": "string"
+    },
+    "until_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "until_pr": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/AwaitedPr"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "deferred_at",
+    "until_at",
+    "until_pr"
+   ],
+   "type": "object"
+  },
   "MentionFact": {
    "properties": {
     "answered": {
@@ -5647,6 +5766,16 @@
       }
      ]
     },
+    "deferred": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/MentionDeferred"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "kind": {
      "type": "string"
     },
@@ -5684,7 +5813,8 @@
     "body",
     "url",
     "on_board",
-    "building"
+    "building",
+    "deferred"
    ],
    "type": "object"
   },
@@ -6128,6 +6258,17 @@
     "unresolved_threads"
    ],
    "type": "object"
+  },
+  "PrMilestone": {
+   "enum": [
+    "needs-you",
+    "approved",
+    "new-commit",
+    "merged",
+    "closed",
+    "any-activity"
+   ],
+   "type": "string"
   },
   "PrSummary": {
    "properties": {

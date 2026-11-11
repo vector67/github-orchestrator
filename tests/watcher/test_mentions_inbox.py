@@ -7,7 +7,7 @@ from github_orchestrator.github import (
     ThreadComment,
 )
 from github_orchestrator.github.fake import FakeGitHub
-from github_orchestrator.mentions import StartUnread
+from github_orchestrator.mentions import PrNow, StartUnread
 from github_orchestrator.watcher import Watcher
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection
@@ -22,9 +22,13 @@ class CountedSearches:
         self.searches = 0
         self._failure = failure
         self.unbuilt_cards: list = []
+        self.settled: list = []
 
     def unbuilt(self):
         return self.unbuilt_cards
+
+    def settle_deferrals(self, prs) -> None:
+        self.settled.append(dict(prs))
 
     def search_if_due(self) -> None:
         self.searches += 1
@@ -98,3 +102,26 @@ def test_the_mention_thread_of_a_pr_the_inbox_repairs_is_queued_to_become_a_card
     [queued] = [event for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
                 if event.kind == "thread-activity"]
     assert [thread.key for thread in queued.threads] == ["IC_1"]
+
+
+def test_each_cycle_hands_the_inbox_what_it_polled_of_each_pr_to_settle_deferrals(settings):
+    github = _off_the_search(settings)
+    github.prs[UNBUILT].state = PullRequestState(author="anna", title="Theirs", head_sha="abc",
+                                                 review_decision="APPROVED")
+    inbox = CountedSearches()
+    inbox.unbuilt_cards = [UNBUILT]
+
+    watcher_over(settings, github=github, mentions_inbox=inbox).run_cycle()
+
+    assert inbox.settled == [{UNBUILT: PrNow(head_sha="abc", approved=True, last_event_at=None,
+                                             ended=False)}]
+
+
+def test_an_inbox_that_fails_to_settle_deferrals_does_not_fail_the_cycle(settings, caplog):
+    class Failing(CountedSearches):
+        def settle_deferrals(self, prs) -> None:
+            raise OSError("mentions-deferred.json unwritable")
+
+    watcher_over(settings, mentions_inbox=Failing()).run_cycle()
+
+    assert "mentions-deferred.json unwritable" in caplog.text

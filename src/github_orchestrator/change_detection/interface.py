@@ -213,6 +213,10 @@ class Facts:
         return self.ci_status is CiStatus.PASSING
 
     @property
+    def approved(self) -> bool:
+        return self.review_decision is ReviewDecision.APPROVED
+
+    @property
     def failed_checks(self) -> tuple[str, ...]:
         return tuple(check.name for check in self.checks if check.failed)
 

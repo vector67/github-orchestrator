@@ -1,10 +1,14 @@
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from github_orchestrator.board_api.interface import ListedMention
+from github_orchestrator.board_api.interface import (
+    ListedMention,
+    MentionDeferral,
+    PrMilestone,
+)
 from github_orchestrator.conversation import (
     Conversation,
     ConversationManager,
@@ -18,16 +22,19 @@ from github_orchestrator.github import (
     PullRequestState,
     Threads,
 )
+from github_orchestrator.mentions._deferrals import over, seen
 from github_orchestrator.mentions._listing import (
     ListingFile,
     building_since,
+    change_deferrals,
+    deferrals,
     dismissal,
     dismissed,
     listed,
     started_before,
     write_listing,
 )
-from github_orchestrator.mentions.interface import StartLine, StartUnread
+from github_orchestrator.mentions.interface import PrNow, StartLine, StartUnread
 
 log = logging.getLogger(__name__)
 
@@ -59,8 +66,43 @@ class GitHubMentionsInbox:
         self._dismissed: frozenset[str] = frozenset()
 
     def unbuilt(self) -> list[Pr]:
-        return list(dict.fromkeys(mention.pr for mention in ListingFile(self._path).listed().mentions
+        return list(dict.fromkeys(mention.pr for mention in self._listing().listed().mentions
                                   if mention.building))
+
+    def settle_deferrals(self, prs: Mapping[Pr, PrNow]) -> None:
+        if not deferrals(self._path):
+            return
+        listed = {dismissal(mention.pr, mention.comment_id): mention
+                  for mention in self._listing().listed().mentions}
+        now = self._clock()
+
+        def settle(held: dict[str, MentionDeferral]) -> None:
+            for key, deferral in list(held.items()):
+                mention = listed.get(key)
+                if mention is None:
+                    continue
+                if over(deferral, now=now, prs=prs, thread_spoken=self._spoken(mention),
+                        pr_spoken=self._pr_spoken(deferral)):
+                    del held[key]
+                else:
+                    held[key] = seen(deferral, prs)
+
+        change_deferrals(self._path, settle)
+
+    def _listing(self) -> ListingFile:
+        return ListingFile(self._path, self._clock)
+
+    def _spoken(self, mention: ListedMention) -> list[str]:
+        card = (None if mention.thread is None
+                else self._conversation_managers.of(mention.pr).get(mention.thread))
+        return [] if card is None else _said_at(card)
+
+    def _pr_spoken(self, deferral: MentionDeferral) -> list[str]:
+        awaited = deferral.until_pr
+        if awaited is None or awaited.state is not PrMilestone.ANY_ACTIVITY:
+            return []
+        return [moment for card in self._conversation_managers.of(awaited.pr).all()
+                for moment in _said_at(card)]
 
     def search_if_due(self) -> None:
         began = self._clock()
@@ -162,6 +204,10 @@ class GitHubMentionsInbox:
         if mention.comment_id is None or mention.kind == KIND_PR_BODY:
             return self._pull_requests.url(pr)
         return self._threads.comment_url(pr, CommentKind(mention.kind), mention.comment_id)
+
+
+def _said_at(card: Conversation) -> list[str]:
+    return [comment.created_at for comment in card.comments if comment.created_at is not None]
 
 
 def _card(manager: ConversationManager, mention: Mention) -> Conversation | None:

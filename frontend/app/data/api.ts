@@ -67,6 +67,12 @@ export interface AssignReviewersRequest {
 
 export type AuthorKind = 'mine' | 'human' | 'bot';
 
+export interface AwaitedPr {
+  repo: string;
+  number: number;
+  state: PrMilestone;
+}
+
 export interface BaseFork {
   commit: PullRequestCommit;
   at: number;
@@ -252,6 +258,14 @@ export interface DashboardSystem {
   reset_to_origin: ResetToOrigin | null;
   diverged: boolean;
   base: BaseStanding | null;
+}
+
+export interface DeferMentionRequest {
+  repo: string;
+  number: number;
+  comment_id: number | null;
+  until_at: string | null;
+  until_pr: AwaitedPr | null;
 }
 
 export interface DeferOperation {
@@ -568,6 +582,12 @@ export interface ManagerFlags {
 
 export type ManagerStanding = 'starting' | 'answering' | 'gone';
 
+export interface MentionDeferred {
+  deferred_at: string;
+  until_at: string | null;
+  until_pr: AwaitedPr | null;
+}
+
 export interface MentionFact {
   author: string;
   at: string | null;
@@ -660,6 +680,7 @@ export interface OutstandingMention {
   url: string;
   on_board: boolean;
   building: boolean;
+  deferred: MentionDeferred | null;
 }
 
 export interface Person {
@@ -730,6 +751,8 @@ export interface PrFacts {
   mentions: MentionFact[];
   unresolved_threads: number | null;
 }
+
+export type PrMilestone = 'needs-you' | 'approved' | 'new-commit' | 'merged' | 'closed' | 'any-activity';
 
 export interface PrSummary {
   repo: string;
