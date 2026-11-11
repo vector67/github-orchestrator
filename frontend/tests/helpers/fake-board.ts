@@ -45,6 +45,7 @@ import type {
   WallGroupName,
   WatcherHealth,
   HubState,
+  AddToWallRequest,
   DeferMentionRequest,
   DismissMentionRequest,
   MentionDeferred,
@@ -821,6 +822,8 @@ export class FakeBoard {
   dismissedMentions: DismissMentionRequest[] = [];
   deferredMentions: DeferMentionRequest[] = [];
   undeferredMentions: DismissMentionRequest[] = [];
+  openedMentions: DismissMentionRequest[] = [];
+  walledPrs: AddToWallRequest[] = [];
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
   sessionGoneTo: Conversation | null = null;
@@ -1344,7 +1347,7 @@ export class FakeBoard {
         ? {
             watching: this.watching,
             groups: WALL_GROUPS,
-            pull_requests: this.held.map((one) => ({
+            pull_requests: this.held.filter(this.onTheWall).map((one) => ({
               ...one,
               dashboard: this.listing(
                 this.boardOf(`${one.board_url}/api/dashboard`),
@@ -1507,6 +1510,16 @@ export class FakeBoard {
     if (side === 'hub' && url.endsWith('/api/mentions:stop-deferring')) {
       return this.stopDeferringMention(
         JSON.parse(init.body as string) as DismissMentionRequest,
+      );
+    }
+    if (side === 'hub' && url.endsWith('/api/mentions:open')) {
+      return this.openMention(
+        JSON.parse(init.body as string) as DismissMentionRequest,
+      );
+    }
+    if (side === 'hub' && url.endsWith('/api/mentions:add-to-wall')) {
+      return this.addToWall(
+        JSON.parse(init.body as string) as AddToWallRequest,
       );
     }
     if (side === 'hub') return this.hubWrite(url, headers);
@@ -1776,6 +1789,42 @@ export class FakeBoard {
       until_at: asked.until_at,
       until_pr: asked.until_pr,
     });
+    return respond(null, { status: 204 });
+  }
+
+  private onTheWall = (held: HeldPullRequest): boolean =>
+    !this.mentions.opened.some(
+      (one) =>
+        one.outside_wall &&
+        one.repo === held.repo &&
+        one.number === held.number,
+    );
+
+  private openMention(asked: DismissMentionRequest): Response {
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.openedMentions.push(asked);
+    return respond(null, { status: 204 });
+  }
+
+  private addToWall(asked: AddToWallRequest): Response {
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.walledPrs.push(asked);
+    this.mentions = {
+      ...this.mentions,
+      opened: this.mentions.opened.map((one) =>
+        one.repo === asked.repo && one.number === asked.number
+          ? { ...one, outside_wall: false }
+          : one,
+      ),
+    };
     return respond(null, { status: 204 });
   }
 

@@ -70,10 +70,24 @@ export default class MentionsCounter extends Component {
   hrefOf = (mention: MentionRow): string =>
     pageOf(
       { repo: mention.repo, number: mention.number },
-      `/conversations/${encodeURIComponent(mention.thread ?? '')}`,
+      mention.thread === null
+        ? '/conversations'
+        : `/conversations/${encodeURIComponent(mention.thread)}`,
     );
 
   go = async (mention: MentionRow): Promise<void> => {
+    this.acting = null;
+    if (!mention.opensOnTheBoard) {
+      const opened = await this.store.openMention({
+        repo: mention.repo,
+        number: mention.number,
+        comment_id: mention.comment_id,
+      });
+      if (!opened.done) {
+        this.toasts.say(`Mention not opened: ${opened.why}`, 'failed');
+        return;
+      }
+    }
     this.close();
     await this.router.transitionTo(this.hrefOf(mention));
   };
@@ -179,7 +193,7 @@ export default class MentionsCounter extends Component {
                 {{if mention.deferredUntil 'deferred'}}"
               data-test-mention={{mention.thread}}
             >
-              {{#if mention.opensOnTheBoard}}
+              {{#if mention.thread}}
                 <a
                   href={{this.hrefOf mention}}
                   class="mention-open"
@@ -193,6 +207,9 @@ export default class MentionsCounter extends Component {
                     class="mention-body"
                     data-test-mention-body
                   >{{mention.body}}</span>
+                  {{#if mention.offTheBoard}}
+                    <span class="mention-off">{{mention.offTheBoard}}</span>
+                  {{/if}}
                   {{#if mention.deferredUntil}}
                     <span
                       class="mention-deferred"
@@ -215,12 +232,7 @@ export default class MentionsCounter extends Component {
                     class="mention-body"
                     data-test-mention-body
                   >{{mention.body}}</span>
-                  <span class="mention-off">{{if
-                      mention.building
-                      "card being built"
-                      "not on the board"
-                    }}
-                    · opens on GitHub</span>
+                  <span class="mention-off">opens on GitHub</span>
                   {{#if mention.deferredUntil}}
                     <span
                       class="mention-deferred"
@@ -250,7 +262,6 @@ export default class MentionsCounter extends Component {
                     type="button"
                     class="mention-action"
                     role="menuitem"
-                    disabled={{if mention.opensOnTheBoard false true}}
                     data-test-mention-action="context"
                     {{on "click" (fn this.go mention)}}
                   >See in context</button>

@@ -3,6 +3,8 @@ import { service } from '@ember/service';
 import PanelView from 'frontend/components/panel';
 import { panelOf, type Panel } from 'frontend/data/panel';
 import didChange from 'frontend/modifiers/did-change';
+import type HereService from 'frontend/services/here';
+import type StoreService from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 
 export const WAITING_FOR_FACTS =
@@ -19,6 +21,8 @@ function scrollToTop(panel: HTMLElement) {
 
 export default class ThreadPanel extends Component<ThreadPanelSignature> {
   @service declare threads: ThreadsService;
+  @service declare here: HereService;
+  @service declare store: StoreService;
 
   private scrolledFor: unknown;
 
@@ -42,6 +46,13 @@ export default class ThreadPanel extends Component<ThreadPanelSignature> {
     return this.threads.unreadable.includes(this.args.key);
   }
 
+  get building(): boolean {
+    const pr = this.here.pr;
+    return (
+      pr !== null && this.store.cardBuilding(pr.repo, pr.number, this.args.key)
+    );
+  }
+
   watch = (element: HTMLElement, key?: unknown) => {
     if (key !== this.scrolledFor) scrollToTop(element);
     this.scrolledFor = key;
@@ -59,6 +70,11 @@ export default class ThreadPanel extends Component<ThreadPanelSignature> {
     {{else if this.waiting}}
       <p class="work-placeholder" data-test-board-waiting>
         {{WAITING_FOR_FACTS}}
+      </p>
+    {{else if this.building}}
+      <p class="work-placeholder" data-test-card-building>
+        Building the card for this mention. The watcher makes it on its next
+        poll, and it opens here once it is ready.
       </p>
     {{else if this.unreadable}}
       <p class="work-placeholder" data-test-missing>

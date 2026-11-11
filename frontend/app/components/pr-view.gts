@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
 import { pulses } from 'frontend/motion';
 import { LinkTo } from '@ember/routing';
 import type Owner from '@ember/owner';
@@ -25,7 +26,12 @@ import type KeysService from 'frontend/services/keys';
 import { stepped, type Keymap } from 'frontend/services/keys';
 import type DashboardService from 'frontend/services/dashboard';
 import type StoreService from 'frontend/services/store';
-import type { ShownPr, Summaries, WallRow } from 'frontend/services/store';
+import type {
+  MentionPage,
+  ShownPr,
+  Summaries,
+  WallRow,
+} from 'frontend/services/store';
 import type ThreadsService from 'frontend/services/threads';
 import type ToastsService from 'frontend/services/toasts';
 
@@ -198,6 +204,37 @@ export default class PrView extends Component<PrViewSignature> {
     return this.store.unheld === 'watcher-starting';
   }
 
+  get mentionPage(): MentionPage | null {
+    return this.store.mentionPage(this.repo, this.args.pr.number);
+  }
+
+  get mentionBanner(): MentionPage | null {
+    const page = this.mentionPage;
+    return page?.outsideWall ? page : null;
+  }
+
+  addToWall = async (): Promise<void> => {
+    const added = await this.store.addToWall({
+      repo: this.repo,
+      number: this.args.pr.number,
+    });
+    if (!added.done)
+      this.toasts.say(`Not added to the Wall: ${added.why}`, 'failed');
+  };
+
+  dismissMention = async (page: MentionPage): Promise<void> => {
+    const dismissed = await this.store.dismissMention({
+      repo: this.repo,
+      number: this.args.pr.number,
+      comment_id: page.commentId,
+    });
+    if (!dismissed.done) {
+      this.toasts.say(`Mention not dismissed: ${dismissed.why}`, 'failed');
+      return;
+    }
+    await this.router.transitionTo('index');
+  };
+
   private async copy(): Promise<void> {
     this.toasts.say(await copyAddress(this.url), 'done');
   }
@@ -285,13 +322,23 @@ export default class PrView extends Component<PrViewSignature> {
         <SettingsMenu />
       </header>
       {{#if this.notHeld}}
-        <section id="not-found" data-test-pr-not-found>
-          <h1>Pull request not found</h1>
-          <p>The watcher holds no pull request
-            {{this.repo}}#{{@pr.number}}. It only watches pull requests you
-            wrote or were asked to review.
-            <a class="not-found-link" href="/">Back to the board</a>.</p>
-        </section>
+        {{#if this.mentionPage}}
+          <section id="pr-starting" data-test-pr-building>
+            <h1>Building this pull request’s page</h1>
+            <p>You opened a mention on
+              {{this.repo}}#{{@pr.number}}. The watcher fetches it from GitHub
+              and builds its cards on its next poll, and this page opens it as
+              soon as they are ready.</p>
+          </section>
+        {{else}}
+          <section id="not-found" data-test-pr-not-found>
+            <h1>Pull request not found</h1>
+            <p>The watcher holds no pull request
+              {{this.repo}}#{{@pr.number}}. It only watches pull requests you
+              wrote or were asked to review.
+              <a class="not-found-link" href="/">Back to the board</a>.</p>
+          </section>
+        {{/if}}
       {{else if this.starting}}
         <section id="pr-starting" data-test-pr-starting>
           <h1>The server is starting up</h1>
@@ -300,6 +347,26 @@ export default class PrView extends Component<PrViewSignature> {
             as soon as the watcher finishes its first poll.</p>
         </section>
       {{else}}
+        {{#if this.mentionBanner}}
+          <p class="mention-banner" data-test-mention-banner>
+            <span><b>{{this.mentionBanner.ended}}</b>
+              · opened for a mention · not on your Wall</span>
+            <span class="mention-banner-actions">
+              <button
+                type="button"
+                class="btn fill"
+                data-test-mention-banner-add
+                {{on "click" this.addToWall}}
+              >Add to Wall</button>
+              <button
+                type="button"
+                class="btn"
+                data-test-mention-banner-dismiss
+                {{on "click" (fn this.dismissMention this.mentionBanner)}}
+              >Dismiss mention</button>
+            </span>
+          </p>
+        {{/if}}
         <nav class="prtabs" aria-label="this pull request">
           <LinkTo
             @route="summary"

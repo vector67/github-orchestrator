@@ -11,6 +11,7 @@ import type {
   Operation,
   OutstandingMention,
   Person,
+  PrEnded,
   PrFacts,
   PullRequestCommit,
   PullRequestCommits,
@@ -1168,6 +1169,58 @@ export function mergeNoteOf(
 export interface MentionRow extends OutstandingMention {
   opensOnTheBoard: boolean;
   deferredUntil: string | null;
+  offTheBoard: string | null;
+}
+
+export interface MentionPage {
+  commentId: number | null;
+  outsideWall: boolean;
+  ended: string;
+}
+
+const ENDED: Record<PrEnded, string> = { merged: 'Merged', closed: 'Closed' };
+
+export function mentionPageOf(
+  mentions: Mentions | null,
+  repo: string,
+  number: number,
+): MentionPage | null {
+  const opened = mentions?.opened.find(
+    (one) => one.repo === repo && one.number === number,
+  );
+  if (!mentions || !opened) return null;
+  const ofThePr = mentions.mentions.filter(
+    (one) => one.repo === repo && one.number === number,
+  );
+  const mention =
+    ofThePr.find((one) => one.comment_id === opened.comment_id) ?? ofThePr[0];
+  return {
+    commentId: opened.comment_id,
+    outsideWall: opened.outside_wall,
+    ended: mention?.ended ? ENDED[mention.ended] : 'Ended',
+  };
+}
+
+export function cardBuildingOf(
+  mentions: Mentions | null,
+  repo: string,
+  number: number,
+  thread: string,
+): boolean {
+  return (mentions?.mentions ?? []).some(
+    (one) =>
+      one.repo === repo &&
+      one.number === number &&
+      one.thread === thread &&
+      !one.on_board,
+  );
+}
+
+function offTheBoardOf(mention: OutstandingMention): string | null {
+  if (mention.on_board) return null;
+  if (mention.building) return 'card being built';
+  if (mention.ended) return `${mention.ended} · page rebuilt when opened`;
+  return 'card built when opened';
 }
 
 export interface DeferTarget {
@@ -1254,6 +1307,7 @@ function listedMentionRows(mentions: Mentions): MentionRow[] {
     ...mention,
     opensOnTheBoard: mention.on_board && mention.thread !== null,
     deferredUntil: deferredUntilOf(mention.deferred),
+    offTheBoard: offTheBoardOf(mention),
   }));
   mentionRowsSoFar.set(mentions, rows);
   return rows;

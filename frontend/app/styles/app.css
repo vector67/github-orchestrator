@@ -1572,6 +1572,7 @@ button.copy-directory {
 }
 
 .decide-dialog .ticket-field input,
+.decide-dialog .dialog-tick select,
 .defer-mention .defer-typed {
   box-sizing: border-box;
   min-width: 0;
@@ -5853,6 +5854,30 @@ button.tree-row[aria-current="true"] {
 
 .merge-note b {
   color: var(--text);
+}
+
+.mention-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: var(--fs-m);
+  line-height: 1.5;
+  color: var(--muted);
+  border-bottom: 1px solid var(--hairline);
+  border-left: 6px solid var(--yellow);
+}
+
+.mention-banner b {
+  color: var(--text);
+}
+
+.mention-banner-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .merge-note-skip {

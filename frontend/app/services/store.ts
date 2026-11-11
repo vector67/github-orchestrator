@@ -14,6 +14,7 @@ import type {
   DashboardSystem,
   Diff,
   DiffAnchors,
+  AddToWallRequest,
   DeferMentionRequest,
   DismissMentionRequest,
   Emoji,
@@ -120,7 +121,9 @@ import {
   heldOf,
   deferTargetsOf,
   landedDeferralsOf,
+  cardBuildingOf,
   mentionableOf,
+  mentionPageOf,
   mentionRowsOf,
   needingYouOf,
   reviewersOf,
@@ -143,6 +146,7 @@ import {
   wallOf,
   type DeferTarget,
   type Entered,
+  type MentionPage,
   type MentionRow,
   type Outstanding,
   type Place,
@@ -171,6 +175,7 @@ export type {
   AtWork,
   DeferTarget,
   Flag,
+  MentionPage,
   MentionRow,
   Move,
   NextMove,
@@ -538,6 +543,14 @@ export default class StoreService extends Service {
       (repo, number) => this.conversations(repo, number),
       this.needingYou,
     );
+  }
+
+  mentionPage(repo: string, number: number): MentionPage | null {
+    return mentionPageOf(this.mentions, repo, number);
+  }
+
+  cardBuilding(repo: string, number: number, thread: string): boolean {
+    return cardBuildingOf(this.mentions, repo, number, thread);
   }
 
   get mentionCount(): number {
@@ -1462,6 +1475,31 @@ export default class StoreService extends Service {
           void reportError('stop a landed deferral', answer.why);
       });
     }
+  }
+
+  async openMention(asked: DismissMentionRequest): Promise<Tried<void>> {
+    const answer = await tried(
+      'open mention',
+      handed('/api/mentions:open', asked),
+    );
+    if (answer.done) await this.readAgain({ kind: 'mentions' });
+    return answer;
+  }
+
+  async addToWall(asked: AddToWallRequest): Promise<Tried<void>> {
+    const answer = await tried(
+      'add to wall',
+      handed('/api/mentions:add-to-wall', asked),
+    );
+    if (!answer.done) return answer;
+    await this.readAgain({ kind: 'mentions' });
+    await this.readAgain({ kind: 'wall' });
+    return answer;
+  }
+
+  private async readAgain(feed: Feed): Promise<void> {
+    const asked = await this.ask(feed, null);
+    if (asked.changed) asked.take();
   }
 
   async dismissMention(asked: DismissMentionRequest): Promise<Tried<void>> {

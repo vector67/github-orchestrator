@@ -201,14 +201,37 @@ module('Acceptance | mentions', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
   });
 
-  test('See in context is off for a mention the board has no card for', async function (assert) {
+  test('See in context on a mention with no card asks the hub to build it and opens its thread', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1' })];
     board().mentions.mentions = [
       outstandingMention({ thread: 'k1', on_board: false }),
     ];
-
     await opened();
 
-    assert.dom('[data-test-mention-action="context"]').isDisabled();
+    await click('[data-test-mention-action="context"]');
+
+    assert.deepEqual(board().openedMentions, [
+      { repo: 'o/r', number: 7, comment_id: 1 },
+    ]);
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
+  });
+
+  test('a refused See in context says why and stays on the list', async function (assert) {
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', on_board: false }),
+    ];
+    await opened();
+    board().refusal = {
+      status: 400,
+      code: 'malformed-request',
+      detail: 'repo: String should match pattern',
+    };
+
+    await click('[data-test-mention-action="context"]');
+
+    assert.dom('[data-test-toast]').includesText('Mention not opened');
+    assert.strictEqual(currentURL(), '/');
   });
 
   test('See on GitHub opens the comment in a new tab', async function (assert) {
@@ -303,48 +326,45 @@ module('Acceptance | mentions', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
   });
 
-  test('a mention not on the board says so and links to the comment on GitHub', async function (assert) {
+  test('a mention not on the board says its card is built when opened, and opens in context', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1' })];
     board().mentions.mentions = [
-      outstandingMention({
-        thread: 'k1',
-        on_board: false,
-        url: 'https://github.com/o/r/pull/7#issuecomment-1',
-      }),
+      outstandingMention({ thread: 'k1', on_board: false }),
     ];
-    await visit('/');
+    await listed();
 
-    await click('[data-test-mentions-count]');
+    assert
+      .dom('[data-test-mention="k1"]')
+      .includesText('card built when opened');
 
-    assert.dom('[data-test-mention="k1"]').includesText('not on the board');
-    assert
-      .dom('[data-test-mention="k1"] [data-test-mention-github]')
-      .hasAttribute('href', 'https://github.com/o/r/pull/7#issuecomment-1');
-    assert
-      .dom('[data-test-mention="k1"] [data-test-mention-open]')
-      .doesNotExist();
+    await click('[data-test-mention="k1"] [data-test-mention-open]');
+
+    assert.deepEqual(board().openedMentions, [
+      { repo: 'o/r', number: 7, comment_id: 1 },
+    ]);
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
   });
 
-  test('a mention whose card is being built says so and links to the comment on GitHub meanwhile', async function (assert) {
+  test('a mention whose card is being built says so', async function (assert) {
     board().mentions.mentions = [
-      outstandingMention({
-        thread: 'k1',
-        on_board: false,
-        building: true,
-        url: 'https://github.com/o/r/pull/7#issuecomment-1',
-      }),
+      outstandingMention({ thread: 'k1', on_board: false, building: true }),
     ];
-    await visit('/');
-
-    await click('[data-test-mentions-count]');
+    await listed();
 
     assert.dom('[data-test-mentions-count]').hasText('1');
     assert.dom('[data-test-mention="k1"]').includesText('card being built');
+  });
+
+  test('a mention on a merged pull request says its page is rebuilt when opened', async function (assert) {
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', on_board: false, ended: 'merged' }),
+    ];
+    await listed();
+
     assert
       .dom('[data-test-mention="k1"]')
-      .doesNotIncludeText('not on the board');
-    assert
-      .dom('[data-test-mention="k1"] [data-test-mention-github]')
-      .hasAttribute('href', 'https://github.com/o/r/pull/7#issuecomment-1');
+      .includesText('merged · page rebuilt when opened');
   });
 
   test('a mention on the board without a thread links to GitHub instead', async function (assert) {
@@ -780,5 +800,128 @@ module('Acceptance | mentions | defer', function (hooks) {
 
     assert.dom('[data-test-mentions-count]').hasText('0');
     assert.deepEqual(board().undeferredMentions, []);
+  });
+});
+
+module('Acceptance | mentions | in context', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+  const clock = setupFakeClock(hooks);
+
+  const LIST = 5000;
+
+  function openedFor(outside_wall: boolean, ended: 'merged' | 'closed') {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1' })];
+    board().mentions.mentions = [outstandingMention({ thread: 'k1', ended })];
+    board().mentions.opened = [
+      { repo: 'o/r', number: 7, comment_id: 1, outside_wall },
+    ];
+  }
+
+  test('a pull request still being built for a mention says so in place of not found, and opens once held', async function (assert) {
+    board().held = [];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', on_board: false, ended: 'merged' }),
+    ];
+    board().mentions.opened = [
+      { repo: 'o/r', number: 7, comment_id: 1, outside_wall: true },
+    ];
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-pr-building]').includesText('o/r#7');
+    assert.dom('[data-test-pr-not-found]').doesNotExist();
+
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1' })];
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    assert.dom('[data-test-pr-building]').doesNotExist();
+    assert.dom('[data-test-tab]').exists();
+    assert.dom('[data-test-missing]').doesNotExist();
+  });
+
+  test('a mention’s thread whose card is still being built says so', async function (assert) {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k2' })];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', on_board: false, building: true }),
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert
+      .dom('[data-test-card-building]')
+      .includesText('Building the card for this mention');
+  });
+
+  test('a merged pull request opened for a mention says so in a banner, off the Wall', async function (assert) {
+    openedFor(true, 'merged');
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert
+      .dom('[data-test-mention-banner]')
+      .includesText('Merged')
+      .includesText('opened for a mention')
+      .includesText('not on your Wall');
+    await visit('/');
+    assert.dom('[data-test-wall-row]').doesNotExist();
+  });
+
+  test('a closed pull request opened for a mention says it closed', async function (assert) {
+    openedFor(true, 'closed');
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-mention-banner]').includesText('Closed');
+  });
+
+  test('a pull request opened for a mention and on the Wall has no banner', async function (assert) {
+    openedFor(false, 'merged');
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-mention-banner]').doesNotExist();
+  });
+
+  test('Add to Wall puts the pull request on the Wall', async function (assert) {
+    openedFor(true, 'merged');
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-mention-banner-add]');
+
+    assert.deepEqual(board().walledPrs, [{ repo: 'o/r', number: 7 }]);
+    assert.dom('[data-test-mention-banner]').doesNotExist();
+    await visit('/');
+    assert.dom('[data-test-wall-row]').exists({ count: 1 });
+  });
+
+  test('a refused Add to Wall says why and keeps the banner', async function (assert) {
+    openedFor(true, 'merged');
+    await visit('/pr/o/r/7/conversations/k1');
+    board().refusal = {
+      status: 400,
+      code: 'malformed-request',
+      detail: 'repo: String should match pattern',
+    };
+
+    await click('[data-test-mention-banner-add]');
+
+    assert.dom('[data-test-toast]').includesText('Not added to the Wall');
+    assert.dom('[data-test-mention-banner]').exists();
+  });
+
+  test('Dismiss mention on the banner clears the mention and goes back to the Wall', async function (assert) {
+    openedFor(true, 'merged');
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-mention-banner-dismiss]');
+
+    assert.deepEqual(board().dismissedMentions, [
+      { repo: 'o/r', number: 7, comment_id: 1 },
+    ]);
+    assert.strictEqual(currentURL(), '/');
   });
 });
