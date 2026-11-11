@@ -11,6 +11,7 @@ import {
   visit,
 } from '@ember/test-helpers';
 import {
+  comment,
   heldPr,
   outstandingMention,
   setupFakeBoard,
@@ -990,6 +991,75 @@ module('Acceptance | mentions | in context', function (hooks) {
 
     assert.dom('[data-test-toast]').includesText('Not added to the Wall');
     assert.dom('[data-test-mention-banner]').exists();
+  });
+
+  const STARTS_WORK_OR_PUSHES = [
+    'fix',
+    'retry',
+    'rework',
+    'start-session',
+    'open-shell',
+  ];
+
+  test('a card on an ended pull request opened for a mention offers nothing that starts an agent or pushes', async function (assert) {
+    openedFor(true, 'merged');
+    board().held = [heldPr({ dashboard: { facts: { ended: true } } })];
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    board().comments['k1'] = [comment()];
+
+    await visit('/pr/o/r/7/conversations/k1');
+    await clock().tick(LIST);
+
+    for (const decision of STARTS_WORK_OR_PUSHES)
+      assert.dom(`[data-test-decision="${decision}"]`).doesNotExist(decision);
+    assert.dom('[data-test-decision="resolve"]').exists();
+    assert.dom('[data-test-reply-open]').exists();
+    assert.dom('[data-test-react]').exists();
+    assert.dom('[data-test-mention-banner-dismiss]').exists();
+  });
+
+  test('the same card on an open pull request still offers them', async function (assert) {
+    openedFor(false, 'merged');
+    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    for (const decision of STARTS_WORK_OR_PUSHES)
+      assert.dom(`[data-test-decision="${decision}"]`).exists(decision);
+  });
+
+  function mentionedLate() {
+    board().held = [heldPr()];
+    board().conversations = [thread({ key: 'k1', kind: 'issue' })];
+    board().comments['k1'] = [
+      ...Array.from({ length: 24 }, (_, at) =>
+        comment({ id: at + 1, body: `comment number ${at}` }),
+      ),
+      comment({ id: 99, author: 'anna', body: '@octocat what do you think?' }),
+    ];
+    board().mentions.mentions = [
+      outstandingMention({ thread: 'k1', comment_id: 99 }),
+    ];
+  }
+
+  test('See in context lands on the mention comment, scrolled into view and marked', async function (assert) {
+    mentionedLate();
+    await visit('/');
+    await click('[data-test-mentions-count]');
+    await click('[data-test-mention="k1"] [data-test-mention-more]');
+
+    await click('[data-test-mention-action="context"]');
+
+    const marked = findAll('[data-test-entry][data-marked]');
+    assert.strictEqual(marked.length, 1, 'only the mention is marked');
+    assert.dom(marked[0]).containsText('@octocat what do you think?');
+    const box = marked[0]!.getBoundingClientRect();
+    const thread = find('#panel-thread')!.getBoundingClientRect();
+    const panel = find('#panel')!.getBoundingClientRect();
+    const inView =
+      box.top >= Math.max(thread.top, panel.top) - 1 &&
+      box.bottom <= Math.min(thread.bottom, panel.bottom) + 1;
+    assert.true(inView, 'the mention is in view');
   });
 
   test('Dismiss mention on the banner clears the mention and goes back to the Wall', async function (assert) {

@@ -122,6 +122,7 @@ import {
   deferTargetsOf,
   landedDeferralsOf,
   mentionableOf,
+  mentionCommentsOf,
   mentionPageOf,
   mentionRowsOf,
   threadCardOf,
@@ -561,6 +562,10 @@ export default class StoreService extends Service {
       thread,
       this.cardSeen(repo, number),
     );
+  }
+
+  mentionComments(repo: string, number: number, thread: string): number[] {
+    return mentionCommentsOf(this.mentions, repo, number, thread);
   }
 
   private cardSeen = (repo: string, number: number): MentionCardSeen => {

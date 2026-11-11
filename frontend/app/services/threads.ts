@@ -176,6 +176,11 @@ export default class ThreadsService extends Service {
     return {
       ...this.seenFor(key, role),
       pullRequest: this.pullRequest,
+      mentionComments: this.store.mentionComments(
+        this.pr.at.repo,
+        this.pr.at.number,
+        key,
+      ),
       ready: this.readyKeys,
       now: Date.now(),
     };

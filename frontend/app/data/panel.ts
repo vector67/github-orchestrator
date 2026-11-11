@@ -60,6 +60,7 @@ export interface TranscriptEntry {
   body: string;
   meta: string;
   highlighted: boolean;
+  mention: boolean;
   pending: boolean;
   reactions: Reaction[];
 }
@@ -299,6 +300,7 @@ export interface Fix {
 
 export interface Context extends Seen {
   pullRequest: PrEntity | null;
+  mentionComments: number[];
   ready: string[];
   now: number;
 }
@@ -649,9 +651,14 @@ export function transcriptOf(
       REVIEW_STATE_WORDS[one.review_state ?? ''] ?? '',
       relative(one.created_at, context.now),
     ),
-    highlighted: at === cameBack && at > 0,
+    highlighted: (at === cameBack && at > 0) || mentionIn(one, context),
+    mention: mentionIn(one, context),
     pending: false,
   }));
+}
+
+function mentionIn(one: Comment, context: Context): boolean {
+  return one.id !== null && context.mentionComments.includes(one.id);
 }
 
 function arrived(
@@ -691,6 +698,7 @@ function replyingOf(
       body: reply.body,
       meta: inFlight(reply.kind),
       highlighted: false,
+      mention: false,
       pending: sent(reply),
     },
   ];
@@ -1409,6 +1417,7 @@ export function panelOf(
     context.role,
     proposal,
     unsentReplyOf(operations),
+    Boolean(context.pullRequest?.facts?.ended),
   );
   const reply = replyOf(conversation, comments, operations, context);
   const replyTo = replyToOf(conversation, context);

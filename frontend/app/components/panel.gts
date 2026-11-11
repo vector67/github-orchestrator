@@ -47,6 +47,10 @@ function reveal(entry: HTMLElement, pending?: unknown) {
   if (pending) entry.scrollIntoView({ block: 'nearest' });
 }
 
+function landOn(entry: HTMLElement, mention?: unknown) {
+  if (mention) entry.scrollIntoView({ block: 'center' });
+}
+
 const PanelView: TOC<PanelSignature> = <template>
   <section id="panel-body" ...attributes>
     <div id="panel-top">
@@ -69,8 +73,10 @@ const PanelView: TOC<PanelSignature> = <template>
                   class="transcript-entry"
                   data-marked={{if entry.highlighted "1"}}
                   data-pending={{if entry.pending "true"}}
+                  data-mention={{if entry.mention "1"}}
                   data-test-entry
                   {{didChange reveal entry.pending}}
+                  {{didChange landOn entry.mention}}
                 >
                   <div class="entry-head">
                     <span class="entry-who" data-test-entry-who>{{if

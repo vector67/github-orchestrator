@@ -15,9 +15,10 @@ export interface ThreadPanelSignature {
   Args: { key: string };
 }
 
-function scrollToTop(panel: HTMLElement) {
+function scrollToWhereItOpens(panel: HTMLElement) {
   panel.closest('#panel')?.scrollTo(0, 0);
   panel.querySelector('#panel-thread')?.scrollTo(0, 0);
+  panel.querySelector('[data-mention]')?.scrollIntoView({ block: 'center' });
 }
 
 export default class ThreadPanel extends Component<ThreadPanelSignature> {
@@ -62,7 +63,7 @@ export default class ThreadPanel extends Component<ThreadPanelSignature> {
   }
 
   watch = (element: HTMLElement, key?: unknown) => {
-    if (key !== this.scrolledFor) scrollToTop(element);
+    if (key !== this.scrolledFor) scrollToWhereItOpens(element);
     this.scrolledFor = key;
     this.threads.watch(typeof key === 'string' ? key : null);
   };

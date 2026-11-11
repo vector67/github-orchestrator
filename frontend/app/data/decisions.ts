@@ -1362,13 +1362,26 @@ function reviewerPhase(conversation: Conversation): Phase {
   return phase;
 }
 
+const NEED_A_LIVE_PR: Decision[] = [
+  'fix',
+  'retry',
+  'rework',
+  'start-session',
+  'answer',
+  'open-shell',
+];
+
 export function offered(
   conversation: Conversation,
   role: Role,
-  proposal?: Proposal,
-  unsent: string | null = null,
+  proposal: Proposal | undefined,
+  unsent: string | null,
+  ended: boolean,
 ): Offer[] {
-  return offeredOn(confirmed(conversation), role, proposal, unsent);
+  const offers = offeredOn(confirmed(conversation), role, proposal, unsent);
+  return ended
+    ? offers.filter((one) => !NEED_A_LIVE_PR.includes(one.decision))
+    : offers;
 }
 
 function offeredOn(

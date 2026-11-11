@@ -1257,6 +1257,20 @@ export function threadCardOf(
     : null;
 }
 
+export function mentionCommentsOf(
+  mentions: Mentions | null,
+  repo: string,
+  number: number,
+  thread: string,
+): number[] {
+  return (mentions?.mentions ?? [])
+    .filter(
+      (one) =>
+        one.repo === repo && one.number === number && one.thread === thread,
+    )
+    .flatMap((one) => (one.comment_id === null ? [] : [one.comment_id]));
+}
+
 function offTheBoardOf(
   mention: OutstandingMention,
   card: MentionCard,
