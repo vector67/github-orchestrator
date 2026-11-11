@@ -22,7 +22,7 @@ PAGE = 100
 SUITES = 50
 
 STATE_FIELDS = """
-      number title url body isDraft createdAt
+      number title url body isDraft createdAt state
       headRefName baseRefName headRefOid
       changedFiles additions deletions
       mergeable mergeStateStatus reviewDecision
@@ -262,6 +262,8 @@ def state_of(gh: Gh, account: str, pr: Pr, pull: dict[str, Any]) -> PullRequestS
         review_decision=pull.get("reviewDecision"),
         pending_reviewers=_pending_reviewers(pull),
         ready_for_review_at=_ready_for_review_at(pull),
+        closed=pull.get("state") in ("MERGED", "CLOSED"),
+        merged=pull.get("state") == "MERGED",
         push_events=() if author == account else _push_events(gh, pr, pull),
     )
 

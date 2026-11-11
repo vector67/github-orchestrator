@@ -208,6 +208,23 @@ def test_the_facts_say_when_the_pr_has_ended(detection):
     assert (before, detection.facts(THE_PR).ended) == (False, True)
 
 
+def test_a_pr_polled_after_it_merged_says_it_ended_merged(detection):
+    detection.advance(THE_PR, poll(pr_state(closed=True, merged=True)), set())
+
+    facts = detection.facts(THE_PR)
+
+    assert (facts.ended, facts.closed, facts.merged) == (True, True, True)
+    assert detection.closing(THE_PR) is False
+
+
+def test_a_pr_polled_after_it_closed_unmerged_says_it_ended_unmerged(detection):
+    detection.advance(THE_PR, poll(pr_state(closed=True)), set())
+
+    facts = detection.facts(THE_PR)
+
+    assert (facts.ended, facts.closed, facts.merged) == (True, True, False)
+
+
 def test_a_reviewer_is_told_what_happened_since_they_last_acted(detection):
     reviewed = (Review(ACCOUNT, ReviewState.CHANGES_REQUESTED, "2026-09-20T00:00:00Z", "sha0"),)
     detection.advance(THE_PR, poll(pr_state(author="alice", reviews=reviewed)), set())

@@ -246,6 +246,8 @@ class FakeGitHub:
             ready_for_review_at=(None if state.draft
                                  else state.ready_for_review_at or record.created_at),
             push_events=() if mine else state.push_events,
+            closed=record.status != "OPEN",
+            merged=record.status == "MERGED",
         )
 
     def head_branch(self, pr: Pr) -> str | None:

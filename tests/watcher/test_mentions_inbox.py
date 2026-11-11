@@ -130,7 +130,9 @@ def test_a_merged_pr_opened_for_a_mention_is_kept_and_not_closed(settings, capsy
     watcher_over(settings, github=github, mentions_inbox=inbox).run_cycle()
 
     assert "0 torn down" in capsys.readouterr().out
-    assert disk_change_detection(settings.state_dir).closing(UNBUILT) is False
+    detection = disk_change_detection(settings.state_dir)
+    assert detection.closing(UNBUILT) is False
+    assert (detection.facts(UNBUILT).ended, detection.facts(UNBUILT).merged) == (True, True)
     assert [event.kind for event in pending_of(disk_event_queue(settings.queues_dir), UNBUILT)
             if event.kind == "pr-closed"] == []
 

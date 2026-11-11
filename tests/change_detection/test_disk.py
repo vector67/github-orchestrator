@@ -26,7 +26,7 @@ EXPECTED = (
     '"base_branch": "main", "pr_author": "alice", "changed_files": 3, '
     '"additions": 10, "deletions": 2, "commits": 2, '
     '"created_at": "2026-08-29T00:00:00Z", "head_sha": "sha2", "mergeable": true, '
-    '"mergeable_state": "clean", "draft": false, '
+    '"mergeable_state": "clean", "draft": false, "closed": false, "merged": false, '
     '"last_poll_timestamp": "2026-09-01T10:00:00Z", "ci_status": "passing", '
     '"review_ready_at": "2026-08-30T00:00:00Z", '
     '"checks": [{"name": "tests", "passed": true, "failed": false, "done": true, '

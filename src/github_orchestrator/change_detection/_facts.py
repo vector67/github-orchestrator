@@ -98,7 +98,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         draft=bool(snapshot.get("draft", False)),
         merge_state=words.mergeability,
         viewer_requested=_requested(snapshot, account),
-        ended=is_closing(snapshot),
+        ended=is_closing(snapshot) or snapshot.get("closed") is True,
         closed=snapshot.get("closed") is True,
         merged=snapshot.get("merged") is True,
         mentions=mentions_of(snapshot),

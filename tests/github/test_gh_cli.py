@@ -370,6 +370,23 @@ def test_a_conflicting_pr_is_not_mergeable_and_dirty():
     assert (state.mergeable, state.mergeable_state) == (False, "dirty")
 
 
+@pytest.mark.parametrize(("said", "ended"), [("OPEN", (False, False)), ("MERGED", (True, True)),
+                                             ("CLOSED", (True, False))])
+def test_a_pr_says_whether_it_closed_and_whether_it_merged(said, ended):
+    state = _state(_pull(state=said))
+
+    assert (state.closed, state.merged) == ended
+
+
+def test_the_fake_says_a_merged_pr_closed_and_merged():
+    world = _world()
+    world.prs[a_pr(7, REPO)].status = "MERGED"
+
+    state = world.pr_state(a_pr(7, REPO))
+
+    assert (state.closed, state.merged) == (True, True)
+
+
 def test_a_rerun_check_is_reported_once_at_its_latest_run():
     older = _run("quality-checks", "FAILURE", databaseId=1, startedAt="2026-05-22T06:28:00Z",
                  completedAt="2026-05-22T06:45:00Z")

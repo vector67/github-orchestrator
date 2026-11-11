@@ -120,6 +120,8 @@ class PullRequestState:
     pending_reviewers: tuple[str, ...] = ()
     ready_for_review_at: str | None = None
     push_events: tuple[PushEvent, ...] = ()
+    closed: bool = False
+    merged: bool = False
 
     @property
     def conflicts(self) -> bool:
