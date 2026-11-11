@@ -45,7 +45,9 @@ import type {
   WallGroupName,
   WatcherHealth,
   HubState,
+  DeferMentionRequest,
   DismissMentionRequest,
+  MentionDeferred,
   Mentions,
   NewestRelease,
   OutstandingMention,
@@ -816,6 +818,8 @@ export class FakeBoard {
   ledger: RunLedger = runLedger();
   mentions: Mentions = { searched_at: null, mentions: [] };
   dismissedMentions: DismissMentionRequest[] = [];
+  deferredMentions: DeferMentionRequest[] = [];
+  undeferredMentions: DismissMentionRequest[] = [];
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
   sessionGoneTo: Conversation | null = null;
@@ -1494,6 +1498,16 @@ export class FakeBoard {
         JSON.parse(init.body as string) as DismissMentionRequest,
       );
     }
+    if (side === 'hub' && url.endsWith('/api/mentions:defer')) {
+      return this.deferMention(
+        JSON.parse(init.body as string) as DeferMentionRequest,
+      );
+    }
+    if (side === 'hub' && url.endsWith('/api/mentions:stop-deferring')) {
+      return this.stopDeferringMention(
+        JSON.parse(init.body as string) as DismissMentionRequest,
+      );
+    }
     if (side === 'hub') return this.hubWrite(url, headers);
     if (url.endsWith('/api/manager/git')) return this.git(url, init, headers);
     if (url.endsWith('/api/terminal/sessions')) {
@@ -1747,6 +1761,48 @@ export class FakeBoard {
       return this.json(refusal.status, { errors: [refusal] });
     }
     return this.json(200, { folder: this.harvestExtensionFolder });
+  }
+
+  private deferMention(asked: DeferMentionRequest): Response {
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.deferredMentions.push(asked);
+    this.redefer(asked, {
+      deferred_at: new Date(Date.now()).toISOString(),
+      until_at: asked.until_at,
+      until_pr: asked.until_pr,
+    });
+    return respond(null, { status: 204 });
+  }
+
+  private stopDeferringMention(asked: DismissMentionRequest): Response {
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    this.undeferredMentions.push(asked);
+    this.redefer(asked, null);
+    return respond(null, { status: 204 });
+  }
+
+  private redefer(
+    asked: DismissMentionRequest,
+    deferred: MentionDeferred | null,
+  ): void {
+    this.mentions = {
+      ...this.mentions,
+      mentions: this.mentions.mentions.map((one) =>
+        one.repo === asked.repo &&
+        one.number === asked.number &&
+        one.comment_id === asked.comment_id
+          ? { ...one, deferred }
+          : one,
+      ),
+    };
   }
 
   private dismissMention(asked: DismissMentionRequest): Response {

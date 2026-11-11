@@ -14,6 +14,7 @@ import type {
   DashboardSystem,
   Diff,
   DiffAnchors,
+  DeferMentionRequest,
   DismissMentionRequest,
   Emoji,
   EmojiList,
@@ -29,6 +30,7 @@ import type {
   ManagerStanding,
   Notice,
   MentionableList,
+  MentionDeferred,
   Mentions,
   Operation,
   OperationKind,
@@ -116,8 +118,11 @@ import {
   filesOf,
   harvestPreparingOf,
   heldOf,
+  deferTargetsOf,
+  landedDeferralsOf,
   mentionableOf,
   mentionRowsOf,
+  needingYouOf,
   reviewersOf,
   outstandingOf,
   placeOf,
@@ -136,6 +141,7 @@ import {
   summaryTabOf,
   tickedOn,
   wallOf,
+  type DeferTarget,
   type Entered,
   type MentionRow,
   type Outstanding,
@@ -163,6 +169,7 @@ import { DOWN } from 'frontend/services/reachability';
 
 export type {
   AtWork,
+  DeferTarget,
   Flag,
   MentionRow,
   Move,
@@ -468,6 +475,7 @@ export default class StoreService extends Service {
   @tracked emojis: Emoji[] = [];
   @tracked private mentionables: Record<string, MentionableList> = {};
   private mentionableAsked = new Set<string>();
+  private ending = new Set<string>();
   private restarting: Restarting | null = null;
 
   private joins = 0;
@@ -524,9 +532,28 @@ export default class StoreService extends Service {
   }
 
   get mentionRows(): MentionRow[] {
-    return mentionRowsOf(this.mentions, this.viewer, (repo, number) =>
-      this.conversations(repo, number),
+    return mentionRowsOf(
+      this.mentions,
+      this.viewer,
+      (repo, number) => this.conversations(repo, number),
+      this.needingYou,
     );
+  }
+
+  get mentionCount(): number {
+    return this.mentionRows.filter((row) => row.deferredUntil === null).length;
+  }
+
+  get deferTargets(): DeferTarget[] {
+    return deferTargetsOf(this.everyRow);
+  }
+
+  private get everyRow(): WallSection[] {
+    return wallOf(this.groups, this.prs, this.threads, this.operations);
+  }
+
+  private get needingYou(): string[] {
+    return needingYouOf(this.everyRow);
   }
 
   setupPressed(kind: string): Pressed {
@@ -1378,6 +1405,65 @@ export default class StoreService extends Service {
     return { done: true, body: undefined };
   }
 
+  async deferMention(asked: DeferMentionRequest): Promise<Tried<void>> {
+    const answer = await tried(
+      'defer mention',
+      handed('/api/mentions:defer', asked),
+    );
+    if (!answer.done) return answer;
+    this.redefer(asked, {
+      deferred_at: new Date(Date.now()).toISOString(),
+      until_at: asked.until_at,
+      until_pr: asked.until_pr,
+    });
+    return answer;
+  }
+
+  async stopDeferringMention(
+    asked: DismissMentionRequest,
+  ): Promise<Tried<void>> {
+    const answer = await tried(
+      'stop deferring mention',
+      handed('/api/mentions:stop-deferring', asked),
+    );
+    if (answer.done) this.redefer(asked, null);
+    return answer;
+  }
+
+  private redefer(
+    asked: DismissMentionRequest,
+    deferred: MentionDeferred | null,
+  ): void {
+    if (!this.mentions) return;
+    this.mentions = {
+      ...this.mentions,
+      mentions: this.mentions.mentions.map((one) =>
+        one.repo === asked.repo &&
+        one.number === asked.number &&
+        one.comment_id === asked.comment_id
+          ? { ...one, deferred }
+          : one,
+      ),
+    };
+  }
+
+  private endLandedDeferrals(): void {
+    for (const mention of landedDeferralsOf(this.mentions, this.needingYou)) {
+      const key = `${mention.repo}#${mention.number}:${mention.comment_id}`;
+      if (this.ending.has(key)) continue;
+      this.ending.add(key);
+      void this.stopDeferringMention({
+        repo: mention.repo,
+        number: mention.number,
+        comment_id: mention.comment_id,
+      }).then((answer) => {
+        this.ending.delete(key);
+        if (!answer.done)
+          void reportError('stop a landed deferral', answer.why);
+      });
+    }
+  }
+
   async dismissMention(asked: DismissMentionRequest): Promise<Tried<void>> {
     const answer = await tried(
       'dismiss mention',
@@ -1542,12 +1628,14 @@ export default class StoreService extends Service {
     switch (feed.kind) {
       case 'wall':
         this.takeWall(body as HeldPullRequests);
+        this.endLandedDeferrals();
         return true;
       case 'runs':
         this.takeLedger(body as RunLedger);
         return true;
       case 'mentions':
         this.mentions = body as Mentions;
+        this.endLandedDeferrals();
         return true;
       case 'dashboard':
         this.drawnInto(feed.pr, body as Dashboard);

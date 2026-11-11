@@ -6,6 +6,7 @@ import type {
   Diff,
   ManagerFlags,
   MentionableList,
+  MentionDeferred,
   Mentions,
   Operation,
   OutstandingMention,
@@ -21,6 +22,7 @@ import type {
   WallGroupName,
 } from 'frontend/data/api';
 import { edgeOf } from 'frontend/data/dashboard';
+import { MILESTONES, whenOf } from 'frontend/data/defer-time';
 import {
   openingOf,
   pressedBy,
@@ -1165,6 +1167,14 @@ export function mergeNoteOf(
 
 export interface MentionRow extends OutstandingMention {
   opensOnTheBoard: boolean;
+  deferredUntil: string | null;
+}
+
+export interface DeferTarget {
+  key: string;
+  repo: string;
+  number: number;
+  title: string | null;
 }
 
 const mentionRowsSoFar = new WeakMap<Mentions, MentionRow[]>();
@@ -1173,13 +1183,68 @@ export function mentionRowsOf(
   mentions: Mentions | null,
   viewer: string | null,
   conversationsOf: (repo: string, number: number) => Conversation[],
+  needingYou: string[],
 ): MentionRow[] {
   if (!mentions) return [];
-  const rows = listedMentionRows(mentions);
+  const rows = listedMentionRows(mentions).map((row) =>
+    landed(row, needingYou) ? { ...row, deferredUntil: null } : row,
+  );
   if (viewer === null) return rows;
   return rows.filter(
     (row) => !repliedSince(row, viewer, conversationsOf(row.repo, row.number)),
   );
+}
+
+export function landedDeferralsOf(
+  mentions: Mentions | null,
+  needingYou: string[],
+): OutstandingMention[] {
+  return (mentions?.mentions ?? []).filter((mention) =>
+    landed(mention, needingYou),
+  );
+}
+
+export function needingYouOf(wall: WallSection[]): string[] {
+  return (
+    wall
+      .find((section) => section.group === 'needs-you')
+      ?.prs.map((pr) => prKeyOf(pr.repo, pr.number)) ?? []
+  );
+}
+
+export function deferTargetsOf(wall: WallSection[]): DeferTarget[] {
+  return wall
+    .flatMap((section) => section.prs)
+    .map((pr) => ({
+      key: prKeyOf(pr.repo, pr.number),
+      repo: pr.repo,
+      number: pr.number,
+      title: pr.title,
+    }))
+    .sort(
+      (one, other) =>
+        one.repo.localeCompare(other.repo) || one.number - other.number,
+    );
+}
+
+function prKeyOf(repo: string, number: number): string {
+  return `${repo}#${number}`;
+}
+
+function landed(mention: OutstandingMention, needingYou: string[]): boolean {
+  const awaited = mention.deferred?.until_pr;
+  return (
+    awaited?.state === 'needs-you' &&
+    needingYou.includes(prKeyOf(awaited.repo, awaited.number))
+  );
+}
+
+function deferredUntilOf(deferred: MentionDeferred | null): string | null {
+  if (!deferred) return null;
+  const awaited = deferred.until_pr;
+  if (awaited)
+    return `until ${awaited.repo}#${awaited.number} ${MILESTONES[awaited.state]}`;
+  return `until ${whenOf(new Date(deferred.until_at ?? ''))}`;
 }
 
 function listedMentionRows(mentions: Mentions): MentionRow[] {
@@ -1188,6 +1253,7 @@ function listedMentionRows(mentions: Mentions): MentionRow[] {
   const rows = mentions.mentions.map((mention) => ({
     ...mention,
     opensOnTheBoard: mention.on_board && mention.thread !== null,
+    deferredUntil: deferredUntilOf(mention.deferred),
   }));
   mentionRowsSoFar.set(mentions, rows);
   return rows;

@@ -1571,7 +1571,8 @@ button.copy-directory {
   color: var(--muted);
 }
 
-.decide-dialog .ticket-field input {
+.decide-dialog .ticket-field input,
+.defer-mention .defer-typed {
   box-sizing: border-box;
   min-width: 0;
   font: inherit;
@@ -2316,7 +2317,8 @@ button.expander:focus-visible {
   font-weight: var(--fw-strong);
 }
 
-.rework-dialog .chip {
+.rework-dialog .chip,
+.defer-mention .chip {
   display: flex;
   gap: 6px;
   max-width: 260px;
@@ -3195,10 +3197,59 @@ kbd {
   background: var(--grey-fill);
 }
 
-.mention-coming {
+.mention-deferred {
   padding: 0 6px;
   font-size: var(--fs-xs);
+  color: var(--muted);
   border: 1px solid var(--hairline);
+}
+
+.decide-dialog.defer-mention {
+  z-index: 40;
+}
+
+.defer-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.defer-tabs .tab {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+}
+
+.defer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.defer-mention .chip {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: var(--fs-m);
+}
+
+.defer-mention .chip:hover {
+  border-color: var(--text);
+}
+
+.defer-mention .chip-hint,
+.defer-mention .defer-lands {
+  color: var(--muted);
+}
+
+.defer-mention .defer-typed {
+  flex: 1;
+}
+
+.defer-mention .refused {
+  margin: 0;
+  color: var(--red-text);
 }
 
 .mention-head {
@@ -3215,6 +3266,12 @@ kbd {
 
 .mention-off {
   color: var(--muted);
+}
+
+.mention.deferred .mention-head,
+.mention.deferred .mention-body {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
 }
 
 .mention-none {
@@ -3822,7 +3879,8 @@ kbd {
   border-bottom: 2px solid var(--border-strong);
 }
 
-.prtabs .tab {
+.prtabs .tab,
+.defer-tabs .tab {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -3835,7 +3893,8 @@ kbd {
   border-bottom: 4px solid transparent;
 }
 
-.prtabs .tab[aria-current="page"] {
+.prtabs .tab[aria-current="page"],
+.defer-tabs .tab[aria-selected="true"] {
   color: var(--text);
   border-bottom-color: var(--border-strong);
 }

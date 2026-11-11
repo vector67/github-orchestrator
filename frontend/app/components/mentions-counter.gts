@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import type RouterService from '@ember/routing/router-service';
 import { modifier } from 'ember-modifier';
+import DeferMention from 'frontend/components/defer-mention';
 import { pageOf } from 'frontend/data/wall';
 import navigates from 'frontend/modifiers/navigates';
 import type KeysService from 'frontend/services/keys';
@@ -24,6 +25,7 @@ export default class MentionsCounter extends Component {
 
   @tracked listing = false;
   @tracked acting: MentionRow | null = null;
+  @tracked deferring: MentionRow | null = null;
 
   private readonly keymap: Keymap = {
     take: (key) => {
@@ -48,6 +50,10 @@ export default class MentionsCounter extends Component {
 
   get mentions(): MentionRow[] {
     return this.store.mentionRows;
+  }
+
+  get counted(): number {
+    return this.store.mentionCount;
   }
 
   open = () => {
@@ -80,6 +86,26 @@ export default class MentionsCounter extends Component {
 
   leaveActions = (): void => {
     this.acting = null;
+  };
+
+  defer = (mention: MentionRow): void => {
+    this.acting = null;
+    this.deferring = mention;
+  };
+
+  stopDialog = (): void => {
+    this.deferring = null;
+  };
+
+  stopDeferring = async (mention: MentionRow): Promise<void> => {
+    this.acting = null;
+    const stopped = await this.store.stopDeferringMention({
+      repo: mention.repo,
+      number: mention.number,
+      comment_id: mention.comment_id,
+    });
+    if (!stopped.done)
+      this.toasts.say(`Mention still deferred: ${stopped.why}`, 'failed');
   };
 
   dismiss = async (mention: MentionRow): Promise<void> => {
@@ -130,13 +156,13 @@ export default class MentionsCounter extends Component {
     <span class="mentions">
       <button
         type="button"
-        class="mentions-count {{if this.mentions.length 'outstanding'}}"
+        class="mentions-count {{if this.counted 'outstanding'}}"
         aria-haspopup="true"
         aria-expanded={{if this.listing "true" "false"}}
         title="comments naming you that the board has not closed"
         data-test-mentions-count
         {{on "click" this.open}}
-      >{{this.mentions.length}}</button>
+      >{{this.counted}}</button>
       {{#if this.listing}}
         <button
           type="button"
@@ -148,7 +174,9 @@ export default class MentionsCounter extends Component {
         <div class="mentions-menu" data-test-mentions-menu>
           {{#each this.mentions key="url" as |mention|}}
             <div
-              class="mention {{if (this.isActing mention) 'acting'}}"
+              class="mention
+                {{if (this.isActing mention) 'acting'}}
+                {{if mention.deferredUntil 'deferred'}}"
               data-test-mention={{mention.thread}}
             >
               {{#if mention.opensOnTheBoard}}
@@ -165,6 +193,12 @@ export default class MentionsCounter extends Component {
                     class="mention-body"
                     data-test-mention-body
                   >{{mention.body}}</span>
+                  {{#if mention.deferredUntil}}
+                    <span
+                      class="mention-deferred"
+                      data-test-mention-deferred
+                    >deferred {{mention.deferredUntil}}</span>
+                  {{/if}}
                 </a>
               {{else}}
                 <a
@@ -187,6 +221,12 @@ export default class MentionsCounter extends Component {
                       "not on the board"
                     }}
                     · opens on GitHub</span>
+                  {{#if mention.deferredUntil}}
+                    <span
+                      class="mention-deferred"
+                      data-test-mention-deferred
+                    >deferred {{mention.deferredUntil}}</span>
+                  {{/if}}
                 </a>
               {{/if}}
               <button
@@ -223,14 +263,23 @@ export default class MentionsCounter extends Component {
                     data-test-mention-action="github"
                     {{on "click" this.leaveActions}}
                   >See on GitHub</a>
-                  <button
-                    type="button"
-                    class="mention-action"
-                    role="menuitem"
-                    disabled
-                    data-test-mention-action="defer"
-                  >Defer…
-                    <span class="mention-coming">coming</span></button>
+                  {{#if mention.deferredUntil}}
+                    <button
+                      type="button"
+                      class="mention-action"
+                      role="menuitem"
+                      data-test-mention-action="stop-deferring"
+                      {{on "click" (fn this.stopDeferring mention)}}
+                    >Stop deferring</button>
+                  {{else}}
+                    <button
+                      type="button"
+                      class="mention-action"
+                      role="menuitem"
+                      data-test-mention-action="defer"
+                      {{on "click" (fn this.defer mention)}}
+                    >Defer…</button>
+                  {{/if}}
                   <button
                     type="button"
                     class="mention-action"
@@ -245,6 +294,9 @@ export default class MentionsCounter extends Component {
             <span class="mention-none">No mentions waiting on you.</span>
           {{/each}}
         </div>
+      {{/if}}
+      {{#if this.deferring}}
+        <DeferMention @mention={{this.deferring}} @close={{this.stopDialog}} />
       {{/if}}
     </span>
   </template>
