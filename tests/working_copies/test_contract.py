@@ -1012,7 +1012,7 @@ def test_a_fetch_that_resets_a_worktree_with_changes_says_so_and_changes_nothing
 
     refused = fetch_and_reset(pr_checkout)
 
-    assert refused is not None and "uncommitted changes" in refused
+    assert (refused.code, refused.detail) == ("uncommitted-changes", None)
     assert pr_checkout.revisions.local_head() == stale
     assert pr_checkout.is_clean() is False
 
@@ -1037,7 +1037,7 @@ def test_a_fetch_that_resets_a_worktree_edited_while_it_fetches_says_so_and_keep
 
     refused = fetch_and_reset(pr_checkout)
 
-    assert refused is not None and "uncommitted changes" in refused
+    assert (refused.code, refused.detail) == ("uncommitted-changes", None)
     assert pr_checkout.revisions.local_head() == stale
 
 

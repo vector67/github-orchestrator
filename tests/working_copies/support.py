@@ -68,7 +68,7 @@ def branch_at(worktree: Path | str) -> str | None:
     return None if shown.returncode != 0 or branch in ("", "HEAD") else branch
 
 
-def fetch_and_reset(checkout: PrCheckout, seen: Sha | None = None) -> str | None:
+def fetch_and_reset(checkout: PrCheckout, seen: Sha | None = None) -> object:
     shown = seen or checkout.revisions.local_head()
     assert shown is not None
     return checkout.fetch("main") or checkout.reset_to_origin(BRANCH, shown)

@@ -1,5 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
+import type { ResetRefusalCode } from 'frontend/data/api';
 import {
   click,
   currentURL,
@@ -20,6 +21,7 @@ import {
   prCommit,
   prDiff,
   setupFakeBoard,
+  thread,
 } from 'frontend/tests/helpers/fake-board';
 import type { PullRequestCommits } from 'frontend/data/api';
 import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
@@ -1899,10 +1901,61 @@ module(
       assert.dom('[data-test-diverged]').exists();
     });
 
+    test('a reset refused because the worktree moved says where it moved to', async function (assert) {
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'worktree-moved',
+        detail: 'c0ffee1234567890abcdef1234567890abcdef12',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the worktree moved to c0ffee123456 since the page showed it, so it was left as it is',
+        );
+    });
+
+    function holding() {
+      board().conversations = [
+        thread({
+          key: 'PRRT_held',
+          anchor: {
+            ...thread().anchor,
+            path: 'src/held.py',
+            line: 7,
+            original_line: 7,
+          },
+        }),
+      ];
+    }
+
+    test('a reset refused over an unpushed pick names the thread holding it and what clears it', async function (assert) {
+      holding();
+      await openLocal();
+      await click('[data-test-reset-to-origin]');
+      board().refusal = {
+        status: 409,
+        code: 'fix-awaits-push',
+        detail: 'PRRT_held',
+      };
+
+      await click('[data-test-reset-yes]');
+
+      assert
+        .dom('[data-test-reset-refused]')
+        .hasText(
+          'Not reset: the fix for src/held.py:7 is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+        );
+    });
+
     function reviewedWith(resetToOrigin: {
       queued_at: string | null;
       ran_at: string | null;
-      refused: string | null;
+      refused: { code: ResetRefusalCode; detail: string | null } | null;
     }) {
       board().manager = dashboard({
         facts: {
@@ -2037,8 +2090,7 @@ module(
       reviewedWith({
         queued_at: null,
         ran_at: '2026-10-23T09:30:00Z',
-        refused:
-          'the worktree has uncommitted changes, so it was left as it is',
+        refused: { code: 'uncommitted-changes', detail: null },
       });
       await openLocal();
 
@@ -2049,6 +2101,100 @@ module(
         );
       assert.dom('[data-test-reset-to-origin]').exists();
     });
+
+    const queuedResetRefusals: [ResetRefusalCode, string | null, string][] = [
+      [
+        'branch-unknown',
+        null,
+        "GitHub has not named the pull request's branch, so the worktree was left as it is",
+      ],
+      [
+        'fetch-failed',
+        'fatal: unable to access origin',
+        'git could not fetch origin: fatal: unable to access origin',
+      ],
+      [
+        'fix-awaits-push',
+        'PRRT_held',
+        'the fix for src/held.py:7 is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+      ],
+      [
+        'fix-awaits-push',
+        'PRRT_gone',
+        'the fix for thread PRRT_gone is picked onto the branch and not pushed yet; stop its landing or send it back for rework, then reset',
+      ],
+      [
+        'head-unreadable',
+        null,
+        "the worktree's HEAD will not read, so it was left as it is",
+      ],
+      [
+        'reset-interrupted',
+        null,
+        'the reset was under way when the manager stopped, so how it ended is not known',
+      ],
+      [
+        'worktree-missing',
+        null,
+        "no worktree holds the pull request's branch, so there was nothing to reset",
+      ],
+      [
+        'no-origin-branch',
+        null,
+        'origin holds no branch for the worktree to reset to',
+      ],
+      [
+        'on-another-branch',
+        'hotfix',
+        "the worktree holds hotfix, not the pull request's branch, so it was left as it is",
+      ],
+      [
+        'on-another-branch',
+        null,
+        "the worktree holds no branch, not the pull request's branch, so it was left as it is",
+      ],
+      [
+        'worktree-moved',
+        'c0ffee1234567890abcdef1234567890abcdef12',
+        'the worktree moved to c0ffee123456 since the page showed it, so it was left as it is',
+      ],
+      [
+        'not-diverged',
+        null,
+        "origin's branch has nothing the worktree lacks, so its own commits are only unpushed and it was left as it is",
+      ],
+      [
+        'origin-adds-unknown',
+        null,
+        "git could not say what origin's branch adds, so the worktree was left as it is",
+      ],
+      [
+        'untracked-in-the-way',
+        'secret.env, notes.md',
+        "origin's branch adds secret.env, notes.md, which the worktree holds untracked or ignored, so it was left as it is",
+      ],
+      [
+        'reset-refused',
+        'error: Entry not uptodate. Cannot merge.',
+        'git would not reset the worktree: error: Entry not uptodate. Cannot merge.',
+      ],
+    ];
+
+    for (const [code, detail, words] of queuedResetRefusals) {
+      test(`the page words a queued reset that didn't run for ${code} with ${detail ?? 'no detail'}`, async function (assert) {
+        holding();
+        reviewedWith({
+          queued_at: null,
+          ran_at: '2026-10-23T09:30:00Z',
+          refused: { code, detail },
+        });
+        await openLocal();
+
+        assert
+          .dom('[data-test-reset-outcome]')
+          .hasText(`The queued reset didn't run: ${words} ×`);
+      });
+    }
 
     test('on origin there is no second lane and nothing about the worktree', async function (assert) {
       await visit('/pr/o/r/7/diff');

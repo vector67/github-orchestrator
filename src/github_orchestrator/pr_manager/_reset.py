@@ -1,6 +1,12 @@
 import logging
 
-from github_orchestrator.board_api.interface import ResetToOrigin, Shelf, Shelves
+from github_orchestrator.board_api.interface import (
+    ResetRefusal,
+    ResetRefusalCode,
+    ResetToOrigin,
+    Shelf,
+    Shelves,
+)
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.domain import Pr, UtcClock
@@ -34,39 +40,39 @@ class QueuedReset:
             return
         facts = self._change_detection.facts(pr)
         if facts is None or facts.branch is None:
-            self._did_not_run(pr, shelf, "GitHub has not named the pull request's branch, "
-                                         "so the worktree was left as it is")
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.BRANCH_UNKNOWN))
             return
         checkout = self._working_copies.checkout(pr)
         failed = checkout.fetch(facts.base_branch)
         if failed is not None:
-            self._did_not_run(pr, shelf, failed)
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.FETCH_FAILED, failed))
             return
         seen = checkout.revisions.local_head()
         if ResetToOrigin.kept(shelf) != queued:
             log.info("%s: the queued reset to origin was cancelled while origin was fetched", pr)
             return
-        if any(conversation.fix.awaits_push
-               for conversation in self._conversation_managers.of(pr).all()):
-            self._did_not_run(pr, shelf, "a fix was picked onto the branch and is not pushed "
-                                         "yet, so the worktree was left as it is")
+        holding = next((conversation.key
+                        for conversation in self._conversation_managers.of(pr).all()
+                        if conversation.fix.awaits_push), None)
+        if holding is not None:
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.FIX_AWAITS_PUSH, holding))
             return
         if seen is None:
-            self._did_not_run(pr, shelf, "the worktree's HEAD will not read, so it was left "
-                                         "as it is")
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode.HEAD_UNREADABLE))
             return
-        ResetToOrigin(ran_at=self._now(), refused="the reset was under way when the manager "
-                                                  "stopped, so how it ended is not known"
-                      ).keep(shelf)
+        ResetToOrigin(ran_at=self._now(),
+                      refused=ResetRefusal(ResetRefusalCode.RESET_INTERRUPTED)).keep(shelf)
         refused = checkout.reset_to_origin(facts.branch, seen)
         if refused is not None:
-            self._did_not_run(pr, shelf, refused)
+            self._did_not_run(pr, shelf, ResetRefusal(ResetRefusalCode(refused.code.value),
+                                                      refused.detail))
             return
         ResetToOrigin(ran_at=self._now()).keep(shelf)
         log.info("%s: the agent's run ended, so the worktree was reset to origin", pr)
 
-    def _did_not_run(self, pr: Pr, shelf: Shelf, refused: str) -> None:
-        log.warning("%s: the queued reset to origin did not run: %s", pr, refused)
+    def _did_not_run(self, pr: Pr, shelf: Shelf, refused: ResetRefusal) -> None:
+        log.warning("%s: the queued reset to origin did not run: %s %s", pr, refused.code,
+                    refused.detail or "")
         ResetToOrigin(ran_at=self._now(), refused=refused).keep(shelf)
 
     def _now(self) -> str:

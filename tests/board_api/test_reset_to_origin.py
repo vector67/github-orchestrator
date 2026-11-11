@@ -4,7 +4,12 @@ from dataclasses import replace
 import pytest
 
 from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
-from github_orchestrator.board_api.interface import ManagerStanding, ResetToOrigin
+from github_orchestrator.board_api.interface import (
+    ManagerStanding,
+    ResetRefusal,
+    ResetRefusalCode,
+    ResetToOrigin,
+)
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from tests.board_api.support import (
@@ -114,12 +119,26 @@ def test_a_worktree_only_ahead_of_origin_keeps_its_unpushed_commits(operation, w
     {"queued_at": 5}, {"queued_at": False}, {"queued_at": 0}, {"queued_at": []},
     {"queued_at": {}}, {"queued_at": None, "ran_at": 1}, {"queued_at": None, "refused": True},
     {"queued_at": ""}, {"ran_at": ""}, {"ran_at": "2026-01-01T00:00:00Z", "refused": ""},
+    {"ran_at": "2026-01-01T00:00:00Z", "refused": "a sentence kept before refusals had codes"},
+    {"ran_at": "2026-01-01T00:00:00Z", "refused": {"code": "no-such-code", "detail": None}},
+    {"ran_at": "2026-01-01T00:00:00Z", "refused": {"code": "reset-refused", "detail": 5}},
+    {"ran_at": "2026-01-01T00:00:00Z", "refused": {"code": "reset-refused", "detail": ""}},
 ])
 def test_a_kept_reset_with_a_field_that_is_not_text_or_is_empty_reads_as_none_kept(fields):
     shelf = FakeThreadRecords().of(THE_PR)
     shelf.save("reset", "state", json.dumps(fields).encode())
 
     assert ResetToOrigin.kept(shelf) is None
+
+
+def test_a_kept_refusal_reads_back_as_its_code_and_detail():
+    shelf = FakeThreadRecords().of(THE_PR)
+    refused = ResetRefusal(ResetRefusalCode.FETCH_FAILED, "fatal: could not read from remote")
+
+    ResetToOrigin(ran_at="2026-01-01T00:00:00Z", refused=refused).keep(shelf)
+
+    assert ResetToOrigin.kept(shelf) == ResetToOrigin(ran_at="2026-01-01T00:00:00Z",
+                                                      refused=refused)
 
 
 def test_a_kept_reset_nested_too_deep_to_parse_reads_as_none_kept():
@@ -186,7 +205,8 @@ def test_a_fix_picked_but_not_pushed_keeps_the_worktree_from_a_reset():
     answer = client.post(RESET, json=shown(copies))
 
     assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "operation-outstanding"
+    assert answer.json()["errors"][0]["code"] == "fix-awaits-push"
+    assert answer.json()["errors"][0]["detail"] == KEY
     assert copies.head_of(WORKTREE) == str(landed)
 
 
@@ -197,5 +217,7 @@ def test_a_worktree_that_moved_since_the_page_drew_it_keeps_its_new_commit():
 
     answer = reset_board(copies).post(RESET, json=drawn)
 
-    assert answer.status_code != 204
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "worktree-moved"
+    assert answer.json()["errors"][0]["detail"] == moved
     assert copies.head_of(WORKTREE) == moved

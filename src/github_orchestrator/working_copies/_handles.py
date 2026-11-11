@@ -17,6 +17,8 @@ from github_orchestrator.working_copies.interface import (
     PrCommit,
     PrCommits,
     PrDiff,
+    ResetRefused,
+    ResetRefusedCode,
     Stack,
     ThreadGitError,
 )
@@ -338,41 +340,41 @@ class BoundCheckout:
             return located.missing
         return self.git._fetch(located.path, base_branch)
 
-    def reset_to_origin(self, branch: str, seen: Sha) -> str | None:
+    def reset_to_origin(self, branch: str, seen: Sha) -> ResetRefused | None:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
-            return located.missing
+            return ResetRefused(ResetRefusedCode.WORKTREE_MISSING)
         with self.git._serialized(self.pr):
             return self._reset(located.path, branch, seen)
 
-    def _reset(self, path: str, branch: str, seen: Sha) -> str | None:
+    def _reset(self, path: str, branch: str, seen: Sha) -> ResetRefused | None:
         origin = self.git._origin_head(path)
         if origin is None:
-            return "origin holds no branch for the worktree to reset to"
+            return ResetRefused(ResetRefusedCode.NO_ORIGIN_BRANCH)
         here = self.git._branch_at(path)
         if here != branch:
-            return (f"the worktree holds {here or 'no branch'}, not {branch}, "
-                    "so it was left as it is")
+            return ResetRefused(ResetRefusedCode.ON_ANOTHER_BRANCH, here or None)
         if not self.git._is_clean(path):
-            return "the worktree has uncommitted changes, so it was left as it is"
+            return ResetRefused(ResetRefusedCode.UNCOMMITTED_CHANGES)
         head = self.git._head_sha(path)
         if head is None:
-            return "the worktree's HEAD will not read, so it was left as it is"
-        return self._holds_back(path, seen, head, origin) or self.git._reset(path, origin)
+            return ResetRefused(ResetRefusedCode.HEAD_UNREADABLE)
+        held_back = self._holds_back(path, seen, head, origin)
+        if held_back is not None:
+            return held_back
+        refused = self.git._reset(path, origin)
+        return None if refused is None else ResetRefused(ResetRefusedCode.RESET_REFUSED, refused)
 
-    def _holds_back(self, path: str, seen: Sha, head: str, origin: str) -> str | None:
+    def _holds_back(self, path: str, seen: Sha, head: str, origin: str) -> ResetRefused | None:
         if head != str(seen):
-            return (f"the worktree moved to {head[:12]} since {str(seen)[:12]} was shown, "
-                    "so it was left as it is")
+            return ResetRefused(ResetRefusedCode.WORKTREE_MOVED, head)
         if self.git._descends(path, origin, head):
-            return ("origin's branch has nothing the worktree lacks, so its own commits are "
-                    "only unpushed and it was left as it is")
+            return ResetRefused(ResetRefusedCode.NOT_DIVERGED)
         in_the_way = self.git._in_the_way(path, head, origin)
         if in_the_way is None:
-            return "git could not say what origin's branch adds, so the worktree was left as it is"
+            return ResetRefused(ResetRefusedCode.ORIGIN_ADDS_UNKNOWN)
         if in_the_way:
-            return (f"origin's branch adds {', '.join(in_the_way)}, which the worktree holds "
-                    "untracked or ignored, so it was left as it is")
+            return ResetRefused(ResetRefusedCode.UNTRACKED_IN_THE_WAY, ", ".join(in_the_way))
         return None
 
     def base_standing(self, base_branch: str | None) -> BaseStanding | None:

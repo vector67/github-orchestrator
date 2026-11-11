@@ -6,7 +6,7 @@ from github_orchestrator import conversation as domain
 from github_orchestrator.board_api import _contract as contract
 from github_orchestrator.board_api._contract import Person
 from github_orchestrator.board_api._etag import etag_of
-from github_orchestrator.board_api.interface import Dashboard
+from github_orchestrator.board_api.interface import Dashboard, ResetRefusal
 from github_orchestrator.conversation import (
     Conversation,
     ConversationManager,
@@ -512,6 +512,11 @@ def collection_of(conversations: Sequence[Conversation], account: str,
                                      listed_at=listed_at)
 
 
+def _reset_refusal_of(refused: ResetRefusal | None) -> contract.ResetRefusal | None:
+    return None if refused is None else contract.ResetRefusal(code=refused.code,
+                                                              detail=refused.detail)
+
+
 def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
     working = dashboard.working_on is not None
     frozen_on, expected, left = (dashboard.frozen_on, dashboard.expected_branch,
@@ -560,7 +565,8 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             reset_to_origin=None if dashboard.reset_to_origin is None
             else contract.ResetToOrigin(queued_at=dashboard.reset_to_origin.queued_at,
                                         ran_at=dashboard.reset_to_origin.ran_at,
-                                        refused=dashboard.reset_to_origin.refused),
+                                        refused=_reset_refusal_of(
+                                            dashboard.reset_to_origin.refused)),
             base=None if dashboard.base is None else contract.BaseStanding(
                 behind_by=dashboard.base.behind_by, conflicts=list(dashboard.base.conflicts),
                 fetched_at=None if dashboard.base.fetched_at is None

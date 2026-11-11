@@ -373,7 +373,7 @@ export interface EmojiList {
   emojis: Emoji[];
 }
 
-export type ErrorCode = 'not-found' | 'operation-outstanding' | 'landing-stalled' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'waiting-to-migrate' | 'not-frozen' | 'terminal-refused' | 'manager-down' | 'no-worktree' | 'worktree-frozen' | 'agent-running' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'summary-running' | 'repo-not-watched' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'server-error';
+export type ErrorCode = 'not-found' | 'operation-outstanding' | 'landing-stalled' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'waiting-to-migrate' | 'not-frozen' | 'terminal-refused' | 'manager-down' | 'no-worktree' | 'worktree-frozen' | 'agent-running' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'summary-running' | 'repo-not-watched' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'fix-awaits-push' | 'branch-unknown' | 'worktree-missing' | 'no-origin-branch' | 'on-another-branch' | 'head-unreadable' | 'worktree-moved' | 'origin-adds-unknown' | 'untracked-in-the-way' | 'reset-refused' | 'server-error';
 
 export interface ErrorDetail {
   status: number;
@@ -887,6 +887,13 @@ export interface ReplyRequest {
   body: string;
 }
 
+export interface ResetRefusal {
+  code: ResetRefusalCode;
+  detail: string | null;
+}
+
+export type ResetRefusalCode = 'branch-unknown' | 'fetch-failed' | 'fix-awaits-push' | 'reset-interrupted' | 'worktree-missing' | 'no-origin-branch' | 'on-another-branch' | 'uncommitted-changes' | 'head-unreadable' | 'worktree-moved' | 'not-diverged' | 'origin-adds-unknown' | 'untracked-in-the-way' | 'reset-refused';
+
 export interface ResetRequest {
   head: string;
 }
@@ -894,7 +901,7 @@ export interface ResetRequest {
 export interface ResetToOrigin {
   queued_at: string | null;
   ran_at: string | null;
-  refused: string | null;
+  refused: ResetRefusal | null;
 }
 
 export interface ResolveRequest {

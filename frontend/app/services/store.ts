@@ -117,6 +117,7 @@ import {
   prHeaderOf,
   readOf,
   resetStandingOf,
+  threadNamedIn,
   setupPressedOf,
   shownOf,
   stepperOf,
@@ -532,6 +533,7 @@ export default class StoreService extends Service {
   resetStanding(repo: string, number: number): ResetStanding | null {
     return resetStandingOf(
       this.prs[keyOf(repo, number)]?.drawn?.system.reset_to_origin,
+      threadNamedIn(this.conversations(repo, number)),
     );
   }
 
@@ -1799,7 +1801,11 @@ export default class StoreService extends Service {
     asking: () => Promise<T>,
     where: string,
   ): Promise<{ taken: Tried<T>; local: StoredOperation }> {
-    const taken = await tried(where, asking());
+    const taken = await tried(
+      where,
+      asking(),
+      threadNamedIn(this.conversations(pr.repo, pr.number)),
+    );
     if (!taken.done) this.refuse(pr, local, taken.why, taken.code);
     return { taken, local };
   }

@@ -31,7 +31,9 @@ import {
 } from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
+import { referenceOf } from 'frontend/data/rows';
 import { atWork } from 'frontend/data/thread';
+import { saidOf, type ThreadNamed } from 'frontend/data/tried';
 import { levelOf, type Level } from 'frontend/data/wall';
 import {
   dayOf,
@@ -1224,8 +1226,17 @@ export interface ResetStanding {
   ranAt: string | null;
 }
 
+export function threadNamedIn(conversations: Conversation[]): ThreadNamed {
+  return (key) => {
+    const held = conversations.find((one) => one.key === key);
+    const reference = held ? referenceOf(held) : null;
+    return reference ?? `thread ${key}`;
+  };
+}
+
 export function resetStandingOf(
   kept: ResetToOrigin | null | undefined,
+  named: ThreadNamed,
 ): ResetStanding | null {
   if (!kept) return null;
   return {
@@ -1235,7 +1246,7 @@ export function resetStandingOf(
         ? null
         : kept.refused === null
           ? 'Reset to origin when the agent finished.'
-          : `The queued reset didn't run: ${kept.refused}`,
+          : `The queued reset didn't run: ${saidOf(kept.refused.code, kept.refused.detail, named) ?? ''}`,
     ranAt: kept.ran_at,
   };
 }

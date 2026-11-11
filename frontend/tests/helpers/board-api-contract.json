@@ -4026,6 +4026,16 @@
     "no-agent-working",
     "uncommitted-changes",
     "not-diverged",
+    "fix-awaits-push",
+    "branch-unknown",
+    "worktree-missing",
+    "no-origin-branch",
+    "on-another-branch",
+    "head-unreadable",
+    "worktree-moved",
+    "origin-adds-unknown",
+    "untracked-in-the-way",
+    "reset-refused",
     "server-error"
    ],
    "type": "string"
@@ -7087,6 +7097,47 @@
    ],
    "type": "object"
   },
+  "ResetRefusal": {
+   "properties": {
+    "code": {
+     "$ref": "#/components/schemas/ResetRefusalCode"
+    },
+    "detail": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "code",
+    "detail"
+   ],
+   "type": "object"
+  },
+  "ResetRefusalCode": {
+   "enum": [
+    "branch-unknown",
+    "fetch-failed",
+    "fix-awaits-push",
+    "reset-interrupted",
+    "worktree-missing",
+    "no-origin-branch",
+    "on-another-branch",
+    "uncommitted-changes",
+    "head-unreadable",
+    "worktree-moved",
+    "not-diverged",
+    "origin-adds-unknown",
+    "untracked-in-the-way",
+    "reset-refused"
+   ],
+   "type": "string"
+  },
   "ResetRequest": {
    "properties": {
     "head": {
@@ -7124,7 +7175,7 @@
     "refused": {
      "anyOf": [
       {
-       "type": "string"
+       "$ref": "#/components/schemas/ResetRefusal"
       },
       {
        "type": "null"

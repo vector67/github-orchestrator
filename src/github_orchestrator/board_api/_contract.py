@@ -9,6 +9,7 @@ from github_orchestrator.board_api.interface import (
     DismissUntil,
     ManagerStanding,
     NoticeCode,
+    ResetRefusalCode,
     WallGroup,
     WriteState,
 )
@@ -105,6 +106,21 @@ class ErrorCode(StrEnum):
     agent's run ends, while the worktree has not diverged from origin; its
     commits are only unpushed, and a reset would drop them.
 
+    FIX_AWAITS_PUSH is a reset of the worktree asked for while a thread's fix
+    is picked onto the branch and not pushed yet; the detail is that thread's
+    key. Stopping its landing, or sending it back for rework, clears it.
+
+    BRANCH_UNKNOWN, WORKTREE_MISSING, NO_ORIGIN_BRANCH, ON_ANOTHER_BRANCH,
+    HEAD_UNREADABLE, WORKTREE_MOVED, ORIGIN_ADDS_UNKNOWN and
+    UNTRACKED_IN_THE_WAY are a reset of the worktree left undone because
+    GitHub has not named the branch, no worktree holds it, origin holds no
+    branch to reset to, the worktree holds another branch (the detail names
+    it, empty for none), its HEAD will not read, it moved since the page
+    showed it (the detail is its new head), git could not say what origin's
+    branch adds, or origin's branch adds files the worktree holds untracked
+    or ignored (the detail lists them). RESET_REFUSED is git refusing the
+    reset; the detail is what git said.
+
     SERVER_ERROR is the board failing in a way nothing anticipated. Its
     traceback is in the server's log under the pid of the worker that answered.
     """
@@ -167,6 +183,16 @@ class ErrorCode(StrEnum):
     NO_AGENT_WORKING = "no-agent-working"
     UNCOMMITTED_CHANGES = "uncommitted-changes"
     NOT_DIVERGED = "not-diverged"
+    FIX_AWAITS_PUSH = "fix-awaits-push"
+    BRANCH_UNKNOWN = "branch-unknown"
+    WORKTREE_MISSING = "worktree-missing"
+    NO_ORIGIN_BRANCH = "no-origin-branch"
+    ON_ANOTHER_BRANCH = "on-another-branch"
+    HEAD_UNREADABLE = "head-unreadable"
+    WORKTREE_MOVED = "worktree-moved"
+    ORIGIN_ADDS_UNKNOWN = "origin-adds-unknown"
+    UNTRACKED_IN_THE_WAY = "untracked-in-the-way"
+    RESET_REFUSED = "reset-refused"
     SERVER_ERROR = "server-error"
 
 
@@ -1699,6 +1725,23 @@ class UnpushedCommit(BaseModel):
     subject: str = Field(description="The first line of its message.")
 
 
+class ResetRefusal(BaseModel):
+    """Why a queued reset did not run, for the page to word."""
+
+    code: ResetRefusalCode = Field(
+        description="Which refusal it is. `fetch-failed` is git failing to fetch "
+                    "origin; `reset-interrupted` is the manager stopping while "
+                    "the reset was under way, so how it ended is not known; the "
+                    "rest mean what the error code of the same name means for a "
+                    "reset asked for now.")
+    detail: str | None = Field(
+        description="What git said for `fetch-failed` and `reset-refused`, the "
+                    "key of the thread holding the pick for `fix-awaits-push`, "
+                    "the branch the worktree holds for `on-another-branch`, its "
+                    "new head for `worktree-moved`, the files in the way for "
+                    "`untracked-in-the-way`; null otherwise.")
+
+
 class ResetToOrigin(BaseModel):
     """A reset of the worktree to origin, queued or carried out."""
 
@@ -1707,7 +1750,7 @@ class ResetToOrigin(BaseModel):
     ran_at: str | None = Field(
         description="When the agent's run ended and the reset was tried; null while "
                     "it waits.")
-    refused: str | None = Field(
+    refused: ResetRefusal | None = Field(
         description="Why the reset was not carried out when it was tried; null when "
                     "it was, or while it waits.")
 

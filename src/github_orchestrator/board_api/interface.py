@@ -92,11 +92,47 @@ RESET_TO_ORIGIN = "reset"
 _RESET_STATE = "state"
 
 
+class ResetRefusalCode(StrEnum):
+    BRANCH_UNKNOWN = "branch-unknown"
+    FETCH_FAILED = "fetch-failed"
+    FIX_AWAITS_PUSH = "fix-awaits-push"
+    RESET_INTERRUPTED = "reset-interrupted"
+    WORKTREE_MISSING = "worktree-missing"
+    NO_ORIGIN_BRANCH = "no-origin-branch"
+    ON_ANOTHER_BRANCH = "on-another-branch"
+    UNCOMMITTED_CHANGES = "uncommitted-changes"
+    HEAD_UNREADABLE = "head-unreadable"
+    WORKTREE_MOVED = "worktree-moved"
+    NOT_DIVERGED = "not-diverged"
+    ORIGIN_ADDS_UNKNOWN = "origin-adds-unknown"
+    UNTRACKED_IN_THE_WAY = "untracked-in-the-way"
+    RESET_REFUSED = "reset-refused"
+
+
+@dataclass(frozen=True)
+class ResetRefusal:
+    code: ResetRefusalCode
+    detail: str | None = None
+
+
+def _text(field: object) -> bool:
+    return field is None or (isinstance(field, str) and bool(field))
+
+
+def _refusal_of(field: object) -> ResetRefusal:
+    if not isinstance(field, dict):
+        raise ValueError(field)
+    code, detail = field.get("code"), field.get("detail")
+    if not isinstance(code, str) or not _text(detail):
+        raise ValueError(field)
+    return ResetRefusal(ResetRefusalCode(code), detail)
+
+
 @dataclass(frozen=True)
 class ResetToOrigin:
     queued_at: str | None = None
     ran_at: str | None = None
-    refused: str | None = None
+    refused: ResetRefusal | None = None
 
     def keep(self, shelf: "Shelf") -> None:
         shelf.save(RESET_TO_ORIGIN, _RESET_STATE, json.dumps(asdict(self)).encode())
@@ -108,12 +144,14 @@ class ResetToOrigin:
             return None
         try:
             fields = json.loads(document)
-            read = [fields.get("queued_at"), fields.get("ran_at"), fields.get("refused")]
-        except (ValueError, AttributeError, RecursionError):
+            queued_at, ran_at = fields.get("queued_at"), fields.get("ran_at")
+            refused = fields.get("refused")
+            if not (_text(queued_at) and _text(ran_at)):
+                return None
+            return ResetToOrigin(queued_at, ran_at,
+                                 None if refused is None else _refusal_of(refused))
+        except (ValueError, TypeError, AttributeError, RecursionError):
             return None
-        if not all(field is None or (isinstance(field, str) and field) for field in read):
-            return None
-        return ResetToOrigin(*read)
 
     @staticmethod
     def forget(shelf: "Shelf") -> None:

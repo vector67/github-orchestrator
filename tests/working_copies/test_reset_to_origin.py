@@ -56,7 +56,7 @@ def test_a_reset_refuses_when_a_commit_lands_while_it_fetches_and_keeps_that_com
 
     refused = fetch_and_reset(pr_checkout, seen)
 
-    assert refused is not None and "moved" in refused
+    assert (refused.code, refused.detail) == ("worktree-moved", landed[0])
     assert world.head_of(pr_worktree) == landed[0]
 
 
@@ -73,7 +73,7 @@ def test_a_reset_refuses_when_the_worktree_switches_branch_while_origin_is_read(
 
     refused = fetch_and_reset(pr_checkout, seen)
 
-    assert refused is not None
+    assert (refused.code, refused.detail) == ("on-another-branch", "hotfix")
     assert world.head_of(pr_worktree) == hotfix[0]
 
 
@@ -83,7 +83,7 @@ def test_a_reset_refuses_a_worktree_whose_commits_are_only_unpushed(
 
     refused = fetch_and_reset(pr_checkout)
 
-    assert refused is not None and "only unpushed" in refused
+    assert (refused.code, refused.detail) == ("not-diverged", None)
     assert pr_checkout.revisions.local_head() == unpushed
 
 
@@ -131,7 +131,7 @@ def test_a_reset_leaves_an_ignored_file_that_origin_now_tracks_as_it_is(
 
     refused = fetch_and_reset(git_checkout)
 
-    assert refused is not None and "secret.env" in refused
+    assert (refused.code, refused.detail) == ("untracked-in-the-way", "secret.env")
     assert (git_worktree / "secret.env").read_text() == "the only copy of the key\n"
 
 
@@ -146,7 +146,7 @@ def test_a_reset_leaves_a_file_excluded_in_info_exclude_that_origin_now_tracks_a
 
     refused = fetch_and_reset(git_checkout)
 
-    assert refused is not None and "notes.md" in refused
+    assert (refused.code, refused.detail) == ("untracked-in-the-way", "notes.md")
     assert (git_worktree / "notes.md").read_text() == "hours of notes\n"
 
 
