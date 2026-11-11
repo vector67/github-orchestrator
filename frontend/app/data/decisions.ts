@@ -1401,9 +1401,8 @@ function offeredOn(
 const GONE_ONCE_A_PART_RAN: Decision[] = ['reject', 'rework'];
 
 const ACCEPT_ALL_TITLE =
-  'accepts every part not yet accepted; each runs in turn, the ticket, the ' +
-  'changes, the new PR, then the reply — public, and the board has no way ' +
-  'to undo a part once it has run';
+  'accepts every part not yet accepted; they run one at a time, in order — ' +
+  'public, and the board has no way to undo a part once it has run';
 
 const PART_ORDER: SplitPartName[] = ['ticket', 'changes', 'new-pr', 'reply'];
 
