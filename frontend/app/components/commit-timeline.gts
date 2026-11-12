@@ -640,6 +640,7 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
         {{#if @timeline.key.unpushed}}
           <span class="timeline-key-item" data-test-key="not-pushed"><i
               data-style="not-pushed"
+              data-shape={{if @timeline.key.tick "tick"}}
             ></i>
             not pushed</span>
         {{/if}}

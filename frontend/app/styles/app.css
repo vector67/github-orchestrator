@@ -5831,6 +5831,14 @@ button.tree-row[aria-current="true"] {
   border-style: dashed;
 }
 
+.timeline-key-item i[data-style="not-pushed"][data-shape="tick"] {
+  width: 0;
+  height: 14px;
+  background: none;
+  border-width: 0 0 0 3px;
+  border-radius: 0;
+}
+
 .timeline-key-item i[data-style="merge-pip"] {
   width: 16px;
   height: 6px;

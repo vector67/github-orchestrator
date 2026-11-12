@@ -1221,6 +1221,30 @@ module(
       assert.deepEqual(shasShown(), [shas[3], shas[10]]);
     });
 
+    test("a day's line stays clear of the sha under that day's first commit", async function (assert) {
+      const shas = long(24);
+      await visit('/pr/o/r/7/diff');
+      await startStepping();
+
+      await click('[data-test-timeline-toggle]');
+      await paneOf(800);
+
+      const sha = findAll('[data-test-sha]').find(
+        (one) => one.textContent.trim() === shas[0],
+      )!;
+      const line = find(
+        `[data-test-day][data-x="${dot(shas[0]!).getAttribute('data-x')}"] line`,
+      )!;
+      const text = sha.getBoundingClientRect();
+      const mark = line.getBoundingClientRect();
+      const apart =
+        mark.top >= text.bottom ||
+        mark.bottom <= text.top ||
+        mark.left >= text.right ||
+        mark.right <= text.left;
+      assert.true(apart, 'the line and the sha do not cross');
+    });
+
     test('the graph spreads its columns across the pane, and again when the pane changes width', async function (assert) {
       long(24);
       await visit('/pr/o/r/7/diff');
@@ -1619,6 +1643,26 @@ module(
       await press('[');
 
       assert.dom('[data-test-not-pushed]').doesNotExist();
+    });
+
+    test('where the commits not pushed turn to ticks, so does their key', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-source="local"]');
+      await click('[data-test-timeline-toggle]');
+
+      (find('.timeline-scroll') as HTMLElement).style.width = '200px';
+      await new Promise((done) =>
+        requestAnimationFrame(() => requestAnimationFrame(done)),
+      );
+      await settled();
+
+      assert.deepEqual(
+        [THIRD, FOURTH].map((sha) => dot(sha).getAttribute('data-shape')),
+        ['tick', 'tick'],
+      );
+      assert
+        .dom('[data-test-key="not-pushed"] i')
+        .hasAttribute('data-shape', 'tick');
     });
 
     test('on origin they are not drawn', async function (assert) {
