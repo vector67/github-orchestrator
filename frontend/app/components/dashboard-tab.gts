@@ -27,6 +27,7 @@ import {
   areYouSureOf,
   opensDialog,
   prLabelOf,
+  RELEASE_ASKS,
   runsAgent,
   type AreYouSure as Asking,
   type Pressing,
@@ -283,19 +284,21 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   redLabel = (verb: RedPrVerb): string =>
     areYouSureOf(verb, this.number ?? 0).label;
 
-  get redAsking(): Asking | null {
+  get yesOrNo(): Asking | null {
     const asking = this.asking;
+    if (asking === 'release') return RELEASE_ASKS;
     if (asking !== 'close' && asking !== 'take-over') return null;
     return areYouSureOf(asking, this.number ?? 0);
   }
 
-  confirmRed = () => {
+  confirmYes = () => {
     const asking = this.asking;
     this.cancelAsking();
     const on = this.on;
     if (!on) return;
     if (asking === 'close') void this.controls.close(on);
     if (asking === 'take-over') void this.controls.takeOver(on);
+    if (asking === 'release') void this.controls.release(on);
   };
 
   private askReady(ready: boolean): void {
@@ -645,10 +648,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             {{/if}}
           </div>
         </section>
-        {{#if this.redAsking}}
+        {{#if this.yesOrNo}}
           <AreYouSure
-            @asking={{this.redAsking}}
-            @confirm={{this.confirmRed}}
+            @asking={{this.yesOrNo}}
+            @confirm={{this.confirmYes}}
             @cancel={{this.cancelAsking}}
           />
         {{/if}}

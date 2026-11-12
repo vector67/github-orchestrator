@@ -14,6 +14,10 @@ interface AreYouSureSignature {
 }
 
 export default class AreYouSure extends Component<AreYouSureSignature> {
+  get danger(): boolean {
+    return this.args.asking.danger ?? true;
+  }
+
   submitted = (event: Event) => {
     event.preventDefault();
     this.args.confirm();
@@ -57,7 +61,7 @@ export default class AreYouSure extends Component<AreYouSureSignature> {
         <div class="dialog-actions">
           <button
             type="submit"
-            class="primary danger"
+            class="primary {{if this.danger 'danger'}}"
             data-test-are-you-sure-submit
           >{{@asking.label}} <kbd>y</kbd></button>
           <button

@@ -6,6 +6,7 @@ import {
   find,
   findAll,
   focus,
+  rerender,
   settled,
   triggerEvent,
   visit,
@@ -2338,7 +2339,7 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(rows(), ['o/r#8'], 'the dismissed row stays gone');
   });
 
-  test('a frozen row takes only w: h and d say so and send nothing, and w releases it', async function (assert) {
+  test('a frozen row takes only w: h and d say so and send nothing, and w releases it once you say yes', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -2367,7 +2368,8 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(verbs(), []);
 
     await press('w');
-    await press('w');
+    assert.deepEqual(verbs(), []);
+    await press('y');
 
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),
@@ -2375,7 +2377,7 @@ module('Acceptance | wall', function (hooks) {
     );
   });
 
-  test('w pressed twice before the hub answers the first release sends one release', async function (assert) {
+  test('Release said yes to twice before the hub answers the first sends one release', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -2394,8 +2396,12 @@ module('Acceptance | wall', function (hooks) {
     await press('j');
     const release = board().hold(/:release$/);
 
+    await press('w');
+    tap('y');
+    await rerender();
     tap('w');
-    tap('w');
+    await rerender();
+    tap('y');
     release();
     await settled();
 
@@ -2510,8 +2516,18 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-release]')
       .doesNotExist();
+    assert
+      .dom('[data-test-wall-row="o/r#8"] [data-test-release]')
+      .hasAttribute('data-opens-dialog', 'true');
 
     await click('[data-test-wall-row="o/r#8"] [data-test-release]');
+
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Release the worktree?');
+    assert.deepEqual(board().posted, []);
+
+    await click('[data-test-are-you-sure-submit]');
 
     assert.deepEqual(
       board().posted.map((one) => `${one.key} ${one.verb}`),

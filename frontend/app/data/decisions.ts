@@ -857,6 +857,7 @@ export interface AreYouSure {
   label: string;
   question: string;
   consequence: string;
+  danger?: boolean;
 }
 
 export type RedPrVerb = 'close' | 'take-over';
@@ -903,6 +904,16 @@ const PR_LABELS = {
 export function prLabelOf(verb: keyof typeof PR_LABELS): string {
   return PR_LABELS[verb];
 }
+
+export const RELEASE_ASKS: AreYouSure = {
+  label: PR_LABELS.release,
+  question: 'Release the worktree?',
+  consequence:
+    'The watcher moves this worktree aside under another name, removing ' +
+    'nothing in it, and builds a fresh one on its next cycle. The board has ' +
+    'no way back to the old one.',
+  danger: false,
+};
 
 export function areYouSureOf(verb: RedPrVerb, number: number): AreYouSure {
   return RED_PR_WRITES[verb](number);
@@ -1327,6 +1338,7 @@ const OPENS_A_DIALOG: Kind[] = [
   'dismiss',
   'send-review',
   'set-importance',
+  'release',
 ];
 
 const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close', 'take-over'];

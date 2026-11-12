@@ -2195,12 +2195,36 @@ module('Acceptance | dashboard', function (hooks) {
       .hasText('The worktree at /wt/tegdiw holds niam, not ydit.');
   });
 
-  test('w releases a frozen worktree through the hub, and the band then says it was asked for', async function (assert) {
+  test('Release asks first, because there is no way back, and carries the window icon', async function (assert) {
+    onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="release"]')
+      .hasAttribute('data-opens-dialog', 'true');
+
+    await click('[data-test-control="release"]');
+
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Release the worktree?');
+    assert.dom('[data-test-are-you-sure-submit]').includesText('Release');
+    assert.dom('[data-test-are-you-sure-submit]').doesNotHaveClass('danger');
+    assert.deepEqual(verbs(), []);
+
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('w releases a frozen worktree through the hub once you say yes, and the band then says it was asked for', async function (assert) {
     onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
     board().broken = /\/stream$/;
     await visit('/pr/o/r/7/dashboard');
 
     await press('w');
+    await click('[data-test-are-you-sure-submit]');
 
     assert.deepEqual(board().posted.at(-1)?.verb, 'release');
     assert.deepEqual(board().posted.at(-1)?.key, 'o/r#7');

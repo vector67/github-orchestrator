@@ -301,6 +301,8 @@ export default class PrControlsService extends Service {
 
   takeOver = (on: Controlled): Promise<void> => this.carryOut(on, 'take-over');
 
+  release = (on: Controlled): Promise<void> => this.carryOut(on, 'release');
+
   markReady = (on: Controlled): Promise<void> =>
     this.carryOut(on, 'mark-ready');
 

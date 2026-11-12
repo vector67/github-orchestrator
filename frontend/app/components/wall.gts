@@ -7,6 +7,7 @@ import { fn, uniqueId } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import { pageTitle } from 'ember-page-title';
+import AreYouSure from 'frontend/components/are-you-sure';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ImportanceConfirm from 'frontend/components/importance-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
@@ -19,7 +20,12 @@ import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil, Importance } from 'frontend/data/api';
 import { ageOf, type Reading } from 'frontend/data/dashboard';
-import { opensDialog, prLabelOf, runsAgent } from 'frontend/data/decisions';
+import {
+  opensDialog,
+  prLabelOf,
+  RELEASE_ASKS,
+  runsAgent,
+} from 'frontend/data/decisions';
 import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -58,6 +64,9 @@ export default class Wall extends Component<WallSignature> {
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
   @tracked ranking: Pick<WallRow, 'key' | 'arrived'> | null = null;
+  @tracked releasing: Pick<WallRow, 'key' | 'arrived'> | null = null;
+
+  readonly releaseAsks = RELEASE_ASKS;
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private lastAt = -1;
@@ -121,6 +130,18 @@ export default class Wall extends Component<WallSignature> {
 
   isConfirming = (pr: WallRow): boolean =>
     pr.key === this.confirming?.key && pr.arrived === this.confirming.arrived;
+
+  isReleasing = (pr: WallRow): boolean =>
+    pr.key === this.releasing?.key && pr.arrived === this.releasing.arrived;
+
+  release = (pr: WallRow) => {
+    this.releasing = null;
+    void this.controls.release(this.controls.ofRow(pr));
+  };
+
+  cancelRelease = () => {
+    this.releasing = null;
+  };
 
   isReadying = (pr: WallRow): boolean =>
     keyOf(pr) === this.args.ready &&
@@ -186,6 +207,8 @@ export default class Wall extends Component<WallSignature> {
     if (next === 'asks' && control === 'dismiss')
       this.confirming = { key: pr.key, arrived: pr.arrived };
     if (next === 'asks' && control === 'mark-ready') this.askReady(keyOf(pr));
+    if (next === 'asks' && control === 'release')
+      this.releasing = { key: pr.key, arrived: pr.arrived };
     return next !== 'nothing';
   }
 
@@ -489,6 +512,13 @@ export default class Wall extends Component<WallSignature> {
                   @wording={{reading.dismiss}}
                   @dismiss={{fn this.dismiss pr}}
                   @cancel={{this.cancel}}
+                />
+              {{/if}}
+              {{#if (this.isReleasing pr)}}
+                <AreYouSure
+                  @asking={{this.releaseAsks}}
+                  @confirm={{fn this.release pr}}
+                  @cancel={{this.cancelRelease}}
                 />
               {{/if}}
               {{#if (this.isRanking pr)}}
