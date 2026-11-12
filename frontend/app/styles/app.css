@@ -176,7 +176,6 @@ input[type="radio"] {
 
 .checkbox {
   appearance: none;
-  position: relative;
   flex: none;
   box-sizing: border-box;
   width: 18px;
@@ -191,18 +190,23 @@ input[type="radio"] {
 .checkbox:checked {
   background: var(--text);
   border-color: var(--text);
-}
-
-.checkbox:checked::after {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 0;
-  width: 5px;
-  height: 10px;
-  border: solid var(--page);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  mask:
+    linear-gradient(currentcolor 0 0),
+    linear-gradient(
+        to top right,
+        transparent calc(50% - 1.2px),
+        currentcolor 0 calc(50% + 1.2px),
+        transparent 0
+      )
+      3.5px 7.5px / 5px 5px no-repeat,
+    linear-gradient(
+        to bottom right,
+        transparent calc(50% - 1.2px),
+        currentcolor 0 calc(50% + 1.2px),
+        transparent 0
+      )
+      6.5px 4px / 8px 8.5px no-repeat;
+  mask-composite: exclude, add, add;
 }
 
 .checkbox:disabled {
