@@ -1,8 +1,9 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
+from github_orchestrator.domain import UtcClock
+
 CREATED_AT_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-STARTED_AT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class SystemClock:
@@ -12,7 +13,7 @@ class SystemClock:
         self._monotonic = monotonic
 
     def now(self) -> str:
-        return self._utcnow().strftime(STARTED_AT_FORMAT)
+        return self._utcnow().strftime(UtcClock.STAMP)
 
     def stamps(self, count: int) -> list[str]:
         stamped = []

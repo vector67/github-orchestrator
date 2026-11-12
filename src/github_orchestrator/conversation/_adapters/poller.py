@@ -16,7 +16,7 @@ from github_orchestrator.conversation._domain.thread import (
     ActiveThread,
     FetchedThread,
 )
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.github import Threads
 
 log = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ _COMMENT_CUTOFF_SECONDS = 5
 
 def comment_cutoff(now: datetime) -> str:
     cutoff = now - timedelta(seconds=_COMMENT_CUTOFF_SECONDS)
-    return cutoff.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return cutoff.strftime(UtcClock.STAMP)
 
 
 def thread_snapshot(
