@@ -2,7 +2,6 @@ import errno
 import fcntl
 import os
 import threading
-from pathlib import Path
 
 import pytest
 
@@ -195,10 +194,10 @@ def test_a_save_that_dies_mid_write_keeps_the_document_that_was_there(
     records = _records(tmp_path)
     records.save("json", KEY, b"the first gist")
 
-    def boom(self, target):
+    def boom(source, target):
         raise OSError("no space left on device")
 
-    monkeypatch.setattr(Path, "replace", boom)
+    monkeypatch.setattr(os, "replace", boom)
     with pytest.raises(OSError):
         records.save("json", KEY, b"the second gist")
 
@@ -214,13 +213,13 @@ def test_a_reader_in_the_middle_of_a_rewrite_still_sees_the_document_that_stands
     records = _records(tmp_path)
     records.save("intent", KEY, b"approve")
     midway = []
-    real_replace = Path.replace
+    real_replace = os.replace
 
-    def replacing(self, target):
+    def replacing(source, target):
         midway.append(records.load("intent", KEY))
-        return real_replace(self, target)
+        return real_replace(source, target)
 
-    monkeypatch.setattr(Path, "replace", replacing)
+    monkeypatch.setattr(os, "replace", replacing)
     records.save("intent", KEY, b"session")
 
     assert midway == [b"approve"]
