@@ -441,6 +441,9 @@ class Pulse(Protocol):
     def fix(self) -> str | None: ...
 
     @property
+    def mentions_error(self) -> str | None: ...
+
+    @property
     def overdue(self) -> bool: ...
 
     @property
@@ -484,10 +487,22 @@ class FolderInUse:
     folder: str
 
 
+@dataclass(frozen=True)
+class BranchNotRenamed:
+    pr: Pr
+    thread: str
+    branch: str
+    new_branch: str
+    clone: str
+    error: str
+
+
 class NamesMigration(Protocol):
     def migrated(self) -> bool: ...
 
     def in_the_way(self) -> list[FolderInUse]: ...
+
+    def not_renamed(self) -> list[BranchNotRenamed]: ...
 
     def close_sessions_and_migrate(self) -> list[FolderInUse]: ...
 

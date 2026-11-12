@@ -603,6 +603,7 @@ export function runLedger(
       overdue: false,
       last_error: null,
       fix: null,
+      mentions_error: null,
       ...over.watcher,
     },
     today: { runs: 0, cost_usd: null, unpriced: 0, ...over.today },
@@ -812,7 +813,11 @@ export class FakeBoard {
   state: HubState = 'watching';
   tourDue = false;
   toursSeen = 0;
-  migration: ThreadNamesMigration = { migrated: true, sessions: [] };
+  migration: ThreadNamesMigration = {
+    migrated: true,
+    sessions: [],
+    branches: [],
+  };
   migrationsAsked = 0;
   emojis: Record<string, string> = {};
   harvestExtensionFolder = '/data/harvest-extension';
@@ -1492,7 +1497,7 @@ export class FakeBoard {
       url.endsWith('/api/thread-names-migration:close-sessions-and-migrate')
     ) {
       this.migrationsAsked += 1;
-      this.migration = { migrated: true, sessions: [] };
+      this.migration = { migrated: true, sessions: [], branches: [] };
       this.unheld = null;
       return this.json(200, this.migration);
     }

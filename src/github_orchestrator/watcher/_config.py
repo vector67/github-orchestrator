@@ -16,6 +16,7 @@ class WatcherConfig:
     heartbeat: Path
     lock: Path
     failures: Path
+    mentions_failure: Path
     log_file: Path
     hub_port: int
     home: Path

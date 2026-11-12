@@ -2616,6 +2616,41 @@
    ],
    "type": "object"
   },
+  "BranchInTheWay": {
+   "properties": {
+    "branch": {
+     "type": "string"
+    },
+    "clone": {
+     "type": "string"
+    },
+    "error": {
+     "type": "string"
+    },
+    "new_branch": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "thread": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "thread",
+    "branch",
+    "new_branch",
+    "clone",
+    "error"
+   ],
+   "type": "object"
+  },
   "Brief": {
    "properties": {
     "include": {
@@ -9017,6 +9052,12 @@
   },
   "ThreadNamesMigration": {
    "properties": {
+    "branches": {
+     "items": {
+      "$ref": "#/components/schemas/BranchInTheWay"
+     },
+     "type": "array"
+    },
     "migrated": {
      "type": "boolean"
     },
@@ -9029,7 +9070,8 @@
    },
    "required": [
     "migrated",
-    "sessions"
+    "sessions",
+    "branches"
    ],
    "type": "object"
   },
@@ -9241,6 +9283,16 @@
       }
      ]
     },
+    "mentions_error": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "next_poll_at": {
      "anyOf": [
       {
@@ -9270,7 +9322,8 @@
     "next_poll_at",
     "overdue",
     "last_error",
-    "fix"
+    "fix",
+    "mentions_error"
    ],
    "type": "object"
   },

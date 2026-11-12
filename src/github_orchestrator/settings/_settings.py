@@ -87,6 +87,10 @@ class Settings:
         return self.data_dir / "watcher.failures.json"
 
     @property
+    def mentions_failure(self) -> Path:
+        return self.data_dir / "mentions.failure"
+
+    @property
     def watcher_lock(self) -> Path:
         return self.data_dir / "watcher.lock"
 

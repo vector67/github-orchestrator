@@ -94,7 +94,7 @@ def test_the_watcher_says_when_it_last_polled_and_when_it_polls_next():
     assert runs_read().json()["watcher"] == {
         "polled_at": "2026-09-28T09:59:41+00:00",
         "next_poll_at": "2026-09-28T10:00:41+00:00", "overdue": False, "last_error": None,
-        "fix": None}
+        "fix": None, "mentions_error": None}
 
 
 def test_the_poll_time_is_the_heartbeat_stamp_whenever_the_health_was_read():
@@ -135,3 +135,14 @@ def test_a_failing_watcher_says_why_and_what_to_do_about_it():
 
     assert (watcher["last_error"], watcher["fix"]) == (
         "gh auth token failed", "Log in with `gh auth login`, then this page retries.")
+
+
+def test_a_failing_mentions_search_says_why_without_a_failing_poll():
+    unread = Health(alive=True, polled_at=NOW - timedelta(seconds=19), read_at=NOW,
+                    last_error=None, fix=None, polls_every=MINUTE,
+                    mentions_error="config.toml: mentions_start must be in quotes")
+
+    watcher = runs_read(health=unread).json()["watcher"]
+
+    assert (watcher["last_error"], watcher["mentions_error"]) == (
+        None, "config.toml: mentions_start must be in quotes")

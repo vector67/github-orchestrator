@@ -41,6 +41,7 @@ from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import HubPages
 from github_orchestrator.board_api._routes import fonts_in
 from github_orchestrator.board_api.interface import (
+    BranchNotRenamed,
     Dashboard,
     Dashboards,
     Emojis,
@@ -636,6 +637,10 @@ class BoardNamesMigration:
 
     def in_the_way(self) -> list[FolderInUse]:
         return _in_use(self._migration.held())
+
+    def not_renamed(self) -> list[BranchNotRenamed]:
+        return [BranchNotRenamed(one.pr, one.thread, one.branch, one.new_branch, one.clone,
+                                 one.error) for one in self._migration.stuck()]
 
     def close_sessions_and_migrate(self) -> list[FolderInUse]:
         self._migration.close_sessions()
@@ -1522,6 +1527,7 @@ def watcher_config(settings: Settings, home: Path, github_token: str | None,
         heartbeat=settings.watcher_heartbeat,
         lock=settings.watcher_lock,
         failures=settings.watcher_failures,
+        mentions_failure=settings.mentions_failure,
         log_file=settings.log_path(Process.WATCHER),
         hub_port=config.hub_port,
         home=home,
@@ -1760,6 +1766,9 @@ class NothingToMigrate:
         return True
 
     def in_the_way(self) -> list[FolderInUse]:
+        return []
+
+    def not_renamed(self) -> list[BranchNotRenamed]:
         return []
 
     def close_sessions_and_migrate(self) -> list[FolderInUse]:

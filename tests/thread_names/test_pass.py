@@ -223,6 +223,26 @@ def test_a_branch_that_cannot_take_its_new_name_after_its_workspace_moved_keeps_
     assert migration.migrated() and _branch_at(new) == _new_branch("PRRT_a")
 
 
+def test_a_branch_that_cannot_take_its_new_name_is_named_with_the_first_line_git_said_until_it_does(
+    settings, clone
+):
+    _legacy_workspace(settings, clone, "PRRT_a")
+    lock = clone / ".git" / "refs" / "heads" / f"{_new_branch('PRRT_a')}.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.touch()
+    _migration(settings, clone).migrate()
+
+    stuck = _migration(settings, clone).stuck()
+
+    assert [(one.pr, one.thread, one.branch, one.new_branch, one.clone) for one in stuck] == [
+        (THE_PR, "PRRT_a", PREFIX + "PRRT_a", _new_branch("PRRT_a"), str(clone))]
+    assert ".lock" in stuck[0].error and "\n" not in stuck[0].error
+    lock.unlink()
+    migration = _migration(settings, clone)
+    migration.migrate()
+    assert migration.stuck() == [] and _migration(settings, clone).stuck() == []
+
+
 def test_a_stale_bare_folder_that_is_no_worktree_is_not_moved_into_the_new_name(settings, clone):
     old, fix = _legacy_workspace(settings, clone, "PRRT_a")
     (old / ".git").unlink()

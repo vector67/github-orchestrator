@@ -2,6 +2,7 @@ import logging
 from collections.abc import Mapping
 from typing import Protocol
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import HubState, Pr, UtcClock
 from github_orchestrator.github import Access
 from github_orchestrator.notifications import Polling, ThreadNews
@@ -29,6 +30,10 @@ class Saving(Protocol):
     def polled(self, managers: Mapping[Pr, ManagerPane]) -> None: ...
 
     def failed(self, exc: BaseException) -> None: ...
+
+    def mentions_unread(self, exc: BaseException) -> None: ...
+
+    def mentions_read(self) -> None: ...
 
 
 class CycleSaving:
@@ -80,6 +85,20 @@ class CycleSaving:
             self._polling.failed(consecutive, error, self._config.log_file)
         except Exception:
             log.exception("Could not report the failed cycle")
+
+    def mentions_unread(self, exc: BaseException) -> None:
+        error = " ".join(str(exc).split()) or type(exc).__name__
+        try:
+            write_atomically(self._config.mentions_failure, error.encode())
+        except OSError as unwritten:
+            log.warning("Could not write %s: %s", self._config.mentions_failure, unwritten)
+        self._polling.mentions_failed(error, self._config.log_file)
+
+    def mentions_read(self) -> None:
+        try:
+            self._config.mentions_failure.unlink(missing_ok=True)
+        except OSError as exc:
+            log.warning("Could not clear %s: %s", self._config.mentions_failure, exc)
 
     def _fix(self) -> str | None:
         account = self._config.gh_account

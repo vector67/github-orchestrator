@@ -5,6 +5,7 @@ from pathlib import Path
 from github_orchestrator.board_api.interface import (
     NO_MENTIONS_LISTED,
     NOTHING_HELD,
+    BranchNotRenamed,
     CloneSpot,
     Dashboard,
     FieldRefusal,
@@ -281,15 +282,20 @@ class FakeHarvestSetup:
 
 
 class FakeNamesMigration:
-    def __init__(self, in_the_way: list[FolderInUse] | None = None) -> None:
+    def __init__(self, in_the_way: list[FolderInUse] | None = None,
+                 not_renamed: list[BranchNotRenamed] | None = None) -> None:
         self.held = list(in_the_way or [])
+        self.stuck = list(not_renamed or [])
         self.closed = 0
 
     def migrated(self) -> bool:
-        return not self.held
+        return not self.held and not self.stuck
 
     def in_the_way(self) -> list[FolderInUse]:
         return list(self.held)
+
+    def not_renamed(self) -> list[BranchNotRenamed]:
+        return list(self.stuck)
 
     def close_sessions_and_migrate(self) -> list[FolderInUse]:
         self.closed += 1

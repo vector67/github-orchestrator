@@ -73,6 +73,12 @@ class WouldSave:
     def failed(self, exc: BaseException) -> None:
         pass
 
+    def mentions_unread(self, exc: BaseException) -> None:
+        pass
+
+    def mentions_read(self) -> None:
+        pass
+
 
 class WouldKeepServer:
     def __init__(self, say: Callable[[str], None]) -> None:

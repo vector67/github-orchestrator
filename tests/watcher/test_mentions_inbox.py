@@ -3,6 +3,8 @@ from dataclasses import replace
 import pytest
 
 from github_orchestrator.board_api.interface import Told
+from github_orchestrator.desktop import Badge
+from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -27,7 +29,7 @@ UNBUILT = a_pr(82, "octocat/hello-world")
 class CountedSearches:
     def __init__(self, failure: Exception | None = None) -> None:
         self.searches = 0
-        self._failure = failure
+        self.failure = failure
         self.unbuilt_cards: list = []
         self.opened_prs: list = []
         self.settled: list = []
@@ -43,8 +45,8 @@ class CountedSearches:
 
     def search_if_due(self) -> None:
         self.searches += 1
-        if self._failure is not None:
-            raise self._failure
+        if self.failure is not None:
+            raise self.failure
 
 
 def test_each_cycle_offers_the_mentions_inbox_its_search(settings):
@@ -64,13 +66,37 @@ def test_a_mentions_inbox_that_fails_does_not_fail_the_cycle(settings, caplog):
     assert "mentions.json unwritable" in caplog.text
 
 
-def test_a_config_the_mentions_inbox_cannot_read_fails_the_cycle_and_says_why(settings):
+def test_a_config_the_mentions_inbox_cannot_read_fails_only_the_mentions_search(settings):
     inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
 
-    with pytest.raises(StartUnread):
-        watcher_over(settings, mentions_inbox=inbox).run_cycle()
+    watcher_over(settings, mentions_inbox=inbox).run_cycle()
 
-    assert health(settings).last_error.endswith("mentions_start must be in quotes")
+    reported = health(settings)
+    assert (reported.last_error, reported.mentions_error) == (
+        None, "config.toml: mentions_start must be in quotes")
+
+
+def test_a_mentions_search_that_fails_is_notified_as_the_mentions_search(settings):
+    desktop = FakeDesktop()
+    inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
+
+    watcher_over(settings, desktop=desktop, mentions_inbox=inbox).run_cycle()
+
+    assert [(a.badge, a.title, a.body) for a in desktop.announcements] == [
+        (Badge.FAILED, "Mentions search failed",
+         "config.toml: mentions_start must be in quotes. "
+         f"Details in {settings.logs_dir / 'watcher.log'}")]
+
+
+def test_a_mentions_search_that_works_again_clears_its_failure(settings):
+    inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
+    watcher = watcher_over(settings, mentions_inbox=inbox)
+    watcher.run_cycle()
+    inbox.failure = None
+
+    watcher.run_cycle()
+
+    assert health(settings).mentions_error is None
 
 
 def test_a_dry_run_says_it_would_search_for_mentions_and_writes_nothing(settings, capsys):

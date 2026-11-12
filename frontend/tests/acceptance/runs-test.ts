@@ -150,6 +150,25 @@ module('Acceptance | runs', function (hooks) {
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
 
+  test('a mentions search that fails while polls go on says only the search fails, and why', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        mentions_error: 'config.toml: mentions_start must be in quotes',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/');
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      'mentions search failing: config.toml: mentions_start must be in quotes',
+    );
+    assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
+  });
+
   test('a long failure stays on the bar’s one row and gives its whole text on hover', async function (assert) {
     const failure = `watcher cannot search acme/gadgets-api as vector67 — ${'check [[repos]] and gh_account '.repeat(12)}`;
     onTheHub();
@@ -397,6 +416,27 @@ module('Acceptance | runs', function (hooks) {
       'Failed 2 of 3 this week',
     );
     assert.dom(failed).hasClass('failing');
+  });
+
+  test('the facts name a failing mentions search and why, as an alarm', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        mentions_error: 'config.toml: mentions_start must be in quotes',
+      },
+    });
+
+    await visit('/runs');
+
+    const failing = findAll('[data-test-watcher-fact]').find((one) =>
+      one.textContent.includes('Mentions search'),
+    );
+    assert.strictEqual(
+      failing?.textContent.trim().replace(/\s+/g, ' '),
+      'Mentions search failing: config.toml: mentions_start must be in quotes',
+    );
+    assert.dom(failing).hasClass('failing');
   });
 
   test('a run claude reported as an error though it exited cleanly says it errored', async function (assert) {
