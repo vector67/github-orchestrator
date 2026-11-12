@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import DecideDialog from 'frontend/components/decide-dialog';
+import Glyphs from 'frontend/components/glyphs';
 import {
   editAsks,
   type DialogSpec,
@@ -165,9 +166,14 @@ export default class SplitCards extends Component<SplitCardsSignature> {
                   class="btn {{if (isPrimary offer) 'fill'}}"
                   title={{offer.title}}
                   disabled={{@pending}}
+                  data-opens-dialog={{if offer.opensDialog "true"}}
+                  data-runs-agent={{if offer.runsAgent "true"}}
                   data-test-part-act={{offer.act}}
                   {{on "click" (fn this.act card offer)}}
-                >{{offer.label}}</button>
+                >{{offer.label}}<Glyphs
+                    @opensDialog={{offer.opensDialog}}
+                    @runsAgent={{offer.runsAgent}}
+                  /></button>
               {{/each}}
             </p>
           {{/if}}

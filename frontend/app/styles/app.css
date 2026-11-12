@@ -2165,6 +2165,18 @@ button.expander:focus-visible {
   height: 16px;
 }
 
+.glyph {
+  flex: none;
+  width: 0.85em;
+  height: 0.85em;
+  margin-left: 0.3em;
+  vertical-align: -0.05em;
+}
+
+.glyph + .glyph {
+  margin-left: 0.2em;
+}
+
 .diff-row.file {
   position: sticky;
   top: 0;

@@ -5,6 +5,7 @@ import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import CheckForFixes from 'frontend/components/check-for-fixes';
 import DecideDialog from 'frontend/components/decide-dialog';
+import Glyphs from 'frontend/components/glyphs';
 import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
 import ReworkDialog from 'frontend/components/rework-dialog';
@@ -100,6 +101,10 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       ? { decision, gathered }
       : null;
   }
+
+  opensDialog = (offered: Offer): boolean =>
+    offered.opensDialog ||
+    (CLOSES_A_MENTION.includes(offered.decision) && this.lastMentionOnAHeldPr);
 
   held = (offered: Offer): boolean => {
     const draft = this.args.draft;
@@ -269,11 +274,16 @@ export default class PanelActions extends Component<PanelActionsSignature> {
           data-weight={{offered.weight}}
           title={{this.titleOf offered}}
           disabled={{this.unavailable offered}}
+          data-opens-dialog={{if (this.opensDialog offered) "true"}}
+          data-runs-agent={{if offered.runsAgent "true"}}
           data-test-decision={{offered.decision}}
           {{on "click" (fn this.decide offered)}}
         >{{#if (this.ringed offered)}}<PendingRing />{{/if}}{{this.labelOf
             offered
-          }}
+          }}<Glyphs
+            @opensDialog={{this.opensDialog offered}}
+            @runsAgent={{offered.runsAgent}}
+          />
           <kbd>{{offered.cap}}</kbd></button>
       {{/each}}
       {{#if @checksForFixes}}

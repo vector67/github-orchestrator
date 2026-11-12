@@ -135,6 +135,7 @@ interface Carrying {
 interface Shade {
   label?: string;
   weight?: Weight;
+  runsAgent?: boolean;
 }
 
 interface Entry extends Carrying {
@@ -165,6 +166,8 @@ export interface Offer {
   doing: string;
   asks: Asks;
   savedFirst: boolean;
+  opensDialog: boolean;
+  runsAgent: boolean;
 }
 
 export interface Carried {
@@ -688,10 +691,10 @@ const ENTRIES = {
     asks: null,
     inPhase: {
       deferred: { label: 'Undefer' },
-      rejected: { label: 'Reconsider' },
+      rejected: { label: 'Reconsider', runsAgent: true },
       resolved: { label: 'Un-resolve' },
       confirmed: { label: 'Bring back' },
-      landed: { label: 'Bring back' },
+      landed: { label: 'Bring back', runsAgent: true },
       discarded: { label: 'Bring back' },
     },
     reviewer: {
@@ -1055,7 +1058,7 @@ export function pressingOf(writes: Written[]): Pressings {
   ) as Pressings;
 }
 
-const CARRIED: Record<
+export type Kind =
   | Decision
   | PrVerb
   | 'edit-draft'
@@ -1065,9 +1068,9 @@ const CARRIED: Record<
   | AnswerKind
   | 'send-review'
   | 'prepare-harvest-extension'
-  | SetupWrite,
-  Carrying
-> = {
+  | SetupWrite;
+
+const CARRIED: Record<Kind, Carrying> = {
   ...ENTRIES,
   ...PR_WRITES,
   'create-draft': {
@@ -1302,6 +1305,44 @@ function besides(asks: Asks, phase: Phase): Asks {
   };
 }
 
+const STARTS_A_RUN: Kind[] = [
+  'fix',
+  'retry',
+  'rework',
+  'start-session',
+  'answer-in-session',
+  'answer',
+  'answer-watched',
+  'request-change',
+  'ask-the-agent',
+  'carry-on',
+  'start-review',
+  'check-for-fixes',
+];
+
+const ASKS_FIRST: Kind[] = [
+  'mark-ready',
+  'assign-reviewers',
+  'dismiss',
+  'close',
+  'send-review',
+];
+
+const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close'];
+
+export function runsAgent(kind: Kind): boolean {
+  return STARTS_A_RUN.includes(kind);
+}
+
+export function opensDialog(kind: Kind): boolean {
+  return ASKS_FIRST.includes(kind) && !RED_ARE_YOU_SURE.includes(kind);
+}
+
+function asksInADialog(decision: Decision, asks: Asks): boolean {
+  if (asks === null || asks === 'composer') return false;
+  return !RED_ARE_YOU_SURE.includes(decision);
+}
+
 function offerOf(
   decision: Decision,
   shade: Shade,
@@ -1319,6 +1360,8 @@ function offerOf(
     doing: doingOf(entry.doing),
     asks,
     savedFirst: Boolean(entry.savedFirst),
+    opensDialog: asksInADialog(decision, asks),
+    runsAgent: Boolean(shade.runsAgent) || runsAgent(decision),
   };
 }
 
@@ -1364,6 +1407,8 @@ function authorOffer(
   const entry: Entry = ENTRIES[decision];
   const phase = phaseOf(conversation);
   const { dialog, ...shade } = entry.inPhase?.[phase] ?? {};
+  const filesATicket =
+    decision === 'approve' && kindToAccept(proposal, phase) === 'ticket';
   const asks =
     typeof entry.asks === 'object' && entry.asks !== null
       ? {
@@ -1376,7 +1421,12 @@ function authorOffer(
           resolving: conversation.author_kind === 'bot',
         }
       : entry.asks;
-  return offerOf(decision, shade, entry.title, besides(asks, phase));
+  return offerOf(
+    decision,
+    { ...shade, runsAgent: Boolean(shade.runsAgent) || filesATicket },
+    entry.title,
+    besides(asks, phase),
+  );
 }
 
 function reviewerOffer(decision: Decision, phase: Phase): Offer {
@@ -1491,6 +1541,14 @@ function acceptAllAsks(
   };
 }
 
+const RUN_BY_AN_AGENT: SplitPartName[] = ['ticket', 'new-pr'];
+
+function agentRunsFor(parts: SplitPart[]): boolean {
+  return parts.some(
+    (one) => one.state === 'proposed' && RUN_BY_AN_AGENT.includes(one.part),
+  );
+}
+
 function splitOffers(
   conversation: Conversation,
   proposal: Proposal,
@@ -1505,7 +1563,7 @@ function splitOffers(
     ? [
         offerOf(
           'approve',
-          { label: 'Accept all' },
+          { label: 'Accept all', runsAgent: agentRunsFor(parts) },
           ACCEPT_ALL_TITLE,
           acceptAllAsks(conversation, parts),
         ),
@@ -1547,6 +1605,8 @@ export interface PartOffer {
   label: string;
   title: string;
   weight: Weight;
+  opensDialog: boolean;
+  runsAgent: boolean;
 }
 
 const ACCEPT_TITLES: Record<SplitPartName, string> = {
@@ -1576,6 +1636,8 @@ export function partOffers(
       label: 'Accept',
       title: ACCEPT_TITLES[part.part],
       weight: 'primary',
+      opensDialog: false,
+      runsAgent: RUN_BY_AN_AGENT.includes(part.part),
     });
   }
   if (WORDED.includes(part.part)) {
@@ -1584,6 +1646,8 @@ export function partOffers(
       label: 'Edit',
       title: 'changes its words and saves them; nothing is accepted',
       weight: 'secondary',
+      opensDialog: true,
+      runsAgent: false,
     });
   }
   if (!running) {
@@ -1594,6 +1658,8 @@ export function partOffers(
         'sends this part back to the agent with your note; the other parts ' +
         'keep what they have',
       weight: 'secondary',
+      opensDialog: true,
+      runsAgent: true,
     });
   }
   return offers;

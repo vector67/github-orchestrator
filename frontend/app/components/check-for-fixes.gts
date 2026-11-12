@@ -1,7 +1,9 @@
 import Component from '@glimmer/component';
+import Glyphs from 'frontend/components/glyphs';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import { runsAgent } from 'frontend/data/decisions';
 import type StoreService from 'frontend/services/store';
 import type ToastsService from 'frontend/services/toasts';
 
@@ -36,8 +38,11 @@ export default class CheckForFixes extends Component<CheckForFixesSignature> {
       data-weight="secondary"
       title="Asks an agent whether the changes since your comment address it: Assumed done if they do, My move if not"
       disabled={{this.asking}}
+      data-runs-agent={{if (runsAgent "check-for-fixes") "true"}}
       data-test-check-for-fixes
       {{on "click" this.check}}
-    >Check for fixes</button>
+    >Check for fixes<Glyphs
+        @runsAgent={{runsAgent "check-for-fixes"}}
+      /></button>
   </template>
 }

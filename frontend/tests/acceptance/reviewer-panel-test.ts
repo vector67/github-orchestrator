@@ -637,6 +637,16 @@ module('Acceptance | mention card', function (hooks) {
     );
   });
 
+  test('Resolve on board acts at once on a mention of a PR that is not held, so it carries no window icon', async function (assert) {
+    mentioned(board());
+
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    assert
+      .dom('[data-test-decision="resolve-on-board"]')
+      .doesNotHaveAttribute('data-opens-dialog');
+  });
+
   test('a mention in the PR description is placed as the PR description', async function (assert) {
     mentioned(board(), 'pr-body');
 
@@ -684,6 +694,14 @@ module(
         .hasAttribute('role', 'alertdialog')
         .includesText('This mention is the only reason you can see this PR.');
       assert.deepEqual(verbs(), []);
+    });
+
+    test('Resolve on board carries the window icon on the card where it opens the warning', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+      assert
+        .dom('[data-test-decision="resolve-on-board"]')
+        .hasAttribute('data-opens-dialog');
     });
 
     test('Back on hold closes the mention and leaves the hold', async function (assert) {

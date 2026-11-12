@@ -205,6 +205,30 @@ module('Acceptance | split', function (hooks) {
     assert.deepEqual(offered('reply'), ['Accept', 'Edit', 'Rework']);
   });
 
+  test('a part’s buttons mark the dialogs they open and the agent runs they start', async function (assert) {
+    seed(board(), { ticket: TICKET });
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    const marked = (name: string) =>
+      findAll(`[data-test-split-card="${name}"] [data-test-part-act]`).map(
+        (one) =>
+          [
+            one.getAttribute('data-test-part-act'),
+            one.hasAttribute('data-runs-agent') ? '✦' : '',
+            one.hasAttribute('data-opens-dialog') ? '⧉' : '',
+          ].join(''),
+      );
+    assert.deepEqual(marked('ticket'), ['accept✦', 'edit⧉', 'rework✦⧉']);
+    assert.deepEqual(marked('changes'), ['accept', 'rework✦⧉']);
+    assert.deepEqual(marked('new-pr'), ['accept✦', 'rework✦⧉']);
+    assert.deepEqual(marked('reply'), ['accept', 'edit⧉', 'rework✦⧉']);
+    assert
+      .dom('[data-test-decision="approve"]')
+      .hasAttribute('data-runs-agent')
+      .hasAttribute('data-opens-dialog');
+  });
+
   test('accepting a part accepts that part alone, at once', async function (assert) {
     seed(board());
 

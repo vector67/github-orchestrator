@@ -3,7 +3,9 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import Glyphs from 'frontend/components/glyphs';
 import RequestSessionAsk from 'frontend/components/request-session-ask';
+import { runsAgent } from 'frontend/data/decisions';
 import didChange from 'frontend/modifiers/did-change';
 import type BoardService from 'frontend/services/board';
 import type RequestSessionService from 'frontend/services/request-session';
@@ -96,9 +98,10 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
                 type="button"
                 class="question-option"
                 disabled={{@pending}}
+                data-runs-agent={{if (runsAgent "answer") "true"}}
                 data-test-question-option
                 {{on "click" (fn this.pick option)}}
-              >{{option}}</button>
+              >{{option}}<Glyphs @runsAgent={{runsAgent "answer"}} /></button>
             </li>
           {{/each}}
         </ol>
@@ -127,8 +130,9 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
               type="submit"
               class="reply-send"
               disabled={{this.unsendable}}
+              data-runs-agent={{if (runsAgent "answer") "true"}}
               data-test-question-other-send
-            >Answer</button>
+            >Answer<Glyphs @runsAgent={{runsAgent "answer"}} /></button>
           </div>
         </form>
       {{/if}}
