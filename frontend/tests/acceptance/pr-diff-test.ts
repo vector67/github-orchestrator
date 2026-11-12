@@ -929,6 +929,51 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-toast]').doesNotExist();
     });
 
+    test('the plus on another line opens an empty box once Ask the agent has used the text', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'why a comment here?');
+      await click('[data-test-box-ask]');
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+
+      await click(`${row('+19')} [data-test-add]`);
+
+      assert.dom('[data-test-comment-box] textarea').hasValue('');
+    });
+
+    test('the plus on another line opens an empty box once Save as local draft has used the text', async function (assert) {
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'return the rows');
+      await click('[data-test-box-save]');
+
+      await click(`${row('+19')} [data-test-add]`);
+
+      assert.dom('[data-test-comment-box] textarea').hasValue('');
+    });
+
+    test('the plus on another line opens an empty box once Add to review has used the text', async function (assert) {
+      board().created = 'draft_00000000000000bb';
+      await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+      await click(`${row('+20')} [data-test-add]`);
+      await fillIn('[data-test-comment-box] textarea', 'return the rows');
+      board().conversations = [
+        ...board().conversations,
+        thread({
+          key: 'draft_00000000000000bb',
+          kind: 'draft',
+          state: 'draft',
+          etag: '"bb-v1"',
+          comments: [],
+        }),
+      ];
+      await click('[data-test-box-add]');
+
+      await click(`${row('+19')} [data-test-add]`);
+
+      assert.dom('[data-test-comment-box] textarea').hasValue('');
+    });
+
     test('a draft being edited has no Add to review in its box', async function (assert) {
       board().conversations = [
         thread({

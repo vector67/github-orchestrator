@@ -118,6 +118,7 @@ export default class CommentBox extends Component<CommentBoxSignature> {
       this.args.from ?? null,
     );
     if (await this.terminal.ask(prompt, null)) {
+      this.drafts.forget(NEW_DRAFT);
       void this.router.transitionTo('terminal');
     }
   };
