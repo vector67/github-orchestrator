@@ -98,7 +98,16 @@ class InstanceChecks:
             *self._github(),
             self._hub(answer, server),
             self._watcher(answer if answer is None or answer.get("pid") == server else None),
+            *self._mentions(),
         ]
+
+    def _mentions(self) -> list[Finding]:
+        failing = self._watcher_health.health().mentions_error
+        if failing is None:
+            return []
+        return [fail(f"the mentions search is failing: {' '.join(failing.split())}",
+                     f"correct mentions_start in {self._config_file.location()}; "
+                     "the next poll searches again")]
 
     def _github(self) -> list[Finding]:
         if self._config_file.check() is not None or self._which("gh") is None:

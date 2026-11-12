@@ -418,6 +418,27 @@ module('Acceptance | runs', function (hooks) {
     assert.dom(failed).hasClass('failing');
   });
 
+  test('the facts name a failing mentions search and why, as an alarm', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        mentions_error: 'config.toml: mentions_start must be in quotes',
+      },
+    });
+
+    await visit('/runs');
+
+    const failing = findAll('[data-test-watcher-fact]').find((one) =>
+      one.textContent.includes('Mentions search'),
+    );
+    assert.strictEqual(
+      failing?.textContent.trim().replace(/\s+/g, ' '),
+      'Mentions search failing: config.toml: mentions_start must be in quotes',
+    );
+    assert.dom(failing).hasClass('failing');
+  });
+
   test('a run claude reported as an error though it exited cleanly says it errored', async function (assert) {
     onTheHub();
     board().ledger = runLedger({

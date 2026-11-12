@@ -151,6 +151,13 @@ export function factsOf(
   if (watcher.last_error) {
     facts.push({ label: 'Last error', text: watcher.last_error, alarm: true });
   }
+  if (watcher.mentions_error) {
+    facts.push({
+      label: 'Mentions search',
+      text: `failing: ${watcher.mentions_error}`,
+      alarm: true,
+    });
+  }
   facts.push({
     label: 'Today',
     text: `${counted(today.runs)}${costWords(today)}${unpriced}`,
