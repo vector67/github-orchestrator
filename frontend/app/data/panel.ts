@@ -326,6 +326,7 @@ const REVIEW_STATE_WORDS: Record<string, string> = {
 const KICKER_PHASES: Partial<Record<Phase, string>> = {
   rejected: 'Rejected',
   resolved: 'Resolved on GitHub',
+  'marked done': 'Marked done',
   confirmed: 'Confirmed',
 };
 
@@ -360,6 +361,7 @@ const FIX_PHRASES: Partial<Record<Phase, string>> = {
   deferred: 'Parked · deferred',
   rejected: 'Rejected · the fix was dropped',
   resolved: 'Resolved on GitHub',
+  'marked done': 'Marked done',
 };
 
 const REPLY_PHRASES: Partial<Record<Phase, string>> = {

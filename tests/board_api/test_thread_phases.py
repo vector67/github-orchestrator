@@ -219,6 +219,10 @@ def resolved():
     return _settled(_proposed(), "resolve", reply="Fixed in the last push.")
 
 
+def marked_done():
+    return _settled(_proposed(), "mark-done")
+
+
 AUTHOR = {
     "queued": queued, "answered": answered, "working": working, "session": session, "rework": rework,
     "landing": landing, "rebasing": rebasing, "proposed": proposed_, "asking": asking,
@@ -226,6 +230,7 @@ AUTHOR = {
     "push failed": push_failed, "reply failed": reply_failed,
     "filing": filing, "filing failed": filing_failed, "waiting": waiting,
     "deferred": deferred, "landed": landed, "rejected": rejected, "resolved": resolved,
+    "marked done": marked_done,
     "draft": lambda: draft(is_author=True), "enrolled": lambda: enrolled(is_author=True),
     "discarded": lambda: discarded(is_author=True),
 }
@@ -285,6 +290,10 @@ def reviewer_resolved():
     return _settled(reviewer_answered(), "resolve", reply="Confirmed, thanks.", resolve=True)
 
 
+def reviewer_marked_done():
+    return _settled(reviewer_answered(), "mark-done")
+
+
 def _drafted(is_author):
     board = _on_a_diff(is_author)
     answer = client_of(board).post("/api/operations:create-draft",
@@ -313,6 +322,7 @@ REVIEWER_PHASES = {
     "assumed-done": reviewer_assumed_done, "not-mine": reviewer_not_mine,
     "confirmed": reviewer_confirmed,
     "deferred": reviewer_deferred, "resolved": reviewer_resolved,
+    "marked done": reviewer_marked_done,
     "draft": draft, "enrolled": enrolled, "discarded": discarded,
 }
 

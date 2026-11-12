@@ -48,7 +48,7 @@ module('Acceptance | toast undo', function (hooks) {
     await click('[data-test-decision="mark-done"]');
 
     assert.dom('[data-test-toast-undo]').hasText('Bring back');
-    settledIn(board(), 'resolved');
+    settledIn(board(), 'marked done');
     assert.strictEqual(
       await undone(board(), 'unpark'),
       `/pr/o/r/7/api/conversations/${KEY}/operations:unpark`,

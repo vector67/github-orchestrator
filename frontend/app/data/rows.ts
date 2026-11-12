@@ -64,6 +64,7 @@ const SETTLED: Phase[] = [
   'landed',
   'rejected',
   'resolved',
+  'marked done',
   'confirmed',
   'discarded',
 ];
@@ -78,6 +79,7 @@ const SAID: Partial<Record<Phase, string>> = {
   deferred: 'Deferred',
   rejected: 'Rejected',
   resolved: 'Resolved on GitHub',
+  'marked done': 'Marked done',
   confirmed: 'Confirmed',
   discarded: 'Discarded',
   removed: 'comment removed from GitHub',

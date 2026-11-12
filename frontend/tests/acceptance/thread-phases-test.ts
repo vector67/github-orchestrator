@@ -242,13 +242,18 @@ module('Acceptance | thread phases', function (hooks) {
       landed: ['Accepted · pushed', 'Bring back'],
       rejected: ['Rejected · the fix was dropped', 'Bring back'],
       resolved: ['Resolved on GitHub', 'Unresolve on GitHub'],
+      'marked done': ['Marked done', 'Bring back'],
     };
 
-    await phases(board(), ['landed', 'rejected', 'resolved'], (phase) => {
-      const [label, verb] = said[phase]!;
-      assert.strictEqual(fixLabel(), label, phase);
-      assert.deepEqual(offered(), [verb], phase);
-    });
+    await phases(
+      board(),
+      ['landed', 'rejected', 'resolved', 'marked done'],
+      (phase) => {
+        const [label, verb] = said[phase]!;
+        assert.strictEqual(fixLabel(), label, phase);
+        assert.deepEqual(offered(), [verb], phase);
+      },
+    );
   });
 
   test('a fix brought back after its worktree went offers a fresh one, not Accept', async function (assert) {

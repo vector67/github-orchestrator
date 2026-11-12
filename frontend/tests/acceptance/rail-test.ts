@@ -214,6 +214,23 @@ module('Acceptance | rail', function (hooks) {
     assert.dom('#c-c [data-test-meta]').hasText('Confirmed');
   });
 
+  for (const role of ['author', 'reviewer'] as const) {
+    test(`a thread the ${role} marked done says so, and only one GitHub resolved says Resolved on GitHub`, async function (assert) {
+      board().actAs(role);
+      board().conversations = [
+        board().threadIn('marked done', { key: 'm' }),
+        board().threadIn('resolved', { key: 'g' }),
+      ];
+
+      await visit('/pr/o/r/7/conversations/m');
+
+      assert.dom('#c-m [data-test-meta]').hasText('Marked done');
+      assert.dom('#c-g [data-test-meta]').hasText('Resolved on GitHub');
+      assert.dom('[data-test-kicker]').includesText('Marked done');
+      assert.dom('[data-test-kicker]').doesNotIncludeText('GitHub');
+    });
+  }
+
   test('a landed row says what its accept landed: a push, a reply or a filed ticket', async function (assert) {
     const landed = (key: string, approve: Partial<OperationSummary>) =>
       thread({

@@ -909,6 +909,79 @@ export const RECORDED = {
    "unread": false,
    "updated_at": "2026-09-12T11:00:00Z"
   },
+  "marked done": {
+   "anchor": {
+    "is_outdated": false,
+    "line": 42,
+    "original_commit": "a1b2c3d",
+    "original_line": 42,
+    "original_start_line": null,
+    "path": "src/foo.py",
+    "side": "RIGHT",
+    "start_line": null,
+    "start_side": null
+   },
+   "author_kind": "human",
+   "comments": [
+    {
+     "author": "anna",
+     "created_at": "2026-09-12T10:00:00Z",
+     "id": 1,
+     "reactions": [],
+     "review_state": "CHANGES_REQUESTED"
+    }
+   ],
+   "commit_check": null,
+   "created_at": "2026-09-12T11:00:00.000000Z",
+   "etag": "\"marked done\"",
+   "gist": "rename the helper",
+   "github_node_id": "PRRT_a",
+   "github_removed": false,
+   "github_resolved": null,
+   "github_resolved_at": null,
+   "key": "PRRT_a",
+   "kind": "review",
+   "mention": false,
+   "operations": [
+    {
+     "attempts": 1,
+     "attempts_allowed": 3,
+     "id": "PRRT_a.1",
+     "kind": "first",
+     "lands": null,
+     "reason": null,
+     "reason_code": null,
+     "requested_at": "2026-09-12T11:00:00.000000Z",
+     "settled_at": "2026-09-12T11:00:00Z",
+     "state": "applied",
+     "steps_done": null,
+     "steps_total": null,
+     "ticket_key": null
+    },
+    {
+     "attempts": null,
+     "attempts_allowed": null,
+     "id": "op_000000000001",
+     "kind": "resolve",
+     "lands": null,
+     "reason": null,
+     "reason_code": null,
+     "requested_at": "2026-09-12T11:00:00Z",
+     "settled_at": "2026-09-12T11:00:00Z",
+     "state": "applied",
+     "steps_done": null,
+     "steps_total": null,
+     "ticket_key": null
+    }
+   ],
+   "question": null,
+   "record_state": "resolved",
+   "reopened": false,
+   "state": "done",
+   "state_changed_at": "2026-09-12T11:00:00Z",
+   "unread": false,
+   "updated_at": "2026-09-12T11:00:00Z"
+  },
   "proposed": {
    "anchor": {
     "is_outdated": false,
@@ -2257,6 +2330,71 @@ export const RECORDED = {
    "record_state": "enrolled",
    "reopened": false,
    "state": "enrolled",
+   "state_changed_at": "2026-09-12T11:00:00Z",
+   "unread": false,
+   "updated_at": "2026-09-12T11:00:00Z"
+  },
+  "marked done": {
+   "anchor": {
+    "is_outdated": false,
+    "line": 42,
+    "original_commit": "a1b2c3d",
+    "original_line": 42,
+    "original_start_line": null,
+    "path": "src/foo.py",
+    "side": "RIGHT",
+    "start_line": null,
+    "start_side": null
+   },
+   "author_kind": "mine",
+   "comments": [
+    {
+     "author": "octocat",
+     "created_at": "2026-09-12T10:00:00Z",
+     "id": 1,
+     "reactions": [],
+     "review_state": "CHANGES_REQUESTED"
+    },
+    {
+     "author": "anna",
+     "created_at": "2026-09-12T10:30:00Z",
+     "id": 2,
+     "reactions": [],
+     "review_state": null
+    }
+   ],
+   "commit_check": null,
+   "created_at": "2026-09-12T11:00:00.000000Z",
+   "etag": "\"marked done\"",
+   "gist": "rename the helper",
+   "github_node_id": "PRRT_a",
+   "github_removed": false,
+   "github_resolved": null,
+   "github_resolved_at": null,
+   "key": "PRRT_a",
+   "kind": "review",
+   "mention": false,
+   "operations": [
+    {
+     "attempts": null,
+     "attempts_allowed": null,
+     "id": "op_000000000001",
+     "kind": "resolve",
+     "lands": null,
+     "reason": null,
+     "reason_code": null,
+     "requested_at": "2026-09-12T11:00:00Z",
+     "settled_at": "2026-09-12T11:00:00Z",
+     "state": "applied",
+     "steps_done": null,
+     "steps_total": null,
+     "ticket_key": null
+    }
+   ],
+   "question": null,
+   "record_state": "resolved",
+   "reopened": false,
+   "state": "done",
    "state_changed_at": "2026-09-12T11:00:00Z",
    "unread": false,
    "updated_at": "2026-09-12T11:00:00Z"

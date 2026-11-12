@@ -71,6 +71,7 @@ export type Phase =
   | 'landed'
   | 'rejected'
   | 'resolved'
+  | 'marked done'
   | 'confirmed'
   | 'discarded';
 
@@ -106,6 +107,8 @@ export const PHASE_HINTS: Record<Phase, string> = {
   landed: 'on the PR branch',
   rejected: 'you turned it down',
   resolved: 'closed, worktree and branch gone',
+  'marked done':
+    'closed on the board alone; GitHub was not asked to resolve it',
   confirmed: 'you confirmed it was settled; nothing was posted to GitHub',
   discarded: 'a draft thrown away with nothing posted',
 };
@@ -284,9 +287,13 @@ function phaseFrom(conversation: Conversation): Phase {
   switch (conversation.state) {
     case 'ready':
       return readyPhase(conversation);
-    case 'done':
+    case 'done': {
       if (conversation.record_state === 'confirmed') return 'confirmed';
-      return CLOSED_PHASES[closedBy(conversation) ?? ''] ?? 'resolved';
+      const closed = CLOSED_PHASES[closedBy(conversation) ?? ''] ?? 'resolved';
+      return closed === 'resolved' && conversation.github_resolved !== true
+        ? 'marked done'
+        : closed;
+    }
     case 'in-session':
       return 'session';
     case 'landing': {
