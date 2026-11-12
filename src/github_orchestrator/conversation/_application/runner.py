@@ -307,7 +307,7 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return WorkspaceCut(base_sha=cut.workspace.base_sha)
         case OpenSession(answers=True):
             refused = ports.agents.answer_in_session(
-                thread_workspace(ports, conversation).path, conversation)
+                thread_workspace(ports, conversation).path, conversation, effect.steer)
             return (None if refused is None
                     else SessionRefused(reason=refused, back_to=effect.back_to))
         case OpenSession():

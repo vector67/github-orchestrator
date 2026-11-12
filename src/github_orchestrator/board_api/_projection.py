@@ -310,6 +310,12 @@ def _operation_of(threads: ConversationManager, conversation: Conversation,
             for step in view.plan]
     brief = view.brief
     match operation.kind:
+        case OperationKind.ANSWER as answer:
+            return contract.AnswerOperation(
+                **envelope, kind=answer, answer=view.text,
+                attempts=operation.attempts, attempts_allowed=operation.attempts_allowed,
+                last_action=last_action, progress=progress, plan=plan,
+                proposal=view.proposal)
         case OperationKind.START_SESSION as session:
             return contract.SessionOperation(
                 **envelope, kind=session, steer=view.text or None,

@@ -249,7 +249,7 @@ def test_every_prompt_that_asks_for_a_fix_offers_a_question_when_the_brief_canno
 
 def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_worktree(
         world, runs, worktree):
-    assert runs.answer_in_session(_fix(worktree)) is None
+    assert runs.answer_in_session(_fix(worktree), None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert (session.worktree, session.argv) == (worktree, ["claude", "--continue"])
@@ -263,7 +263,7 @@ def test_answering_a_question_resumes_the_session_that_thread_s_run_started(
     finish(runs.fix(_fix(worktree)))
     finish(runs.fix(_fix(worktree, key="PRRT_2")))
 
-    assert runs.answer_in_session(_fix(worktree)) is None
+    assert runs.answer_in_session(_fix(worktree), None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert session.argv == ["claude", "--resume", "asked"]
@@ -279,6 +279,32 @@ def test_a_reply_while_asking_continues_the_agent_s_conversation_with_the_reply(
     assert "--continue" in claude.spawned[-1].argv
     assert "reviewer: Use clock_timestamp() in production too." in prompt
     assert {verb for verb, _ in invocations(prompt)} == {"ready", "ask"}
+
+
+ANSWER = "Use clock_timestamp() in production too."
+
+
+def test_an_answer_continues_the_agent_s_conversation_unwatched_with_the_answer(
+        runs, claude, worktree):
+    prompt = _ran(runs, claude, runs.answer_thread(_fix(worktree, note=ANSWER)))
+
+    assert "--continue" in claude.spawned[-1].argv
+    assert ANSWER in prompt
+    assert {verb for verb, _ in invocations(prompt)} == {"ready", "ask"}
+    for verb, flags in invocations(prompt):
+        assert_the_cli_takes(verb, flags)
+
+
+def test_an_answer_in_a_session_resumes_the_conversation_with_the_answer_as_its_first_message(
+        world, runs, worktree):
+    assert runs.answer_in_session(_fix(worktree), ANSWER) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    *argv, message = session.argv
+    assert argv == ["claude", "--continue"]
+    assert ANSWER in message
+    assert "now watching" in message
+    assert {verb for verb, _ in invocations(message)} == {"ready", "ask"}
 
 
 SKIPPED_AS = "risky|acknowledgement|needs-human"

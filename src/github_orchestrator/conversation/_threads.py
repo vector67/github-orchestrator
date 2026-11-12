@@ -62,6 +62,7 @@ from github_orchestrator.conversation._domain.apply import (
     apply,
 )
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     CheckForFixes,
     Command,
@@ -399,6 +400,9 @@ class _Editable:
 
     def drop_question(self) -> Conversation | Denied:
         return self._ask(DropQuestion())
+
+    def answer(self, text: str, *, visible: bool) -> Conversation | Denied:
+        return self._ask(Answer(text=text, visible=visible))
 
     def resolve(self, *, reply: str = "", delete_comment: bool = False,
                 resolve: bool = False,

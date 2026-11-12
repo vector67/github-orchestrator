@@ -108,6 +108,7 @@
     "200": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -183,6 +184,9 @@
        "$ref": "#/components/schemas/DropQuestionOperation"
       },
       {
+       "$ref": "#/components/schemas/AnswerOperation"
+      },
+      {
        "$ref": "#/components/schemas/ReplyOperation"
       },
       {
@@ -201,6 +205,28 @@
      "$ref": "#/components/schemas/Errors"
     },
     "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/conversations/{key}/operations:answer": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
      "$ref": "#/components/schemas/Errors"
     },
     "500": {
@@ -1099,6 +1125,7 @@
     "200": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -1172,6 +1199,9 @@
       },
       {
        "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/AnswerOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -1201,6 +1231,7 @@
     "202": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -1274,6 +1305,9 @@
       },
       {
        "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/AnswerOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -1302,6 +1336,7 @@
     "202": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -1375,6 +1410,9 @@
       },
       {
        "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/AnswerOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -1406,6 +1444,7 @@
     "202": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -1479,6 +1518,9 @@
       },
       {
        "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/AnswerOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"
@@ -2089,6 +2131,150 @@
     "original_start_line",
     "original_commit",
     "is_outdated"
+   ],
+   "type": "object"
+  },
+  "AnswerOperation": {
+   "properties": {
+    "answer": {
+     "type": "string"
+    },
+    "attempts": {
+     "type": "integer"
+    },
+    "attempts_allowed": {
+     "type": "integer"
+    },
+    "conversation": {
+     "anyOf": [
+      {
+       "maxLength": 128,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "answer",
+     "type": "string"
+    },
+    "last_action": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "plan": {
+     "items": {
+      "$ref": "#/components/schemas/PlanStep"
+     },
+     "type": "array"
+    },
+    "progress": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "proposal": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason_code": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/ReasonCode"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "requested_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "settled_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "$ref": "#/components/schemas/OperationState"
+    }
+   },
+   "required": [
+    "id",
+    "conversation",
+    "kind",
+    "state",
+    "reason",
+    "reason_code",
+    "requested_at",
+    "settled_at",
+    "answer",
+    "attempts",
+    "attempts_allowed",
+    "last_action",
+    "progress",
+    "plan",
+    "proposal"
+   ],
+   "type": "object"
+  },
+  "AnswerRequest": {
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "visible": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "text",
+    "visible"
    ],
    "type": "object"
   },
@@ -5542,6 +5728,7 @@
     "approve",
     "stop",
     "drop-question",
+    "answer",
     "resolve",
     "reject",
     "defer",
@@ -5565,6 +5752,7 @@
    "items": {
     "discriminator": {
      "mapping": {
+      "answer": "#/components/schemas/AnswerOperation",
       "approve": "#/components/schemas/ApproveOperation",
       "confirm": "#/components/schemas/PlaceOperation",
       "create-draft": "#/components/schemas/DraftOperation",
@@ -5638,6 +5826,9 @@
      },
      {
       "$ref": "#/components/schemas/DropQuestionOperation"
+     },
+     {
+      "$ref": "#/components/schemas/AnswerOperation"
      },
      {
       "$ref": "#/components/schemas/ReplyOperation"
@@ -5802,6 +5993,7 @@
     "operation": {
      "discriminator": {
       "mapping": {
+       "answer": "#/components/schemas/AnswerOperation",
        "approve": "#/components/schemas/ApproveOperation",
        "confirm": "#/components/schemas/PlaceOperation",
        "create-draft": "#/components/schemas/DraftOperation",
@@ -5875,6 +6067,9 @@
       },
       {
        "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/AnswerOperation"
       },
       {
        "$ref": "#/components/schemas/ReplyOperation"

@@ -117,7 +117,9 @@ class ThreadAgents:
         asked = self._asked(conversation, _worktree_of(worktree),
                             skipped=bool(conversation.fix.classification),
                             brief=conversation.fix.run.brief)
-        if conversation.fix.run.resumes:
+        if kind == OperationKind.ANSWER:
+            run = self.thread_work.answer_thread(asked)
+        elif conversation.fix.run.resumes:
             run = self.thread_work.carry_on_thread(asked)
         elif kind == OperationKind.REBASE:
             run = self.thread_work.rebase_fix(asked, None if onto is None else str(onto))
@@ -159,10 +161,10 @@ class ThreadAgents:
             return self.thread_work.fix_in_session(asked)
         return self.thread_work.open_session(asked, steer)
 
-    def answer_in_session(self, worktree: str | None,
-                          conversation: Conversation) -> str | None:
+    def answer_in_session(self, worktree: str | None, conversation: Conversation,
+                          answer: str | None) -> str | None:
         return self.thread_work.answer_in_session(
-            self._asked(conversation, _worktree_of(worktree), False, None))
+            self._asked(conversation, _worktree_of(worktree), False, None), answer)
 
     def open_shell(self, worktree: str | None) -> str | None:
         return self.thread_work.open_shell(self.pr, _worktree_of(worktree))

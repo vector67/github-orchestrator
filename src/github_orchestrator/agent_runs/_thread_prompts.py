@@ -757,6 +757,38 @@ def carry_on_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
     ])
 
 
+def answered_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
+    return "\n".join([
+        "The author answered your question:",
+        "",
+        fix.note,
+        "",
+        "Carry on from where you stopped and report as before:",
+        _ready(commands, fix, FULL_SHA, "<one line: what changed>"),
+        "",
+        "If the answer does not settle it, ask again, saying what the answer changed:",
+        _ask(commands, fix),
+    ])
+
+
+def watched_answer_prompt(commands: ReportCommands, fix: ThreadFix, answer: str) -> str:
+    return "\n".join([
+        "The author answered your question, and is now watching this session and may "
+        "type to you here. Nobody was watching when you asked; that no longer holds, so "
+        "answer the author here when they write to you. Their answer:",
+        "",
+        answer,
+        "",
+        "Carry on from where you stopped. The board takes the outcome only from a "
+        "report, so whatever the author says in this session, finish by running a report "
+        "command yourself, as before:",
+        _ready(commands, fix, FULL_SHA, "<one line: what changed>"),
+        "",
+        "If you need the author to decide something again, ask through the board:",
+        _ask(commands, fix),
+    ])
+
+
 PART_NAMES = {"ticket": "the ticket", "changes": "the changes to this PR",
               "new-pr": "the new PR", "reply": "the reply"}
 

@@ -35,9 +35,13 @@ EDIT_PART = "edit-part"
 
 PLACE = "place"
 
+ANSWER = "answer"
+
+VISIBLE_MODIFIER = "visible"
+
 DECISIONS = (APPROVE, REWORK, SESSION, "shell", "resolve", "retry", "fix", "reject",
              "defer", "unpark", "confirm", "place", "not_fixed", "stop", "reply", EDIT_DRAFT,
-             "enrol", "withdraw-from-review", "discard", "post-now", "drop-question", EDIT_PART)
+             "enrol", "withdraw-from-review", "discard", "post-now", "drop-question", EDIT_PART, ANSWER)
 
 WORDS_ONLY = (REWORK, "not_fixed", "reply", EDIT_DRAFT, EDIT_PART)
 
@@ -65,6 +69,8 @@ def _modifier_allowed(decision: str, modifier: str) -> bool:
         return modifier in frozenset(ConversationState)
     if decision == SESSION:
         return modifier in (BRIEF_MODIFIER, DELETE_MODIFIER)
+    if decision == ANSWER:
+        return modifier == VISIBLE_MODIFIER
     if decision == RESOLVE:
         *slot, last = modifier.split(" ")
         return (last in (GITHUB_MODIFIER, DELETE_MODIFIER, NO_THUMBS_UP_MODIFIER)

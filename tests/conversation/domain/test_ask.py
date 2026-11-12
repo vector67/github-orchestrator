@@ -2,7 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.agent_runs.fake import CarryingOnThread, FakeAgentRuns, Outcome
+from github_orchestrator.agent_runs.fake import (
+    AnsweringThread,
+    CarryingOnThread,
+    FakeAgentRuns,
+    Outcome,
+)
 from github_orchestrator.conversation import Conversation, ConversationState, Denied
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -160,7 +165,7 @@ def test_answering_a_question_continues_the_agent_s_conversation_in_a_session(be
     assert not isinstance(outcome, Denied), outcome
     assert bench.stored().standing is ConversationState.IN_SESSION
     [answering] = bench.agent_runs.answering
-    assert answering.key == KEY
+    assert (answering.fix.key, answering.answer) == (KEY, None)
 
 
 def test_answering_a_question_starts_the_attempts_over(bench):
@@ -419,3 +424,98 @@ def test_a_run_that_reports_leaves_no_last_words_behind(bench):
     bench.ask()
 
     assert bench.stored().fix.last_words is None
+
+
+ANSWER = "Use clock_timestamp() in production too"
+
+
+def _asked_and_stopped(bench):
+    start_run(bench.world, bench.threads)
+    bench.ask()
+    drain(bench.threads)
+    bench.world.pr_processes.open(THE_PR, Path(WORKTREE))
+
+
+def _answer_with(bench, text=ANSWER, *, visible):
+    with bench.threads.editing(KEY) as editable:
+        outcome = editable.answer(text, visible=visible)
+    drain(bench.threads)
+    drain(bench.threads)
+    return outcome
+
+
+def test_an_answer_carries_the_agent_s_own_conversation_on_with_it_unwatched(bench):
+    _asked_and_stopped(bench)
+    bench.agent_runs.script(Outcome(finishes=False))
+
+    outcome = _answer_with(bench, visible=False)
+
+    assert not isinstance(outcome, Denied), outcome
+    assert bench.stored().standing is ConversationState.WORKING
+    resumed = bench.agent_runs.started[-1].work
+    assert isinstance(resumed, AnsweringThread)
+    assert resumed.fix.note == ANSWER
+    assert bench.agent_runs.answering == []
+
+
+def test_an_answer_watched_opens_the_agent_s_own_conversation_with_it_in_a_session(bench):
+    _asked_and_stopped(bench)
+    started = len(bench.agent_runs.started)
+
+    outcome = _answer_with(bench, visible=True)
+
+    assert not isinstance(outcome, Denied), outcome
+    assert bench.stored().standing is ConversationState.IN_SESSION
+    [answering] = bench.agent_runs.answering
+    assert (answering.fix.key, answering.answer) == (KEY, ANSWER)
+    assert len(bench.agent_runs.started) == started
+
+
+@pytest.mark.parametrize("visible", [False, True])
+def test_an_answer_is_kept_in_the_thread_s_history(bench, visible):
+    _asked_and_stopped(bench)
+    bench.agent_runs.script(Outcome(finishes=False))
+
+    _answer_with(bench, visible=visible)
+
+    answered = bench.stored().operations[-1]
+    assert (answered.kind, answered.text) == ("answer", ANSWER)
+
+
+def test_an_unwatched_answer_that_ends_without_reporting_asks_the_same_question(bench):
+    _asked_and_stopped(bench)
+
+    _answer_with(bench, visible=False)
+    drain(bench.threads)
+
+    fix = bench.stored().fix
+    assert fix.is_asking
+    assert fix.question.text == QUESTION
+
+
+def test_an_unwatched_answer_that_proposes_a_fix_leaves_no_question(bench):
+    _asked_and_stopped(bench)
+    bench.agent_runs.script(Outcome(finishes=False))
+    _answer_with(bench, visible=False)
+
+    with bench.threads.editing(KEY) as editable:
+        editable.ready(commit_fix(bench.world, KEY), tests="passed")
+
+    fix = bench.stored().fix
+    assert fix.is_proposed
+    assert fix.question is None
+
+
+@pytest.mark.parametrize("visible", [False, True])
+def test_only_a_question_can_be_answered(bench, visible):
+    propose(bench.world, bench.threads, KEY)
+
+    assert isinstance(_answer_with(bench, visible=visible), Denied)
+
+
+@pytest.mark.parametrize("visible", [False, True])
+def test_an_answer_says_something(bench, visible):
+    _asked_and_stopped(bench)
+
+    assert isinstance(_answer_with(bench, "  ", visible=visible), Denied)
+    assert bench.stored().fix.is_asking

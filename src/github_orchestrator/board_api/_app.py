@@ -27,6 +27,7 @@ from github_orchestrator.board_api import _routes as routes
 from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
+    AnswerRequest,
     ApproveRequest,
     AskedReviewer,
     AssignReviewersRequest,
@@ -1428,6 +1429,24 @@ def drop_question(key: ThreadKey, board: Serving, if_match: IfMatch) -> Response
     """
     return _queued(board, _thread(board, key), if_match,
                    lambda editable: editable.drop_question())
+
+
+@writes.post("/conversations/{key}/operations:answer", status_code=202,
+             response_model=Outcome, operation_id="answerQuestion",
+             summary="Answer the agent's question and let it carry on.",
+             responses={**ACCEPTED, 409: {
+                 "description": "No agent is asking anything on this thread.",
+                 "model": Errors}})
+def answer_question(key: ThreadKey, board: Serving, if_match: IfMatch,
+                    asked: AnswerRequest) -> Response:
+    """The agent's own conversation carries on with the answer as its next
+    message. `visible` opens it as a terminal session the operator watches and
+    may type into, as `:start-session` does on a question; otherwise it runs
+    unwatched like any run. Either way it ends in a proposal or a new
+    question.
+    """
+    return _queued(board, _thread(board, key), if_match,
+                   lambda editable: editable.answer(asked.text, visible=asked.visible))
 
 
 @writes.post("/conversations/{key}/operations:open-shell", status_code=202,

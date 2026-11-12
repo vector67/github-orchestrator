@@ -1,3 +1,5 @@
+import pytest
+
 from github_orchestrator.agent_runs.fake import Outcome
 from github_orchestrator.conversation import ConversationState
 from tests.board_api.support import KEY, THE_PR, client_of, heard_on, proposed, running
@@ -136,3 +138,42 @@ def test_a_proposal_left_by_a_silent_run_carries_its_last_words(board):
     [proposal] = client_of(board).get(f"/api/conversations/{KEY}/proposals").json()
 
     assert proposal["last_words"] == LAST_WORDS
+
+
+ANSWER = "Widen the bound"
+
+
+@pytest.mark.parametrize(("visible", "standing"), [(False, ConversationState.QUEUED),
+                                                   (True, ConversationState.IN_SESSION)])
+def test_answer_carries_the_agent_on_with_the_answer(board, visible, standing):
+    _asking(board)
+
+    answer = asked(client_of(board), "answer", text=ANSWER, visible=visible)
+
+    assert answer.status_code == 202, answer.json()
+    assert answer.json()["operation"]["kind"] == "answer"
+    assert drained(board).standing is standing
+
+
+def test_the_answer_stays_on_the_thread_s_operations(board):
+    _asking(board)
+    settled_by(board, "answer", text=ANSWER, visible=False)
+
+    operations = client_of(board).get(f"/api/conversations/{KEY}/operations").json()
+
+    assert (operations[-1]["kind"], operations[-1]["answer"]) == ("answer", ANSWER)
+
+
+def test_answer_refuses_a_thread_that_asks_nothing(ready):
+    answer = asked(client_of(ready), "answer", text=ANSWER, visible=False)
+
+    assert answer.status_code == 409
+
+
+def test_answer_refuses_an_answer_without_words(board):
+    _asking(board)
+
+    answer = asked(client_of(board), "answer", text="  ", visible=False)
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "empty-body"

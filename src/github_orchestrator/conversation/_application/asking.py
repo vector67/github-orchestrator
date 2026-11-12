@@ -11,6 +11,7 @@ from github_orchestrator.conversation._application.ports import (
 from github_orchestrator.conversation._application.settings import ThreadsConfig
 from github_orchestrator.conversation._domain.apply import apply
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     Command,
     Confirm,
@@ -77,6 +78,7 @@ KIND_OF_DECISION = {
     "fix": OperationKind.FIRST,
     "stop": OperationKind.STOP,
     "drop-question": OperationKind.DROP_QUESTION,
+    "answer": OperationKind.ANSWER,
     "reject": OperationKind.REJECT,
     "not_fixed": OperationKind.REPLY,
     "reply": OperationKind.REPLY,
@@ -177,6 +179,9 @@ def _intent_of(command: Command) -> Intent:
             return Intent(decision="stop")
         case DropQuestion():
             return Intent(decision="drop-question")
+        case Answer():
+            return Intent(decision="answer", payload=command.text,
+                          modifier="visible" if command.visible else "")
         case Retry():
             return Intent(decision="retry")
         case WriteFix():
@@ -203,6 +208,8 @@ def _allowed(command: Command, config: ThreadsConfig) -> Command:
         return replace(command, reworks_allowed=config.agents_enabled)
     if isinstance(command, StartSession):
         return replace(command, sessions_allowed=config.agents_enabled)
+    if isinstance(command, Answer):
+        return replace(command, agents_allowed=config.agents_enabled)
     if isinstance(command, Approve):
         return replace(command, account=config.gh_account,
                        filing_allowed=config.agents_enabled,

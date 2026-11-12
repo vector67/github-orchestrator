@@ -254,7 +254,7 @@ def test_answering_a_question_resumes_codex_s_newest_session_in_the_worktree(run
     fix = ThreadFix(pr=THE_PR, key="2313088871", worktree="/tmp/wt", author="reviewer",
                     path="src/foo.py", line=4, body="rename this")
 
-    assert runs.answer_in_session(fix) is None
+    assert runs.answer_in_session(fix, None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert (session.worktree, session.argv) == ("/tmp/wt", ["codex", "resume", "--last"])
@@ -268,10 +268,43 @@ def test_answering_a_question_resumes_the_thread_that_thread_s_run_started(
                     path="src/foo.py", line=4, body="rename this")
     finish(runs.fix(fix))
 
-    assert runs.answer_in_session(fix) is None
+    assert runs.answer_in_session(fix, None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert session.argv == ["codex", "resume", THREAD]
+
+
+OTHER_THREAD = "1a2b3c4d-5555-4666-8777-988899990000"
+
+
+def _thread_fix(tmp_path, key="2313088871", **fields):
+    return ThreadFix(pr=THE_PR, key=key, worktree=str(tmp_path), author="reviewer",
+                     path="src/foo.py", line=4, body="rename this", **fields)
+
+
+def test_answering_a_question_in_a_session_hands_codex_the_answer_as_its_first_message(
+        runs, world, tmp_path):
+    world.script(Outcome(events=({"type": "thread.started", "thread_id": THREAD},)))
+    finish(runs.fix(_thread_fix(tmp_path)))
+
+    assert runs.answer_in_session(_thread_fix(tmp_path), "widen the bound") is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv[:3] == ["codex", "resume", THREAD]
+    assert "widen the bound" in session.argv[3]
+
+
+def test_an_answer_carries_on_the_thread_its_own_run_started_not_the_pr_s_newest(
+        runs, world, codex, tmp_path):
+    world.script(Outcome(events=({"type": "thread.started", "thread_id": THREAD},)),
+                 Outcome(events=({"type": "thread.started", "thread_id": OTHER_THREAD},)))
+    finish(runs.fix(_thread_fix(tmp_path)))
+    finish(runs.fix(_thread_fix(tmp_path, key="2313088872")))
+
+    finish(runs.answer_thread(_thread_fix(tmp_path, note="widen the bound")))
+
+    assert codex.spawned[-1].argv[-3:] == ["resume", THREAD, "-"]
+    assert "widen the bound" in codex.prompts[-1]
 
 
 def test_a_codex_turn_reads_on_the_board_as_what_it_said_and_ran(runs, world, tmp_path):

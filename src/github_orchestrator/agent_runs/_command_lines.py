@@ -20,7 +20,7 @@ class CommandLines(Protocol):
 
     def rebase_session(self) -> list[str]: ...
 
-    def answering(self, session: str | None) -> list[str]: ...
+    def answering(self, session: str | None, first: str | None) -> list[str]: ...
 
     def env(self) -> dict[str, str]: ...
 
@@ -48,8 +48,9 @@ class ClaudeCommandLines:
     def rebase_session(self) -> list[str]:
         return [REBASE_ON_MAIN]
 
-    def answering(self, session: str | None) -> list[str]:
-        return ["--resume", session] if session else ["--continue"]
+    def answering(self, session: str | None, first: str | None) -> list[str]:
+        resumed = ["--resume", session] if session else ["--continue"]
+        return resumed if first is None else [*resumed, first]
 
     def env(self) -> dict[str, str]:
         return _without("ANTHROPIC_API_KEY")
@@ -97,8 +98,9 @@ class CodexCommandLines:
     def rebase_session(self) -> list[str]:
         return ["$" + REBASE_ON_MAIN.removeprefix("/")]
 
-    def answering(self, session: str | None) -> list[str]:
-        return ["resume", session or "--last"]
+    def answering(self, session: str | None, first: str | None) -> list[str]:
+        resumed = ["resume", session or "--last"]
+        return resumed if first is None else [*resumed, first]
 
     def env(self) -> dict[str, str]:
         return _without("OPENAI_API_KEY")

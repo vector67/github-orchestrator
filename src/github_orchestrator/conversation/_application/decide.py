@@ -5,6 +5,7 @@ from github_orchestrator.conversation._application.ports import Intent, Ports
 from github_orchestrator.conversation._application.reviews import send_reviews
 from github_orchestrator.conversation._application.runner import resume, run
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     Command,
     Confirm,
@@ -218,6 +219,9 @@ def _command(ports: Ports, intent: Intent) -> Command | _Refusal:
             return Stop()
         case "drop-question":
             return DropQuestion()
+        case "answer":
+            return Answer(text=payload, visible=intent.modifier == "visible",
+                          agents_allowed=ports.config.agents_enabled)
         case "reject":
             return Reject(reply=payload,
                           delete_comment=intent.delete_comment,

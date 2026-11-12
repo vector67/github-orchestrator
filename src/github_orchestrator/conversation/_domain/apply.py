@@ -4,6 +4,7 @@ from typing import Any
 from github_orchestrator.conversation._domain import operations as history
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     CheckForFixes,
     Confirm,
@@ -1072,11 +1073,19 @@ def _first(conversation: Conversation) -> Accepted:
                   decision_error=None, reply_note=None, pending_reply=""))
 
 
-def _answer_in_session(conversation: Conversation) -> Accepted:
+def _answer_in_session(conversation: Conversation, answer: str | None = None) -> Accepted:
     return Accepted(
         with_fix(conversation, state=IN_SESSION, session_from=ASKING, attempts=0,
                  decision_error=None),
-        (CutWorkspace(), OpenSession(back_to=ASKING, answers=True)))
+        (CutWorkspace(), OpenSession(back_to=ASKING, answers=True, steer=answer)))
+
+
+def _carry_on_with_the_answer(conversation: Conversation, command: Answer) -> Accepted:
+    if command.visible:
+        return _answer_in_session(conversation, command.text)
+    return Accepted(with_fix(conversation, state=QUEUED, started_at=None, decision_error=None,
+                             run=Run(kind=OperationKind.ANSWER, brief=Brief(note=command.text),
+                                     resumes=True)))
 
 
 def _start_session(conversation: Conversation, command: StartSession) -> Accepted:
@@ -1542,6 +1551,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _stop(conversation)
         case DropQuestion():
             return _drop_question(conversation, at)
+        case Answer():
+            return _carry_on_with_the_answer(conversation, command)
         case Resolve():
             return _closing(conversation, command)
         case Reject():

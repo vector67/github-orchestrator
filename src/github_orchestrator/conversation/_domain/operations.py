@@ -3,6 +3,7 @@ from typing import Any
 
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     Confirm,
     Defer,
@@ -122,6 +123,7 @@ VERB_KINDS: dict[type, OperationKind] = {
     OpenShell: OperationKind.OPEN_SHELL,
     Stop: OperationKind.STOP,
     DropQuestion: OperationKind.DROP_QUESTION,
+    Answer: OperationKind.ANSWER,
     Resolve: OperationKind.RESOLVE,
     Reject: OperationKind.REJECT,
     Defer: OperationKind.DEFER,
@@ -321,6 +323,8 @@ def _carried(command: Change) -> dict[str, Any]:
             return {"text": command.text}
         case StartSession():
             return {"text": command.steer}
+        case Answer():
+            return {"text": command.text}
         case Rework():
             return {"brief": Brief(note=command.note, pointed=command.pointed,
                                    include=command.include, part=command.part)}

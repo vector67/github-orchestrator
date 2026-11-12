@@ -40,6 +40,7 @@ class OperationKind(StrEnum):
     APPROVE = "approve"
     STOP = "stop"
     DROP_QUESTION = "drop-question"
+    ANSWER = "answer"
     RESOLVE = "resolve"
     REJECT = "reject"
     DEFER = "defer"
@@ -236,7 +237,8 @@ SESSION_GONE = "the session ended without reporting back"
 
 MAX_ATTEMPTS = 3
 
-RUN_KINDS = (OperationKind.FIRST, OperationKind.REBASE, OperationKind.REWORK, OperationKind.RETRY)
+RUN_KINDS = (OperationKind.FIRST, OperationKind.REBASE, OperationKind.REWORK, OperationKind.RETRY,
+             OperationKind.ANSWER)
 
 PART_RUNS = (OperationKind.FILE, OperationKind.OPEN)
 

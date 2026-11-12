@@ -5,6 +5,7 @@ from typing import Any
 from github_orchestrator.conversation._domain import operations as history
 from github_orchestrator.conversation._domain.change import Change
 from github_orchestrator.conversation._domain.commands import (
+    Answer,
     Approve,
     CheckForFixes,
     Confirm,
@@ -790,6 +791,22 @@ def _a_fix_for_a_session(conversation: Conversation,
     return _a_fix_in(states, "is not waiting for anyone")(conversation, command)
 
 
+def _agents_enabled_for_an_answer(conversation: Conversation,
+                                   command: Answer) -> Refused | None:
+    if not command.agents_allowed:
+        return _refuse_decision(
+            conversation, ErrorCode.AGENTS_DISABLED,
+            "Agents are disabled (agents_enabled=false) — the answer reached no agent.")
+    return None
+
+
+def _an_answer(conversation: Conversation, command: Answer) -> Refused | None:
+    if not command.text.strip():
+        return _refuse_decision(conversation, ErrorCode.EMPTY_BODY,
+                                "an answer needs words for the agent to carry on with")
+    return None
+
+
 def _a_brief(conversation: Conversation, command: Rework) -> Refused | None:
     brief = Brief(note=command.note, pointed=command.pointed,
                   include=command.include)
@@ -1086,6 +1103,8 @@ RULES: dict[type, tuple[Rule, ...]] = {
     WriteFix: (_open_to_a_fix, _a_fix_in((ABSENT,), "has a fix already")),
     Stop: (_not_closed_to_stop, _in_flight_to_stop, _not_pushed_to_stop),
     DropQuestion: (_open_to("drops nothing"), _a_fix_in((ASKING,), "asks nothing to drop")),
+    Answer: (_agents_enabled_for_an_answer, _open_to("answers nothing"),
+             _a_fix_in((ASKING,), "asks nothing to answer"), _an_answer),
     Resolve: (_still_open_to_resolve, _the_operators_to_resolve,
               _a_comment_to_answer_on_resolving, _a_thread_left_to_resolve,
               _yours_to_delete, _no_blank_closing_reply),
@@ -1120,6 +1139,7 @@ _REFUSED_ON_A_DRAFT: dict[type, ErrorCode] = {
     Land: ErrorCode.NO_PROPOSAL,
     Stop: ErrorCode.NOTHING_IN_FLIGHT,
     DropQuestion: ErrorCode.NO_PROPOSAL,
+    Answer: ErrorCode.NO_PROPOSAL,
     Resolve: ErrorCode.STILL_A_DRAFT,
     Reject: ErrorCode.NO_PROPOSAL,
     Defer: ErrorCode.STILL_A_DRAFT,

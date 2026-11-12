@@ -210,6 +210,13 @@ class DropQuestion:
 
 
 @dataclass(frozen=True)
+class Answer:
+    text: str
+    visible: bool
+    agents_allowed: bool = True
+
+
+@dataclass(frozen=True)
 class Resolve:
     reply: str = ""
     delete_comment: bool = False
@@ -286,6 +293,7 @@ Command = (
     | WriteFix
     | Stop
     | DropQuestion
+    | Answer
     | Resolve
     | Reply
     | EditDraft

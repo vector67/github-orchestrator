@@ -52,6 +52,7 @@ from github_orchestrator.agent_runs._summary_prompts import (
 )
 from github_orchestrator.agent_runs._tail import iter_lines_reverse
 from github_orchestrator.agent_runs._thread_prompts import (
+    answered_prompt,
     carry_on_prompt,
     filing_prompt,
     fix_rebase_prompt,
@@ -59,6 +60,7 @@ from github_orchestrator.agent_runs._thread_prompts import (
     reconcile_prompt,
     rework_prompt,
     thread_prompt,
+    watched_answer_prompt,
 )
 from github_orchestrator.agent_runs._transcript import (
     last_thread_in,
@@ -114,6 +116,13 @@ def command_argv(command: str) -> list[str]:
     if not settings:
         return words
     return ["env", *map(_filled_in, settings), *words[len(settings):]]
+
+
+def _kept_session(session_file: Path) -> str | None:
+    try:
+        return session_file.read_text().strip() or None
+    except OSError:
+        return None
 
 
 def open_session_in(pr_processes: PrProcesses, pr: Pr, worktree: str, command: list[str],
@@ -338,7 +347,8 @@ class AgentRuns:
                project_settings: bool, continuing: bool = False,
                in_flight: Path | None = None,
                session_file: Path | None = None) -> AgentRun | str:
-        thread = last_thread_in(self._transcript(pr)) if continuing else None
+        kept = None if session_file is None else _kept_session(session_file)
+        thread = (kept or last_thread_in(self._transcript(pr))) if continuing else None
         argv = [*self._clamp, *self._command,
                 *self._lines.headless(self._model, carrying_on=continuing, thread=thread,
                                       project_settings=project_settings, cwd=worktree)]
@@ -464,6 +474,9 @@ class AgentRuns:
     def carry_on_thread(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, carry_on_prompt(self._commands, fix), continuing=True)
 
+    def answer_thread(self, fix: ThreadFix) -> AgentRun | str:
+        return self._fix_thread(fix, answered_prompt(self._commands, fix), continuing=True)
+
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
                         rework_prompt(self._commands, fix, steer, self._workers))
@@ -473,13 +486,11 @@ class AgentRuns:
                                thread_prompt(self._commands, fix, self._workers,
                                              watched=True))
 
-    def answer_in_session(self, fix: ThreadFix) -> str | None:
-        try:
-            session: str | None = self._session_file(fix).read_text().strip() or None
-        except OSError:
-            session = None
-        return self._pr_processes.split_kept(fix.pr, fix.worktree,
-                                             [*self._command, *self._lines.answering(session)])
+    def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
+        first = (None if answer is None
+                 else watched_answer_prompt(self._commands, fix, answer))
+        argv = self._lines.answering(_kept_session(self._session_file(fix)), first)
+        return self._pr_processes.split_kept(fix.pr, fix.worktree, [*self._command, *argv])
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split_kept(pr, worktree, shell_argv())

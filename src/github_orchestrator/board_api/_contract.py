@@ -1003,6 +1003,22 @@ class DropQuestionOperation(OperationEnvelope):
     kind: Literal[OperationKind.DROP_QUESTION]
 
 
+class AnswerOperation(OperationEnvelope):
+    """The operator's answer to an agent's question, carrying the agent's own
+    conversation on with it: in an interactive session the operator watches
+    when it was asked for visibly, otherwise as a run nobody watches. Leaves a
+    proposal behind, or a new question, like any run."""
+
+    kind: Literal[OperationKind.ANSWER]
+    answer: str = Field(description="What the operator answered.")
+    attempts: int
+    attempts_allowed: int
+    last_action: str | None
+    progress: str | None
+    plan: list[PlanStep]
+    proposal: str | None
+
+
 class UnparkOperation(OperationEnvelope):
     """Bringing a parked thread back."""
 
@@ -1089,7 +1105,7 @@ Operation = Annotated[
     | ReconcileOperation
     | EditPartOperation | StopOperation
     | CloseOperation | DeferOperation | UnparkOperation | ShellOperation | PlaceOperation
-    | DropQuestionOperation
+    | DropQuestionOperation | AnswerOperation
     | ReplyOperation
     | DraftOperation | ReviewOperation | PostedOperation,
     Field(discriminator="kind",
@@ -1595,6 +1611,14 @@ class StartSessionRequest(BaseModel):
         default_factory=list,
         description="Logins whose comments go into the session's context along "
                     "with the steer.")
+
+
+class AnswerRequest(BaseModel):
+    text: str = Field(description="The answer: one of the agent's options or the "
+                                  "operator's own words.")
+    visible: bool = Field(description="Whether the agent carries on in a session the "
+                                      "operator watches and may type into, or "
+                                      "unwatched.")
 
 
 class DeferRequest(BaseModel):

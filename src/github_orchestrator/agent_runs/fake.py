@@ -110,6 +110,17 @@ class CarryingOnThread:
 
 
 @dataclass(frozen=True)
+class AnsweringThread:
+    fix: ThreadFix
+
+
+@dataclass(frozen=True)
+class Answering:
+    fix: ThreadFix
+    answer: str | None
+
+
+@dataclass(frozen=True)
 class FilingTicket:
     fix: ThreadFix
 
@@ -132,7 +143,8 @@ class Session:
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
-        | Reworking | CarryingOnThread | FilingTicket | OpeningPr | Reconciling)
+        | Reworking | CarryingOnThread | AnsweringThread | FilingTicket | OpeningPr
+        | Reconciling)
 
 
 @dataclass(frozen=True)
@@ -288,7 +300,7 @@ class FakeAgentRuns:
     outcomes: list[Outcome] = field(default_factory=list)
     started: list[Started] = field(default_factory=list)
     sessions: list[Session] = field(default_factory=list)
-    answering: list[ThreadFix] = field(default_factory=list)
+    answering: list[Answering] = field(default_factory=list)
     pr_runs: dict[Pr, FakeRun] = field(default_factory=dict)
     thread_runs: list[FakeRun] = field(default_factory=list)
     gists: list[str | tuple[str, ...] | None] = field(default_factory=list)
@@ -391,6 +403,9 @@ class FakeAgentRuns:
     def carry_on_thread(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, CarryingOnThread(fix))
 
+    def answer_thread(self, fix: ThreadFix) -> FakeRun | str:
+        return self._fix_thread(fix, AnsweringThread(fix))
+
     def file_ticket(self, fix: ThreadFix) -> FakeRun | str:
         return self._fix_thread(fix, FilingTicket(fix))
 
@@ -414,10 +429,10 @@ class FakeAgentRuns:
             self.sessions.append(Session(fix, None, first=True))
         return refused
 
-    def answer_in_session(self, fix: ThreadFix) -> str | None:
+    def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
         refused = self.pr_processes.split_kept(fix.pr, fix.worktree, ["claude", "--continue"])
         if refused is None:
-            self.answering.append(fix)
+            self.answering.append(Answering(fix, answer))
         return refused
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
