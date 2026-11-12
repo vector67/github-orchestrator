@@ -2198,6 +2198,38 @@ module('Acceptance | pr diff', function (hooks) {
       );
     });
 
+    test('a card drawn after you scroll away from an address naming a line leaves the pane where you put it', async function (assert) {
+      board().conversations = [
+        thread({
+          key: 'k1',
+          anchor: {
+            path: 'README.md',
+            line: 76,
+            start_line: null,
+            start_side: null,
+            side: 'RIGHT',
+            original_line: 76,
+            original_start_line: null,
+            original_commit: 'ba5e000',
+            is_outdated: false,
+          },
+        }),
+      ];
+      board().comments = { k1: [comment({ body: 'a late card' })] };
+      const release = board().hold(/\/api\/conversations\/k1\/comments$/);
+
+      const visiting = visit('/pr/o/r/7/diff?file=README.md&line=80');
+      await waitFor('[data-test-file="README.md"] [data-line="80"]');
+      const pane = find('[data-test-diff-pane]') as HTMLElement;
+      pane.dispatchEvent(new WheelEvent('wheel', { deltaY: -500 }));
+      pane.scrollTop = 0;
+      release();
+      await visiting;
+
+      assert.dom('[data-test-file="README.md"] [data-test-inline]').exists();
+      assert.strictEqual(pane.scrollTop, 0, 'the pane stays at the top');
+    });
+
     test('an address naming a line the diff does not show opens scrolled to its file', async function (assert) {
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fold.py&line=500');
 
