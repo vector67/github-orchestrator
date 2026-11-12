@@ -162,8 +162,19 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-pr-diff]').containsText('third change');
   });
 
+  test('] from All starts stepping on the first commit you have not read', async function (assert) {
+    board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
+    await visit('/pr/o/r/7/diff');
+
+    await press(']');
+
+    assert.dom('[data-test-commit-place]').hasText('Commit 2 of 3');
+    assert.dom('[data-test-pr-diff]').containsText('second change');
+  });
+
   test('] and Next step on, [ and Prev step back', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await press(']');
 
@@ -480,6 +491,7 @@ module('Acceptance | commit stepper', function (hooks) {
   test('[ and ] still step in Minimal', async function (assert) {
     localStorage.setItem(COMMIT_SIZING, 'minimal');
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     assert.dom('[data-test-commit-bar]').doesNotExist();
 
@@ -506,6 +518,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('picking Full again brings the bar back on the commit you were on', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press(']');
     await sized('hidden');
 
@@ -729,6 +742,7 @@ module('Acceptance | commit stepper', function (hooks) {
     test('stepping on before the delay leaves the commit unread and starts the count again', async function (assert) {
       localStorage.setItem(AUTO_READ, '5s');
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       await clock().tick(4000);
       await press(']');

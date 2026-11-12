@@ -417,6 +417,7 @@ module('Acceptance | commit timeline', function (hooks) {
 
   test('shift-click picks a range: the bar says so, its pips turn yellow and the diff is the range as one change', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press(']');
     await press('t');
 
@@ -463,6 +464,7 @@ module('Acceptance | commit timeline', function (hooks) {
 
   test('Escape and Back to stepping return to the commit you were on', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press(']');
     await press('t');
     await click(dot(THIRD), { shiftKey: true });
@@ -717,6 +719,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
   test('unticked, stepping stops on a merge and shows only what it changed on its own', async function (assert) {
     localStorage.setItem(SKIP_MERGES, 'false');
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await press(']');
 
@@ -750,6 +753,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
     localStorage.setItem(SKIP_MERGES, 'false');
     board().commits = withLongSubjects(board().commits);
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await tabOf(400);
 
     barFits(assert, 'stepping');

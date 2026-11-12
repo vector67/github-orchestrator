@@ -428,7 +428,12 @@ export default class PullRequestDiffService extends Service {
 
   step = (by: number) => {
     const stepper = this.stepper;
-    const sha = by < 0 ? stepper?.previous : stepper?.next;
+    const onAll = this.pr.opening && this.showing !== null;
+    const sha = onAll
+      ? stepper?.sha
+      : by < 0
+        ? stepper?.previous
+        : stepper?.next;
     if (!sha) return;
     this.pr.opening = false;
     this.pr.chosen = sha;
