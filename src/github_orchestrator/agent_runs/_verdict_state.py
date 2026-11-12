@@ -2,6 +2,8 @@ import re
 import unicodedata
 from collections.abc import Sequence
 
+from github_orchestrator.domain import LabelledComment
+
 VIEWER = "viewer"
 PR_AUTHOR = "pr-author"
 BOT = "bot"
@@ -17,7 +19,7 @@ _EMOJI_ONLY = re.compile(r"^[\s\U0001F300-\U0001FAFF☀-➿️‍]+$")
 _JOINERS = "️‍"
 
 
-def _stand_ins(comments: Sequence[tuple[str, str, str]], viewer: str,
+def _stand_ins(comments: Sequence[LabelledComment], viewer: str,
                pr_author: str) -> dict[str, str]:
     names = {viewer: VIEWER}
     if pr_author:
@@ -30,11 +32,11 @@ def _stand_ins(comments: Sequence[tuple[str, str, str]], viewer: str,
             colleagues += 1
             names[login] = f"colleague-{colleagues}"
 
-    for label, login, _ in comments:
-        if label != BOT:
-            named(login)
-    for _, _, body in comments:
-        for mention in _MENTION.findall(body):
+    for comment in comments:
+        if comment.label != BOT:
+            named(comment.login)
+    for comment in comments:
+        for mention in _MENTION.findall(comment.body):
             named(mention)
     return names
 
@@ -56,12 +58,13 @@ def _emoji_named(body: str) -> str:
     return f"{body} [a reply with only the emoji: {', '.join(names)}]"
 
 
-def verdict_state(comments: Sequence[tuple[str, str, str]], *, viewer: str, pr_author: str,
+def verdict_state(comments: Sequence[LabelledComment], *, viewer: str, pr_author: str,
                   viewer_commented: bool, mentions_viewer: bool, kind: str) -> str:
     names = _stand_ins(comments, viewer, pr_author)
-    lines = [f"{names.get(login, login) or GHOST}: {_emoji_named(_scrubbed(body, names))}"
-             for _, login, body in comments]
-    spoke = [index for index, (_, login, _) in enumerate(comments) if login == viewer]
+    lines = [f"{names.get(comment.login, comment.login) or GHOST}: "
+             f"{_emoji_named(_scrubbed(comment.body, names))}"
+             for comment in comments]
+    spoke = [index for index, comment in enumerate(comments) if comment.login == viewer]
     if spoke:
         after = spoke[-1] + 1
         lines.insert(after, SINCE_VIEWER if after < len(lines) else NOTHING_SINCE_VIEWER)

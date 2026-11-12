@@ -14,7 +14,11 @@ from github_orchestrator.github import PullRequests
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import Worktrees
 from github_orchestrator.notifications.fake import FakeNotifications
-from github_orchestrator.working_copies._diff import FALLBACK_BASE_REFS, is_branch_name
+from github_orchestrator.working_copies._diff import (
+    FALLBACK_BASE_REFS,
+    PrBase,
+    is_branch_name,
+)
 from github_orchestrator.working_copies._handles import (
     BoundCheckout,
     Located,
@@ -27,7 +31,7 @@ from github_orchestrator.working_copies._layout import (
     thread_branch_prefix,
     thread_worktree,
 )
-from github_orchestrator.working_copies._revisions import line_count
+from github_orchestrator.working_copies._revisions import ShownCommit, line_count
 from github_orchestrator.working_copies._threads import SQUASH_EMPTY
 from github_orchestrator.working_copies._trouble import (
     BranchTrouble,
@@ -605,7 +609,7 @@ class FakeWorkingCopies:
         resolved = self._resolve(str(sha))
         return None if resolved is None else self.commits[resolved].message
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
+    def _named_commit(self, worktree: str, sha: str) -> ShownCommit | None:
         resolved = self._resolve(sha) if self._has_commit(worktree, sha) else None
         commit = None if resolved is None else self.commits[resolved]
         if commit is None or not commit.parents:
@@ -614,7 +618,8 @@ class FakeWorkingCopies:
         before = self.commits[parent].tree
         changed = "".join(f"+++ b/{path}\n" + "".join(f"+{line}\n" for line in text.splitlines())
                           for path, text in commit.tree.items() if before.get(path) != text)
-        return commit.sha, parent, f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}"
+        return ShownCommit(commit.sha, parent,
+                           f"commit {commit.sha}\n\n    {commit.message}\n\n{changed}")
 
     def _diff_text(self, worktree: str, base: str, head: str) -> str | None:
         old = self._rev_tree(worktree, base)
@@ -640,7 +645,7 @@ class FakeWorkingCopies:
         return parse_diff(printed)
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str, str] | None:
+                 head: str) -> PrBase | None:
         if base_branch and not is_branch_name(base_branch):
             base_branch = None
         refs = (f"origin/{base_branch}", base_branch) if base_branch else FALLBACK_BASE_REFS
@@ -652,11 +657,11 @@ class FakeWorkingCopies:
         reachable = set(self._ancestors(found))
         fork = next((sha for sha in self._ancestors(head_sha) if sha in reachable), None)
         named = "main" if ref == "origin/HEAD" else ref.removeprefix("origin/")
-        return None if fork is None else (fork, found, named)
+        return None if fork is None else PrBase(fork, found, named)
 
     def _merge_base(self, worktree: str, base_branch: str | None, head: str) -> str | None:
         found = self._pr_base(worktree, base_branch, head)
-        return None if found is None else found[0]
+        return None if found is None else found.merge_base
 
     def _head_diff(self, worktree: str, base_branch: str | None, local: bool) -> PrDiff | None:
         head = self._head_sha(worktree) if local else self._origin_head(worktree)

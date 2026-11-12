@@ -19,7 +19,7 @@ from github_orchestrator.conversation._domain.mentions import (
     KIND_PR_BODY,
     names_the_viewer,
 )
-from github_orchestrator.domain import AuthorKind, author_kind_of
+from github_orchestrator.domain import AuthorKind, LabelledComment, author_kind_of
 
 PLACED_BY_A_VERDICT = (OPEN, WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE)
 
@@ -72,7 +72,7 @@ YOU = "you"
 
 @dataclass(frozen=True)
 class VerdictFacts:
-    comments: tuple[tuple[str, str, str], ...]
+    comments: tuple[LabelledComment, ...]
     viewer: str
     pr_author: str
     spoke_last: str
@@ -100,12 +100,13 @@ def _label(login: str, viewer: str, pr_author: str) -> str:
 
 def facts_of(conversation: Conversation, viewer: str, pr_author: str | None) -> VerdictFacts:
     author = pr_author or ""
-    labelled = tuple((_label(comment.author, viewer, author), comment.author, comment.body)
+    labelled = tuple(LabelledComment(_label(comment.author, viewer, author), comment.author,
+                                     comment.body)
                      for comment in conversation.comments)
-    last = f"{labelled[-1][0]} {labelled[-1][1]}" if labelled else ""
+    last = f"{labelled[-1].label} {labelled[-1].login}" if labelled else ""
     return VerdictFacts(
         comments=labelled, viewer=viewer, pr_author=author, spoke_last=last,
-        viewer_commented=any(label == YOU for label, _, _ in labelled),
+        viewer_commented=any(comment.label == YOU for comment in labelled),
         mentions_viewer=any(names_the_viewer(comment, viewer)
                             for comment in conversation.comments),
         kind=KIND_WORDS.get(conversation.comment_type, conversation.comment_type))

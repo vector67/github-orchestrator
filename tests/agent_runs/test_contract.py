@@ -4,6 +4,7 @@ import pytest
 
 from github_orchestrator.agent_runs import ThreadFix
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
+from github_orchestrator.domain import LabelledComment
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.scripted_jev import ScriptedJev
@@ -432,7 +433,7 @@ VERDICTS = {"my-move": "the viewer has to answer", "their-move": "someone else h
 
 def _judge(world, done):
     world.runs.judge_thread(
-        "PRRT_x", [("PR author", "mei", "fixed in abc123")], viewer="octocat",
+        "PRRT_x", [LabelledComment("PR author", "mei", "fixed in abc123")], viewer="octocat",
         pr_author="mei", spoke_last="PR author", viewer_commented=True,
         mentions_viewer=False, kind="a line thread", answers=VERDICTS,
         done=done)
@@ -476,7 +477,7 @@ CHECKS = {"addressed": "it does what was asked", "not-addressed": "it does not"}
 
 def _check(world, done):
     world.runs.check_commit(
-        "PRRT_x", [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
+        "PRRT_x", [LabelledComment("you", "octocat", "rename this"), LabelledComment("PR author", "mei", "fixed in abc1234")],
         path="src/foo.py", line=4, sha="abc1234def", shown="commit abc1234def",
         worktree=".", answers=CHECKS,
         done=lambda word, reasoning: done((word, reasoning)))

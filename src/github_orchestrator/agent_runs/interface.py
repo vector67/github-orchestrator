@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import LabelledComment, Pr, Repo
 
 
 @dataclass(frozen=True)
@@ -159,17 +159,17 @@ class Summaries(Protocol):
     def summarize_fixes(self, fixes: Sequence[tuple[Sequence[tuple[str, str]], str | None]],
                         done: Callable[[str], None], *, chars: int) -> None: ...
 
-    def judge_thread(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def judge_thread(self, key: str, comments: Sequence[LabelledComment], *,
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None: ...
 
-    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_commit(self, key: str, comments: Sequence[LabelledComment], *,
                      path: str | None, line: int | None, sha: str, shown: str,
                      worktree: str, answers: Mapping[str, str],
                      done: Callable[[str, str], None]) -> None: ...
 
-    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_changes(self, key: str, comments: Sequence[LabelledComment], *,
                       path: str | None, line: int | None, base: str, head: str, shown: str,
                       worktree: str, answers: Mapping[str, str],
                       done: Callable[[str, str], None]) -> None: ...

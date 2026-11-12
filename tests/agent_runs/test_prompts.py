@@ -5,6 +5,7 @@ import pytest
 
 from github_orchestrator.agent_runs import FixComment, PointedAt, ThreadFix
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
+from github_orchestrator.domain import LabelledComment
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.cli_flags import assert_the_cli_takes, invocations
 from tests.agent_runs.pinned import assert_pinned
@@ -75,10 +76,10 @@ def _sent_to_jev(runs, jev):
 def test_the_verdict_on_a_thread(runs, jev):
     runs.judge_thread(
         "PRRT_1",
-        [("colleague", "sam", "Asking the other reviewers — @octocat @ana — shout if you disagree"),
-         ("you", "octocat", "I'd remove the checks so drafts stay unvalidated."),
-         ("colleague", "ana", "Agree with you on this."),
-         ("PR author", "mei", "OK, removing them. Sam, fine for you?")],
+        [LabelledComment("colleague", "sam", "Asking the other reviewers — @octocat @ana — shout if you disagree"),
+         LabelledComment("you", "octocat", "I'd remove the checks so drafts stay unvalidated."),
+         LabelledComment("colleague", "ana", "Agree with you on this."),
+         LabelledComment("PR author", "mei", "OK, removing them. Sam, fine for you?")],
         viewer="octocat", pr_author="mei", spoke_last="PR author mei", viewer_commented=True,
         mentions_viewer=True, kind="a line thread", answers=VERDICTS,
         done=lambda verdict: None)
@@ -90,8 +91,8 @@ def test_the_verdict_on_a_thread_without_jev(world, claude, tmp_path):
     runs = real_agent_runs(world, claude, tmp_path)
     runs.judge_thread(
         "PRRT_1",
-        [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc123"),
-         ("bot", "claude", "looks fine")],
+        [LabelledComment("you", "octocat", "rename this"), LabelledComment("PR author", "mei", "fixed in abc123"),
+         LabelledComment("bot", "claude", "looks fine")],
         viewer="octocat", pr_author="mei", spoke_last="bot", viewer_commented=True,
         mentions_viewer=False, kind="a line thread", answers=VERDICTS,
         done=lambda verdict: None)
@@ -102,10 +103,10 @@ def test_the_verdict_on_a_thread_without_jev(world, claude, tmp_path):
 def test_the_verdict_on_a_thread_with_links_and_an_emoji_reply(runs, jev):
     runs.judge_thread(
         "PRRT_1",
-        [("bot", "claude[bot]", "Summary at https://example.com/runs/1"),
-         ("you", "octocat", "Add a test, see [the guide](https://example.com/guide)."),
-         ("PR author", "mei", "👍"),
-         ("you", "octocat", "Thanks! https://example.com/runs/2")],
+        [LabelledComment("bot", "claude[bot]", "Summary at https://example.com/runs/1"),
+         LabelledComment("you", "octocat", "Add a test, see [the guide](https://example.com/guide)."),
+         LabelledComment("PR author", "mei", "👍"),
+         LabelledComment("you", "octocat", "Thanks! https://example.com/runs/2")],
         viewer="octocat", pr_author="mei", spoke_last="you octocat", viewer_commented=True,
         mentions_viewer=False, kind="a line thread", answers=VERDICTS,
         done=lambda verdict: None)
@@ -116,7 +117,7 @@ def test_the_verdict_on_a_thread_with_links_and_an_emoji_reply(runs, jev):
 def test_the_check_of_a_commit_against_a_thread(runs, claude, tmp_path):
     runs.check_commit(
         "PRRT_1",
-        [("you", "octocat", "rename this"), ("PR author", "mei", "fixed in abc1234")],
+        [LabelledComment("you", "octocat", "rename this"), LabelledComment("PR author", "mei", "fixed in abc1234")],
         path="src/foo.py", line=4, sha="abc1234def",
         shown="commit abc1234def\n\n    Rename the helper\n\n-def old_name():\n+def new_name():",
         worktree=str(tmp_path),
@@ -129,7 +130,7 @@ def test_the_check_of_a_commit_against_a_thread(runs, claude, tmp_path):
 
 def test_the_check_of_the_changes_since_a_comment_against_a_thread(runs, claude, tmp_path):
     runs.check_changes(
-        "PRRT_1", [("you", "octocat", "rename this")],
+        "PRRT_1", [LabelledComment("you", "octocat", "rename this")],
         path="src/foo.py", line=4, base="abc1234def", head="fed4321cba",
         shown="diff --git a/src/foo.py b/src/foo.py\n-def old_name():\n+def new_name():",
         worktree=str(tmp_path),

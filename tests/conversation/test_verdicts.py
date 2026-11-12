@@ -4,6 +4,7 @@ from datetime import timedelta
 from github_orchestrator.agent_runs.fake import HeldVerdicts, VerdictAsked
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import ConversationState
+from github_orchestrator.domain import LabelledComment
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -87,7 +88,7 @@ def test_a_colleagues_single_comment_asks_for_a_verdict_with_the_facts(settings)
     [asked] = board.agent_runs.verdicts_asked()
 
     assert asked == VerdictAsked(
-        key="PRRT_one", comments=(("colleague", "ben", "rename this"),), viewer=ME,
+        key="PRRT_one", comments=(LabelledComment("colleague", "ben", "rename this"),), viewer=ME,
         pr_author=AUTHOR, spoke_last="colleague ben", viewer_commented=False,
         mentions_viewer=False, kind="a line thread")
 
@@ -104,7 +105,7 @@ def test_the_pr_description_is_my_move_not_waiting_on_its_author(settings):
 
     assert (held.standing, held.unread) == (ConversationState.READY, True)
     [asked] = board.agent_runs.verdicts_asked()
-    assert (asked.kind, asked.comments[0][0], asked.mentions_viewer) == (
+    assert (asked.kind, asked.comments[0].label, asked.mentions_viewer) == (
         "the PR description", "PR author", True)
 
 
@@ -126,8 +127,8 @@ def test_the_facts_label_each_comment_and_say_the_viewer_spoke(settings):
 
     [asked] = board.agent_runs.verdicts_asked()
 
-    assert asked.comments == (("you", ME, "rename this"), ("PR author", AUTHOR, "which one?"),
-                              ("colleague", "ben", "@octocat the helper"))
+    assert asked.comments == (LabelledComment("you", ME, "rename this"), LabelledComment("PR author", AUTHOR, "which one?"),
+                              LabelledComment("colleague", "ben", "@octocat the helper"))
     assert (asked.viewer_commented, asked.mentions_viewer, asked.spoke_last) == (
         True, True, "colleague ben")
 

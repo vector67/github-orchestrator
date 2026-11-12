@@ -5,6 +5,7 @@ import pytest
 
 from github_orchestrator.agent_runs import Agent, ThreadFix
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
+from github_orchestrator.domain import LabelledComment
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.support import finish, ledger_file, real_agent_runs
@@ -183,7 +184,7 @@ def test_a_commit_check_treats_the_checkout_as_an_untrusted_project(
         runs, world, codex, tmp_path):
     world.answer("addressed || it renames the helper")
 
-    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+    runs.check_commit("PRRT_x", [LabelledComment("you", "octocat", "rename this")], path=None, line=None,
                       sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
                       answers={"addressed": "yes"}, done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)
@@ -200,7 +201,7 @@ def test_a_commit_check_turns_off_every_mcp_server_the_user_configured(
         '[mcp_servers.notes]\ncommand = "notes"\n\n[mcp_servers."acme.tracker"]\nurl = "x"\n')
     world.answer("addressed || it renames the helper")
 
-    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+    runs.check_commit("PRRT_x", [LabelledComment("you", "octocat", "rename this")], path=None, line=None,
                       sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
                       answers={"addressed": "yes"}, done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)

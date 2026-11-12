@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+from dataclasses import dataclass
 from datetime import datetime
 
 from github_orchestrator.domain import Sha
@@ -9,6 +10,13 @@ from github_orchestrator.working_copies.interface import PrCommit
 log = logging.getLogger(__name__)
 
 REVISION_TIMEOUT = 30
+
+
+@dataclass(frozen=True)
+class ShownCommit:
+    sha: str
+    parent: str
+    shown: str
 
 
 def _git(worktree: str, *args: str) -> subprocess.CompletedProcess[bytes]:
@@ -87,7 +95,7 @@ def _commit(line: str) -> PrCommit:
                     author, datetime.fromisoformat(authored_at))
 
 
-def named_commit(worktree: str, sha: str) -> tuple[str, str, str] | None:
+def named_commit(worktree: str, sha: str) -> ShownCommit | None:
     if Sha.parse(sha) is None or not os.path.isdir(worktree):
         return None
     try:
@@ -108,7 +116,7 @@ def named_commit(worktree: str, sha: str) -> tuple[str, str, str] | None:
         return None
     if shown.returncode != 0:
         return None
-    return full, parents[0], shown.stdout.decode(errors="replace")
+    return ShownCommit(full, parents[0], shown.stdout.decode(errors="replace"))
 
 
 def diff_text(worktree: str, base: str, head: str) -> str | None:

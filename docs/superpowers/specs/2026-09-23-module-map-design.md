@@ -207,6 +207,11 @@ takes `after|before`.
   `ready-for-review`, `forever`), the one spelling on the board's wire and in
   settings' flag files. The board and settings each carried their own enum,
   with the manager translating between them (#159).
+- `LabelledComment`: a thread comment with its login, its body and who wrote
+  it as the viewer sees it (`you`, `PR author`, `colleague`, `bot`).
+  Conversation's domain labels a thread with it and agent runs reads it into
+  the verdict and check prompts; neither may import the other. It replaced an
+  unnamed `(label, login, body)` triple (#159).
 
 ## Processes
 

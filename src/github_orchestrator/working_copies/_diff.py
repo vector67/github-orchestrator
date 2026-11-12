@@ -28,6 +28,13 @@ BRANCH_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]*")
 NOT_A_COMMIT = "not a commit"
 
 
+@dataclass(frozen=True)
+class PrBase:
+    merge_base: str
+    tip: str
+    branch: str
+
+
 def _is_rev(value: str | None) -> bool:
     return value == "HEAD" or Sha.parse(value) is not None
 
@@ -161,7 +168,7 @@ def merge_base(worktree: str, tip: str, head: str) -> str | None:
 
 def resolve_pr_base(
     worktree: str, base_branch: str | None, head: str
-) -> tuple[tuple[str, str, str] | None, str]:
+) -> tuple[PrBase | None, str]:
     refs = _base_refs(base_branch)
     found = tip = None
     for ref in refs:
@@ -192,4 +199,4 @@ def resolve_pr_base(
         log.warning("git merge-base %s %s exited %d: %s",
                     found, head, merge_base.returncode, detail)
         return None, CODE_NOT_FOUND
-    return (merge_base.stdout.strip(), tip, _named_branch(worktree, found)), ""
+    return PrBase(merge_base.stdout.strip(), tip, _named_branch(worktree, found)), ""

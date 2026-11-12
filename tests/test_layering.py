@@ -79,7 +79,7 @@ def _under(module, package):
 
 
 KERNEL = "github_orchestrator.domain"
-KERNEL_ENTRIES = frozenset({"DismissUntil", "HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo",
+KERNEL_ENTRIES = frozenset({"DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo",
                             "Sha", "Side", "Sleep", "ThreadName", "UtcClock"})
 
 
