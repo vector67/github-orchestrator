@@ -6,10 +6,11 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from github_orchestrator.domain import Pr, Repo, UtcClock
 from github_orchestrator.pr_summaries._disk import working_folder
@@ -21,6 +22,8 @@ from github_orchestrator.pr_summaries.interface import (
 )
 
 log = logging.getLogger(__name__)
+
+Run = Callable[..., subprocess.CompletedProcess[Any]]
 
 WORKING_FILES = "Working files: "
 WITNESSES = ("primer", "requested", "claimed", "implementation", "tests", "why", "alignment", "critic", "verdict")
@@ -47,6 +50,26 @@ with open(sys.argv[1], "w") as recorded:
 if stopped:
     os.killpg(0, signal.SIGKILL)
 """
+
+
+@dataclass(frozen=True)
+class SummaryPlugin:
+    command: tuple[str, ...]
+    config_path: Path
+    gh_account: str
+    mcp_config: str
+    timeout: float
+    clamp: tuple[str, ...]
+
+    def argv(self, url: str, folder: Path, outputs: Path, *, use_github_api: bool) -> list[str]:
+        kept = _kept_primer(folder)
+        command = [*self.command, url, "--config", str(self.config_path),
+                   "--work-dir", str(folder), "--gh-account", self.gh_account,
+                   *(["--mcp-config", self.mcp_config] if self.mcp_config else []),
+                   *(["--use-github-api"] if use_github_api else []),
+                   *(["--earlier-primer", str(kept)] if kept.exists() else [])]
+        return [*self.clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"),
+                str(self.timeout), *command]
 
 
 @dataclass(frozen=True)
@@ -131,26 +154,21 @@ def _named(content: bytes) -> _Run | None:
 
 class LocalSummaryLane:
     def __init__(self, summaries_dir: Path, summaries: PrSummaries, clock: UtcClock, *,
-                 plugin: Sequence[str], config_path: Path, clones: Mapping[Repo, Path],
+                 plugin: SummaryPlugin, clones: Mapping[Repo, Path],
                  head_of: Callable[[Pr], str | None], holds: Callable[[Pr], bool],
-                 url_of: Callable[[Pr], str],
-                 gh_account: str, mcp_config: str, agents_enabled: bool, timeout: float,
-                 run_in: Callable[[Callable[[], None]], None], clamp: Sequence[str]) -> None:
+                 url_of: Callable[[Pr], str], agents_enabled: bool,
+                 run_in: Callable[[Callable[[], None]], None], run: Run) -> None:
         self._dir = summaries_dir
         self._summaries = summaries
         self._clock = clock
-        self._plugin = tuple(plugin)
-        self._config_path = config_path
+        self._plugin = plugin
         self._clones = clones
         self._head_of = head_of
         self._holds = holds
         self._url_of = url_of
-        self._gh_account = gh_account
-        self._mcp_config = mcp_config
         self._agents_enabled = agents_enabled
-        self._timeout = timeout
         self._run_in = run_in
-        self._clamp = tuple(clamp)
+        self._git_run = run
 
     def poll(self) -> None:
         if not self._agents_enabled:
@@ -202,8 +220,8 @@ class LocalSummaryLane:
         clone = self._clones.get(pr.repo)
         if read is None or head is None or clone is None:
             return None
-        counted = subprocess.run(["git", "rev-list", "--count", f"{read}..{head}"],
-                                 cwd=clone, capture_output=True, text=True, check=False)
+        counted = self._git_run(["git", "rev-list", "--count", f"{read}..{head}"],
+                                cwd=clone, capture_output=True, text=True, check=False)
         return int(counted.stdout) if counted.returncode == 0 else None
 
     def _held(self) -> _Run | None:
@@ -273,16 +291,9 @@ class LocalSummaryLane:
         folder = working_folder(self._dir, pr)
         outputs = _outputs(folder)
         outputs.mkdir(parents=True)
-        kept = _kept_primer(folder)
-        command = [*self._plugin, self._url_of(pr), "--config", str(self._config_path),
-                   "--work-dir", str(folder), "--gh-account", self._gh_account,
-                   *(["--mcp-config", self._mcp_config] if self._mcp_config else []),
-                   *(["--use-github-api"] if use_github_api else []),
-                   *(["--earlier-primer", str(kept)] if kept.exists() else [])]
+        argv = self._plugin.argv(self._url_of(pr), folder, outputs, use_github_api=use_github_api)
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
             process = subprocess.Popen(
-                [*self._clamp, sys.executable, "-c", RECORDING_THE_EXIT, str(outputs / "exit_status"),
-                 str(self._timeout), *command],
-                cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
+                argv, cwd=self._clones[pr.repo], stdout=stdout, stderr=stderr,
                 start_new_session=True, pass_fds=(slot,))
         process.wait()

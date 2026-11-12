@@ -148,7 +148,8 @@ from github_orchestrator.pr_processes._changes import DiskAgentChanges
 from github_orchestrator.pr_processes._places import Places
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane
 from github_orchestrator.pr_summaries._disk import DiskPrSummaries
-from github_orchestrator.pr_summaries._lane import LocalSummaryLane
+from github_orchestrator.pr_summaries._lane import LocalSummaryLane, SummaryPlugin
+from github_orchestrator.pr_summaries._lane import Run as SummaryRun
 from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._process import Kill, ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
@@ -694,6 +695,7 @@ class SummaryLaneWiring(Wiring):
     agents_enabled: bool
     gh_account: str
     _: KW_ONLY
+    run: SummaryRun
     mcp_config: str = ""
     plugin: tuple[str, ...] = ("uv", "run", "--script", str(SUMMARISE))
     timeout: float = SUMMARY_TIMEOUT_SECONDS
@@ -717,12 +719,12 @@ class SummaryLaneProvider(Provider):
         def holds(pr: Pr) -> bool:
             return change_detection.facts(pr) is not None and not change_detection.closing(pr)
 
+        plugin = SummaryPlugin(wiring.plugin, wiring.config_path, wiring.gh_account,
+                               wiring.mcp_config, wiring.timeout, wiring.clamp)
         return LocalSummaryLane(summaries_wiring.summaries_dir, summaries, clock,
-                                plugin=wiring.plugin, config_path=wiring.config_path,
-                                clones=wiring.clones, head_of=head_of, holds=holds, url_of=pr_url,
-                                gh_account=wiring.gh_account, mcp_config=wiring.mcp_config,
-                                agents_enabled=wiring.agents_enabled, timeout=wiring.timeout,
-                                run_in=wiring.run_in, clamp=wiring.clamp)
+                                plugin=plugin, clones=wiring.clones, head_of=head_of, holds=holds,
+                                url_of=pr_url, agents_enabled=wiring.agents_enabled,
+                                run_in=wiring.run_in, run=wiring.run)
 
 
 @dataclass(frozen=True)
@@ -1547,6 +1549,7 @@ def summary_lane_wiring(settings: Settings, clamp: tuple[str, ...]) -> SummaryLa
     return SummaryLaneWiring(settings.config_path,
                              {repo: clone.path for repo, clone in settings.repos.items()},
                              settings.config.agents_enabled, settings.config.gh_account,
+                             run=subprocess.run,
                              mcp_config=os.path.expanduser(settings.config.summary_mcp_config),
                              clamp=clamp)
 
