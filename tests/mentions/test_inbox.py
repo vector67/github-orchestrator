@@ -179,16 +179,15 @@ def test_a_search_finding_a_mention_outstanding_keeps_the_start(tmp_path):
     assert datetime.fromisoformat(_start(here)) == START
 
 
-def test_a_pr_github_says_mentions_me_that_names_another_login_keeps_the_start(tmp_path):
+def test_a_pr_the_search_lists_for_naming_me_without_an_at_moves_the_start(tmp_path):
     here = _here(tmp_path)
-    here.github.add_pr(THE_PR, PullRequestState(author="anna"), mentioned=True,
-                       updated_at="2026-10-22T10:00:00Z")
-    here.github.add_thread(THE_PR, _issue("IC_1", 1, "anna", "@octocat-renamed ping",
-                                          "2026-10-22T10:00:00Z"))
+    here.github.add_pr(THE_PR, PullRequestState(
+        author="anna", body="first in https://github.com/octocat/widgets/pull/1, octocat said"),
+        mentioned=True, updated_at="2026-10-22T10:00:00Z")
 
     _searched(here)
 
-    assert datetime.fromisoformat(_start(here)) == START
+    assert datetime.fromisoformat(_start(here)) == datetime.fromisoformat(SEARCHED)
 
 
 def test_a_repo_added_after_the_last_search_starts_cleared(tmp_path):
