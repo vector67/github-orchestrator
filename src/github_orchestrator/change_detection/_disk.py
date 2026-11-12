@@ -10,7 +10,10 @@ from github_orchestrator.change_detection._rules import (
     advance,
     closing,
     ended,
+    handing_back,
     is_closing,
+    reopening,
+    taken_over_when_closed,
     taking_over,
 )
 from github_orchestrator.change_detection._stored import current_form
@@ -127,6 +130,14 @@ class DiskChangeDetection:
     def close(self, pr: Pr, ending: PrClosed) -> None:
         self._save(pr, closing(self._last(pr), ending))
 
+    def reopen(self, pr: Pr) -> None:
+        snapshot = self._last(pr)
+        if snapshot is None:
+            return
+        self._save(pr, reopening(snapshot))
+        if taken_over_when_closed(snapshot):
+            self.take_over(pr)
+
     def take_over(self, pr: Pr) -> None:
         self._mark_taken_over(pr)
         snapshot = self._last(pr)
@@ -140,6 +151,9 @@ class DiskChangeDetection:
 
     def end_take_over(self, pr: Pr) -> None:
         self._taken_over_marker(pr).unlink(missing_ok=True)
+        snapshot = self._last(pr)
+        if snapshot is not None:
+            self._save(pr, handing_back(snapshot, self._account))
 
     def forget(self, pr: Pr) -> bool:
         path = self._file(pr)

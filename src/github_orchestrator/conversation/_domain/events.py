@@ -208,6 +208,11 @@ class TakenOver:
 
 
 @dataclass(frozen=True)
+class HandedBack:
+    pass
+
+
+@dataclass(frozen=True)
 class CommitCheckDue:
     viewer: str
 
@@ -307,6 +312,7 @@ Event = (
     | VerdictGiven
     | VerdictDue
     | TakenOver
+    | HandedBack
     | CommitCheckDue
     | CommitChecked
     | ThreadResolved

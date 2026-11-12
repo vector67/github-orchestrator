@@ -1875,11 +1875,12 @@ class Notice(BaseModel):
                     "when it drained it; `agent-wont-start` is an agent that "
                     "would not start; `not-your-draft` and `not-yours-to-assign` "
                     "are mark ready and assign reviewers on a pull request that "
-                    "is not yours; `close-refused`, `mark-ready-refused` and "
+                    "is not yours; `close-refused`, `reopen-refused`, "
+                    "`mark-ready-refused`, `convert-to-draft-refused` and "
                     "`assign-reviewers-refused` are GitHub refusing the command.")
     detail: str | None = Field(
         description="What GitHub or the system said, where it said something: "
-                    "set for `agent-wont-start` and the three GitHub refusals, "
+                    "set for `agent-wont-start` and the five GitHub refusals, "
                     "null otherwise.")
 
 

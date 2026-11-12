@@ -460,6 +460,8 @@ class _World:
             return Failure(NOT_FOUND)
         if request.payload == {"state": "closed"}:
             self.world.close(record.pr)
+        elif request.payload == {"state": "open"}:
+            self.world.reopen(record.pr)
         else:
             assert list(request.payload) == ["body"], request.payload
             record.state = replace(record.state, body=request.payload["body"])

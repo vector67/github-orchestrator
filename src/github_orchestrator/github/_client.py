@@ -149,8 +149,14 @@ class GhCliGitHub:
         return _pull_requests.head_branch(self._gh, pr)
 
     def close(self, pr: Pr) -> str | None:
+        return self._set_state(pr, "closed")
+
+    def reopen(self, pr: Pr) -> str | None:
+        return self._set_state(pr, "open")
+
+    def _set_state(self, pr: Pr, state: str) -> str | None:
         try:
-            self._gh.api_json(f"repos/{pr.repo}/pulls/{pr.number}", {"state": "closed"},
+            self._gh.api_json(f"repos/{pr.repo}/pulls/{pr.number}", {"state": state},
                               method="PATCH")
         except GhError as refused:
             return str(refused)

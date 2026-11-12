@@ -262,6 +262,14 @@ class FakeGitHub:
         record.status = "CLOSED"
         return None
 
+    def reopen(self, pr: Pr) -> str | None:
+        record = self.prs.get(pr)
+        if record is None:
+            return (f"gh api PATCH repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
+                    "gh: Not Found (HTTP 404)")
+        record.status = "OPEN"
+        return None
+
     def set_draft(self, pr: Pr, draft: bool) -> str | None:
         record = self.prs.get(pr)
         if record is None:

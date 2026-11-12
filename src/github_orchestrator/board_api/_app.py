@@ -878,6 +878,18 @@ def close_pull_request(board: Serving) -> Response:
     return _handed_over(board, board.manager.close())
 
 
+@writes.post("/manager:reopen", status_code=202, tags=["manager"],
+             operation_id="reopenPullRequest", responses=HANDED_TO_THE_MANAGER,
+             summary="Reopen this pull request on GitHub.")
+def reopen_pull_request(board: Serving) -> Response:
+    """The undo on Close PR's toast. The manager reopens the pull request on
+    GitHub, or puts GitHub's refusal in the status's notice. It holds back
+    the teardown of a pull request it closed for a few seconds, so a reopen
+    in that time also withdraws a teardown the watcher has queued.
+    """
+    return _handed_over(board, board.manager.reopen())
+
+
 @writes.post("/manager:mark-ready", status_code=202, tags=["manager"],
              operation_id="markPullRequestReady", responses=HANDED_TO_THE_MANAGER,
              summary="Mark this draft pull request ready for review on GitHub.")
@@ -886,6 +898,17 @@ def mark_pull_request_ready(board: Serving) -> Response:
     GitHub's refusal in the status's notice.
     """
     return _handed_over(board, board.manager.mark_ready())
+
+
+@writes.post("/manager:convert-to-draft", status_code=202, tags=["manager"],
+             operation_id="convertPullRequestToDraft", responses=HANDED_TO_THE_MANAGER,
+             summary="Convert this pull request back to a draft on GitHub.")
+def convert_pull_request_to_draft(board: Serving) -> Response:
+    """The undo on Ready for review's toast. The manager converts the pull
+    request to a draft on GitHub, or puts GitHub's refusal in the status's
+    notice.
+    """
+    return _handed_over(board, board.manager.convert_to_draft())
 
 
 @writes.post("/manager:assign-reviewers", status_code=202, tags=["manager"],
@@ -919,6 +942,17 @@ def take_over_pull_request(board: Serving) -> Response:
     its agents, its next move and the author's controls.
     """
     return _handed_over(board, board.manager.take_over())
+
+
+@writes.post("/manager:hand-back", status_code=202, tags=["manager"],
+             operation_id="handBackPullRequest", responses=HANDED_TO_THE_MANAGER,
+             summary="Stop treating a pull request you took over as yours.")
+def hand_back_pull_request(board: Serving) -> Response:
+    """The undo on Take over's toast. From then on the orchestrator treats the
+    pull request as its author's again, and its threads go back to you as
+    their reviewer.
+    """
+    return _handed_over(board, board.manager.hand_back())
 
 
 MAX_GIT_LINES = 2000

@@ -563,7 +563,7 @@ def test_the_event_queue_names_only_the_thread_activity_it_holds_from_conversati
 
 PR_EVENT_QUEUE_ROLES = {
     "Intake": frozenset({"add", "add_thread_activity"}),
-    "Worklist": frozenset({"next", "waiting", "queue", "settling", "recover", "drop_in_flight",
+    "Worklist": frozenset({"next", "waiting", "queue", "settling", "recover", "drop_in_flight", "withdraw_close",
                            "is_torn_down", "forget"}),
     "Queues": frozenset({"queues", "failed_since", "archive_other_repos"}),
 }
@@ -737,7 +737,7 @@ def test_the_manager_and_a_conversation_offer_only_their_own_methods(role):
 
 
 CHANGE_DETECTION_MEMBERS = frozenset({
-    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "take_over", "end_take_over",
+    "advance", "ended", "facts", "tracked", "stored", "closing", "close", "reopen", "take_over", "end_take_over",
     "forget", "archive_other_repos",
 })
 

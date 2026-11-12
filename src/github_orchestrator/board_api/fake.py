@@ -66,9 +66,12 @@ class FakeManagerPanel:
     reviews_started: int = 0
     dismissed: DismissUntil | None = None
     closed: int = 0
+    reopened: int = 0
     marked_ready: int = 0
+    converted_to_draft: int = 0
     assigned: list[tuple[tuple[str, ...], str | None]] = field(default_factory=list)
     taken_over: int = 0
+    handed_back: int = 0
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
@@ -111,9 +114,19 @@ class FakeManagerPanel:
             self.closed += 1
         return self.refusal
 
+    def reopen(self) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.reopened += 1
+        return self.refusal
+
     def mark_ready(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.marked_ready += 1
+        return self.refusal
+
+    def convert_to_draft(self) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.converted_to_draft += 1
         return self.refusal
 
     def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
@@ -130,6 +143,11 @@ class FakeManagerPanel:
     def take_over(self) -> ManagerRefusal | None:
         if self.refusal is None:
             self.taken_over += 1
+        return self.refusal
+
+    def hand_back(self) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.handed_back += 1
         return self.refusal
 
     def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:

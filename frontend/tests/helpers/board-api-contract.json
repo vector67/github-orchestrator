@@ -1030,12 +1030,28 @@
     }
    }
   },
+  "/api/manager:convert-to-draft": {
+   "post": {
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:dismiss": {
    "post": {
     "202": {},
     "400": {
      "$ref": "#/components/schemas/Errors"
     },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:hand-back": {
+   "post": {
+    "202": {},
     "409": {
      "$ref": "#/components/schemas/Errors"
     }
@@ -1050,6 +1066,14 @@
    }
   },
   "/api/manager:mark-ready": {
+   "post": {
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:reopen": {
    "post": {
     "202": {},
     "409": {
@@ -5713,7 +5737,9 @@
     "not-your-draft",
     "not-yours-to-assign",
     "close-refused",
+    "reopen-refused",
     "mark-ready-refused",
+    "convert-to-draft-refused",
     "assign-reviewers-refused"
    ],
    "type": "string"

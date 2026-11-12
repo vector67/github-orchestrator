@@ -225,6 +225,24 @@ def test_a_forgotten_pr_is_no_longer_torn_down(event_queue):
     assert event_queue.is_torn_down(THE_PR) is False
 
 
+def test_withdrawing_a_close_keeps_the_events_beside_it_and_tears_nothing_down(event_queue):
+    event_queue.add(THE_PR, ci_failed())
+    event_queue.add(THE_PR, closed())
+    event_queue.add(THE_PR, mergeable())
+
+    event_queue.withdraw_close(THE_PR)
+
+    assert kinds(pending_of(event_queue, THE_PR)) == ["ci-failed", "became-mergeable"]
+    assert event_queue.waiting(THE_PR).closing is False
+    assert event_queue.is_torn_down(THE_PR) is False
+
+
+def test_withdrawing_a_close_from_a_pr_with_no_queue_does_nothing(event_queue):
+    event_queue.withdraw_close(THE_PR)
+
+    assert pending_of(event_queue, THE_PR) == []
+
+
 def test_a_pr_never_added_to_has_nothing_waiting(event_queue):
     assert event_queue.waiting(THE_PR) == Waiting(count=0, closing=False,
                                                   failed_checks=frozenset())

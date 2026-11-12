@@ -24,10 +24,13 @@ class Command(StrEnum):
     DISMISS_UNTIL_READY_FOR_REVIEW = "dismiss-until-ready-for-review"
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
+    REOPEN = "reopen"
     MARK_READY = "mark-ready"
+    CONVERT_TO_DRAFT = "convert-to-draft"
     ASSIGN_REVIEWERS = "assign-reviewers"
     ASSIGN_WHEN_READY = "assign-when-ready"
     TAKE_OVER = "take-over"
+    HAND_BACK = "hand-back"
 
 
 @dataclass(frozen=True)

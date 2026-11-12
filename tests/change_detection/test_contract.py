@@ -293,6 +293,63 @@ def test_a_pr_whose_take_over_ended_then_forgotten_is_not_yours_when_found_again
     assert detection.facts(THE_PR).is_author is False
 
 
+def test_ending_a_take_over_makes_someone_elses_pr_theirs_again_at_once(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+
+    detection.end_take_over(THE_PR)
+
+    assert detection.facts(THE_PR).is_author is False
+
+
+def test_a_pr_whose_take_over_ended_stays_theirs_through_later_polls(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+    detection.end_take_over(THE_PR)
+
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(THE_PR).is_author is False
+
+
+def test_ending_a_take_over_leaves_your_own_pr_yours(detection):
+    detection.advance(THE_PR, poll(), set())
+
+    detection.end_take_over(THE_PR)
+
+    assert detection.facts(THE_PR).is_author is True
+
+
+def test_a_closing_pr_reopened_is_open_and_no_longer_closing(detection):
+    detection.advance(THE_PR, poll(), set())
+    detection.close(THE_PR, CLOSED)
+
+    detection.reopen(THE_PR)
+
+    facts = detection.facts(THE_PR)
+    assert detection.closing(THE_PR) is False
+    assert (facts.ended, facts.closed, facts.merged) == (False, False, False)
+    assert facts.branch == "PROJ-7-widgets"
+
+
+def test_a_taken_over_pr_reopened_after_its_close_ended_the_take_over_is_yours_again(detection):
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+    detection.take_over(THE_PR)
+    detection.close(THE_PR, CLOSED)
+    detection.end_take_over(THE_PR)
+
+    detection.reopen(THE_PR)
+    detection.advance(THE_PR, poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(THE_PR).is_author is True
+
+
+def test_reopening_a_pr_never_polled_knows_nothing_of_it(detection):
+    detection.reopen(THE_PR)
+
+    assert detection.tracked() == []
+
+
 def test_a_forgotten_pr_is_no_longer_known(detection):
     detection.advance(THE_PR, poll(), set())
 

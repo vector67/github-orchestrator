@@ -254,6 +254,15 @@ def drop_in_flight(queues_dir: Path, pr: Pr) -> None:
             logger.warning("Failed to remove %s", processing_file, exc_info=True)
 
 
+def withdraw_close(queues_dir: Path, pr: Pr) -> None:
+    for file in _queue_dir_for_pr(queues_dir, pr).glob(f"*{_PENDING}"):
+        try:
+            if isinstance(_load(file), PrClosed):
+                file.unlink()
+        except (Unreadable, OSError):
+            logger.warning("Could not withdraw the close in %s", file, exc_info=True)
+
+
 def mark_torn_down(queues_dir: Path, pr: Pr) -> None:
     queue_dir = _queue_dir_for_pr(queues_dir, pr)
     queue_dir.mkdir(parents=True, exist_ok=True)
@@ -373,6 +382,9 @@ class DiskPrEventQueue:
 
     def drop_in_flight(self, pr: Pr) -> None:
         drop_in_flight(self._queues_dir, pr)
+
+    def withdraw_close(self, pr: Pr) -> None:
+        withdraw_close(self._queues_dir, pr)
 
     def forget(self, pr: Pr) -> bool:
         queue_dir = _queue_dir_for_pr(self._queues_dir, pr)

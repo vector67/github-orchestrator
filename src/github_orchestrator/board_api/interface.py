@@ -55,7 +55,9 @@ class NoticeCode(StrEnum):
     NOT_YOUR_DRAFT = "not-your-draft"
     NOT_YOURS_TO_ASSIGN = "not-yours-to-assign"
     CLOSE_REFUSED = "close-refused"
+    REOPEN_REFUSED = "reopen-refused"
     MARK_READY_REFUSED = "mark-ready-refused"
+    CONVERT_TO_DRAFT_REFUSED = "convert-to-draft-refused"
     ASSIGN_REVIEWERS_REFUSED = "assign-reviewers-refused"
 
 
@@ -269,7 +271,11 @@ class ManagerPanel(Protocol):
 
     def close(self) -> ManagerRefusal | None: ...
 
+    def reopen(self) -> ManagerRefusal | None: ...
+
     def mark_ready(self) -> ManagerRefusal | None: ...
+
+    def convert_to_draft(self) -> ManagerRefusal | None: ...
 
     def assign_reviewers(self, reviewers: Sequence[str],
                          detailed: str | None) -> ManagerRefusal | None: ...
@@ -278,6 +284,8 @@ class ManagerPanel(Protocol):
                           detailed: str | None) -> ManagerRefusal | None: ...
 
     def take_over(self) -> ManagerRefusal | None: ...
+
+    def hand_back(self) -> ManagerRefusal | None: ...
 
 
 class ManagerWorktree(Protocol):

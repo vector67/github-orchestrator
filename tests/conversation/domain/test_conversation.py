@@ -377,6 +377,18 @@ def test_taking_over_the_pr_hands_a_thread_you_waited_on_as_its_reviewer_to_you(
     assert (conversation.role, conversation.standing) == ("author", ConversationState.READY)
 
 
+def test_handing_the_pr_back_makes_a_thread_handed_to_you_the_reviewers_again(settings):
+    here = _here(settings)
+    threads = _waiting_reviewer(here)
+    here.change_detection.take_over(THE_PR)
+    drain(threads)
+
+    here.change_detection.end_take_over(THE_PR)
+    drain(threads)
+
+    assert _held(threads).role == "reviewer"
+
+
 def test_a_commit_made_without_a_run_is_proposed_on_a_thread_that_never_had_a_fix(settings):
     here = _here(settings)
     threads = _waiting_reviewer(here)

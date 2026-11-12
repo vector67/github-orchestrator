@@ -33,7 +33,7 @@ from github_orchestrator.conversation._application.poll import (
     RoleUnknown,
     ask_due_commit_checks,
     ask_due_verdicts,
-    hand_over_taken_over,
+    follow_the_prs_role,
     known_role,
     materialise,
     open_one,
@@ -754,9 +754,10 @@ class _ConversationManager:
         except Exception:
             log.exception("loop %s: the board's pending decisions could not be read", pr)
         try:
-            hand_over_taken_over(ports)
+            follow_the_prs_role(ports)
         except Exception:
-            log.exception("loop %s: the threads of a PR you took over could not be handed to you", pr)
+            log.exception("loop %s: the threads of a PR taken over or handed back could not "
+                          "follow its new author", pr)
         try:
             ask_due_verdicts(ports)
         except Exception:

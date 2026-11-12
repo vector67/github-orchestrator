@@ -143,6 +143,7 @@ from github_orchestrator.conversation._domain.events import (
     DraftPosted,
     DraftPostFailed,
     GistWritten,
+    HandedBack,
     PickConflicted,
     Picked,
     PickRefused,
@@ -1465,6 +1466,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return Accepted(conversation)
         case TakenOver():
             return Accepted(_taken_over(conversation))
+        case HandedBack():
+            return Accepted(replace(conversation, role=ROLE_REVIEWER))
         case CommitCheckDue():
             return _commit_check_due(conversation, command, at)
         case CommitChecked():

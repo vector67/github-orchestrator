@@ -300,6 +300,20 @@ def test_take_over_is_accepted_and_handed_to_the_manager():
     assert panel.taken_over == 1
 
 
+@pytest.mark.parametrize(("path", "counted"), [
+    ("/api/manager:reopen", "reopened"),
+    ("/api/manager:convert-to-draft", "converted_to_draft"),
+    ("/api/manager:hand-back", "handed_back"),
+], ids=["reopen", "convert-to-draft", "hand-back"])
+def test_each_pr_undo_is_accepted_and_handed_to_the_manager(path, counted):
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post(path)
+
+    assert answer.status_code == 202
+    assert getattr(panel, counted) == 1
+
+
 def test_mark_ready_is_accepted_and_handed_to_the_manager():
     panel = FakeManagerPanel()
 
@@ -338,6 +352,8 @@ def test_assign_when_ready_is_handed_to_the_manager_and_the_dashboard_shows_the_
     ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
     ("/api/manager:dismiss", {"until": "next-event"}), ("/api/manager:close", None),
     ("/api/manager:mark-ready", None), ("/api/manager:take-over", None),
+    ("/api/manager:reopen", None), ("/api/manager:convert-to-draft", None),
+    ("/api/manager:hand-back", None),
     ("/api/manager:assign-reviewers", {"reviewers": ["anna"], "detailed": None}),
     ("/api/manager:assign-when-ready", {"reviewers": ["anna"], "detailed": None}),
 ])
@@ -351,6 +367,7 @@ def test_a_command_the_manager_rules_out_is_refused_with_the_code_for_why(path, 
     assert error["code"] == "agent-running"
     assert (panel.carried_on, panel.reviews_started, panel.dismissed, panel.closed,
             panel.marked_ready, panel.taken_over, panel.assigned) == (0, 0, None, 0, 0, 0, [])
+    assert (panel.reopened, panel.converted_to_draft, panel.handed_back) == (0, 0, 0)
     assert panel.dashboard().on_hold is False
     assert panel.dashboard().assign_when_ready is None
 
@@ -365,6 +382,8 @@ def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
                              "/api/manager:carry-on", "/api/manager:start-review",
                              "/api/manager:dismiss", "/api/manager:close",
                              "/api/manager:mark-ready", "/api/manager:take-over",
+                             "/api/manager:reopen", "/api/manager:convert-to-draft",
+                             "/api/manager:hand-back",
                              "/api/manager:assign-reviewers",
                              "/api/manager:assign-when-ready"}
     assert all(command["responses"]["202"]["headers"]["Location"]

@@ -15,6 +15,7 @@ from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
 log = logging.getLogger(__name__)
 
 NOTICE_SECONDS = 4.0
+CLOSE_UNDO_SECONDS = 10.0
 
 
 class ManagerCommands:
@@ -38,6 +39,7 @@ class ManagerCommands:
         self._dismissed = False
         self._notice: Notice | None = None
         self._notice_at = 0.0
+        self._closed_at: float | None = None
 
     def obey(self, *, frozen: bool) -> None:
         for pending in self._command_files.pending(self._config.pr):
@@ -101,8 +103,12 @@ class ManagerCommands:
                 self._leave("forever")
             case Command.CLOSE:
                 self._close()
+            case Command.REOPEN:
+                self._reopen()
             case Command.MARK_READY:
                 self._mark_ready()
+            case Command.CONVERT_TO_DRAFT:
+                self._convert_to_draft()
             case Command.ASSIGN_REVIEWERS:
                 self._assign_reviewers(fields["reviewers"], fields["detailed"])
             case Command.ASSIGN_WHEN_READY:
@@ -111,6 +117,9 @@ class ManagerCommands:
             case Command.TAKE_OVER:
                 self._change_detection.take_over(self._config.pr)
                 log.info("%s: taken over — treated as yours from now on", self._config.pr)
+            case Command.HAND_BACK:
+                self._change_detection.end_take_over(self._config.pr)
+                log.info("%s: handed back — its author's again", self._config.pr)
 
     def _set_on_hold(self, on_hold: bool) -> None:
         pr = self._config.pr
@@ -151,7 +160,36 @@ class ManagerCommands:
             log.warning("close %s: GitHub refused — %s", pr, refused)
             self.notify(Notice(NoticeCode.CLOSE_REFUSED, refused))
             return
+        self._closed_at = self._monotonic()
         log.info("Closed %s on GitHub; the watcher tears it down on its next poll", pr)
+
+    def keeps_the_close(self) -> bool:
+        return (self._closed_at is not None
+                and self._monotonic() - self._closed_at < CLOSE_UNDO_SECONDS)
+
+    def _reopen(self) -> None:
+        pr = self._config.pr
+        refused = self._pull_requests.reopen(pr)
+        if refused is not None:
+            log.warning("reopen %s: GitHub refused — %s", pr, refused)
+            self.notify(Notice(NoticeCode.REOPEN_REFUSED, refused))
+            return
+        self._closed_at = None
+        if self._change_detection.closing(pr):
+            self._worklist.withdraw_close(pr)
+            self._change_detection.reopen(pr)
+            log.info("Reopened %s on GitHub and withdrew the teardown the watcher queued", pr)
+            return
+        log.info("Reopened %s on GitHub", pr)
+
+    def _convert_to_draft(self) -> None:
+        pr = self._config.pr
+        refused = self._pull_requests.set_draft(pr, True)
+        if refused is not None:
+            log.warning("convert to draft %s: GitHub refused — %s", pr, refused)
+            self.notify(Notice(NoticeCode.CONVERT_TO_DRAFT_REFUSED, refused))
+            return
+        log.info("Converted %s to a draft on GitHub", pr)
 
     def _mark_ready(self) -> None:
         pr = self._config.pr

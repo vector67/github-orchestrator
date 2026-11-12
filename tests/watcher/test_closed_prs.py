@@ -171,6 +171,19 @@ def test_a_closed_pr_i_took_over_is_not_mine_once_torn_down_and_found_again(sett
     assert detection.facts(a_pr(56, REPO)).is_author is False
 
 
+def test_a_closed_pr_i_took_over_is_mine_again_once_reopened_before_its_teardown(settings, capsys):
+    _polled(settings, REPO, 55)
+    disk_change_detection(settings.state_dir).take_over(a_pr(55, REPO))
+    github = _github(settings, (REPO, 55, "CLOSED", False, False))
+    _cycle(settings, capsys, github)
+
+    detection = disk_change_detection(settings.state_dir)
+    detection.reopen(a_pr(55, REPO))
+    detection.advance(a_pr(55, REPO), poll(pr_state(author="hubot")), set())
+
+    assert detection.facts(a_pr(55, REPO)).is_author is True
+
+
 def test_a_pr_waiting_for_teardown_is_reaped_without_queueing_again(settings, capsys):
     _polled(settings, REPO, 58)
     disk_change_detection(settings.state_dir).close(a_pr(58, REPO), PrClosed(merged=False))

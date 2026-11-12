@@ -257,7 +257,9 @@ class ManagerLoop:
 
         conversations.tick(self._thread_news, on_hold=on_hold)
 
-        if waiting.closing:
+        if waiting.closing and self._commands.keeps_the_close():
+            log.debug("loop %s: pr-closed queued — kept until its reopen can no longer come", pr)
+        elif waiting.closing:
             log.debug(
                 "loop %s: pr-closed queued — running cleanup (on_hold=%s, agent=%s)",
                 pr, on_hold, agent,

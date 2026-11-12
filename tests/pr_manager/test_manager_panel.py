@@ -11,6 +11,7 @@ from github_orchestrator.agent_runs.fake import (
     Reviewing,
 )
 from github_orchestrator.board_api.interface import ManagerRefusal, Notice, NoticeCode
+from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.domain import DismissUntil, ReviewerPick
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
@@ -22,7 +23,9 @@ from tests.pr_manager.support import (
     PR,
     REPO,
     ServerPanel,
+    change_detection_of,
     managed_in,
+    manager_over,
     run_manager,
     seed_state,
 )
@@ -317,6 +320,16 @@ def test_take_over_from_the_board_makes_you_the_author_of_someone_elses_pr(setti
     assert seen == [False, True]
 
 
+def test_hand_back_from_the_board_makes_a_pr_you_took_over_theirs_again(settings, tmp_path):
+    board = ServerPanel()
+    seen = []
+    _reviewer_of(settings, tmp_path, lambda: board.panel.take_over(),
+                 lambda: seen.append(board.panel.dashboard().is_author),
+                 lambda: board.panel.hand_back(),
+                 lambda: seen.append(board.panel.dashboard().is_author), board=board)
+    assert seen == [True, False]
+
+
 def test_start_review_from_the_board_starts_the_review_agent_a_review_request_would(
         settings, tmp_path):
     runs = _runs(Outcome(finishes=False))
@@ -395,6 +408,102 @@ def test_a_close_github_refuses_says_why_in_the_notice(settings, tmp_path):
                           lambda: seen.append(board.panel.dashboard().notice), board=board)
     [notice] = seen
     assert notice is not None and notice.code is NoticeCode.CLOSE_REFUSED
+    assert "Not Found" in (notice.detail or "")
+
+
+def test_reopen_from_the_board_reopens_the_pr_on_github(settings, tmp_path):
+    github = FakeGitHub()
+    github.add_pr(THE_PR, status="CLOSED")
+    board = ServerPanel()
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.reopen(), None, board=board,
+                          github=github)
+    assert github.relevance(THE_PR).is_open is True
+
+
+def test_a_reopen_github_refuses_says_why_in_the_notice(settings, tmp_path):
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.reopen(),
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and notice.code is NoticeCode.REOPEN_REFUSED
+    assert "Not Found" in (notice.detail or "")
+
+
+AFTER_THE_UNDO = 60
+
+
+def _closed_then_seen_closed(settings, board, manager_of):
+    def watcher_sees_it_closed():
+        manager_of().event_queue.add(THE_PR, PrClosed(merged=False))
+        change_detection_of(settings).close(THE_PR, PrClosed(merged=False))
+    return [lambda: board.panel.close(), None, watcher_sees_it_closed, None]
+
+
+def test_a_close_from_the_board_is_kept_open_for_its_undo_once_the_watcher_sees_it(
+        settings, tmp_path):
+    seed_state(settings, title="t", url=URL)
+    github = FakeGitHub()
+    github.add_pr(THE_PR)
+    board = ServerPanel()
+    reached = []
+    manager = manager_over(settings, *_closed_then_seen_closed(settings, board, lambda: manager),
+                           lambda: reached.append(True), worktree=tmp_path, is_author=True,
+                           board=board, github=github)
+    manager.run()
+    assert reached == [True]
+    assert manager.event_queue.waiting(THE_PR).closing is True
+
+
+def test_a_close_from_the_board_is_carried_out_once_its_undo_has_passed(settings, tmp_path):
+    seed_state(settings, title="t", url=URL)
+    github = FakeGitHub()
+    github.add_pr(THE_PR)
+    board = ServerPanel()
+    reached = []
+    manager = manager_over(settings, *_closed_then_seen_closed(settings, board, lambda: manager),
+                           lambda: manager.clock.advance(AFTER_THE_UNDO), None,
+                           lambda: reached.append(True), worktree=tmp_path, is_author=True,
+                           board=board, github=github)
+    manager.run()
+    assert reached == []
+    assert manager.event_queue.is_torn_down(THE_PR) is True
+
+
+def test_reopening_a_pr_the_watcher_saw_closed_withdraws_its_teardown(settings, tmp_path):
+    seed_state(settings, title="t", url=URL)
+    github = FakeGitHub()
+    github.add_pr(THE_PR)
+    board = ServerPanel()
+    reached = []
+    manager = manager_over(settings, *_closed_then_seen_closed(settings, board, lambda: manager),
+                           lambda: board.panel.reopen(), None,
+                           lambda: manager.clock.advance(AFTER_THE_UNDO), None,
+                           lambda: reached.append(True), worktree=tmp_path, is_author=True,
+                           board=board, github=github)
+    manager.run()
+    assert reached == [True]
+    assert github.relevance(THE_PR).is_open is True
+    assert manager.event_queue.waiting(THE_PR).closing is False
+    assert change_detection_of(settings).closing(THE_PR) is False
+
+
+def test_convert_to_draft_from_the_board_makes_the_pr_a_draft_on_github(settings, tmp_path):
+    github = FakeGitHub()
+    github.add_pr(THE_PR)
+    board = ServerPanel()
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.convert_to_draft(), None,
+                          board=board, github=github)
+    assert github.pr_state(THE_PR).draft is True
+
+
+def test_a_convert_to_draft_github_refuses_says_why_in_the_notice(settings, tmp_path):
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.convert_to_draft(),
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and notice.code is NoticeCode.CONVERT_TO_DRAFT_REFUSED
     assert "Not Found" in (notice.detail or "")
 
 

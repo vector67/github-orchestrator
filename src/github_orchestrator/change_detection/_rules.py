@@ -353,11 +353,26 @@ def ended(*, still_open: bool, merged: bool) -> PrClosed:
 
 def closing(snapshot: dict[str, Any] | None, ending: PrClosed) -> dict[str, Any]:
     return {**(snapshot or {}), "pending_teardown": True,
+            "taken_over_when_closed": bool((snapshot or {}).get("taken_over")),
             "closed": not ending.no_longer_relevant, "merged": ending.merged}
+
+
+def reopening(snapshot: dict[str, Any]) -> dict[str, Any]:
+    kept = {key: value for key, value in snapshot.items()
+            if key not in ("pending_teardown", "taken_over_when_closed")}
+    return {**kept, "closed": False, "merged": False}
+
+
+def taken_over_when_closed(snapshot: dict[str, Any]) -> bool:
+    return snapshot.get("taken_over_when_closed") is True
 
 
 def taking_over(snapshot: dict[str, Any]) -> dict[str, Any]:
     return {**snapshot, "taken_over": True, "is_author": True}
+
+
+def handing_back(snapshot: dict[str, Any], account: str) -> dict[str, Any]:
+    return {**snapshot, "taken_over": False, "is_author": snapshot.get("pr_author") == account}
 
 
 def is_closing(snapshot: dict[str, Any] | None) -> bool:

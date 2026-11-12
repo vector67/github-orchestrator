@@ -163,6 +163,12 @@ class FakePrEventQueue:
         if queue is not None:
             queue.in_flight = []
 
+    def withdraw_close(self, pr: Pr) -> None:
+        queue = self._queues.get(pr)
+        if queue is not None:
+            queue.pending = [held for held in queue.pending
+                             if not isinstance(held.event, PrClosed)]
+
     def forget(self, pr: Pr) -> bool:
         self._queues.pop(pr, None)
         return True

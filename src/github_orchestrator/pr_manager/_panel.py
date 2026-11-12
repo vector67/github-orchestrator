@@ -76,8 +76,14 @@ class FilePanel(ManagerPanel, ManagerWorktree):
     def close(self) -> ManagerRefusal | None:
         return self._hand(Command.CLOSE)
 
+    def reopen(self) -> ManagerRefusal | None:
+        return self._hand(Command.REOPEN)
+
     def mark_ready(self) -> ManagerRefusal | None:
         return self._hand(Command.MARK_READY)
+
+    def convert_to_draft(self) -> ManagerRefusal | None:
+        return self._hand(Command.CONVERT_TO_DRAFT)
 
     def assign_reviewers(self, reviewers: Sequence[str], detailed: str | None) -> ManagerRefusal | None:
         return self._hand(Command.ASSIGN_REVIEWERS,
@@ -89,6 +95,9 @@ class FilePanel(ManagerPanel, ManagerWorktree):
 
     def take_over(self) -> ManagerRefusal | None:
         return self._hand(Command.TAKE_OVER)
+
+    def hand_back(self) -> ManagerRefusal | None:
+        return self._hand(Command.HAND_BACK)
 
     def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:
         command = resolve(keys)

@@ -373,11 +373,13 @@ class PollingWatcher:
                     log.info("PR no longer relevant: %s", pr)
                 else:
                     log.info("PR closed: %s", pr)
-                    self._change_detection.end_take_over(pr)
 
-                if self._enqueue_unless_dismissed_forever(pr, ending):
+                queued = self._enqueue_unless_dismissed_forever(pr, ending)
+                if queued:
                     self._change_detection.close(pr, ending)
-                elif not self._teardown.reap(pr, Reason.CLOSED):
+                if not ending.no_longer_relevant:
+                    self._change_detection.end_take_over(pr)
+                if not queued and not self._teardown.reap(pr, Reason.CLOSED):
                     continue
                 closed += 1
             except Exception:

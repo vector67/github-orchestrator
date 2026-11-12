@@ -251,6 +251,18 @@ def test_closing_a_pr_github_does_not_know_says_why(github):
     assert "Not Found" in (github.close(a_pr(40, REPO)) or "")
 
 
+def test_a_pr_i_reopen_is_open_again(world, github):
+    world.add_pr(a_pr(1, REPO), _state())
+    github.close(a_pr(1, REPO))
+
+    assert github.reopen(a_pr(1, REPO)) is None
+    assert github.relevance(a_pr(1, REPO)).is_open is True
+
+
+def test_reopening_a_pr_github_does_not_know_says_why(github):
+    assert "Not Found" in (github.reopen(a_pr(40, REPO)) or "")
+
+
 def test_reviewers_i_assign_are_asked_to_review(world, github):
     world.add_pr(a_pr(1, REPO), _state(body="Adds widgets."))
 

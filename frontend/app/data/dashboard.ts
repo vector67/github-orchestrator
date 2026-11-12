@@ -1212,8 +1212,12 @@ const NOTICES: Record<NoticeCode, (detail: string | null) => string> = {
     'Assigning reviewers is only for your own pull request.',
   'close-refused': (detail) =>
     `GitHub would not close the pull request: ${detail ?? ''}`,
+  'reopen-refused': (detail) =>
+    `GitHub would not reopen the pull request: ${detail ?? ''}`,
   'mark-ready-refused': (detail) =>
     `GitHub would not mark the pull request ready: ${detail ?? ''}`,
+  'convert-to-draft-refused': (detail) =>
+    `GitHub would not convert the pull request to a draft: ${detail ?? ''}`,
   'assign-reviewers-refused': (detail) =>
     `GitHub would not ask those reviewers: ${detail ?? ''}`,
 };
