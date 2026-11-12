@@ -20,6 +20,7 @@ from github_orchestrator.conversation._domain.conversation import (
     ConfidenceLevel,
     Conversation,
     Fix,
+    HumanDirection,
     Operation,
     OperationKind,
     OperationState,
@@ -343,7 +344,7 @@ def _decoded_operation(entry: Document) -> Operation:
         anchor=_anchor(entry["anchor"]),
         review=entry["review"],
         github_node_id=entry["github_node_id"],
-        direction=entry["direction"],
+        direction=HumanDirection(entry["direction"]),
     )
 
 
@@ -498,7 +499,7 @@ def decode_review(document: Document) -> Review:
         reason_code=_reason(document["reason_code"]),
         drafts=tuple(document["drafts"]),
         posted_review=document["posted_review"],
-        direction=document["direction"],
+        direction=HumanDirection(document["direction"]),
     )
 
 

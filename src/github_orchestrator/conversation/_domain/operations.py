@@ -37,6 +37,7 @@ from github_orchestrator.conversation._domain.conversation import (
     LANDED,
     LANDING,
     LANDING_RUNS,
+    NO_DIRECTION,
     PROPOSED,
     QUEUED,
     REJECTED,
@@ -49,6 +50,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Brief,
     Conversation,
     Fix,
+    HumanDirection,
     Operation,
     OperationKind,
     OperationState,
@@ -152,7 +154,7 @@ class Asked:
 
     id: str
     requested_at: str | None = None
-    direction: str = ""
+    direction: HumanDirection = NO_DIRECTION
 
 
 @dataclass(frozen=True)
@@ -362,7 +364,7 @@ def asked_of(conversation: Conversation, command: Change,
     return Operation(
         id=_own_id(conversation, operations, kind, asked), kind=kind,
         requested_at=asked.requested_at if asked is not None else at,
-        direction=asked.direction if asked is not None else "",
+        direction=asked.direction if asked is not None else NO_DIRECTION,
         **_carried(command))
 
 

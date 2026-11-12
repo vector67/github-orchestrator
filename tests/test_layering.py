@@ -263,7 +263,7 @@ PACKAGES = {
         pinned=frozenset({
             "Classification", "CommitVerdict", "ConfidenceLevel", "Conversation",
             "ConversationManager", "ConversationState", "Denied", "EditableConversation",
-            "ErrorCode", "OperationKind", "OperationState", "ReasonCode",
+            "ErrorCode", "HumanDirection", "OperationKind", "OperationState", "ReasonCode",
             "ReviewState", "ConversationManagerFactory", "ThreadActivity", "Verdict",
         }),
         may_import=("github", "notifications", "working_copies", "agent_runs", "thread_records",

@@ -5,10 +5,12 @@ from typing import Literal, Protocol
 
 from github_orchestrator.conversation._application.settings import ThreadsConfig
 from github_orchestrator.conversation._domain.conversation import (
+    NO_DIRECTION,
     Brief,
     Comment,
     CommitVerdict,
     Conversation,
+    HumanDirection,
     PointedLine,
     ThreadVerdict,
 )
@@ -66,7 +68,7 @@ class Intent:
     thumbs_up: bool = True
     message: str = ""
     ticket: Ticket | None = None
-    direction: str = ""
+    direction: HumanDirection = NO_DIRECTION
     part: SplitPart | None = None
 
 

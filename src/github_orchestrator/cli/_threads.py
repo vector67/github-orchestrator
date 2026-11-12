@@ -20,6 +20,7 @@ from github_orchestrator.conversation import (
     ConversationState,
     Denied,
     EditableConversation,
+    HumanDirection,
     Verdict,
 )
 from github_orchestrator.domain import Location, Pr, Repo, Sha, Side
@@ -62,7 +63,7 @@ def thread_open(args: argparse.Namespace, *, conversation_managers: Conversation
 
 def _report_or_die(args: argparse.Namespace, conversation_managers: ConversationManagerFactory,
                    reported: Callable[[EditableConversation], object], target: str,
-                   direction: str = "") -> None:
+                   direction: HumanDirection = HumanDirection("")) -> None:
     key = args.thread_id
     with conversation_managers.of(_pr_of(args)).editing(key, direction=direction) as conversation:
         outcome = reported(conversation)
@@ -73,7 +74,8 @@ def _report_or_die(args: argparse.Namespace, conversation_managers: Conversation
 def _directed_or_die(args: argparse.Namespace,
                      conversation_managers: ConversationManagerFactory,
                      asked: Callable[[EditableConversation], object], target: str) -> None:
-    _report_or_die(args, conversation_managers, asked, target, args.human_direction)
+    _report_or_die(args, conversation_managers, asked, target,
+                   HumanDirection(args.human_direction))
 
 
 def thread_skip(args: argparse.Namespace, *, conversation_managers: ConversationManagerFactory,
@@ -350,7 +352,7 @@ def thread_send_review(args: argparse.Namespace, *,
                        conversation_managers: ConversationManagerFactory,
                        gist_model: str | None) -> None:
     review = conversation_managers.of(_pr_of(args)).send_review(
-        Verdict(args.verdict), args.body, args.human_direction)
+        Verdict(args.verdict), args.body, HumanDirection(args.human_direction))
     if isinstance(review, Denied):
         _die(f"{_pr_of(args)} sent no review: {review.reason}")
     print(review.id)

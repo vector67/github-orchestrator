@@ -107,6 +107,7 @@ from github_orchestrator.conversation._domain.conversation import (
     CONFIRMED,
     DEFERRED,
     DRAFT,
+    NO_DIRECTION,
     OPEN,
     RESOLVED,
     ROLE_AUTHOR,
@@ -118,6 +119,7 @@ from github_orchestrator.conversation._domain.conversation import (
     CommitVerdict,
     Conversation,
     ConversationState,
+    HumanDirection,
     OperationState,
     PointedLine,
     Question,
@@ -305,7 +307,7 @@ def _ticket(project: str | None, title: str, body: str) -> Ticket | None:
 
 
 class _Editable:
-    def __init__(self, pr: _Pr, key: str, held: Held | None, direction: str) -> None:
+    def __init__(self, pr: _Pr, key: str, held: Held | None, direction: HumanDirection) -> None:
         self._pr = pr
         self._key = key
         self._held = held
@@ -543,7 +545,7 @@ class _ConversationManager:
         self._pr = _Pr(modules, pr)
 
     @contextmanager
-    def editing(self, key: str, *, direction: str = "") -> Iterator[EditableConversation]:
+    def editing(self, key: str, *, direction: HumanDirection = NO_DIRECTION) -> Iterator[EditableConversation]:
         if not is_thread_key(key):
             unheld = _Editable(self._pr, key, None, direction)
             try:
@@ -606,7 +608,7 @@ class _ConversationManager:
             return cut.workspace.path
 
     def send_review(self, verdict: Verdict, body: str | None,
-                    direction: str = "") -> Review | Denied:
+                    direction: HumanDirection = NO_DIRECTION) -> Review | Denied:
         return send_review(self._pr.ports, verdict, body, direction)
 
     def reviews(self) -> Sequence[Review]:

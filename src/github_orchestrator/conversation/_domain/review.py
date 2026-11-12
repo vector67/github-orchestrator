@@ -3,6 +3,8 @@ from enum import Enum
 
 from github_orchestrator.conversation._domain.conversation import (
     IN_FLIGHT,
+    NO_DIRECTION,
+    HumanDirection,
     OperationState,
     ReasonCode,
 )
@@ -33,7 +35,7 @@ class Review:
     reason_code: ReasonCode | None = None
     drafts: tuple[str, ...] = ()
     posted_review: int | None = None
-    direction: str = ""
+    direction: HumanDirection = NO_DIRECTION
 
     @property
     def in_flight(self) -> bool:

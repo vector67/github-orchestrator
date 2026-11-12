@@ -8,11 +8,13 @@ from github_orchestrator.change_detection import ReviewerStatus
 from github_orchestrator.conversation._application.asking import Denied
 from github_orchestrator.conversation._domain.commit_check import FixChecks
 from github_orchestrator.conversation._domain.conversation import (
+    NO_DIRECTION,
     WAKE_MANUAL,
     Classification,
     CommitVerdict,
     Conversation,
     ConversationState,
+    HumanDirection,
 )
 from github_orchestrator.conversation._domain.review import Review, Verdict
 from github_orchestrator.conversation._domain.thread import FetchedThread
@@ -183,7 +185,7 @@ class EditableConversation(Protocol):
 
 class ConversationManager(Protocol):
     def editing(self, key: str, *,
-                direction: str = "") -> AbstractContextManager[EditableConversation]: ...
+                direction: HumanDirection = NO_DIRECTION) -> AbstractContextManager[EditableConversation]: ...
 
     def get(self, key: str) -> Conversation | None: ...
 
@@ -196,7 +198,7 @@ class ConversationManager(Protocol):
                     comment_id: int, author: str, body: str) -> str | None | Denied: ...
 
     def send_review(self, verdict: Verdict, body: str | None,
-                    direction: str = "") -> Review | Denied: ...
+                    direction: HumanDirection = NO_DIRECTION) -> Review | Denied: ...
 
     def reviews(self) -> Sequence[Review]: ...
 

@@ -37,10 +37,12 @@ from github_orchestrator.conversation._domain.commands import (
 from github_orchestrator.conversation._domain.conversation import (
     ENROLLED,
     LANDING,
+    NO_DIRECTION,
     RUNNING,
     WAKE_MANUAL,
     Brief,
     Conversation,
+    HumanDirection,
     Operation,
     OperationKind,
     OperationState,
@@ -270,7 +272,7 @@ def _stops_a_landing(conversation: Conversation, command: Command, intent: Inten
 
 
 def _joined(ports: Ports, conversation: Conversation, command: Command, held: Update,
-            direction: str) -> Conversation | Denied:
+            direction: HumanDirection) -> Conversation | Denied:
     requested_at = ports.clock.now()
     outcome = apply(conversation, command, requested_at,
                     Asked(id=_operation_id(), requested_at=requested_at, direction=direction))
@@ -281,7 +283,7 @@ def _joined(ports: Ports, conversation: Conversation, command: Command, held: Up
 
 
 def ask(ports: Ports, conversation: Conversation, command: Command,
-        held: Update, direction: str = "") -> Conversation | Denied:
+        held: Update, direction: HumanDirection = NO_DIRECTION) -> Conversation | Denied:
     """The refusals the rules can give now, the write into the pending decisions
     the drain reads, and the thread as the drain will leave it.
 
@@ -333,7 +335,7 @@ _SAID_AS = {Verdict.APPROVE: "approval", Verdict.REQUEST_CHANGES: "change reques
 
 
 def send_review(ports: Ports, verdict: Verdict, body: str | None,
-                direction: str = "") -> Review | Denied:
+                direction: HumanDirection = NO_DIRECTION) -> Review | Denied:
     if not ports.github.takes_review(verdict, body):
         return Denied(ErrorCode.EMPTY_BODY,
                       f"GitHub takes no {_SAID_AS[verdict]} without a summary")

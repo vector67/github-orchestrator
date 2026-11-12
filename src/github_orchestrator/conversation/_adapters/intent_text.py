@@ -9,7 +9,9 @@ from github_orchestrator.conversation._adapters.side_words import (
 )
 from github_orchestrator.conversation._application.ports import Intent
 from github_orchestrator.conversation._domain.conversation import (
+    NO_DIRECTION,
     ConversationState,
+    HumanDirection,
     PointedLine,
     wakes_on,
 )
@@ -305,15 +307,15 @@ def _asked(text: str) -> tuple[str | None, str | None, str]:
     return operation or None, requested_at or None, rest
 
 
-def _directed(text: str) -> tuple[str, str] | None:
+def _directed(text: str) -> tuple[HumanDirection, str] | None:
     if not text.startswith(f"{DIRECTED} "):
-        return "", text
+        return NO_DIRECTION, text
     header, _, rest = text.partition("\n")
     try:
         direction = json.loads(header[len(DIRECTED) + 1:])
     except ValueError:
         return None
-    return (direction, rest) if isinstance(direction, str) else None
+    return (HumanDirection(direction), rest) if isinstance(direction, str) else None
 
 
 def parse_intent(text: str) -> Intent | None:

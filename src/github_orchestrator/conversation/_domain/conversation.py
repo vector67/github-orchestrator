@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field, replace
 from enum import Enum, StrEnum
+from typing import NewType
 
 from github_orchestrator.conversation._domain.parts import (
     ANSWER,
@@ -15,6 +16,9 @@ from github_orchestrator.conversation._domain.parts import (
     views,
 )
 from github_orchestrator.domain import Location, Sha, Side
+
+HumanDirection = NewType("HumanDirection", str)
+NO_DIRECTION = HumanDirection("")
 
 
 class OperationKind(StrEnum):
@@ -482,7 +486,7 @@ class Operation:
     anchor: Location | None = None
     review: str | None = None
     github_node_id: str | None = None
-    direction: str = ""
+    direction: HumanDirection = NO_DIRECTION
 
     @property
     def is_run(self) -> bool:
