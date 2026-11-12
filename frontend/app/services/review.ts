@@ -91,7 +91,10 @@ export default class ReviewService extends Service {
   }
 
   get needsSummary(): boolean {
-    if (this.verdict === 'COMMENT') return !this.review.enrolled.length;
+    if (this.verdict === 'COMMENT') {
+      const { enrolled, pendingOnGitHub } = this.review;
+      return !enrolled.length && !pendingOnGitHub.length;
+    }
     return this.verdict === 'REQUEST_CHANGES';
   }
 

@@ -46,6 +46,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Operation,
     OperationKind,
     OperationState,
+    ReviewState,
 )
 from github_orchestrator.conversation._domain.machine import Refused
 from github_orchestrator.conversation._domain.operations import (
@@ -338,9 +339,13 @@ def send_review(ports: Ports, verdict: Verdict, body: str | None,
                 direction: HumanDirection = NO_DIRECTION) -> Review | Denied:
     records = ports.records
     with records.update_reviews() as held:
-        drafts = tuple(conversation.key for conversation in records.list()
+        conversations = records.list()
+        drafts = tuple(conversation.key for conversation in conversations
                        if conversation.state == ENROLLED)
-        if not ports.github.takes_review(verdict, body, carries_comments=bool(drafts)):
+        pending_on_github = any(conversation.review_state is ReviewState.PENDING
+                                for conversation in conversations)
+        if not ports.github.takes_review(
+                verdict, body, carries_comments=bool(drafts) or pending_on_github):
             return Denied(ErrorCode.EMPTY_BODY,
                           f"GitHub takes no {_SAID_AS[verdict]} without a summary")
         if _going_out(held.reviews):

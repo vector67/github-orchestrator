@@ -15,6 +15,7 @@ from tests.conversation.support import (
     at,
     diff_over,
     drain,
+    hear,
     world,
 )
 
@@ -116,6 +117,21 @@ def test_drafts_go_out_in_the_review_left_pending_on_github_with_its_comments(se
     roots = _roots_on_github(here)
     assert set(roots) == {"drafted on github", draft.body}
     assert threads.get(draft.key).operations[-1].posted_comment == roots[draft.body][1]
+
+
+def test_a_comment_submits_the_review_left_pending_on_github_without_a_summary(settings):
+    here, threads, _ = _reviewing(settings)
+    pending = here.github.start_pending_review(THE_PR, [
+        (Location("billing/invoice_writer.py", 3, Side.AFTER), "drafted on github")])
+    hear(threads)
+
+    sent = threads.send_review(Verdict.COMMENT, None)
+    assert not isinstance(sent, Denied), sent
+    drain(threads)
+
+    review = _review(threads)
+    assert (review.state, review.posted_review) == (OperationState.APPLIED, pending)
+    assert set(_roots_on_github(here)) == {"drafted on github"}
 
 
 def test_a_draft_that_is_not_enrolled_stays_behind(settings):

@@ -1813,7 +1813,7 @@ def send_review(board: Serving, asked: SendReviewRequest) -> Response:
     words, so the operator fixes and sends again.
 
     `body` is required for `REQUEST_CHANGES`, and for a `COMMENT` with no
-    enrolled draft, and refused `empty-body` here, before anything reaches
+    enrolled draft and no comment pending on GitHub, and refused `empty-body` here, before anything reaches
     GitHub. Nothing enrolled is
     not refused: an approval, or a summary on its own, is a review GitHub
     takes.
