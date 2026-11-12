@@ -9,10 +9,17 @@ export default class HarvestSwitchService extends Service {
   @tracked on = recall(REMEMBERED) === 'on';
   @tracked settingUp = false;
 
+  get missing(): boolean {
+    return !document.getElementById(EXTENSION_MARK);
+  }
+
   toggle(): void {
     this.on = !this.on;
-    this.settingUp = this.on && !document.getElementById(EXTENSION_MARK);
     keep(REMEMBERED, this.on ? 'on' : 'off');
+  }
+
+  setUp(): void {
+    this.settingUp = true;
   }
 
   doneSettingUp(): void {

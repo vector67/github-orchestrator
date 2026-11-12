@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import Glyphs from 'frontend/components/glyphs';
 import HarvestSetup from 'frontend/components/harvest-setup';
 import {
   AUTO_READS,
@@ -111,6 +112,11 @@ export default class SettingsMenu extends Component {
 
   flipHarvest = () => this.harvestSwitch.toggle();
 
+  setUpHarvest = () => {
+    this.close();
+    this.harvestSwitch.setUp();
+  };
+
   openSizing = () => {
     this.sizing = !this.sizing;
   };
@@ -207,6 +213,15 @@ export default class SettingsMenu extends Component {
             data-test-harvest-toggle
             {{on "click" this.flipHarvest}}
           >{{this.harvestLabel}}</button>
+          {{#if this.harvestSwitch.missing}}
+            <button
+              type="button"
+              class="setting"
+              data-opens-dialog="true"
+              data-test-harvest-setup-open
+              {{on "click" this.setUpHarvest}}
+            >Set up Harvest<Glyphs @opensDialog={{true}} /></button>
+          {{/if}}
           <button
             type="button"
             class="setting"
