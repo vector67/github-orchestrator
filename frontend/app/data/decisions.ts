@@ -1440,7 +1440,11 @@ function authorOffer(
 ): Offer {
   const entry: Entry = ENTRIES[decision];
   const phase = phaseOf(conversation);
-  const { dialog, ...shade } = entry.inPhase?.[phase] ?? {};
+  const { dialog, ...inPhase } = entry.inPhase?.[phase] ?? {};
+  const shade =
+    decision === 'unpark' && unresolvesOnGitHub(conversation, phase)
+      ? UNRESOLVE_ON_GITHUB
+      : inPhase;
   const filesATicket =
     decision === 'approve' && kindToAccept(proposal, phase) === 'ticket';
   const asks =
@@ -1653,13 +1657,11 @@ const UNDOS: Partial<Record<string, Decision>> = {
 export function undoOf(
   decision: Decision | AnswerKind | 'reply' | 'edit-draft' | 'edit-part',
   conversation: Conversation,
-  role: Role,
   gathered: Gathered,
 ): Undo | null {
   const undo = UNDOS[decision];
   if (!undo) return null;
   const unresolves =
-    role === 'reviewer' &&
     conversation.kind === 'review' &&
     carriedOut(decision, gathered).request.body['resolve'] === true;
   return {

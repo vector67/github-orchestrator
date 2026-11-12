@@ -241,7 +241,7 @@ module('Acceptance | thread phases', function (hooks) {
     const said: Record<string, [string, string]> = {
       landed: ['Accepted · pushed', 'Bring back'],
       rejected: ['Rejected · the fix was dropped', 'Bring back'],
-      resolved: ['Resolved on GitHub', 'Bring back'],
+      resolved: ['Resolved on GitHub', 'Unresolve on GitHub'],
     };
 
     await phases(board(), ['landed', 'rejected', 'resolved'], (phase) => {

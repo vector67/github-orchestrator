@@ -319,6 +319,38 @@ module('Acceptance | verbs | the author board', function (hooks) {
       ['stop'],
     );
   });
+
+  test('a done review thread GitHub shows resolved is unresolved on GitHub', async function (assert) {
+    board().conversations = [
+      board().threadIn('resolved', { key: 'k1', github_resolved: true }),
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.deepEqual(offered(), ['Unresolve on GitHub']);
+    assert
+      .dom('[data-test-decision="unpark"]')
+      .hasAttribute('title', /unresolves this thread on GitHub/);
+    await click('[data-test-decision="unpark"]');
+    assert.strictEqual(board().posted[0]!.verb, 'unpark');
+    assert.deepEqual(board().posted[0]!.body, {});
+  });
+
+  test('a done thread GitHub does not show resolved, or that is no review thread, is brought back', async function (assert) {
+    board().conversations = [
+      board().threadIn('resolved', { key: 'k1', github_resolved: false }),
+      board().threadIn('resolved', {
+        key: 'k2',
+        kind: 'issue',
+        github_resolved: true,
+      }),
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+    assert.deepEqual(offered(), ['Bring back'], 'unresolved on GitHub');
+    await visit('/pr/o/r/7/conversations/k2');
+    assert.deepEqual(offered(), ['Bring back'], 'an issue comment');
+  });
 });
 
 module('Acceptance | verbs | the reviewer board', function (hooks) {

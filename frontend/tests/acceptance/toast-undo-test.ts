@@ -91,6 +91,22 @@ module('Acceptance | toast undo', function (hooks) {
     assert.deepEqual(verbs(board()), ['resolve', 'unpark']);
   });
 
+  test('the author’s Resolve offers Unresolve on GitHub, sent only once GitHub has resolved it', async function (assert) {
+    await open(board(), 'waiting');
+    await click('[data-test-decision="resolve"]');
+    await click('[data-test-dialog-submit]');
+    assert.dom('[data-test-toast-undo]').hasText('Unresolve on GitHub');
+
+    await click('[data-test-toast-undo]');
+
+    assert.deepEqual(verbs(board()), ['resolve']);
+    settledIn(board(), 'resolved', { github_resolved: true });
+    await waitUntil(() => verbs(board()).includes('unpark'), {
+      timeout: 5000,
+    });
+    assert.deepEqual(verbs(board()), ['resolve', 'unpark']);
+  });
+
   test('Discard offers Bring back to the local draft', async function (assert) {
     board().actAs('reviewer');
     await open(board(), 'draft');

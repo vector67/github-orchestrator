@@ -1214,8 +1214,7 @@ def _resolves_on_github(conversation: Conversation) -> bool:
 
 
 def _unresolves_on_github(conversation: Conversation) -> bool:
-    return (conversation.role == ROLE_REVIEWER and conversation.github_resolved is True
-            and conversation.comment_type == KIND_REVIEW)
+    return conversation.github_resolved is True and conversation.comment_type == KIND_REVIEW
 
 
 def _newest_other_comment(conversation: Conversation, viewer: str) -> Comment | None:

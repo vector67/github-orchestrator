@@ -1291,6 +1291,43 @@ def test_a_failed_reopen_hands_the_card_back_with_the_error(settings):
     assert stored.fix.decision_error == "reopen failed: gh: 403"
 
 
+def test_bringing_back_an_author_thread_github_shows_resolved_unresolves_it_there(settings):
+    here = _here(settings)
+    threads = _resolved_on_github(here, *ANSWERED_THREAD[:2], is_author=True)
+    assert _held(threads).standing is ConversationState.DONE
+
+    _asked(threads, "unpark")
+
+    assert not _on_github(here).is_resolved
+    back = _held(threads)
+    assert back.standing is not ConversationState.DONE
+    assert back.github_resolved is False
+    assert len(_on_github(here).comments) == 2
+
+
+def test_an_author_thread_resolved_on_github_by_the_board_comes_back_unresolved(settings):
+    here, threads = _author(settings, _proposed)
+    _asked(threads, "resolve", resolve=True)
+    assert _on_github(here).is_resolved
+
+    _asked(threads, "unpark")
+
+    assert not _on_github(here).is_resolved
+    assert _held(threads).standing is ConversationState.READY
+
+
+def test_a_failed_author_unresolve_leaves_the_card_done_with_the_error(settings):
+    here = _here(settings, github=ResolveRefused())
+    threads = _resolved_on_github(here, *ANSWERED_THREAD, is_author=True)
+
+    outcome = _asked(threads, "unpark")
+
+    assert not isinstance(outcome, Denied)
+    stored = _held(threads)
+    assert stored.standing is ConversationState.DONE
+    assert stored.fix.decision_error == "reopen failed: gh: 403"
+
+
 def test_a_reviewer_thread_a_conversation_comment_settles_without_a_github_resolve(settings):
     here = _here(settings)
     threads = _open(here, *ANSWERED_THREAD, is_author=False, kind=CommentKind.ISSUE)

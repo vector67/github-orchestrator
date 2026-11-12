@@ -123,10 +123,9 @@ export default class BoardService extends Service {
   ): Promise<boolean> {
     const { request, toast, opensTerminal } = carriedOut(decision, gathered);
     const before = this.threads.thread(key);
-    const role = this.threads.role;
     const undo = this.undoing(
       before,
-      before && role ? undoOf(decision, before, role, gathered) : null,
+      before ? undoOf(decision, before, gathered) : null,
     );
     const acted = this.acted(key, decision, request, answered);
     if (!(await waitForPromise(acted))) return false;
