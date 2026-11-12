@@ -31,6 +31,10 @@ const THIRD = 'c3c3c3c';
 const COMMIT_SIZING = 'commit-box-sizing';
 const AUTO_READ = 'commit-auto-read';
 
+function startStepping() {
+  return triggerEvent(document, 'keydown', { key: 'Escape' });
+}
+
 function pips(): (string | undefined)[] {
   return findAll('[data-test-pip]').map(
     (one) => (one as HTMLElement).dataset['state'],
@@ -76,10 +80,12 @@ module('Acceptance | commit stepper', function (hooks) {
     };
   });
 
-  test('it opens on the first commit you have not read, and draws only that commit', async function (assert) {
+  test('stepping starts on the first commit you have not read, and draws only that commit', async function (assert) {
     board().readMarks = [{ sha: FIRST, subject: 'Add the widget' }];
 
     await visit('/pr/o/r/7/diff');
+
+    await startStepping();
 
     assert.dom('[data-test-commit-place]').hasText('Commit 2 of 3');
     assert.dom('[data-test-commit-bar]').containsText(SECOND);
@@ -114,6 +120,7 @@ module('Acceptance | commit stepper', function (hooks) {
       },
     };
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press('t');
 
     const bar = find('[data-test-commit-stepper]')!;
@@ -138,7 +145,7 @@ module('Acceptance | commit stepper', function (hooks) {
     );
   });
 
-  test('it opens on the last commit when every commit is read', async function (assert) {
+  test('stepping starts on the last commit when every commit is read', async function (assert) {
     board().readMarks = [
       { sha: FIRST, subject: 'Add the widget' },
       { sha: SECOND, subject: 'Name the widget' },
@@ -146,6 +153,8 @@ module('Acceptance | commit stepper', function (hooks) {
     ];
 
     await visit('/pr/o/r/7/diff');
+
+    await startStepping();
 
     assert.dom('[data-test-commit-place]').hasText('Commit 3 of 3');
     assert.deepEqual(pips(), ['read', 'read', 'current']);
@@ -178,6 +187,7 @@ module('Acceptance | commit stepper', function (hooks) {
   test('[ at the first commit and ] at the last do nothing, not even switch pull request', async function (assert) {
     board().held = [heldPr({ number: 6 }), heldPr(), heldPr({ number: 8 })];
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await press('[');
 
@@ -196,6 +206,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('ticking Read keeps the mark on the server and leaves you on the commit', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await click('[data-test-read]');
 
@@ -219,6 +230,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('a tick on its way shows the box ticked and pending, the pips as the server has them, until the server keeps it', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     const release = board().hold(
       /\/api\/pull-request\/read-marks\/operations:mark-read$/,
     );
@@ -242,6 +254,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('a tick the server refuses puts the box back and says why beside it', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     board().refusal = {
       status: 404,
       code: 'no-such-commit',
@@ -263,6 +276,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('[ and ] still step once the Read box has the focus', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await click('[data-test-read]');
 
     await triggerEvent('[data-test-read]', 'keydown', { key: ']' });
@@ -311,6 +325,7 @@ module('Acceptance | commit stepper', function (hooks) {
   test("a comment on an unchanged line of an early commit is posted at the head's line", async function (assert) {
     anchoredOnTheFirstCommit();
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
 
@@ -344,6 +359,7 @@ module('Acceptance | commit stepper', function (hooks) {
   test('a line a later commit changed says so where the comment box would open, and nothing is posted', async function (assert) {
     anchoredOnTheFirstCommit();
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await click(`${row('+20')} [data-test-add]`);
 
@@ -367,6 +383,7 @@ module('Acceptance | commit stepper', function (hooks) {
       }),
     ];
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     assert.dom(`${row('+19')} + [data-test-inline]`).exists();
     assert.dom('[data-test-pr-diff] [data-test-inline]').exists({ count: 1 });
@@ -383,6 +400,7 @@ module('Acceptance | commit stepper', function (hooks) {
       }),
     ];
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     assert.dom(`${row('+19')}`).exists();
     assert.dom('[data-test-threads-elsewhere]').doesNotExist();
@@ -391,6 +409,7 @@ module('Acceptance | commit stepper', function (hooks) {
   test("Ask the agent cites the head's lines and names the commit it was asked from", async function (assert) {
     anchoredOnTheFirstCommit();
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await click(`${row('+19')} [data-test-add]`);
     await fillIn('[data-test-comment-box] textarea', 'why here?');
 
@@ -443,6 +462,7 @@ module('Acceptance | commit stepper', function (hooks) {
 
   test('Minimal is the pips alone: hovering one names its commit and clicking it goes there', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await sized('minimal');
 
     assert.dom('[data-test-commit-bar]').doesNotExist();
@@ -556,17 +576,19 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.dom('[data-test-commit-note]').doesNotExist();
   });
 
-  test('after your review, it opens on the first commit you have not read after the one you reviewed', async function (assert) {
+  test('after your review, stepping starts on the first commit you have not read after the one you reviewed', async function (assert) {
     reviewedOn(FIRST);
 
     await visit('/pr/o/r/7/diff');
+
+    await startStepping();
 
     assert.dom('[data-test-commit-place]').hasText('Commit 2 of 3');
     assert.deepEqual(pips(), ['unread', 'current', 'unread']);
     assert.dom('[data-test-commit-note]').includesText('2 commits pushed');
   });
 
-  test('when everything after your review is read, it opens on the first commit you have not read, with no note', async function (assert) {
+  test('when everything after your review is read, stepping starts on the first commit you have not read, with no note', async function (assert) {
     reviewedOn(FIRST);
     board().readMarks = [
       { sha: SECOND, subject: 'Name the widget' },
@@ -574,6 +596,8 @@ module('Acceptance | commit stepper', function (hooks) {
     ];
 
     await visit('/pr/o/r/7/diff');
+
+    await startStepping();
 
     assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
     assert.dom('[data-test-commit-note]').doesNotExist();
@@ -671,6 +695,14 @@ module('Acceptance | commit stepper', function (hooks) {
 
       await visit('/pr/o/r/7/diff');
 
+      assert.deepEqual(
+        board().readMarks,
+        [],
+        'the page opens on All, where no one commit is open',
+      );
+
+      await startStepping();
+
       assert.deepEqual(board().readMarks, [
         { sha: FIRST, subject: 'Add the widget' },
       ]);
@@ -680,6 +712,7 @@ module('Acceptance | commit stepper', function (hooks) {
     test('after a delay, the commit is read once you have stayed on it that long', async function (assert) {
       localStorage.setItem(AUTO_READ, '2s');
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       await clock().tick(1000);
 
@@ -714,6 +747,7 @@ module('Acceptance | commit stepper', function (hooks) {
       localStorage.setItem(AUTO_READ, 'bottom');
       longFirstCommit();
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       assert.deepEqual(board().readMarks, []);
 
@@ -731,6 +765,8 @@ module('Acceptance | commit stepper', function (hooks) {
 
       await visit('/pr/o/r/7/diff');
 
+      await startStepping();
+
       assert.deepEqual(board().readMarks, [
         { sha: FIRST, subject: 'Add the widget' },
       ]);
@@ -740,6 +776,7 @@ module('Acceptance | commit stepper', function (hooks) {
       localStorage.setItem(AUTO_READ, 'bottom');
       longFirstCommit();
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       const pane = find('[data-test-diff-pane]')!;
       pane.scrollTop = pane.scrollHeight;
       await triggerEvent(pane, 'scroll');

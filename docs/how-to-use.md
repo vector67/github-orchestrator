@@ -606,8 +606,10 @@ and a **merge** or **not pushed** pill when one applies (**not on origin** on a
 worktree diverged from origin). **‹ Prev** and
 **Next ›** step, the **Read** checkbox marks the commit read, and a row of pips
 under the bar, one per commit, shows which are read and jumps to the one you
-click. The tab opens on the first unread commit after your review, or on the
-first unread one when you have not reviewed, or the last when all are read.
+click. The tab opens on **All**, every commit of the pull request as one
+change. Escape or **This commit** in the timeline starts stepping on
+the first unread commit after your review, or on the first unread one when you
+have not reviewed, or the last when all are read.
 After a review a note says **Picked up at
 the first new commit** and how many were pushed since your review, or, after a
 force-push, **Rebased since your review**, how many of your read commits were

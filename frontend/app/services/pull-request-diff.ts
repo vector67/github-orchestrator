@@ -56,6 +56,7 @@ class PerPr {
   @tracked source: DiffSource = 'origin';
   @tracked chosen: string | null = null;
   @tracked picked: Picked | null = null;
+  @tracked opening = true;
   @tracked timelineOpen = false;
   @tracked across = 0;
   @tracked pipsAcross = 0;
@@ -69,6 +70,16 @@ class PerPr {
 }
 
 const fresh = (scope: PrScope): PerPr => new PerPr(scope);
+
+const wholes = new WeakMap<object, Picked>();
+
+function wholeOf(commits: { sha: string }[]): Picked {
+  const known = wholes.get(commits);
+  if (known) return known;
+  const whole = { from: commits[0]!.sha, to: commits.at(-1)!.sha };
+  wholes.set(commits, whole);
+  return whole;
+}
 
 const afterThisRender = (): Promise<void> => Promise.resolve();
 
@@ -129,7 +140,7 @@ export default class PullRequestDiffService extends Service {
       this.here.at,
       this.source,
       this.pr.chosen,
-      this.pr.picked,
+      this.showing,
       this.commitBox.skipMerges,
       this.pr.pipsAcross,
     );
@@ -140,7 +151,14 @@ export default class PullRequestDiffService extends Service {
   }
 
   get picked(): PickedRange | null {
-    return this.store.pickedRange(this.here.at, this.source, this.pr.picked);
+    return this.store.pickedRange(this.here.at, this.source, this.showing);
+  }
+
+  private get showing(): Picked | null {
+    const pr = this.pr;
+    if (pr.picked || !pr.opening || this.hidden) return pr.picked;
+    const whole = this.whole;
+    return whole && whole.from !== whole.to ? whole : null;
   }
 
   get pickedFiles(): number | null {
@@ -151,7 +169,7 @@ export default class PullRequestDiffService extends Service {
   get timeline(): Timeline | null | undefined {
     return this.store.timeline(this.here.at, this.source, {
       current: this.stepping?.sha ?? null,
-      picked: this.pr.picked,
+      picked: this.showing,
       hidden: this.hidden,
       across: this.pr.across,
     });
@@ -175,7 +193,7 @@ export default class PullRequestDiffService extends Service {
 
   pick = (sha: string, extend: boolean) => {
     const order = this.timeline?.order ?? [];
-    const anchor = this.stepper?.sha ?? this.pr.picked?.from ?? sha;
+    const anchor = this.stepper?.sha ?? this.showing?.from ?? sha;
     this.choose(extend ? ordered(order, anchor, sha) : { from: sha, to: sha });
   };
 
@@ -187,6 +205,7 @@ export default class PullRequestDiffService extends Service {
   };
 
   choose = (picked: Picked | null) => {
+    this.pr.opening = false;
     if (picked && picked.from === picked.to && !this.hidden) {
       this.pr.chosen = picked.from;
       this.pr.picked = null;
@@ -264,9 +283,7 @@ export default class PullRequestDiffService extends Service {
   get whole(): Picked | null {
     const { repo, number } = this.here.at;
     const commits = this.store.pr(repo, number)?.history[this.source]?.commits;
-    return commits?.length
-      ? { from: commits[0]!.sha, to: commits.at(-1)!.sha }
-      : null;
+    return commits?.length ? wholeOf(commits) : null;
   }
 
   showWhole = () => {
@@ -276,6 +293,7 @@ export default class PullRequestDiffService extends Service {
 
   unpick = (): boolean => {
     if (!this.picked) return false;
+    this.pr.opening = false;
     this.pr.picked = null;
     return true;
   };
@@ -412,17 +430,19 @@ export default class PullRequestDiffService extends Service {
     const stepper = this.stepper;
     const sha = by < 0 ? stepper?.previous : stepper?.next;
     if (!sha) return;
+    this.pr.opening = false;
     this.pr.chosen = sha;
     this.pr.picked = null;
   };
 
   go = (sha: string) => {
+    this.pr.opening = false;
     this.pr.chosen = sha;
     this.pr.picked = null;
   };
 
   get dwelling(): string {
-    const sha = this.pr.picked ? '' : (this.stepper?.sha ?? '');
+    const sha = this.showing ? '' : (this.stepper?.sha ?? '');
     return `${keyOf(this.here.at)}@${sha}@${this.commitBox.autoRead}`;
   }
 
@@ -432,7 +452,7 @@ export default class PullRequestDiffService extends Service {
     this.stopDwelling();
     this.dwelt = dwelling;
     this.autoMarked = null;
-    const stepper = this.pr.picked ? null : this.stepper;
+    const stepper = this.showing ? null : this.stepper;
     if (!stepper || stepper.read) return;
     const when = this.commitBox.autoRead;
     if (when === 'instant') this.autoMark(stepper.sha);
@@ -452,7 +472,7 @@ export default class PullRequestDiffService extends Service {
   };
 
   reachedBottom = (pane: HTMLElement) => {
-    if (this.commitBox.autoRead !== 'bottom' || this.pr.picked) return;
+    if (this.commitBox.autoRead !== 'bottom' || this.showing) return;
     const stepper = this.stepper;
     if (!stepper || stepper.read || !this.shown) return;
     if (pane.scrollTop + pane.clientHeight < pane.scrollHeight - 1) return;
