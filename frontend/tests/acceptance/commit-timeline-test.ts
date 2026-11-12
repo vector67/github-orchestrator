@@ -53,6 +53,10 @@ const MAIN_ONE = 'd4d4d4d';
 const MAIN_TWO = 'e5e5e5e';
 const COMMIT_SIZING = 'commit-box-sizing';
 
+function startStepping() {
+  return triggerEvent(document, 'keydown', { key: 'Escape' });
+}
+
 function pips(): (string | undefined)[] {
   return findAll('[data-test-pip]').map(
     (one) => (one as HTMLElement).dataset['state'],
@@ -286,6 +290,7 @@ module('Acceptance | commit timeline', function (hooks) {
       ],
     };
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await press('t');
 
@@ -357,6 +362,19 @@ module('Acceptance | commit timeline', function (hooks) {
     );
   });
 
+  test('the diff page opens on All, every commit of the pull request as one change', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    await press('t');
+
+    assert.dom('[data-test-preset="all"]').hasAttribute('aria-pressed', 'true');
+    assert.deepEqual(inRange(), [FIRST, SECOND, THIRD]);
+    assert
+      .dom('[data-test-range]')
+      .hasText(`${FIRST} → ${THIRD} · 3 commits · 1 file`);
+    assert.dom('[data-test-pr-diff]').containsText('every commit');
+    assert.dom('[data-test-pr-diff]').doesNotContainText('first change');
+  });
+
   test('t and the Timeline button open the graph under the stepper and close it again', async function (assert) {
     await visit('/pr/o/r/7/diff');
 
@@ -399,6 +417,7 @@ module('Acceptance | commit timeline', function (hooks) {
 
   test('shift-click picks a range: the bar says so, its pips turn yellow and the diff is the range as one change', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press(']');
     await press('t');
 
@@ -445,6 +464,7 @@ module('Acceptance | commit timeline', function (hooks) {
 
   test('Escape and Back to stepping return to the commit you were on', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press(']');
     await press('t');
     await click(dot(THIRD), { shiftKey: true });
@@ -466,6 +486,7 @@ module('Acceptance | commit timeline', function (hooks) {
 
   test('dragging a handle stretches the band into a range', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await press('t');
 
     assert.deepEqual(inRange(), [FIRST]);
@@ -485,10 +506,12 @@ module('Acceptance | commit timeline', function (hooks) {
     reviewedOn(FIRST);
     await visit('/pr/o/r/7/diff');
     await press('t');
+    await click('[data-test-preset="this-commit"]');
 
     assert
       .dom('[data-test-preset="this-commit"]')
       .hasAttribute('aria-pressed', 'true');
+    assert.dom('[data-test-commit-place]').hasText('Commit 2 of 3');
 
     await click('[data-test-preset="all"]');
 
@@ -675,6 +698,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
 
   test('stepping skips merges while the box is ticked, and its pip is striped', async function (assert) {
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     assert.deepEqual(
       findAll('[data-test-pip]').map((one) => one.hasAttribute('data-merge')),
@@ -695,6 +719,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
   test('unticked, stepping stops on a merge and shows only what it changed on its own', async function (assert) {
     localStorage.setItem(SKIP_MERGES, 'false');
     await visit('/pr/o/r/7/diff');
+    await startStepping();
 
     await press(']');
 
@@ -728,6 +753,7 @@ module('Acceptance | commit timeline with main merged in', function (hooks) {
     localStorage.setItem(SKIP_MERGES, 'false');
     board().commits = withLongSubjects(board().commits);
     await visit('/pr/o/r/7/diff');
+    await startStepping();
     await tabOf(400);
 
     barFits(assert, 'stepping');
@@ -821,6 +847,7 @@ module(
 
     test("three lanes: main, the base pull request's commits, and this one's off it", async function (assert) {
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       await click('[data-test-timeline-toggle]');
 
@@ -1163,6 +1190,7 @@ module(
     test('with under 40px a commit the dots turn to ticks, shas show only where you are, and a day row marks each day', async function (assert) {
       const shas = long(24);
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       await click('[data-test-timeline-toggle]');
       await paneOf(800);
@@ -1229,6 +1257,7 @@ module(
       const shas = long(40);
       readUpTo(shas, 30);
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       await click('[data-test-timeline-toggle]');
 
       await paneOf(2400);
@@ -1357,6 +1386,7 @@ module(
     test('dots too close for a sha apiece name only where you are, as ticks do', async function (assert) {
       const shas = long(10);
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       await click('[data-test-timeline-toggle]');
 
       await paneOf(500);
@@ -1546,6 +1576,7 @@ module(
 
     test('on local the commits not pushed run on past an origin flag, dashed, to a local label', async function (assert) {
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       await click('[data-test-source="local"]');
 
       await click('[data-test-timeline-toggle]');
@@ -1744,6 +1775,7 @@ module(
 
     test('on local the header counts the worktree and origin apart, and the stepper says its commit is not on origin', async function (assert) {
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       await click('[data-test-source="local"]');
 
       await click('[data-test-timeline-toggle]');
@@ -1783,6 +1815,7 @@ module(
 
     test("clicking one of origin's commits picks nothing", async function (assert) {
       await visit('/pr/o/r/7/diff');
+      await startStepping();
       await click('[data-test-source="local"]');
       await click('[data-test-timeline-toggle]');
       assert.dom('[data-test-commit-place]').hasText('Commit 1 of 2');
@@ -2272,6 +2305,7 @@ module(
     test('what your review saw hangs off the old fork as a ghost lane under the branch, and cannot be picked', async function (assert) {
       rebasedOnto('Add the widget', 'Name the widget', 'Test the widget');
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       await click('[data-test-timeline-toggle]');
 
@@ -2329,6 +2363,7 @@ module(
     test('new commits matching a read one by subject count as read, and Since my review picks only the rest', async function (assert) {
       rebasedOnto('Add the widget', 'Name the widget', 'Test the widget');
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       assert.dom('[data-test-commit-place]').hasText('Commit 3 of 3');
       assert.deepEqual(pips(), ['read', 'read', 'current']);
@@ -2362,9 +2397,10 @@ module(
       assert.deepEqual(inRange(), [THIRD]);
     });
 
-    test('when nothing matches, every commit is new and it opens on the first', async function (assert) {
+    test('when nothing matches, every commit is new and stepping starts on the first', async function (assert) {
       rebasedOnto('Build the widget', 'Rename the widget', 'Test the widget');
       await visit('/pr/o/r/7/diff');
+      await startStepping();
 
       assert.dom('[data-test-commit-place]').hasText('Commit 1 of 3');
       assert
