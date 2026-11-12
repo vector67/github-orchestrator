@@ -3,9 +3,14 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import showsSession from 'frontend/modifiers/shows-session';
-import type { Pressed, Pressing } from 'frontend/data/decisions';
+import {
+  runsAgent,
+  type Pressed,
+  type Pressing,
+} from 'frontend/data/decisions';
 import type { Session } from 'frontend/data/terminal';
 import type DashboardService from 'frontend/services/dashboard';
 import type TerminalService from 'frontend/services/terminal';
@@ -14,10 +19,11 @@ interface Launcher {
   keys: string;
   does: string;
   counts: boolean;
+  agent: boolean;
 }
 
 function launcher(keys: string, does: string, counts = false) {
-  return { keys, does, counts };
+  return { keys, does, counts, agent: false };
 }
 
 const LAUNCHERS: Launcher[] = [
@@ -25,7 +31,10 @@ const LAUNCHERS: Launcher[] = [
   launcher('a', 'git add -p'),
   launcher('c', 'git commit'),
   launcher('i', 'git rebase -i HEAD~N', true),
-  launcher('r', 'rebase-on-main in an agent session, steered by you'),
+  {
+    ...launcher('r', 'rebase-on-main in an agent session, steered by you'),
+    agent: runsAgent('rebase-on-main'),
+  },
 ];
 
 const DEFAULT_COUNT = '3';
@@ -185,12 +194,15 @@ export default class TerminalTab extends Component {
               <button
                 type="button"
                 class="launch"
+                data-runs-agent={{if one.agent "true"}}
                 data-test-launch={{one.keys}}
                 {{on "click" (fn this.launch one)}}
               ><span class="does">{{#if (this.launching one)}}{{#if
                       this.launched.ring
                     }}<PendingRing
-                      />{{/if}}{{this.launched.doing}}{{else}}{{one.does}}{{/if}}</span></button>
+                      />{{/if}}{{this.launched.doing}}{{else}}{{one.does}}{{/if}}<Glyphs
+                    @runsAgent={{one.agent}}
+                  /></span></button>
             {{/if}}
           {{/each}}
           {{#if this.launched.refused}}

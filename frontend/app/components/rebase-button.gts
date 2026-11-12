@@ -3,7 +3,8 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import type RouterService from '@ember/routing/router-service';
 import PendingRing from 'frontend/components/pending-ring';
-import type { Pressing } from 'frontend/data/decisions';
+import Glyphs from 'frontend/components/glyphs';
+import { runsAgent, type Pressing } from 'frontend/data/decisions';
 import { REBASE_ON_MAIN } from 'frontend/data/git';
 import type TerminalService from 'frontend/services/terminal';
 
@@ -34,12 +35,13 @@ export default class RebaseButton extends Component {
       disabled={{this.pending}}
       data-pending={{if this.pending "true"}}
       data-refused={{if this.opening.refused "true"}}
+      data-runs-agent={{if (runsAgent "rebase-on-main") "true"}}
       data-test-rebase
       {{on "click" this.rebase}}
     >{{#if this.pending}}{{#if this.opening.ring}}<PendingRing
-          />{{/if}}{{this.opening.doing}}{{else}}Rebase on main{{/if}}</button>{{#if
-      this.opening.refused
-    }}<span
+          />{{/if}}{{this.opening.doing}}{{else}}Rebase on main{{/if}}<Glyphs
+        @runsAgent={{runsAgent "rebase-on-main"}}
+      /></button>{{#if this.opening.refused}}<span
         class="refusal rebase-refusal"
         data-test-rebase-refusal
       >{{this.opening.refused}}</span>{{/if}}

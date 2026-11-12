@@ -185,6 +185,20 @@ module('Acceptance | git palette', function (hooks) {
     assert.deepEqual(ran(), [{ keys: 'f' }]);
   });
 
+  test('only the rebase-on-main row starts an agent, so only it carries the star', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('g');
+
+    assert.deepEqual(
+      findAll('[data-test-palette-row][data-runs-agent]').map((one) =>
+        one.getAttribute('data-test-palette-row'),
+      ),
+      ['r'],
+    );
+    assert.dom('[data-test-palette-row="r"] [data-glyph="agent"]').exists();
+  });
+
   test('a click on the push row pushes at once', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');

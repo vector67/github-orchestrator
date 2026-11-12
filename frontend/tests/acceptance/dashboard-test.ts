@@ -244,6 +244,17 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-status="mergeable"] [data-test-rebase]').exists();
   });
 
+  test('Rebase on main starts an agent session, so it carries the star', async function (assert) {
+    onTheHub({
+      facts: factsFor('rebase', { merge_state: 'behind' }),
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-rebase]').hasAttribute('data-runs-agent', 'true');
+    assert.dom('[data-test-rebase] [data-glyph="agent"]').exists();
+  });
+
   test('a conflict the agent is rebasing away reads as handled, and no reviewer reads as not assigned', async function (assert) {
     onTheHub({
       facts: { merge_state: 'conflicts' },

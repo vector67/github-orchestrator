@@ -458,6 +458,19 @@ module('Acceptance | terminal', function (hooks) {
     assert.strictEqual(board().socketsOf('made-1').length, 1);
   });
 
+  test('only the rebase-on-main launcher starts an agent, so only it carries the star', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/terminal');
+
+    assert.deepEqual(
+      findAll('[data-test-launch][data-runs-agent]').map((one) =>
+        one.getAttribute('data-test-launch'),
+      ),
+      ['r'],
+    );
+    assert.dom('[data-test-launch="r"] [data-glyph="agent"]').exists();
+  });
+
   test('a launcher shows its session opening, with the ring, from the click until the board lists it', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');

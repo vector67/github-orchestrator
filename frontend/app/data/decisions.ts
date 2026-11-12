@@ -1317,7 +1317,9 @@ function besides(asks: EntryAsks, phase: Phase): EntryAsks {
   };
 }
 
-const STARTS_A_RUN: Kind[] = [
+type Starter = Kind | 'rebase-on-main';
+
+const STARTS_A_RUN: Starter[] = [
   'fix',
   'retry',
   'rework',
@@ -1330,6 +1332,7 @@ const STARTS_A_RUN: Kind[] = [
   'carry-on',
   'start-review',
   'check-for-fixes',
+  'rebase-on-main',
 ];
 
 const OPENS_A_DIALOG: Kind[] = [
@@ -1343,7 +1346,7 @@ const OPENS_A_DIALOG: Kind[] = [
 
 const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close', 'take-over'];
 
-export function runsAgent(kind: Kind): boolean {
+export function runsAgent(kind: Starter): boolean {
   return STARTS_A_RUN.includes(kind);
 }
 

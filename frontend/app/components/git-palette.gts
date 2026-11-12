@@ -5,12 +5,14 @@ import type { GitRun } from 'frontend/data/api';
 import {
   FORCE_PUSH,
   GIT_COMMANDS,
+  REBASE_ON_MAIN,
   WHERE_WORDS,
   keysLabel,
   reachable,
   type GitCommand,
 } from 'frontend/data/git';
 import Glyphs from 'frontend/components/glyphs';
+import { runsAgent } from 'frontend/data/decisions';
 import type GitPaletteState from 'frontend/components/git-palette-state';
 import PendingRing from 'frontend/components/pending-ring';
 
@@ -30,6 +32,9 @@ const FORCE_NOTE =
 const FORCE_PUSH_LABEL = 'Force-push';
 
 const asksFirst = (one: GitCommand): boolean => one.keys === FORCE_PUSH;
+
+const startsAgent = (one: GitCommand): boolean =>
+  one === REBASE_ON_MAIN && runsAgent('rebase-on-main');
 
 const secondsOf = (answer: GitRun): string => answer.seconds.toFixed(1);
 
@@ -121,12 +126,14 @@ const GitPalette: TOC<GitPaletteSignature> = <template>
             type="button"
             class="p {{unless (reachable one @palette.typed) 'dim'}}"
             data-opens-dialog={{if (asksFirst one) "true"}}
+            data-runs-agent={{if (startsAgent one) "true"}}
             data-test-palette-row={{one.keys}}
             {{on "click" (fn @palette.pick one.keys)}}
           >
             <span>g {{keysLabel one}}</span>
             <span>{{one.display}}<Glyphs
                 @opensDialog={{asksFirst one}}
+                @runsAgent={{startsAgent one}}
               /></span>
             <span class="where">{{get WHERE_WORDS one.where}}</span>
           </button>
