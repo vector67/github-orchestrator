@@ -11,10 +11,22 @@ class HeldFolder:
     folder: str
 
 
+@dataclass(frozen=True)
+class StuckBranch:
+    pr: Pr
+    thread: str
+    branch: str
+    new_branch: str
+    clone: str
+    error: str
+
+
 class NameMigration(Protocol):
     def migrated(self) -> bool: ...
 
     def held(self) -> list[HeldFolder]: ...
+
+    def stuck(self) -> list[StuckBranch]: ...
 
     def close_sessions(self) -> None: ...
 

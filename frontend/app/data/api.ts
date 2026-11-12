@@ -112,6 +112,16 @@ export interface BaseStanding {
   fetched_at: string | null;
 }
 
+export interface BranchInTheWay {
+  repo: string;
+  number: number;
+  thread: string;
+  branch: string;
+  new_branch: string;
+  clone: string;
+  error: string;
+}
+
 export interface Brief {
   note: string;
   pointed: PointedLine[];
@@ -1232,6 +1242,7 @@ export type ThreadKind = 'draft' | 'request' | 'review' | 'issue' | 'review-summ
 export interface ThreadNamesMigration {
   migrated: boolean;
   sessions: SessionInTheWay[];
+  branches: BranchInTheWay[];
 }
 
 export interface ThreadRow {

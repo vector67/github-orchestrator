@@ -21,6 +21,7 @@ from github_orchestrator.board_api._app import (
 from github_orchestrator.board_api._contract import (
     AddToWallRequest,
     AwaitedPr,
+    BranchInTheWay,
     DeferMentionRequest,
     DismissMentionRequest,
     Emoji,
@@ -150,7 +151,7 @@ def list_pull_requests(request: Request, desk: Serving) -> Response:
     new one and says where it came from.
     """
     held = desk.told.held()
-    if not held.told:
+    if not held.told or desk.migration.not_renamed():
         raise _unheld(desk)
     outside = {opened.pr for opened in desk.mentions.listed().opened if opened.outside_wall}
     return etag.answered(request, desk.wall.read(dataclasses.replace(held, managers={
@@ -163,6 +164,9 @@ def _unheld(desk: Desk) -> Refusal:
         return Refusal(503, ErrorCode.WAITING_TO_MIGRATE,
                        "terminal sessions are in folders the thread names migration moves",
                        headers=again)
+    if desk.migration.not_renamed():
+        return Refusal(503, ErrorCode.WAITING_TO_MIGRATE,
+                       "a thread branch would not take its new name", headers=again)
     state = desk.told.state()
     if state is not None and state is not HubState.WATCHING:
         return Refusal(503, ErrorCode.NOT_WATCHING,
@@ -288,12 +292,15 @@ def add_to_wall(body: AddToWallRequest, desk: Serving) -> None:
 def _migration_read(desk: Desk, held: list[FolderInUse]) -> ThreadNamesMigration:
     return ThreadNamesMigration(migrated=desk.migration.migrated(), sessions=[
         SessionInTheWay(repo=str(one.pr.repo), number=one.pr.number, thread=one.thread,
-                        folder=one.folder) for one in held])
+                        folder=one.folder) for one in held], branches=[
+        BranchInTheWay(repo=str(one.pr.repo), number=one.pr.number, thread=one.thread,
+                         branch=one.branch, new_branch=one.new_branch, clone=one.clone,
+                         error=one.error) for one in desk.migration.not_renamed()])
 
 
 @reads.get("/thread-names-migration", response_model=ThreadNamesMigration, tags=["hub"],
            operation_id="readThreadNamesMigration",
-           summary="Whether the thread names migrated, and the terminal sessions in its way.")
+           summary="Whether the thread names migrated, and the sessions and branches in its way.")
 def read_thread_names_migration(desk: Serving) -> ThreadNamesMigration:
     return _migration_read(desk, desk.migration.in_the_way())
 
@@ -304,7 +311,8 @@ def read_thread_names_migration(desk: Serving) -> ThreadNamesMigration:
 def close_sessions_and_migrate(desk: Serving) -> ThreadNamesMigration:
     """Hangs up the pull requests whose sessions are in folders the migration
     moves, waits for them to go, and runs the migration; the sessions still
-    in its way come back, none once it ran.
+    in its way and the branches it could not rename come back, none once it
+    ran.
     """
     return _migration_read(desk, desk.migration.close_sessions_and_migrate())
 
