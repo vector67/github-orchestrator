@@ -55,6 +55,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   @tracked filesOpen = false;
   private pane: HTMLElement | null = null;
   private followed: unknown = null;
+  private scrolledAwayFrom: string | null = null;
   private shownLinked: unknown = null;
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private readonly filesKeymap: Keymap = {
@@ -146,7 +147,16 @@ export default class DiffTab extends Component<DiffTabSignature> {
   }
 
   get scrolling(): string {
+    return `${this.placing}|${this.cardsDrawn}`;
+  }
+
+  private get placing(): string {
     return `${this.args.file ?? ''}|${this.args.line ?? ''}|${this.pullRequestDiff.shown ? this.pullRequestDiff.drawing || 'drawn' : ''}`;
+  }
+
+  private get cardsDrawn(): string {
+    if (!this.args.line || !this.pullRequestDiff.commenting) return '';
+    return this.pullRequestDiff.inline.shown.map((one) => one.key).join(',');
   }
 
   get waitingOn(): string {
@@ -225,8 +235,22 @@ export default class DiffTab extends Component<DiffTabSignature> {
       pane.scrollTop = 0;
       return;
     }
-    if (this.args.line) this.scrollToLine(this.args.file, this.args.line);
-    else this.scrollTo(this.args.file);
+    if (this.args.line) {
+      if (this.scrolledAwayFrom !== this.placing)
+        this.scrollToLine(this.args.file, this.args.line);
+    } else this.scrollTo(this.args.file);
+  };
+
+  watchScrollingAway = (pane: HTMLElement) => {
+    const scrolledAway = (event: Event) => {
+      if (event.type === 'pointerdown' && event.target !== pane) return;
+      this.scrolledAwayFrom = this.placing;
+    };
+    const kinds = ['wheel', 'touchmove', 'keydown', 'pointerdown'];
+    for (const kind of kinds) pane.addEventListener(kind, scrolledAway);
+    return () => {
+      for (const kind of kinds) pane.removeEventListener(kind, scrolledAway);
+    };
   };
 
   scrolled = (event: Event) => {
@@ -350,6 +374,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
         class="diff-main"
         data-test-diff-pane
         {{didChange this.follow this.scrolling}}
+        {{didChange this.watchScrollingAway}}
         {{didChange
           this.pullRequestDiff.reachedBottom
           this.pullRequestDiff.shown

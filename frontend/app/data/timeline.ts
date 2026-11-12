@@ -20,6 +20,7 @@ const BAND_REACH = 12;
 const SHA_DROP = 20;
 const DAY_DROP = 36;
 const DAY_RISE = 14;
+const SHA_CLEAR = 4;
 const DAY_GAP = 4;
 const TICK = 7;
 const DOT_ROOM = 40;
@@ -771,6 +772,7 @@ function tickAt(x: number, y: number): string {
 function daysOf(
   history: PullRequestCommits,
   placed: Map<string, Placed>,
+  named: Set<string>,
 ): TimelineDay[] {
   const days = history.commits.flatMap((one, index) => {
     const text = dayOf(one.authored_at);
@@ -780,7 +782,7 @@ function daysOf(
     return [
       {
         x: at.x,
-        top: at.y + DAY_RISE,
+        top: at.y + (named.has(one.sha) ? SHA_DROP + SHA_CLEAR : DAY_RISE),
         y: at.y + DAY_DROP,
         textX: at.x + DAY_GAP,
         text,
@@ -1143,7 +1145,13 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
     flag: flagOf(order, input, graph, right),
     since: sinceOf(history, graph, base, collapsed, textX, right),
     collapsed,
-    days: ticked ? daysOf(history, graph.nodes) : [],
+    days: ticked
+      ? daysOf(
+          history,
+          graph.nodes,
+          new Set(dots.filter((one) => one.showSha).map((one) => one.sha)),
+        )
+      : [],
     ghosts: ghosts.length
       ? `your review saw ${ghosts.map((one) => one.sha.slice(0, SHORT)).join(' ')}, rewritten since`
       : null,
