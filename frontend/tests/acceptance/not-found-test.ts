@@ -28,6 +28,7 @@ module('Acceptance | not found', function (hooks) {
       .exists(
         'the old board left urls behind, and the router owns them all now',
       );
+    assert.dom('[data-test-not-found] a[href="/"]').hasText('Back to the wall');
   });
 
   test('a path the board never had keeps the theme the viewer chose', async function (assert) {
@@ -87,7 +88,9 @@ module('Acceptance | not found', function (hooks) {
         .includesText(
           'only watches pull requests you wrote or were asked to review',
         );
-      assert.dom('[data-test-pr-not-found] a[href="/"]').exists();
+      assert
+        .dom('[data-test-pr-not-found] a[href="/"]')
+        .hasText('Back to the wall');
       assert.dom('[data-test-tab]').doesNotExist();
       assert.dom('[data-test-load-trouble]').doesNotExist();
     });

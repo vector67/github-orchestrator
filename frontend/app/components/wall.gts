@@ -19,7 +19,7 @@ import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil, Importance } from 'frontend/data/api';
 import { ageOf, type Reading } from 'frontend/data/dashboard';
-import { opensDialog, runsAgent } from 'frontend/data/decisions';
+import { opensDialog, prLabelOf, runsAgent } from 'frontend/data/decisions';
 import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -419,7 +419,7 @@ export default class Wall extends Component<WallSignature> {
                       title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "release")}}
-                    >Release<Glyphs
+                    >{{prLabelOf "release"}}<Glyphs
                         @opensDialog={{opensDialog "release"}}
                         @runsAgent={{runsAgent "release"}}
                       /></button>{{/if}}
@@ -433,7 +433,11 @@ export default class Wall extends Component<WallSignature> {
                       data-test-wall-control="hold"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "hold")}}
-                    >{{if reading.onHold "Resume" "Hold"}}<Glyphs
+                    >{{if
+                        reading.onHold
+                        (prLabelOf "resume")
+                        (prLabelOf "hold")
+                      }}<Glyphs
                         @opensDialog={{opensDialog "hold"}}
                         @runsAgent={{runsAgent "hold"}}
                       /></button><button

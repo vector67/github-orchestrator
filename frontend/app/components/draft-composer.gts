@@ -89,10 +89,6 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
     return !this.drafts.saveable(this.key, this.saved);
   }
 
-  get saveLabel(): string {
-    return this.creating ? 'Create draft' : 'Save draft';
-  }
-
   get going(): boolean {
     const draft = this.args.draft;
     if (!draft) return false;
@@ -237,7 +233,7 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
               class="reply-send"
               data-test-draft-save
               disabled={{this.unsaveable}}
-            >{{this.saveLabel}}</button>
+            >Save draft</button>
           {{/unless}}
           <p class="composer-note" data-test-draft-note>{{this.note}}</p>
         </div>

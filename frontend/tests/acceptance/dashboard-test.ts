@@ -889,7 +889,7 @@ module('Acceptance | dashboard', function (hooks) {
     const labelOf = (control: string) =>
       text(`[data-test-control="${control}"]`).replace(/ \S+$/, '');
     assert.strictEqual(labelOf('close'), 'Close PR #7');
-    assert.strictEqual(labelOf('hold'), 'Put on hold');
+    assert.strictEqual(labelOf('hold'), 'Hold');
     assert.strictEqual(labelOf('dismiss'), 'Dismiss #7');
     for (const control of ['close', 'hold', 'carry-on', 'dismiss']) {
       assert
@@ -902,7 +902,7 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('h');
 
-    assert.strictEqual(labelOf('resume'), 'Resume the agent');
+    assert.strictEqual(labelOf('resume'), 'Resume');
     assert.dom('[data-test-control="resume"]').hasAttribute('title', /\w/);
   });
 
@@ -1815,7 +1815,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
-  test('a pull request you review with threads waiting on the author offers Check for fixes', async function (assert) {
+  test('a pull request you review with threads waiting on the author offers Check all threads for fixes', async function (assert) {
     onTheHub();
     board().actAs('reviewer');
     board().conversations = [
@@ -1829,7 +1829,8 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert
       .dom('[data-test-control="check-for-fixes"]')
-      .hasAttribute('title', /\w/);
+      .hasAttribute('title', /\w/)
+      .includesText('Check all threads for fixes');
 
     await click('[data-test-control="check-for-fixes"]');
 
@@ -1839,7 +1840,7 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
-  test('Check for fixes names each waiting thread it skipped and why', async function (assert) {
+  test('Check all threads for fixes names each waiting thread it skipped and why', async function (assert) {
     onTheHub();
     board().actAs('reviewer');
     board().conversations = [
@@ -1870,7 +1871,7 @@ module('Acceptance | dashboard', function (hooks) {
       );
   });
 
-  test('no thread waiting on the author offers no Check for fixes', async function (assert) {
+  test('no thread waiting on the author offers no Check all threads for fixes', async function (assert) {
     onTheHub();
     board().actAs('reviewer');
     board().conversations = [thread({ key: 'k1' })];
@@ -1971,7 +1972,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert
       .dom('[data-test-toast]')
       .hasText(
-        'Close goes through the manager’s board, which is not answering.',
+        'Close PR goes through the manager’s board, which is not answering.',
       );
   });
 
@@ -1987,7 +1988,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert
       .dom('[data-test-action-band] [data-test-refusal]')
       .hasText('the board server is not answering');
-    assert.dom('[data-test-control="hold"]').includesText('Put on hold');
+    assert.dom('[data-test-control="hold"]').includesText('Hold');
     assert.dom('[data-test-control="hold"]').isNotDisabled();
     assert.dom('[data-test-toast]').doesNotExist();
   });
@@ -2028,10 +2029,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert
       .dom('[data-test-control="carry-on"] [data-test-ring]')
       .doesNotExist();
-    assert
-      .dom('[data-test-control="hold"]')
-      .includesText('Put on hold')
-      .isDisabled();
+    assert.dom('[data-test-control="hold"]').includesText('Hold').isDisabled();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
 
     release();
@@ -2083,10 +2081,7 @@ module('Acceptance | dashboard', function (hooks) {
       .hasText(
         'Event dispatch is frozen. No agent run is going. The watcher detaches it in 38m and builds a fresh one. Nothing in the directory is removed.',
       );
-    assert.deepEqual(
-      texts('[data-test-control]').map((one) => one.split(' ')[0]),
-      ['Release'],
-    );
+    assert.deepEqual(texts('[data-test-control]'), ['Release w']);
     assert.deepEqual(
       findAll('[data-test-block]').map((one) =>
         one.getAttribute('data-test-block'),

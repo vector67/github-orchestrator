@@ -256,6 +256,19 @@ module('Acceptance | keyboard', function (hooks) {
     ]);
   });
 
+  test('the key help names hold by the buttons’ own words on the dashboard and the wall', async function (assert) {
+    await visit('/');
+
+    await triggerEvent(document, 'keydown', { key: '?' });
+
+    for (const group of ['Dashboard', 'Wall']) {
+      const does = findAll(`[data-test-key-group="${group}"] dd`).map((one) =>
+        one.textContent.trim(),
+      );
+      assert.true(does.includes('Hold or resume'), group);
+    }
+  });
+
   test('the key help writes a capital key with the shift sign', async function (assert) {
     await visit('/pr/o/r/7/conversations');
 

@@ -175,7 +175,11 @@ export default class SummaryTab extends Component {
                 data-test-summary-run
                 disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
+              >{{if
+                  this.pressing.pressed
+                  this.pressing.doing
+                  "Summarise"
+                }}</button>
             </span>
           {{else if (eq this.tab.state "stale")}}
             <span>Written for
@@ -193,7 +197,11 @@ export default class SummaryTab extends Component {
                 data-test-summary-run
                 disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
+              >{{if
+                  this.pressing.pressed
+                  this.pressing.doing
+                  "Summarise"
+                }}</button>
             </span>
           {{else}}
             <span><code>{{this.tab.sha}}</code></span>
@@ -208,7 +216,11 @@ export default class SummaryTab extends Component {
                 data-test-summary-run
                 disabled={{if this.pressing.pressed true}}
                 {{on "click" this.run}}
-              >{{if this.pressing.pressed this.pressing.doing "Rerun"}}</button>
+              >{{if
+                  this.pressing.pressed
+                  this.pressing.doing
+                  "Summarise"
+                }}</button>
             </span>
           {{/if}}
           {{#if this.pressing.refused}}

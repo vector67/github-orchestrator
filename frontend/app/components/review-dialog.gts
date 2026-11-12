@@ -149,13 +149,13 @@ export default class ReviewDialog extends Component {
                       class="ghost"
                       data-test-edit
                       {{navigates (fn this.review.edit one.key)}}
-                    >Edit</a>
+                    >Open draft</a>
                     <button
                       type="button"
                       class="ghost"
                       data-test-leave-out
                       {{on "click" (fn this.review.leaveOut one.key)}}
-                    >Leave out</button>
+                    >Leave out of review</button>
                   </span>
                 {{/if}}
                 {{#if one.refused}}

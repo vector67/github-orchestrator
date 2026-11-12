@@ -340,7 +340,7 @@ export default class PrView extends Component<PrViewSignature> {
             <p>The watcher holds no pull request
               {{this.repo}}#{{@pr.number}}. It only watches pull requests you
               wrote or were asked to review.
-              <a class="not-found-link" href="/">Back to the board</a>.</p>
+              <a class="not-found-link" href="/">Back to the wall</a>.</p>
           </section>
         {{/if}}
       {{else if this.starting}}

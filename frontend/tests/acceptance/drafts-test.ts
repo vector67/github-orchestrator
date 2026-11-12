@@ -457,7 +457,7 @@ module('Acceptance | drafts', function (hooks) {
       ['src/bar.py', 'src/foo.py'],
     );
     assert.dom(`${ANCHOR} [data-test-pr-diff]`).doesNotExist();
-    assert.dom('[data-test-draft-save]').hasText('Create draft');
+    assert.dom('[data-test-draft-save]').hasText('Save draft');
     await fillIn('[data-test-draft-body]', 'why not a context manager?');
     assert
       .dom('[data-test-draft-save]')

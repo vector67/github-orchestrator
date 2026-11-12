@@ -99,7 +99,7 @@ module('Acceptance | importance', function (hooks) {
     assert.dom(`${ROW} [data-test-nudged]`).doesNotExist();
   });
 
-  test('the dashboard offers Set importance beside Put on hold, with the red dot until it is set', async function (assert) {
+  test('the dashboard offers Set importance beside Hold, with the red dot until it is set', async function (assert) {
     serve(ranked(null));
     await visit('/pr/o/r/7/dashboard');
 

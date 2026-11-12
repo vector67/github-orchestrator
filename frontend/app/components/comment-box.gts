@@ -241,7 +241,7 @@ export default class CommentBox extends Component<CommentBoxSignature> {
             class="box-draft"
             data-test-box-save
             disabled={{this.unsaveable}}
-          >Save as local draft</button>
+          >Save draft</button>
           <button
             type="button"
             class="reply-send"

@@ -446,7 +446,7 @@ const ENTRIES = {
           'Anything you write is posted to GitHub as your reply. Tick the ' +
           'boxes to mark the thread resolved there too, or, with nothing ' +
           'written, to put 👍 on the newest reply. Either way the card moves ' +
-          'to Done. Reopen is one click from there.',
+          'to Done, where one click on the card undoes it.',
         reply: true,
         resolves: true,
         thumbsUp: true,
@@ -624,7 +624,7 @@ const ENTRIES = {
       question: 'Confirm this conversation?',
       note:
         'The card moves to Done. Untick what should not happen on GitHub. ' +
-        'Reopen is one click from there.',
+        'One click on the card undoes it from there.',
       reply: false,
       resolves: true,
       resolving: true,
@@ -949,6 +949,17 @@ const RED_PR_WRITES: Record<RedPrVerb, (number: number) => AreYouSure> = {
       'From then on its agents fix CI, rebase and answer threads on it as they do on your own pull requests.',
   }),
 };
+
+const PR_LABELS = {
+  hold: 'Hold',
+  resume: 'Resume',
+  release: 'Release',
+  'check-for-fixes': 'Check all threads for fixes',
+} as const;
+
+export function prLabelOf(verb: keyof typeof PR_LABELS): string {
+  return PR_LABELS[verb];
+}
 
 export function areYouSureOf(verb: RedPrVerb, number: number): AreYouSure {
   return RED_PR_WRITES[verb](number);

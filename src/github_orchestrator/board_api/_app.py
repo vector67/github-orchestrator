@@ -1684,7 +1684,7 @@ def check_for_fixes(board: Serving) -> FixChecks:
                  "model": Errors}})
 def place_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
                  asked: PlaceRequest) -> Response:
-    """Not confirm on an Assumed done thread and Move on a Not my conversation
+    """Move on an Assumed done thread and on a Not my conversation
     one. Nothing reaches GitHub; `queued`, on your own pull request, starts a
     fresh agent run.
     """
@@ -1956,7 +1956,7 @@ def _summarised(board: Board, if_match: str, *, use_github_api: bool) -> Respons
              tags=["summary"], operation_id="summarise", responses=SUMMARY_STARTED,
              summary="Run the pr-summary plugin on this pull request now.")
 def summarise(board: Serving, if_match: SummaryIfMatch) -> Response:
-    """Rerun, or the first run on a pull request you wrote. It leaves `wanted`
+    """Summarise, again or the first time on a pull request you wrote. It leaves `wanted`
     alone, and the run it starts answers whatever request is pending.
     """
     return _summarised(board, if_match, use_github_api=False)

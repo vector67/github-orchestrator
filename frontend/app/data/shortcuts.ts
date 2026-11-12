@@ -79,7 +79,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
   {
     screen: 'Dashboard',
     shortcuts: [
-      { keys: [capOfControl('hold')], does: 'Put on hold or resume' },
+      { keys: [capOfControl('hold')], does: 'Hold or resume' },
       { keys: [capOfControl('carry-on')], does: 'Carry on' },
       {
         keys: [capOfControl('start-review')],
@@ -119,7 +119,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
     shortcuts: [
       { keys: ['j', 'k'], does: 'Walk the pull requests' },
       { keys: ['Enter'], does: 'Open the chosen one' },
-      { keys: [capOfControl('hold')], does: 'Put on hold or resume' },
+      { keys: [capOfControl('hold')], does: 'Hold or resume' },
       { keys: [capOfControl('carry-on')], does: 'Carry on' },
       {
         keys: [capOfControl('mark-ready')],

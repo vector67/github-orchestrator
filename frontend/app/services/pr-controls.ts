@@ -94,7 +94,7 @@ const BOARD_DOWN = {
   'start-review':
     'Start a review agent waits for the manager’s board, which is not answering.',
   dismiss: 'Dismiss goes through the manager’s board, which is not answering.',
-  close: 'Close goes through the manager’s board, which is not answering.',
+  close: 'Close PR goes through the manager’s board, which is not answering.',
   'mark-ready':
     'Ready for review goes through the manager’s board, which is not answering.',
   'assign-reviewers':
@@ -102,7 +102,7 @@ const BOARD_DOWN = {
   'take-over':
     'Take over goes through the manager’s board, which is not answering.',
   'check-for-fixes':
-    'Check for fixes goes through the manager’s board, which is not answering.',
+    'Check all threads for fixes goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
 };
 

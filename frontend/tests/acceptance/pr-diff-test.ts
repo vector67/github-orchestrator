@@ -941,7 +941,7 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-comment-box] textarea').hasValue('');
     });
 
-    test('the plus on another line opens an empty box once Save as local draft has used the text', async function (assert) {
+    test('the plus on another line opens an empty box once Save draft has used the text', async function (assert) {
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
       await click(`${row('+20')} [data-test-add]`);
       await fillIn('[data-test-comment-box] textarea', 'return the rows');
@@ -1015,7 +1015,7 @@ module('Acceptance | pr diff', function (hooks) {
           'Cancel',
           'Ask the agent',
           'Request change',
-          'Save as local draft',
+          'Save draft',
           'Add to review',
         ]);
       });

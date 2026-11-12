@@ -26,6 +26,7 @@ import {
 import {
   areYouSureOf,
   opensDialog,
+  prLabelOf,
   runsAgent,
   type AreYouSure as Asking,
   type Pressing,
@@ -425,7 +426,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 data-test-control="release"
                 {{on "click" (fn this.press "release")}}
               >{{#if (this.ringed "release")}}<PendingRing
-                  />{{/if}}{{this.labelOf "release" "Release now"}}<Glyphs
+                  />{{/if}}{{this.labelOf
+                  "release"
+                  (prLabelOf "release")
+                }}<Glyphs
                   @opensDialog={{opensDialog "release"}}
                   @runsAgent={{runsAgent "release"}}
                 />
@@ -458,7 +462,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   data-runs-agent={{if (runsAgent "hold") "true"}}
                   data-test-control="resume"
                   {{on "click" (fn this.press "hold")}}
-                >{{this.labelOf "hold" "Resume the agent"}}<Glyphs
+                >{{this.labelOf "hold" (prLabelOf "resume")}}<Glyphs
                     @opensDialog={{opensDialog "hold"}}
                     @runsAgent={{runsAgent "hold"}}
                   />
@@ -473,7 +477,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   data-runs-agent={{if (runsAgent "hold") "true"}}
                   data-test-control="hold"
                   {{on "click" (fn this.press "hold")}}
-                >{{this.labelOf "hold" "Put on hold"}}<Glyphs
+                >{{this.labelOf "hold" (prLabelOf "hold")}}<Glyphs
                     @opensDialog={{opensDialog "hold"}}
                     @runsAgent={{runsAgent "hold"}}
                   />
@@ -592,7 +596,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   data-runs-agent={{if (runsAgent "check-for-fixes") "true"}}
                   data-test-control="check-for-fixes"
                   {{on "click" (fn this.press "check-for-fixes")}}
-                >{{this.labelOf "check-for-fixes" "Check for fixes"}}<Glyphs
+                >{{this.labelOf
+                    "check-for-fixes"
+                    (prLabelOf "check-for-fixes")
+                  }}<Glyphs
                     @opensDialog={{opensDialog "check-for-fixes"}}
                     @runsAgent={{runsAgent "check-for-fixes"}}
                   />

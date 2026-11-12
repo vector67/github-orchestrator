@@ -417,7 +417,7 @@ module('Acceptance | send review', function (hooks) {
     assert.strictEqual(asked?.ifMatch, '"draft_b-v1"');
   });
 
-  test('Leave out shows the draft pending in the modal, its buttons held, until the board answers', async function (assert) {
+  test('Leave out of review shows the draft pending in the modal, its buttons held, until the board answers', async function (assert) {
     await opened();
     const release = board().hold(/operations:withdraw-from-review$/);
 
@@ -584,7 +584,10 @@ module(
       );
       assert
         .dom(rows[0])
-        .hasText('src/foo.py:42 Edit Leave out', 'a draft with no words yet');
+        .hasText(
+          'src/foo.py:42 Open draft Leave out of review',
+          'a draft with no words yet',
+        );
       assert.dom(rows[1]).containsText('b.py:3');
       assert.dom(rows[1]).containsText('why a list?');
     });

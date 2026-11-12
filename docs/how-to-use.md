@@ -483,11 +483,11 @@ for their shares and grey for the rest. Under that, the pr-summary plugin's late
 sits below a one-line strip. The strip says which state it is in: waiting for
 its turn (a PR you review) or a **Summarise** button (your own); running, with
 the head it reads, how long it has run and each witness ticked off as it
-finishes; ready, with the head it read, when it finished and **Rerun**; stale
-after a push, naming both heads and how many commits behind, with **Rerun**;
+finishes; ready, with the head it read, when it finished and **Summarise**; stale
+after a push, naming both heads and how many commits behind, with **Summarise**;
 needing the GitHub API, with the plugin's reason and a button that runs it over
 the API; or failed, with the exit status, the end of what it printed and
-**Rerun**. While a rerun runs, the old summary stays, and the strip says when
+**Summarise**. While a rerun runs, the old summary stays, and the strip says when
 the rerun started and how many of its agents have finished. A refused run says
 why in the strip.
 
@@ -516,7 +516,7 @@ ones." A draft on its way to GitHub cannot change.
 
 **Dashboard** is the PR's state as its agent manager last saw it.
 The band at the top has your move and why, and the buttons: **Open the Board**
-(`2`) when threads wait for you, **Put on hold** or **Resume the agent**
+(`2`) when threads wait for you, **Hold** or **Resume**
 (`h`), **Carry on** (`c`), **Start a review agent** (`a`) when your move is to
 review or re-review, which starts the review agent a review request would, for
 when the automatic one went wrong, **Ready for review** (`r`, then `y`) on your
@@ -554,7 +554,7 @@ output, newest last; `⇧C` flips between them. Both follow the board's streams,
 so they change as the files do. When the manager's board is not answering, the
 page shows the watcher's view from disk marked **Not live**, and carry on,
 dismiss and git wait for the board to come back. On a PR frozen on the wrong
-branch only `w`, **Release now**, does anything; see
+branch only `w`, **Release**, does anything; see
 [A PR on the wrong branch](#a-pr-on-the-wrong-branch).
 
 Two keys have no button. `t` opens the Terminal tab, and `g` opens the
@@ -678,7 +678,7 @@ It can take in − and + lines together but stays in the hunk it started in,
 because GitHub refuses a comment whose lines span two hunks. Lines shown by
 expanding context cannot be selected. The comment box opens under the last
 selected line, saying which lines it is on ("Commenting on lines −19 to +20").
-**Save as local draft** makes a draft that stays on the board, out of your
+**Save draft** makes a draft that stays on the board, out of your
 review, and **Add to review** makes it and puts it in your review; either leaves
 the tab where it was. `Esc` or **Cancel** closes the box and keeps what you
 typed for the next new draft.
@@ -783,7 +783,7 @@ session in the Terminal tab.
 
 When the worktree ends up holding a different branch than the PR it manages,
 the usual state after a stacked-PR split, event dispatch freezes and the
-Dashboard says so. Only `w`, **Release now**, does anything: it tells the
+Dashboard says so. Only `w`, **Release**, does anything: it tells the
 watcher to set this worktree aside on its next poll and build a fresh one. The
 PR is left alone for an hour first (`mismatch_grace_seconds`), because
 releasing it stops whatever was moving the branch, usually a Claude session
@@ -927,14 +927,14 @@ settled for you to confirm (Assumed done), or nothing to do with you (Not my
 conversation). Until it has answered, the thread sits in Ready for you and its card
 says "not yet read". A reply you post from the board moves it to Waiting on
 author at once, and the agent reads it again. Only you move a thread to Done:
-an Assumed done card offers **Confirm** (`g`) and **Not confirm** (`m`), which
+an Assumed done card offers **Confirm** (`g`) and **Move** (`m`), which
 asks where it stands instead. Confirm moves the card to Done and asks first, with
 two ticks, both on: resolve the thread on GitHub, and put 👍 on the newest reply
 from someone else. Untick either to leave it undone on GitHub. Confirm posts no
 reply; **Reply and resolve** beside it does. A mention in a review thread gets the
 same Confirm, with Reply and resolve and Resolve on board moved to the right. On
 any other mention, or on a PR you wrote, Confirm moves the card to Done and
-touches nothing on GitHub. A Not my conversation card offers the same question as **Move…**. It
+touches nothing on GitHub. A Not my conversation card offers the same question as **Move**. It
 lists My move, Their move, Not my conversation and Later…, leaving out the group
 the card is in, and Later… opens the Defer dialog. On a PR you wrote it lists
 Needs a fix, which starts a fresh agent run, Needs a reply from me, which puts
