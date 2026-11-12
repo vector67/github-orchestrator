@@ -41,20 +41,33 @@ says so.
     you typed yourself is not problematic: posting it is the check.
 
 05. **A button behaves the same every time.** No button opens a dialog only
-    sometimes. Three stated exceptions, each kept from today:
+    sometimes. Two stated exceptions, each kept from today:
 
-    - Confirm on the last open mention of a held PR opens the hold warning
-      ("Back on hold" / "Resume this PR"), because you have to see that the PR
-      goes back on hold. That Confirm carries the window icon.
-    - Request change, and the mention's Ask the agent, ask "Run the change in a
-      visible session?" until you tick "Remember my choice", then act without
-      asking (`request-session-ask.gts`). Answering an agent's question works
-      the same way. All three share the one Agent sessions setting
-      (`services/request-session.ts`), so remembering a choice in one
-      remembers it for the others.
-    - The Ready for review dialog's Assign reviewers opens the Assign reviewers
-      dialog on top of it (`ready-confirm.gts`). This is the only dialog that
-      opens another.
+    - The hold warning ("Back on hold" / "Resume this PR",
+      `panel-actions.gts`). It opens when you press Resolve, Mark done or
+      Defer on a card that is the PR's last open mention while the PR is on
+      hold, because you have to see that the PR goes back on hold. On any
+      other card, or when the PR is not on hold, those buttons do what they
+      always do. Resolve and Defer open their own dialog anyway, so the
+      button this really changes is Mark done, which otherwise acts at once.
+    - The visible-session chooser ("Run the change in a visible session?",
+      `request-session-ask.gts`). Request change, the mention's Ask the
+      agent and answering an agent's question all read the one Agent
+      sessions setting (`services/request-session.ts`). While it is "ask",
+      every press opens the chooser. Once it is "visible" or "without a
+      session", set by ticking "Remember my choice" or in Settings, the press
+      acts at once.
+
+    In both cases the board knows before the click whether the press will
+    open the dialog, so the window icon shows exactly when it will. Mark
+    done carries it only on the card where it opens the hold warning. Once
+    Agent sessions is "visible" or "without a session", Request change,
+    the mention's Ask the agent and the answer buttons lose the window icon
+    and keep only the star.
+
+    Separately, Ready for review always opens its dialog, and that dialog's
+    Assign reviewers opens the Assign reviewers dialog on top of it
+    (`ready-confirm.gts`). It is the only dialog that opens another.
 
 06. **Underline only goes somewhere.** Underlined text is a link that navigates
     (Open the Board, New draft, On the board, See in Diff, Prev / Next). Every
@@ -65,7 +78,7 @@ says so.
     only a filled square.
 
 08. **Bring back undoes the last move.** It returns the card to the state it
-    was in before the move: after Mark as done from Waiting, Bring back returns
+    was in before the move: after Mark done from Waiting, Bring back returns
     to Waiting, not Ready. The toast's Bring back and the card's own Bring back
     do the same thing. Bring back after Reject, or after a landed fix, re-runs
     the agent from scratch, because the worktree went with it, so there it
@@ -89,9 +102,19 @@ says so.
 11. **Resolve always reaches GitHub.** Every "Resolve" resolves the thread on
     GitHub, through a dialog with an optional reply and no resolve tick box.
     Finishing a card on the board only, with nothing sent to GitHub, is its own
-    button, **Mark as done**, which acts at once. The undo of Resolve is
+    button, **Mark done**, which acts at once. The undo of Resolve is
     **Unresolve on GitHub**. The reviewer's Reopen, which already unresolves on
     GitHub (`apply.py` `_unresolves_on_github`), takes that name too.
+
+    Unresolve on GitHub is offered on a Done review thread that GitHub shows
+    resolved. It calls GitHub's `unresolveReviewThread` on the thread and
+    leaves the card where it is until GitHub answers. Once GitHub confirms,
+    the board records the thread as unresolved on GitHub, moves the card back
+    to your move, and clears the agent's verdict and any deferral. It posts
+    no reply, adds no reaction and does not re-run the agent. If GitHub
+    refuses, the card stays Done and shows "reopen failed: \<GitHub's error>".
+    A Done thread that GitHub does not show resolved, or that is not a review
+    thread, offers Bring back instead, which touches nothing on GitHub.
 
 12. **GitHub posts act at once and show that they are going.** Post now, a
     reply and a reaction post on click. While the post is in flight the card
@@ -109,7 +132,7 @@ says so.
 15. **Names.** One name per action, sentence case:
 
     - Hold / Resume (both views).
-    - Mark as done (board only).
+    - Mark done (board only).
     - Bring back (all six of today's names: Bring back to Ready, Undefer,
       Reconsider, Un-resolve, Reopen when it does not touch GitHub, Bring back).
     - Move (Not confirm, Move…).
@@ -137,29 +160,29 @@ says so.
 
 ## Controls, place by place
 
-In the tables, ⧉ stands for the window icon and ✦ for the AI star (rule 02).
+In the tables, ⧉ stands for the window icon and ✦ for the AI star (rule 02). (⧉) is the window icon only while Agent sessions is "ask" (rule 05).
 
 ### Thread footer, author
 
-| State                 | Buttons, left to right                                                                                                | Notes                                                                                                                                                                                                                                                                      |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fix proposed          | Accept ⧉ (primary), Send back for rework ✦⧉, then on the right Resolve ⧉, Mark as done, Defer ⧉, Reject ⧉             | Accept's dialog shows the reply that will be sent above the commit message. Reject drops the fix and its worktree; Bring back after it carries the star.                                                                                                                   |
-| Agent working         | Stop (red), Defer ⧉                                                                                                   | Stop asks "Stop the agent on this comment?"; afterwards Try again ✦.                                                                                                                                                                                                       |
-| Waiting               | Stop waiting, Mark as done, Resolve ⧉, Defer ⧉                                                                        |                                                                                                                                                                                                                                                                            |
-| Assumed done          | Confirm (primary), Move ⧉, Resolve ⧉                                                                                  | Agent line per rule 10.                                                                                                                                                                                                                                                    |
-| Declined              | Send back for rework ✦⧉, Resolve ⧉, Defer ⧉                                                                           | Resolve's dialog offers Use the agent's words.                                                                                                                                                                                                                             |
-| Agent asks a question | The agent's options as answer buttons and Other (`question-answers.gts`), then on the right Defer ⧉, Drop (red, last) | Drop asks "Drop the agent's question?". It drops the question and deletes the agent's worktree. The thread goes back to the state where no agent has run on it, with Write a fix ✦, Resolve ⧉, Mark as done, Defer ⧉. Defer is its own button, never a choice inside Drop. |
-| Done                  | Bring back                                                                                                            |                                                                                                                                                                                                                                                                            |
+| State                 | Buttons, left to right                                                                                                | Notes                                                                                                                                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fix proposed          | Accept ⧉ (primary), Send back for rework ✦⧉, then on the right Resolve ⧉, Mark done, Defer ⧉, Reject ⧉                | Accept's dialog shows the reply that will be sent above the commit message. Reject drops the fix and its worktree; Bring back after it carries the star.                                                                                                                |
+| Agent working         | Stop (red), Defer ⧉                                                                                                   | Stop asks "Stop the agent on this comment?"; afterwards Try again ✦.                                                                                                                                                                                                    |
+| Waiting               | Stop waiting, Mark done, Resolve ⧉, Defer ⧉                                                                           |                                                                                                                                                                                                                                                                         |
+| Assumed done          | Confirm (primary), Move ⧉, Resolve ⧉                                                                                  | Agent line per rule 10.                                                                                                                                                                                                                                                 |
+| Declined              | Send back for rework ✦⧉, Resolve ⧉, Defer ⧉                                                                           | Resolve's dialog offers Use the agent's words.                                                                                                                                                                                                                          |
+| Agent asks a question | The agent's options as answer buttons and Other (`question-answers.gts`), then on the right Defer ⧉, Drop (red, last) | Drop asks "Drop the agent's question?". It drops the question and deletes the agent's worktree. The thread goes back to the state where no agent has run on it, with Write a fix ✦, Resolve ⧉, Mark done, Defer ⧉. Defer is its own button, never a choice inside Drop. |
+| Done                  | Bring back                                                                                                            |                                                                                                                                                                                                                                                                         |
 
 ### Thread footer, reviewer
 
-| State              | Buttons                                                                     | Notes                                                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Author answered    | Resolve ⧉ (primary), Not fixed ⧉, Move ⧉, Defer ⧉                           | Resolve's dialog: optional reply, a ticked "Put 👍 on the newest reply".                                                                                          |
-| Assumed done       | Confirm ⧉ (primary), Move ⧉                                                 | Dialog ticks: resolve on GitHub, 👍 on the reply.                                                                                                                 |
-| Mention            | Reply and mark as done ⧉ (primary), Ask the agent ✦⧉, Mark as done, Defer ⧉ | Ask the agent runs the session chooser (rule 05), then comes back as a proposal with Accept and the rest.                                                         |
-| Local draft        | Add to review, Post now, Discard                                            | Add to review ↔ Leave out of review. Post now per rule 12, then the waiting state's Resolve ⧉, Move ⧉, Defer ⧉. Discard's undo is Bring back, to the local draft. |
-| Resolved on GitHub | Unresolve on GitHub                                                         | Rule 11.                                                                                                                                                          |
+| State              | Buttons                                                                 | Notes                                                                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Author answered    | Resolve ⧉ (primary), Not fixed ⧉, Move ⧉, Defer ⧉                       | Resolve's dialog: optional reply, a ticked "Put 👍 on the newest reply".                                                                                          |
+| Assumed done       | Confirm ⧉ (primary), Move ⧉                                             | Dialog ticks: resolve on GitHub, 👍 on the reply.                                                                                                                 |
+| Mention            | Reply and mark done ⧉ (primary), Ask the agent ✦(⧉), Mark done, Defer ⧉ | Ask the agent runs the session chooser (rule 05), then comes back as a proposal with Accept and the rest.                                                         |
+| Local draft        | Add to review, Post now, Discard                                        | Add to review ↔ Leave out of review. Post now per rule 12, then the waiting state's Resolve ⧉, Move ⧉, Defer ⧉. Discard's undo is Bring back, to the local draft. |
+| Resolved on GitHub | Unresolve on GitHub                                                     | Rule 11.                                                                                                                                                          |
 
 ### Dashboard and wall
 
@@ -183,7 +206,7 @@ In the tables, ⧉ stands for the window icon and ✦ for the AI star (rule 02).
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Board strip                   | New draft (link); Send review · N ⧉, submit "Send review".                                                                   |
 | Diff, a local draft on a line | Edit (opens the box in place), Ask the agent ✦ (opens a session straight away), Add to review, Discard, On the board (link). |
-| Diff, the new-comment box     | Cancel (quiet), Ask the agent ✦, Request change ✦⧉ (rule 05), Save draft, Add to review (primary).                           |
+| Diff, the new-comment box     | Cancel (quiet), Ask the agent ✦, Request change ✦(⧉) (rule 05), Save draft, Add to review (primary).                         |
 | Commit timeline               | Reset to origin ⧉ asks in a dialog naming the commits it drops; the in-place Reset / Cancel goes.                            |
 | Git palette                   | Push acts at once. Force push is its own row ⧉ that asks first.                                                              |
 | Settings                      | The Harvest timer always toggles; a "Set up Harvest" link shows when the extension is missing.                               |
