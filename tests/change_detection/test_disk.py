@@ -155,7 +155,7 @@ def test_a_save_that_fails_leaves_the_last_snapshot_and_no_temporary_file(tmp_pa
         detection.advance(THE_PR, poll(at="2026-09-23T11:05:00Z"), set())
 
     assert state_file(tmp_path, THE_PR).read_text() == before
-    assert list(tmp_path.rglob("*.tmp")) == []
+    assert list(tmp_path.rglob("*.writing")) == []
 
 
 def test_a_reader_never_sees_a_half_written_snapshot(tmp_path, monkeypatch):

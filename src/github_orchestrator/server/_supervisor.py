@@ -9,6 +9,7 @@ import uvicorn
 from starlette.types import ASGIApp
 from uvicorn.supervisors import Multiprocess
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.server._config import ServerConfig
 
 log = logging.getLogger(__name__)
@@ -30,9 +31,7 @@ def _bound(host: str, port: int) -> socket.socket:
 
 
 def _write_pid(path: Path) -> None:
-    written = path.with_name(f".{path.name}.{os.getpid()}")
-    written.write_text(f"{os.getpid()}\n")
-    os.replace(written, path)
+    write_atomically(path, f"{os.getpid()}\n".encode())
 
 
 def serve(config: ServerConfig, worker: Callable[[], ASGIApp]) -> int:

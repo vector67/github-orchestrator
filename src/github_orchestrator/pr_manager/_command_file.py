@@ -9,8 +9,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import Pr
-from github_orchestrator.pr_manager._files import write_whole
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class CommandFiles:
 
     def write(self, pr: Pr, command: Command, fields: dict[str, Any]) -> None:
         path = self._of(pr) / f"{_IDS.next()}.json"
-        write_whole(path, json.dumps({**fields, "command": command.value}).encode())
+        write_atomically(path, json.dumps({**fields, "command": command.value}).encode())
 
     def pending(self, pr: Pr) -> list[Pending]:
         try:

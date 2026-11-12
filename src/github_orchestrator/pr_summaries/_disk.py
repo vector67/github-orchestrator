@@ -1,13 +1,13 @@
 import fcntl
 import json
 import os
-import tempfile
 from collections.abc import Iterator, Set
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import Pr, Repo, UtcClock
 from github_orchestrator.pr_summaries._due import due
 from github_orchestrator.pr_summaries.interface import Summary
@@ -57,14 +57,6 @@ def working_folder(summaries_dir: Path, pr: Pr) -> Path:
     return summaries_dir / pr.repo.owner / pr.repo.name / str(pr.number)
 
 
-def _replaced(path: Path, content: bytes) -> None:
-    with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".tmp", delete=False) as written:
-        written.write(content)
-        written.flush()
-        os.fsync(written.fileno())
-    Path(written.name).replace(path)
-
-
 class DiskPrSummaries:
     def __init__(self, summaries_dir: Path, clock: UtcClock) -> None:
         self._dir = summaries_dir
@@ -73,7 +65,7 @@ class DiskPrSummaries:
     def want(self, pr: Pr) -> None:
         with self._locked(pr):
             stored = self.load(pr) or Summary()
-            _replaced(self._file(pr), _encoded(replace(stored, wanted=self._clock())))
+            write_atomically(self._file(pr), _encoded(replace(stored, wanted=self._clock())))
 
     def unwant(self, pr: Pr) -> bool:
         if not self._file(pr).exists():
@@ -81,7 +73,7 @@ class DiskPrSummaries:
         try:
             with self._locked(pr):
                 stored = self.load(pr) or Summary()
-                _replaced(self._file(pr), _encoded(replace(stored, wanted=None)))
+                write_atomically(self._file(pr), _encoded(replace(stored, wanted=None)))
         except OSError:
             return False
         return True
@@ -95,7 +87,7 @@ class DiskPrSummaries:
     def save(self, pr: Pr, summary: Summary) -> None:
         with self._locked(pr):
             stored = self.load(pr) or Summary()
-            _replaced(self._file(pr), _encoded(replace(summary, wanted=stored.wanted)))
+            write_atomically(self._file(pr), _encoded(replace(summary, wanted=stored.wanted)))
 
     def due(self, in_flight: Set[Pr]) -> list[Pr]:
         stored = {}
