@@ -37,6 +37,9 @@ use.
 | 2026-10-09 | bd632429 | 4,105        | 930         | 13.2 s (12.4-16.4)  | 12.8 s (12.4-14.9)  | 5.8-15.0         | 47-91 °C        |
 | 2026-10-15 | db18876b | 4,315        | 961         | 11.5 s (11.1-11.9)  | 11.7 s (11.0-11.9)  | 2.6-13.2         | 46-91 °C        |
 | 2026-10-23 | 817b7d6a | 4,598        | 1,157       | 9.5 s (9.4-9.8)     | 10.0 s (9.3-10.1)   | 1.9-8.1          | 51-90 °C        |
+| 2026-11-12 | 21094fe6 | 5,571        | 1,677       | 22.6 s (22.3-24.9)  | 29.1 s (22.9-40.1)  | 3.8-12.3         | 53-81 °C        |
+
+The 2026-11-12 row closes the click consistency plan (#366). The same measurement at d12180c4, the commit before the plan, at the same load, gave a cold median of 22.5 s (22.3-22.8) and a warm one of 26.0 s (21.8-41.0), so the plan added no measurable time. The rise from the 2026-10-23 row came from the features between them, which added no row.
 
 The 2026-10-23 row closes the speed rounds #140-#144 and brings the cold median under 10 s with 283 more python and 196 more Ember tests than the row above. Alone, the python half takes about 5.1 s and the Ember half about 6.9 s; together they compete for the 4 performance cores, so the next cut has to come from the Ember half, which now finishes last. Fork counts of 4, 6 and 8 made no clear difference, so `PYTEST_WORKERS` stays 8.
 
