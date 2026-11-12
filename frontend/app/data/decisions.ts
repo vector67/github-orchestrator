@@ -735,7 +735,13 @@ const PR_WRITES = {
     ring: true,
     until: (facts) => !facts.draft,
   },
+  'convert-to-draft': {
+    doing: 'converting it to a draft',
+    square: null,
+    slot: 'controls',
+  },
   'take-over': { doing: 'taking it over', square: null, slot: 'controls' },
+  'hand-back': { doing: 'handing it back', square: null, slot: 'controls' },
   'assign-reviewers': {
     doing: 'asking the reviewers',
     square: null,
@@ -767,6 +773,7 @@ const PR_WRITES = {
     until: (facts) => facts.ended,
     leaves: true,
   },
+  reopen: { doing: 'reopening it', square: null, slot: 'controls' },
   release: { doing: 'asking for the release', square: null, slot: 'controls' },
   fetch: {
     doing: 'fetching the branch',
@@ -868,6 +875,23 @@ const RED_PR_WRITES: Record<RedPrVerb, (number: number) => AreYouSure> = {
       'From then on its agents fix CI, rebase and answer threads on it as they do on your own pull requests.',
   }),
 };
+
+export type UndonePrVerb = RedPrVerb | 'mark-ready';
+
+export interface PrUndo {
+  verb: PrVerb;
+  label: string;
+}
+
+const PR_UNDOS: Record<UndonePrVerb, (number: number) => PrUndo> = {
+  close: (number) => ({ verb: 'reopen', label: `Reopen PR #${number}` }),
+  'mark-ready': () => ({ verb: 'convert-to-draft', label: 'Convert to draft' }),
+  'take-over': () => ({ verb: 'hand-back', label: 'Hand back' }),
+};
+
+export function prUndoOf(verb: UndonePrVerb, number: number): PrUndo {
+  return PR_UNDOS[verb](number);
+}
 
 const PR_LABELS = {
   hold: 'Hold',

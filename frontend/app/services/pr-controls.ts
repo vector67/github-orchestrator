@@ -16,7 +16,9 @@ import {
   asksFirst,
   capOf,
   leavesThePage,
+  prUndoOf,
   type PrVerb,
+  type UndonePrVerb,
 } from 'frontend/data/decisions';
 import type { Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
@@ -104,6 +106,13 @@ const BOARD_DOWN = {
   'check-for-fixes':
     'Check all threads for fixes goes through the manager’s board, which is not answering.',
   git: 'Git runs through the manager’s board, which is not answering.',
+};
+
+const DONE_SAYING: Record<UndonePrVerb, (number: number) => string> = {
+  close: (number) =>
+    `Asked GitHub to close #${number}. The watcher tears it down on its next poll.`,
+  'mark-ready': (number) => `Asked GitHub to mark #${number} ready for review.`,
+  'take-over': (number) => `Took over #${number}.`,
 };
 
 const DISMISSALS: Record<DismissUntil, Dismissal> = {
@@ -353,12 +362,22 @@ export default class PrControlsService extends Service {
       return;
     }
     if (!(await this.throughTheManager(on, control))) return;
-    if (control === 'close') {
-      this.toasts.say(
-        `Asked GitHub to close #${on.number}. The watcher tears it down on its next poll.`,
-        'done',
-      );
-    }
+    if (
+      control === 'close' ||
+      control === 'mark-ready' ||
+      control === 'take-over'
+    )
+      this.sayUndoable(on, control, DONE_SAYING[control](on.number));
+  }
+
+  private sayUndoable(on: Controlled, verb: UndonePrVerb, text: string): void {
+    const undo = prUndoOf(verb, on.number);
+    this.toasts.say(text, 'done', {
+      label: undo.label,
+      run: () => {
+        void waitForPromise(this.throughTheManager(on, undo.verb));
+      },
+    });
   }
 
   private async checkingForFixes(on: Controlled): Promise<void> {

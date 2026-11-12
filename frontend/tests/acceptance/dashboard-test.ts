@@ -1130,7 +1130,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert
       .dom('[data-test-toast]')
-      .hasText(
+      .includesText(
         'Asked GitHub to close #7. The watcher tears it down on its next poll.',
       );
   });
@@ -1158,7 +1158,9 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert.deepEqual(verbs(), ['mark-ready']);
     assert.dom('[data-test-ready-confirm]').doesNotExist();
-    assert.dom('[data-test-toast]').doesNotExist();
+    assert
+      .dom('[data-test-toast]')
+      .includesText('Asked GitHub to mark #7 ready for review.');
   });
 
   test('the ready question opened from its link asks who can review, so Assign reviewers lists them', async function (assert) {
@@ -1802,6 +1804,90 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert.deepEqual(verbs(), ['take-over']);
     assert.dom('[data-test-are-you-sure]').doesNotExist();
+  });
+
+  test('Close PR offers Reopen PR #7 on its toast, which reopens it through the manager', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await click('[data-test-control="close"]');
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.dom('[data-test-toast-undo]').hasText('Reopen PR #7');
+
+    await click('[data-test-toast-undo]');
+
+    assert.deepEqual(verbs(), ['close', 'reopen']);
+    assert.strictEqual(
+      board().posted.at(-1)!.url,
+      '/pr/o/r/7/api/manager:reopen',
+    );
+  });
+
+  test('Ready for review offers Convert to draft on its toast, which converts it through the manager', async function (assert) {
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+    await press('r');
+    await press('y');
+
+    assert.dom('[data-test-toast-undo]').hasText('Convert to draft');
+
+    await click('[data-test-toast-undo]');
+
+    assert.deepEqual(verbs(), ['mark-ready', 'convert-to-draft']);
+    assert.strictEqual(
+      board().posted.at(-1)!.url,
+      '/pr/o/r/7/api/manager:convert-to-draft',
+    );
+  });
+
+  test('Take over offers Hand back on its toast, which hands it back through the manager', async function (assert) {
+    onTheHub({ facts: { is_author: false } });
+    await visit('/pr/o/r/7/dashboard');
+    await click('[data-test-control="take-over"]');
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.dom('[data-test-toast-undo]').hasText('Hand back');
+
+    await click('[data-test-toast-undo]');
+
+    assert.deepEqual(verbs(), ['take-over', 'hand-back']);
+    assert.strictEqual(
+      board().posted.at(-1)!.url,
+      '/pr/o/r/7/api/manager:hand-back',
+    );
+  });
+
+  test('an undo the manager refuses says why where the other controls do', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await click('[data-test-control="close"]');
+    await click('[data-test-are-you-sure-submit]');
+    board().refusal = {
+      status: 409,
+      code: 'manager-down',
+      detail: 'the manager is down',
+    };
+
+    await click('[data-test-toast-undo]');
+
+    assert.deepEqual(verbs(), ['close', 'reopen']);
+    assert.dom('[data-test-action-band]').hasAttribute('data-refused');
+    assert
+      .dom('[data-test-refusal]')
+      .hasText("The manager is down, so your action can't be recorded.");
+  });
+
+  test('GitHub refusing a reopen says so on the dashboard', async function (assert) {
+    onTheHub({
+      notice: { code: 'reopen-refused', detail: 'gh: Not Found (HTTP 404)' },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-notice]')
+      .hasText(
+        'GitHub would not reopen the pull request: gh: Not Found (HTTP 404)',
+      );
   });
 
   test('Cancel on the take over question takes nothing over', async function (assert) {

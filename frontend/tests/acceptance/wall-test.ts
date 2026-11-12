@@ -1995,7 +1995,7 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-pending] [data-test-ring]')
       .exists();
-    assert.dom('[data-test-toast]').doesNotExist();
+    assert.dom('[data-test-toast-undo]').hasText('Convert to draft');
 
     onTheHub(heldPr({ dashboard: { facts: { draft: false } } }));
     await clock().tick(LIST);
