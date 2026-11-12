@@ -79,7 +79,7 @@ from github_orchestrator.agent_runs.interface import (
     RunDay,
     ThreadFix,
 )
-from github_orchestrator.domain import Monotonic, Pr, Repo
+from github_orchestrator.domain import LabelledComment, Monotonic, Pr, Repo
 from github_orchestrator.pr_processes import PrProcesses, shell_argv
 
 log = logging.getLogger(__name__)
@@ -545,7 +545,7 @@ class AgentRuns:
                         done: Callable[[str], None], *, chars: int) -> None:
         self._summaries.summarize(fixes_prompt(fixes, chars), done, label=NOTIFICATIONS)
 
-    def judge_thread(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def judge_thread(self, key: str, comments: Sequence[LabelledComment], *,
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None:
@@ -574,7 +574,7 @@ class AgentRuns:
 
         self._summaries.later(judge)
 
-    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_commit(self, key: str, comments: Sequence[LabelledComment], *,
                      path: str | None, line: int | None, sha: str, shown: str,
                      worktree: str, answers: Mapping[str, str],
                      done: Callable[[str, str], None]) -> None:
@@ -588,7 +588,7 @@ class AgentRuns:
                                 answers=answers),
             given, label=key, checkout=worktree)
 
-    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_changes(self, key: str, comments: Sequence[LabelledComment], *,
                       path: str | None, line: int | None, base: str, head: str, shown: str,
                       worktree: str, answers: Mapping[str, str],
                       done: Callable[[str, str], None]) -> None:

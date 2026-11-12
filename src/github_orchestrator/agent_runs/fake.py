@@ -36,7 +36,7 @@ from github_orchestrator.agent_runs.interface import (
     RunDay,
     ThreadFix,
 )
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import LabelledComment, Pr, Repo
 from github_orchestrator.pr_processes import PrProcesses, shell_argv
 
 TERMINATED = -15
@@ -173,7 +173,7 @@ class FixesAsked:
 @dataclass(frozen=True)
 class VerdictAsked:
     key: str
-    comments: tuple[tuple[str, str, str], ...]
+    comments: tuple[LabelledComment, ...]
     viewer: str
     pr_author: str
     spoke_last: str
@@ -185,7 +185,7 @@ class VerdictAsked:
 @dataclass(frozen=True)
 class CommitCheckAsked:
     key: str
-    comments: tuple[tuple[str, str, str], ...]
+    comments: tuple[LabelledComment, ...]
     path: str | None
     line: int | None
     sha: str
@@ -196,7 +196,7 @@ class CommitCheckAsked:
 @dataclass(frozen=True)
 class FixCheckAsked:
     key: str
-    comments: tuple[tuple[str, str, str], ...]
+    comments: tuple[LabelledComment, ...]
     path: str | None
     line: int | None
     base: str
@@ -478,7 +478,7 @@ class FakeAgentRuns:
             tuple((tuple(comments), summary) for comments, summary in fixes), chars))
         self._said(done)
 
-    def judge_thread(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def judge_thread(self, key: str, comments: Sequence[LabelledComment], *,
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None:
@@ -489,7 +489,7 @@ class FakeAgentRuns:
         if word is not None:
             done(word)
 
-    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_commit(self, key: str, comments: Sequence[LabelledComment], *,
                      path: str | None, line: int | None, sha: str, shown: str,
                      worktree: str, answers: Mapping[str, str],
                      done: Callable[[str, str], None]) -> None:
@@ -500,7 +500,7 @@ class FakeAgentRuns:
         if checked is not None:
             done(*checked)
 
-    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_changes(self, key: str, comments: Sequence[LabelledComment], *,
                       path: str | None, line: int | None, base: str, head: str, shown: str,
                       worktree: str, answers: Mapping[str, str],
                       done: Callable[[str, str], None]) -> None:
@@ -519,7 +519,7 @@ class HeldVerdicts(FakeAgentRuns):
     held_checks: list[tuple[Mapping[str, str], Callable[[str, str], None]]] = field(
         default_factory=list)
 
-    def judge_thread(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def judge_thread(self, key: str, comments: Sequence[LabelledComment], *,
                      viewer: str, pr_author: str, spoke_last: str, viewer_commented: bool,
                      mentions_viewer: bool, kind: str, answers: Mapping[str, str],
                      done: Callable[[str], None]) -> None:
@@ -527,7 +527,7 @@ class HeldVerdicts(FakeAgentRuns):
                                        viewer_commented, mentions_viewer, kind))
         self.held.append((key, answers, done))
 
-    def check_commit(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_commit(self, key: str, comments: Sequence[LabelledComment], *,
                      path: str | None, line: int | None, sha: str, shown: str,
                      worktree: str, answers: Mapping[str, str],
                      done: Callable[[str, str], None]) -> None:
@@ -535,7 +535,7 @@ class HeldVerdicts(FakeAgentRuns):
                                            worktree))
         self.held_checks.append((answers, done))
 
-    def check_changes(self, key: str, comments: Sequence[tuple[str, str, str]], *,
+    def check_changes(self, key: str, comments: Sequence[LabelledComment], *,
                       path: str | None, line: int | None, base: str, head: str, shown: str,
                       worktree: str, answers: Mapping[str, str],
                       done: Callable[[str, str], None]) -> None:

@@ -187,6 +187,13 @@ class Mention:
 
 
 @dataclass(frozen=True)
+class LabelledComment:
+    label: str
+    login: str
+    body: str
+
+
+@dataclass(frozen=True)
 class UtcClock:
     STAMP: ClassVar[str] = "%Y-%m-%dT%H:%M:%SZ"
     now: Callable[[], datetime]
@@ -234,5 +241,5 @@ class HubState(StrEnum):
     BROKEN = "broken"
 
 
-__all__ = ["DismissUntil", "HubState", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+__all__ = ["DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]

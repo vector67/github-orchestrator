@@ -20,7 +20,7 @@ from github_orchestrator.working_copies import (
     _threads,
     _worktree,
 )
-from github_orchestrator.working_copies._diff import resolve_pr_base
+from github_orchestrator.working_copies._diff import PrBase, resolve_pr_base
 from github_orchestrator.working_copies._flags import DiskFlags
 from github_orchestrator.working_copies._handles import (
     BoundCheckout,
@@ -379,7 +379,7 @@ class GitWorkingCopies:
         return _hunks.diff_files(worktree, base, head, merged)
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str, str] | None:
+                 head: str) -> PrBase | None:
         found, _ = resolve_pr_base(worktree, base_branch, head)
         return found
 
@@ -409,7 +409,7 @@ class GitWorkingCopies:
     def _blob(self, worktree: str, sha: str, path: str) -> bytes | None:
         return _revisions.blob(worktree, sha, path)
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None:
+    def _named_commit(self, worktree: str, sha: str) -> _revisions.ShownCommit | None:
         return _revisions.named_commit(worktree, sha)
 
     def _diff_text(self, worktree: str, base: str, head: str) -> str | None:

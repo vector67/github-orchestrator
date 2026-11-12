@@ -1,5 +1,7 @@
 from collections.abc import Mapping, Sequence
 
+from github_orchestrator.domain import LabelledComment
+
 SEPARATOR = "||"
 
 
@@ -56,11 +58,11 @@ def _yes(said: bool) -> str:
     return "yes" if said else "no"
 
 
-def verdict_prompt(comments: Sequence[tuple[str, str, str]], *, viewer: str, pr_author: str,
+def verdict_prompt(comments: Sequence[LabelledComment], *, viewer: str, pr_author: str,
                    spoke_last: str, viewer_commented: bool, mentions_viewer: bool, kind: str,
                    answers: Mapping[str, str]) -> str:
-    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
-                          for label, login, body in comments)
+    thread = "\n\n".join(f"[{comment.label}] {comment.login or 'ghost'}: {comment.body}"
+                          for comment in comments)
     offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
     return (
         "You sort pull request comment threads for one person, the viewer, who is "
@@ -85,11 +87,11 @@ def verdict_in(answer: str, answers: Mapping[str, str]) -> str | None:
     return word if word in answers else None
 
 
-def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str | None,
+def commit_check_prompt(comments: Sequence[LabelledComment], *, path: str | None,
                         line: int | None, sha: str, shown: str,
                         answers: Mapping[str, str]) -> str:
-    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
-                          for label, login, body in comments)
+    thread = "\n\n".join(f"[{comment.label}] {comment.login or 'ghost'}: {comment.body}"
+                          for comment in comments)
     where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
     offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
     return (
@@ -109,11 +111,11 @@ def commit_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str |
     )
 
 
-def changes_check_prompt(comments: Sequence[tuple[str, str, str]], *, path: str | None,
+def changes_check_prompt(comments: Sequence[LabelledComment], *, path: str | None,
                          line: int | None, base: str, head: str, shown: str,
                          answers: Mapping[str, str]) -> str:
-    thread = "\n\n".join(f"[{label}] {login or 'ghost'}: {body}"
-                          for label, login, body in comments)
+    thread = "\n\n".join(f"[{comment.label}] {comment.login or 'ghost'}: {comment.body}"
+                          for comment in comments)
     where = f"{path}:{line}" if path and line is not None else (path or "the pull request")
     offered = "\n".join(f"- {word}: {meaning}" for word, meaning in answers.items())
     return (

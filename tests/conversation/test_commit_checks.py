@@ -3,7 +3,7 @@ from datetime import timedelta
 from github_orchestrator.agent_runs.fake import HeldVerdicts
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import CommitVerdict, ConversationState, Denied
-from github_orchestrator.domain import Sha
+from github_orchestrator.domain import LabelledComment, Sha
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -80,8 +80,8 @@ def test_a_reply_naming_a_commit_asks_about_that_commit_in_the_prs_checkout(sett
 
     assert (asked.key, asked.sha, asked.path, asked.line, asked.worktree) == (
         KEY, sha, "helpers.py", 1, WORKTREE)
-    assert asked.comments == (("you", ME, "rename old_name"),
-                              ("PR author", AUTHOR, f"Fixed in {sha[:7]}"))
+    assert asked.comments == (LabelledComment("you", ME, "rename old_name"),
+                              LabelledComment("PR author", AUTHOR, f"Fixed in {sha[:7]}"))
     assert ("Rename the helper" in asked.shown, "def new_name():" in asked.shown) == (
         True, True)
 
@@ -315,7 +315,7 @@ def test_checking_for_fixes_asks_about_the_changes_since_the_comment_in_the_prs_
     [asked] = board.agent_runs.fix_checks_asked()
     assert (asked.key, asked.base, asked.head, asked.path, asked.line, asked.worktree) == (
         KEY, base, head, "helpers.py", 1, WORKTREE)
-    assert asked.comments == (("you", ME, "rename old_name"),)
+    assert asked.comments == (LabelledComment("you", ME, "rename old_name"),)
     assert ("def new_name():" in asked.shown, "def old_name():" in asked.shown) == (True, True)
 
 

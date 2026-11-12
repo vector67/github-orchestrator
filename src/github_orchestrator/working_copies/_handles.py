@@ -4,8 +4,9 @@ from datetime import datetime
 from typing import Protocol
 
 from github_orchestrator.domain import Pr, Sha
-from github_orchestrator.working_copies._diff import is_branch_name
+from github_orchestrator.working_copies._diff import PrBase, is_branch_name
 from github_orchestrator.working_copies._layout import thread_branch
+from github_orchestrator.working_copies._revisions import ShownCommit
 from github_orchestrator.working_copies.interface import (
     BaseStanding,
     Changes,
@@ -80,7 +81,7 @@ class Git(Protocol):
 
     def _commit_message(self, worktree: str, sha: str | None) -> str | None: ...
 
-    def _named_commit(self, worktree: str, sha: str) -> tuple[str, str, str] | None: ...
+    def _named_commit(self, worktree: str, sha: str) -> ShownCommit | None: ...
 
     def _diff_text(self, worktree: str, base: str, head: str) -> str | None: ...
 
@@ -88,7 +89,7 @@ class Git(Protocol):
                     merged: str | None = None) -> tuple[FileDiff, ...] | None: ...
 
     def _pr_base(self, worktree: str, base_branch: str | None,
-                 head: str) -> tuple[str, str, str] | None: ...
+                 head: str) -> PrBase | None: ...
 
     def _merge_base(self, worktree: str, base_branch: str | None, head: str) -> str | None: ...
 
@@ -235,8 +236,7 @@ class BoundRevisions:
         read = None if path is None else self.git._named_commit(path, str(sha))
         if path is None or read is None:
             return None
-        full, parent, shown = read
-        return NamedCommit(Sha(full), Sha(parent), path, shown)
+        return NamedCommit(Sha(read.sha), Sha(read.parent), path, read.shown)
 
     def changes(self, base: Sha, head: Sha) -> Changes | None:
         path = self._path()
@@ -277,7 +277,7 @@ class BoundRevisions:
         found = self.git._pr_base(path, base_branch, str(head))
         if found is None:
             return None
-        fork, tip, _ = found
+        fork, tip = found.merge_base, found.tip
         commits = self.git._commits_between(path, fork, str(head))
         base_commits = self.git._commits_between(path, fork, tip)
         fork_at = self.git._authored_at(path, fork)
@@ -288,11 +288,11 @@ class BoundRevisions:
 
     def _stack(self, path: str, base_branch: str | None, fork: str) -> Stack | None:
         found = None if base_branch is None else self.git._pr_base(path, None, fork)
-        if found is None or found[2] == base_branch or found[0] == fork:
+        if found is None or found.branch == base_branch or found.merge_base == fork:
             return None
-        under, _, branch = found
-        commits = self.git._commits_between(path, under, fork)
-        return None if commits is None else Stack(branch, Sha(under), commits)
+        commits = self.git._commits_between(path, found.merge_base, fork)
+        return None if commits is None else Stack(found.branch, Sha(found.merge_base),
+                                                  commits)
 
     def has_commit(self, sha: Sha) -> bool:
         path = self._path()

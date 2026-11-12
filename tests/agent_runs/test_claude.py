@@ -11,6 +11,7 @@ import pytest
 
 from github_orchestrator.agent_runs import ThreadFix
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
+from github_orchestrator.domain import LabelledComment
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.support import (
@@ -516,7 +517,7 @@ def test_a_gist_is_asked_of_the_summary_model_away_from_any_checkout_with_no_too
 def test_a_verdict_is_asked_of_sonnet_with_no_tools(runs, world, claude):
     world.answer("my-move")
 
-    runs.judge_thread("PRRT_x", [("octocat", "you", "rename this")], viewer="you",
+    runs.judge_thread("PRRT_x", [LabelledComment("octocat", "you", "rename this")], viewer="you",
                       pr_author="octocat", spoke_last="octocat", viewer_commented=True,
                       mentions_viewer=False, kind="review", answers={"my-move": "yes"},
                       done=lambda word: None)
@@ -540,7 +541,7 @@ def test_a_commit_check_reads_the_checkout_on_the_fix_model_with_no_shell_and_no
         runs, world, claude, tmp_path):
     world.answer("addressed || it renames the helper")
 
-    runs.check_commit("PRRT_x", [("you", "octocat", "rename this")], path=None, line=None,
+    runs.check_commit("PRRT_x", [LabelledComment("you", "octocat", "rename this")], path=None, line=None,
                       sha="abc1234def", shown="commit abc1234def", worktree=str(tmp_path),
                       answers={"addressed": "yes"}, done=lambda word, reasoning: None)
     assert runs.drain_summaries(10)
