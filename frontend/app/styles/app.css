@@ -1725,6 +1725,35 @@ button.copy-directory {
   margin-top: 0;
 }
 
+.toast-with-undo {
+  cursor: default;
+}
+
+.toast-text {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+.toast-undo {
+  padding: 3px 12px;
+  font: inherit;
+  font-weight: var(--fw-strong);
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--page);
+  border: 1px solid var(--page);
+  border-radius: 0;
+}
+
 #key-help {
   position: fixed;
   inset: 0;

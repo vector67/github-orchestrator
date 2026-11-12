@@ -873,7 +873,12 @@ the machine's own setting.
 
 Outcomes arrive as a toast: a black bar at the top right for about four seconds,
 one when the board queues a decision, one when that decision lands, and one when
-an agent finishes and a row moves into Ready for you. Most refusals stay off the
+an agent finishes and a row moves into Ready for you. A move you can take back
+keeps its toast up for eight seconds with the way back on it: Mark done, the
+author's Confirm and Discard offer Bring back, the reviewer's Resolve offers
+Unresolve on GitHub, and Add to review offers Leave out of review. It sends what
+the card's own button sends, once the move has landed, and Bring back puts the
+card where it stood before (Waiting stays Waiting). Most refusals stay off the
 toasts and say why in red on what you pressed, as below. A failure toasts only when that place cannot say it: a held control you
 press anyway gives its reason, a refused Close or Dismiss, a session from the
 git palette that did not open, and a **Go to the session** whose session is no

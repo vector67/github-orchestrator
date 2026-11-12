@@ -64,18 +64,40 @@ export default class ToastRail extends Component {
     {{/if}}
     <div id="toasts" aria-live="polite" {{moves}}>
       {{#each this.toasts.bars key="id" as |bar|}}
-        <button
-          type="button"
-          class="toast"
-          data-flip-key="toast:{{bar.id}}"
-          data-leaving={{if bar.leaving "true"}}
-          data-test-toast
-          {{on "click" (fn this.toasts.drop bar.id)}}
-        ><span
-            class="square"
-            data-test-square
-            data-square={{bar.square}}
-          ></span>{{bar.text}}</button>
+        {{#if bar.undo}}
+          <div
+            class="toast toast-with-undo"
+            data-flip-key="toast:{{bar.id}}"
+            data-leaving={{if bar.leaving "true"}}
+            data-test-toast
+          ><button
+              type="button"
+              class="toast-text"
+              {{on "click" (fn this.toasts.drop bar.id)}}
+            ><span
+                class="square"
+                data-test-square
+                data-square={{bar.square}}
+              ></span>{{bar.text}}</button><button
+              type="button"
+              class="toast-undo"
+              data-test-toast-undo
+              {{on "click" (fn this.toasts.undo bar.id)}}
+            >{{bar.undo.label}}</button></div>
+        {{else}}
+          <button
+            type="button"
+            class="toast"
+            data-flip-key="toast:{{bar.id}}"
+            data-leaving={{if bar.leaving "true"}}
+            data-test-toast
+            {{on "click" (fn this.toasts.drop bar.id)}}
+          ><span
+              class="square"
+              data-test-square
+              data-square={{bar.square}}
+            ></span>{{bar.text}}</button>
+        {{/if}}
       {{/each}}
     </div>
   </template>

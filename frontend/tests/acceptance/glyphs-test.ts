@@ -70,6 +70,10 @@ module('Acceptance | glyphs', function (hooks) {
     assert.deepEqual(await footerIn(board(), 'rejected'), ['unpark✦']);
   });
 
+  test('Bring back after a landed fix re-runs the agent, so it carries the star', async function (assert) {
+    assert.deepEqual(await footerIn(board(), 'landed'), ['unpark✦']);
+  });
+
   test('Bring back after a resolve runs no agent', async function (assert) {
     assert.deepEqual(await footerIn(board(), 'resolved'), ['unpark']);
   });

@@ -1463,8 +1463,10 @@ function authorOffer(
   );
 }
 
+const UNRESOLVE_LABEL = 'Unresolve on GitHub';
+
 const UNRESOLVE_ON_GITHUB: Shade = {
-  label: 'Unresolve on GitHub',
+  label: UNRESOLVE_LABEL,
   title:
     'unresolves this thread on GitHub, which is public, and brings the card ' +
     'back to your move once GitHub confirms',
@@ -1634,6 +1636,37 @@ function splitOffers(
 }
 
 export type AnswerKind = 'answer' | 'answer-watched';
+
+export interface Undo {
+  decision: Decision;
+  label: string;
+}
+
+const UNDOS: Partial<Record<string, Decision>> = {
+  resolve: 'unpark',
+  'mark-done': 'unpark',
+  confirm: 'unpark',
+  discard: 'unpark',
+  enrol: 'withdraw-from-review',
+};
+
+export function undoOf(
+  decision: Decision | AnswerKind | 'reply' | 'edit-draft' | 'edit-part',
+  conversation: Conversation,
+  role: Role,
+  gathered: Gathered,
+): Undo | null {
+  const undo = UNDOS[decision];
+  if (!undo) return null;
+  const unresolves =
+    role === 'reviewer' &&
+    conversation.kind === 'review' &&
+    carriedOut(decision, gathered).request.body['resolve'] === true;
+  return {
+    decision: undo,
+    label: unresolves ? UNRESOLVE_LABEL : ENTRIES[undo].label,
+  };
+}
 
 export function carriedOut(
   decision: Decision | AnswerKind | 'reply' | 'edit-draft' | 'edit-part',
