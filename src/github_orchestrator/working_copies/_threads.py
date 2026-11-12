@@ -253,17 +253,6 @@ def restore_head(pr_worktree: str, base: str, mode: str = "--hard") -> str | Non
     return None if reset.returncode == 0 else git_diagnostic(reset)
 
 
-def reset_checkout(worktree: str, to: str) -> str | None:
-    failure = restore_head(worktree, to)
-    if failure is not None:
-        return failure
-    try:
-        cleaned = run_git(worktree, "clean", "-fd")
-    except (OSError, subprocess.TimeoutExpired) as e:
-        return str(e)
-    return None if cleaned.returncode == 0 else git_diagnostic(cleaned)
-
-
 def diff_since(worktree: str, since: str) -> str | None:
     if Sha.parse(since) is None:
         log.warning("refusing to diff %r in %s: it is not a commit", since, worktree)

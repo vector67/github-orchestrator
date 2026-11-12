@@ -106,8 +106,6 @@ class Git(Protocol):
 
     def _blob(self, worktree: str, sha: str, path: str) -> bytes | None: ...
 
-    def _reset_workspace(self, path: str | None, to: str) -> str | None: ...
-
     def _workspace_diff(self, path: str | None, since: str) -> tuple[FileDiff, ...] | None: ...
 
 
@@ -194,9 +192,6 @@ class BoundWorkspace:
 
     def progress(self) -> str | None:
         return self.git._progress_of(self.path, _text(self.base_sha))
-
-    def reset(self, to: Sha) -> str | None:
-        return self.git._reset_workspace(self.path, str(to))
 
     def diff_since(self, since: Sha) -> tuple[FileDiff, ...] | None:
         return self.git._workspace_diff(self.path, str(since))

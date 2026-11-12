@@ -430,15 +430,6 @@ class FakeWorkingCopies:
         return parse_diff("".join(_unified(name, old.get(name), new.get(name))
                                   for name in _changed_paths(old, new)))
 
-    def _reset_workspace(self, path: str | None, to: str) -> str | None:
-        checkout = None if path is None else self.checkouts.get(_key(path))
-        sha = self._resolve(to)
-        if checkout is None or sha is None:
-            return f"fatal: could not reset {path} to {to}"
-        checkout.edits.clear()
-        self._advance(checkout, sha)
-        return None
-
     def _drop_workspace(self, worktree: str, path: str | None, branch: str | None) -> None:
         if self._drop_error is not None:
             raise self._drop_error

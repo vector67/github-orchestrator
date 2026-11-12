@@ -262,11 +262,6 @@ class GitWorkingCopies:
             return None
         return _hunks.worktree_files(_threads.diff_since(path, since))
 
-    def _reset_workspace(self, path: str | None, to: str) -> str | None:
-        if not path:
-            return "the thread has no worktree to reset"
-        return _threads.reset_checkout(path, to)
-
     def _drop_workspace(self, worktree: str, path: str | None, branch: str | None) -> None:
         try:
             _threads.drop_checkout(worktree, path, branch)

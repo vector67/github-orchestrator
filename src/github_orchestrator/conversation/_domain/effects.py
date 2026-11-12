@@ -43,11 +43,6 @@ class DropWorkspace:
 
 
 @dataclass(frozen=True)
-class ResetWorkspace:
-    to: Sha
-
-
-@dataclass(frozen=True)
 class Pick:
     message: str = ""
 

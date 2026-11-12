@@ -596,7 +596,7 @@ REVISIONS_MEMBERS = frozenset({
 })
 THREAD_WORKSPACE_MEMBERS = frozenset({
     "path", "base_sha", "ensure", "pick", "head_sha", "descends", "branch_head", "progress", "drop",
-    "reset", "diff_since",
+    "diff_since",
 })
 
 

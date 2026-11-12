@@ -40,7 +40,6 @@ from github_orchestrator.conversation._domain.effects import (
     PostReply,
     Push,
     React,
-    ResetWorkspace,
     ResolveThread,
     StartRun,
     StopRun,
@@ -362,11 +361,6 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return None
         case DropWorkspace(cut_at=cut_at):
             failure = ports.git.workspace(conversation.key, cut_at).drop()
-            if failure is not None:
-                raise WorkspaceRefused(failure)
-            return None
-        case ResetWorkspace():
-            failure = thread_workspace(ports, conversation).reset(effect.to)
             if failure is not None:
                 raise WorkspaceRefused(failure)
             return None
