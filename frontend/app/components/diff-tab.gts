@@ -146,7 +146,12 @@ export default class DiffTab extends Component<DiffTabSignature> {
   }
 
   get scrolling(): string {
-    return `${this.args.file ?? ''}|${this.args.line ?? ''}|${this.pullRequestDiff.shown ? this.pullRequestDiff.drawing || 'drawn' : ''}`;
+    return `${this.args.file ?? ''}|${this.args.line ?? ''}|${this.pullRequestDiff.shown ? this.pullRequestDiff.drawing || 'drawn' : ''}|${this.cardsDrawn}`;
+  }
+
+  private get cardsDrawn(): string {
+    if (!this.args.line || !this.pullRequestDiff.commenting) return '';
+    return this.pullRequestDiff.inline.shown.map((one) => one.key).join(',');
   }
 
   get waitingOn(): string {

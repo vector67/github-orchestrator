@@ -2123,6 +2123,83 @@ module('Acceptance | pr diff', function (hooks) {
       );
     });
 
+    test('an address naming a line opens with that line in the pane when thread cards above it are drawn only once the head’s anchors arrive', async function (assert) {
+      board().conversations = [
+        thread({
+          key: 'k0',
+          anchor: {
+            path: 'src/widgets/changes.py',
+            line: 20,
+            start_line: null,
+            start_side: null,
+            side: 'RIGHT',
+            original_line: 20,
+            original_start_line: null,
+            original_commit: 'ba5e000',
+            is_outdated: false,
+          },
+        }),
+        thread({
+          key: 'k1',
+          anchor: {
+            path: 'README.md',
+            line: 76,
+            start_line: null,
+            start_side: null,
+            side: 'RIGHT',
+            original_line: 76,
+            original_start_line: null,
+            original_commit: 'ba5e000',
+            is_outdated: false,
+          },
+        }),
+      ];
+      const points = Array.from({ length: 12 }, (_, at) =>
+        comment({ id: at + 1, review_state: null, body: `point ${at + 1}` }),
+      );
+      board().comments = { k0: points, k1: points };
+      board().pullRequest = { ...board().pullRequest, head_sha: 'f00d000' };
+      board().anchors['ba5e000..c0ffee1'] = {
+        files: [
+          {
+            path: 'src/widgets/changes.py',
+            lines: [
+              { side: 'RIGHT', line: 20, onto: { side: 'RIGHT', line: 20 } },
+            ],
+          },
+          {
+            path: 'README.md',
+            lines: [
+              { side: 'RIGHT', line: 76, onto: { side: 'RIGHT', line: 76 } },
+            ],
+          },
+        ],
+      };
+      const release = board().hold(/\/anchors\/ba5e000\.\.f00d000$/);
+
+      const visiting = visit('/pr/o/r/7/diff?file=README.md&line=80');
+      await waitFor('[data-test-file="README.md"] [data-line="80"]');
+      release();
+      await visiting;
+
+      const pane = find('[data-test-diff-pane]')!.getBoundingClientRect();
+      const card = find(
+        '[data-test-file="README.md"] [data-test-inline]',
+      )!.getBoundingClientRect();
+      const row = find(
+        '[data-test-file="README.md"] [data-line="80"]',
+      )!.getBoundingClientRect();
+      assert.true(
+        card.height > pane.height / 3,
+        `the card is tall (${card.height} of ${pane.height})`,
+      );
+      const inThePane = row.top >= pane.top && row.bottom <= pane.bottom;
+      assert.true(
+        inThePane,
+        `line 80 is in the pane (${row.top}–${row.bottom} in ${pane.top}–${pane.bottom})`,
+      );
+    });
+
     test('an address naming a line the diff does not show opens scrolled to its file', async function (assert) {
       await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fold.py&line=500');
 
