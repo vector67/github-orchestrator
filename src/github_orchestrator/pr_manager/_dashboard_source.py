@@ -6,6 +6,7 @@ from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     Notice,
+    PrImportance,
     QueuedEvent,
     ResetToOrigin,
     Shelves,
@@ -66,8 +67,11 @@ class DashboardSource:
         drawn = self.drawn(self._config_of(pr, worktree), self._conversation_managers.of(pr),
                            wrong=wrong, run=None, notice=None)
         unpushed = self._unpushed(worktree, pr)
+        ranked = PrImportance.kept(self._shelves.of(pr))
         return self._status_files.laid_over(
             replace(drawn, unpushed_commits=unpushed,
+                    importance=ranked.importance,
+                    nudge_due=ranked.nudge_due(drawn.last_event_at, self._clock()),
                     diverged=bool(unpushed) and self._behind(worktree, pr),
                     reset_to_origin=ResetToOrigin.kept(self._shelves.of(pr)),
                     base=self._base(pr)),

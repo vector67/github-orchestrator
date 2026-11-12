@@ -531,6 +531,8 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       on_hold: false,
       working_on: null,
       hidden: false,
+      importance: null,
+      nudge_due: false,
       threads_live: 0,
       changed_at: '2026-09-12T08:30:00Z',
       ...manager,

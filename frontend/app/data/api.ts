@@ -586,6 +586,8 @@ export interface HeldPullRequests {
 
 export type HubState = 'setup' | 'watching' | 'broken';
 
+export type Importance = 'important' | 'normal' | 'someday';
+
 export interface LandingSteps {
   filed: boolean;
   picked: boolean;
@@ -614,6 +616,8 @@ export interface ManagerFlags {
   on_hold: boolean;
   working_on: string | null;
   hidden: boolean;
+  importance: Importance | null;
+  nudge_due: boolean;
   threads_live: number;
   changed_at: string | null;
 }
@@ -907,6 +911,11 @@ export interface QueuedEvent {
   queued_at: string;
 }
 
+export interface RankedPullRequest {
+  importance: Importance | null;
+  nudged_at: string | null;
+}
+
 export interface ReactRequest {
   content: ReactionKind;
   mine: boolean;
@@ -1069,6 +1078,10 @@ export interface SessionOperation {
   progress: string | null;
   plan: PlanStep[];
   proposal: string | null;
+}
+
+export interface SetImportanceRequest {
+  importance: Importance;
 }
 
 export interface Setup {
