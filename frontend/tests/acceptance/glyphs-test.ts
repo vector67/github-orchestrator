@@ -40,7 +40,7 @@ module('Acceptance | glyphs', function (hooks) {
       'defer⧉',
       'reject⧉',
       'resolve⧉',
-      'start-session✦⧉',
+      'mark-done',
     ]);
   });
 

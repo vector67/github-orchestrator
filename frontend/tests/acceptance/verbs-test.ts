@@ -64,8 +64,8 @@ module('Acceptance | verbs | the author board', function (hooks) {
       'Send back for rework',
       'Defer',
       'Reject',
-      'Resolve on GitHub',
-      'Steer it yourself',
+      'Resolve',
+      'Mark done',
     ]);
   });
 
@@ -122,7 +122,8 @@ module('Acceptance | verbs | the author board', function (hooks) {
       'Steer it yourself',
       'Defer',
       'Reject',
-      'Resolve on GitHub',
+      'Resolve',
+      'Mark done',
     ]);
   });
 
@@ -132,7 +133,7 @@ module('Acceptance | verbs | the author board', function (hooks) {
     for (const [decision, label] of [
       ['defer', 'Defer'],
       ['reject', 'Reject'],
-      ['start-session', 'Steer it yourself'],
+      ['resolve', 'Resolve'],
     ] as const) {
       await click(`[data-test-decision="${decision}"]`);
       assert.dom('[data-test-dialog-submit]').hasText(label, decision);
@@ -143,11 +144,7 @@ module('Acceptance | verbs | the author board', function (hooks) {
   test('a declined run is argued with in its own words', async function (assert) {
     await open(board(), 'declined');
 
-    assert.deepEqual(offered(), [
-      'Send back for rework',
-      'Agreed, resolve the comment',
-      'Defer',
-    ]);
+    assert.deepEqual(offered(), ['Send back for rework', 'Resolve', 'Defer']);
     assert
       .dom('[data-test-decision="rework"]')
       .hasAttribute('data-weight', 'secondary');
@@ -160,8 +157,8 @@ module('Acceptance | verbs | the author board', function (hooks) {
     await each(
       board(),
       [
-        ['waiting', ['Stop waiting', 'Resolve', 'Resolve on GitHub', 'Defer']],
-        ['deferred', ['Bring back', 'Resolve on GitHub']],
+        ['waiting', ['Stop waiting', 'Mark done', 'Resolve', 'Defer']],
+        ['deferred', ['Bring back', 'Resolve', 'Mark done']],
       ] as const,
       ([phase]) => phase,
       ([phase, labels]) => assert.deepEqual(offered(), labels, phase),
@@ -216,7 +213,6 @@ module('Acceptance | verbs | the author board', function (hooks) {
       ['a', 'Accept: push'],
       ['f', 'When should this come back to you?'],
       ['R', 'drops the fix'],
-      ['o', 'the session you steer'],
       ['s', 'Resolve this comment'],
     ];
 
@@ -241,63 +237,20 @@ module('Acceptance | verbs | the author board', function (hooks) {
     assert.deepEqual(board().posted, []);
   });
 
-  test('resolve on GitHub, ticked, asks for the thread to be resolved there, after the reply typed', async function (assert) {
+  test('s asks for an optional reply, then resolves the thread on GitHub after it', async function (assert) {
     await open(board(), 'proposed');
 
     await triggerEvent(document, 'keydown', { key: 's' });
-    await click('[data-test-resolve]');
 
     assert.deepEqual(board().posted, [], 'nothing has reached GitHub yet');
-    assert.dom('[data-test-dialog-submit]').hasText('Resolve on GitHub');
-
     await fillIn('[data-test-dialog-body]', 'Not needed after all.');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Post reply and resolve on the board and GitHub');
+    assert.dom('[data-test-dialog-submit]').hasText('Resolve');
 
     await click('[data-test-dialog-submit]');
 
     assert.strictEqual(board().posted[0]!.verb, 'resolve');
     assert.deepEqual(board().posted[0]!.body, {
       reply: 'Not needed after all.',
-      delete_comment: false,
-      resolve: true,
-    });
-  });
-
-  test('resolve on GitHub opens unticked and resolves the comment on the board alone', async function (assert) {
-    await open(board(), 'declined');
-
-    await click('[data-test-decision="resolve"]');
-
-    assert.dom('[data-test-resolve]').isNotChecked();
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve, posting nothing to GitHub');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.strictEqual(board().posted[0]!.verb, 'resolve');
-    assert.deepEqual(board().posted[0]!.body, {
-      delete_comment: false,
-      resolve: false,
-    });
-  });
-
-  test('resolve on GitHub opens ticked on a thread a bot opened', async function (assert) {
-    board().conversations = [
-      board().threadIn('declined', { key: 'k1', author_kind: 'bot' }),
-    ];
-    await visit('/pr/o/r/7/conversations/k1');
-
-    await click('[data-test-decision="resolve"]');
-
-    assert.dom('[data-test-dialog-submit]').hasText('Resolve on GitHub');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.deepEqual(board().posted[0]!.body, {
       delete_comment: false,
       resolve: true,
     });
@@ -327,7 +280,7 @@ module('Acceptance | verbs | the author board', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, {
       reply: 'a question, not an instruction',
       delete_comment: false,
-      resolve: false,
+      resolve: true,
     });
   });
 
@@ -339,31 +292,14 @@ module('Acceptance | verbs | the author board', function (hooks) {
     assert.dom('[data-test-agent-words]').doesNotExist();
   });
 
-  test('a reply with resolve on GitHub unticked says it resolves on the board', async function (assert) {
-    await open(board(), 'declined');
-
-    await click('[data-test-decision="resolve"]');
-    await fillIn('[data-test-dialog-body]', 'Not needed after all.');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Post reply and resolve on the board');
-  });
-
-  test('a parked thread resolves on the board alone, posting nothing when the box is empty', async function (assert) {
+  test('h marks a waiting thread done on the board at once, sending GitHub nothing', async function (assert) {
     await open(board(), 'waiting');
 
-    await triggerEvent(document, 'keydown', { key: 'v' });
+    await triggerEvent(document, 'keydown', { key: 'h' });
 
-    assert.dom('[data-test-dialog-question]').hasText('Resolve this comment?');
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve, posting nothing to GitHub');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.strictEqual(board().posted[0]!.verb, 'resolve');
-    assert.deepEqual(board().posted[0]!.body, { delete_comment: false });
+    assert.dom('[data-test-dialog]').doesNotExist();
+    assert.strictEqual(board().posted[0]!.verb, 'mark-done');
+    assert.deepEqual(board().posted[0]!.body, {});
   });
 
   test('x asks before it stops the agent, and stops it once confirmed', async function (assert) {
@@ -402,7 +338,7 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
       .hasAttribute('data-weight', 'primary');
     assert
       .dom('[data-test-decision="resolve"]')
-      .hasAttribute('title', /resolved on GitHub too/);
+      .hasAttribute('title', /resolves this thread on GitHub/);
   });
 
   test('each dialog an answered thread opens submits with its opener’s words', async function (assert) {
@@ -448,8 +384,8 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     await each(
       board(),
       [
-        ['waiting', ['Resolve', 'Defer', 'Move']],
-        ['deferred', ['Bring back', 'Resolve']],
+        ['waiting', ['Resolve', 'Mark done', 'Defer', 'Move']],
+        ['deferred', ['Bring back', 'Resolve', 'Mark done']],
       ] as const,
       ([phase]) => phase,
       ([phase, labels]) => {

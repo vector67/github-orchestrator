@@ -402,66 +402,35 @@ const ENTRIES = {
   },
   resolve: {
     key: 's',
-    label: 'Resolve on GitHub',
+    label: 'Resolve',
     weight: 'ghost',
     title:
-      'closes this comment on the board, drops the agent’s worktree and ' +
-      'posts any reply you write — tick the box in the dialog to mark the ' +
-      'thread resolved on GitHub too',
+      'resolves this thread on GitHub, after any reply you write, and moves ' +
+      'the card to Done — the agent’s worktree is dropped',
     asks: {
       question: 'Resolve this comment on GitHub?',
       note:
         'Anything you write here is posted to GitHub as your reply, in your ' +
-        'own words, and then the thread is marked resolved there if the box ' +
-        'is ticked. The card moves to Done and the agent’s worktree is dropped.',
+        'own words. Then the thread is resolved there, the card moves to Done ' +
+        'and the agent’s worktree is dropped.',
       reply: true,
       del: true,
-      resolves: true,
-      submit: (typed, resolving) =>
-        resolving
-          ? typed
-            ? 'Post reply and resolve on the board and GitHub'
-            : 'Resolve on GitHub'
-          : typed
-            ? 'Post reply and resolve on the board'
-            : 'Resolve, posting nothing to GitHub',
     },
     inPhase: {
-      declined: { label: 'Agreed, resolve the comment', weight: 'secondary' },
-      removed: {
-        dialog: {
-          reply: false,
-          resolves: false,
-          submit: () => 'Resolve, posting nothing to GitHub',
-        },
-      },
+      declined: { weight: 'secondary' },
     },
     reviewer: {
       title:
-        'moves the card to Done and posts any reply you write — tick the box ' +
-        'in the dialog to mark the thread resolved on GitHub too',
+        'resolves this thread on GitHub, after any reply you write, and moves ' +
+        'the card to Done',
       asks: {
-        question: 'Resolve this conversation?',
+        question: 'Resolve this conversation on GitHub?',
         note:
-          'Anything you write is posted to GitHub as your reply. Tick the ' +
-          'boxes to mark the thread resolved there too, or, with nothing ' +
-          'written, to put 👍 on the newest reply. Either way the card moves ' +
-          'to Done, where one click on the card undoes it.',
+          'Anything you write is posted to GitHub as your reply, and then the ' +
+          'thread is resolved there. With nothing written, 👍 goes on the ' +
+          'newest reply instead, unless you untick it. The card moves to Done.',
         reply: true,
-        resolves: true,
         thumbsUp: true,
-        submit: (typed, resolving, thumbing) =>
-          resolving
-            ? typed
-              ? 'Reply and resolve on GitHub'
-              : thumbing
-                ? 'Resolve on GitHub and put 👍 on the newest reply'
-                : 'Resolve on GitHub'
-            : typed
-              ? 'Post reply and resolve on the board'
-              : thumbing
-                ? 'Resolve on the board and put 👍 on the newest reply'
-                : 'Resolve, posting nothing to GitHub',
       },
       inPhase: {
         answered: { label: 'Resolve', weight: 'primary' },
@@ -473,64 +442,59 @@ const ENTRIES = {
     doing: 'resolving',
     square: 'done',
   },
-  'resolve-here': {
+  'reply-and-mark-done': {
     key: 'v',
-    label: 'Resolve',
-    weight: 'secondary',
+    label: 'Reply and mark done',
+    weight: 'ghost',
     title:
-      'closes this comment on the board and drops the agent’s worktree — the ' +
-      'thread itself stays open on GitHub',
+      'posts your reply to GitHub and moves the card to Done on the board — ' +
+      'GitHub has no thread to resolve for this comment',
     asks: {
-      question: 'Resolve this comment?',
+      question: 'Reply and mark this done?',
       note:
-        'Anything you write here is posted to GitHub as your reply, in your ' +
-        'own words. Leave it empty and nothing is posted: the card moves to ' +
-        'Done and the agent’s worktree is dropped. The thread stays open on ' +
-        'GitHub either way.',
+        'Your words are posted to GitHub as your reply. The card moves to ' +
+        'Done on the board; GitHub has no thread to resolve for this comment.',
       reply: true,
-      del: true,
-      submit: (typed) =>
-        typed ? 'Post reply and resolve' : 'Resolve, posting nothing to GitHub',
+      requiresReply: true,
+    },
+    inPhase: {
+      declined: { weight: 'secondary' },
     },
     reviewer: {
-      title:
-        'posts your reply to GitHub and closes this mention on the board — ' +
-        'nothing is resolved on GitHub',
-      asks: {
-        question: 'Reply to this mention?',
-        note:
-          'Your words are posted to GitHub as your reply. The mention moves ' +
-          'to Done on the board; nothing is resolved on GitHub.',
-        reply: true,
-        requiresReply: true,
-        submit: () => 'Reply and resolve',
-      },
       inPhase: {
-        answered: { label: 'Reply and resolve', weight: 'primary' },
-        waiting: { label: 'Reply and resolve' },
-        'assumed-done': { label: 'Reply and resolve', weight: 'ghost' },
-        'not-mine': { label: 'Reply and resolve' },
-        deferred: { label: 'Reply and resolve' },
+        answered: { weight: 'primary' },
+        waiting: { weight: 'secondary' },
+        'not-mine': { weight: 'secondary' },
+        deferred: { weight: 'secondary' },
       },
     },
-    request: (gathered) => ({ verb: 'resolve', body: closing(gathered) }),
-    doing: 'resolving',
+    request: ({ body }) => ({
+      verb: 'mark-done',
+      body: body ? { reply: body } : {},
+    }),
+    doing: 'replying and marking it done',
     square: 'done',
   },
-  'resolve-on-board': {
+  'mark-done': {
     key: 'h',
-    label: 'Resolve on board',
-    weight: 'secondary',
+    label: 'Mark done',
+    weight: 'ghost',
     title:
-      'moves this mention to Done on the board with nothing posted to GitHub — ' +
+      'moves this card to Done on the board with nothing sent to GitHub — ' +
       'no reply, no 👍, nothing resolved there',
     asks: null,
-    reviewer: { inPhase: { 'assumed-done': { weight: 'ghost' } } },
-    request: () => ({
-      verb: 'resolve',
-      body: { delete_comment: false, thumbs_up: false },
-    }),
-    doing: 'resolving on the board',
+    inPhase: {
+      waiting: { weight: 'secondary' },
+    },
+    reviewer: {
+      inPhase: {
+        answered: { weight: 'secondary' },
+        waiting: { weight: 'secondary' },
+        'not-mine': { weight: 'secondary' },
+      },
+    },
+    request: () => ({ verb: 'mark-done', body: {} }),
+    doing: 'marking it done',
     square: 'done',
   },
   reject: {
@@ -619,7 +583,7 @@ const ENTRIES = {
     weight: 'primary',
     title:
       'moves this card to Done and asks whether to resolve the thread on ' +
-      "GitHub and put 👍 on the author's message there",
+      'GitHub and put 👍 on the newest reply there',
     asks: {
       question: 'Confirm this conversation?',
       note:
@@ -1223,14 +1187,15 @@ export function writtenOn(
   };
 }
 
-const LANDING_AGAIN: Decision[] = [
+const PROPOSED: Decision[] = [
   'approve',
   'rework',
   'defer',
   'reject',
   'resolve',
-  'start-session',
+  'mark-done',
 ];
+const LANDING_AGAIN: Decision[] = [...PROPOSED, 'start-session'];
 const TRY_AGAIN: Decision[] = [
   'fix',
   'open-shell',
@@ -1239,6 +1204,7 @@ const TRY_AGAIN: Decision[] = [
   'start-session',
   'defer',
   'resolve',
+  'mark-done',
 ];
 const GAVE_UP: Decision[] = [
   'retry',
@@ -1247,13 +1213,14 @@ const GAVE_UP: Decision[] = [
   'defer',
   'reject',
   'resolve',
+  'mark-done',
 ];
 const AT_WORK: Decision[] = ['stop', 'defer'];
 const DRAFTING: Decision[] = ['enrol', 'post-now', 'discard'];
 const ENROLLED: Decision[] = ['withdraw-from-review'];
 
 const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
-  proposed: LANDING_AGAIN,
+  proposed: PROPOSED,
   asking: ['answer-in-session', 'drop'],
   'push failed': LANDING_AGAIN,
   'landing failed': LANDING_AGAIN,
@@ -1263,7 +1230,7 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   failed: GAVE_UP,
   stopped: GAVE_UP,
   answered: TRY_AGAIN,
-  removed: ['approve', 'resolve'],
+  removed: ['approve', 'mark-done'],
   queued: AT_WORK,
   working: AT_WORK,
   session: AT_WORK,
@@ -1271,10 +1238,10 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   landing: ['stop'],
   rebasing: [],
   filing: [],
-  waiting: ['fix', 'unpark', 'resolve-here', 'resolve', 'defer'],
+  waiting: ['fix', 'unpark', 'mark-done', 'resolve', 'defer'],
   'assumed-done': ['confirm', 'place', 'resolve'],
-  'not-mine': ['resolve', 'defer'],
-  deferred: ['unpark', 'resolve'],
+  'not-mine': ['resolve', 'mark-done', 'defer'],
+  deferred: ['unpark', 'resolve', 'mark-done'],
   landed: ['unpark'],
   rejected: ['unpark'],
   resolved: ['unpark'],
@@ -1286,11 +1253,11 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
 
 const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
   answered: ['resolve', 'not-fixed', 'place', 'defer'],
-  removed: ['resolve'],
-  waiting: ['resolve', 'defer', 'place'],
+  removed: ['mark-done'],
+  waiting: ['resolve', 'mark-done', 'defer', 'place'],
   'assumed-done': ['confirm-resolve', 'place', 'resolve'],
-  'not-mine': ['place', 'resolve'],
-  deferred: ['unpark', 'resolve'],
+  'not-mine': ['place', 'resolve', 'mark-done'],
+  deferred: ['unpark', 'resolve', 'mark-done'],
   resolved: ['unpark'],
   confirmed: ['unpark'],
   rejected: ['unpark'],
@@ -1300,11 +1267,11 @@ const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
 };
 
 const MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
-  answered: ['resolve-here', 'resolve-on-board', 'defer'],
-  waiting: ['resolve-here', 'resolve-on-board', 'defer'],
-  'assumed-done': ['confirm', 'place', 'resolve-here', 'resolve-on-board'],
-  'not-mine': ['place', 'resolve-here', 'resolve-on-board'],
-  deferred: ['unpark', 'resolve-here'],
+  answered: ['reply-and-mark-done', 'mark-done', 'defer'],
+  waiting: ['reply-and-mark-done', 'mark-done', 'defer'],
+  'assumed-done': ['confirm', 'place', 'reply-and-mark-done', 'mark-done'],
+  'not-mine': ['place', 'reply-and-mark-done', 'mark-done'],
+  deferred: ['unpark', 'reply-and-mark-done'],
 };
 
 const REVIEW_MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
@@ -1312,10 +1279,26 @@ const REVIEW_MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
   'assumed-done': [
     'confirm-resolve',
     'place',
-    'resolve-here',
-    'resolve-on-board',
+    'reply-and-mark-done',
+    'mark-done',
   ],
 };
+
+function finishing(
+  conversation: Conversation,
+  decisions: Decision[],
+): Decision[] {
+  if (conversation.kind === 'review') return decisions;
+  const instead: Decision =
+    conversation.kind === 'request' ? 'mark-done' : 'reply-and-mark-done';
+  return [
+    ...new Set(
+      decisions.map((decision) =>
+        decision === 'resolve' ? instead : decision,
+      ),
+    ),
+  ];
+}
 
 export function keyOf(decision: Decision): string {
   return ENTRIES[decision].key;
@@ -1382,11 +1365,7 @@ function asksInADialog(decision: Decision, asks: EntryAsks): boolean {
   return !RED_ARE_YOU_SURE.includes(decision);
 }
 
-const SUBMITS_IN_ITS_OWN_WORDS: Decision[] = [
-  'resolve',
-  'resolve-here',
-  'drop',
-];
+const SUBMITS_IN_ITS_OWN_WORDS: Decision[] = ['drop'];
 
 function submittedBy(asks: Asking, label: string): DialogSpec {
   return { ...asks, submit: () => label };
@@ -1562,14 +1541,14 @@ function offeredOn(
       (conversation.mention ? mentionOffers[phase] : undefined) ??
       REVIEWER_OFFERS[phase] ??
       [];
-    return offers.map((decision) =>
+    return finishing(conversation, offers).map((decision) =>
       reviewerOffer(decision, conversation, phase),
     );
   }
   const phase = phaseOf(conversation);
   const split = proposal?.split;
   if (split) return splitOffers(conversation, proposal, split.parts, phase);
-  return AUTHOR_OFFERS[phase]
+  return finishing(conversation, AUTHOR_OFFERS[phase])
     .filter((decision) => {
       const entry: Entry = ENTRIES[decision];
       return entry.offeredWhen?.(conversation) ?? true;
@@ -1649,7 +1628,7 @@ function splitOffers(
     : [];
   return [
     ...acceptAll,
-    ...AUTHOR_OFFERS[phase]
+    ...finishing(conversation, AUTHOR_OFFERS[phase])
       .filter((decision) => decision !== 'approve')
       .filter((decision) => !(ran && GONE_ONCE_A_PART_RAN.includes(decision)))
       .map((decision) => authorOffer(decision, conversation, proposal, null)),

@@ -22,7 +22,7 @@ const focused = modifier((element: HTMLElement) => {
 });
 
 function thumbedAtFirst(spec: DialogSpec): boolean {
-  return spec.thumbsUp === true && spec.resolving === true;
+  return spec.thumbsUp === true;
 }
 
 export interface DecideDialogSignature {
@@ -446,7 +446,7 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
                   checked={{this.thumbing}}
                   {{on "change" this.toggleThumbsUp}}
                 />
-                Post 👍 on the author's message
+                Put 👍 on the newest reply
               </label>
             {{/if}}
           </fieldset>

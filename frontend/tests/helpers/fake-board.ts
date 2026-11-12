@@ -1671,7 +1671,9 @@ export class FakeBoard {
     const kind =
       verb === 'fix'
         ? 'first'
-        : (verb as Exclude<OperationKind, 'file' | 'open' | 'reconcile'>);
+        : verb === 'mark-done'
+          ? 'resolve'
+          : (verb as Exclude<OperationKind, 'file' | 'open' | 'reconcile'>);
     const listed = verb === 'reply' ? this.listReply(asked, id) : asked;
     return this.json(202, {
       operation: operation({

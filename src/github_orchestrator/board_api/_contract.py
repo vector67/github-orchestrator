@@ -1584,11 +1584,12 @@ class ResolveRequest(CloseRequest):
     """The body of `:resolve`."""
 
     resolve: bool = Field(
-        default=False,
-        description="Also mark the thread resolved on GitHub, after any "
-                    "reply. Left false, a reviewer's thread closes on the "
-                    "board only; a comment with no thread of its own has nothing to "
-                    "resolve and only closes on the board. Refused beside "
+        default=True,
+        description="Mark the thread resolved on GitHub, after any reply. Only "
+                    "a reviewer's Confirm with its resolve box unticked sends "
+                    "false; finishing on the board alone is `:mark-done`. A "
+                    "comment with no thread of its own has nothing to resolve "
+                    "and only closes on the board. Ignored beside "
                     "`delete_comment`, which leaves no thread to resolve.")
     thumbs_up: bool = Field(
         default=True,
@@ -1596,6 +1597,15 @@ class ResolveRequest(CloseRequest):
                     "reply of a reviewer's thread as it resolves, on GitHub "
                     "or on the board alone. False resolves it with no "
                     "reaction.")
+
+
+class MarkDoneRequest(BaseModel):
+    """The body of `:mark-done`."""
+
+    reply: str | None = Field(
+        default=None,
+        description="Posted to GitHub before the thread closes on the board. "
+                    "Nothing else reaches GitHub: no resolve and no thumbs-up.")
 
 
 class BriefRequest(BaseModel):

@@ -250,7 +250,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.dom('[data-test-dialog-body]').hasValue('');
     assert
       .dom('[data-test-dialog]')
-      .includesText("👍 on the author's message")
+      .includesText('👍 on the newest reply')
       .includesText('moves to Done');
 
     await click('[data-test-dialog-submit]');
@@ -258,8 +258,7 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.strictEqual(board().posted[0]!.verb, 'resolve');
     assert.deepEqual(board().posted[0]!.body, {
       delete_comment: false,
-      resolve: false,
-      thumbs_up: false,
+      resolve: true,
     });
   });
 
@@ -365,98 +364,19 @@ module('Acceptance | reviewer panel', function (hooks) {
       );
   });
 
-  test('resolve opens with resolving on GitHub and the 👍 unticked and resolves on the board alone', async function (assert) {
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-
-    await click('[data-test-decision="resolve"]');
-
-    assert.dom('[data-test-resolve]').isNotChecked();
-    assert.dom('[data-test-thumbs-up]').isNotChecked();
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve, posting nothing to GitHub');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.deepEqual(board().posted[0]!.body, {
-      delete_comment: false,
-      resolve: false,
-      thumbs_up: false,
-    });
-  });
-
-  test('the 👍 alone resolves on the board and reacts on GitHub', async function (assert) {
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-    await click('[data-test-decision="resolve"]');
-
-    await click('[data-test-thumbs-up]');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve on the board and put 👍 on the newest reply');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.deepEqual(board().posted[0]!.body, {
-      delete_comment: false,
-      resolve: false,
-    });
-  });
-
-  test('a reply with resolving on GitHub unticked says it resolves on the board', async function (assert) {
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-    await click('[data-test-decision="resolve"]');
-
-    await fillIn('[data-test-dialog-body]', 'Not for me to answer.');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Post reply and resolve on the board');
-  });
-
-  test('an empty resolve on GitHub says on its button that it puts 👍 on the newest reply', async function (assert) {
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-
-    await click('[data-test-decision="resolve"]');
-    await click('[data-test-resolve]');
-    await click('[data-test-thumbs-up]');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve on GitHub and put 👍 on the newest reply');
-
-    await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
-
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Reply and resolve on GitHub');
-  });
-
-  test('ticking resolve alone resolves on GitHub with no reaction', async function (assert) {
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-    await click('[data-test-decision="resolve"]');
-    await click('[data-test-resolve]');
-
-    assert.dom('[data-test-thumbs-up]').isNotChecked();
-    assert.dom('[data-test-dialog-submit]').hasText('Resolve on GitHub');
-
-    await click('[data-test-dialog-submit]');
-
-    assert.deepEqual(board().posted[0]!.body, {
-      delete_comment: false,
-      resolve: true,
-      thumbs_up: false,
-    });
-  });
-
   test('a written reply is the thanks, so the 👍 tick goes away', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
     await click('[data-test-decision="resolve"]');
-    await click('[data-test-resolve]');
 
     await fillIn('[data-test-dialog-body]', 'Thanks, that covers it.');
 
     assert.dom('[data-test-thumbs-up]').doesNotExist();
+    await click('[data-test-dialog-submit]');
+    assert.deepEqual(board().posted[0]!.body, {
+      reply: 'Thanks, that covers it.',
+      delete_comment: false,
+      resolve: true,
+    });
   });
 
   test('an author card is drawn with its fix', async function (assert) {
@@ -545,27 +465,25 @@ module('Acceptance | mention card', function (hooks) {
     mentioned(board());
   });
 
-  test('a mention offers Reply and resolve, Resolve on board, and Defer', async function (assert) {
+  test('a mention offers Reply and mark done, Mark done, and Defer', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
     assert.deepEqual(
       [...document.querySelectorAll('[data-test-decision]')].map((one) =>
         one.getAttribute('data-test-decision'),
       ),
-      ['resolve-here', 'resolve-on-board', 'defer'],
+      ['reply-and-mark-done', 'mark-done', 'defer'],
     );
     assert
-      .dom('[data-test-decision="resolve-here"]')
-      .includesText('Reply and resolve');
-    assert
-      .dom('[data-test-decision="resolve-on-board"]')
-      .includesText('Resolve on board');
+      .dom('[data-test-decision="reply-and-mark-done"]')
+      .includesText('Reply and mark done');
+    assert.dom('[data-test-decision="mark-done"]').includesText('Mark done');
     assert
       .dom('#panel-thread')
       .containsText('does the export still need the guard?');
   });
 
-  test('a mention a verdict put in Waiting keeps Reply and resolve', async function (assert) {
+  test('a mention a verdict put in Waiting keeps Reply and mark done', async function (assert) {
     board().conversations = board().conversations.map((one) => ({
       ...one,
       state: 'waiting' as const,
@@ -574,8 +492,8 @@ module('Acceptance | mention card', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
     assert
-      .dom('[data-test-decision="resolve-here"]')
-      .includesText('Reply and resolve');
+      .dom('[data-test-decision="reply-and-mark-done"]')
+      .includesText('Reply and mark done');
   });
 
   test('a mention has no reply link under the comment and no line for a proposal', async function (assert) {
@@ -585,10 +503,10 @@ module('Acceptance | mention card', function (hooks) {
     assert.dom('[data-test-work-placeholder]').doesNotExist();
   });
 
-  test('Reply and resolve opens the decide dialog and will not post without a reply', async function (assert) {
+  test('Reply and mark done opens the decide dialog and will not post without a reply', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
-    await click('[data-test-decision="resolve-here"]');
+    await click('[data-test-decision="reply-and-mark-done"]');
 
     assert.dom('[data-test-dialog]').exists();
     assert.dom('[data-test-dialog-submit]').isDisabled();
@@ -596,30 +514,26 @@ module('Acceptance | mention card', function (hooks) {
     assert.strictEqual(board().posted.length, 0);
   });
 
-  test('Reply and resolve posts the reply and resolves on the board only', async function (assert) {
+  test('Reply and mark done posts the reply and marks the mention done on the board', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
-    await click('[data-test-decision="resolve-here"]');
+    await click('[data-test-decision="reply-and-mark-done"]');
 
     await fillIn('[data-test-dialog-body]', 'It does, the guard stays.');
     await click('[data-test-dialog-submit]');
 
-    assert.strictEqual(board().posted[0]!.verb, 'resolve');
+    assert.strictEqual(board().posted[0]!.verb, 'mark-done');
     assert.deepEqual(board().posted[0]!.body, {
       reply: 'It does, the guard stays.',
-      delete_comment: false,
     });
   });
 
-  test('Resolve on board closes the mention with nothing posted to GitHub', async function (assert) {
+  test('Mark done closes the mention with nothing posted to GitHub', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
-    await click('[data-test-decision="resolve-on-board"]');
+    await click('[data-test-decision="mark-done"]');
 
-    assert.strictEqual(board().posted[0]!.verb, 'resolve');
-    assert.deepEqual(board().posted[0]!.body, {
-      delete_comment: false,
-      thumbs_up: false,
-    });
+    assert.strictEqual(board().posted[0]!.verb, 'mark-done');
+    assert.deepEqual(board().posted[0]!.body, {});
   });
 
   test('a deferred mention comes back or is answered, never resolved on GitHub', async function (assert) {
@@ -633,17 +547,17 @@ module('Acceptance | mention card', function (hooks) {
       [...document.querySelectorAll('[data-test-decision]')].map((one) =>
         one.getAttribute('data-test-decision'),
       ),
-      ['unpark', 'resolve-here'],
+      ['unpark', 'reply-and-mark-done'],
     );
   });
 
-  test('Resolve on board acts at once on a mention of a PR that is not held, so it carries no window icon', async function (assert) {
+  test('Mark done acts at once on a mention of a PR that is not held, so it carries no window icon', async function (assert) {
     mentioned(board());
 
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
     assert
-      .dom('[data-test-decision="resolve-on-board"]')
+      .dom('[data-test-decision="mark-done"]')
       .doesNotHaveAttribute('data-opens-dialog');
   });
 
@@ -684,10 +598,10 @@ module(
       return board().posted.map((one) => one.verb);
     }
 
-    test('Resolve on board warns that the mention is all that shows the PR, and posts nothing yet', async function (assert) {
+    test('Mark done warns that the mention is all that shows the PR, and posts nothing yet', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
-      await click('[data-test-decision="resolve-on-board"]');
+      await click('[data-test-decision="mark-done"]');
 
       assert
         .dom('[data-test-hold-warning]')
@@ -696,36 +610,36 @@ module(
       assert.deepEqual(verbs(), []);
     });
 
-    test('Resolve on board carries the window icon on the card where it opens the warning', async function (assert) {
+    test('Mark done carries the window icon on the card where it opens the warning', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
       assert
-        .dom('[data-test-decision="resolve-on-board"]')
+        .dom('[data-test-decision="mark-done"]')
         .hasAttribute('data-opens-dialog');
     });
 
     test('Back on hold closes the mention and leaves the hold', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
-      await click('[data-test-decision="resolve-on-board"]');
+      await click('[data-test-decision="mark-done"]');
 
       await click('[data-test-hold-warning-keep]');
 
-      assert.deepEqual(verbs(), ['resolve']);
+      assert.deepEqual(verbs(), ['mark-done']);
       assert.dom('[data-test-hold-warning]').doesNotExist();
     });
 
     test('Resume this PR closes the mention and resumes the PR', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
-      await click('[data-test-decision="resolve-on-board"]');
+      await click('[data-test-decision="mark-done"]');
 
       await click('[data-test-hold-warning-resume]');
 
-      assert.deepEqual(verbs(), ['resolve', 'resume']);
+      assert.deepEqual(verbs(), ['mark-done', 'resume']);
     });
 
     test('cancelling the warning closes nothing', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
-      await click('[data-test-decision="resolve-on-board"]');
+      await click('[data-test-decision="mark-done"]');
 
       await click('[data-test-hold-warning-cancel]');
 
@@ -733,9 +647,9 @@ module(
       assert.dom('[data-test-hold-warning]').doesNotExist();
     });
 
-    test('Reply and resolve warns after its own dialog', async function (assert) {
+    test('Reply and mark done warns after its own dialog', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
-      await click('[data-test-decision="resolve-here"]');
+      await click('[data-test-decision="reply-and-mark-done"]');
       await fillIn('[data-test-dialog-body]', 'It does, the guard stays.');
 
       await click('[data-test-dialog-submit]');
@@ -747,7 +661,6 @@ module(
 
       assert.deepEqual(board().posted[0]!.body, {
         reply: 'It does, the guard stays.',
-        delete_comment: false,
       });
     });
 
@@ -764,17 +677,17 @@ module(
       assert.deepEqual(verbs(), ['defer']);
     });
 
-    test('with another mention still open, Resolve on board does not warn', async function (assert) {
+    test('with another mention still open, Mark done does not warn', async function (assert) {
       board().conversations = [
         ...board().conversations,
         thread({ key: 'IC_other', github_node_id: 'IC_other', mention: true }),
       ];
       await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
-      await click('[data-test-decision="resolve-on-board"]');
+      await click('[data-test-decision="mark-done"]');
 
       assert.dom('[data-test-hold-warning]').doesNotExist();
-      assert.deepEqual(verbs(), ['resolve']);
+      assert.deepEqual(verbs(), ['mark-done']);
     });
   },
 );
@@ -957,8 +870,8 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
       [
         ['confirm-resolve', 'primary'],
         ['place', 'secondary'],
-        ['resolve-here', 'ghost'],
-        ['resolve-on-board', 'ghost'],
+        ['reply-and-mark-done', 'ghost'],
+        ['mark-done', 'ghost'],
       ],
     );
   });
@@ -997,11 +910,11 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
   });
 
-  test('a not my conversation card offers Move and Resolve, and Move leaves out where it is', async function (assert) {
+  test('a not my conversation card offers Move, Resolve and Mark done, and Move leaves out where it is', async function (assert) {
     board().conversations = [board().threadIn('not-mine', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers(), ['place', 'resolve']);
+    assert.deepEqual(offers(), ['place', 'resolve', 'mark-done']);
     assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="place"]');
 
@@ -1030,7 +943,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     board().conversations = [board().threadIn('waiting', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers(), ['resolve', 'defer', 'place']);
+    assert.deepEqual(offers(), ['resolve', 'mark-done', 'defer', 'place']);
     await click('[data-test-decision="place"]');
 
     assert.deepEqual(outcomes(), ['My move', 'Not my conversation', 'Later…']);

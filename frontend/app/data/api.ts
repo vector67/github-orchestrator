@@ -624,6 +624,10 @@ export interface ManagerFlags {
 
 export type ManagerStanding = 'starting' | 'answering' | 'gone';
 
+export interface MarkDoneRequest {
+  reply?: string | null;
+}
+
 export interface MentionDeferred {
   deferred_at: string;
   until_at: string | null;

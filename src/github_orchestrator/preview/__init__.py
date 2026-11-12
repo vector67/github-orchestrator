@@ -858,7 +858,7 @@ def _reviewer_board(seeding: _Seeding, viewer: str) -> None:
     seeding.hear(Thread(key="IC_mention", kind=CommentKind.ISSUE, comments=(
         _said(9200201, COLLEAGUE, COLLEAGUE_NAME,
               f"@{viewer} does the export still need the guard once the reader "
-              "checks the units? A mention, answered with one Reply and resolve.",
+              "checks the units? A mention, answered with one Reply and mark done.",
               "2026-09-12T11:45:00Z"),)))
 
 

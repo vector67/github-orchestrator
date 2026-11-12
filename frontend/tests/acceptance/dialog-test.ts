@@ -276,6 +276,7 @@ module('Acceptance | dialog', function (hooks) {
   });
 
   test('a session is opened with the steer typed for it', async function (assert) {
+    board().conversations = [board().threadIn('push failed', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
     await click('[data-test-decision="start-session"]');
@@ -576,16 +577,14 @@ module('Acceptance | dialog', function (hooks) {
     assert.dom('[data-test-dialog-submit]').hasText('Accept');
   });
 
-  test('resolving a removed comment asks first, with no reply to write', async function (assert) {
+  test('a removed comment, which has no thread left to resolve, is marked done at once', async function (assert) {
     board().conversations = [board().threadIn('removed', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
-    await click('[data-test-decision="resolve"]');
+    await click('[data-test-decision="mark-done"]');
 
-    assert.dom('[data-test-dialog-body]').doesNotExist();
-    assert
-      .dom('[data-test-dialog-submit]')
-      .hasText('Resolve, posting nothing to GitHub');
+    assert.dom('[data-test-dialog]').doesNotExist();
+    assert.strictEqual(board().posted[0]!.verb, 'mark-done');
   });
 
   module('accepting a proposed reply', function (hooks) {

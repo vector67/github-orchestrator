@@ -931,8 +931,8 @@ an Assumed done card offers **Confirm** (`g`) and **Move** (`m`), which
 asks where it stands instead. Confirm moves the card to Done and asks first, with
 two ticks, both on: resolve the thread on GitHub, and put 👍 on the newest reply
 from someone else. Untick either to leave it undone on GitHub. Confirm posts no
-reply; **Reply and resolve** beside it does. A mention in a review thread gets the
-same Confirm, with Reply and resolve and Resolve on board moved to the right. On
+reply; **Reply and mark done** beside it does. A mention in a review thread gets the
+same Confirm, with Reply and mark done and Mark done moved to the right. On
 any other mention, or on a PR you wrote, Confirm moves the card to Done and
 touches nothing on GitHub. A Not my conversation card offers the same question as **Move**. It
 lists My move, Their move, Not my conversation and Later…, leaving out the group
@@ -982,19 +982,23 @@ that arrives while an agent, a session or a push is under way queues a rework on
 top of it once it finishes.
 
 Buttons say what they do rather than naming the state machine, so a rework
-renders as **send back for rework**, or **disagree, try a fix anyway** on a
-skipped comment, and opening a session you steer as **Steer it yourself**. Every button that posts to GitHub, drops a worktree or stops
+renders as **Send back for rework**, and opening a session you steer as **Steer it yourself**. Every button that posts to GitHub, drops a worktree or stops
 an agent asks in a dialog that says what it is about to do, and resolve, reject,
 approve and opening a session give you a box to type in. **Stop** (`x`) asks
 before it halts the run. Approve takes the reply you
 want on the thread; leave it blank and the thread gets the commit link alone.
 Opening a session takes what the rework should do differently, which is the
 difference between steering the next attempt and starting it over blind; leave it
-blank and the session starts unsteered. Resolve takes the reply that closes the
-comment; leave it blank and it closes with nothing posted, which its button
-says. On a reviewer's card an empty resolve can put 👍 on the newest reply
-instead, whether or not it resolves on GitHub: the tick starts off, and the
-button says what it will do. Where the agent had something to
+blank and the session starts unsteered.
+
+**Resolve** (`s`) always resolves the thread on GitHub. Its dialog takes an
+optional reply, posted first. On a reviewer's card an empty Resolve puts 👍 on
+the newest reply as well, a tick that starts on. **Mark done** (`h`) moves the
+card to Done on the board at once and sends GitHub nothing: no reply, no 👍, no
+resolve. An issue comment or a mention in the PR description has no thread for
+GitHub to resolve, so it offers **Reply and mark done** (`v`) where a review
+thread offers Resolve. Its dialog will not post until you write a reply. A change
+you asked for on the board alone offers Mark done and no Resolve. Where the agent had something to
 say about the comment, the reason it skipped one or the note it left on a fix,
 the dialog offers **use the agent's own words**, which pastes that into the box
 for you to edit before it posts.
@@ -1003,18 +1007,19 @@ On someone else's PR, a comment that mentions you and that you have not answered
 is a card of its own, and so is a mention in the PR description. A reply naming
 you on a review thread you started is not a mention: that thread is yours
 already. A mention card offers
-**Reply and resolve** (`v`) and **Resolve on board** (`h`), with **Defer** at the bottom right, and no
-reply link. Its dialog will not post until you write a reply. The reply goes on
+**Reply and mark done** (`v`) and **Mark done** (`h`), with **Defer** at the bottom right, and no
+reply link. Reply and mark done will not post until you write a reply. The reply goes on
 the thread for a review comment, or to the PR's conversation quoting the comment
 for anything else (a mention in the description gets an @ to its author and no
 quote), and the card moves to Done on the board only: nothing is resolved on
-GitHub. **Resolve on board** (`h`) moves the card to Done with nothing posted at
-all: no reply, no 👍, nothing resolved on GitHub.
+GitHub. **Mark done** moves the card to Done with nothing posted at
+all.
 
 On a comment you wrote yourself, and that nobody else has replied to, the same
 dialog offers **Delete the comment** under "On GitHub, also:". Tick it and the verb posts nothing:
 approve lands and pushes the fix and then takes your comment off GitHub, and
-resolve closes the card the same way. **Resolve the thread** greys out while it
+resolve closes the card the same way, with no thread left to resolve. In the
+approve dialog, **Resolve the thread** greys out while delete
 is ticked and keeps whatever you had set, so unticking delete gives it back. It is the note you left for an
 agent rather than a question anybody is waiting on an answer to, so there is
 nothing to reply to once the fix is in. The tick is clear every time the dialog
@@ -1051,13 +1056,13 @@ decision is yours again.
 
 Resolve is how you close a comment without landing a fix, whether you agreed
 with the agent's skip or decided the fix is not needed at all. Its reply posts in
-your own words with no robot prefix — on the comment's thread, or on the pull
-request quoting the comment where there is no thread. Leave it blank and it
-closes without a reply.
+your own words with no robot prefix on the comment's thread, and then the thread
+is resolved on GitHub. Leave the reply blank and it resolves without one. Mark
+done closes the card on the board and leaves GitHub as it is.
 
 While a comment is open in the panel, the board asks GitHub whether it is still
 there. A comment deleted while its row still wanted work turns that row
-`removed`: it offers resolve, and approve where there is a commit worth
+`removed`: it offers Mark done, and approve where there is a commit worth
 keeping, because the worktree holds real work that a deletion should not quietly
 bin. One that had already landed or been resolved keeps its status and says
 **GitHub no longer has this comment** at the top of the panel, which means

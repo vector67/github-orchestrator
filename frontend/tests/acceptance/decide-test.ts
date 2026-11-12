@@ -198,15 +198,15 @@ module('Acceptance | decide', function (hooks) {
     ];
     board().actAs('reviewer');
     await visit('/pr/o/r/7/conversations/k1');
-    const release = board().hold(/operations:resolve$/);
+    const release = board().hold(/operations:mark-done$/);
 
-    const clicking = click('[data-test-decision="resolve-on-board"]');
+    const clicking = click('[data-test-decision="mark-done"]');
     await waitFor('#panel-actions[data-pending]');
 
     assert
-      .dom('[data-test-decision="resolve-on-board"]')
-      .includesText('Resolving on the board…');
-    assert.dom('#c-k1 [data-test-meta]').hasText('resolving on the board…');
+      .dom('[data-test-decision="mark-done"]')
+      .includesText('Marking it done…');
+    assert.dom('#c-k1 [data-test-meta]').hasText('marking it done…');
 
     release();
     await clicking;

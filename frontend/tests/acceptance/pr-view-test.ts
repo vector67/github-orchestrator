@@ -585,7 +585,7 @@ module('Acceptance | pr view', function (hooks) {
 
   test('on the Board a decision key beats the pull request’s own: o steers the thread and opens nothing on GitHub', async function (assert) {
     onTheHub(heldPr());
-    board().conversations = [board().threadIn('proposed', { key: 'k1' })];
+    board().conversations = [board().threadIn('stopped', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
     await press('o');

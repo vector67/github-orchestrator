@@ -108,7 +108,7 @@ module('Acceptance | motion', function (hooks) {
     return row.top > box.top - pixel && row.bottom < box.bottom + pixel;
   }
 
-  async function queued(decision: 'unpark' | 'resolve-here'): Promise<void> {
+  async function queued(decision: 'unpark' | 'mark-done'): Promise<void> {
     await click(`[data-test-decision="${decision}"]`);
     if (find('[data-test-dialog-submit]')) {
       await click('[data-test-dialog-submit]');
@@ -207,12 +207,12 @@ module('Acceptance | motion', function (hooks) {
     board().conversations = [board().threadIn('waiting', { key: 'b' })];
     await visit('/pr/o/r/7/conversations/b');
     await queued('unpark');
-    await queued('resolve-here');
+    await queued('mark-done');
 
     await click('[data-test-toast]');
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('resolving');
+    assert.dom('[data-test-toast]').containsText('marking it done');
   });
 
   test('a toast leaves when its time is up, and one raised after it stays', async function (assert) {
@@ -220,12 +220,12 @@ module('Acceptance | motion', function (hooks) {
     await visit('/pr/o/r/7/conversations/b');
     await queued('unpark');
     await clock().tick(2000);
-    await queued('resolve-here');
+    await queued('mark-done');
 
     await clock().tick(1000);
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('resolving');
+    assert.dom('[data-test-toast]').containsText('marking it done');
   });
 
   test('a toast that goes leaves the mark on a row whose flash is still playing', async function (assert) {
@@ -263,7 +263,7 @@ module('Acceptance | motion', function (hooks) {
     board().conversations = [board().threadIn('waiting', { key: 'b' })];
     await visit('/pr/o/r/7/conversations/b');
     await queued('unpark');
-    await queued('resolve-here');
+    await queued('mark-done');
     inMotion();
 
     await click('[data-test-toast]');
@@ -280,7 +280,7 @@ module('Acceptance | motion', function (hooks) {
     await settled();
 
     assert.dom('[data-test-toast]').exists({ count: 1 });
-    assert.dom('[data-test-toast]').containsText('resolving');
+    assert.dom('[data-test-toast]').containsText('marking it done');
   });
 
   test('a decision marks the decided card, and its toast waits for the card to land and a rest after', async function (assert) {

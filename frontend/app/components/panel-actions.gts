@@ -64,8 +64,9 @@ const SAVE_FIRST =
 const COMPOSER = 'reply-box';
 
 const CLOSES_A_MENTION: Decision[] = [
-  'resolve-here',
-  'resolve-on-board',
+  'resolve',
+  'reply-and-mark-done',
+  'mark-done',
   'defer',
 ];
 

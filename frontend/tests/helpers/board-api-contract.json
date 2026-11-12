@@ -474,6 +474,31 @@
     }
    }
   },
+  "/api/conversations/{key}/operations:mark-done": {
+   "post": {
+    "202": {
+     "$ref": "#/components/schemas/Outcome"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "412": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "500": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/conversations/{key}/operations:open-shell": {
    "post": {
     "202": {
@@ -5487,6 +5512,21 @@
     "gone"
    ],
    "type": "string"
+  },
+  "MarkDoneRequest": {
+   "properties": {
+    "reply": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "type": "object"
   },
   "MentionDeferred": {
    "properties": {

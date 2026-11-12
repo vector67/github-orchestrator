@@ -56,6 +56,7 @@ from github_orchestrator.board_api._contract import (
     GitRun,
     Health,
     ManagerChanges,
+    MarkDoneRequest,
     MentionableList,
     Operation,
     OperationList,
@@ -1516,22 +1517,40 @@ def fix_thread(key: ThreadKey, board: Serving, if_match: IfMatch) -> Response:
 
 @writes.post("/conversations/{key}/operations:resolve", status_code=202,
              response_model=Outcome, operation_id="resolveThread",
-             summary="Close the thread on the board, and on GitHub where it "
-                     "can.",
+             summary="Resolve the thread on GitHub and close it on the board.",
              responses=ACCEPTED_WITH_A_REPLY)
 def resolve_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
                    asked: ResolveRequest) -> Response:
     """With nothing written, a reviewer's thread gets a thumbs-up on its
-    newest reply instead of a comment, unless `thumbs_up` is false. Refused on a thread that is already
-    closed.
+    newest reply instead of a comment, unless `thumbs_up` is false. A comment
+    with no thread of its own on GitHub only closes on the board. Refused on
+    a thread that is already closed.
     """
     _within_githubs_limit(board, asked.reply)
     return _queued(
         board, _thread(board, key), if_match,
         lambda editable: editable.resolve(reply=asked.reply or "",
                                             delete_comment=asked.delete_comment,
-                                            resolve=asked.resolve,
+                                            resolve=asked.resolve and not asked.delete_comment,
                                             thumbs_up=asked.thumbs_up))
+
+
+@writes.post("/conversations/{key}/operations:mark-done", status_code=202,
+             response_model=Outcome, operation_id="markThreadDone",
+             summary="Close the thread on the board, sending GitHub nothing "
+                     "but the reply you wrote.",
+             responses=ACCEPTED_WITH_A_REPLY)
+def mark_thread_done(key: ThreadKey, board: Serving, if_match: IfMatch,
+                     asked: MarkDoneRequest) -> Response:
+    """The thread stays open on GitHub and gets no thumbs-up. The operation
+    reads `resolve`, as every close on the board does. Refused on a thread
+    that is already closed.
+    """
+    _within_githubs_limit(board, asked.reply)
+    return _queued(
+        board, _thread(board, key), if_match,
+        lambda editable: editable.resolve(reply=asked.reply or "",
+                                            resolve=False, thumbs_up=False))
 
 
 @writes.post("/conversations/{key}/operations:reject", status_code=202,

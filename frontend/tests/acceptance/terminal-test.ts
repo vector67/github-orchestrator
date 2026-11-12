@@ -748,7 +748,7 @@ module('Acceptance | terminal', function (hooks) {
   });
 
   test("the Board's Steer it yourself takes you to the Terminal tab with the session", async function (assert) {
-    board().conversations = [board().threadIn('proposed', { key: 'k1' })];
+    board().conversations = [board().threadIn('stopped', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
     await click('[data-test-decision="start-session"]');

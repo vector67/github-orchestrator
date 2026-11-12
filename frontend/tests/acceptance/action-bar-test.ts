@@ -74,7 +74,7 @@ module('Acceptance | action bar', function (hooks) {
 
     await visit('/pr/o/r/7/conversations/k1');
 
-    assert.deepEqual(bar(), ['Resolve on GitHub']);
+    assert.deepEqual(bar(), ['Mark done']);
     assert.dom('#panel-talk [data-test-reply-open]').hasText('Reply to Anna');
   });
 
