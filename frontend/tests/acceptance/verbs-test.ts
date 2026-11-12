@@ -138,6 +138,18 @@ module('Acceptance | verbs | the author board', function (hooks) {
     ]);
   });
 
+  test('a thread no agent has run on offers a fix, a shell and the ways to finish it, and nothing that acts on a run', async function (assert) {
+    await open(board(), 'answered');
+
+    assert.deepEqual(offered(), [
+      'Write a fix',
+      'Open a shell',
+      'Defer',
+      'Resolve',
+      'Mark done',
+    ]);
+  });
+
   test('each dialog a proposal opens submits with its opener’s words', async function (assert) {
     await open(board(), 'proposed');
 

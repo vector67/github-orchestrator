@@ -254,6 +254,7 @@ const ENTRIES = {
       'lines you pointed at, starting from the commit it already wrote — ' +
       'nothing reaches the PR branch',
     asks: 'rework',
+    offeredWhen: agentHasRun,
     request: ({ brief }) => ({ verb: 'rework', body: { ...brief } }),
     doing: 'sending it back',
     square: 'rework',
@@ -276,6 +277,7 @@ const ENTRIES = {
         'session with no steer.',
       reply: true,
     },
+    offeredWhen: agentHasRun,
     request: ({ body, brief }) => ({
       verb: 'start-session',
       body: brief
@@ -357,6 +359,7 @@ const ENTRIES = {
       'runs the agent on this comment again with a fresh attempt budget — ' +
       'nothing reaches the PR branch',
     asks: null,
+    offeredWhen: agentHasRun,
     doing: 'retrying',
     square: 'rework',
   },

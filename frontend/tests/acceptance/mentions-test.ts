@@ -1002,25 +1002,33 @@ module('Acceptance | mentions | in context', function (hooks) {
   });
 
   const STARTS_WORK_OR_PUSHES = [
-    'fix',
-    'retry',
-    'rework',
-    'start-session',
-    'open-shell',
-  ];
+    ['k2', 'failed', ['retry', 'rework', 'start-session']],
+    ['k1', 'answered', ['fix', 'open-shell']],
+  ] as const;
+
+  function cardsThatStartWork() {
+    board().conversations = STARTS_WORK_OR_PUSHES.map(([key, phase]) =>
+      board().threadIn(phase, { key }),
+    );
+    for (const [key] of STARTS_WORK_OR_PUSHES)
+      board().comments[key] = [comment()];
+  }
 
   test('a card on an ended pull request opened for a mention offers nothing that starts an agent or pushes', async function (assert) {
     openedFor(true, 'merged');
     board().held = [heldPr({ dashboard: { facts: { ended: true } } })];
-    board().conversations = [board().threadIn('answered', { key: 'k1' })];
-    board().comments['k1'] = [comment()];
+    cardsThatStartWork();
 
-    await visit('/pr/o/r/7/conversations/k1');
-    await clock().tick(LIST);
+    for (const [key, phase, decisions] of STARTS_WORK_OR_PUSHES) {
+      await visit(`/pr/o/r/7/conversations/${key}`);
+      await clock().tick(LIST);
 
-    for (const decision of STARTS_WORK_OR_PUSHES)
-      assert.dom(`[data-test-decision="${decision}"]`).doesNotExist(decision);
-    assert.dom('[data-test-decision="resolve"]').exists();
+      for (const decision of decisions)
+        assert
+          .dom(`[data-test-decision="${decision}"]`)
+          .doesNotExist(`${decision} on ${phase}`);
+      assert.dom('[data-test-decision="resolve"]').exists(phase);
+    }
     assert.dom('[data-test-reply-open]').exists();
     assert.dom('[data-test-react]').exists();
     assert.dom('[data-test-mention-banner-dismiss]').exists();
@@ -1028,12 +1036,16 @@ module('Acceptance | mentions | in context', function (hooks) {
 
   test('the same card on an open pull request still offers them', async function (assert) {
     openedFor(false, 'merged');
-    board().conversations = [board().threadIn('answered', { key: 'k1' })];
+    cardsThatStartWork();
 
-    await visit('/pr/o/r/7/conversations/k1');
+    for (const [key, phase, decisions] of STARTS_WORK_OR_PUSHES) {
+      await visit(`/pr/o/r/7/conversations/${key}`);
 
-    for (const decision of STARTS_WORK_OR_PUSHES)
-      assert.dom(`[data-test-decision="${decision}"]`).exists(decision);
+      for (const decision of decisions)
+        assert
+          .dom(`[data-test-decision="${decision}"]`)
+          .exists(`${decision} on ${phase}`);
+    }
   });
 
   function mentionedLate() {

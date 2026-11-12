@@ -1167,6 +1167,10 @@ button.copy-directory {
   border-top: 2px solid var(--border-strong);
 }
 
+#panel-actions {
+  flex-wrap: wrap;
+}
+
 #panel-actions button[data-weight="primary"],
 #panel-actions button[data-weight="secondary"],
 #panel-actions button[data-weight="ghost"],

@@ -445,6 +445,37 @@ module('Acceptance | panel', function (hooks) {
     );
   });
 
+  test('a footer too wide for a narrow column wraps onto another row in its own order, and the panel never scrolls sideways', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const panel = document.querySelector('#panel') as HTMLElement;
+    const footer = document.querySelector('#panel-actions')!;
+    const buttons = [...footer.querySelectorAll('[data-test-decision]')];
+
+    panel.style.maxWidth = '360px';
+    await new Promise((done) =>
+      requestAnimationFrame(() => requestAnimationFrame(done)),
+    );
+
+    const edge = footer.getBoundingClientRect();
+    const boxes = buttons.map((one) => one.getBoundingClientRect());
+    const rows = new Set(boxes.map((box) => Math.round(box.top)));
+    const readingOrder = [...buttons].sort((one, other) => {
+      const a = one.getBoundingClientRect();
+      const b = other.getBoundingClientRect();
+      return Math.round(a.top) - Math.round(b.top) || a.left - b.left;
+    });
+    assert.true(rows.size > 1, `the buttons take ${rows.size} rows`);
+    assert.deepEqual(readingOrder, buttons, 'read row by row, in their order');
+    assert.true(
+      boxes.every((box) => box.right <= edge.right + 1),
+      'every button sits inside the footer',
+    );
+    assert.true(
+      panel.scrollWidth <= panel.clientWidth,
+      `${panel.scrollWidth}px drawn in a ${panel.clientWidth}px panel`,
+    );
+  });
+
   test('a fold brings its diff frame, drawn from the proposal', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
