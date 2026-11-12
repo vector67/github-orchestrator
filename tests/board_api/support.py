@@ -1,6 +1,7 @@
 import functools
 import http.client
 import socket
+import subprocess
 import threading
 from collections.abc import Callable, Collection, Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -152,7 +153,7 @@ class NoHeads:
 
 def summaries_in(directory: Path) -> list[Part]:
     return [PrSummariesWiring(directory),
-            SummaryLaneWiring(Path("/nonexistent/config.toml"), {}, False, "octocat"),
+            SummaryLaneWiring(Path("/nonexistent/config.toml"), {}, False, "octocat", run=subprocess.run),
             fake_provider(ChangeDetection, NoHeads())]
 
 

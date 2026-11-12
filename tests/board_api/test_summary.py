@@ -1,4 +1,5 @@
 import json
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -29,7 +30,7 @@ def summary_parts(tmp_path: Path, behaviour: str = "clean", *, read: str | None 
     return [PrSummariesWiring(tmp_path / "summaries"),
             SummaryLaneWiring(tmp_path / "config.toml", {THE_PR.repo: clone}, agents_enabled, "octocat",
                               plugin=("/bin/sh", str(FAKE_PLUGIN), "--behaviour", behaviour),
-                              run_in=run_in),
+                              run_in=run_in, run=subprocess.run),
             fake_provider(ChangeDetection, HeadsAt(read, (THE_PR,), ()))]
 
 

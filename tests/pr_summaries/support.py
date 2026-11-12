@@ -61,7 +61,7 @@ class Lane:
             SummaryLaneWiring(plugin=plugin or ("/bin/sh", str(FAKE_PLUGIN), "--behaviour", behaviour),
                               config_path=self.config, clones={THE_PR.repo: self.clone}, gh_account="octocat",
                               agents_enabled=agents_enabled, mcp_config=mcp_config, timeout=timeout, run_in=run_in,
-                              clamp=clamp),
+                              clamp=clamp, run=subprocess.run),
             clocks_of(ticking_clock()),
             fake_provider(ChangeDetection, HeadsAt(head, held, closing)),
         )
