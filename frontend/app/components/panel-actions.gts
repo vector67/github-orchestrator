@@ -219,10 +219,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
 
   confirm = (gathered: Gathered): Promise<boolean> => {
     const decision = this.asking;
-    if (
-      (decision === 'place' || decision === 'drop') &&
-      gathered.modifier === LATER
-    ) {
+    if (decision === 'drop' && gathered.modifier === LATER) {
       this.asking = 'defer';
       this.spec = laterAsks();
       return Promise.resolve(true);

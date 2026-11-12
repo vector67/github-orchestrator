@@ -902,7 +902,6 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
       'My move',
       'Their move',
       'Not my conversation',
-      'Later…',
     ]);
     await click('[data-test-outcome="waiting"]');
     await click('[data-test-dialog-submit]');
@@ -918,7 +917,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="place"]');
 
-    assert.deepEqual(outcomes(), ['My move', 'Their move', 'Later…']);
+    assert.deepEqual(outcomes(), ['My move', 'Their move']);
   });
 
   test('an answered card offers Move, which leaves out My move', async function (assert) {
@@ -929,11 +928,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="place"]');
 
-    assert.deepEqual(outcomes(), [
-      'Their move',
-      'Not my conversation',
-      'Later…',
-    ]);
+    assert.deepEqual(outcomes(), ['Their move', 'Not my conversation']);
     await click('[data-test-outcome="waiting"]');
     await click('[data-test-dialog-submit]');
     assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
@@ -946,21 +941,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(offers(), ['resolve', 'mark-done', 'defer', 'place']);
     await click('[data-test-decision="place"]');
 
-    assert.deepEqual(outcomes(), ['My move', 'Not my conversation', 'Later…']);
-  });
-
-  test('later… opens the defer dialog, which defers the thread', async function (assert) {
-    board().conversations = [board().threadIn('not-mine', { key: KEY })];
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
-    await click('[data-test-decision="place"]');
-
-    await click('[data-test-outcome="later"]');
-    await click('[data-test-dialog-submit]');
-
-    assert.dom('[data-test-outcome]').doesNotExist();
-    assert.dom('[data-test-wake]').exists();
-    await click('[data-test-dialog-submit]');
-    assert.strictEqual(board().posted[0]!.verb, 'defer');
+    assert.deepEqual(outcomes(), ['My move', 'Not my conversation']);
   });
 
   test('on my own pull request move offers a fix, a reply of mine or their move', async function (assert) {
@@ -981,7 +962,6 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
       'Needs a fix',
       'Needs a reply from me',
       'Their move',
-      'Later…',
     ]);
     await click('[data-test-outcome="queued"]');
     await click('[data-test-dialog-submit]');

@@ -935,10 +935,10 @@ reply; **Reply and mark done** beside it does. A mention in a review thread gets
 same Confirm, with Reply and mark done and Mark done moved to the right. On
 any other mention, or on a PR you wrote, Confirm moves the card to Done and
 touches nothing on GitHub. A Not my conversation card offers the same question as **Move**. It
-lists My move, Their move, Not my conversation and Later…, leaving out the group
-the card is in, and Later… opens the Defer dialog. On a PR you wrote it lists
+lists My move, Their move and Not my conversation, leaving out the group the
+card is in; Defer is its own button. On a PR you wrote it lists
 Needs a fix, which starts a fresh agent run, Needs a reply from me, which puts
-it in Needs a look, Their move and Later…. Placing a card by hand posts nothing,
+it in Needs a look, and Their move. Placing a card by hand posts nothing,
 and the next new comment is read again. Hovering a heading, a column head, or the state word on a card or in
 the panel gives its one-line definition, the same as the table below. Inside a group the thread replied to most
 recently comes first, except in Ready for you: there a conversation you replied

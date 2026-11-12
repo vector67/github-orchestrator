@@ -88,7 +88,7 @@ function droppedOutcomes(proposed: boolean): Outcome[] {
 function placing(outcomes: Outcome[]): Asking {
   return {
     question: 'Where does this thread stand instead?',
-    note: 'Nothing is posted to GitHub. Later… asks when it should come back.',
+    note: 'Nothing is posted to GitHub.',
     reply: false,
     outcomes,
   };
@@ -609,14 +609,12 @@ const ENTRIES = {
       { to: 'queued', label: 'Needs a fix' },
       { to: 'ready', label: 'Needs a reply from me' },
       { to: 'waiting', label: 'Their move' },
-      { to: LATER, label: 'Later…' },
     ]),
     reviewer: {
       asks: placing([
         { to: 'ready', label: 'My move' },
         { to: 'waiting', label: 'Their move' },
         { to: 'not-mine', label: 'Not my conversation' },
-        { to: LATER, label: 'Later…' },
       ]),
       inPhase: {
         'not-mine': { weight: 'primary' },
