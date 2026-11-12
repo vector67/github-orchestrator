@@ -100,13 +100,13 @@ export default class PanelHeader extends Component<PanelHeaderSignature> {
       <span class="panel-walk">
         <a
           href={{this.hrefOfStep -1}}
-          class="walk"
+          class="walk linkish"
           data-test-prev
           {{navigates this.boardKeys.previousReady}}
         >← Prev</a>
         <a
           href={{this.hrefOfStep 1}}
-          class="walk"
+          class="walk linkish"
           data-test-next
           {{navigates this.boardKeys.nextReady}}
         >{{this.nextLabel}}</a>

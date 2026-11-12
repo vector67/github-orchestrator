@@ -727,15 +727,16 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
-  test('Open the Board only navigates, so it is secondary, and closing the pull request is destructive', async function (assert) {
+  test('Open the Board only navigates, so it is a link and not a button, and closing the pull request is destructive', async function (assert) {
     onTheHub({ system: { last_run: EARLIER_RUN } });
     board().conversations = [board().threadIn('proposed', { key: 'k1' })];
     await visit('/pr/o/r/7/dashboard');
 
+    assert.strictEqual(find('[data-test-control="board"]')?.tagName, 'A');
     assert
       .dom('[data-test-control="board"]')
-      .hasClass('btn')
-      .doesNotHaveClass('fill');
+      .hasClass('linkish')
+      .doesNotHaveClass('btn');
     assert.dom('[data-test-control="close"]').hasClass('danger');
 
     await click('[data-test-control="close"]');

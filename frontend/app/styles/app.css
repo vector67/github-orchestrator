@@ -61,7 +61,6 @@ body {
 :where(
   .btn,
   .reply-send,
-  .panel-walk .walk,
   .wall-row .row-control,
   .switch-btn,
   button.copy-directory,
@@ -69,10 +68,15 @@ body {
   .box-draft,
   .box-cancel,
   .dialog-actions button,
-  #panel-actions button[data-weight="primary"],
-  #panel-actions button[data-weight="secondary"],
-  #panel-actions button[data-weight="destructive"],
-  .diff-frame[data-expanded] button.expand-diff
+  #panel-actions button,
+  button.expand-diff,
+  button.linkish,
+  .reply-open,
+  .commit-edit,
+  .review-draft-tools button,
+  .fix-meta summary,
+  .launch,
+  .pr-diff .file-load
 ) {
   display: inline-flex;
   gap: 6px;
@@ -90,6 +94,22 @@ body {
   background: transparent;
   border: 1px solid var(--border-strong);
   border-radius: 0;
+}
+
+:where(
+  button.expand-diff,
+  button.linkish,
+  .reply-open,
+  .commit-edit,
+  .review-draft-tools button,
+  .fix-meta summary,
+  .launch,
+  .pr-diff .file-load,
+  .dialog-actions button.ghost,
+  #panel-actions button[data-weight="ghost"]
+) {
+  background: var(--grey-fill);
+  border-color: var(--grey-fill);
 }
 
 :where(
@@ -114,15 +134,7 @@ body {
   border-color: var(--red);
 }
 
-:where(
-  .linkish,
-  .reply-open,
-  .commit-edit,
-  .review-draft-tools :is(a, button),
-  .dialog-actions button.ghost,
-  #panel-actions button[data-weight="ghost"],
-  .diff-frame:not([data-expanded]) button.expand-diff
-) {
+:where(a.linkish, .review-draft-tools a) {
   padding: 0;
   font: inherit;
   font-size: var(--fs-m);
@@ -137,7 +149,7 @@ body {
 :where(
   .btn,
   .reply-send,
-  .panel-walk .walk,
+  button.linkish,
   .dialog-actions button,
   .card-edit,
   .box-draft,
@@ -147,15 +159,6 @@ body {
   color: var(--muted);
   background: transparent;
   border-color: var(--hairline);
-}
-
-:where(
-  .linkish,
-  .dialog-actions button.ghost,
-  #panel-actions button[data-weight="ghost"]
-):disabled {
-  text-decoration: none;
-  border-color: transparent;
 }
 
 :focus-visible {
@@ -1036,7 +1039,9 @@ button.copy-directory {
 }
 
 .fix-meta summary {
-  text-decoration: underline;
+  padding: 1px 8px;
+  font-size: inherit;
+  font-weight: inherit;
   list-style: none;
   cursor: pointer;
 }
@@ -1143,7 +1148,9 @@ button.copy-directory {
 }
 
 #panel-actions button[data-weight="primary"],
-#panel-actions button[data-weight="secondary"] {
+#panel-actions button[data-weight="secondary"],
+#panel-actions button[data-weight="ghost"],
+#panel-actions button[data-weight="destructive"] {
   height: 40px;
   padding: 0 18px;
 }
@@ -2175,6 +2182,11 @@ button.expander:focus-visible {
 
 .glyph + .glyph {
   margin-left: 0.2em;
+}
+
+.question-option .glyph {
+  align-self: center;
+  margin-left: -6px;
 }
 
 .diff-row.file {
@@ -4337,19 +4349,9 @@ kbd {
 
 .launch {
   display: block;
-  margin: 0;
-  padding: 5px 16px;
-  font: inherit;
+  margin: 2px 16px;
   font-size: var(--fs-s);
-  text-align: left;
-  cursor: pointer;
-  color: var(--text);
-  background: none;
-  border: 0;
-}
-
-.launch .does {
-  text-decoration: underline;
+  white-space: normal;
 }
 
 .launch.count input {
@@ -5968,22 +5970,6 @@ button.tree-row[aria-current="true"] {
 .pr-diff .file-held p {
   margin: 6px 0 0;
   font-size: var(--fs-m);
-}
-
-.pr-diff .file-load {
-  padding: 2px 6px;
-  font: inherit;
-  font-size: var(--fs-l);
-  font-weight: var(--fw-strong);
-  color: var(--blue);
-  cursor: pointer;
-  background: none;
-  border: 0;
-  border-radius: 4px;
-}
-
-.pr-diff .file-load:hover {
-  text-decoration: underline;
 }
 
 .file-head button {

@@ -101,7 +101,7 @@ export default class CodeContext extends Component<CodeContextSignature> {
             <LinkTo
               @route="pr.diff"
               @query={{this.diffAt}}
-              class="btn see-in-diff"
+              class="linkish see-in-diff"
               data-test-see-in-diff
             >See in Diff</LinkTo>
           </div>

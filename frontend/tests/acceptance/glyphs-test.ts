@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { findAll, visit } from '@ember/test-helpers';
+import { click, find, findAll, visit } from '@ember/test-helpers';
 import {
   operation,
   proposal,
@@ -108,6 +108,24 @@ module('Acceptance | glyphs', function (hooks) {
     const offered = await footerIn(board(), 'proposed');
 
     assert.strictEqual(offered[0], 'approve✦⧉');
+  });
+
+  test('on a thread, Prev and Next are links and the quiet actions are buttons', async function (assert) {
+    board().conversations = [
+      board().threadIn('proposed', { key: KEY }),
+      board().threadIn('proposed', { key: `${KEY}_2` }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    for (const link of ['[data-test-prev]', '[data-test-next]']) {
+      assert.strictEqual(find(link)?.tagName, 'A', link);
+      assert.dom(link).hasClass('linkish');
+    }
+    assert.strictEqual(find('[data-test-decision="defer"]')?.tagName, 'BUTTON');
+
+    await click('[data-test-decision="defer"]');
+
+    assert.strictEqual(find('[data-test-dialog-cancel]')?.tagName, 'BUTTON');
   });
 
   test('the reviewer’s Reply opens the composer in place, not a dialog', async function (assert) {

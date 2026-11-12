@@ -206,10 +206,19 @@ module('Acceptance | shell', function (hooks) {
     await visit('/pr/o/r/7/conversations');
 
     assert.dom('[data-test-send-review]').hasClass('btn').hasClass('fill');
+  });
+
+  test('New draft goes to the composer, so it is a link and not a button', async function (assert) {
+    await visit('/pr/o/r/7/conversations');
+
+    assert.strictEqual(
+      document.querySelector('[data-test-new-draft]')?.tagName,
+      'A',
+    );
     assert
       .dom('[data-test-new-draft]')
-      .hasClass('btn')
-      .doesNotHaveClass('fill', 'opening the composer is secondary');
+      .hasClass('linkish')
+      .doesNotHaveClass('btn');
   });
 
   test('Send review carries the window icon, for the dialog it opens', async function (assert) {

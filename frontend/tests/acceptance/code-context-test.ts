@@ -48,6 +48,14 @@ module('Acceptance | code context', function (hooks) {
     ]);
   });
 
+  test('See in diff goes somewhere, so it is a link and not a button', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+
+    const link = '[data-test-context] [data-test-see-in-diff]';
+    assert.strictEqual(document.querySelector(link)?.tagName, 'A');
+    assert.dom(link).hasClass('linkish').doesNotHaveClass('btn');
+  });
+
   test('See in diff opens the diff tab at the file and line the comment sits on', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
 

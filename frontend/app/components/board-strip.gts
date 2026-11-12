@@ -57,7 +57,7 @@ export default class BoardStrip extends Component<BoardStripSignature> {
       </span>
       <LinkTo
         @route="conversations.new-draft"
-        class="new-draft btn"
+        class="new-draft linkish"
         data-test-new-draft
       >New draft</LinkTo>
       <button

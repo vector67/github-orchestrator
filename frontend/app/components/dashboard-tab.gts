@@ -396,7 +396,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
               {{#if this.threadsWaiting}}
                 <a
                   href={{this.boardHref}}
-                  class="btn"
+                  class="linkish"
                   data-test-control="board"
                   {{navigates this.toBoard}}
                 >Open the Board <kbd>2</kbd></a>
