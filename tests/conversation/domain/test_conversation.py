@@ -12,6 +12,7 @@ from github_orchestrator.agent_runs.fake import (
     ThreadAsked,
     VerdictAsked,
 )
+from github_orchestrator.agent_runs.fake import Outcome as RunOutcome
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import (
     Classification,
@@ -19,6 +20,8 @@ from github_orchestrator.conversation import (
     Denied,
     ErrorCode,
     OperationKind,
+    OperationState,
+    ReasonCode,
     ReviewState,
 )
 from github_orchestrator.domain import AuthorKind, Side
@@ -387,6 +390,26 @@ def test_handing_the_pr_back_makes_a_thread_handed_to_you_the_reviewers_again(se
     drain(threads)
 
     assert _held(threads).role == "reviewer"
+
+
+def test_handing_the_pr_back_stops_a_fix_run_the_take_over_started_as_stop_does(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+    here.change_detection.take_over(THE_PR)
+    here.agent_runs.script(RunOutcome(finishes=False))
+    on_github(here.github, "PRRT_two", _comment(id=6001), path="src/app.py", line=30)
+    hear(threads)
+    drain(threads)
+    assert [run.is_alive() for run in here.agent_runs.thread_runs] == [True]
+
+    here.change_detection.end_take_over(THE_PR)
+    drain(threads)
+
+    conversation = threads.get("PRRT_two")
+    run = next(one for one in conversation.operations if one.kind == OperationKind.FIRST)
+    assert (conversation.role, run.state, run.reason_code) == (
+        "reviewer", OperationState.REFUSED, ReasonCode.WITHDRAWN)
+    assert [run.is_alive() for run in here.agent_runs.thread_runs] == [False]
 
 
 def test_a_commit_made_without_a_run_is_proposed_on_a_thread_that_never_had_a_fix(settings):

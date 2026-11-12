@@ -351,6 +351,13 @@ def _taken_over(conversation: Conversation) -> Conversation:
     return _my_move(taken) if conversation.state in PLACED_BY_A_VERDICT else taken
 
 
+def _the_pr_handed_back(conversation: Conversation) -> Accepted:
+    handed = replace(conversation, role=ROLE_REVIEWER)
+    if refusal(conversation, Stop(), None) is not None:
+        return Accepted(handed)
+    return _stop(handed)
+
+
 def _read_and_asked(outcome: Accepted, at: str | None) -> Accepted:
     conversation = replace(outcome.conversation, unread=unread_of(outcome.conversation))
     if not verdict_due(conversation, at):
@@ -1467,7 +1474,7 @@ def _dispatch(conversation: Conversation, command: Change,
         case TakenOver():
             return Accepted(_taken_over(conversation))
         case HandedBack():
-            return Accepted(replace(conversation, role=ROLE_REVIEWER))
+            return _the_pr_handed_back(conversation)
         case CommitCheckDue():
             return _commit_check_due(conversation, command, at)
         case CommitChecked():
