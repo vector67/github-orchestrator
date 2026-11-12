@@ -88,11 +88,22 @@ def gh_as(account: str) -> Gh:
     return lambda args: gh_cli(args, env)
 
 
+def _parsed(args: list[str], body: bytes | str) -> Any:
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError:
+        raise GhFailed(f"gh {' '.join(args[:2])} answered with a body that is not JSON: {body[:200]!r}") from None
+
+
+def _gh_json(gh: Gh, args: list[str]) -> Any:
+    return _parsed(args, gh(args))
+
+
 def target(gh: Gh, given: str) -> tuple[str, str, int]:
     found = PR_URL.search(given)
     if found:
         return found.group(1), found.group(2), int(found.group(3))
-    owner, repo = json.loads(gh(["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner | split(\"/\")"]))
+    owner, repo = _gh_json(gh, ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner | split(\"/\")"])
     return owner, repo, int(given.lstrip("#"))
 
 
@@ -101,11 +112,7 @@ def _variables(query: str, owner: str, repo: str, number: int) -> list[str]:
 
 
 def _graphql(gh: Gh, query: str, owner: str, repo: str, number: int) -> dict[str, Any]:
-    body = gh(["api", "graphql", *_variables(query, owner, repo, number)])
-    try:
-        response: dict[str, Any] = json.loads(body)
-    except json.JSONDecodeError:
-        raise GhFailed(f"gh api graphql answered with a body that is not JSON: {body[:200]!r}") from None
+    response: dict[str, Any] = _gh_json(gh, ["api", "graphql", *_variables(query, owner, repo, number)])
     return response
 
 
@@ -113,21 +120,21 @@ def pull_request(gh: Gh, owner: str, repo: str, number: int) -> PullRequest:
     response = _graphql(gh, PULL_REQUEST, owner, repo, number)
     pr = response["data"]["repository"]["pullRequest"]
     for connection in PAGED:
-        pages = json.loads(gh(["api", "graphql", "--paginate", "--slurp", *_variables(_paged_query(connection), owner, repo, number)]))
+        pages = _gh_json(gh, ["api", "graphql", "--paginate", "--slurp", *_variables(_paged_query(connection), owner, repo, number)])
         pr[connection] = {"nodes": [node for page in pages for node in page["data"]["repository"]["pullRequest"][connection]["nodes"]]}
     return pull_request_from(response)
 
 
 def changed_files(gh: Gh, owner: str, repo: str, number: int) -> list[ChangedFile]:
-    lines = gh(["api", "--paginate", f"repos/{owner}/{repo}/pulls/{number}/files", "--jq", ".[] | {filename, previous_filename, status, changes}"])
-    files = [json.loads(line) for line in lines.decode().splitlines() if line.strip()]
+    args = ["api", "--paginate", f"repos/{owner}/{repo}/pulls/{number}/files", "--jq", ".[] | {filename, previous_filename, status, changes}"]
+    files = [_parsed(args, line) for line in gh(args).decode().splitlines() if line.strip()]
     return [ChangedFile(path=found["filename"], previous=found.get("previous_filename"), status=found["status"], changes=found["changes"]) for found in files]
 
 
 def contents(gh: Gh, owner: str, repo: str) -> Contents:
     def at(sha: str, path: str) -> bytes | None:
         try:
-            found = json.loads(gh(["api", f"repos/{owner}/{repo}/contents/{quote(path)}?ref={sha}"]))
+            found = _gh_json(gh, ["api", f"repos/{owner}/{repo}/contents/{quote(path)}?ref={sha}"])
         except GhFailed as failure:
             if "HTTP 404" in str(failure):
                 return None
@@ -135,7 +142,7 @@ def contents(gh: Gh, owner: str, repo: str) -> Contents:
         if not isinstance(found, dict) or found.get("type") != "file":
             raise Unreadable(path)
         if found.get("encoding") != "base64":
-            found = json.loads(gh(["api", f"repos/{owner}/{repo}/git/blobs/{found['sha']}"]))
+            found = _gh_json(gh, ["api", f"repos/{owner}/{repo}/git/blobs/{found['sha']}"])
         return base64.b64decode(found["content"])
 
     return at
