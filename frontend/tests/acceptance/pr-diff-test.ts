@@ -1020,6 +1020,18 @@ module('Acceptance | pr diff', function (hooks) {
         ]);
       });
 
+      test('Ask the agent and Request change carry the star, and nothing else in the box does', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+
+        assert.deepEqual(
+          findAll('[data-test-comment-box] .box-foot [data-runs-agent]').map(
+            (one) => one.textContent.trim(),
+          ),
+          ['Ask the agent', 'Request change'],
+        );
+      });
+
       test('it is not offered on a pull request you are reviewing', async function (assert) {
         board().actAs('reviewer');
         await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
@@ -1804,6 +1816,19 @@ module('Acceptance | pr diff', function (hooks) {
       await discarding;
 
       assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
+    });
+
+    test('a draft’s card marks Ask the agent and its Ask with the star, and nothing else on the card', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-card="d1"] [data-test-card-ask]');
+
+      assert.deepEqual(
+        findAll('[data-test-card="d1"] [data-runs-agent]').map((one) =>
+          one.textContent.trim(),
+        ),
+        ['Ask the agent', 'Ask'],
+      );
+      assert.dom('[data-test-card="d1"] [data-opens-dialog]').doesNotExist();
     });
 
     test('a draft’s card asks the agent a question about the draft in a new terminal session', async function (assert) {

@@ -212,6 +212,12 @@ module('Acceptance | shell', function (hooks) {
       .doesNotHaveClass('fill', 'opening the composer is secondary');
   });
 
+  test('Send review carries the window icon, for the dialog it opens', async function (assert) {
+    await visit('/pr/o/r/7/conversations');
+
+    assert.dom('[data-test-send-review]').hasAttribute('data-opens-dialog');
+  });
+
   test('a face the board cannot serve is said in the bar', async function (assert) {
     const problem =
       'board_font_dir /nowhere cannot be listed, so the board is set in ' +

@@ -9,6 +9,7 @@ import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import type { AssignReviewersRequest } from 'frontend/data/api';
+import Glyphs from 'frontend/components/glyphs';
 import HubBar from 'frontend/components/hub-bar';
 import MigrationWait from 'frontend/components/migration-wait';
 import PendingRing from 'frontend/components/pending-ring';
@@ -16,6 +17,7 @@ import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil } from 'frontend/data/api';
 import { ageOf, type Reading } from 'frontend/data/dashboard';
+import { opensDialog, runsAgent } from 'frontend/data/decisions';
 import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -380,28 +382,43 @@ export default class Wall extends Component<WallSignature> {
                       type="button"
                       class="row-control release"
                       disabled={{this.pending pr}}
+                      data-opens-dialog={{if (opensDialog "release") "true"}}
+                      data-runs-agent={{if (runsAgent "release") "true"}}
                       data-test-release
                       title="let go of the worktree on the wrong branch; the watcher keeps it aside and cuts a fresh one"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "release")}}
-                    >Release</button>{{/if}}
+                    >Release<Glyphs
+                        @opensDialog={{opensDialog "release"}}
+                        @runsAgent={{runsAgent "release"}}
+                      /></button>{{/if}}
                   {{#unless reading.frozen}}<button
                       type="button"
                       class="row-control"
                       disabled={{this.pending pr}}
                       title={{this.titleOf pr "hold"}}
+                      data-opens-dialog={{if (opensDialog "hold") "true"}}
+                      data-runs-agent={{if (runsAgent "hold") "true"}}
                       data-test-wall-control="hold"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "hold")}}
-                    >{{if reading.onHold "Resume" "Hold"}}</button><button
+                    >{{if reading.onHold "Resume" "Hold"}}<Glyphs
+                        @opensDialog={{opensDialog "hold"}}
+                        @runsAgent={{runsAgent "hold"}}
+                      /></button><button
                       type="button"
                       class="row-control"
                       disabled={{this.pending pr}}
                       title={{this.titleOf pr "dismiss"}}
+                      data-opens-dialog={{if (opensDialog "dismiss") "true"}}
+                      data-runs-agent={{if (runsAgent "dismiss") "true"}}
                       data-test-wall-control="dismiss"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "dismiss")}}
-                    >Dismiss</button>{{/unless}}
+                    >Dismiss<Glyphs
+                        @opensDialog={{opensDialog "dismiss"}}
+                        @runsAgent={{runsAgent "dismiss"}}
+                      /></button>{{/unless}}
                 </span>
               </div>
               {{#if (this.isConfirming pr)}}

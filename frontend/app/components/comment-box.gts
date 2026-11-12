@@ -13,10 +13,11 @@ import {
 import { inLatestOf } from 'frontend/data/anchors';
 import didChange from 'frontend/modifiers/did-change';
 import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
+import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import RequestSessionAsk from 'frontend/components/request-session-ask';
 import { tracked } from '@glimmer/tracking';
-import type { Pressing } from 'frontend/data/decisions';
+import { runsAgent, type Pressing } from 'frontend/data/decisions';
 import type BoardService from 'frontend/services/board';
 import type DraftsService from 'frontend/services/drafts';
 import type HereService from 'frontend/services/here';
@@ -216,18 +217,24 @@ export default class CommentBox extends Component<CommentBoxSignature> {
           <button
             type="button"
             class="box-draft"
+            data-runs-agent={{if (runsAgent "ask-the-agent") "true"}}
             data-test-box-ask
             disabled={{this.unaskable}}
             {{on "click" this.ask}}
-          >Ask the agent</button>
+          >Ask the agent<Glyphs
+              @runsAgent={{runsAgent "ask-the-agent"}}
+            /></button>
           {{#if this.requestable}}
             <button
               type="button"
               class="box-draft"
+              data-runs-agent={{if (runsAgent "request-change") "true"}}
               data-test-box-request
               disabled={{this.unrequestable}}
               {{on "click" this.request}}
-            >Request change</button>
+            >Request change<Glyphs
+                @runsAgent={{runsAgent "request-change"}}
+              /></button>
           {{/if}}
           <button
             type="submit"

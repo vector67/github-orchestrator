@@ -743,6 +743,41 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-close-option]').hasClass('danger');
   });
 
+  test('each control marks whether it opens a dialog or starts an agent run', async function (assert) {
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    const marked = findAll('.controls [data-test-control]').map((one) =>
+      [
+        one.getAttribute('data-test-control'),
+        one.hasAttribute('data-runs-agent') ? '✦' : '',
+        one.hasAttribute('data-opens-dialog') ? '⧉' : '',
+      ].join(''),
+    );
+    assert.deepEqual(marked, [
+      'hold',
+      'carry-on✦',
+      'mark-ready⧉',
+      'assign-reviewers⧉',
+      'dismiss⧉',
+      'close',
+    ]);
+  });
+
+  test('Start a review agent carries the star and Take over nothing', async function (assert) {
+    onTheHub({ facts: factsFor('review', { is_author: false }) });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="start-review"]')
+      .hasAttribute('data-runs-agent')
+      .doesNotHaveAttribute('data-opens-dialog');
+    assert
+      .dom('[data-test-control="take-over"]')
+      .doesNotHaveAttribute('data-runs-agent')
+      .doesNotHaveAttribute('data-opens-dialog');
+  });
+
   test('carry on is held back with the reason on hover while Claude works or is disabled, and c says why', async function (assert) {
     onTheHub({ system: { agent: WORKING } });
     await visit('/pr/o/r/7/dashboard');

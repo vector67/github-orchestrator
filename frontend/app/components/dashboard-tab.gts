@@ -10,6 +10,7 @@ import DismissConfirm from 'frontend/components/dismiss-confirm';
 import type { DismissUntil } from 'frontend/data/api';
 import GitPalette from 'frontend/components/git-palette';
 import GitPaletteState from 'frontend/components/git-palette-state';
+import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import RebaseButton from 'frontend/components/rebase-button';
 import {
@@ -19,7 +20,7 @@ import {
   threadsWaitingOf,
   type Reading,
 } from 'frontend/data/dashboard';
-import type { Pressing } from 'frontend/data/decisions';
+import { opensDialog, runsAgent, type Pressing } from 'frontend/data/decisions';
 import { notesOf } from 'frontend/data/markdown';
 import type { Numbered } from 'frontend/data/wall';
 import drawn from 'frontend/modifiers/drawn';
@@ -381,10 +382,15 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 type="button"
                 class="btn fill"
                 disabled={{this.releaseAsked}}
+                data-opens-dialog={{if (opensDialog "release") "true"}}
+                data-runs-agent={{if (runsAgent "release") "true"}}
                 data-test-control="release"
                 {{on "click" (fn this.press "release")}}
               >{{#if (this.ringed "release")}}<PendingRing
-                  />{{/if}}{{this.labelOf "release" "Release now"}}
+                  />{{/if}}{{this.labelOf "release" "Release now"}}<Glyphs
+                  @opensDialog={{opensDialog "release"}}
+                  @runsAgent={{runsAgent "release"}}
+                />
                 <kbd>{{capOfControl "release"}}</kbd></button>
             {{else}}
               {{#if this.threadsWaiting}}
@@ -401,9 +407,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn fill"
                   disabled={{this.pending}}
                   title={{this.titleOf "hold"}}
+                  data-opens-dialog={{if (opensDialog "hold") "true"}}
+                  data-runs-agent={{if (runsAgent "hold") "true"}}
                   data-test-control="resume"
                   {{on "click" (fn this.press "hold")}}
-                >{{this.labelOf "hold" "Resume the agent"}}
+                >{{this.labelOf "hold" "Resume the agent"}}<Glyphs
+                    @opensDialog={{opensDialog "hold"}}
+                    @runsAgent={{runsAgent "hold"}}
+                  />
                   <kbd>{{capOfControl "hold"}}</kbd></button>
               {{else}}
                 <button
@@ -411,9 +422,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.pending}}
                   title={{this.titleOf "hold"}}
+                  data-opens-dialog={{if (opensDialog "hold") "true"}}
+                  data-runs-agent={{if (runsAgent "hold") "true"}}
                   data-test-control="hold"
                   {{on "click" (fn this.press "hold")}}
-                >{{this.labelOf "hold" "Put on hold"}}
+                >{{this.labelOf "hold" "Put on hold"}}<Glyphs
+                    @opensDialog={{opensDialog "hold"}}
+                    @runsAgent={{runsAgent "hold"}}
+                  />
                   <kbd>{{capOfControl "hold"}}</kbd></button>
               {{/if}}
               <button
@@ -421,9 +437,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 class="btn"
                 disabled={{this.heldBack "carry-on"}}
                 title={{this.titleOf "carry-on"}}
+                data-opens-dialog={{if (opensDialog "carry-on") "true"}}
+                data-runs-agent={{if (runsAgent "carry-on") "true"}}
                 data-test-control="carry-on"
                 {{on "click" (fn this.press "carry-on")}}
-              >{{this.labelOf "carry-on" "Carry on"}}
+              >{{this.labelOf "carry-on" "Carry on"}}<Glyphs
+                  @opensDialog={{opensDialog "carry-on"}}
+                  @runsAgent={{runsAgent "carry-on"}}
+                />
                 <kbd>{{capOfControl "carry-on"}}</kbd></button>
               {{#if (this.offered "start-review")}}
                 <button
@@ -431,9 +452,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.heldBack "start-review"}}
                   title={{this.titleOf "start-review"}}
+                  data-opens-dialog={{if (opensDialog "start-review") "true"}}
+                  data-runs-agent={{if (runsAgent "start-review") "true"}}
                   data-test-control="start-review"
                   {{on "click" (fn this.press "start-review")}}
-                >{{this.labelOf "start-review" "Start a review agent"}}
+                >{{this.labelOf "start-review" "Start a review agent"}}<Glyphs
+                    @opensDialog={{opensDialog "start-review"}}
+                    @runsAgent={{runsAgent "start-review"}}
+                  />
                   <kbd>{{capOfControl "start-review"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "mark-ready")}}
@@ -442,10 +468,18 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.heldBack "mark-ready"}}
                   title={{this.titleOf "mark-ready"}}
+                  data-opens-dialog={{if (opensDialog "mark-ready") "true"}}
+                  data-runs-agent={{if (runsAgent "mark-ready") "true"}}
                   data-test-control="mark-ready"
                   {{on "click" (fn this.press "mark-ready")}}
                 >{{#if (this.ringed "mark-ready")}}<PendingRing
-                    />{{/if}}{{this.labelOf "mark-ready" "Ready for review"}}
+                    />{{/if}}{{this.labelOf
+                    "mark-ready"
+                    "Ready for review"
+                  }}<Glyphs
+                    @opensDialog={{opensDialog "mark-ready"}}
+                    @runsAgent={{runsAgent "mark-ready"}}
+                  />
                   <kbd>{{capOfControl "mark-ready"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "assign-reviewers")}}
@@ -454,9 +488,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.heldBack "assign-reviewers"}}
                   title={{this.titleOf "assign-reviewers"}}
+                  data-opens-dialog={{if
+                    (opensDialog "assign-reviewers")
+                    "true"
+                  }}
+                  data-runs-agent={{if (runsAgent "assign-reviewers") "true"}}
                   data-test-control="assign-reviewers"
                   {{on "click" (fn this.press "assign-reviewers")}}
-                >{{this.labelOf "assign-reviewers" "Assign reviewers"}}
+                >{{this.labelOf "assign-reviewers" "Assign reviewers"}}<Glyphs
+                    @opensDialog={{opensDialog "assign-reviewers"}}
+                    @runsAgent={{runsAgent "assign-reviewers"}}
+                  />
                   <kbd>{{capOfControl "assign-reviewers"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "take-over")}}
@@ -465,9 +507,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.heldBack "take-over"}}
                   title={{this.titleOf "take-over"}}
+                  data-opens-dialog={{if (opensDialog "take-over") "true"}}
+                  data-runs-agent={{if (runsAgent "take-over") "true"}}
                   data-test-control="take-over"
                   {{on "click" (fn this.press "take-over")}}
-                >{{this.labelOf "take-over" "Take over"}}
+                >{{this.labelOf "take-over" "Take over"}}<Glyphs
+                    @opensDialog={{opensDialog "take-over"}}
+                    @runsAgent={{runsAgent "take-over"}}
+                  />
                   <kbd>{{capOfControl "take-over"}}</kbd></button>
               {{/if}}
               {{#if (this.offered "check-for-fixes")}}
@@ -476,9 +523,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn"
                   disabled={{this.heldBack "check-for-fixes"}}
                   title={{this.titleOf "check-for-fixes"}}
+                  data-opens-dialog={{if
+                    (opensDialog "check-for-fixes")
+                    "true"
+                  }}
+                  data-runs-agent={{if (runsAgent "check-for-fixes") "true"}}
                   data-test-control="check-for-fixes"
                   {{on "click" (fn this.press "check-for-fixes")}}
-                >{{this.labelOf "check-for-fixes" "Check for fixes"}}
+                >{{this.labelOf "check-for-fixes" "Check for fixes"}}<Glyphs
+                    @opensDialog={{opensDialog "check-for-fixes"}}
+                    @runsAgent={{runsAgent "check-for-fixes"}}
+                  />
                   <kbd>{{capOfControl "check-for-fixes"}}</kbd></button>
               {{/if}}
               <button
@@ -486,12 +541,17 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 class="btn"
                 disabled={{this.heldBack "dismiss"}}
                 title={{this.titleOf "dismiss"}}
+                data-opens-dialog={{if (opensDialog "dismiss") "true"}}
+                data-runs-agent={{if (runsAgent "dismiss") "true"}}
                 data-test-control="dismiss"
                 {{on "click" (fn this.press "dismiss")}}
               >{{this.labelOf
                   "dismiss"
                   (concat "Dismiss #" this.reading.number)
-                }}
+                }}<Glyphs
+                  @opensDialog={{opensDialog "dismiss"}}
+                  @runsAgent={{runsAgent "dismiss"}}
+                />
                 <kbd>{{capOfControl "dismiss"}}</kbd></button>
               {{#if (this.offered "close")}}
                 <button
@@ -499,13 +559,18 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   class="btn danger"
                   disabled={{this.heldBack "close"}}
                   title={{this.titleOf "close"}}
+                  data-opens-dialog={{if (opensDialog "close") "true"}}
+                  data-runs-agent={{if (runsAgent "close") "true"}}
                   data-test-control="close"
                   {{on "click" (fn this.press "close")}}
                 >{{#if (this.ringed "close")}}<PendingRing
                     />{{/if}}{{this.labelOf
                     "close"
                     (concat "Close PR #" this.reading.number)
-                  }}
+                  }}<Glyphs
+                    @opensDialog={{opensDialog "close"}}
+                    @runsAgent={{runsAgent "close"}}
+                  />
                   <kbd>{{capOfControl "close"}}</kbd></button>
               {{/if}}
             {{/if}}

@@ -10,12 +10,14 @@ import { waitForPromise } from '@ember/test-waiters';
 import { modifier } from 'ember-modifier';
 import CommentBody from 'frontend/components/comment-body';
 import CommentReactions from 'frontend/components/comment-reactions';
+import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import Waiting from 'frontend/components/waiting';
 import { collapse } from 'frontend/motion';
 import type { Inline } from 'frontend/data/inline';
 import { questionAbout } from 'frontend/data/selection';
 import { STANDING_LABELS } from 'frontend/data/thread';
+import { runsAgent } from 'frontend/data/decisions';
 import type BoardService from 'frontend/services/board';
 import type TerminalService from 'frontend/services/terminal';
 
@@ -147,9 +149,12 @@ export default class InlineCard extends Component<InlineCardSignature> {
             <button
               type="button"
               class="card-edit"
+              data-runs-agent={{if (runsAgent "ask-the-agent") "true"}}
               data-test-card-ask
               {{on "click" this.startAsking}}
-            >Ask the agent</button>
+            >Ask the agent<Glyphs
+                @runsAgent={{runsAgent "ask-the-agent"}}
+              /></button>
           {{/if}}
           {{#if this.draftingLocally}}
             <button
@@ -225,9 +230,10 @@ export default class InlineCard extends Component<InlineCardSignature> {
                 <button
                   type="submit"
                   class="reply-send"
+                  data-runs-agent={{if (runsAgent "ask-the-agent") "true"}}
                   data-test-ask-send
                   disabled={{this.unaskable}}
-                >Ask</button>
+                >Ask<Glyphs @runsAgent={{runsAgent "ask-the-agent"}} /></button>
               </div>
             </form>
           {{/if}}

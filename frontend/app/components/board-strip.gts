@@ -2,7 +2,9 @@ import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
+import Glyphs from 'frontend/components/glyphs';
 import ReviewDialog from 'frontend/components/review-dialog';
+import { opensDialog, runsAgent } from 'frontend/data/decisions';
 import type RouterService from '@ember/routing/router-service';
 import type ReviewService from 'frontend/services/review';
 import type { Header } from 'frontend/services/threads';
@@ -61,10 +63,15 @@ export default class BoardStrip extends Component<BoardStripSignature> {
       <button
         type="button"
         class="send-review btn fill"
+        data-opens-dialog={{if (opensDialog "send-review") "true"}}
+        data-runs-agent={{if (runsAgent "send-review") "true"}}
         data-test-send-review
         title="send one review carrying every draft you have added (S)"
         {{on "click" this.review.show}}
-      >{{this.sendLabel}}</button>
+      >{{this.sendLabel}}<Glyphs
+          @opensDialog={{opensDialog "send-review"}}
+          @runsAgent={{runsAgent "send-review"}}
+        /></button>
     </div>
     {{#if this.review.open}}
       <ReviewDialog />

@@ -1770,6 +1770,18 @@ module('Acceptance | wall', function (hooks) {
     }
   });
 
+  test('a row’s Dismiss carries the window icon and its Hold does not', async function (assert) {
+    onTheHub(heldPr());
+    await visit('/');
+
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="dismiss"]')
+      .hasAttribute('data-opens-dialog');
+    assert
+      .dom('[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]')
+      .doesNotHaveAttribute('data-opens-dialog');
+  });
+
   test('each row has a hold and a dismiss button that do what h and d do', async function (assert) {
     onTheHub(
       heldPr(),
