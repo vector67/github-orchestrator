@@ -212,6 +212,17 @@ module('Acceptance | reactions', function (hooks) {
     );
   });
 
+  test('resizing the window closes the picker and sends nothing', async function (assert) {
+    seed([]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-react]');
+
+    await triggerEvent(window, 'resize');
+
+    assert.dom('[data-test-reaction-picker]').doesNotExist();
+    assert.deepEqual(board().reacted, []);
+  });
+
   test('the smiley on a diff card opens its picker over the page, under it, and Escape closes it', async function (assert) {
     board().pullRequestDiff = prDiff(
       changed('src/widgets/changes.py', [

@@ -77,6 +77,9 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
       if (now.top !== smiley.top || now.left !== smiley.left)
         this.picking = false;
     };
+    const resized = () => {
+      this.picking = false;
+    };
     const outside = (pressed: Event) => {
       const target = pressed.target as Node;
       if (!element.contains(target) && !trigger.contains(target))
@@ -84,10 +87,12 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
     };
     document.addEventListener('scroll', moved, true);
     document.addEventListener('mousedown', outside, true);
+    window.addEventListener('resize', resized);
     this.keys.push('dialog', this.keymap);
     return () => {
       document.removeEventListener('scroll', moved, true);
       document.removeEventListener('mousedown', outside, true);
+      window.removeEventListener('resize', resized);
       this.keys.drop(this.keymap);
     };
   });
