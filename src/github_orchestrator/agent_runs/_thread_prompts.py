@@ -481,7 +481,19 @@ def _split_out(commands: ReportCommands, fix: ThreadFix, heading: str) -> list[s
     ]
 
 
-def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int) -> str:
+UNATTENDED = ("as part of an autonomous feedback pass. Do the work and report the outcome "
+              "yourself by running exactly one of the report commands below. Nobody is "
+              "watching this run, so a question asked in your last message goes unread: "
+              "when you need the author, ask through the report command for it.")
+
+WATCHED = ("in a terminal session the author is watching and may type into. Do the work, "
+           "and answer the author here when they write to you. The board takes the outcome "
+           "only from a report, so whatever the author says in this session, finish by "
+           "running exactly one of the report commands below yourself.")
+
+
+def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int, *,
+                  watched: bool = False) -> str:
     pr = fix.pr
     worktree = fix.worktree
     skip_cmd = commands.skip(pr, fix.key, reason='"<why>"')
@@ -503,11 +515,8 @@ def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int) -> str
     path, line_text = _anchor(fix)
     parallelism_note = test_parallelism_note(workers)
 
-    return f"""You are addressing one PR review thread on {pr} as part of an \
-autonomous feedback pass. Do the work and report the outcome yourself by running \
-exactly one of the report commands below. Nobody is watching this run, so a \
-question asked in your last message goes unread: when you need the author, \
-ask through the report command for it.
+    return f"""You are addressing one PR review thread on {pr} \
+{WATCHED if watched else UNATTENDED}
 
 Work ONLY in `{worktree}` — an isolated git worktree created for this one \
 thread. Every file you read or change, every command you run, and every \

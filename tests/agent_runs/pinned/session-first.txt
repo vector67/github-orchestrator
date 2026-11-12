@@ -1,4 +1,4 @@
-claude 'You are addressing one PR review thread on acme/widgets#7 as part of an autonomous feedback pass. Do the work and report the outcome yourself by running exactly one of the report commands below. Nobody is watching this run, so a question asked in your last message goes unread: when you need the author, ask through the report command for it.
+claude 'You are addressing one PR review thread on acme/widgets#7 in a terminal session the author is watching and may type into. Do the work, and answer the author here when they write to you. The board takes the outcome only from a report, so whatever the author says in this session, finish by running exactly one of the report commands below yourself.
 
 Work ONLY in `/tmp/wt` — an isolated git worktree created for this one thread. Every file you read or change, every command you run, and every commit you make happen there, never anywhere else.
 

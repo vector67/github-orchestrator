@@ -372,11 +372,29 @@ def test_a_session_nobody_steered(world, runs, at_wt):
     _pinned("session", _session(world, runs, _thread(at_wt), None), at_wt)
 
 
-def test_a_first_fix_run_in_a_session_is_briefed_as_the_run_would_be(world, runs, at_wt):
+def _first_in_session(world, runs, at_wt):
     runs.fix_in_session(_thread(at_wt))
     [session] = world.pr_processes.sessions[ACME]
+    return shlex.join(session.argv)
 
-    _pinned("session-first", shlex.join(session.argv), at_wt)
+
+def test_a_first_fix_run_in_a_session_is_briefed_as_the_run_would_be(world, runs, at_wt):
+    _pinned("session-first", _first_in_session(world, runs, at_wt), at_wt)
+
+
+def test_a_first_fix_run_in_a_session_says_the_author_is_watching_and_still_reports(
+        world, runs, at_wt):
+    brief = _first_in_session(world, runs, at_wt)
+
+    assert "nobody is watching" not in brief.lower()
+    assert "autonomous" not in brief.lower()
+    assert "the author is watching" in brief
+    assert "thread ready" in brief
+
+
+def test_the_first_fix_run_in_the_background_still_says_nobody_is_watching(runs, claude,
+                                                                          at_wt):
+    assert "Nobody is watching this run" in _prompted(runs, claude, runs.fix(_thread(at_wt)))
 
 
 def test_the_fix_of_a_thread_with_jira_tickets(runs, claude, at_wt):

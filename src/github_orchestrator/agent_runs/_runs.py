@@ -470,7 +470,8 @@ class AgentRuns:
 
     def fix_in_session(self, fix: ThreadFix) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
-                               thread_prompt(self._commands, fix, self._workers))
+                               thread_prompt(self._commands, fix, self._workers,
+                                             watched=True))
 
     def answer_in_session(self, fix: ThreadFix) -> str | None:
         try:
