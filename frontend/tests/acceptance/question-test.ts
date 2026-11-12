@@ -135,8 +135,8 @@ module('Acceptance | agent question', function (hooks) {
 
     async function chosen(choice: string) {
       await click('[data-test-settings-open]');
-      await click('[data-test-answer-session-open]');
-      await click(`[data-test-answer-session-choice="${choice}"]`);
+      await click('[data-test-agent-session-open]');
+      await click(`[data-test-agent-session-choice="${choice}"]`);
       await click('[aria-label="close the settings"]');
     }
 
@@ -229,15 +229,15 @@ module('Acceptance | agent question', function (hooks) {
       assert.dom('[data-test-request-session]').doesNotExist();
       assert.strictEqual(answered().length, 2);
       await click('[data-test-settings-open]');
-      await click('[data-test-answer-session-open]');
-      assert.dom('[data-test-answer-session-choice="invisible"]').isChecked();
+      await click('[data-test-agent-session-open]');
+      assert.dom('[data-test-agent-session-choice="invisible"]').isChecked();
       assert.strictEqual(
         (answered() as { text: string }[])[1]?.text,
         asking.question!.options[0],
       );
     });
 
-    test('the settings menu holds Answer sessions apart from Request change sessions', async function (assert) {
+    test('the Agent sessions setting decides an answer without asking', async function (assert) {
       seed(board());
       await visit(`/pr/o/r/7/conversations/${KEY}`);
       await chosen('visible');
@@ -249,9 +249,42 @@ module('Acceptance | agent question', function (hooks) {
         (answered() as { visible: boolean }[]).map((one) => one.visible),
         [true],
       );
+    });
+
+    async function settled(): Promise<string | undefined> {
       await click('[data-test-settings-open]');
-      await click('[data-test-request-session-open]');
-      assert.dom('[data-test-request-session-choice="ask"]').isChecked();
+      await click('[data-test-agent-session-open]');
+      const checked = find('[data-test-agent-session-choice]:checked');
+      return checked instanceof HTMLInputElement ? checked.value : undefined;
+    }
+
+    test('a choice kept only for answers carries over to Agent sessions', async function (assert) {
+      localStorage.setItem('answer-session', 'visible');
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.strictEqual(await settled(), 'visible');
+      assert.strictEqual(localStorage.getItem('agent-session'), 'visible');
+      assert.strictEqual(localStorage.getItem('answer-session'), null);
+      assert.strictEqual(localStorage.getItem('request-change-session'), null);
+    });
+
+    test('a session choice beats Ask me each time when the old settings differ', async function (assert) {
+      localStorage.setItem('request-change-session', 'ask');
+      localStorage.setItem('answer-session', 'invisible');
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.strictEqual(await settled(), 'invisible');
+    });
+
+    test('when both old settings chose a session, Request change sessions wins', async function (assert) {
+      localStorage.setItem('request-change-session', 'invisible');
+      localStorage.setItem('answer-session', 'visible');
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.strictEqual(await settled(), 'invisible');
     });
 
     test('an answer you gave shows in the thread as yours, on the board only', async function (assert) {
