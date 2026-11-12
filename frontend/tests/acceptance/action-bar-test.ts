@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, visit } from '@ember/test-helpers';
+import { click, triggerEvent, visit } from '@ember/test-helpers';
 import {
   added,
   diffOf,
@@ -69,28 +69,22 @@ module('Acceptance | action bar', function (hooks) {
       .hasAttribute('title', /^lands this fix on the PR branch/);
   });
 
-  test('a bar with nothing to decide leads with the reply', async function (assert) {
+  test('a bar with nothing to decide leaves Reply to <name> by the comment it answers', async function (assert) {
     board().conversations = [thread({ key: 'k1', github_removed: true })];
 
     await visit('/pr/o/r/7/conversations/k1');
 
-    assert.deepEqual(bar(), ['Reply to Anna', 'Resolve on GitHub']);
-    assert.dom('[data-test-reply-to]').hasAttribute('data-weight', 'secondary');
+    assert.deepEqual(bar(), ['Resolve on GitHub']);
+    assert.dom('#panel-talk [data-test-reply-open]').hasText('Reply to Anna');
   });
 
-  test('the reply opens the composer and puts the cursor in it', async function (assert) {
+  test('c opens the composer by the comment and puts the cursor in it', async function (assert) {
     board().conversations = [thread({ key: 'k1', github_removed: true })];
     await visit('/pr/o/r/7/conversations/k1');
 
-    await click('[data-test-reply-to]');
+    await triggerEvent(document, 'keydown', { key: 'c' });
 
     assert.dom('[data-test-reply]').isFocused();
-  });
-
-  test('a bar with something to decide offers no reply of its own', async function (assert) {
-    await visit('/pr/o/r/7/conversations/k1');
-
-    assert.dom('[data-test-reply-to]').doesNotExist();
   });
 
   test('send back for rework opens the rework dialog, not the decide one', async function (assert) {

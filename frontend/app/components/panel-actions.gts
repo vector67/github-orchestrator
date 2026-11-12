@@ -11,12 +11,12 @@ import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
-  keyOf,
   LATER,
   laterAsks,
   REJECTED,
   redAsksOf,
   rejectAsks,
+  REPLY_KEY,
   type AreYouSure as AreYouSureAsking,
   type DialogSpec,
   type Decision,
@@ -25,7 +25,6 @@ import {
 } from 'frontend/data/decisions';
 import type {
   AcceptView,
-  Affordance,
   DraftView,
   Fold,
   Footer,
@@ -48,7 +47,6 @@ export interface PanelActionsSignature {
     conversationId: string;
     actions: Offer[];
     footer: Footer;
-    replyAction?: Affordance | null;
     replies?: boolean;
     canDelete: boolean;
     agentWords?: string | null;
@@ -64,8 +62,6 @@ const SAVE_FIRST =
   'save your edits first: this sends the draft as it was saved';
 
 const COMPOSER = 'reply-box';
-
-const REPLY_KEY = keyOf('reply');
 
 const CLOSES_A_MENTION: Decision[] = [
   'resolve-here',
@@ -163,8 +159,6 @@ export default class PanelActions extends Component<PanelActionsSignature> {
         null,
         this.args.rework?.unsent ?? '',
       );
-    } else if (offered.asks === 'composer') {
-      this.compose();
     } else if (offered.asks === null) {
       this.warned = this.warningFor(offered.decision, {});
       if (!this.warned) void this.post(offered.decision);
@@ -273,16 +267,6 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     >
       {{#if @footer.refused}}
         <p class="refusal" data-test-refusal>{{@footer.refused}}</p>
-      {{/if}}
-      {{#if @replyAction}}
-        <button
-          type="button"
-          class="compose"
-          data-weight={{@replyAction.weight}}
-          data-test-reply-to
-          {{on "click" this.compose}}
-        >{{@replyAction.label}}
-          {{#if @replies}}<kbd>{{REPLY_KEY}}</kbd>{{/if}}</button>
       {{/if}}
       {{#each @actions key="decision" as |offered|}}
         <button

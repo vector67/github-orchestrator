@@ -1,4 +1,9 @@
-import { capOf, keyOf, type Decision } from 'frontend/data/decisions';
+import {
+  capOf,
+  keyOf,
+  REPLY_KEY,
+  type Decision,
+} from 'frontend/data/decisions';
 import { capOfControl } from 'frontend/services/pr-controls';
 
 export interface Shortcut {
@@ -47,14 +52,14 @@ export const SHORTCUTS: ShortcutGroup[] = [
       { keys: ['Esc'], does: 'Close the panel' },
       decides('approve', 'Accept'),
       decides('rework', 'Send back for rework'),
-      decides('reply', 'Reply'),
+      { keys: [REPLY_KEY], does: 'Reply to the comment' },
       decides('resolve', 'Resolve on GitHub'),
       decides('resolve-here', 'Resolve on the board'),
       decides('reject', 'Reject'),
       decides('defer', 'Defer'),
-      decides('unpark', 'Bring back to Ready'),
+      decides('unpark', 'Bring back, Stop waiting, or Unresolve on GitHub'),
       decides('confirm', 'Confirm an assumed done card'),
-      decides('place', 'Not confirm, or Move…'),
+      decides('place', 'Move'),
       decides('not-fixed', 'Not fixed'),
       decides('fix', 'Write a fix'),
       decides('open-shell', "Open a shell in the comment's own worktree"),
@@ -67,7 +72,7 @@ export const SHORTCUTS: ShortcutGroup[] = [
       decides('enrol', 'Add to review'),
       decides('post-now', 'Post now'),
       decides('discard', 'Discard'),
-      decides('withdraw-from-review', 'Withdraw from review'),
+      decides('withdraw-from-review', 'Leave out of review'),
       { keys: ['z'], does: 'Full screen the fix, or close it' },
     ],
   },

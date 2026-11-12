@@ -210,14 +210,14 @@ module('Acceptance | keyboard', function (hooks) {
     assert.deepEqual(keys.map((key, at) => `${key} ${does[at]}`).slice(4), [
       'a Accept',
       'w Send back for rework',
-      'c Reply',
+      'c Reply to the comment',
       's Resolve on GitHub',
       'v Resolve on the board',
       '⇧R Reject',
       'f Defer',
-      'u Bring back to Ready',
+      'u Bring back, Stop waiting, or Unresolve on GitHub',
       'g Confirm an assumed done card',
-      'm Not confirm, or Move…',
+      'm Move',
       'b Not fixed',
       'i Write a fix',
       "q Open a shell in the comment's own worktree",
@@ -227,7 +227,7 @@ module('Acceptance | keyboard', function (hooks) {
       'e Add to review',
       '⇧G Post now',
       'd Discard',
-      'l Withdraw from review',
+      'l Leave out of review',
       'z Full screen the fix, or close it',
     ]);
   });

@@ -5,6 +5,7 @@ import {
   fillIn,
   findAll,
   settled,
+  triggerEvent,
   triggerKeyEvent,
   visit,
   waitFor,
@@ -558,10 +559,10 @@ module('Acceptance | reply', function (hooks) {
   test('asking again for the composer already open keeps the words', async function (assert) {
     board().actAs('reviewer');
     await visit('/pr/o/r/7/conversations/k1');
-    await click('[data-test-decision="reply"]');
+    await click(OPEN);
     await fillIn(BOX, 'half a thought');
 
-    await click('[data-test-decision="reply"]');
+    await triggerEvent(document, 'keydown', { key: 'c' });
 
     assert.dom(BOX).hasValue('half a thought');
   });

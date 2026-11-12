@@ -130,7 +130,7 @@ module('Acceptance | verbs | the author board', function (hooks) {
     await open(board(), 'declined');
 
     assert.deepEqual(offered(), [
-      'Disagree — try a fix anyway',
+      'Send back for rework',
       'Agreed, resolve the comment',
       'Defer',
     ]);
@@ -142,15 +142,12 @@ module('Acceptance | verbs | the author board', function (hooks) {
       .hasAttribute('data-weight', 'secondary');
   });
 
-  test('a parked thread is brought back', async function (assert) {
+  test('a waiting thread stops waiting and a deferred one is brought back', async function (assert) {
     await each(
       board(),
       [
-        [
-          'waiting',
-          ['Bring back to Ready', 'Resolve', 'Resolve on GitHub', 'Defer'],
-        ],
-        ['deferred', ['Undefer', 'Resolve on GitHub']],
+        ['waiting', ['Stop waiting', 'Resolve', 'Resolve on GitHub', 'Defer']],
+        ['deferred', ['Bring back', 'Resolve on GitHub']],
       ] as const,
       ([phase]) => phase,
       ([phase, labels]) => assert.deepEqual(offered(), labels, phase),
@@ -382,16 +379,10 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     board().actAs('reviewer');
   });
 
-  test('an answered thread is resolved, argued with, answered or put off', async function (assert) {
+  test('an answered thread is resolved, argued with, moved or put off', async function (assert) {
     await open(board(), 'answered');
 
-    assert.deepEqual(offered(), [
-      'Resolve',
-      'Not fixed',
-      'Move…',
-      'Reply',
-      'Defer until …',
-    ]);
+    assert.deepEqual(offered(), ['Resolve', 'Not fixed', 'Move', 'Defer']);
     assert
       .dom('[data-test-decision="resolve"]')
       .hasAttribute('data-weight', 'primary');
@@ -425,12 +416,12 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     );
   });
 
-  test('a parked thread is resolved, put off or answered, and a deferred one brought back', async function (assert) {
+  test('a parked thread is resolved, put off or moved, and a deferred one brought back', async function (assert) {
     await each(
       board(),
       [
-        ['waiting', ['Resolve', 'Defer until …', 'Move…', 'Reply']],
-        ['deferred', ['Undefer', 'Resolve']],
+        ['waiting', ['Resolve', 'Defer', 'Move']],
+        ['deferred', ['Bring back', 'Resolve']],
       ] as const,
       ([phase]) => phase,
       ([phase, labels]) => {
@@ -442,10 +433,33 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
     );
   });
 
-  test('a resolved thread is reopened', async function (assert) {
-    await open(board(), 'resolved');
+  test('a resolved thread GitHub does not show resolved is brought back', async function (assert) {
+    board().conversations = [
+      board().threadIn('resolved', { key: 'k1', github_resolved: false }),
+    ];
 
-    assert.deepEqual(offered(), ['Reopen']);
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.deepEqual(offered(), ['Bring back']);
+  });
+
+  test('a review thread GitHub shows resolved is unresolved on GitHub', async function (assert) {
+    board().conversations = [
+      board().threadIn('resolved', { key: 'k1', github_resolved: true }),
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.deepEqual(offered(), ['Unresolve on GitHub']);
+    assert
+      .dom('[data-test-decision="unpark"]')
+      .hasAttribute('title', /unresolves this thread on GitHub/);
+  });
+
+  test('an answered thread offers Reply to its author by the comment it answers', async function (assert) {
+    await open(board(), 'answered');
+
+    assert.dom('#panel-talk [data-test-reply-open]').hasText('Reply to Anna');
   });
 });
 

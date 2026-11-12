@@ -116,7 +116,7 @@ export interface Gathered {
 
 type Weight = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
-type Asks = DialogSpec | 'rework' | 'composer' | null;
+type Asks = DialogSpec | 'rework' | null;
 
 interface Request {
   verb: string;
@@ -134,6 +134,7 @@ interface Carrying {
 
 interface Shade {
   label?: string;
+  title?: string;
   weight?: Weight;
   runsAgent?: boolean;
 }
@@ -299,7 +300,6 @@ const ENTRIES = {
       'lines you pointed at, starting from the commit it already wrote — ' +
       'nothing reaches the PR branch',
     asks: 'rework',
-    inPhase: { declined: { label: 'Disagree — try a fix anyway' } },
     request: ({ brief }) => ({ verb: 'rework', body: { ...brief } }),
     doing: 'sending it back',
     square: 'rework',
@@ -607,8 +607,8 @@ const ENTRIES = {
         'choose is met — a reply, the next push, this PR’s CI, another PR ' +
         'closing, or you',
       inPhase: {
-        answered: { label: 'Defer until …', weight: 'secondary' },
-        waiting: { label: 'Defer until …', weight: 'secondary' },
+        answered: { weight: 'secondary' },
+        waiting: { weight: 'secondary' },
       },
     },
     request: ({ modifier }) => ({
@@ -653,7 +653,7 @@ const ENTRIES = {
   },
   place: {
     key: 'm',
-    label: 'Not confirm',
+    label: 'Move',
     weight: 'secondary',
     title:
       'asks where this card stands instead, apart from Done — nothing is ' +
@@ -672,9 +672,7 @@ const ENTRIES = {
         { to: LATER, label: 'Later…' },
       ]),
       inPhase: {
-        'not-mine': { label: 'Move…', weight: 'primary' },
-        answered: { label: 'Move…' },
-        waiting: { label: 'Move…' },
+        'not-mine': { weight: 'primary' },
       },
     },
     request: ({ modifier }) => ({ verb: 'place', body: { to: modifier } }),
@@ -683,31 +681,24 @@ const ENTRIES = {
   },
   unpark: {
     key: 'u',
-    label: 'Bring back to Ready',
+    label: 'Bring back',
     weight: 'secondary',
     title:
       'brings this conversation back; from rejected or landed it also re-runs ' +
       'the agent, because the worktree went with it',
     asks: null,
     inPhase: {
-      deferred: { label: 'Undefer' },
-      rejected: { label: 'Reconsider', runsAgent: true },
-      resolved: { label: 'Un-resolve' },
-      confirmed: { label: 'Bring back' },
-      landed: { label: 'Bring back', runsAgent: true },
-      discarded: { label: 'Bring back' },
+      waiting: {
+        label: 'Stop waiting',
+        title:
+          'stops waiting on their reply and brings this card back to Ready — ' +
+          'nothing is posted to GitHub',
+      },
+      rejected: { runsAgent: true },
+      landed: { runsAgent: true },
     },
     reviewer: {
-      title:
-        'brings this card back to Ready for you; from Done it unresolves the thread on ' +
-        'GitHub too, which is public',
-      inPhase: {
-        deferred: { label: 'Undefer' },
-        resolved: { label: 'Reopen' },
-        confirmed: { label: 'Reopen' },
-        rejected: { label: 'Reopen' },
-        discarded: { label: 'Bring back' },
-      },
+      title: 'brings this card back to your move — nothing is posted to GitHub',
     },
     doing: 'bringing it back',
     square: 'ready',
@@ -750,18 +741,6 @@ const ENTRIES = {
     request: ({ body }) => ({ verb: 'reply', body: { body: body ?? '' } }),
     doing: 'replying that it is not fixed',
     square: 'waiting',
-  },
-  reply: {
-    key: 'c',
-    label: 'Reply',
-    weight: 'ghost',
-    title:
-      'opens the composer under the thread; your words post to GitHub and park ' +
-      'the card on the author, with nothing resolved',
-    asks: 'composer',
-    request: ({ body }) => ({ verb: 'reply', body: { body } }),
-    doing: 'replying',
-    square: null,
   },
   enrol: {
     key: 'e',
@@ -1110,9 +1089,12 @@ export function pressingOf(writes: Written[]): Pressings {
   ) as Pressings;
 }
 
+export const REPLY_KEY = 'c';
+
 export type Kind =
   | Decision
   | PrVerb
+  | 'reply'
   | 'edit-draft'
   | 'edit-part'
   | 'create-draft'
@@ -1128,6 +1110,11 @@ const CARRIED: Record<Kind, Carrying> = {
   ...PR_WRITES,
   'create-draft': {
     doing: 'saving the draft',
+    square: null,
+  },
+  reply: {
+    request: ({ body }) => ({ verb: 'reply', body: { body } }),
+    doing: 'replying',
     square: null,
   },
   'request-change': {
@@ -1307,11 +1294,11 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
 };
 
 const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
-  answered: ['resolve', 'not-fixed', 'place', 'reply', 'defer'],
+  answered: ['resolve', 'not-fixed', 'place', 'defer'],
   removed: ['resolve'],
-  waiting: ['resolve', 'defer', 'place', 'reply'],
-  'assumed-done': ['confirm-resolve', 'place', 'resolve', 'reply'],
-  'not-mine': ['place', 'resolve', 'reply'],
+  waiting: ['resolve', 'defer', 'place'],
+  'assumed-done': ['confirm-resolve', 'place', 'resolve'],
+  'not-mine': ['place', 'resolve'],
   deferred: ['unpark', 'resolve'],
   resolved: ['unpark'],
   confirmed: ['unpark'],
@@ -1400,7 +1387,7 @@ export function asksFirst(kind: Kind): boolean {
 }
 
 function asksInADialog(decision: Decision, asks: Asks): boolean {
-  if (asks === null || asks === 'composer') return false;
+  if (asks === null) return false;
   return !RED_ARE_YOU_SURE.includes(decision);
 }
 
@@ -1414,7 +1401,7 @@ function offerOf(
   return {
     decision,
     label: shade.label ?? entry.label,
-    title,
+    title: shade.title ?? title,
     weight: shade.weight ?? entry.weight,
     key: entry.key,
     cap: capOf(entry.key),
@@ -1490,11 +1477,34 @@ function authorOffer(
   );
 }
 
-function reviewerOffer(decision: Decision, phase: Phase): Offer {
+const UNRESOLVE_ON_GITHUB: Shade = {
+  label: 'Unresolve on GitHub',
+  title:
+    'unresolves this thread on GitHub, which is public, and brings the card ' +
+    'back to your move once GitHub confirms',
+};
+
+function unresolvesOnGitHub(conversation: Conversation, phase: Phase): boolean {
+  return (
+    phase === 'resolved' &&
+    conversation.kind === 'review' &&
+    conversation.github_resolved === true
+  );
+}
+
+function reviewerOffer(
+  decision: Decision,
+  conversation: Conversation,
+  phase: Phase,
+): Offer {
   const entry: Entry = ENTRIES[decision];
+  const unresolving =
+    decision === 'unpark' && unresolvesOnGitHub(conversation, phase);
   return offerOf(
     decision,
-    entry.reviewer?.inPhase?.[phase] ?? {},
+    unresolving
+      ? UNRESOLVE_ON_GITHUB
+      : (entry.reviewer?.inPhase?.[phase] ?? {}),
     entry.reviewer?.title ?? entry.title,
     besides(entry.reviewer?.asks ?? entry.asks, phase),
   );
@@ -1543,7 +1553,9 @@ function offeredOn(
       (conversation.mention ? mentionOffers[phase] : undefined) ??
       REVIEWER_OFFERS[phase] ??
       [];
-    return offers.map((decision) => reviewerOffer(decision, phase));
+    return offers.map((decision) =>
+      reviewerOffer(decision, conversation, phase),
+    );
   }
   const phase = phaseOf(conversation);
   const split = proposal?.split;
@@ -1642,7 +1654,7 @@ function splitOffers(
 export type AnswerKind = 'answer' | 'answer-watched';
 
 export function carriedOut(
-  decision: Decision | AnswerKind | 'edit-draft' | 'edit-part',
+  decision: Decision | AnswerKind | 'reply' | 'edit-draft' | 'edit-part',
   gathered: Gathered,
 ): Carried {
   const carrying = CARRIED[decision];

@@ -139,12 +139,6 @@ export interface ReworkView {
   unsent: string;
 }
 
-export interface Affordance {
-  kind: string;
-  label: string;
-  weight: string;
-}
-
 export interface QuestionView {
   heading: string;
   text: string;
@@ -222,7 +216,6 @@ export interface Panel {
   draft: DraftView | null;
   transcript: TranscriptEntry[];
   reply: ReplyBox | null;
-  reply_action: Affordance | null;
   actions: Offer[];
   footer: Footer;
   can_delete: boolean;
@@ -1535,16 +1528,6 @@ export function panelOf(
           ...replyingOf(operations, comments, context),
         ],
     reply,
-    reply_action:
-      reply &&
-      context.role !== 'reviewer' &&
-      actions.every((one) => one.weight === 'ghost')
-        ? {
-            kind: 'reply',
-            label: `Reply to ${firstName(replyTo)}`,
-            weight: 'secondary',
-          }
-        : null,
     actions,
     footer: {
       pressed: written.sending,

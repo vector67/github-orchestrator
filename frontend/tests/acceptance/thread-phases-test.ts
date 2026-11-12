@@ -240,8 +240,8 @@ module('Acceptance | thread phases', function (hooks) {
   test('a done thread says how it closed', async function (assert) {
     const said: Record<string, [string, string]> = {
       landed: ['Accepted · pushed', 'Bring back'],
-      rejected: ['Rejected · the fix was dropped', 'Reconsider'],
-      resolved: ['Resolved on GitHub', 'Un-resolve'],
+      rejected: ['Rejected · the fix was dropped', 'Bring back'],
+      resolved: ['Resolved on GitHub', 'Bring back'],
     };
 
     await phases(board(), ['landed', 'rejected', 'resolved'], (phase) => {
@@ -280,7 +280,7 @@ module('Acceptance | thread phases', function (hooks) {
     assert
       .dom('[data-test-fix-label]')
       .hasText('Rejected · the fix was dropped');
-    assert.deepEqual(offered(), ['Reconsider']);
+    assert.deepEqual(offered(), ['Bring back']);
   });
 
   test('a close that was refused did not close anything', async function (assert) {

@@ -26,7 +26,6 @@ export interface PanelSignature {
 function offersAnything(panel: Panel) {
   return (
     Boolean(panel.actions?.length) ||
-    Boolean(panel.reply_action) ||
     Boolean(panel.footer.refused) ||
     panel.check_for_fixes
   );
@@ -384,7 +383,6 @@ const PanelView: TOC<PanelSignature> = <template>
         @conversationId={{@panel.id}}
         @actions={{@panel.actions}}
         @footer={{@panel.footer}}
-        @replyAction={{@panel.reply_action}}
         @replies={{replies @panel}}
         @canDelete={{@panel.can_delete}}
         @agentWords={{@panel.agent_words}}

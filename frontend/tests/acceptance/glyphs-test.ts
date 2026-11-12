@@ -128,14 +128,13 @@ module('Acceptance | glyphs', function (hooks) {
     assert.strictEqual(find('[data-test-dialog-cancel]')?.tagName, 'BUTTON');
   });
 
-  test('the reviewer’s Reply opens the composer in place, not a dialog', async function (assert) {
+  test('the reviewer’s answered footer marks each of its dialog openers', async function (assert) {
     board().actAs('reviewer');
 
     assert.deepEqual(await footerIn(board(), 'answered'), [
       'resolve⧉',
       'not-fixed⧉',
       'place⧉',
-      'reply',
       'defer⧉',
     ]);
   });

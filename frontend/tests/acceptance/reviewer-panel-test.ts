@@ -306,10 +306,10 @@ module('Acceptance | reviewer panel', function (hooks) {
     assert.dom('[data-test-wake] option[value="push"]').exists();
   });
 
-  test('defer is a button that says you choose when', async function (assert) {
+  test('defer is a secondary button named Defer', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.dom('[data-test-decision="defer"]').includesText('Defer until …');
+    assert.dom('[data-test-decision="defer"]').includesText('Defer');
     assert
       .dom('[data-test-decision="defer"]')
       .hasAttribute('data-weight', 'secondary');
@@ -344,10 +344,10 @@ module('Acceptance | reviewer panel', function (hooks) {
       .includesText('waiting until someone replies on the thread');
   });
 
-  test('reply on the bar opens the composer rather than deciding', async function (assert) {
+  test('Reply to <name> by the comment opens the composer rather than deciding', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-decision="reply"]');
+    await click('#panel-talk [data-test-reply-open]');
 
     assert.dom('[data-test-reply]').exists('the composer is open');
     assert.strictEqual(board().posted.length, 0);
@@ -908,7 +908,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.deepEqual(offers().slice(0, 2), ['confirm-resolve', 'place']);
-    assert.dom('[data-test-decision="place"]').includesText('Not confirm');
+    assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="confirm-resolve"]');
 
     assert.dom('[data-test-dialog-body]').doesNotExist();
@@ -943,7 +943,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     });
   });
 
-  test('a mention in a review thread offers Confirm and Not confirm first, with its replies on the right', async function (assert) {
+  test('a mention in a review thread offers Confirm and Move first, with its replies on the right', async function (assert) {
     board().conversations = [
       board().threadIn('assumed-done', { key: KEY, mention: true }),
     ];
@@ -979,7 +979,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, {});
   });
 
-  test('not confirm lists the outcomes the thread could be in apart from Done', async function (assert) {
+  test('move lists the outcomes the thread could be in apart from Done', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
@@ -997,29 +997,23 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
   });
 
-  test('a not my conversation card offers Move… and Resolve, and Move… leaves out where it is', async function (assert) {
+  test('a not my conversation card offers Move and Resolve, and Move leaves out where it is', async function (assert) {
     board().conversations = [board().threadIn('not-mine', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers(), ['place', 'resolve', 'reply']);
-    assert.dom('[data-test-decision="place"]').includesText('Move…');
+    assert.deepEqual(offers(), ['place', 'resolve']);
+    assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="place"]');
 
     assert.deepEqual(outcomes(), ['My move', 'Their move', 'Later…']);
   });
 
-  test('an answered card offers Move…, which leaves out My move', async function (assert) {
+  test('an answered card offers Move, which leaves out My move', async function (assert) {
     board().conversations = [board().threadIn('answered', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers(), [
-      'resolve',
-      'not-fixed',
-      'place',
-      'reply',
-      'defer',
-    ]);
-    assert.dom('[data-test-decision="place"]').includesText('Move…');
+    assert.deepEqual(offers(), ['resolve', 'not-fixed', 'place', 'defer']);
+    assert.dom('[data-test-decision="place"]').includesText('Move');
     await click('[data-test-decision="place"]');
 
     assert.deepEqual(outcomes(), [
@@ -1032,11 +1026,11 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
   });
 
-  test('a waiting card offers Move…, which leaves out Their move', async function (assert) {
+  test('a waiting card offers Move, which leaves out Their move', async function (assert) {
     board().conversations = [board().threadIn('waiting', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.deepEqual(offers(), ['resolve', 'defer', 'place', 'reply']);
+    assert.deepEqual(offers(), ['resolve', 'defer', 'place']);
     await click('[data-test-decision="place"]');
 
     assert.deepEqual(outcomes(), ['My move', 'Not my conversation', 'Later…']);
@@ -1056,7 +1050,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.strictEqual(board().posted[0]!.verb, 'defer');
   });
 
-  test('on my own pull request not confirm offers a fix, a reply of mine or their move', async function (assert) {
+  test('on my own pull request move offers a fix, a reply of mine or their move', async function (assert) {
     board().actAs('author');
     board().conversations = [
       board().threadIn('declined', {
@@ -1081,10 +1075,10 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     assert.deepEqual(board().posted[0]!.body, { to: 'queued' });
   });
 
-  test('a confirmed card offers Reopen', async function (assert) {
+  test('a confirmed card offers Bring back', async function (assert) {
     board().conversations = [board().threadIn('confirmed', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.dom('[data-test-decision="unpark"]').includesText('Reopen');
+    assert.dom('[data-test-decision="unpark"]').includesText('Bring back');
   });
 });
