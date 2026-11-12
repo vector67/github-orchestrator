@@ -1343,16 +1343,20 @@ export default class StoreService extends Service {
   }
 
   async checkSession(pr: Numbered, key: string): Promise<Tried<string | null>> {
-    const checked = await tried(
+    const { taken, local } = await this.sendHeld(
+      pr,
+      this.hold(pr, this.sending(key, 'check-session', null)),
+      () =>
+        posted<SessionCheck>(
+          this.here.api(`${under(key)}/operations:check-session`),
+          null,
+          {},
+        ),
       'session',
-      posted<SessionCheck>(
-        this.here.api(`${under(key)}/operations:check-session`),
-        null,
-        {},
-      ),
     );
-    if (!checked.done) return checked;
-    const { session, conversation } = checked.body.body;
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    const { session, conversation } = taken.body.body;
     this.takeThread(pr, conversation);
     return { done: true, body: session };
   }

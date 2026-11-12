@@ -29,6 +29,10 @@ are the spec's. Issue #366.
 - **The board holds each server fact once**, in `frontend/app/services/store.ts`;
   derived values live only in `frontend/app/data/summaries.ts` (or the
   existing `data/panel.ts` / `data/decisions.ts` derivations).
+- **Move no button.** Every control keeps its place and order unless the spec
+  moves it (Reply to <name> leaving the footer, a footer whose spec table names
+  a different set of buttons). Where a button is renamed or restyled, it stays
+  where it was.
 - **Follow the board's look.** Reuse its button weights, `decide-dialog.gts`
   and the toast rail. Check every front-end step in a real browser in both
   themes with the console open; any `Uncaught` error fails the check.
@@ -83,8 +87,7 @@ are the spec's. Issue #366.
   GitHub call behind `github/interface.py` and the fake (hand back ends the
   take-over through `change_detection`'s `end_take_over`).
 - **Reset to origin** stays where the commit timeline has it today; the dialog
-  replaces the in-place Reset / Cancel. The spec's open question about its
-  position is left for the live check.
+  replaces the in-place Reset / Cancel.
 
 ## Steps
 

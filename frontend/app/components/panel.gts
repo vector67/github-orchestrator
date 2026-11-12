@@ -198,6 +198,7 @@ const PanelView: TOC<PanelSignature> = <template>
             <GoToSession
               @conversation={{@panel.id}}
               @directory={{@panel.fix_directory}}
+              @pressed={{@panel.footer.pressed}}
             />
           {{/if}}
           {{#if @panel.banner}}
