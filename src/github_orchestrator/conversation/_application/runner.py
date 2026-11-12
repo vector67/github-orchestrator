@@ -355,8 +355,13 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             if refused is not None:
                 return ReactionFailed(refused)
             return ReactionPosted(effect.comment_id)
-        case DropWorkspace():
+        case DropWorkspace(cut_at=None):
             failure = thread_workspace(ports, conversation).drop()
+            if failure is not None:
+                raise WorkspaceRefused(failure)
+            return None
+        case DropWorkspace(cut_at=cut_at):
+            failure = ports.git.workspace(conversation.key, cut_at).drop()
             if failure is not None:
                 raise WorkspaceRefused(failure)
             return None

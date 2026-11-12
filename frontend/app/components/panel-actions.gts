@@ -11,11 +11,7 @@ import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
-  LATER,
-  laterAsks,
-  REJECTED,
   redAsksOf,
-  rejectAsks,
   REPLY_KEY,
   type AreYouSure as AreYouSureAsking,
   type DialogSpec,
@@ -219,16 +215,6 @@ export default class PanelActions extends Component<PanelActionsSignature> {
 
   confirm = (gathered: Gathered): Promise<boolean> => {
     const decision = this.asking;
-    if (decision === 'drop' && gathered.modifier === LATER) {
-      this.asking = 'defer';
-      this.spec = laterAsks();
-      return Promise.resolve(true);
-    }
-    if (decision === 'drop' && gathered.modifier === REJECTED) {
-      this.asking = 'reject';
-      this.spec = rejectAsks();
-      return Promise.resolve(true);
-    }
     this.cancel();
     this.warned = decision ? this.warningFor(decision, { ...gathered }) : null;
     if (this.warned) return Promise.resolve(true);

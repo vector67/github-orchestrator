@@ -6621,41 +6621,6 @@ img.emoji-glyph {
   gap: 6px;
 }
 
-.decide-dialog .outcome-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-regular);
-}
-
-.decide-dialog .state-step {
-  padding: 2px 6px;
-  border: 1px solid var(--border-strong);
-}
-
-.decide-dialog .state-step[data-step="asking"] {
-  padding-left: 10px;
-  box-shadow: inset 4px 0 0 var(--yellow);
-}
-
-.decide-dialog .state-step[data-step="deferred"] {
-  background: var(--grey-fill);
-  border-color: var(--grey);
-}
-
-.decide-dialog .state-step:is([data-step="rejected"], [data-step="failed"]) {
-  color: var(--red-text);
-  background: var(--red-fill);
-  border-color: var(--red);
-}
-
-.decide-dialog .outcome-worktree {
-  color: var(--muted);
-}
-
 .answer-reply {
   position: fixed;
   top: 84px;

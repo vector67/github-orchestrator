@@ -40,6 +40,7 @@ import {
   phaseOf,
   REOPENED_HINT,
   RUN_KINDS,
+  runDropped,
   sent,
   unsettled,
   type Phase,
@@ -799,7 +800,10 @@ function planOf(
   const live = atWork(conversation)
     ? runningOf(context.inFlight)?.plan
     : undefined;
-  const plan = live ?? newest(operations, RUN_KINDS)?.plan ?? [];
+  const run = runDropped(operations)
+    ? undefined
+    : newest(operations, RUN_KINDS);
+  const plan = live ?? run?.plan ?? [];
   return plan.map((step) => ({
     text: step.text,
     file: step.file ?? '',

@@ -231,31 +231,38 @@ def _drop(bench):
     return outcome
 
 
-def test_dropping_a_question_goes_back_to_the_last_proposal(bench):
-    proposed = _asked_over_a_proposal(bench)
-
-    outcome = _drop(bench)
-
-    assert not isinstance(outcome, Denied), outcome
-    fix = bench.stored().fix
-    assert fix.is_proposed
-    assert fix.question is None
-    assert fix.thread_sha == proposed
-    assert bench.working_copies.head_of(bench.checkout()) == str(proposed)
-    assert bench.working_copies.edits_at(bench.checkout()) == {}
-
-
-def test_dropping_the_question_of_a_first_run_fails_it(bench):
+def _asked_on_a_first_run(bench):
     _running(bench)
     commit_fix(bench.world, KEY)
     bench.ask()
 
+
+@pytest.mark.parametrize("reach", [_asked_on_a_first_run, _asked_over_a_proposal])
+def test_dropping_a_question_puts_the_thread_back_where_no_agent_has_run_on_it(bench, reach):
+    reach(bench)
+
+    outcome = _drop(bench)
+
+    assert not isinstance(outcome, Denied), outcome
+    dropped = bench.stored()
+    assert dropped.standing is ConversationState.READY
+    assert dropped.proposal is None
+    assert dropped.fix.question is None
+    assert dropped.fix.commits is None
+    assert dropped.fix.reason is None
+    assert not bench.working_copies.holds_thread(THE_PR, KEY)
+
+
+def test_a_thread_whose_question_was_dropped_can_be_given_a_fresh_fix(bench):
+    _asked_over_a_proposal(bench)
     _drop(bench)
 
-    fix = bench.stored().fix
-    assert fix.has_failed
-    assert fix.reason == "question dropped"
-    assert bench.working_copies.head_of(bench.checkout()) == str(fix.base_sha)
+    with bench.threads.editing(KEY) as editable:
+        outcome = editable.fix()
+    drain(bench.threads)
+
+    assert not isinstance(outcome, Denied), outcome
+    assert bench.stored().standing is ConversationState.QUEUED
 
 
 def test_only_a_question_can_be_dropped(bench):

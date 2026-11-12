@@ -116,15 +116,25 @@ module('Acceptance | agent question', function (hooks) {
     assert.dom('[data-test-confidence]').doesNotExist();
   });
 
-  test('a question offers an answer in a session and a drop, and nothing to approve', async function (assert) {
+  test('a question offers an answer in a session, Defer and a red Drop last, and nothing to approve', async function (assert) {
     seed(board());
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.deepEqual(texts('[data-test-decision]'), [
       'Answer in a session o',
-      'Drop… ⇧D',
+      'Defer f',
+      'Drop ⇧D',
     ]);
+    assert
+      .dom('[data-test-decision="drop"]')
+      .hasAttribute('data-weight', 'destructive');
+    assert
+      .dom('[data-test-decision="drop"]')
+      .doesNotHaveAttribute('data-opens-dialog');
+    assert
+      .dom('[data-test-decision="defer"]')
+      .hasAttribute('data-opens-dialog', 'true');
   });
 
   module('answering with an option or your own words', function () {
@@ -334,61 +344,69 @@ module('Acceptance | agent question', function (hooks) {
     assert.strictEqual(board().posted.at(-1)?.verb, 'start-session');
   });
 
-  test('dropping back to the last proposal drops the question', async function (assert) {
+  test('Drop asks whether to drop the agent’s question, and drops it once confirmed', async function (assert) {
     seed(board());
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     await click('[data-test-decision="drop"]');
-    assert.deepEqual(texts('[data-test-outcome-label]'), [
-      'Back to the last proposal',
-      'Defer',
-      'Reject the thread',
-    ]);
-    assert
-      .dom('[data-test-outcome-steps="proposal"]')
-      .hasText('asking → proposed');
-    await click('[data-test-outcome="proposal"]');
-    await click('[data-test-dialog-submit]');
 
-    assert.strictEqual(board().posted.at(-1)?.verb, 'drop-question');
+    assert.deepEqual(board().posted, [], 'nothing dropped yet');
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Drop the agent’s question?');
+    assert.dom('[data-test-are-you-sure-submit]').includesText('Drop');
+    assert.dom('[data-test-outcomes]').doesNotExist();
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.deepEqual(
+      board().posted.map((one) => one.verb),
+      ['drop-question'],
+    );
+    assert.deepEqual(board().posted[0]!.body, {});
   });
 
-  test('dropping into a deferral asks when it comes back', async function (assert) {
+  test('Defer on a question asks when it comes back', async function (assert) {
     seed(board());
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-decision="drop"]');
-    await click('[data-test-outcome="later"]');
-    await click('[data-test-dialog-submit]');
+    await click('[data-test-decision="defer"]');
 
     assert.dom('[data-test-wake]').exists();
     assert.strictEqual(board().posted.length, 0);
   });
 
-  test('dropping by rejecting the thread asks for the reply first', async function (assert) {
-    seed(board());
+  test('a dropped question leaves a thread no agent has run on', async function (assert) {
+    const asking = seed(board());
+    board().conversations = [
+      {
+        ...asking,
+        question: null,
+        operations: [
+          ...asking.operations,
+          summary({ id: `${KEY}.9`, kind: 'drop-question' }),
+        ],
+      },
+    ];
+
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-decision="drop"]');
-    await click('[data-test-outcome="reject"]');
-    await click('[data-test-dialog-submit]');
-    await click('[data-test-dialog-submit]');
+    const dropped = texts('[data-test-decision]');
+    board().conversations = [{ ...asking, question: null, operations: [] }];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.strictEqual(board().posted.at(-1)?.verb, 'reject');
+    assert.strictEqual(dropped[0], 'Write a fix i');
+    assert.deepEqual(dropped, texts('[data-test-decision]'));
+    assert.dom('[data-test-decision="drop"]').doesNotExist();
   });
 
-  test('a first run that asked has no proposal to go back to', async function (assert) {
+  test('a first run that asked shows its changes so far', async function (assert) {
     const asking = seed(board());
     board().conversations = [
       { ...asking, question: { ...asking.question!, last_proposal: null } },
     ];
+
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-decision="drop"]');
-
-    assert
-      .dom('[data-test-outcome-steps="proposal"]')
-      .hasText('asking → failed');
     assert.dom('[data-test-fold-title]').hasText('Changes so far');
   });
 

@@ -39,7 +39,7 @@ class CutWorkspace:
 
 @dataclass(frozen=True)
 class DropWorkspace:
-    pass
+    cut_at: Sha | None = None
 
 
 @dataclass(frozen=True)

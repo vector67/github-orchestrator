@@ -172,6 +172,30 @@ export function newestOf(
   );
 }
 
+const RUN_OR_DROP: string[] = [...RUN_KINDS, 'drop-question'];
+
+export function runDropped(
+  operations: readonly { kind: string; reason_code: string | null }[],
+): boolean {
+  return (
+    operations.findLast(
+      (one) => RUN_OR_DROP.includes(one.kind) && heldARun(one),
+    )?.kind === 'drop-question'
+  );
+}
+
+export function newestRun(
+  conversation: Conversation,
+): OperationSummary | undefined {
+  return runDropped(conversation.operations)
+    ? undefined
+    : newestOf(conversation, RUN_KINDS);
+}
+
+export function agentHasRun(conversation: Conversation): boolean {
+  return newestRun(conversation) !== undefined;
+}
+
 export function outstanding(
   conversation: Conversation,
 ): OperationSummary | undefined {
@@ -188,7 +212,7 @@ export function busy(conversation: Conversation): boolean {
 
 export function proposalWaiting(conversation: Conversation): boolean {
   if (outstanding(conversation)) return false;
-  return newestOf(conversation, RUN_KINDS)?.state === 'applied';
+  return newestRun(conversation)?.state === 'applied';
 }
 
 export function closedBy(conversation: Conversation): string | null {
@@ -236,7 +260,7 @@ function readyPhase(conversation: Conversation): Phase {
   const failure = landingFailureOf(conversation);
   if (failure) return failure;
   if (proposalWaiting(conversation)) return 'proposed';
-  const run = newestOf(conversation, RUN_KINDS);
+  const run = newestRun(conversation);
   if (run?.state === 'refused') {
     return REFUSALS[run.reason_code ?? ''] ?? 'failed';
   }

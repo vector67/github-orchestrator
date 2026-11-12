@@ -64,6 +64,22 @@ def test_drop_question_gives_up_the_question(board):
     assert dropped.fix.question is None
 
 
+def test_a_dropped_question_leaves_a_thread_no_agent_has_run_on(board):
+    proposed(board)
+    with board.threads.editing(KEY) as editable:
+        editable.rework(note="stamp both bounds")
+    _asking(board)
+    asked(client_of(board), "drop-question")
+    drained(board)
+
+    question = client_of(board).get(f"/api/conversations/{KEY}").json()["question"]
+    proposals = client_of(board).get(f"/api/conversations/{KEY}/proposals").json()
+    written = asked(client_of(board), "fix")
+
+    assert (question, proposals) == (None, [])
+    assert written.status_code == 202, written.json()
+
+
 def test_drop_question_refuses_a_thread_that_asks_nothing(ready):
     answer = asked(client_of(ready), "drop-question")
 

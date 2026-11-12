@@ -10,14 +10,13 @@ import type {
 } from 'frontend/data/api';
 import type { Role } from 'frontend/data/groups';
 import {
+  agentHasRun,
   busy,
   confirmed,
   local,
-  newestOf,
   outstanding,
   phaseOf,
   proposalWaiting,
-  RUN_KINDS,
   sent,
   type Phase,
 } from 'frontend/data/thread';
@@ -38,7 +37,6 @@ export interface DialogSpec {
   resolving?: boolean;
   thumbsUp?: boolean;
   outcomes?: Outcome[];
-  legend?: string;
   submit: (
     typed: string,
     resolving: boolean,
@@ -52,37 +50,6 @@ type Asking = Omit<DialogSpec, 'submit'> & Partial<Pick<DialogSpec, 'submit'>>;
 export interface Outcome {
   to: string;
   label: string;
-  steps?: string[];
-  worktree?: string;
-}
-
-export const LATER = 'later';
-
-export const REJECTED = 'reject';
-
-function droppedOutcomes(proposed: boolean): Outcome[] {
-  return [
-    {
-      to: 'proposal',
-      label: 'Back to the last proposal',
-      steps: ['asking', proposed ? 'proposed' : 'failed'],
-      worktree: proposed
-        ? 'worktree: everything since that proposal discarded'
-        : 'worktree: no proposal to go back to, so the edits are discarded',
-    },
-    {
-      to: LATER,
-      label: 'Defer',
-      steps: ['asking', 'deferred', 'asking'],
-      worktree: 'edits kept',
-    },
-    {
-      to: REJECTED,
-      label: 'Reject the thread',
-      steps: ['asking', 'rejected'],
-      worktree: 'edits discarded · reply step follows',
-    },
-  ];
 }
 
 function placing(outcomes: Outcome[]): Asking {
@@ -339,24 +306,18 @@ const ENTRIES = {
   },
   drop: {
     key: 'D',
-    label: 'Drop…',
-    weight: 'secondary',
+    label: 'Drop',
+    weight: 'destructive',
     title:
-      'gives up the agent’s question: back to the last proposal, deferred ' +
-      'with its edits kept, or the thread rejected',
+      'drops the agent’s question and deletes its worktree, so the thread is ' +
+      'back where no agent has run on it — nothing is posted to GitHub',
     asks: {
-      question: 'Drop this question',
+      question: 'Drop the agent’s question?',
       note:
-        'Choose where the thread goes and what happens to its worktree. ' +
-        'Nothing is posted to GitHub unless you reject it with a reply.',
+        'The question, any proposal before it and the agent’s worktree are ' +
+        'deleted, and the thread goes back to where no agent has run on it.',
       reply: false,
-      legend: 'Instead:',
-      outcomes: droppedOutcomes(true),
-      submit: () => 'Drop it',
     },
-    dialogFor: (conversation) => ({
-      outcomes: droppedOutcomes(Boolean(conversation.question?.last_proposal)),
-    }),
     request: () => ({ verb: 'drop-question', body: {} }),
     doing: 'dropping the question',
     square: 'ready',
@@ -384,8 +345,7 @@ const ENTRIES = {
       'puts an agent on this comment to write a fix in its own worktree, ' +
       'for you to accept or turn down — nothing reaches the PR branch yet',
     asks: null,
-    offeredWhen: (conversation) =>
-      newestOf(conversation, RUN_KINDS) === undefined,
+    offeredWhen: (conversation) => !agentHasRun(conversation),
     doing: 'writing a fix',
     square: 'rework',
   },
@@ -1219,7 +1179,7 @@ const ENROLLED: Decision[] = ['withdraw-from-review'];
 
 const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   proposed: PROPOSED,
-  asking: ['answer-in-session', 'drop'],
+  asking: ['answer-in-session', 'defer', 'drop'],
   'push failed': LANDING_AGAIN,
   'landing failed': LANDING_AGAIN,
   'reply failed': LANDING_AGAIN,
@@ -1363,16 +1323,12 @@ function asksInADialog(decision: Decision, asks: EntryAsks): boolean {
   return !RED_ARE_YOU_SURE.includes(decision);
 }
 
-const SUBMITS_IN_ITS_OWN_WORDS: Decision[] = ['drop'];
-
 function submittedBy(asks: Asking, label: string): DialogSpec {
   return { ...asks, submit: () => label };
 }
 
-function asksOf(decision: Decision, asks: EntryAsks, label: string): Asks {
+function asksOf(asks: EntryAsks, label: string): Asks {
   if (typeof asks !== 'object' || asks === null) return asks;
-  if (asks.submit && SUBMITS_IN_ITS_OWN_WORDS.includes(decision))
-    return { ...asks, submit: asks.submit };
   return submittedBy(asks, label);
 }
 
@@ -1392,7 +1348,7 @@ function offerOf(
     key: entry.key,
     cap: capOf(entry.key),
     doing: doingOf(entry.doing),
-    asks: asksOf(decision, asks, label),
+    asks: asksOf(asks, label),
     savedFirst: Boolean(entry.savedFirst),
     opensDialog: asksInADialog(decision, asks),
     runsAgent: Boolean(shade.runsAgent) || runsAgent(decision),
@@ -1792,14 +1748,6 @@ export function editAsks(
     placeholder: '',
     submit: () => EDIT,
   };
-}
-
-export function laterAsks(): DialogSpec {
-  return submittedBy(ENTRIES.defer.asks, ENTRIES.defer.label);
-}
-
-export function rejectAsks(): DialogSpec {
-  return submittedBy(ENTRIES.reject.asks, ENTRIES.reject.label);
 }
 
 export function inFlight(kind: string): string {

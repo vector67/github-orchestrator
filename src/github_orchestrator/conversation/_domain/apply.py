@@ -122,7 +122,6 @@ from github_orchestrator.conversation._domain.effects import (
     PostReply,
     Push,
     React,
-    ResetWorkspace,
     ResolveThread,
     StartRun,
     StopRun,
@@ -1149,18 +1148,9 @@ def _retry(conversation: Conversation) -> Accepted:
                               started_at=None, decision_error=None))
 
 
-QUESTION_DROPPED = "question dropped"
-
-
 def _drop_question(conversation: Conversation, at: str | None) -> Accepted:
-    fix = conversation.fix
-    dropped = with_fix(_decidable(conversation, at), question=None, decision_error=None)
-    if fix.thread_sha is not None or fix.kind != ProposalKind.COMMIT:
-        back_to = fix.thread_sha or fix.base_sha
-        return Accepted(with_fix(dropped, state=PROPOSED),
-                        () if back_to is None else (ResetWorkspace(to=back_to),))
-    failed = with_fix(dropped, state=FAILED, reason=QUESTION_DROPPED)
-    return Accepted(failed, () if fix.base_sha is None else (ResetWorkspace(to=fix.base_sha),))
+    return Accepted(replace(_decidable(conversation, at), fix=Fix(state=ABSENT)),
+                    (DropWorkspace(cut_at=conversation.fix.base_sha),))
 
 
 def _landing_withdrawn(conversation: Conversation, reason: str = WITHDRAWN) -> Accepted:

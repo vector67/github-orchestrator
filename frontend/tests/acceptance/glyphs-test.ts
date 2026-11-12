@@ -78,9 +78,10 @@ module('Acceptance | glyphs', function (hooks) {
     assert.deepEqual(await footerIn(board(), 'resolved'), ['unpark']);
   });
 
-  test('an agent asking a question offers a session with the star, and Drop without the window icon', async function (assert) {
+  test('an agent asking a question offers a session with the star, Defer with the window icon, and Drop without it', async function (assert) {
     assert.deepEqual(await footerIn(board(), 'asking'), [
       'answer-in-session✦',
+      'defer⧉',
       'drop',
     ]);
     assert.dom('[data-test-question-option]').hasAttribute('data-runs-agent');

@@ -16,10 +16,10 @@ import {
   busy,
   confirmed,
   newestOf,
+  newestRun,
   outstanding,
   PHASE_HINTS,
   phaseOf,
-  RUN_KINDS,
   STANDING_LABELS,
   standingOf,
   type Phase,
@@ -114,7 +114,7 @@ export function referenceOf(conversation: Conversation): string | null {
 }
 
 function currentRun(conversation: Conversation): OperationSummary | undefined {
-  return newestOf(conversation, RUN_KINDS);
+  return newestRun(conversation);
 }
 
 export function stepsOf(conversation: Conversation, seen: Seen): boolean[] {
