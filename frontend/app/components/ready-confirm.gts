@@ -10,6 +10,7 @@ import type StoreService from 'frontend/services/store';
 import type { Outstanding, ReviewerGroup } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 import AssignReviewers from 'frontend/components/assign-reviewers';
+import Glyphs from 'frontend/components/glyphs';
 
 interface ReadyConfirmSignature {
   Args: {
@@ -162,9 +163,11 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
                   <button
                     type="button"
                     class="btn outstanding-assign"
+                    data-opens-dialog="true"
                     data-test-ready-assign
                     {{on "click" this.openPicker}}
-                  >Assign reviewers <kbd>⇧R</kbd></button>
+                  >Assign reviewers<Glyphs @opensDialog={{true}} />
+                    <kbd>⇧R</kbd></button>
                 </section>
               {{else}}
                 <details

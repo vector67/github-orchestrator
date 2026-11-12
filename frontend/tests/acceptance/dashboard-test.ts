@@ -1199,7 +1199,11 @@ module('Acceptance | dashboard', function (hooks) {
       .dom(
         '[data-test-ready-confirm] [data-test-outstanding="reviewers"] [data-test-ready-assign]',
       )
-      .hasText('Assign reviewers ⇧R');
+      .hasText('Assign reviewers ⇧R')
+      .hasAttribute('data-opens-dialog');
+    assert
+      .dom('[data-test-ready-assign] [data-glyph="dialog"]')
+      .exists({ count: 1 });
     assert.deepEqual(
       texts('[data-test-ready-confirm] .dialog-actions button'),
       ['Mark ready anyway y', 'Cancel Esc'],
