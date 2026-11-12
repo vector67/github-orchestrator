@@ -142,13 +142,15 @@ fonts, and the environment variables that move the config and data files.
 
 ## Day to day
 
-`github-orchestrator help` lists the commands in four groups:
+`github-orchestrator help`, like `--help`, lists every command in its group:
 
 ```text
 everyday     open, status, logs, runs
 service      start, stop, restart, restart-all, hold-restarts, allow-restarts
 maintenance  update, doctor, config, uninstall, setup, skill
-learning     tutorial
+learning     tutorial, help
+agents       thread
+debugging    queue, undismiss
 ```
 
 ```bash
@@ -161,9 +163,7 @@ github-orchestrator stop                # stop this instance (--all: every insta
 ```
 
 `help COMMAND` is the same as `COMMAND --help`, which says what it does and
-shows an example. Every command takes `--instance NAME`. `github-orchestrator --help` ends with a
-**debugging** section, `queue PR` and `undismiss PR`, which the short list
-leaves out.
+shows an example. Every command takes `--instance NAME`.
 
 `runs` totals cost as `~$8.14 API-equivalent` rather than as money, because
 every run bills against your subscription and none of it is a charge.
