@@ -1,6 +1,7 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
+  click,
   currentURL,
   findAll,
   triggerEvent,
@@ -151,11 +152,13 @@ module('Acceptance | git palette', function (hooks) {
     await press('g', 'f', 'Enter');
 
     assert.deepEqual(ran(), []);
+    assert.dom('[data-test-force-question]').hasText('Force-push the branch?');
     assert
-      .dom('[data-test-palette-footer]')
+      .dom('[data-test-force-note]')
       .hasText(
-        'Force-push with lease replaces the branch on GitHub with this worktree’s. Enter again to force-push · Esc cancel',
+        'Force-push with lease replaces the branch on GitHub with this worktree’s. The board has no way to undo it.',
       );
+    assert.dom('[data-test-force-confirm]').hasText('Force-push Enter');
 
     await press('Escape');
 
@@ -178,6 +181,45 @@ module('Acceptance | git palette', function (hooks) {
     assert.deepEqual(ran(), []);
 
     await press('Enter');
+
+    assert.deepEqual(ran(), [{ keys: 'f' }]);
+  });
+
+  test('a click on the push row pushes at once', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('g');
+
+    await click('[data-test-palette-row="p"]');
+
+    assert.deepEqual(ran(), [{ keys: 'p' }]);
+    assert.dom('[data-test-git-output-command]').hasText('git push');
+  });
+
+  test('force-push is its own row with the window icon, and a click on it asks before it runs', async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    await press('g');
+
+    assert
+      .dom('[data-test-palette-row="f"]')
+      .hasAttribute('data-opens-dialog', 'true');
+    assert
+      .dom('[data-test-palette-row="p"]')
+      .doesNotHaveAttribute('data-opens-dialog');
+
+    await click('[data-test-palette-row="f"]');
+
+    assert.deepEqual(ran(), []);
+    assert.dom('[data-test-force-question]').exists();
+
+    await click('[data-test-force-cancel]');
+
+    assert.dom('[data-test-force-question]').doesNotExist();
+    assert.deepEqual(ran(), []);
+
+    await click('[data-test-palette-row="f"]');
+    await click('[data-test-force-confirm]');
 
     assert.deepEqual(ran(), [{ keys: 'f' }]);
   });

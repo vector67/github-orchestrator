@@ -4963,6 +4963,22 @@ kbd {
   color: var(--muted);
 }
 
+.palette .force-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--body-stack);
+}
+
+.palette .force-question {
+  margin: 0;
+  font-weight: var(--fw-bold);
+}
+
+.palette .force-note {
+  margin: 0;
+}
+
 .palette .buf {
   margin-top: 10px;
   font-weight: var(--fw-bold);

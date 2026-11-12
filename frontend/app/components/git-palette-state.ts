@@ -70,9 +70,6 @@ export default class GitPaletteState {
     if (chosen.where === 'terminal') {
       return `will open: ${line} in the Terminal tab · Enter open · Esc cancel`;
     }
-    if (this.forceAsked) {
-      return 'Force-push with lease replaces the branch on GitHub with this worktree’s. Enter again to force-push · Esc cancel';
-    }
     return `will run: ${line} · Enter run · Esc cancel`;
   }
 
@@ -80,7 +77,6 @@ export default class GitPaletteState {
     const chosen = this.chosen;
     if (!chosen) return null;
     if (chosen.where === 'terminal') return 'Open';
-    if (this.forceAsked) return 'Force-push';
     return chosen.where === 'shown' ? 'Show' : 'Run';
   }
 
@@ -101,6 +97,15 @@ export default class GitPaletteState {
   choose = (keys: string): void => {
     this.buffer = keys;
     this.forceAsked = false;
+  };
+
+  pick = (keys: string): void => {
+    this.choose(keys);
+    if (this.chosen) this.run();
+  };
+
+  unask = (): void => {
+    this.choose('');
   };
 
   run = (): void => {

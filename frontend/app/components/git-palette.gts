@@ -3,11 +3,14 @@ import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import type { GitRun } from 'frontend/data/api';
 import {
+  FORCE_PUSH,
   GIT_COMMANDS,
   WHERE_WORDS,
   keysLabel,
   reachable,
+  type GitCommand,
 } from 'frontend/data/git';
+import Glyphs from 'frontend/components/glyphs';
 import type GitPaletteState from 'frontend/components/git-palette-state';
 import PendingRing from 'frontend/components/pending-ring';
 
@@ -17,6 +20,16 @@ interface GitPaletteSignature {
     palette: GitPaletteState;
   };
 }
+
+const FORCE_QUESTION = 'Force-push the branch?';
+
+const FORCE_NOTE =
+  'Force-push with lease replaces the branch on GitHub with this ' +
+  'worktree’s. The board has no way to undo it.';
+
+const FORCE_PUSH_LABEL = 'Force-push';
+
+const asksFirst = (one: GitCommand): boolean => one.keys === FORCE_PUSH;
 
 const secondsOf = (answer: GitRun): string => answer.seconds.toFixed(1);
 
@@ -77,16 +90,44 @@ const GitPalette: TOC<GitPaletteSignature> = <template>
           {{/if}}
           <span class="note">Esc or any key closes</span>
         </div>
+      {{else if @palette.forceAsked}}
+        <div class="force-ask" data-pending={{if @palette.running "true"}}>
+          <p
+            class="force-question"
+            data-test-force-question
+          >{{FORCE_QUESTION}}</p>
+          <p class="force-note" data-test-force-note>{{FORCE_NOTE}}</p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="primary"
+              disabled={{@palette.running}}
+              data-test-force-confirm
+              {{on "click" @palette.run}}
+            >{{#if @palette.ring}}<PendingRing />{{/if}}{{FORCE_PUSH_LABEL}}
+              <kbd>Enter</kbd></button>
+            <button
+              type="button"
+              class="ghost"
+              disabled={{@palette.running}}
+              data-test-force-cancel
+              {{on "click" @palette.unask}}
+            >Cancel</button>
+          </div>
+        </div>
       {{else}}
         {{#each GIT_COMMANDS key="keys" as |one|}}
           <button
             type="button"
             class="p {{unless (reachable one @palette.typed) 'dim'}}"
+            data-opens-dialog={{if (asksFirst one) "true"}}
             data-test-palette-row={{one.keys}}
-            {{on "click" (fn @palette.choose one.keys)}}
+            {{on "click" (fn @palette.pick one.keys)}}
           >
             <span>g {{keysLabel one}}</span>
-            <span>{{one.display}}</span>
+            <span>{{one.display}}<Glyphs
+                @opensDialog={{asksFirst one}}
+              /></span>
             <span class="where">{{get WHERE_WORDS one.where}}</span>
           </button>
         {{/each}}
