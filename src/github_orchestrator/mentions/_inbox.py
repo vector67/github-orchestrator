@@ -135,15 +135,8 @@ class GitHubMentionsInbox:
                     log.exception("mentions in %s skipped: its state will not read", pr)
                     held = True
                     continue
-                outstanding = self._outstanding(pr, state,
-                                                max(start, _moment(started[str(pr.repo)])),
-                                                began)
-                if outstanding is None:
-                    log.warning("GitHub says %s mentions you, but it names no gh_account the "
-                                "config gives; did your GitHub login change?", pr)
-                    held = True
-                    continue
-                mentions += outstanding
+                mentions += self._outstanding(pr, state,
+                                              max(start, _moment(started[str(pr.repo)])), began)
         except _Unread as unread:
             log.warning("mentions not searched: the threads of %s will not read", unread.pr)
             return
@@ -169,13 +162,11 @@ class GitHubMentionsInbox:
         return {str(repo): before.get(str(repo), began.isoformat()) for repo in self._repos}
 
     def _outstanding(self, pr: Pr, state: PullRequestState, start: datetime,
-                     began: datetime) -> list[ListedMention] | None:
+                     began: datetime) -> list[ListedMention]:
         manager = self._conversation_managers.of(pr)
         found = manager.poll(state).mentions
         if found is None:
             raise _Unread(pr)
-        if not found:
-            return None
         dated = [replace(mention, at=_latest(mention.at or state.created_at, mention.edited_at))
                  for mention in found]
         outstanding = []
