@@ -840,6 +840,63 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
       .hasText('Queued: resolving.', 'the toast names what the card says');
   });
 
+  test('an assumed done card offers Confirm and Move, and says Confirm resolves on GitHub and puts 👍 on the newest reply', async function (assert) {
+    board().conversations = [board().threadIn('assumed-done', { key: KEY })];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(offers(), ['confirm-resolve', 'place']);
+    assert
+      .dom('[data-test-agent-proposal]')
+      .hasText(
+        'Agent proposal: resolve the thread on GitHub and put 👍 on Anna Example’s reply',
+      );
+  });
+
+  test('an assumed done card the commit check settled gives its reasoning as the agent’s line, with no Addressed heading', async function (assert) {
+    board().conversations = [
+      board().threadIn('assumed-done', {
+        key: KEY,
+        commit_check: {
+          sha: 'b'.repeat(40),
+          parent: 'a'.repeat(40),
+          verdict: 'addressed',
+          reasoning: 'every line item now goes through in_units()',
+        },
+      }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-agent-reason]')
+      .hasText('every line item now goes through in_units()');
+    assert.dom('[data-test-commit-check]').doesNotExist();
+  });
+
+  test('confirm on a mention outside a review thread proposes to skip', async function (assert) {
+    board().conversations = [
+      board().threadIn('assumed-done', {
+        key: KEY,
+        mention: true,
+        kind: 'issue',
+      }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+  });
+
+  test('an assumed done conversation comment, which GitHub cannot resolve, confirms on the board alone and proposes to skip', async function (assert) {
+    board().conversations = [
+      board().threadIn('assumed-done', { key: KEY, kind: 'issue' }),
+    ];
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert.deepEqual(offers(), ['confirm', 'place']);
+    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+    await click('[data-test-decision="confirm"]');
+    assert.strictEqual(board().posted[0]!.verb, 'confirm');
+  });
+
   test('confirm with resolving unticked keeps the thread open on GitHub and still puts 👍 there', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     await visit(`/pr/o/r/7/conversations/${KEY}`);

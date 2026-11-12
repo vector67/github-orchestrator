@@ -1009,7 +1009,7 @@ module('Acceptance | panel', function (hooks) {
       .hasText('attempt 3 of 3 failed: the agent gave up: tests failed twice');
   });
 
-  test('an assumed done thread on your PR says the agent skipped it, not that it failed', async function (assert) {
+  test('an assumed done thread on your PR gives the agent’s reason above the footer, then its proposal to skip', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     board().operations[KEY] = [
       operation({
@@ -1026,10 +1026,20 @@ module('Acceptance | panel', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert
-      .dom('[data-test-notes] .verdict')
-      .hasText(
-        'skipped: the agent made no change: thanks the author, asks for nothing',
-      );
+      .dom('[data-test-agent-reason]')
+      .hasText('thanks the author, asks for nothing');
+    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+    assert.dom('[data-test-notes] .verdict').doesNotExist();
+    assert.true(
+      Boolean(
+        document
+          .querySelector('[data-test-agent-line]')
+          ?.nextElementSibling?.matches('#panel-actions'),
+      ),
+      'the agent’s line sits right above the footer',
+    );
+    await click('[data-test-decision="confirm"]');
+    assert.strictEqual(board().posted[0]!.verb, 'confirm');
   });
 
   test('a fix the agent is rebasing says it lands on its own, with the conflict folded away', async function (assert) {

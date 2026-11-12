@@ -131,7 +131,7 @@ const PanelView: TOC<PanelSignature> = <template>
                 </p>
               {{/if}}
             </div>
-          {{else if @panel.mention}}{{else}}
+          {{else if @panel.mention}}{{else if @panel.agent_line}}{{else}}
             <p class="work-placeholder" data-test-work-placeholder>
               What the author did lands here
             </p>
@@ -378,6 +378,18 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
     </div>
+    {{#if @panel.agent_line}}
+      <section class="agent-line" data-test-agent-line>
+        {{#if @panel.agent_line.reason}}
+          <p class="agent-reason" data-test-agent-reason>
+            {{@panel.agent_line.reason}}
+          </p>
+        {{/if}}
+        <p class="agent-proposal" data-test-agent-proposal>
+          {{@panel.agent_line.proposal}}
+        </p>
+      </section>
+    {{/if}}
     {{#if (offersAnything @panel)}}
       <PanelActions
         @conversationId={{@panel.id}}

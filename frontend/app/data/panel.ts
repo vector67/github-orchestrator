@@ -194,6 +194,11 @@ export interface Footer {
   refused: string | null;
 }
 
+export interface AgentLine {
+  reason: string | null;
+  proposal: string;
+}
+
 export interface Panel {
   id: string;
   role: string;
@@ -220,6 +225,7 @@ export interface Panel {
   footer: Footer;
   can_delete: boolean;
   check_for_fixes: boolean;
+  agent_line: AgentLine | null;
   accept: AcceptView | null;
   rework: ReworkView | null;
   agent_words: string | null;
@@ -959,7 +965,7 @@ function workNotes(
   }
   const run = newest(operations, RUN_KINDS);
   const fix = run?.kind === 'start-session' ? undefined : run;
-  if (run?.state === 'refused' && run.reason) {
+  if (run?.state === 'refused' && run.reason && phase !== 'assumed-done') {
     const attempt =
       phase === 'failed' && fix?.attempts && fix.attempts_allowed
         ? `attempt ${fix.attempts} of ${fix.attempts_allowed} failed: `
@@ -1472,6 +1478,43 @@ function commitCheckOf(conversation: Conversation): {
   };
 }
 
+const CONFIRMS = ['confirm', 'confirm-resolve'];
+
+function confirmStepsOf(confirm: Offer, replyTo: string): string[] {
+  const { asks } = confirm;
+  if (typeof asks !== 'object' || asks === null) return [];
+  return [
+    asks.resolves && asks.resolving ? 'resolve the thread on GitHub' : '',
+    asks.thumbsUp && replyTo ? `put 👍 on ${replyTo}’s reply` : '',
+  ].filter(Boolean);
+}
+
+function agentReasonOf(
+  conversation: Conversation,
+  operations: Operation[],
+): string | null {
+  const check = conversation.commit_check;
+  if (check?.verdict === 'addressed') return check.reasoning || null;
+  const run = newest(operations, RUN_KINDS);
+  return run?.state === 'refused' ? run.reason : null;
+}
+
+function agentLineOf(
+  conversation: Conversation,
+  actions: Offer[],
+  replyTo: string,
+  operations: Operation[],
+): AgentLine | null {
+  if (conversation.state !== 'assumed-done') return null;
+  const confirm = actions.find((one) => CONFIRMS.includes(one.decision));
+  if (!confirm) return null;
+  const steps = confirmStepsOf(confirm, replyTo);
+  return {
+    reason: agentReasonOf(conversation, operations),
+    proposal: `Agent proposal: ${steps.length ? steps.join(' and ') : 'skip'}`,
+  };
+}
+
 export function panelOf(
   conversation: Conversation,
   details: Details | null,
@@ -1538,12 +1581,15 @@ export function panelOf(
     },
     can_delete: canDelete(conversation, comments, context.viewer),
     check_for_fixes: checksForFixes(conversation, context),
+    agent_line: agentLineOf(shown, actions, replyTo, settled),
   };
   if (context.role === 'reviewer' && !proposal) {
+    const check = commitCheckOf(shown);
     return {
       ...top,
       ...NO_FIX,
-      ...commitCheckOf(shown),
+      ...check,
+      commit_check: top.agent_line ? null : check.commit_check,
       notes: [
         ...deferralNotes(shown, settled),
         ...draftNotes(shown),

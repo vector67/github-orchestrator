@@ -926,6 +926,22 @@ button.copy-directory {
   line-height: 1.5;
 }
 
+.agent-line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-m);
+  line-height: 1.5;
+}
+
+.agent-line p {
+  margin: 0;
+}
+
+.agent-proposal {
+  font-weight: var(--fw-strong);
+}
+
 #panel-fix .proposed-reply {
   margin: 0;
   padding-left: 12px;

@@ -1213,7 +1213,7 @@ const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
   answered: ['resolve', 'not-fixed', 'place', 'defer'],
   removed: ['mark-done'],
   waiting: ['resolve', 'mark-done', 'defer', 'place'],
-  'assumed-done': ['confirm-resolve', 'place', 'resolve'],
+  'assumed-done': ['confirm-resolve', 'place'],
   'not-mine': ['place', 'resolve', 'mark-done'],
   deferred: ['unpark', 'resolve', 'mark-done'],
   resolved: ['unpark'],
@@ -1247,14 +1247,13 @@ function finishing(
   decisions: Decision[],
 ): Decision[] {
   if (conversation.kind === 'review') return decisions;
-  const instead: Decision =
-    conversation.kind === 'request' ? 'mark-done' : 'reply-and-mark-done';
+  const instead: Partial<Record<Decision, Decision>> = {
+    resolve:
+      conversation.kind === 'request' ? 'mark-done' : 'reply-and-mark-done',
+    'confirm-resolve': 'confirm',
+  };
   return [
-    ...new Set(
-      decisions.map((decision) =>
-        decision === 'resolve' ? instead : decision,
-      ),
-    ),
+    ...new Set(decisions.map((decision) => instead[decision] ?? decision)),
   ];
 }
 
