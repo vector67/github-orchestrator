@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.domain import Location, Pr, Repo
+from github_orchestrator.domain import Location, Pr, Repo, UtcClock
 from github_orchestrator.github import _fetch_ahead, _pages, _pull_requests, _threads
 from github_orchestrator.github._gh_cli import Gh, Run
 from github_orchestrator.github._traffic import Traffic
@@ -136,7 +136,7 @@ class GhCliGitHub:
         query = f'"@{self._account}"' if whose == "mentions" else _SEARCHES[whose]
         if updated_since is None:
             return self._gh.search_prs(repos, query)
-        updated = updated_since.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        updated = updated_since.astimezone(UTC).strftime(UtcClock.STAMP)
         return self._gh.search_prs(repos, query, f"--updated=>={updated}", open_only=False)
 
     def pr_state(self, pr: Pr) -> PullRequestState:

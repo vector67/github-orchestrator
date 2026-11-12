@@ -2,7 +2,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
@@ -105,7 +105,7 @@ class ShelfKey:
 
 RESET_TO_ORIGIN = "reset"
 REVIEWED = "reviewed"
-_RESET_STATE = ShelfKey("state")
+RESET_STATE = ShelfKey("state")
 
 
 class ResetRefusalCode(StrEnum):
@@ -131,47 +131,56 @@ class ResetRefusal:
     detail: str | None = None
 
 
-def _text(field: object) -> bool:
-    return field is None or (isinstance(field, str) and bool(field))
-
-
-def _refusal_of(field: object) -> ResetRefusal:
-    if not isinstance(field, dict):
-        raise ValueError(field)
-    code, detail = field.get("code"), field.get("detail")
-    if not isinstance(code, str) or not _text(detail):
-        raise ValueError(field)
-    return ResetRefusal(ResetRefusalCode(code), detail)
-
-
 @dataclass(frozen=True)
 class ResetToOrigin:
     queued_at: str | None = None
     ran_at: str | None = None
     refused: ResetRefusal | None = None
 
+
+def _text(field: object) -> bool:
+    return field is None or (isinstance(field, str) and bool(field))
+
+
+IMPORTANCE = "importance"
+_RANKED = ShelfKey("ranked")
+NUDGE_AFTER = timedelta(hours=24)
+
+
+class Importance(StrEnum):
+    IMPORTANT = "important"
+    NORMAL = "normal"
+    SOMEDAY = "someday"
+
+
+@dataclass(frozen=True)
+class PrImportance:
+    importance: Importance | None = None
+    nudged_at: str | None = None
+
     def keep(self, shelf: "Shelf") -> None:
-        shelf.save(RESET_TO_ORIGIN, _RESET_STATE, json.dumps(asdict(self)).encode())
+        shelf.save(IMPORTANCE, _RANKED, json.dumps(asdict(self)).encode())
 
     @staticmethod
-    def kept(shelf: "Shelf") -> "ResetToOrigin | None":
-        document = shelf.list(RESET_TO_ORIGIN).get(_RESET_STATE)
+    def kept(shelf: "Shelf") -> "PrImportance":
+        document = shelf.list(IMPORTANCE).get(_RANKED)
         if document is None:
-            return None
+            return PrImportance()
         try:
             fields = json.loads(document)
-            queued_at, ran_at = fields.get("queued_at"), fields.get("ran_at")
-            refused = fields.get("refused")
-            if not (_text(queued_at) and _text(ran_at)):
-                return None
-            return ResetToOrigin(queued_at, ran_at,
-                                 None if refused is None else _refusal_of(refused))
+            importance, nudged_at = fields.get("importance"), fields.get("nudged_at")
+            if not _text(nudged_at):
+                return PrImportance()
+            return PrImportance(None if importance is None else Importance(importance), nudged_at)
         except (ValueError, TypeError, AttributeError, RecursionError):
-            return None
+            return PrImportance()
 
-    @staticmethod
-    def forget(shelf: "Shelf") -> None:
-        shelf.delete(RESET_TO_ORIGIN, _RESET_STATE)
+    def nudge_due(self, last_event_at: str | None, now: datetime) -> bool:
+        if self.importance is not Importance.IMPORTANT:
+            return False
+        moments = [datetime.fromisoformat(moment) for moment in (last_event_at, self.nudged_at)
+                   if moment is not None]
+        return bool(moments) and now - max(moments) >= NUDGE_AFTER
 
 
 @dataclass(frozen=True)
@@ -236,6 +245,8 @@ class Dashboard:
     run_working: bool
     release_requested: bool
     hidden: bool
+    importance: Importance | None
+    nudge_due: bool
     flags_changed_at: str | None
     thread_rows: tuple[ThreadRow, ...]
     unreadable_threads: tuple[str, ...]

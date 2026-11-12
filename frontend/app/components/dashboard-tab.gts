@@ -1,13 +1,15 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
+import { waitForPromise } from '@ember/test-waiters';
 import { on } from '@ember/modifier';
 import { pulses } from 'frontend/motion';
 import { concat, fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
-import type { DismissUntil } from 'frontend/data/api';
+import ImportanceConfirm from 'frontend/components/importance-confirm';
+import type { DismissUntil, Importance } from 'frontend/data/api';
 import GitPalette from 'frontend/components/git-palette';
 import GitPaletteState from 'frontend/components/git-palette-state';
 import Glyphs from 'frontend/components/glyphs';
@@ -89,7 +91,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: 'dismiss' | 'close' | 'assign' | null = null;
+  @tracked asking: 'dismiss' | 'close' | 'assign' | 'importance' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -241,6 +243,33 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     this.asking = null;
   };
 
+  get unranked(): boolean {
+    return this.summaries?.unranked ?? false;
+  }
+
+  get importance(): Importance | null {
+    return this.on?.shown.flags?.importance ?? null;
+  }
+
+  get importanceRefused(): string | null {
+    return this.summaries?.pressing.importance.refused ?? null;
+  }
+
+  askImportance = () => {
+    this.asking = 'importance';
+  };
+
+  setImportance = (importance: Importance) => {
+    this.cancelAsking();
+    const pr = this.here.pr;
+    if (pr) void waitForPromise(this.store.setImportance(pr, importance));
+  };
+
+  nudged = () => {
+    const pr = this.here.pr;
+    if (pr) void waitForPromise(this.store.nudged(pr));
+  };
+
   dismiss = (until: DismissUntil) => {
     this.cancelAsking();
     const on = this.on;
@@ -375,6 +404,12 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             {{#if this.pressing.refused}}
               <p class="refusal" data-test-refusal>{{this.pressing.refused}}</p>
             {{/if}}
+            {{#if this.importanceRefused}}
+              <p
+                class="refusal"
+                data-test-importance-refused
+              >{{this.importanceRefused}}</p>
+            {{/if}}
           </div>
           <div class="controls">
             {{#if this.reading.frozen}}
@@ -400,6 +435,15 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   data-test-control="board"
                   {{navigates this.toBoard}}
                 >Open the Board <kbd>2</kbd></a>
+              {{/if}}
+              {{#if (eq this.reading.code "nudge")}}
+                <button
+                  type="button"
+                  class="btn"
+                  title="Say you nudged them: puts the next nudge a day off"
+                  data-test-control="nudged"
+                  {{on "click" this.nudged}}
+                >I nudged them</button>
               {{/if}}
               {{#if this.reading.onHold}}
                 <button
@@ -432,6 +476,21 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   />
                   <kbd>{{capOfControl "hold"}}</kbd></button>
               {{/if}}
+              <button
+                type="button"
+                class="btn"
+                title="Say how much this pull request matters to you"
+                data-opens-dialog={{if (opensDialog "set-importance") "true"}}
+                data-test-control="set-importance"
+                {{on "click" this.askImportance}}
+              >{{#if this.unranked}}<span
+                    class="unset-dot"
+                    aria-label="not set"
+                    data-test-importance-unset
+                  ></span>{{/if}}Set importance<Glyphs
+                  @opensDialog={{opensDialog "set-importance"}}
+                  @runsAgent={{runsAgent "set-importance"}}
+                /></button>
               <button
                 type="button"
                 class="btn"
@@ -633,6 +692,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @pick={{this.savedPick}}
             @assign={{this.assignReviewers}}
             @assignWhenReady={{this.assignWhenReady}}
+            @cancel={{this.cancelAsking}}
+          />
+        {{/if}}
+        {{#if (eq this.asking "importance")}}
+          <ImportanceConfirm
+            @number={{this.reading.number}}
+            @current={{this.importance}}
+            @pick={{this.setImportance}}
             @cancel={{this.cancelAsking}}
           />
         {{/if}}

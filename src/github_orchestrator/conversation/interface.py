@@ -72,10 +72,7 @@ class Polled:
 
 @dataclass(frozen=True)
 class Counts:
-    queued: int
     live: frozenset[str]
-    proposed: int
-    drafts: int
     answered: tuple[str, ...]
     rows: tuple[ThreadRow, ...]
     unreadable: tuple[str, ...]

@@ -890,8 +890,7 @@ def test_a_proposed_fix_is_not_counted_as_answered(settings):
     threads = _open(here)
     propose(here, threads, KEY)
 
-    counts = threads.counts()
-    assert (counts.proposed, counts.answered) == (1, ())
+    assert threads.counts().answered == ()
 
 
 @pytest.mark.parametrize("bot", ["claude", "Codex", "copilot[bot]"])

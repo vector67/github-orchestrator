@@ -8,10 +8,7 @@ from github_orchestrator.conversation._adapters import (
     conversation_document as codec,
 )
 from github_orchestrator.conversation._adapters import record_schema as schema
-from github_orchestrator.conversation._adapters.clock import (
-    CREATED_AT_FORMAT,
-    STARTED_AT_FORMAT,
-)
+from github_orchestrator.conversation._adapters.clock import CREATED_AT_FORMAT
 from github_orchestrator.conversation._adapters.intent_text import (
     format_intent,
     parse_intent,
@@ -27,6 +24,7 @@ from github_orchestrator.conversation._domain.conversation import (
     UnreadableRecord,
 )
 from github_orchestrator.conversation._domain.review import Review
+from github_orchestrator.domain import UtcClock
 from github_orchestrator.thread_records import PrRecords, UnreadableThread
 
 log = logging.getLogger(__name__)
@@ -120,7 +118,7 @@ class Conversations:
         now = self._utcnow()
         self._records.save(THREAD, conversation.key, schema.stamped(
             codec.encode(conversation), now.strftime(CREATED_AT_FORMAT),
-            now.strftime(STARTED_AT_FORMAT)))
+            now.strftime(UtcClock.STAMP)))
 
     def list(self) -> builtins.list[Conversation]:
         listed = []

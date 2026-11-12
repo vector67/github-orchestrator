@@ -757,6 +757,7 @@ module('Acceptance | dashboard', function (hooks) {
     );
     assert.deepEqual(marked, [
       'hold',
+      'set-importance⧉',
       'carry-on✦',
       'mark-ready⧉',
       'assign-reviewers⧉',

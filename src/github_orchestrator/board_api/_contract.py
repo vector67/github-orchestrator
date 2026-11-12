@@ -13,6 +13,7 @@ from pydantic import (
 from github_orchestrator import conversation as domain
 from github_orchestrator.board_api.interface import (
     CloneState,
+    Importance,
     ManagerStanding,
     NoticeCode,
     PrEnded,
@@ -1308,6 +1309,17 @@ class ReadMarkRequest(BaseModel):
     sha: Sha
 
 
+class SetImportanceRequest(BaseModel):
+    importance: Importance
+
+
+class RankedPullRequest(BaseModel):
+    """How much the pull request matters to you, and when you last said you nudged."""
+
+    importance: Importance | None
+    nudged_at: str | None
+
+
 class ResetRequest(BaseModel):
     head: Sha = Field(description="The worktree's HEAD the page showed. The reset refuses "
                                   "once the worktree has moved on from it.")
@@ -1955,6 +1967,11 @@ class ManagerFlags(BaseModel):
     working_on: str | None = Field(
         description="The event an agent run is working on. Null where none runs.")
     hidden: bool = Field(description="Dismissed, until its next event or forever.")
+    importance: Importance | None = Field(
+        description="How much the pull request matters to you. Null until you set it.")
+    nudge_due: bool = Field(
+        description="Important, and a day has passed since its last event and since "
+                    "you last said you nudged.")
     threads_live: int = Field(description="Threads an agent is working on now.")
     changed_at: str | None = Field(
         description="When one of these last changed, as this process saw it. "

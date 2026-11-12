@@ -4,6 +4,7 @@ import type {
   Conversation,
   ConversationState,
   Diff,
+  Importance,
   ManagerFlags,
   MentionableList,
   MentionDeferred,
@@ -87,7 +88,8 @@ export type Move =
   | 'await-rerequest'
   | 'await-ready'
   | 'mention'
-  | 'mentioned';
+  | 'mentioned'
+  | 'nudge';
 
 export type Flag = 'draft' | 'fix-ci' | 'rebase' | 'unresolved-threads';
 
@@ -142,6 +144,8 @@ export interface Summaries {
   pressing: Pressings;
   opening: Pressed;
   answering: AnswerReply[];
+  unranked: boolean;
+  problems: number;
 }
 
 type Threads = Record<string, Thread>;
@@ -284,13 +288,20 @@ const GROUPS: Partial<Record<Move, WallGroup | null>> = {
   mentioned: 'waiting-on-others',
 };
 
-const DRAFT_DECISIONS: Move[] = [
-  'agent-question',
-  'human-comments',
-  'bot-comments',
+const DRAFT_DECISIONS: Move[] = ['agent-question', 'human-comments'];
+
+const NUDGEABLE: Move[] = [
+  'await-review',
+  'await-reviewers',
+  'await-rereview',
+  'await-author',
+  'await-rerequest',
+  'await-ready',
 ];
 
 const YOUR_TURN: Move[] = ['review', 'rereview'];
+
+const PROBLEMS: Flag[] = ['fix-ci', 'rebase'];
 
 interface Pick {
   move: Move;
@@ -422,6 +433,10 @@ function yourTurn(state: Move, board: Board): Move {
   return board.drafts ? 'send-review' : state;
 }
 
+function nudged(code: Move, board: Board): Move {
+  return board.flags?.nudge_due && NUDGEABLE.includes(code) ? 'nudge' : code;
+}
+
 function onTop(state: Move | null, board: Board): Move {
   if ((board.flags?.frozen_on ?? null) !== null) return 'release-worktree';
   if (board.flags?.on_hold) return board.openMentions ? 'mention' : 'on-hold';
@@ -440,7 +455,7 @@ function wallGroupOf(code: Move, muted: boolean): WallGroup | null {
 function nextMoveOf(facts: PrFacts | null, board: Board): NextMove {
   const pick = facts ? ofPr(facts) : null;
   const state = pick?.move ?? null;
-  const code = onTop(state, board);
+  const code = nudged(onTop(state, board), board);
   const dismissed = Boolean(board.flags?.hidden) && code !== 'release-worktree';
   const muted =
     facts !== null &&
@@ -491,6 +506,9 @@ function summarised(
   const openMentions = all
     .filter((one) => one.mention && !CLOSED_MENTION.includes(one.state))
     .map((one) => one.key);
+  const unranked =
+    Boolean(pr?.flags) && (pr?.flags?.importance ?? null) === null;
+  const wrong = flagsOf(facts).filter((flag) => PROBLEMS.includes(flag));
   return {
     role,
     groups: role ? groupsOf(readOf(threads, operations), role) : {},
@@ -517,6 +535,8 @@ function summarised(
     pressing: pressedOn(pr, operations),
     opening: openingOf(all.flatMap((one) => operationsOf(one, operations))),
     answering: answeringOf(all, operations, pr?.author ?? null),
+    unranked,
+    problems: wrong.length + (unranked ? 1 : 0),
   };
 }
 
@@ -906,6 +926,19 @@ export function enteredAt(
 
 type Placed = WallRow & { joined: number; group: WallGroup | null };
 
+const RANKS: Record<Importance, number> = {
+  important: 0,
+  normal: 2,
+  someday: 3,
+};
+
+const UNRANKED = 1;
+
+function rankOf(row: Placed): number {
+  const importance = row.flags?.importance ?? null;
+  return importance === null ? UNRANKED : RANKS[importance];
+}
+
 function wallBuilt(
   groups: WallGroup[],
   prs: Record<string, PrEntity>,
@@ -927,7 +960,10 @@ function wallBuilt(
       edge: edgeOf(group),
       prs: placed
         .filter((one) => one.group === group)
-        .sort((one, other) => one.joined - other.joined),
+        .sort(
+          (one, other) =>
+            rankOf(one) - rankOf(other) || one.joined - other.joined,
+        ),
     }))
     .filter((section) => section.prs.length > 0);
 }

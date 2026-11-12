@@ -830,7 +830,8 @@ export type Slot =
   | 'session'
   | 'ask'
   | 'summary'
-  | 'reviewers';
+  | 'reviewers'
+  | 'importance';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -927,6 +928,18 @@ const PR_WRITES = {
     slot: 'read',
     unsent: 'Not marked unread',
   },
+  'set-importance': {
+    doing: 'setting its importance',
+    square: null,
+    slot: 'importance',
+    unsent: 'Importance not set',
+  },
+  nudged: {
+    doing: 'noting the nudge',
+    square: null,
+    slot: 'importance',
+    unsent: 'Nudge not noted',
+  },
   git: {
     doing: 'running git',
     square: null,
@@ -967,6 +980,7 @@ const SLOTS: Slot[] = [
   'ask',
   'summary',
   'reviewers',
+  'importance',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {
@@ -1065,6 +1079,7 @@ export type Kind =
   | 'edit-part'
   | 'create-draft'
   | 'request-change'
+  | 'check-session'
   | AnswerKind
   | 'send-review'
   | 'prepare-harvest-extension'
@@ -1079,6 +1094,10 @@ const CARRIED: Record<Kind, Carrying> = {
   },
   'request-change': {
     doing: 'requesting the change',
+    square: null,
+  },
+  'check-session': {
+    doing: 'checking the session',
     square: null,
   },
   answer: {
@@ -1326,6 +1345,7 @@ const ASKS_FIRST: Kind[] = [
   'dismiss',
   'close',
   'send-review',
+  'set-importance',
 ];
 
 const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close'];

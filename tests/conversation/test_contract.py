@@ -198,7 +198,6 @@ def test_a_fix_reported_ready_is_proposed_with_its_commit(stage):
     assert conversation.fix.is_proposed
     assert conversation.fix.summary == "renamed it"
     assert conversation.standing is ConversationState.READY
-    assert threads.counts().proposed == 1
 
 
 def test_a_declined_fix_keeps_its_classification_and_reason(stage):

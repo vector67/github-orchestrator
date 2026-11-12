@@ -26,6 +26,7 @@ import type {
   HarvestExtensionFolder,
   Health,
   HeldPullRequests,
+  Importance,
   ManagerChanges,
   ManagerFlags,
   ManagerStanding,
@@ -45,8 +46,10 @@ import type {
   PullRequestCommits,
   ReactRequest,
   ReadMark,
+  RankedPullRequest,
   ReadMarks,
   ResetRequest,
+  SetImportanceRequest,
   RunLedger,
   Setup,
   SetupAccount,
@@ -312,6 +315,8 @@ const CONFIG_MOVED =
   'The config changed since this page read it. Check your choices and save again.';
 
 const READ_MARKS = '/api/pull-request/read-marks';
+
+const IMPORTANCE = '/api/pull-request/importance';
 
 const UNREAD_HEAD = 'the page has not read the worktree’s commits yet';
 
@@ -1250,6 +1255,43 @@ export default class StoreService extends Service {
     return { done: true, body: () => this.drop(pr, local) };
   }
 
+  async setImportance(
+    pr: Numbered,
+    importance: Importance,
+  ): Promise<Tried<void>> {
+    return this.rank(pr, 'set-importance', 'operations:set', { importance });
+  }
+
+  async nudged(pr: Numbered): Promise<Tried<void>> {
+    return this.rank(pr, 'nudged', 'operations:nudged', undefined);
+  }
+
+  private async rank(
+    pr: Numbered,
+    verb: 'set-importance' | 'nudged',
+    operation: string,
+    asked: SetImportanceRequest | undefined,
+  ): Promise<Tried<void>> {
+    const { taken, local } = await this.sendOn(
+      pr,
+      verb,
+      () =>
+        write<RankedPullRequest>(
+          `${this.here.prefixOf(pr)}${IMPORTANCE}/${operation}`,
+          null,
+          asked,
+        ),
+      verb === 'nudged' ? 'note the nudge' : 'set its importance',
+    );
+    if (!taken.done) return taken;
+    const drawn = await this.ask({ kind: 'dashboard', pr }, null).catch(
+      () => null,
+    );
+    if (drawn?.changed) drawn.take();
+    this.drop(pr, local);
+    return { done: true, body: undefined };
+  }
+
   async markRead(pr: Numbered, sha: string, marked: boolean): Promise<void> {
     const verb = marked ? 'mark-read' : 'mark-unread';
     const { taken, local } = await this.sendOn(
@@ -1343,16 +1385,20 @@ export default class StoreService extends Service {
   }
 
   async checkSession(pr: Numbered, key: string): Promise<Tried<string | null>> {
-    const checked = await tried(
+    const { taken, local } = await this.sendHeld(
+      pr,
+      this.hold(pr, this.sending(key, 'check-session', null)),
+      () =>
+        posted<SessionCheck>(
+          this.here.api(`${under(key)}/operations:check-session`),
+          null,
+          {},
+        ),
       'session',
-      posted<SessionCheck>(
-        this.here.api(`${under(key)}/operations:check-session`),
-        null,
-        {},
-      ),
     );
-    if (!checked.done) return checked;
-    const { session, conversation } = checked.body.body;
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    const { session, conversation } = taken.body.body;
     this.takeThread(pr, conversation);
     return { done: true, body: session };
   }

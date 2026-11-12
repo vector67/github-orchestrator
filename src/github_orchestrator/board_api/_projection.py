@@ -590,6 +590,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
         manager=contract.ManagerFlags(
             frozen_on=dashboard.frozen_on, on_hold=dashboard.on_hold,
             working_on=dashboard.working_on, hidden=dashboard.hidden,
+            importance=dashboard.importance, nudge_due=dashboard.nudge_due,
             threads_live=len(dashboard.threads_live), changed_at=dashboard.flags_changed_at),
         threads=[contract.ThreadRow(
             key=row.key, state=domain.ConversationState(row.standing),

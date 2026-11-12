@@ -134,18 +134,33 @@ export default class TerminalService extends Service {
     return found !== undefined;
   };
 
-  goTo(key: string, worktree: string | null): Promise<void> {
-    return waitForPromise(this.going(key, worktree));
+  goTo(
+    key: string,
+    worktree: string | null,
+    arrive: () => Promise<void>,
+  ): Promise<void> {
+    return waitForPromise(this.going(key, worktree, arrive));
   }
 
-  private async going(key: string, worktree: string | null): Promise<void> {
+  private async going(
+    key: string,
+    worktree: string | null,
+    arrive: () => Promise<void>,
+  ): Promise<void> {
     const pr = this.here.pr;
+    if (pr === null) return;
     await this.refresh();
-    if (pr === null || (worktree !== null && this.selectIn(worktree))) return;
+    const known = this.sessions.find(
+      (one) => worktree !== null && one.listed.worktree === worktree,
+    );
+    if (known) {
+      await arrive();
+      this.select(known.id);
+      return;
+    }
     const checked = await this.store.checkSession(pr, key);
-    if (!checked.done) {
-      this.toasts.say(checked.why, 'failed');
-    } else if (checked.body === null) {
+    if (!checked.done) return;
+    if (checked.body === null) {
       this.toasts.say(
         'The session this comment expected is not running; the board checked and found none',
         'failed',
@@ -154,10 +169,11 @@ export default class TerminalService extends Service {
         'The comment is back where it was before the session opened',
         'done',
       );
-    } else {
-      await this.refresh();
-      this.select(checked.body);
+      return;
     }
+    await arrive();
+    await this.refresh();
+    this.select(checked.body);
   }
 
   refresh(): Promise<string[]> {

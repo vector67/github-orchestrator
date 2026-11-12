@@ -104,6 +104,10 @@ export default class PrView extends Component<PrViewSignature> {
     return this.store.summary(this.repo, this.args.pr.number);
   }
 
+  get problems(): number {
+    return this.summaries?.problems ?? 0;
+  }
+
   get threadsWaiting(): string | null {
     const summaries = this.summaries;
     return summaries ? threadsWaitingOf(summaries) : null;
@@ -395,7 +399,11 @@ export default class PrView extends Component<PrViewSignature> {
             {{#if this.reading.working}}<span
                 class="live-dot"
                 {{pulses this.reading.move}}
-              ></span>{{/if}}
+              ></span>{{/if}}{{#if this.problems}}<span
+                class="problem-badge"
+                title="Problems on this pull request: importance not set, CI failing or behind its base"
+                data-test-tab-badge
+              >{{this.problems}}</span>{{/if}}
             <kbd>3</kbd></LinkTo>
           <LinkTo
             @route="terminal"

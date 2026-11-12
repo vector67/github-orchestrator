@@ -1604,6 +1604,23 @@
     }
    }
   },
+  "/api/pull-request/importance/operations:nudged": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/RankedPullRequest"
+    }
+   }
+  },
+  "/api/pull-request/importance/operations:set": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/RankedPullRequest"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/operations:cancel-reset-to-origin": {
    "post": {
     "204": null
@@ -5302,6 +5319,14 @@
    ],
    "type": "string"
   },
+  "Importance": {
+   "enum": [
+    "important",
+    "normal",
+    "someday"
+   ],
+   "type": "string"
+  },
   "LandingSteps": {
    "properties": {
     "answered": {
@@ -5413,6 +5438,19 @@
     "hidden": {
      "type": "boolean"
     },
+    "importance": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Importance"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "nudge_due": {
+     "type": "boolean"
+    },
     "on_hold": {
      "type": "boolean"
     },
@@ -5435,6 +5473,8 @@
     "on_hold",
     "working_on",
     "hidden",
+    "importance",
+    "nudge_due",
     "threads_live",
     "changed_at"
    ],
@@ -7371,6 +7411,35 @@
    ],
    "type": "object"
   },
+  "RankedPullRequest": {
+   "properties": {
+    "importance": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Importance"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "nudged_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "importance",
+    "nudged_at"
+   ],
+   "type": "object"
+  },
   "ReactRequest": {
    "properties": {
     "content": {
@@ -8263,6 +8332,17 @@
     "progress",
     "plan",
     "proposal"
+   ],
+   "type": "object"
+  },
+  "SetImportanceRequest": {
+   "properties": {
+    "importance": {
+     "$ref": "#/components/schemas/Importance"
+    }
+   },
+   "required": [
+    "importance"
    ],
    "type": "object"
   },

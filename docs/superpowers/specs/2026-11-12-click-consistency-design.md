@@ -227,11 +227,6 @@ In the tables, ⧉ stands for the window icon and ✦ for the AI star (rule 02).
 - The renames under rule 15, Reply moved out of the footer, and the underline
   rule.
 
-## Open
-
-- Reset to origin's place in the commit timeline is a guess: the preview could
-  not show a diverged branch.
-
 ## Out of scope
 
 The agent's question card's answer buttons (#363) and the split proposal's

@@ -53,6 +53,7 @@ import type {
   NewestRelease,
   OutstandingMention,
   QueuedEvent,
+  SetImportanceRequest,
   UnpushedCommit,
 } from 'frontend/data/api';
 import { driftOf } from 'frontend/tests/helpers/contract';
@@ -531,6 +532,8 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       on_hold: false,
       working_on: null,
       hidden: false,
+      importance: 'normal',
+      nudge_due: false,
       threads_live: 0,
       changed_at: '2026-09-12T08:30:00Z',
       ...manager,
@@ -641,6 +644,8 @@ const SUMMARISE =
 const READ_MARK =
   /\/api\/pull-request\/read-marks\/operations:(mark-read|mark-unread)$/;
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
+const RANKING = /\/api\/pull-request\/importance\/operations:(set|nudged)$/;
+export const NUDGED_AT = '2026-09-12T09:00:00+00:00';
 export const ONE_PR_READ =
   /^\/api\/(?!health$|pull-requests$|runs$|mentions$|tour$|emojis$|client-errors$)/;
 const THROUGH_THE_HUB = /^\/pr\/([^/]+\/[^/]+)\/(\d+)(\/api\/.*)$/;
@@ -1548,6 +1553,8 @@ export class FakeBoard {
     if (queueing) return this.queueReset(url, queueing[1]!);
     const marking = READ_MARK.exec(url);
     if (marking) return this.mark(url, marking[1]!, init);
+    const ranking = RANKING.exec(url);
+    if (ranking) return this.rank(url, ranking[1]!, init);
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
     const summarised = SUMMARISE.exec(url);
@@ -1727,6 +1734,34 @@ export class FakeBoard {
     return respond(JSON.stringify(this.summary), {
       status: 202,
       headers: { 'Content-Type': 'application/json', Location: '/api/summary' },
+    });
+  }
+
+  private rank(url: string, verb: string, init: RequestInit): Response {
+    const body: unknown =
+      typeof init.body === 'string' ? JSON.parse(init.body) : null;
+    this.posted.push({ url, key: '', verb, ifMatch: null, body });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    const shown = this.boardOf(url);
+    const flags: ManagerFlags =
+      verb === 'set'
+        ? {
+            ...shown.manager,
+            importance: (body as SetImportanceRequest).importance,
+          }
+        : { ...shown.manager, nudge_due: false };
+    const changed: Dashboard = { ...shown, manager: flags };
+    this.held = this.held.map((one) =>
+      one.dashboard === shown ? { ...one, dashboard: changed } : one,
+    );
+    if (this.managerSet && this.manager === shown) this.manager = changed;
+    return this.json(200, {
+      importance: flags.importance ?? null,
+      nudged_at: verb === 'nudged' ? NUDGED_AT : null,
     });
   }
 

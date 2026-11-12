@@ -138,7 +138,7 @@ module('Acceptance | shell', function (hooks) {
       assert
         .dom(document.documentElement)
         .hasAttribute('data-theme', wasDark ? 'light' : 'dark');
-      assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: on');
+      assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: On');
     } finally {
       Object.defineProperty(window, 'localStorage', storage);
     }
@@ -166,12 +166,12 @@ module('Acceptance | shell', function (hooks) {
         ].map((one) => one.textContent.trim()),
         [
           window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'Light theme'
-            : 'Dark theme',
-          'Harvest timer: off',
-          'Commit box sizing',
-          'Auto read',
-          'Agent sessions',
+            ? 'Theme: Dark'
+            : 'Theme: Light',
+          'Harvest timer: Off',
+          'Commit box sizing: Full',
+          'Auto read: Off',
+          'Agent sessions: Ask me each time',
           'Terminal colours',
         ],
       );
@@ -182,11 +182,11 @@ module('Acceptance | shell', function (hooks) {
       assert.strictEqual(currentURL(), before);
     });
 
-    test(`the theme toggle on ${page} names the theme it switches to and is never pressed`, async function (assert) {
+    test(`the theme toggle on ${page} names the theme it shows, as every setting names its state, and is never pressed`, async function (assert) {
       await visit(page);
       await click('[data-test-settings-open]');
       const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const named = (dark: boolean) => (dark ? 'Light theme' : 'Dark theme');
+      const named = (dark: boolean) => (dark ? 'Theme: Dark' : 'Theme: Light');
 
       assert
         .dom('[data-test-theme-toggle]')
