@@ -7,6 +7,7 @@ import { pulses } from 'frontend/motion';
 import { concat, fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
+import AreYouSure from 'frontend/components/are-you-sure';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ImportanceConfirm from 'frontend/components/importance-confirm';
 import type { DismissUntil, Importance } from 'frontend/data/api';
@@ -22,7 +23,14 @@ import {
   threadsWaitingOf,
   type Reading,
 } from 'frontend/data/dashboard';
-import { opensDialog, runsAgent, type Pressing } from 'frontend/data/decisions';
+import {
+  areYouSureOf,
+  opensDialog,
+  runsAgent,
+  type AreYouSure as Asking,
+  type Pressing,
+  type RedPrVerb,
+} from 'frontend/data/decisions';
 import { notesOf } from 'frontend/data/markdown';
 import type { Numbered } from 'frontend/data/wall';
 import drawn from 'frontend/modifiers/drawn';
@@ -50,7 +58,6 @@ import type {
 } from 'frontend/services/store';
 import type TerminalService from 'frontend/services/terminal';
 import type ToastsService from 'frontend/services/toasts';
-import modal from 'frontend/modifiers/modal';
 import navigates from 'frontend/modifiers/navigates';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import AssignReviewers from 'frontend/components/assign-reviewers';
@@ -73,8 +80,6 @@ const KEYED = [
   'release',
 ] as const;
 
-const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
-
 interface DashboardTabSignature {
   Args: { pane?: string | null; ready?: boolean };
 }
@@ -91,7 +96,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: 'dismiss' | 'close' | 'assign' | 'importance' | null = null;
+  @tracked asking: Control | 'importance' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -231,10 +236,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   press = (control: Control): boolean => {
     const next = this.controls.press(this.on, control);
-    if (next === 'confirm-dismiss') this.asking = 'dismiss';
-    else if (next === 'confirm-close') this.asking = 'close';
-    else if (next === 'confirm-ready') this.askReady(true);
-    else if (next === 'confirm-assign') this.asking = 'assign';
+    if (next === 'asks' && control === 'mark-ready') this.askReady(true);
+    else if (next === 'asks') this.asking = control;
     else if (next === 'palette') this.palette.open();
     return next !== 'nothing';
   };
@@ -276,10 +279,22 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     if (on) void this.controls.dismiss(on, until);
   };
 
-  close = () => {
+  redLabel = (verb: RedPrVerb): string =>
+    areYouSureOf(verb, this.number ?? 0).label;
+
+  get redAsking(): Asking | null {
+    const asking = this.asking;
+    if (asking !== 'close' && asking !== 'take-over') return null;
+    return areYouSureOf(asking, this.number ?? 0);
+  }
+
+  confirmRed = () => {
+    const asking = this.asking;
     this.cancelAsking();
     const on = this.on;
-    if (on) void this.controls.close(on);
+    if (!on) return;
+    if (asking === 'close') void this.controls.close(on);
+    if (asking === 'take-over') void this.controls.takeOver(on);
   };
 
   private askReady(ready: boolean): void {
@@ -329,18 +344,6 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     const pr = this.here.pr;
     return pr ? this.store.outstanding(pr.repo, pr.number) : null;
   }
-
-  closeSubmitted = (event: Event) => {
-    event.preventDefault();
-    this.close();
-  };
-
-  closeAnswer = (key: string): boolean => {
-    if (MODIFIERS.has(key)) return true;
-    if (key === 'y') this.close();
-    else this.cancelAsking();
-    return true;
-  };
 
   private takes(key: string): boolean {
     const reading = this.reading;
@@ -563,14 +566,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
               {{#if (this.offered "take-over")}}
                 <button
                   type="button"
-                  class="btn"
+                  class="btn danger"
                   disabled={{this.heldBack "take-over"}}
                   title={{this.titleOf "take-over"}}
                   data-opens-dialog={{if (opensDialog "take-over") "true"}}
                   data-runs-agent={{if (runsAgent "take-over") "true"}}
                   data-test-control="take-over"
                   {{on "click" (fn this.press "take-over")}}
-                >{{this.labelOf "take-over" "Take over"}}<Glyphs
+                >{{this.labelOf "take-over" (this.redLabel "take-over")}}<Glyphs
                     @opensDialog={{opensDialog "take-over"}}
                     @runsAgent={{runsAgent "take-over"}}
                   />
@@ -625,7 +628,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 >{{#if (this.ringed "close")}}<PendingRing
                     />{{/if}}{{this.labelOf
                     "close"
-                    (concat "Close PR #" this.reading.number)
+                    (this.redLabel "close")
                   }}<Glyphs
                     @opensDialog={{opensDialog "close"}}
                     @runsAgent={{runsAgent "close"}}
@@ -635,42 +638,12 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             {{/if}}
           </div>
         </section>
-        {{#if (eq this.asking "close")}}
-          <div class="decide-dialog">
-            <form
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="close-confirm-question"
-              tabindex="-1"
-              data-test-close-confirm
-              {{modal this.cancelAsking this.closeAnswer}}
-              {{on "submit" this.closeSubmitted}}
-            >
-              <header class="dialog-head">
-                <p class="question" id="close-confirm-question">Close #{{this.reading.number}}
-                  on GitHub?</p>
-                <button
-                  type="button"
-                  class="dialog-close"
-                  aria-label="cancel"
-                  {{on "click" this.cancelAsking}}
-                >×</button>
-              </header>
-              <div class="dialog-actions">
-                <button
-                  type="submit"
-                  class="primary danger"
-                  data-test-close-option
-                >Close it <kbd>y</kbd></button>
-                <button
-                  type="button"
-                  class="ghost"
-                  data-test-close-cancel
-                  {{on "click" this.cancelAsking}}
-                >Cancel <kbd>Esc</kbd></button>
-              </div>
-            </form>
-          </div>
+        {{#if this.redAsking}}
+          <AreYouSure
+            @asking={{this.redAsking}}
+            @confirm={{this.confirmRed}}
+            @cancel={{this.cancelAsking}}
+          />
         {{/if}}
         {{#if this.readyAbout}}
           <ReadyConfirm
@@ -684,7 +657,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @cancel={{this.cancelReady}}
           />
         {{/if}}
-        {{#if (eq this.asking "assign")}}
+        {{#if (eq this.asking "assign-reviewers")}}
           <AssignReviewers
             @number={{this.reading.number}}
             @groups={{this.groups}}

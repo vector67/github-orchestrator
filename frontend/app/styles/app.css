@@ -1159,17 +1159,27 @@ button.copy-directory {
   padding: 0 18px;
 }
 
-#panel-actions:not(:has([data-weight="primary"], [data-weight="secondary"]))
+#panel-actions:not(
+    :has(
+      [data-weight="primary"],
+      [data-weight="secondary"],
+      [data-weight="destructive"]
+    )
+  )
   button[data-weight="ghost"]:first-child,
 #panel-actions
-  :is([data-weight="primary"], [data-weight="secondary"])
-  + :is([data-weight="ghost"], [data-weight="destructive"]) {
+  :is(
+    [data-weight="primary"],
+    [data-weight="secondary"],
+    [data-weight="destructive"]
+  ):not(.reject)
+  + :is([data-weight="ghost"], .reject) {
   margin-left: auto;
 }
 
 #panel-actions
-  :is([data-weight="ghost"], [data-weight="destructive"])
-  + :is([data-weight="ghost"], [data-weight="destructive"]) {
+  :is([data-weight="ghost"], .reject)
+  + :is([data-weight="ghost"], .reject) {
   margin-left: 6px;
 }
 

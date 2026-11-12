@@ -362,10 +362,10 @@ module('Acceptance | verbs | the author board', function (hooks) {
 
     assert.deepEqual(board().posted, [], 'nothing stopped yet');
     assert
-      .dom('[data-test-dialog-question]')
+      .dom('[data-test-are-you-sure-question]')
       .hasText('Stop the agent on this comment?');
 
-    await click('[data-test-dialog-submit]');
+    await click('[data-test-are-you-sure-submit]');
 
     assert.deepEqual(
       board().posted.map((one) => one.verb),

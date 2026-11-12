@@ -550,7 +550,7 @@ const ENTRIES = {
   reject: {
     key: 'R',
     label: 'Reject',
-    weight: 'destructive',
+    weight: 'secondary',
     title:
       'turns this fix down and drops its worktree — the proposed diff goes with ' +
       'it, so bringing the conversation back re-runs the agent from scratch',
@@ -715,17 +715,17 @@ const ENTRIES = {
   stop: {
     key: 'x',
     label: 'Stop',
-    weight: 'secondary',
+    weight: 'destructive',
     title:
       'halts whatever is in flight on this thread, queued or running — nothing ' +
       'is posted to GitHub, and the thread is yours to decide again',
     asks: {
       question: 'Stop the agent on this comment?',
       note:
-        'Whatever is queued or running on this thread is halted. Nothing is ' +
-        'posted to GitHub, and the thread is yours to decide again.',
+        'Whatever is queued or running here halts with nothing posted to ' +
+        'GitHub, and the thread is yours to decide again.',
       reply: false,
-      submit: () => 'stop it',
+      submit: () => 'Stop',
     },
     doing: 'stopping',
     square: 'ready',
@@ -967,6 +967,44 @@ const PR_WRITES = {
 } satisfies Record<string, PrWrite>;
 
 export type PrVerb = keyof typeof PR_WRITES;
+
+export interface AreYouSure {
+  label: string;
+  question: string;
+  consequence: string;
+}
+
+export type RedPrVerb = 'close' | 'take-over';
+
+const RED_PR_WRITES: Record<RedPrVerb, (number: number) => AreYouSure> = {
+  close: (number) => ({
+    label: `Close PR #${number}`,
+    question: `Close #${number} on GitHub?`,
+    consequence:
+      'GitHub closes it unmerged, and the watcher tears down its worktree on its next poll.',
+  }),
+  'take-over': (number) => ({
+    label: 'Take over',
+    question: `Take over #${number}?`,
+    consequence:
+      'From then on its agents fix CI, rebase and answer threads on it as they do on your own pull requests.',
+  }),
+};
+
+export function areYouSureOf(verb: RedPrVerb, number: number): AreYouSure {
+  return RED_PR_WRITES[verb](number);
+}
+
+export function redAsksOf(offer: Offer): AreYouSure | null {
+  const asks = offer.asks;
+  if (offer.weight !== 'destructive' || typeof asks !== 'object' || !asks)
+    return null;
+  return {
+    label: offer.label,
+    question: asks.question,
+    consequence: asks.note,
+  };
+}
 
 export type SetupWrite = 'check-account' | 'write-setup' | 'move-aside';
 
@@ -1339,23 +1377,26 @@ const STARTS_A_RUN: Kind[] = [
   'check-for-fixes',
 ];
 
-const ASKS_FIRST: Kind[] = [
+const OPENS_A_DIALOG: Kind[] = [
   'mark-ready',
   'assign-reviewers',
   'dismiss',
-  'close',
   'send-review',
   'set-importance',
 ];
 
-const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close'];
+const RED_ARE_YOU_SURE: Kind[] = ['stop', 'drop', 'close', 'take-over'];
 
 export function runsAgent(kind: Kind): boolean {
   return STARTS_A_RUN.includes(kind);
 }
 
 export function opensDialog(kind: Kind): boolean {
-  return ASKS_FIRST.includes(kind) && !RED_ARE_YOU_SURE.includes(kind);
+  return OPENS_A_DIALOG.includes(kind);
+}
+
+export function asksFirst(kind: Kind): boolean {
+  return opensDialog(kind) || RED_ARE_YOU_SURE.includes(kind);
 }
 
 function asksInADialog(decision: Decision, asks: Asks): boolean {

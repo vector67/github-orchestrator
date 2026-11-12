@@ -69,12 +69,39 @@ module('Acceptance | decide', function (hooks) {
     assert.dom('#c-k1 [data-test-meta]').hasText('bringing it back…');
   });
 
+  test('Stop is red and asks a plain are-you-sure whose submit is Stop', async function (assert) {
+    board().conversations = [board().threadIn('working', { key: 'k1' })];
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert
+      .dom('[data-test-decision="stop"]')
+      .hasAttribute('data-weight', 'destructive')
+      .doesNotHaveAttribute('data-opens-dialog');
+
+    await click('[data-test-decision="stop"]');
+
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Stop the agent on this comment?');
+    assert.dom('[data-test-are-you-sure-consequence]').hasText(/\w\.$/);
+    assert
+      .dom('[data-test-are-you-sure-submit]')
+      .hasClass('danger')
+      .includesText('Stop');
+    assert.strictEqual(board().posted.length, 0);
+
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.strictEqual(board().posted.length, 0);
+  });
+
   test('stop halts the work in flight', async function (assert) {
     board().conversations = [board().threadIn('working', { key: 'k1' })];
     await visit('/pr/o/r/7/conversations/k1');
 
     await click('[data-test-decision="stop"]');
-    await click('[data-test-dialog-submit]');
+    await click('[data-test-are-you-sure-submit]');
 
     assert.strictEqual(board().posted[0]!.verb, 'stop');
     assert

@@ -12,7 +12,12 @@ import {
   fixChecksSaying,
   type Dismissal,
 } from 'frontend/data/dashboard';
-import { capOf, leavesThePage, type PrVerb } from 'frontend/data/decisions';
+import {
+  asksFirst,
+  capOf,
+  leavesThePage,
+  type PrVerb,
+} from 'frontend/data/decisions';
 import type { Tried } from 'frontend/data/tried';
 import { keyOf, type Numbered } from 'frontend/data/wall';
 import type DashboardService from 'frontend/services/dashboard';
@@ -41,14 +46,7 @@ export type Control =
   | 'git'
   | 'release';
 
-export type PressOutcome =
-  | 'nothing'
-  | 'done'
-  | 'palette'
-  | 'confirm-dismiss'
-  | 'confirm-close'
-  | 'confirm-ready'
-  | 'confirm-assign';
+export type PressOutcome = 'nothing' | 'done' | 'palette' | 'asks';
 
 export interface Controlled {
   number: number;
@@ -220,16 +218,6 @@ export function controlOf(verb: PrVerb | null): Control | null {
   return (Object.keys(KEYS) as Control[]).find((one) => one === verb) ?? null;
 }
 
-type Command =
-  | 'hold'
-  | 'carry-on'
-  | 'start-review'
-  | 'mark-ready'
-  | 'take-over'
-  | 'check-for-fixes'
-  | 'close'
-  | 'release';
-
 export default class PrControlsService extends Service {
   @service declare dashboard: DashboardService;
   @service declare here: HereService;
@@ -289,15 +277,11 @@ export default class PrControlsService extends Service {
     if (on.pending) return 'done';
     if (offer.state === 'held') this.toasts.say(offer.title, 'failed');
     if (offer.state !== 'ready') return 'done';
-    if (control === 'dismiss') return 'confirm-dismiss';
-    if (control === 'close') return 'confirm-close';
-    if (control === 'mark-ready') {
-      void waitForPromise(this.readOutstanding(on));
-      return 'confirm-ready';
-    }
-    if (control === 'assign-reviewers') {
-      this.store.readMentionable(on.shown);
-      return 'confirm-assign';
+    if (asksFirst(control)) {
+      if (control === 'mark-ready')
+        void waitForPromise(this.readOutstanding(on));
+      if (control === 'assign-reviewers') this.store.readMentionable(on.shown);
+      return 'asks';
     }
     if (control === 'git') return 'palette';
     void this.carryOut(on, control);
@@ -305,6 +289,8 @@ export default class PrControlsService extends Service {
   }
 
   close = (on: Controlled): Promise<void> => this.carryOut(on, 'close');
+
+  takeOver = (on: Controlled): Promise<void> => this.carryOut(on, 'take-over');
 
   markReady = (on: Controlled): Promise<void> =>
     this.carryOut(on, 'mark-ready');
@@ -340,7 +326,7 @@ export default class PrControlsService extends Service {
       this.store.runGit(on.shown, `${this.prefix(on)}/api/manager/git`, keys),
     );
 
-  private carryOut(on: Controlled, control: Command): Promise<void> {
+  private carryOut(on: Controlled, control: Control): Promise<void> {
     return waitForPromise(this.carrying(on, control));
   }
 
@@ -348,7 +334,7 @@ export default class PrControlsService extends Service {
     return this.here.prefixOf(on.shown);
   }
 
-  private async carrying(on: Controlled, control: Command): Promise<void> {
+  private async carrying(on: Controlled, control: Control): Promise<void> {
     if (control === 'release') {
       if (on.held) await this.throughTheHub(on.shown, 'release');
       return;

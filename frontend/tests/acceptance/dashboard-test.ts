@@ -741,7 +741,7 @@ module('Acceptance | dashboard', function (hooks) {
 
     await click('[data-test-control="close"]');
 
-    assert.dom('[data-test-close-option]').hasClass('danger');
+    assert.dom('[data-test-are-you-sure-submit]').hasClass('danger');
   });
 
   test('each control marks whether it opens a dialog or starts an agent run', async function (assert) {
@@ -1036,7 +1036,7 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('c');
 
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert.deepEqual(verbs(), []);
 
     await press('w');
@@ -1051,17 +1051,17 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('Q');
 
-    assert.dom('[data-test-close-confirm]').containsText('Close #7 on GitHub?');
+    assert.dom('[data-test-are-you-sure]').containsText('Close #7 on GitHub?');
 
     await press('Escape');
 
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert.deepEqual(verbs(), []);
 
     await press('Q');
     await press('h');
 
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert.deepEqual(verbs(), []);
   });
 
@@ -1074,7 +1074,7 @@ module('Acceptance | dashboard', function (hooks) {
       await press(key);
     }
 
-    assert.dom('[data-test-close-confirm]').exists();
+    assert.dom('[data-test-are-you-sure]').exists();
     assert.deepEqual(verbs(), []);
   });
 
@@ -1087,26 +1087,36 @@ module('Acceptance | dashboard', function (hooks) {
 
       await press('Q');
 
-      assert.dom('[data-test-close-confirm]').doesNotExist();
+      assert.dom('[data-test-are-you-sure]').doesNotExist();
       assert.deepEqual(verbs(), []);
     }
   });
 
-  test('the close confirmation is a modal dialog whose Close button closes the pull request', async function (assert) {
+  test('Close PR asks a plain are-you-sure whose red submit repeats its label', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
 
     await click('[data-test-control="close"]');
 
     assert
-      .dom('[data-test-close-confirm]')
+      .dom('[data-test-are-you-sure]')
       .hasAttribute('role', 'dialog')
       .hasAttribute('aria-modal', 'true');
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Close #7 on GitHub?');
+    assert.dom('[data-test-are-you-sure-consequence]').hasText(/\w\.$/);
+    assert
+      .dom('[data-test-are-you-sure-submit]')
+      .hasClass('danger')
+      .includesText('Close PR #7');
+    assert.dom('[data-test-are-you-sure-cancel]').includesText('Cancel');
+    assert.deepEqual(verbs(), []);
 
-    await click('[data-test-close-option]');
+    await click('[data-test-are-you-sure-submit]');
 
     assert.deepEqual(verbs(), ['close']);
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
   });
 
   test('the Close button then y closes the pull request and says so', async function (assert) {
@@ -1117,7 +1127,7 @@ module('Acceptance | dashboard', function (hooks) {
     await press('y');
 
     assert.deepEqual(verbs(), ['close']);
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert
       .dom('[data-test-toast]')
       .hasText(
@@ -1580,7 +1590,7 @@ module('Acceptance | dashboard', function (hooks) {
     await visit('/pr/o/r/7/dashboard');
 
     await click('[data-test-control="close"]');
-    await click('[data-test-close-option]');
+    await click('[data-test-are-you-sure-submit]');
 
     assert.deepEqual(verbs(), ['close']);
     assert.dom('[data-test-action-band]').hasAttribute('data-pending');
@@ -1603,7 +1613,7 @@ module('Acceptance | dashboard', function (hooks) {
     };
 
     await click('[data-test-control="close"]');
-    await click('[data-test-close-option]');
+    await click('[data-test-are-you-sure-submit]');
 
     assert
       .dom('[data-test-toast]')
@@ -1768,18 +1778,41 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
-  test("someone else's pull request offers Take over, which T takes over", async function (assert) {
+  test("someone else's pull request offers a red Take over, which T asks about before taking over", async function (assert) {
     onTheHub({ facts: { is_author: false } });
     await visit('/pr/o/r/7/dashboard');
 
     assert
       .dom('[data-test-control="take-over"]')
       .hasText('Take over ⇧T')
+      .hasClass('danger')
       .hasAttribute('title', /\w/);
 
     await press('T');
 
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-are-you-sure-question]').hasText('Take over #7?');
+    assert.dom('[data-test-are-you-sure-consequence]').hasText(/\w\.$/);
+    assert
+      .dom('[data-test-are-you-sure-submit]')
+      .hasClass('danger')
+      .includesText('Take over');
+
+    await click('[data-test-are-you-sure-submit]');
+
     assert.deepEqual(verbs(), ['take-over']);
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+  });
+
+  test('Cancel on the take over question takes nothing over', async function (assert) {
+    onTheHub({ facts: { is_author: false } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-control="take-over"]');
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.deepEqual(verbs(), []);
   });
 
   test('a pull request you review with threads waiting on the author offers Check for fixes', async function (assert) {
@@ -1934,7 +1967,7 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('Q');
 
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert
       .dom('[data-test-toast]')
       .hasText(

@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
+import AreYouSure from 'frontend/components/are-you-sure';
 import CheckForFixes from 'frontend/components/check-for-fixes';
 import DecideDialog from 'frontend/components/decide-dialog';
 import Glyphs from 'frontend/components/glyphs';
@@ -14,7 +15,9 @@ import {
   LATER,
   laterAsks,
   REJECTED,
+  redAsksOf,
   rejectAsks,
+  type AreYouSure as AreYouSureAsking,
   type DialogSpec,
   type Decision,
   type Gathered,
@@ -88,6 +91,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
   @tracked asking: Decision | null = null;
   @tracked spec: DialogSpec | null = null;
   @tracked warned: Warned | null = null;
+  @tracked red: { decision: Decision; asking: AreYouSureAsking } | null = null;
 
   get lastMentionOnAHeldPr(): boolean {
     const pr = this.here.pr;
@@ -150,7 +154,10 @@ export default class PanelActions extends Component<PanelActionsSignature> {
   };
 
   decide = (offered: Offer) => {
-    if (offered.asks === 'rework') {
+    const red = redAsksOf(offered);
+    if (red) {
+      this.red = { decision: offered.decision, asking: red };
+    } else if (offered.asks === 'rework') {
       this.rework.open(
         this.args.conversationId,
         null,
@@ -165,6 +172,16 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       this.asking = offered.decision;
       this.spec = offered.asks;
     }
+  };
+
+  confirmRed = () => {
+    const red = this.red;
+    this.red = null;
+    if (red) void this.post(red.decision);
+  };
+
+  cancelRed = () => {
+    this.red = null;
   };
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
@@ -313,6 +330,13 @@ export default class PanelActions extends Component<PanelActionsSignature> {
         @cancel={{this.cancel}}
       />
     {{/each}}
+    {{#if this.red}}
+      <AreYouSure
+        @asking={{this.red.asking}}
+        @confirm={{this.confirmRed}}
+        @cancel={{this.cancelRed}}
+      />
+    {{/if}}
     {{#if this.warned}}
       <HoldWarning
         @keep={{this.keepTheHold}}

@@ -2015,7 +2015,7 @@ module('Acceptance | wall', function (hooks) {
 
     assert.deepEqual(board().posted, []);
     assert.dom('[data-test-palette]').doesNotExist();
-    assert.dom('[data-test-close-confirm]').doesNotExist();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert.dom('[data-test-toast]').doesNotExist();
   });
 

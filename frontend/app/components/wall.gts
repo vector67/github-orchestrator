@@ -183,9 +183,9 @@ export default class Wall extends Component<WallSignature> {
 
   private press(pr: WallRow, control: Control): boolean {
     const next = this.controls.press(this.controls.ofRow(pr), control);
-    if (next === 'confirm-dismiss')
+    if (next === 'asks' && control === 'dismiss')
       this.confirming = { key: pr.key, arrived: pr.arrived };
-    if (next === 'confirm-ready') this.askReady(keyOf(pr));
+    if (next === 'asks' && control === 'mark-ready') this.askReady(keyOf(pr));
     return next !== 'nothing';
   }
 

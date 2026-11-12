@@ -46,12 +46,18 @@ module('Acceptance | action bar', function (hooks) {
       .hasAttribute('data-weight', 'ghost');
   });
 
-  test('turning a fix down wears the destructive weight, not a link’s', async function (assert) {
+  test('Reject is not red: it wears the secondary weight and opens its dialog with the optional reply', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
 
     assert
       .dom('[data-test-decision="reject"]')
-      .hasAttribute('data-weight', 'destructive');
+      .hasAttribute('data-weight', 'secondary')
+      .hasAttribute('data-opens-dialog');
+
+    await click('[data-test-decision="reject"]');
+
+    assert.dom('[data-test-dialog-body]').exists();
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
   });
 
   test('a verb says what it will do', async function (assert) {
