@@ -143,6 +143,22 @@ export default class SettingsMenu extends Component {
     return `Harvest timer: ${this.harvestSwitch.on ? 'on' : 'off'}`;
   }
 
+  get themeLabel(): string {
+    return `Theme: ${this.theme.dark ? 'dark' : 'light'}`;
+  }
+
+  get sizingLabel(): string {
+    return `Commit box sizing: ${SIZING_NAMES[this.commitBox.sizing]}`;
+  }
+
+  get autoReadLabel(): string {
+    return `Auto read: ${AUTO_READ_NAMES[this.commitBox.autoRead]}`;
+  }
+
+  get sessionLabel(): string {
+    return `Agent sessions: ${REQUEST_SESSION_NAMES[this.requestSession.chosen]}`;
+  }
+
   <template>
     <span class="settings">
       <button
@@ -183,7 +199,7 @@ export default class SettingsMenu extends Component {
             data-test-setting
             data-test-theme-toggle
             {{on "click" this.flip}}
-          >{{if this.theme.dark "Light theme" "Dark theme"}}</button>
+          >{{this.themeLabel}}</button>
           <button
             type="button"
             class="setting"
@@ -198,7 +214,7 @@ export default class SettingsMenu extends Component {
             data-test-setting
             data-test-commit-sizing-open
             {{on "click" this.openSizing}}
-          >Commit box sizing</button>
+          >{{this.sizingLabel}}</button>
           {{#if this.sizing}}
             <fieldset class="setting-choices" data-test-commit-sizings>
               <legend class="visually-hidden">Commit box sizing</legend>
@@ -224,7 +240,7 @@ export default class SettingsMenu extends Component {
             data-test-setting
             data-test-auto-read-open
             {{on "click" this.openAutoRead}}
-          >Auto read</button>
+          >{{this.autoReadLabel}}</button>
           {{#if this.autoReading}}
             <fieldset class="setting-choices" data-test-auto-reads>
               <legend class="visually-hidden">Auto read</legend>
@@ -250,7 +266,7 @@ export default class SettingsMenu extends Component {
             data-test-setting
             data-test-agent-session-open
             {{on "click" this.openRequesting}}
-          >Agent sessions</button>
+          >{{this.sessionLabel}}</button>
           {{#if this.requesting}}
             <fieldset class="setting-choices" data-test-agent-session-choices>
               <legend class="visually-hidden">Agent sessions</legend>

@@ -471,6 +471,17 @@ module('Acceptance | commit stepper', function (hooks) {
     assert.strictEqual(localStorage.getItem(COMMIT_SIZING), 'minimal');
   });
 
+  test('the folded sizing row shows the size in use', async function (assert) {
+    await visit('/pr/o/r/7/diff');
+    await sized('hidden');
+    await click('[data-test-commit-sizing-open]');
+
+    assert.dom('[data-test-commit-sizings]').doesNotExist();
+    assert
+      .dom('[data-test-commit-sizing-open]')
+      .hasText('Commit box sizing: Hidden');
+  });
+
   test('Minimal is the pips alone: hovering one names its commit and clicking it goes there', async function (assert) {
     await visit('/pr/o/r/7/diff');
     await startStepping();
