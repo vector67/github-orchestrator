@@ -110,7 +110,6 @@ from github_orchestrator.conversation._domain.conversation import (
     ASSUMED_DONE,
     CONFIRMED,
     DEFERRED,
-    DRAFT,
     NO_DIRECTION,
     OPEN,
     RESOLVED,
@@ -771,16 +770,14 @@ class _ConversationManager:
             _announce_settled(news, pr, settled)
 
     def counts(self) -> Counts:
-        runs, ports = self._pr.runs, self._pr.ports
+        ports = self._pr.ports
         held = ports.records.list()
         account = self._pr.modules.config.gh_account
         listed_at = ports.clock.now()
         readable, unreadable = threads_listed(self.all())
         yours = [conversation for conversation in held
                  if conversation.author == account and conversation.state in _YOURS]
-        return Counts(queued=runs.queued_count(ports), live=ports.agents.live_keys(),
-                      proposed=runs.proposed_count(ports),
-                      drafts=sum(1 for conversation in held if conversation.state == DRAFT),
+        return Counts(live=ports.agents.live_keys(),
                       answered=tuple(conversation.key for conversation in yours
                                      if conversation.state in _ANSWERED),
                       rows=tuple(ThreadRow(

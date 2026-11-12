@@ -41,14 +41,6 @@ class Runs:
     def live_count(self, ports: Ports) -> int:
         return len(ports.agents.live_keys())
 
-    def proposed_count(self, ports: Ports) -> int:
-        return sum(1 for conversation in ports.records.list()
-                   if conversation.state == OPEN and conversation.fix.state == PROPOSED)
-
-    def queued_count(self, ports: Ports) -> int:
-        return sum(1 for conversation in ports.records.list()
-                   if _is_queued(conversation))
-
     def pump_and_schedule(self, pr: Pr, ports: Ports,
                           schedule: bool = True) -> list[Conversation]:
         settled: list[Conversation] = []
