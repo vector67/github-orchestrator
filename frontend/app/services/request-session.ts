@@ -1,6 +1,6 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import { keep, recall } from 'frontend/data/site-data';
+import { forget, keep, recall } from 'frontend/data/site-data';
 
 export type RequestSession = 'ask' | 'visible' | 'invisible';
 
@@ -10,18 +10,33 @@ export const REQUEST_SESSIONS: RequestSession[] = [
   'invisible',
 ];
 
-const KEPT = 'request-change-session';
+const KEPT = 'agent-session';
 
-const ANSWER_KEPT = 'answer-session';
+const KEPT_FOR_REQUESTS = 'request-change-session';
 
-function recalled(key: string): RequestSession {
+const KEPT_FOR_ANSWERS = 'answer-session';
+
+function recalled(key: string): RequestSession | null {
   const kept = recall(key);
-  return REQUEST_SESSIONS.find((one) => one === kept) ?? 'ask';
+  return REQUEST_SESSIONS.find((one) => one === kept) ?? null;
+}
+
+function carriedOver(): RequestSession {
+  const requests = recalled(KEPT_FOR_REQUESTS);
+  const answers = recalled(KEPT_FOR_ANSWERS);
+  const carried =
+    [requests, answers].find((one) => one !== null && one !== 'ask') ??
+    requests ??
+    answers;
+  forget(KEPT_FOR_REQUESTS);
+  forget(KEPT_FOR_ANSWERS);
+  if (carried === null) return 'ask';
+  keep(KEPT, carried);
+  return carried;
 }
 
 export default class RequestSessionService extends Service {
-  @tracked chosen: RequestSession = recalled(KEPT);
-  @tracked answering: RequestSession = recalled(ANSWER_KEPT);
+  @tracked chosen: RequestSession = recalled(KEPT) ?? carriedOver();
 
   choose(chosen: RequestSession): void {
     this.chosen = chosen;
@@ -30,14 +45,5 @@ export default class RequestSessionService extends Service {
 
   remember(visible: boolean): void {
     this.choose(visible ? 'visible' : 'invisible');
-  }
-
-  chooseAnswering(chosen: RequestSession): void {
-    this.answering = chosen;
-    keep(ANSWER_KEPT, chosen);
-  }
-
-  rememberAnswering(visible: boolean): void {
-    this.chooseAnswering(visible ? 'visible' : 'invisible');
   }
 }

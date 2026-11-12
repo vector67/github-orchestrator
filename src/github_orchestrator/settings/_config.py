@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.agent_runs import Agent
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import Clone, HubState, Repo
 from github_orchestrator.settings._renamed_keys import RENAMED_KEYS, doubled, renamed
 from github_orchestrator.settings.interface import ConfigDescription, ConfigRow
@@ -585,16 +586,7 @@ class TomlConfigFile:
             yield
 
     def _replace(self, text: str) -> None:
-        target = self._path.resolve()
-        descriptor, writing = tempfile.mkstemp(dir=target.parent, prefix=f"{target.name}.",
-                                               suffix=".writing")
-        with os.fdopen(descriptor, "w") as file:
-            file.write(text)
-            file.flush()
-            os.fsync(file.fileno())
-        if target.exists():
-            shutil.copymode(target, writing)
-        os.replace(writing, target)
+        write_atomically(self._path.resolve(), text.encode())
 
     def move_aside(self, now: datetime) -> str:
         target = self._path.resolve()

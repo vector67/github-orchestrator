@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.board_api.interface import (
     Dashboard,
     ManagerStanding,
@@ -12,7 +13,6 @@ from github_orchestrator.board_api.interface import (
     NoticeCode,
 )
 from github_orchestrator.domain import Pr, UtcClock
-from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._refusals import DOWN, Conditions
 from github_orchestrator.pr_processes import ManagerPane
 
@@ -49,7 +49,7 @@ class StatusFiles:
         }
         path = self._path(dashboard.pr)
         try:
-            write_whole(path, json.dumps(status).encode())
+            write_atomically(path, json.dumps(status).encode())
         except OSError as error:
             log.warning("could not write the status file %s: %s", path, error)
 

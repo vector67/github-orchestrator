@@ -2,7 +2,6 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -314,15 +313,15 @@ def test_a_composer_reply_github_took_is_never_dropped_by_a_write_that_fails(
     s = _on_disk(settings, tmp_path, github)
     s.here.thread_records.of(THE_PR).save("reply", KEY, b"please also bump the lockfile")
     posted = []
-    real_replace = Path.replace
+    real_replace = os.replace
 
-    def replace_once_github_has_been_told(self, target):
+    def replace_once_github_has_been_told(source, target):
         if posted:
             raise OSError(28, "No space left on device")
-        return real_replace(self, target)
+        return real_replace(source, target)
 
     github.meanwhile = lambda: posted.append(True)
-    monkeypatch.setattr(Path, "replace", replace_once_github_has_been_told)
+    monkeypatch.setattr(os, "replace", replace_once_github_has_been_told)
 
     drain(s.threads)
 

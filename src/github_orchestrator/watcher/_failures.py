@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+
+from github_orchestrator.atomic_write import write_atomically
 
 
 @dataclass(frozen=True)
@@ -34,32 +34,11 @@ def record_failure(path: Path, error: str, fix: str | None) -> WatcherFailures:
     failures = WatcherFailures(
         consecutive=read_failures(path).consecutive + 1, last_error=error, fix=fix,
     )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = tempfile.NamedTemporaryFile(
-        mode="w", dir=path.parent, suffix=".tmp", delete=False
-    )
-    tmp_path = Path(tmp.name)
-    try:
-        try:
-            json.dump(
-                {
-                    "consecutive": failures.consecutive,
-                    "last_error": failures.last_error,
-                    "fix": failures.fix,
-                },
-                tmp,
-            )
-            tmp.flush()
-            os.fsync(tmp.fileno())
-        finally:
-            tmp.close()
-        tmp_path.replace(path)
-    except BaseException:
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
+    write_atomically(path, json.dumps({
+        "consecutive": failures.consecutive,
+        "last_error": failures.last_error,
+        "fix": failures.fix,
+    }).encode())
     return failures
 
 

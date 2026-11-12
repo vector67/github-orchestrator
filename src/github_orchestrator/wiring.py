@@ -35,6 +35,7 @@ from github_orchestrator.agent_runs._runs import (
 )
 from github_orchestrator.agent_runs._runs import Popen as AgentPopen
 from github_orchestrator.agent_runs._summaries import Run as GistRun
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.board_api._app_files import APP_ROOT
 from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import HubPages
@@ -137,7 +138,6 @@ from github_orchestrator.pr_manager._command_file import CommandFiles
 from github_orchestrator.pr_manager._commands import ManagerCommands
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
-from github_orchestrator.pr_manager._files import write_whole
 from github_orchestrator.pr_manager._git_palette import Run as GitRun
 from github_orchestrator.pr_manager._manager import ManagerLoop
 from github_orchestrator.pr_manager._panel import FilePanels
@@ -387,7 +387,7 @@ class SwitchesProvider(Provider):
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:
-        return ToldFiles(wiring.data_dir, write_whole)
+        return ToldFiles(wiring.data_dir, write_atomically)
 
     @provide
     def told(self, files: ToldFiles) -> Told:
@@ -969,7 +969,7 @@ class WatcherProvider(Provider):
 
     @provide
     def setup_files(self, config: WatcherConfig) -> SetupFiles:
-        return SetupFiles(config.data_dir, write_whole)
+        return SetupFiles(config.data_dir, write_atomically)
 
     @provide
     def manager_leftovers(self, config: WatcherConfig, clock: UtcClock) -> ManagerLeftovers:
