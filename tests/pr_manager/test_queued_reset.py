@@ -1,11 +1,13 @@
+import json
 from pathlib import Path
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.interface import (
+    RESET_STATE,
+    RESET_TO_ORIGIN,
     Dashboards,
     ResetRefusal,
     ResetRefusalCode,
-    ResetToOrigin,
     Shelves,
 )
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -61,11 +63,20 @@ def _lose(copies, worktree):
 
 
 def _queue(manager):
-    ResetToOrigin(queued_at=QUEUED_AT).keep(manager.container.get(Shelves).of(THE_PR))
+    queued = {"queued_at": QUEUED_AT, "ran_at": None, "refused": None}
+    _shelf(manager).save(RESET_TO_ORIGIN, RESET_STATE, json.dumps(queued).encode())
 
 
 def _kept(manager):
-    return ResetToOrigin.kept(manager.container.get(Shelves).of(THE_PR))
+    return manager.container.get(Dashboards).dashboard(THE_PR).reset_to_origin
+
+
+def _shelf(manager):
+    return manager.container.get(Shelves).of(THE_PR)
+
+
+def _forget(manager):
+    _shelf(manager).delete(RESET_TO_ORIGIN, RESET_STATE)
 
 
 def test_a_queued_reset_runs_when_the_agent_run_ends(settings, tmp_path):
@@ -87,7 +98,7 @@ def test_a_queued_reset_cancelled_before_the_run_ends_does_not_run(settings, tmp
     copies, _ = _diverged(tmp_path)
     before = copies.head_of(tmp_path)
     manager = _manager(settings, tmp_path, copies, lambda: _queue(manager),
-                       lambda: ResetToOrigin.forget(manager.container.get(Shelves).of(THE_PR)))
+                       lambda: _forget(manager))
 
     manager.run()
 
@@ -127,7 +138,7 @@ def test_a_queued_reset_cancelled_while_it_fetches_does_not_run(settings, tmp_pa
     copies, _ = _diverged(tmp_path)
     before = copies.head_of(tmp_path)
     manager = _manager(settings, tmp_path, copies, lambda: _queue(manager))
-    copies.on_fetch = lambda: ResetToOrigin.forget(manager.container.get(Shelves).of(THE_PR))
+    copies.on_fetch = lambda: _forget(manager)
 
     manager.run()
 
@@ -204,7 +215,7 @@ def test_a_queued_reset_cancelled_while_it_resets_says_it_ran(settings, tmp_path
     resetting = copies._reset
 
     def cancelled_meanwhile(worktree, sha):
-        ResetToOrigin.forget(manager.container.get(Shelves).of(THE_PR))
+        _forget(manager)
         return resetting(worktree, sha)
 
     copies._reset = cancelled_meanwhile

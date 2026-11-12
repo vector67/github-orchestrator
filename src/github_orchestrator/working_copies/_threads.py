@@ -3,6 +3,7 @@ import os
 import subprocess
 import threading
 from pathlib import Path
+from typing import Any
 
 from github_orchestrator.domain import Pr, Sha
 from github_orchestrator.working_copies._layout import (
@@ -29,22 +30,39 @@ LANDING_UNREADABLE = (
     "approving again, which would cherry-pick work that is already committed"
 )
 
-def run_git(cwd: str, *args: str) -> subprocess.CompletedProcess[str]:
+def run_git(cwd: str, *args: str | bytes) -> subprocess.CompletedProcess[str]:
+    completed: subprocess.CompletedProcess[str] = _run_git(
+        cwd, args, encoding="utf-8", errors="replace")
+    return completed
+
+
+def run_git_bytes(cwd: str, *args: str) -> subprocess.CompletedProcess[bytes]:
+    completed: subprocess.CompletedProcess[bytes] = _run_git(cwd, args)
+    return completed
+
+
+def _run_git(cwd: str, args: tuple[str | bytes, ...], encoding: str | None = None,
+             errors: str | None = None) -> subprocess.CompletedProcess[Any]:
     try:
         return subprocess.run(
             ["git", "-C", cwd, *args],
-            capture_output=True, encoding="utf-8", errors="replace",
+            capture_output=True, encoding=encoding, errors=errors,
             timeout=GIT_TIMEOUT,
             stdin=subprocess.DEVNULL,
             env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
     except subprocess.TimeoutExpired:
-        log.warning("git %s timed out after %ds in %s", " ".join(args),
+        log.warning("git %s timed out after %ds in %s", _shown(args),
                     GIT_TIMEOUT, cwd)
         raise
     except OSError as e:
-        log.warning("git %s could not run in %s: %s", " ".join(args), cwd, e)
+        log.warning("git %s could not run in %s: %s", _shown(args), cwd, e)
         raise
+
+
+def _shown(args: tuple[str | bytes, ...]) -> str:
+    return " ".join(arg if isinstance(arg, str) else arg.decode("utf-8", "replace")
+                    for arg in args)
 
 
 def create_thread_worktree(
@@ -255,17 +273,26 @@ def diff_since(worktree: str, since: str) -> str | None:
             "--src-prefix=a/", "--dst-prefix=b/")
     try:
         tracked = run_git(worktree, *diff, "--end-of-options", since)
-        untracked = run_git(worktree, "ls-files", "--others", "--exclude-standard", "-z")
-        if tracked.returncode != 0 or untracked.returncode != 0:
+        untracked = run_git_bytes(worktree, "ls-files", "--others", "--exclude-standard", "-z")
+        if tracked.returncode != 0:
             log.warning("git could not diff %s in %s: %s", since, worktree,
-                        git_diagnostic(tracked if tracked.returncode else untracked))
+                        git_diagnostic(tracked))
             return None
-        added = [run_git(worktree, *diff, "--no-index", "--", "/dev/null", path).stdout
-                 for path in untracked.stdout.split("\0") if path]
+        if untracked.returncode != 0:
+            log.warning("git could not list untracked files in %s: %s", worktree,
+                        untracked.stderr.decode("utf-8", "replace").strip())
+            return None
+        added = [run_git(worktree, *diff, "--no-index", "--", "/dev/null", path)
+                 for path in untracked.stdout.split(b"\0") if path]
     except (OSError, subprocess.TimeoutExpired) as e:
         log.warning("git could not diff %s in %s: %s", since, worktree, e)
         return None
-    return tracked.stdout + "".join(added)
+    failed = next((each for each in added if each.returncode > 1), None)
+    if failed is not None:
+        log.warning("git could not diff an untracked file in %s: %s", worktree,
+                    git_diagnostic(failed))
+        return None
+    return tracked.stdout + "".join(each.stdout for each in added)
 
 
 def _aborted_timeout_reason(pr_worktree: str) -> str:

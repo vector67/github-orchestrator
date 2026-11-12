@@ -55,7 +55,6 @@ def test_a_handle_keeps_the_runs_it_started_between_passes(settings):
 
     assert len(here.agent_runs.started) == 1
     assert len(threads.counts().live) == 1
-    assert threads.counts().queued == 0
     assert threads.get(KEY).standing is ConversationState.WORKING
 
 

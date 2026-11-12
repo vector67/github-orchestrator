@@ -1076,6 +1076,7 @@ const CARRIED: Record<
   | 'edit-part'
   | 'create-draft'
   | 'request-change'
+  | 'check-session'
   | AnswerKind
   | 'send-review'
   | 'prepare-harvest-extension'
@@ -1090,6 +1091,10 @@ const CARRIED: Record<
   },
   'request-change': {
     doing: 'requesting the change',
+    square: null,
+  },
+  'check-session': {
+    doing: 'checking the session',
     square: null,
   },
   answer: {

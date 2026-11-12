@@ -353,8 +353,66 @@ module('Acceptance | terminal', function (hooks) {
       'The session this comment expected is not running; the board checked and found none',
       'The comment is back where it was before the session opened',
     ]);
-    await visit('/pr/o/r/7/conversations/k1');
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
     assert.dom('[data-test-go-to-session]').doesNotExist();
+  });
+
+  test('Go to the session is pending on the comment from the click until the board has checked the session', async function (assert) {
+    board().conversations = [board().threadIn('session', { key: 'k1' })];
+    board().terminalSessions = [
+      { id: 'claude-k1', argv: ['claude'], worktree: '/wt/thread-k1' },
+      SHELL,
+    ];
+    await visit('/pr/o/r/7/conversations/k1');
+    const release = board().hold(/operations:check-session$/);
+
+    const going = click('[data-test-go-to-session]');
+    await waitFor('[data-test-go-to-session][data-pending]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
+    assert.dom('[data-test-go-to-session]').hasText('Checking the session…');
+    assert.dom('#c-k1').hasAttribute('data-pending');
+
+    release();
+    await going;
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    assert
+      .dom('[data-test-session="claude-k1"]')
+      .hasAttribute('aria-current', 'true');
+  });
+
+  test('a session check the board refuses says why on the comment, with no toast, and can be tried again', async function (assert) {
+    board().conversations = [board().threadIn('session', { key: 'k1' })];
+    board().terminalSessions = [
+      { id: 'claude-k1', argv: ['claude'], worktree: '/wt/thread-k1' },
+      SHELL,
+    ];
+    await visit('/pr/o/r/7/conversations/k1');
+    board().refusal = {
+      status: 409,
+      code: 'operation-outstanding',
+      detail: 'thread k1 already has an operation waiting',
+    };
+
+    await click('[data-test-go-to-session]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/conversations/k1');
+    assert.dom('#panel-actions').hasAttribute('data-refused');
+    assert
+      .dom('#panel-actions [data-test-refusal]')
+      .containsText('already on its way');
+    assert.dom('[data-test-toast]').doesNotExist();
+    assert
+      .dom('[data-test-go-to-session]')
+      .hasText('Go to the session in the Terminal tab');
+
+    await click('[data-test-go-to-session]');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    assert
+      .dom('[data-test-session="claude-k1"]')
+      .hasAttribute('aria-current', 'true');
   });
 
   test('a Session open conversation with no proposal to name its worktree is led to the session the board finds for it', async function (assert) {

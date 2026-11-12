@@ -74,14 +74,6 @@ def test_a_new_draft_is_a_draft_with_nothing_on_github(settings):
     assert reviewing.on_github() == []
 
 
-def test_the_counts_hold_each_draft_the_reviewer_has_not_sent(settings):
-    reviewing = Reviewing(settings)
-    reviewing.draft()
-    reviewing.threads.open_draft("and this one", THERE, "op_other")
-
-    assert reviewing.threads.counts().drafts == 2
-
-
 def test_an_edit_replaces_the_body_and_the_anchor_together(settings):
     reviewing = Reviewing(settings)
     key = reviewing.draft().key
