@@ -132,15 +132,10 @@ def _sections(text):
     return sections
 
 
-def test_help_lists_the_commands_in_their_groups(run_cli):
+def test_help_prints_the_same_page_as_the_full_help(run_cli):
     ran = run_cli("help")
     assert ran.code == 0
-    assert _sections(ran.out) == {
-        "everyday": ["open", "status", "logs", "runs"],
-        "service": ["start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts"],
-        "maintenance": ["update", "doctor", "config", "uninstall", "setup", "skill"],
-        "learning": ["tutorial", "help"],
-    }
+    assert ran.out == run_cli("--help").out
 
 
 def test_the_full_help_ends_with_the_debugging_commands_after_the_groups(run_cli):
@@ -152,14 +147,6 @@ def test_the_full_help_ends_with_the_debugging_commands_after_the_groups(run_cli
     assert sections["agents"] == ["thread"]
     assert sections["debugging"] == ["queue", "undismiss"]
     assert ran.out.rstrip().endswith("Clear a PR's dismissal so it comes back to the wall.")
-
-
-def test_help_leaves_out_the_debugging_and_agent_commands(run_cli):
-    sections = _sections(run_cli("help").out)
-    listed = [name for names in sections.values() for name in names]
-    assert "debugging" not in sections
-    for hidden in ("queue", "undismiss", "thread"):
-        assert hidden not in listed
 
 
 def test_running_the_tool_bare_prints_the_grouped_help(run_cli):

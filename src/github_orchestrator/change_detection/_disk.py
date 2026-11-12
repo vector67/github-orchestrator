@@ -1,11 +1,10 @@
 import json
 import logging
-import os
-import tempfile
 from collections.abc import Iterator, Set
 from pathlib import Path
 from typing import Any
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.change_detection._facts import facts_of
 from github_orchestrator.change_detection._rules import (
     advance,
@@ -46,25 +45,7 @@ def _read(path: Path) -> dict[str, Any]:
 
 
 def _write(target: Path, snapshot: dict[str, Any]) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = tempfile.NamedTemporaryFile(
-        mode="w", dir=target.parent, suffix=".tmp", delete=False
-    )
-    tmp_path = Path(tmp.name)
-    try:
-        try:
-            json.dump(snapshot, tmp)
-            tmp.flush()
-            os.fsync(tmp.fileno())
-        finally:
-            tmp.close()
-        tmp_path.replace(target)
-    except BaseException:
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
+    write_atomically(target, json.dumps(snapshot).encode())
 
 
 class DiskChangeDetection:

@@ -16,6 +16,7 @@ const SKIP_MERGES = 'commit-skip-merges';
 const AUTO_READ = 'commit-auto-read';
 const REQUEST_SESSION = 'request-change-session';
 const ANSWER_SESSION = 'answer-session';
+const AGENT_SESSION = 'agent-session';
 const TERMINAL_THEME = 'terminal-theme';
 const TERMINAL_LIGHT_THEME = 'terminal-light-theme';
 const TERMINAL_DARK_THEME = 'terminal-dark-theme';
@@ -34,6 +35,7 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(AUTO_READ);
     localStorage.removeItem(REQUEST_SESSION);
     localStorage.removeItem(ANSWER_SESSION);
+    localStorage.removeItem(AGENT_SESSION);
     localStorage.removeItem(TERMINAL_THEME);
     localStorage.removeItem(TERMINAL_LIGHT_THEME);
     localStorage.removeItem(TERMINAL_DARK_THEME);

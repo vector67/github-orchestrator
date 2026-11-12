@@ -59,7 +59,7 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
   };
 
   private answer(text: string): void {
-    const chosen = this.requestSession.answering;
+    const chosen = this.requestSession.chosen;
     if (chosen === 'ask') this.choosing = text;
     else void this.send(text, chosen === 'visible');
   }
@@ -67,7 +67,7 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
   choose = (visible: boolean, remember: boolean) => {
     const text = this.choosing;
     this.choosing = null;
-    if (remember) this.requestSession.rememberAnswering(visible);
+    if (remember) this.requestSession.remember(visible);
     if (text !== null) void this.send(text, visible);
   };
 

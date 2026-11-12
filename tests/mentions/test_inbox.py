@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import tomllib
 from dataclasses import replace
@@ -397,6 +398,25 @@ def test_the_first_search_writes_its_listing_where_no_data_folder_is_yet(tmp_pat
     shutil.rmtree(settings.data_dir, ignore_errors=True)
 
     assert _listed_threads(here) == ["IC_1"]
+
+
+def test_a_search_puts_its_listing_on_disk_before_it_replaces_the_last_one(tmp_path, monkeypatch):
+    here = _here(tmp_path)
+    listing = here.settings.data_dir / "mentions.json"
+    listing.write_text("the last listing")
+    _mentioned(here, _issue("IC_1", 1, "anna", "@octocat ping", "2026-10-22T10:00:00Z"))
+    synced = []
+    real_fsync = os.fsync
+
+    def seen_at_fsync(fd):
+        synced.append((b"IC_1" in os.pread(fd, 1 << 20, 0), listing.read_text()))
+        real_fsync(fd)
+
+    monkeypatch.setattr(os, "fsync", seen_at_fsync)
+
+    assert _listed_threads(here) == ["IC_1"]
+    assert (True, "the last listing") in synced
+    assert sorted(path.name for path in listing.parent.glob("mentions.json*")) == ["mentions.json"]
 
 
 def _cardless(here, status="OPEN"):
