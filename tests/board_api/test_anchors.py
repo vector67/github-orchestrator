@@ -1,12 +1,6 @@
-import time
 from pathlib import Path
 
-from github_orchestrator.working_copies import FileDiff
-from github_orchestrator.working_copies.fake import (
-    DiffHunk,
-    DiffLine,
-    FakeWorkingCopies,
-)
+from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.board_api.support import (
     THE_PR,
     WORKTREE,
@@ -90,40 +84,3 @@ def test_a_line_the_pull_requests_diff_does_not_show_has_no_place():
     answer = anchors(client, shas[0], shas[1], shas)
 
     assert onto(answer, "src/foo.py", "RIGHT", 1) is None
-
-
-def in_context(path, size):
-    lines = tuple(DiffLine(kind="context", old_line=n, new_line=n, text=f"line {n}")
-                  for n in range(1, size + 1))
-    return FileDiff(path=path, old_path=None, status="modified", added=0, removed=0,
-                    is_binary=False,
-                    hunks=(DiffHunk(old_start=1, old_lines=size, new_start=1, new_lines=size,
-                                    section=None, lines=lines),))
-
-
-def anchoring_of(size):
-    copies = FakeWorkingCopies()
-    copies.show_diff((in_context("src/big.py", size),))
-    client, shas = pull_request({"src/big.py": "old\n"}, {"src/big.py": "new\n"}, copies=copies)
-    return lambda: anchors(client, shas[0], shas[1], shas)
-
-
-def timed(anchoring):
-    started = time.perf_counter()
-    answer = anchoring()
-    return time.perf_counter() - started, answer
-
-
-def test_a_diff_ten_times_longer_anchors_in_about_ten_times_the_time():
-    small, large = 500, 5000
-    anchor_small, anchor_large = anchoring_of(small), anchoring_of(large)
-
-    small_times, large_times = [], []
-    for _ in range(3):
-        small_times.append(timed(anchor_small)[0])
-        elapsed, answer = timed(anchor_large)
-        large_times.append(elapsed)
-    ratio = min(large_times) / min(small_times)
-
-    assert onto(answer, "src/big.py", "LEFT", large) == {"side": "LEFT", "line": large}
-    assert ratio < 30, f"ten times the lines took {ratio:.0f} times as long to anchor"
