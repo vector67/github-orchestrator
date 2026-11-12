@@ -49,7 +49,9 @@ says so.
     - Request change, and the mention's Ask the agent, ask "Run the change in a
       visible session?" until you tick "Remember my choice", then act without
       asking (`request-session-ask.gts`). Answering an agent's question works
-      the same way under its own setting.
+      the same way. All three share the one Agent sessions setting
+      (`services/request-session.ts`), so remembering a choice in one
+      remembers it for the others.
     - The Ready for review dialog's Assign reviewers opens the Assign reviewers
       dialog on top of it (`ready-confirm.gts`). This is the only dialog that
       opens another.
@@ -204,8 +206,6 @@ In the tables, ⧉ stands for the window icon and ✦ for the AI star (rule 02).
 
 ## Open
 
-- The mention's Ask the agent: does it share the "Request change sessions"
-  setting, or get its own?
 - Reset to origin's place in the commit timeline is a guess: the preview could
   not show a diverged branch.
 
