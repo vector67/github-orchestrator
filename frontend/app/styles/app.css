@@ -6466,6 +6466,35 @@ img.emoji-glyph {
   border: 1px solid var(--border-strong);
 }
 
+.question-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.question-answers .question-option {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--fw-strong);
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.question-answers .question-option:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.question-answers .question-option:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.question-answers .question-option.other::before {
+  content: "…";
+}
+
 .stopped {
   display: flex;
   flex-direction: column;

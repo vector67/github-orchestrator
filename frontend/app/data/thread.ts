@@ -11,6 +11,7 @@ export const RUN_KINDS = [
   'rework',
   'retry',
   'start-session',
+  'answer',
 ] satisfies OperationKind[];
 
 const CLOSES = ['approve', 'reject', 'resolve', 'discard'];

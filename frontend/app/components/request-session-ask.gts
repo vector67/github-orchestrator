@@ -8,11 +8,27 @@ interface RequestSessionAskSignature {
   Args: {
     choose: (visible: boolean, remember: boolean) => void;
     cancel: () => void;
+    question?: string;
+    note?: string;
   };
 }
 
+const QUESTION = 'Run the change in a visible session?';
+
+const NOTE =
+  'A visible session opens in the terminal, where you can watch the agent and ' +
+  'type to it. Either way the change comes back to the board as a proposal.';
+
 export default class RequestSessionAsk extends Component<RequestSessionAskSignature> {
   @tracked remember = false;
+
+  get question(): string {
+    return this.args.question ?? QUESTION;
+  }
+
+  get note(): string {
+    return this.args.note ?? NOTE;
+  }
 
   shown = modifier((element: HTMLElement) => {
     element.showPopover();
@@ -37,8 +53,7 @@ export default class RequestSessionAsk extends Component<RequestSessionAskSignat
         {{modal @cancel}}
       >
         <header class="dialog-head">
-          <p class="question" id="request-ask-question">Run the change in a
-            visible session?</p>
+          <p class="question" id="request-ask-question">{{this.question}}</p>
           <button
             type="button"
             class="dialog-close"
@@ -46,9 +61,7 @@ export default class RequestSessionAsk extends Component<RequestSessionAskSignat
             {{on "click" @cancel}}
           >×</button>
         </header>
-        <p class="note">A visible session opens in the terminal, where you can
-          watch the agent and type to it. Either way the change comes back to
-          the board as a proposal.</p>
+        <p class="note">{{this.note}}</p>
         <label class="composer-tick">
           <input
             type="checkbox"

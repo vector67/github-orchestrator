@@ -184,6 +184,7 @@ const DETAILS: {
   'edit-part': { reply: null },
   stop: { stopped: null },
   'drop-question': {},
+  answer: { ...RUN, answer: '', attempts: 0, attempts_allowed: 3 },
   unpark: {},
   confirm: {},
   place: {},
@@ -648,7 +649,7 @@ type Side = 'board' | 'hub';
 interface Draining {
   key: string;
   id: string;
-  kind: 'start-session' | 'open-shell';
+  kind: 'start-session' | 'open-shell' | 'answer';
   argv: string[];
   worktree: string;
 }
@@ -1585,6 +1586,18 @@ export class FakeBoard {
         worktree: `/wt/thread-${key}`,
       });
     }
+    if (verb === 'answer') {
+      const asked = body as { text: string; visible: boolean };
+      if (asked.visible) {
+        this.drain({
+          key,
+          id,
+          kind: 'answer',
+          argv: ['claude', '--resume', key, asked.text],
+          worktree: `/wt/thread-${key}`,
+        });
+      }
+    }
     if (verb === 'send-review') {
       const review = operation({
         id,
@@ -1657,7 +1670,10 @@ export class FakeBoard {
         ...(verb === 'edit-draft' || verb === 'reply'
           ? { body: (body as { body: string }).body }
           : {}),
-      }),
+        ...(verb === 'answer'
+          ? { answer: (body as { text: string }).text }
+          : {}),
+      } as Partial<Operation>),
       conversation: listed,
     });
   }

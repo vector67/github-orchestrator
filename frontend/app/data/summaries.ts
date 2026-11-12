@@ -528,7 +528,8 @@ function answeringOf(
   return all.flatMap((one) => {
     if (one.state !== 'in-session' || !one.question) return [];
     const opened = operationsOf(one, operations).findLast(
-      (operation) => operation.kind === 'start-session',
+      (operation) =>
+        operation.kind === 'start-session' || operation.kind === 'answer',
     )?.requested_at;
     if (!opened) return [];
     const reply = (one.comments ?? []).findLast(

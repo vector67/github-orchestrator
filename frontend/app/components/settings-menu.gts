@@ -77,6 +77,7 @@ export default class SettingsMenu extends Component {
   @tracked sizing = false;
   @tracked autoReading = false;
   @tracked requesting = false;
+  @tracked answering = false;
   @tracked colouring = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
@@ -104,6 +105,7 @@ export default class SettingsMenu extends Component {
     this.sizing = false;
     this.autoReading = false;
     this.requesting = false;
+    this.answering = false;
     this.keys.drop(this.keymap);
   };
 
@@ -129,6 +131,13 @@ export default class SettingsMenu extends Component {
 
   chooseSession = (session: RequestSession) =>
     this.requestSession.choose(session);
+
+  openAnswering = () => {
+    this.answering = !this.answering;
+  };
+
+  chooseAnswering = (session: RequestSession) =>
+    this.requestSession.chooseAnswering(session);
 
   openColours = () => {
     this.close();
@@ -263,6 +272,32 @@ export default class SettingsMenu extends Component {
                     checked={{eq this.requestSession.chosen choice.session}}
                     data-test-request-session-choice={{choice.session}}
                     {{on "change" (fn this.chooseSession choice.session)}}
+                  />
+                  {{choice.name}}
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/if}}
+          <button
+            type="button"
+            class="setting"
+            aria-expanded={{if this.answering "true" "false"}}
+            data-test-setting
+            data-test-answer-session-open
+            {{on "click" this.openAnswering}}
+          >Answer sessions</button>
+          {{#if this.answering}}
+            <fieldset class="setting-choices" data-test-answer-session-choices>
+              <legend class="visually-hidden">Answer sessions</legend>
+              {{#each REQUEST_SESSION_CHOICES key="session" as |choice|}}
+                <label class="setting-choice">
+                  <input
+                    type="radio"
+                    name="answer-session"
+                    value={{choice.session}}
+                    checked={{eq this.requestSession.answering choice.session}}
+                    data-test-answer-session-choice={{choice.session}}
+                    {{on "change" (fn this.chooseAnswering choice.session)}}
                   />
                   {{choice.name}}
                 </label>

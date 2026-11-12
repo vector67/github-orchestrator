@@ -333,7 +333,7 @@ const ENTRIES = {
     opensTerminal: true,
     ring: true,
   },
-  answer: {
+  'answer-in-session': {
     key: 'o',
     label: 'Answer in a session',
     weight: 'primary',
@@ -1062,6 +1062,7 @@ const CARRIED: Record<
   | 'edit-part'
   | 'create-draft'
   | 'request-change'
+  | AnswerKind
   | 'send-review'
   | 'prepare-harvest-extension'
   | SetupWrite,
@@ -1076,6 +1077,24 @@ const CARRIED: Record<
   'request-change': {
     doing: 'requesting the change',
     square: null,
+  },
+  answer: {
+    request: ({ body }) => ({
+      verb: 'answer',
+      body: { text: body ?? '', visible: false },
+    }),
+    doing: 'answering the agent',
+    square: 'rework',
+  },
+  'answer-watched': {
+    request: ({ body }) => ({
+      verb: 'answer',
+      body: { text: body ?? '', visible: true },
+    }),
+    doing: 'opening the session with your answer',
+    square: null,
+    opensTerminal: true,
+    ring: true,
   },
   'edit-draft': {
     request: ({ draft }) => ({ verb: 'edit-draft', body: { ...draft } }),
@@ -1197,7 +1216,7 @@ const ENROLLED: Decision[] = ['withdraw-from-review'];
 
 const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   proposed: LANDING_AGAIN,
-  asking: ['answer', 'drop'],
+  asking: ['answer-in-session', 'drop'],
   'push failed': LANDING_AGAIN,
   'landing failed': LANDING_AGAIN,
   'reply failed': LANDING_AGAIN,
@@ -1381,7 +1400,7 @@ const NEED_A_LIVE_PR: Decision[] = [
   'retry',
   'rework',
   'start-session',
-  'answer',
+  'answer-in-session',
   'open-shell',
 ];
 
@@ -1501,8 +1520,10 @@ function splitOffers(
   ];
 }
 
+export type AnswerKind = 'answer' | 'answer-watched';
+
 export function carriedOut(
-  decision: Decision | 'edit-draft' | 'edit-part',
+  decision: Decision | AnswerKind | 'edit-draft' | 'edit-part',
   gathered: Gathered,
 ): Carried {
   const carrying = CARRIED[decision];

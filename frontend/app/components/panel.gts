@@ -10,6 +10,7 @@ import FixMeta from 'frontend/components/fix-meta';
 import GoToSession from 'frontend/components/go-to-session';
 import PanelActions from 'frontend/components/panel-actions';
 import PanelHeader from 'frontend/components/panel-header';
+import QuestionAnswers from 'frontend/components/question-answers';
 import QuestionMoved from 'frontend/components/question-moved';
 import ReplyBoxComponent from 'frontend/components/reply-box';
 import SplitCards from 'frontend/components/split-cards';
@@ -152,7 +153,13 @@ const PanelView: TOC<PanelSignature> = <template>
                 class="question-text"
                 data-test-question-text
               >{{@panel.question.text}}</p>
-              {{#if @panel.question.options}}
+              {{#if @panel.question.answerable}}
+                <QuestionAnswers
+                  @conversationId={{@panel.id}}
+                  @options={{@panel.question.options}}
+                  @pending={{pressed @panel}}
+                />
+              {{else if @panel.question.options}}
                 <ol class="question-options">
                   {{#each @panel.question.options key="@index" as |option|}}
                     <li

@@ -12,13 +12,16 @@ export const REQUEST_SESSIONS: RequestSession[] = [
 
 const KEPT = 'request-change-session';
 
-function recalled(): RequestSession {
-  const kept = recall(KEPT);
+const ANSWER_KEPT = 'answer-session';
+
+function recalled(key: string): RequestSession {
+  const kept = recall(key);
   return REQUEST_SESSIONS.find((one) => one === kept) ?? 'ask';
 }
 
 export default class RequestSessionService extends Service {
-  @tracked chosen: RequestSession = recalled();
+  @tracked chosen: RequestSession = recalled(KEPT);
+  @tracked answering: RequestSession = recalled(ANSWER_KEPT);
 
   choose(chosen: RequestSession): void {
     this.chosen = chosen;
@@ -27,5 +30,14 @@ export default class RequestSessionService extends Service {
 
   remember(visible: boolean): void {
     this.choose(visible ? 'visible' : 'invisible');
+  }
+
+  chooseAnswering(chosen: RequestSession): void {
+    this.answering = chosen;
+    keep(ANSWER_KEPT, chosen);
+  }
+
+  rememberAnswering(visible: boolean): void {
+    this.chooseAnswering(visible ? 'visible' : 'invisible');
   }
 }

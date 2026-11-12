@@ -1,4 +1,5 @@
 import type {
+  AnswerOperation,
   Comment,
   CommitVerdict,
   Conversation,
@@ -150,6 +151,7 @@ export interface QuestionView {
   options: string[];
   context: string;
   moved: string | null;
+  answerable: boolean;
 }
 
 export interface FixBanner {
@@ -658,6 +660,54 @@ export function transcriptOf(
   }));
 }
 
+const ANSWERED = 'answered the agent · on the board only';
+
+function answeredOf(
+  operations: Operation[],
+  context: Context,
+): { at: string; entry: TranscriptEntry }[] {
+  return operations
+    .filter(
+      (one): one is AnswerOperation =>
+        one.kind === 'answer' &&
+        !local(one) &&
+        one.state !== 'refused' &&
+        typeof one.answer === 'string',
+    )
+    .map((one) => ({
+      at: one.requested_at ?? '',
+      entry: {
+        id: null,
+        reactions: [],
+        author: context.viewer,
+        author_name: context.names[context.viewer] ?? '',
+        body: one.answer,
+        meta: sentence(ANSWERED, relative(one.requested_at, context.now)),
+        highlighted: false,
+        mention: false,
+        pending: false,
+      },
+    }));
+}
+
+function withAnswers(
+  said: TranscriptEntry[],
+  comments: Comment[],
+  answers: { at: string; entry: TranscriptEntry }[],
+): TranscriptEntry[] {
+  const merged: TranscriptEntry[] = [];
+  let next = 0;
+  said.forEach((entry, at) => {
+    const stamp = comments[at]?.created_at ?? '';
+    while (next < answers.length && answers[next]!.at < stamp) {
+      merged.push(answers[next]!.entry);
+      next += 1;
+    }
+    merged.push(entry);
+  });
+  return [...merged, ...answers.slice(next).map((one) => one.entry)];
+}
+
 function mentionIn(one: Comment, context: Context): boolean {
   return one.id !== null && context.mentionComments.includes(one.id);
 }
@@ -926,7 +976,7 @@ function workNotes(
         : 'previous attempt failed: ');
     notes.push({ kind: 'verdict', text: `${verdict}${reasonOf(run)}` });
   }
-  if (fix?.conflict) {
+  if (fix && 'conflict' in fix && fix.conflict) {
     notes.push({
       kind: 'landing-failure',
       text:
@@ -1023,6 +1073,7 @@ function questionOf(
     options: question.options,
     context: question.context,
     moved: movedOf(question.head, context.pullRequest),
+    answerable: !context.pullRequest?.facts?.ended,
   };
 }
 
@@ -1475,7 +1526,11 @@ export function panelOf(
     transcript: composing(conversation)
       ? []
       : [
-          ...transcriptOf(conversation, comments, context),
+          ...withAnswers(
+            transcriptOf(conversation, comments, context),
+            comments,
+            answeredOf(operations, context),
+          ),
           ...replyingOf(operations, comments, context),
         ],
     reply,

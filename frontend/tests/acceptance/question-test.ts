@@ -1,6 +1,13 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, find, findAll, visit } from '@ember/test-helpers';
+import {
+  click,
+  currentURL,
+  fillIn,
+  find,
+  findAll,
+  visit,
+} from '@ember/test-helpers';
 import {
   added,
   comment,
@@ -120,11 +127,176 @@ module('Acceptance | agent question', function (hooks) {
     ]);
   });
 
+  module('answering with an option or your own words', function () {
+    function answered(): unknown[] {
+      const posted = board().posted.filter((one) => one.verb === 'answer');
+      return posted.map((one) => one.body);
+    }
+
+    async function chosen(choice: string) {
+      await click('[data-test-settings-open]');
+      await click('[data-test-answer-session-open]');
+      await click(`[data-test-answer-session-choice="${choice}"]`);
+      await click('[aria-label="close the settings"]');
+    }
+
+    test('each option is a button, with Other after them', async function (assert) {
+      const asking = seed(board());
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.deepEqual(texts('[data-test-question-answers] button'), [
+        ...asking.question!.options,
+        'Other…',
+      ]);
+    });
+
+    test('a question with no options offers only Other', async function (assert) {
+      const asking = seed(board());
+      board().conversations = [
+        { ...asking, question: { ...asking.question!, options: [] } },
+      ];
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.deepEqual(texts('[data-test-question-answers] button'), [
+        'Other…',
+      ]);
+    });
+
+    test('an option asks whether to watch before it sends anything', async function (assert) {
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-question-option]');
+
+      assert.dom('[data-test-request-session]').includesText('Answer');
+      assert.dom('[data-test-request-remember]').isNotChecked();
+      assert.deepEqual(answered(), []);
+    });
+
+    test('an option answered without a session sends it unwatched and stays on the thread', async function (assert) {
+      const asking = seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-question-option]');
+      await click('[data-test-request-visible="no"]');
+
+      assert.deepEqual(answered(), [
+        { text: asking.question!.options[0], visible: false },
+      ]);
+      assert.strictEqual(currentURL(), `/pr/o/r/7/conversations/${KEY}`);
+    });
+
+    test('an option answered in a visible session sends it watched and opens the terminal', async function (assert) {
+      const asking = seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click(findAll('[data-test-question-option]')[1]!);
+      await click('[data-test-request-visible="yes"]');
+
+      assert.deepEqual(answered(), [
+        { text: asking.question!.options[1], visible: true },
+      ]);
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+    });
+
+    test('Other opens a box, and sends what you typed once you choose how', async function (assert) {
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-question-other]');
+      assert.dom('[data-test-question-other-send]').isDisabled();
+      await fillIn('[data-test-question-other-text]', 'Stamp it in the entity');
+      await click('[data-test-question-other-send]');
+      await click('[data-test-request-visible="no"]');
+
+      assert.deepEqual(answered(), [
+        { text: 'Stamp it in the entity', visible: false },
+      ]);
+    });
+
+    test('a remembered choice sends the next answer without asking, and shows in the settings', async function (assert) {
+      const asking = seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      await click('[data-test-question-option]');
+      await click('[data-test-request-remember]');
+      await click('[data-test-request-visible="no"]');
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-question-option]');
+
+      assert.dom('[data-test-request-session]').doesNotExist();
+      assert.strictEqual(answered().length, 2);
+      await click('[data-test-settings-open]');
+      await click('[data-test-answer-session-open]');
+      assert.dom('[data-test-answer-session-choice="invisible"]').isChecked();
+      assert.strictEqual(
+        (answered() as { text: string }[])[1]?.text,
+        asking.question!.options[0],
+      );
+    });
+
+    test('the settings menu holds Answer sessions apart from Request change sessions', async function (assert) {
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      await chosen('visible');
+
+      await click('[data-test-question-option]');
+
+      assert.dom('[data-test-request-session]').doesNotExist();
+      assert.deepEqual(
+        (answered() as { visible: boolean }[]).map((one) => one.visible),
+        [true],
+      );
+      await click('[data-test-settings-open]');
+      await click('[data-test-request-session-open]');
+      assert.dom('[data-test-request-session-choice="ask"]').isChecked();
+    });
+
+    test('an answer you gave shows in the thread as yours, on the board only', async function (assert) {
+      const asking = seed(board());
+      board().conversations = [
+        {
+          ...asking,
+          question: null,
+          state: 'working',
+          operations: [
+            ...asking.operations,
+            summary({
+              id: `${KEY}.9`,
+              kind: 'answer',
+              state: 'running',
+              requested_at: '2026-09-12T12:00:00Z',
+            }),
+          ],
+        },
+      ];
+      board().operations[KEY] = [
+        ...board().operations[KEY]!,
+        operation({
+          id: `${KEY}.9`,
+          conversation: KEY,
+          kind: 'answer',
+          state: 'running',
+          answer: 'Widen the bound',
+          requested_at: '2026-09-12T12:00:00Z',
+        }),
+      ];
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      const entry = findAll('[data-test-entry]').at(-1);
+      assert.dom(entry).includesText('Widen the bound');
+      assert.dom(entry).includesText('answered the agent');
+    });
+  });
+
   test('answering opens a session on the thread', async function (assert) {
     seed(board());
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-decision="answer"]');
+    await click('[data-test-decision="answer-in-session"]');
 
     assert.strictEqual(board().posted.at(-1)?.verb, 'start-session');
   });
@@ -234,7 +406,10 @@ module('Acceptance | agent question', function (hooks) {
       localStorage.removeItem('answer-replies-seen');
     });
 
-    function answering(board: FakeBoard) {
+    function answering(
+      board: FakeBoard,
+      kind: 'start-session' | 'answer' = 'start-session',
+    ) {
       const asking = seed(board);
       board.conversations = [
         {
@@ -244,7 +419,7 @@ module('Acceptance | agent question', function (hooks) {
             ...asking.operations,
             summary({
               id: `${KEY}.9`,
-              kind: 'start-session',
+              kind,
               state: 'running',
               requested_at: '2026-09-12T12:00:00Z',
             }),
@@ -293,6 +468,16 @@ module('Acceptance | agent question', function (hooks) {
       ]);
       await click('[data-test-close-reply]');
       assert.dom('[data-test-answer-reply]').doesNotExist();
+    });
+
+    test('a reply on a thread you answered in a visible session says so too', async function (assert) {
+      answering(board(), 'answer');
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-answer-reply]')
+        .includesText("anna replied to the thread you're answering");
     });
 
     test('a dismissed reply toast stays dismissed', async function (assert) {
