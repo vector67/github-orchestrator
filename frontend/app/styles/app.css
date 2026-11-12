@@ -583,6 +583,7 @@ input[type="radio"] {
   gap: 14px;
   padding: 18px 32px 0;
   min-height: 0;
+  container: panel / inline-size;
 }
 
 #panel-top,
@@ -1162,6 +1163,7 @@ button.copy-directory {
   gap: 10px;
   position: sticky;
   bottom: 0;
+  z-index: 2;
   padding: 14px 0 16px;
   background: var(--page);
   border-top: 2px solid var(--border-strong);
@@ -5136,6 +5138,13 @@ kbd {
 
   .panel-head {
     flex-wrap: wrap;
+  }
+}
+
+@container panel (width < 560px) {
+  #panel-top,
+  #panel-work {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
