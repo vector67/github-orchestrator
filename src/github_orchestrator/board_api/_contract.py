@@ -67,8 +67,9 @@ class ErrorCode(StrEnum):
 
     WAITING_TO_MIGRATE is the hub serving while terminal sessions are in
     folders the thread names migration moves, so the watcher waits and no
-    pull request's board is served; the thread names migration resource names
-    each one and closes them.
+    pull request's board is served, or while a thread branch would not take
+    its new name, so no board is served until it does; the thread names
+    migration resource names each one, closes the sessions and tries again.
 
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
@@ -2554,14 +2555,27 @@ class SessionInTheWay(BaseModel):
     folder: str = Field(description="The folder a terminal session is in, under its old name.")
 
 
+class BranchInTheWay(BaseModel):
+    repo: str = Field(description="The pull request's repository, owner/name.")
+    number: int = Field(description="The pull request's number.")
+    thread: str = Field(description="The review thread the branch belongs to.")
+    branch: str = Field(description="The branch, still under its old name.")
+    new_branch: str = Field(description="The name the migration gives it.")
+    clone: str = Field(description="The clone the branch is in.")
+    error: str = Field(description="The first line git said when the rename failed.")
+
+
 class ThreadNamesMigration(BaseModel):
     """Whether the one-time rename of every thread's worktree, branch and
-    record file has run, and the terminal sessions holding it up."""
+    record file has run, and the terminal sessions and branches holding it up."""
 
     migrated: bool = Field(description="Whether the thread names carry their key's case now.")
     sessions: list[SessionInTheWay] = Field(description="Each folder the migration moves that a "
                                                         "terminal session is in; empty once "
                                                         "migrated.")
+    branches: list[BranchInTheWay] = Field(description="Each thread branch the last migrate "
+                                                         "could not rename; empty once "
+                                                         "migrated.")
 
 
 class Tour(BaseModel):

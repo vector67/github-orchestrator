@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from github_orchestrator.domain import Pr, Repo, ThreadName
+from github_orchestrator.thread_names.interface import StuckBranch
 
 log = logging.getLogger(__name__)
 
@@ -115,25 +116,26 @@ def _planned(clone: Path, repo: Repo, worktrees_dir: Path) -> list[ThreadRename]
     return planned
 
 
-def _renamed_whole(thread: ThreadRename) -> bool:
+def _stuck(thread: ThreadRename) -> StuckBranch | None:
     if thread.left is not None:
         log.warning("%s", thread.left)
-        return True
+        return None
     if thread.folder is not None:
         moved = _git(thread.clone, "worktree", "move", str(thread.folder),
                      str(thread.target_folder))
         if moved.returncode != 0:
             log.warning("Left %s under its old name: %s", thread.folder, _said(moved))
-            return True
+            return None
         log.info("Moved %s to %s", thread.folder, thread.target_folder)
     if thread.branch != thread.target_branch:
         renamed = _git(thread.clone, "branch", "-m", thread.branch, thread.target_branch)
         if renamed.returncode != 0:
             log.error("Could not rename %s to %s: %s", thread.branch, thread.target_branch,
                       _said(renamed))
-            return False
+            return StuckBranch(thread.pr, thread.key, thread.branch, thread.target_branch,
+                               str(thread.clone), _said(renamed).splitlines()[0])
         log.info("Renamed %s to %s", thread.branch, thread.target_branch)
-    return True
+    return None
 
 
 def _report_dead_folders(worktrees_dir: Path) -> None:
@@ -155,8 +157,8 @@ class ThreadNames:
         return [thread for repo, clone in self._clones.items() if clone.is_dir()
                 for thread in _planned(clone, repo, self._worktrees_dir)]
 
-    def rename(self, planned: list[ThreadRename]) -> bool:
+    def rename(self, planned: list[ThreadRename]) -> list[StuckBranch]:
         _rename_records(self._threads_dir)
-        whole = [_renamed_whole(thread) for thread in planned]
+        stuck = [one for thread in planned if (one := _stuck(thread)) is not None]
         _report_dead_folders(self._worktrees_dir)
-        return all(whole)
+        return stuck

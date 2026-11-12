@@ -1,4 +1,4 @@
-from github_orchestrator.thread_names.interface import HeldFolder
+from github_orchestrator.thread_names.interface import HeldFolder, StuckBranch
 
 
 class FakeNameMigration:
@@ -13,6 +13,9 @@ class FakeNameMigration:
 
     def held(self) -> list[HeldFolder]:
         return [] if self._migrated or not self.rounds else self.rounds[0]
+
+    def stuck(self) -> list[StuckBranch]:
+        return []
 
     def close_sessions(self) -> None:
         self.closed += 1
