@@ -98,10 +98,14 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
                 type="button"
                 class="question-option"
                 disabled={{@pending}}
+                data-opens-dialog={{if this.requestSession.asks "true"}}
                 data-runs-agent={{if (runsAgent "answer") "true"}}
                 data-test-question-option
                 {{on "click" (fn this.pick option)}}
-              >{{option}}<Glyphs @runsAgent={{runsAgent "answer"}} /></button>
+              >{{option}}<Glyphs
+                  @opensDialog={{this.requestSession.asks}}
+                  @runsAgent={{runsAgent "answer"}}
+                /></button>
             </li>
           {{/each}}
         </ol>
@@ -130,9 +134,13 @@ export default class QuestionAnswers extends Component<QuestionAnswersSignature>
               type="submit"
               class="reply-send"
               disabled={{this.unsendable}}
+              data-opens-dialog={{if this.requestSession.asks "true"}}
               data-runs-agent={{if (runsAgent "answer") "true"}}
               data-test-question-other-send
-            >Answer<Glyphs @runsAgent={{runsAgent "answer"}} /></button>
+            >Answer<Glyphs
+                @opensDialog={{this.requestSession.asks}}
+                @runsAgent={{runsAgent "answer"}}
+              /></button>
           </div>
         </form>
       {{/if}}

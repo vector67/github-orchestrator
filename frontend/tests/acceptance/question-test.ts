@@ -185,6 +185,36 @@ module('Acceptance | agent question', function (hooks) {
       assert.deepEqual(answered(), []);
     });
 
+    test('the answer buttons carry the window icon while Agent sessions asks', async function (assert) {
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      await click('[data-test-question-other]');
+
+      for (const answer of [
+        '[data-test-question-option]',
+        '[data-test-question-other-send]',
+      ]) {
+        assert.dom(answer).hasAttribute('data-opens-dialog', 'true');
+        assert.dom(`${answer} [data-glyph="dialog"]`).exists();
+      }
+    });
+
+    test('the answer buttons keep only the star once Agent sessions runs without a session', async function (assert) {
+      seed(board());
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      await chosen('invisible');
+      await click('[data-test-question-other]');
+
+      for (const answer of [
+        '[data-test-question-option]',
+        '[data-test-question-other-send]',
+      ]) {
+        assert.dom(answer).doesNotHaveAttribute('data-opens-dialog');
+        assert.dom(`${answer} [data-glyph="dialog"]`).doesNotExist();
+        assert.dom(answer).hasAttribute('data-runs-agent');
+      }
+    });
+
     test('an option answered without a session sends it unwatched and stays on the thread', async function (assert) {
       const asking = seed(board());
       await visit(`/pr/o/r/7/conversations/${KEY}`);

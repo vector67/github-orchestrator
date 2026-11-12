@@ -228,11 +228,13 @@ export default class CommentBox extends Component<CommentBoxSignature> {
             <button
               type="button"
               class="box-draft"
+              data-opens-dialog={{if this.requestSession.asks "true"}}
               data-runs-agent={{if (runsAgent "request-change") "true"}}
               data-test-box-request
               disabled={{this.unrequestable}}
               {{on "click" this.request}}
             >Request change<Glyphs
+                @opensDialog={{this.requestSession.asks}}
                 @runsAgent={{runsAgent "request-change"}}
               /></button>
           {{/if}}

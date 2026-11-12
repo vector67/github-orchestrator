@@ -1032,6 +1032,30 @@ module('Acceptance | pr diff', function (hooks) {
         );
       });
 
+      test('Request change carries the window icon while Agent sessions asks, because the press opens the chooser', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+
+        assert
+          .dom('[data-test-box-request]')
+          .hasAttribute('data-opens-dialog', 'true');
+        assert.dom('[data-test-box-request] [data-glyph="dialog"]').exists();
+      });
+
+      test('Request change keeps only the star once Agent sessions is chosen', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await chosen('visible');
+        await typed();
+
+        assert
+          .dom('[data-test-box-request]')
+          .doesNotHaveAttribute('data-opens-dialog');
+        assert
+          .dom('[data-test-box-request] [data-glyph="dialog"]')
+          .doesNotExist();
+        assert.dom('[data-test-box-request]').hasAttribute('data-runs-agent');
+      });
+
       test('it is not offered on a pull request you are reviewing', async function (assert) {
         board().actAs('reviewer');
         await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');

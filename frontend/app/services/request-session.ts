@@ -38,6 +38,10 @@ function carriedOver(): RequestSession {
 export default class RequestSessionService extends Service {
   @tracked chosen: RequestSession = recalled(KEPT) ?? carriedOver();
 
+  get asks(): boolean {
+    return this.chosen === 'ask';
+  }
+
   choose(chosen: RequestSession): void {
     this.chosen = chosen;
     keep(KEPT, chosen);
