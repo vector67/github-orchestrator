@@ -49,6 +49,10 @@ description: Must be invoked for any requested front-end change in this reposito
   `/pr/acme/widgets/7/api/...`, not `/api/...`, and a conversation opens at
   `/pr/acme/widgets/7/conversations/<key>`.
 
+- **Move only the buttons you were asked to move.** Every other control keeps
+  its place and order, even when you rename or restyle it. A position you
+  were not asked about is not an open question to raise.
+
 - **A temporary overlay goes in the top layer.** Open a picker or menu as a
   popover placed at its trigger, never in the page flow (it pushes everything
   down) or inside a box that clips it. Its test asserts it is fully visible and

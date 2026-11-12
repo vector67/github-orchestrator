@@ -586,7 +586,8 @@ function codeOf(conversation: Conversation, context: Context): Code | null {
   const current = !anchor.is_outdated && anchor.line !== null && head;
   const sha =
     anchor.side === 'LEFT'
-      ? context.pullRequest?.diffs.origin?.base
+      ? (context.pullRequest?.merge_base ??
+        context.pullRequest?.diffs.origin?.base)
       : current
         ? head
         : anchor.original_commit;

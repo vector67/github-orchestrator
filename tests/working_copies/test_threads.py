@@ -1,4 +1,7 @@
+import os
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -316,6 +319,48 @@ def test_a_workspace_line_that_is_not_utf8_reads_with_a_replacement_character(gi
 
     assert _texts(files["f"]) == ["base", "caf�"]
     assert _texts(files["menu.txt"]) == ["th�"]
+
+
+LATIN_NAMED_GIT = """#!{python}
+import os, subprocess, sys
+LATIN, STORED = b"caf\\xe9.txt", b"cafe-latin1.txt"
+args = [STORED if arg == LATIN else arg for arg in map(os.fsencode, sys.argv[1:])]
+done = subprocess.run([{git!r}, *args], stdout=subprocess.PIPE)
+sys.stdout.buffer.write(done.stdout.replace(STORED, LATIN))
+sys.exit(done.returncode)
+"""
+
+
+def _git_on_a_latin1_file_system(tmp_path, monkeypatch):
+    stubs = tmp_path / "stubs"
+    stubs.mkdir()
+    stub = stubs / "git"
+    stub.write_text(LATIN_NAMED_GIT.format(python=sys.executable, git=shutil.which("git")))
+    stub.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{stubs}{os.pathsep}{os.environ['PATH']}")
+
+
+def test_a_workspace_diff_keeps_an_untracked_file_whose_name_is_not_utf8(
+        git, pr_worktree, tmp_path, monkeypatch):
+    cut = _cut(git, pr_worktree)
+    (Path(cut.path) / "cafe-latin1.txt").write_text("untracked\n")
+    proposed = _git(cut.path, "rev-parse", "HEAD").stdout.strip()
+    _git_on_a_latin1_file_system(tmp_path, monkeypatch)
+
+    files = {file.path: file for file in cut.diff_since(Sha(proposed))}
+
+    assert {path: _texts(file) for path, file in files.items()} == {"caf�.txt": ["untracked"]}
+
+
+def test_a_workspace_diff_fails_when_an_untracked_file_cannot_be_diffed(
+        git, pr_worktree, monkeypatch):
+    cut = _cut(git, pr_worktree)
+    (Path(cut.path) / "new").write_text("untracked\n")
+    proposed = _git(cut.path, "rev-parse", "HEAD").stdout.strip()
+    _git_answers(monkeypatch, lambda cwd, args: subprocess.CompletedProcess(
+        args, 128, "", "fatal: could not access 'new'") if "--no-index" in args else None)
+
+    assert cut.diff_since(Sha(proposed)) is None
 
 
 def test_a_workspace_diff_ignores_an_external_diff_tool_in_the_config(git, pr_worktree):

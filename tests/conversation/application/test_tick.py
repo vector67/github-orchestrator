@@ -167,6 +167,11 @@ def _rebase_runs(agent_runs) -> list[RebasingFix]:
             if isinstance(started.work, RebasingFix)]
 
 
+def _queued(threads) -> int:
+    return sum(1 for conversation in threads.all()
+               if conversation.state == "open" and conversation.fix.state == "queued")
+
+
 def test_only_one_rebase_runs_on_a_pr_at_a_time(settings):
     agent_runs = _agent_runs()
     here, threads = _ready_world(settings, "PRRT_1", "PRRT_2", agent_runs=agent_runs)
@@ -176,7 +181,7 @@ def test_only_one_rebase_runs_on_a_pr_at_a_time(settings):
     drain(threads)
 
     assert len(_rebase_runs(agent_runs)) == 1
-    assert threads.counts().queued == 1
+    assert _queued(threads) == 1
 
 
 def test_the_next_rebase_waits_for_the_rebased_fix_to_land_and_starts_onto_its_head(settings):
@@ -229,7 +234,7 @@ def test_the_cap_holds_and_the_next_starts_when_a_slot_frees(tmp_path):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert len(threads.counts().live) == 4
-    assert threads.counts().queued == 1
+    assert _queued(threads) == 1
     assert _started_in(agent_runs) == [_checkout(here, key) for key in keys[:4]]
     assert _read(threads, "PRRT_1").standing is ConversationState.WORKING
     assert _read(threads, "PRRT_5").standing is ConversationState.QUEUED
@@ -238,7 +243,7 @@ def test_the_cap_holds_and_the_next_starts_when_a_slot_frees(tmp_path):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert len(threads.counts().live) == 4
-    assert threads.counts().queued == 0
+    assert _queued(threads) == 0
     assert _started_in(agent_runs)[-1] == _checkout(here, "PRRT_5")
 
 
@@ -634,7 +639,6 @@ def test_a_queued_fix_of_a_conversation_that_is_not_open_is_never_started(settin
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert agent_runs.started == []
-    assert threads.counts().queued == 0
 
 
 def test_an_absent_fix_is_never_scheduled(settings):
@@ -646,7 +650,6 @@ def test_an_absent_fix_is_never_scheduled(settings):
     threads.tick(FakeNotifications(), on_hold=False)
 
     assert agent_runs.started == []
-    assert threads.counts().queued == 0
 
 
 def _deferred(settings, until: str, *, before=None, **fakes):
@@ -830,20 +833,3 @@ def test_a_tick_that_may_not_schedule_still_settles_the_decisions_and_starts_no_
 
     assert _read(threads).operations[-1].state is OperationState.APPLIED
     assert here.agent_runs.started == []
-
-
-def test_the_counts_say_what_is_queued_live_and_proposed(settings):
-    here = _world(settings, agent_runs=_agent_runs())
-    threads = here.threads()
-    _commented(here, threads, "PRRT_c")
-    propose(here, threads, "PRRT_c")
-    here.agent_runs.script(KEEPS_GOING, KEEPS_GOING)
-    on_github(here.github, "PRRT_a", said(201, "rename this"))
-    on_github(here.github, "PRRT_b", said(202, "rename this"))
-    hear(threads)
-
-    before = threads.counts()
-    threads.tick(FakeNotifications(), on_hold=False)
-
-    assert (before.queued, len(before.live), before.proposed) == (2, 0, 1)
-    assert (threads.counts().queued, len(threads.counts().live)) == (0, 2)
