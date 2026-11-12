@@ -1,7 +1,8 @@
+import json
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
@@ -137,6 +138,51 @@ class ResetToOrigin:
     refused: ResetRefusal | None = None
 
 
+def _text(field: object) -> bool:
+    return field is None or (isinstance(field, str) and bool(field))
+
+
+IMPORTANCE = "importance"
+_RANKED = ShelfKey("ranked")
+NUDGE_AFTER = timedelta(hours=24)
+
+
+class Importance(StrEnum):
+    IMPORTANT = "important"
+    NORMAL = "normal"
+    SOMEDAY = "someday"
+
+
+@dataclass(frozen=True)
+class PrImportance:
+    importance: Importance | None = None
+    nudged_at: str | None = None
+
+    def keep(self, shelf: "Shelf") -> None:
+        shelf.save(IMPORTANCE, _RANKED, json.dumps(asdict(self)).encode())
+
+    @staticmethod
+    def kept(shelf: "Shelf") -> "PrImportance":
+        document = shelf.list(IMPORTANCE).get(_RANKED)
+        if document is None:
+            return PrImportance()
+        try:
+            fields = json.loads(document)
+            importance, nudged_at = fields.get("importance"), fields.get("nudged_at")
+            if not _text(nudged_at):
+                return PrImportance()
+            return PrImportance(None if importance is None else Importance(importance), nudged_at)
+        except (ValueError, TypeError, AttributeError, RecursionError):
+            return PrImportance()
+
+    def nudge_due(self, last_event_at: str | None, now: datetime) -> bool:
+        if self.importance is not Importance.IMPORTANT:
+            return False
+        moments = [datetime.fromisoformat(moment) for moment in (last_event_at, self.nudged_at)
+                   if moment is not None]
+        return bool(moments) and now - max(moments) >= NUDGE_AFTER
+
+
 @dataclass(frozen=True)
 class Dashboard:
     pr: Pr
@@ -199,6 +245,8 @@ class Dashboard:
     run_working: bool
     release_requested: bool
     hidden: bool
+    importance: Importance | None
+    nudge_due: bool
     flags_changed_at: str | None
     thread_rows: tuple[ThreadRow, ...]
     unreadable_threads: tuple[str, ...]

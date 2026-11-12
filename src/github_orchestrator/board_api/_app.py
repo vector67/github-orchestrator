@@ -71,6 +71,7 @@ from github_orchestrator.board_api._contract import (
     PullRequestCommit,
     PullRequestCommits,
     QuestionRequest,
+    RankedPullRequest,
     ReactRequest,
     ReadMark,
     ReadMarkRequest,
@@ -82,6 +83,7 @@ from github_orchestrator.board_api._contract import (
     ReviewedCommits,
     SendReviewRequest,
     SessionCheck,
+    SetImportanceRequest,
     Sha,
     SkippedFixCheck,
     Stack,
@@ -147,6 +149,7 @@ from github_orchestrator.board_api.interface import (
     ManagerStanding,
     ManagerWorktree,
     Mentionable,
+    PrImportance,
     ResetToOrigin,
     Shelf,
     ShelfKey,
@@ -1058,6 +1061,32 @@ def mark_unread(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
     """Answered with every mark left."""
     board.shelf.delete(READ, ShelfKey(asked.sha))
     return _read_marks(board)
+
+
+def _ranked(kept: PrImportance) -> RankedPullRequest:
+    return RankedPullRequest(importance=kept.importance, nudged_at=kept.nudged_at)
+
+
+@writes.post("/pull-request/importance/operations:set", response_model=RankedPullRequest,
+             tags=["pull request"], operation_id="setImportance",
+             summary="Say how much the pull request matters to you.")
+def set_importance(board: Serving, asked: SetImportanceRequest) -> RankedPullRequest:
+    """Kept on the server, per pull request. The wall lists each group's
+    important pull requests first and its someday ones last.
+    """
+    kept = dataclasses.replace(PrImportance.kept(board.shelf), importance=asked.importance)
+    kept.keep(board.shelf)
+    return _ranked(kept)
+
+
+@writes.post("/pull-request/importance/operations:nudged", response_model=RankedPullRequest,
+             tags=["pull request"], operation_id="markNudged",
+             summary="Say you nudged the people an important pull request waits on.")
+def mark_nudged(board: Serving) -> RankedPullRequest:
+    """Puts the next nudge a day off."""
+    kept = dataclasses.replace(PrImportance.kept(board.shelf), nudged_at=board.clock().isoformat())
+    kept.keep(board.shelf)
+    return _ranked(kept)
 
 
 @writes.post("/manager/git", response_model=GitRun, tags=["manager"],

@@ -251,6 +251,42 @@ module('Acceptance | wall', function (hooks) {
       .hasText('PROJ-7 · Fix the widget');
   });
 
+  function ranked(
+    number: number,
+    importance: 'important' | 'normal' | 'someday' | null,
+  ): ReturnType<typeof heldPr> {
+    return heldPr({ number, dashboard: { manager: { importance } } });
+  }
+
+  test('each section lists important first, then unset, then normal, then someday', async function (assert) {
+    onTheHub(
+      ranked(7, 'normal'),
+      ranked(8, 'someday'),
+      ranked(9, null),
+      ranked(10, 'important'),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(rows(), ['o/r#10', 'o/r#9', 'o/r#7', 'o/r#8']);
+  });
+
+  test('an important or someday pull request says so as a chip, and a normal one does not', async function (assert) {
+    onTheHub(
+      ranked(7, 'normal'),
+      ranked(8, 'someday'),
+      ranked(10, 'important'),
+    );
+
+    await visit('/');
+
+    const chips = (number: number): string[] =>
+      texts(`[data-test-wall-row="o/r#${number}"] [data-test-state]`);
+    assert.true(chips(10).includes('important'));
+    assert.true(chips(8).includes('someday'));
+    assert.false(chips(7).some((one) => ['important', 'normal'].includes(one)));
+  });
+
   test('a pull request off the wall gets no row and no count', async function (assert) {
     onTheHub(
       heldPr(),

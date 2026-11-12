@@ -5,7 +5,9 @@ from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
+    Importance,
     Notice,
+    PrImportance,
     QueuedEvent,
     Shelves,
     Told,
@@ -28,7 +30,7 @@ from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
 ConfigOf = Callable[[Pr, str], ManagerConfig]
 
-Flags = tuple[str | None, bool, str | None, bool, int]
+Flags = tuple[str | None, bool, str | None, bool, int, Importance | None, bool]
 
 
 def _unpushed_commit(line: str) -> UnpushedCommit:
@@ -78,13 +80,17 @@ class DashboardSource:
         pr = config.pr
         facts = self._change_detection.facts(pr)
         queued = self._worklist.waiting(pr).count
-        return self._stamped(dashboard_of(
+        ranked = PrImportance.kept(self._shelves.of(pr))
+        drawn = dashboard_of(
             config, facts, run=run, last_run=self._history.last_run(pr), queue=self._queue(pr),
             on_hold=self._holds.on_hold(pr), threads=threads, wrong=wrong, notice=notice,
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0,
                                               draft=facts is None or facts.draft),
             assign_when_ready=self._picks.saved(pr),
-        ))
+        )
+        return self._stamped(replace(
+            drawn, importance=ranked.importance,
+            nudge_due=ranked.nudge_due(drawn.last_event_at, self._clock())))
 
     def _queue(self, pr: Pr) -> tuple[QueuedEvent, ...]:
         return tuple(QueuedEvent(None if entry.event is None else entry.event.kind,
@@ -116,7 +122,8 @@ class DashboardSource:
 
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,
-                 dashboard.hidden, len(dashboard.threads_live))
+                 dashboard.hidden, len(dashboard.threads_live), dashboard.importance,
+                 dashboard.nudge_due)
         seen = self._flags_seen.get(dashboard.pr)
         if seen is None or seen[0] != flags:
             seen = (flags, self._clock().strftime(STAMP))

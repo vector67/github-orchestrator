@@ -6,6 +6,7 @@ from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     DismissUntil,
+    Importance,
     ManagerRefusal,
     ManagerStanding,
     Notice,
@@ -86,7 +87,8 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                   "viewer_requested": False, "mentioned": False, "mentions": [],
                   "unresolved_threads": 0},
         "manager": {"frozen_on": None, "on_hold": True, "working_on": "new-comments",
-                    "hidden": False, "threads_live": 2, "changed_at": None},
+                    "hidden": False, "importance": None, "nudge_due": False,
+                    "threads_live": 2, "changed_at": None},
         "threads": [],
         "unreadable": [],
         "listed_at": None,
@@ -102,6 +104,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         my_review="approved", my_review_at="2026-10-07T12:00:00Z", my_review_sha="c0ffee1",
         force_pushed_at="2026-10-07T13:00:00Z",
         changes_requested_by=("bob",), review_decision="changes-requested", hidden=True,
+        importance=Importance.IMPORTANT, nudge_due=True,
         flags_changed_at="2026-10-08T09:01:00Z",
         unreadable_threads=(), threads_listed_at="2026-10-08T08:59:00Z",
         thread_rows=(ThreadRow(key="PRRT_1", standing="ready", state="open",
@@ -123,6 +126,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         "unresolved_threads": 0}
     assert answer["manager"] == {
         "frozen_on": None, "on_hold": True, "working_on": "new-comments", "hidden": True,
+        "importance": "important", "nudge_due": True,
         "threads_live": 2, "changed_at": "2026-10-08T09:01:00Z"}
     assert answer["threads"] == [{"key": "PRRT_1", "state": "ready", "record_state": "open",
                                   "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z",

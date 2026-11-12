@@ -52,7 +52,7 @@ IDLE = Dashboard(
     assign_when_ready=None, unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_live=frozenset(),
     frozen_on=None, expected_branch=None,
     seconds_left=None, run_working=False, release_requested=False,
-    hidden=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
+    hidden=False, importance=None, nudge_due=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
     undismiss_command="github-orchestrator undismiss --repo o/n 1",
     notice=None, standing=ManagerStanding.ANSWERING)
 

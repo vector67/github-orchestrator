@@ -1,11 +1,14 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.interface import (
     Dashboards,
+    Importance,
     ManagerStanding,
+    PrImportance,
+    Shelves,
     UnpushedCommit,
 )
 from github_orchestrator.conversation import ConversationManagerFactory
@@ -42,7 +45,7 @@ from tests.pr_manager.polls import (
     polled_pr,
     seed,
 )
-from tests.pr_manager.scripted_terminal import ManualClock
+from tests.pr_manager.scripted_terminal import NOW, ManualClock
 from tests.pr_manager.support import POLLED_AT, THE_PR, ServerPanel, manager_over
 from tests.settings.support import disk_dismissals, disk_holds
 
@@ -411,3 +414,55 @@ def test_the_wall_and_an_open_board_give_the_same_dashboard(settings, tmp_path):
 
     assert [row["dashboard"] for row in wall["pull_requests"]] == [opened]
     assert (opened["standing"], opened["manager"]["working_on"]) == ("answering", "ci-failed")
+
+
+def _ranked(settings, tmp_path, importance):
+    seed(settings, POLLED)
+    manager = manager_over(settings, None, worktree=tmp_path, is_author=True)
+    if importance is not None:
+        importance.keep(manager.container.get(Shelves).of(THE_PR))
+    manager.run()
+    return manager.container.get(Dashboards).dashboard(THE_PR)
+
+
+def test_a_pr_nobody_has_ranked_has_no_importance(settings, tmp_path):
+    dashboard = _ranked(settings, tmp_path, None)
+
+    assert (dashboard.importance, dashboard.nudge_due) == (None, False)
+
+
+def test_the_importance_kept_on_the_prs_shelf_shows_on_its_dashboard(settings, tmp_path):
+    dashboard = _ranked(settings, tmp_path, PrImportance(Importance.SOMEDAY))
+
+    assert (dashboard.importance, dashboard.nudge_due) == (Importance.SOMEDAY, False)
+
+
+def test_an_important_pr_quiet_for_a_day_is_due_a_nudge(settings, tmp_path):
+    dashboard = _ranked(settings, tmp_path, PrImportance(Importance.IMPORTANT))
+
+    assert (dashboard.importance, dashboard.nudge_due) == (Importance.IMPORTANT, True)
+
+
+@pytest.mark.parametrize(("hours_ago", "due"), [(23.9, False), (24, True)],
+                         ids=["inside the day", "a day on"])
+def test_a_nudge_falls_due_a_day_after_the_last_one(settings, tmp_path, hours_ago, due):
+    nudged_at = (NOW - timedelta(hours=hours_ago)).isoformat()
+
+    dashboard = _ranked(settings, tmp_path, PrImportance(Importance.IMPORTANT, nudged_at))
+
+    assert dashboard.nudge_due is due
+
+
+def test_setting_importance_stamps_the_flags_anew(settings, tmp_path):
+    seed(settings, POLLED)
+    clock = ManualClock()
+    manager = manager_over(settings, None, worktree=tmp_path, is_author=True, clock=clock)
+    manager.run()
+    dashboards = manager.container.get(Dashboards)
+    before = dashboards.dashboard(THE_PR).flags_changed_at
+
+    clock.advance(10)
+    PrImportance(Importance.IMPORTANT).keep(manager.container.get(Shelves).of(THE_PR))
+    after = dashboards.dashboard(THE_PR).flags_changed_at
+
+    assert before is not None and after is not None and after > before

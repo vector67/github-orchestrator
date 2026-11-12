@@ -365,6 +365,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
       return 'Answer the mention';
     case 'mentioned':
       return 'Waiting on others';
+    case 'nudge':
+      return `Nudge ${listed(move.reviewers.length ? move.reviewers : [shown.author ?? 'the author'])}`;
     default:
       return labelOf(code, shown);
   }
@@ -829,7 +831,8 @@ function titleOf(shown: ShownPr): string {
   return ticket ? `${ticket} · ${withoutLeadingTicket(title, ticket)}` : title;
 }
 
-export type ChipTone = 'alarm' | 'warn' | 'plain' | 'quiet' | 'accent';
+export type ChipTone =
+  'alarm' | 'warn' | 'plain' | 'quiet' | 'accent' | 'strong';
 
 export interface Chip {
   key: string;
@@ -871,6 +874,11 @@ const DECISIONS: Move[] = ['agent-question', 'human-comments', 'bot-comments'];
 
 const MENTION_NAMED: Move[] = ['mention', 'mentioned'];
 
+const IMPORTANT_HINT =
+  'You marked it important: it is listed first in its section';
+
+const SOMEDAY_HINT = 'You marked it someday: it is listed last in its section';
+
 const DRAFT_HINT =
   'A draft: it has to be marked ready for review before it can merge';
 
@@ -879,6 +887,17 @@ const MISMATCHES_HINT =
 
 function chip(key: string, text: string, hint: string, tone: ChipTone): Chip {
   return { key, text, hint, tone };
+}
+
+function importanceChip(shown: ShownPr): Chip | null {
+  const importance = shown.flags?.importance;
+  if (importance === 'important') {
+    return chip('importance', 'important', IMPORTANT_HINT, 'strong');
+  }
+  if (importance === 'someday') {
+    return chip('importance', 'someday', SOMEDAY_HINT, 'quiet');
+  }
+  return null;
 }
 
 function ciChip(shown: ShownPr, code: Move): Chip | null {
@@ -1036,6 +1055,7 @@ function chipsOf(
   const system = shown.drawn.system;
   const facts = shown.facts;
   const found = [
+    importanceChip(shown),
     ciChip(shown, code),
     mergeChip(shown, code),
     reviewChip(shown, code),
