@@ -168,6 +168,18 @@ module('Acceptance | send review', function (hooks) {
             '1 draft you have not added.',
         );
     });
+
+    test('a comment carrying only its drafts goes without a summary', async function (assert) {
+      board().conversations = board().conversations.filter(
+        (one) => one.key === 'PRRT_p',
+      );
+      await opened();
+
+      assert.dom('[data-test-review-send]').isNotDisabled();
+      await click('[data-test-review-send]');
+
+      assert.deepEqual(sent()[0]?.body, { verdict: 'COMMENT', body: null });
+    });
   });
 
   test('a comment carrying drafts goes without a summary', async function (assert) {
