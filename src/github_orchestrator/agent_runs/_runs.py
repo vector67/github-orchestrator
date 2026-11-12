@@ -98,6 +98,10 @@ CARRY_ON = "manual-continue"
 CARRY_ON_PROMPT = "Carry on where you left off."
 WONT_START = "could not start the agent"
 
+NO_CODEX_SESSION = ("no Codex session is recorded for this thread, so there is no "
+                    "conversation to carry the answer on; use Answer in a session and "
+                    "type the answer there")
+
 Popen = Callable[..., "subprocess.Popen[bytes]"]
 
 
@@ -475,7 +479,13 @@ class AgentRuns:
         return self._fix_thread(fix, carry_on_prompt(self._commands, fix), continuing=True)
 
     def answer_thread(self, fix: ThreadFix) -> AgentRun | str:
+        if self._unanswerable(fix):
+            return NO_CODEX_SESSION
         return self._fix_thread(fix, answered_prompt(self._commands, fix), continuing=True)
+
+    def _unanswerable(self, fix: ThreadFix) -> bool:
+        return (not self._lines.answers_without_a_session()
+                and _kept_session(self._session_file(fix)) is None)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
@@ -487,6 +497,8 @@ class AgentRuns:
                                              watched=True))
 
     def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
+        if answer is not None and self._unanswerable(fix):
+            return NO_CODEX_SESSION
         first = (None if answer is None
                  else watched_answer_prompt(self._commands, fix, answer))
         argv = self._lines.answering(_kept_session(self._session_file(fix)), first)

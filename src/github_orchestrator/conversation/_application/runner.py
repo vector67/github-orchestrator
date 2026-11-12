@@ -70,6 +70,7 @@ from github_orchestrator.conversation._domain.events import (
     ReactionPosted,
     ReplyFailed,
     ReplyPosted,
+    RunRefused,
     SessionRefused,
     ShellRefused,
     ThreadResolved,
@@ -375,7 +376,7 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             if refused is not None:
                 log.warning("StartRun failed for conversation %s: %s",
                             conversation.key, refused)
-                return Fail("failed to launch the agent run")
+                return RunRefused(refused)
             return None
         case StopRun():
             ports.agents.stop_run(conversation.key)

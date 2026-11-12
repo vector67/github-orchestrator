@@ -519,3 +519,30 @@ def test_an_answer_says_something(bench, visible):
 
     assert isinstance(_answer_with(bench, "  ", visible=visible), Denied)
     assert bench.stored().fix.is_asking
+
+
+def test_an_unwatched_answer_no_agent_can_carry_on_keeps_the_question_and_says_why(bench):
+    _asked_and_stopped(bench)
+    bench.agent_runs.script(Outcome(starts=False))
+
+    _answer_with(bench, visible=False)
+
+    stored = bench.stored()
+    assert stored.fix.is_asking
+    assert stored.fix.question.text == QUESTION
+    answered = stored.operations[-1]
+    assert (answered.kind, answered.state) == ("answer", "refused")
+    assert "No such file or directory" in answered.reason
+
+
+def test_a_watched_answer_no_session_can_open_for_keeps_the_question_and_says_why(bench):
+    _asked_and_stopped(bench)
+    bench.world.pr_processes.refusal = "no tmux server is running"
+
+    _answer_with(bench, visible=True)
+
+    stored = bench.stored()
+    assert stored.fix.is_asking
+    answered = stored.operations[-1]
+    assert (answered.kind, answered.state, answered.reason) == (
+        "answer", "refused", "no tmux server is running")

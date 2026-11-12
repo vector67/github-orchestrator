@@ -79,6 +79,7 @@ from github_orchestrator.conversation._domain.events import (
     Rebase,
     ReplyFailed,
     ReplyPosted,
+    RunRefused,
     SessionRefused,
     ShellRefused,
     ThreadResolved,
@@ -457,7 +458,8 @@ def _sync_fix(operations: list[Operation], after: Conversation,
     if index is None:
         return
     synced = _synced(operations[index], after, at)
-    if isinstance(command, SessionRefused):
+    if isinstance(command, SessionRefused) or (isinstance(command, RunRefused)
+                                               and after.fix.is_asking):
         synced = replace(synced, state=OperationState.REFUSED, reason=command.reason,
                          reason_code=ReasonCode.AGENT_UNAVAILABLE,
                          settled_at=_settled_at(operations[index], OperationState.REFUSED,

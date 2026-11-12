@@ -22,6 +22,8 @@ class CommandLines(Protocol):
 
     def answering(self, session: str | None, first: str | None) -> list[str]: ...
 
+    def answers_without_a_session(self) -> bool: ...
+
     def env(self) -> dict[str, str]: ...
 
 
@@ -51,6 +53,9 @@ class ClaudeCommandLines:
     def answering(self, session: str | None, first: str | None) -> list[str]:
         resumed = ["--resume", session] if session else ["--continue"]
         return resumed if first is None else [*resumed, first]
+
+    def answers_without_a_session(self) -> bool:
+        return True
 
     def env(self) -> dict[str, str]:
         return _without("ANTHROPIC_API_KEY")
@@ -101,6 +106,9 @@ class CodexCommandLines:
     def answering(self, session: str | None, first: str | None) -> list[str]:
         resumed = ["resume", session or "--last"]
         return resumed if first is None else [*resumed, first]
+
+    def answers_without_a_session(self) -> bool:
+        return False
 
     def env(self) -> dict[str, str]:
         return _without("OPENAI_API_KEY")

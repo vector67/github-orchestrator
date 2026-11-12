@@ -159,6 +159,7 @@ from github_orchestrator.conversation._domain.events import (
     RootGone,
     RunExited,
     RunLost,
+    RunRefused,
     RunStarted,
     RunTimedOut,
     SessionRefused,
@@ -700,6 +701,15 @@ def _carried_on_with_the_reply(conversation: Conversation) -> Accepted:
     brief = Brief(note=REPLIED_WHILE_ASKING, include=_repliers(conversation))
     return Accepted(with_fix(conversation, state=QUEUED, started_at=None, decision_error=None,
                              run=Run(kind=OperationKind.REWORK, brief=brief, resumes=True)))
+
+
+LAUNCH_FAILED = "failed to launch the agent run"
+
+
+def _answer_refused(conversation: Conversation, command: RunRefused) -> Accepted:
+    fix = conversation.fix
+    return Accepted(with_fix(conversation, state=ASKING, started_at=None,
+                             attempts=max(fix.attempts - 1, 0), decision_error=command.reason))
 
 
 def _still_asking(conversation: Conversation) -> Accepted:
@@ -1420,6 +1430,10 @@ def apply(conversation: Conversation, command: Change, at: str | None = None,
 def _dispatch(conversation: Conversation, command: Change,
               at: str | None) -> Accepted | Deferred:
     match command:
+        case RunRefused() if conversation.fix.run.kind == OperationKind.ANSWER:
+            return _answer_refused(conversation, command)
+        case RunRefused():
+            return _dispatch(conversation, Fail(LAUNCH_FAILED), at)
         case Refresh():
             return Accepted(_refreshed(conversation, command))
         case Reopen():
