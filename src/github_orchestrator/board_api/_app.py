@@ -1,4 +1,5 @@
 import dataclasses
+import json
 import logging
 import os
 import secrets
@@ -139,9 +140,8 @@ from github_orchestrator.board_api._reviewed import commit_of, kept
 from github_orchestrator.board_api._streams import described, streamed
 from github_orchestrator.board_api._terminal import carried
 from github_orchestrator.board_api.interface import (
-    Dashboard as ManagerDashboard,
-)
-from github_orchestrator.board_api.interface import (
+    RESET_STATE,
+    RESET_TO_ORIGIN,
     ManagerPanel,
     ManagerRefusal,
     ManagerStanding,
@@ -150,6 +150,9 @@ from github_orchestrator.board_api.interface import (
     ResetToOrigin,
     Shelf,
     ShelfKey,
+)
+from github_orchestrator.board_api.interface import (
+    Dashboard as ManagerDashboard,
 )
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -981,7 +984,7 @@ def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
         code = ErrorCode(refused.code.value)
         raise Refusal(500 if code is ErrorCode.RESET_REFUSED else 409, code,
                       refused.detail or "")
-    ResetToOrigin.forget(board.shelf)
+    board.shelf.delete(RESET_TO_ORIGIN, RESET_STATE)
     return Response(status_code=204)
 
 
@@ -1002,7 +1005,8 @@ def queue_reset_to_origin(board: Serving) -> Response:
         raise Refusal(409, ErrorCode.NO_AGENT_WORKING,
                       "no agent is working in the worktree, so reset it now instead")
     _refuse_unless_diverged(dashboard)
-    ResetToOrigin(queued_at=board.clock.stamp()).keep(board.shelf)
+    queued = ResetToOrigin(queued_at=board.clock.stamp())
+    board.shelf.save(RESET_TO_ORIGIN, RESET_STATE, json.dumps(dataclasses.asdict(queued)).encode())
     return Response(status_code=204)
 
 
@@ -1011,7 +1015,7 @@ def queue_reset_to_origin(board: Serving) -> Response:
              summary="Forget a queued reset, or what the last one did.")
 def cancel_reset_to_origin(board: Serving) -> Response:
     """Doing nothing when nothing is kept."""
-    ResetToOrigin.forget(board.shelf)
+    board.shelf.delete(RESET_TO_ORIGIN, RESET_STATE)
     return Response(status_code=204)
 
 

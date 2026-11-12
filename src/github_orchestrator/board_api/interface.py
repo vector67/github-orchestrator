@@ -1,7 +1,6 @@
-import json
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -105,7 +104,7 @@ class ShelfKey:
 
 RESET_TO_ORIGIN = "reset"
 REVIEWED = "reviewed"
-_RESET_STATE = ShelfKey("state")
+RESET_STATE = ShelfKey("state")
 
 
 class ResetRefusalCode(StrEnum):
@@ -131,47 +130,11 @@ class ResetRefusal:
     detail: str | None = None
 
 
-def _text(field: object) -> bool:
-    return field is None or (isinstance(field, str) and bool(field))
-
-
-def _refusal_of(field: object) -> ResetRefusal:
-    if not isinstance(field, dict):
-        raise ValueError(field)
-    code, detail = field.get("code"), field.get("detail")
-    if not isinstance(code, str) or not _text(detail):
-        raise ValueError(field)
-    return ResetRefusal(ResetRefusalCode(code), detail)
-
-
 @dataclass(frozen=True)
 class ResetToOrigin:
     queued_at: str | None = None
     ran_at: str | None = None
     refused: ResetRefusal | None = None
-
-    def keep(self, shelf: "Shelf") -> None:
-        shelf.save(RESET_TO_ORIGIN, _RESET_STATE, json.dumps(asdict(self)).encode())
-
-    @staticmethod
-    def kept(shelf: "Shelf") -> "ResetToOrigin | None":
-        document = shelf.list(RESET_TO_ORIGIN).get(_RESET_STATE)
-        if document is None:
-            return None
-        try:
-            fields = json.loads(document)
-            queued_at, ran_at = fields.get("queued_at"), fields.get("ran_at")
-            refused = fields.get("refused")
-            if not (_text(queued_at) and _text(ran_at)):
-                return None
-            return ResetToOrigin(queued_at, ran_at,
-                                 None if refused is None else _refusal_of(refused))
-        except (ValueError, TypeError, AttributeError, RecursionError):
-            return None
-
-    @staticmethod
-    def forget(shelf: "Shelf") -> None:
-        shelf.delete(RESET_TO_ORIGIN, _RESET_STATE)
 
 
 @dataclass(frozen=True)

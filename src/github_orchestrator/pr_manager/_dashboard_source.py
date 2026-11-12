@@ -7,7 +7,6 @@ from github_orchestrator.board_api.interface import (
     BaseStanding,
     Notice,
     QueuedEvent,
-    ResetToOrigin,
     Shelves,
     Told,
     UnpushedCommit,
@@ -20,6 +19,7 @@ from github_orchestrator.conversation import (
 from github_orchestrator.domain import Pr, UtcClock
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_manager._config import ManagerConfig
+from github_orchestrator.pr_manager._reset_shelf import kept_reset
 from github_orchestrator.pr_manager._snapshot import dashboard_of
 from github_orchestrator.pr_manager._status import STAMP, StatusFiles
 from github_orchestrator.pr_processes import PrProcesses
@@ -69,7 +69,7 @@ class DashboardSource:
         return self._status_files.laid_over(
             replace(drawn, unpushed_commits=unpushed,
                     diverged=bool(unpushed) and self._behind(worktree, pr),
-                    reset_to_origin=ResetToOrigin.kept(self._shelves.of(pr)),
+                    reset_to_origin=kept_reset(self._shelves.of(pr)),
                     base=self._base(pr)),
             manager=self._told.held().managers.get(pr))
 
