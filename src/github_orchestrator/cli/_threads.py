@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import NoReturn
 
+from github_orchestrator.cli._help_format import OptionHelp
 from github_orchestrator.cli._report_commands import (
     REPLIED_AS,
     SKIPPED_AS,
@@ -450,23 +451,41 @@ def parse_repo(text: str) -> Repo:
         raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
+THREAD_LINE = "Report on and act on a pull request's comment threads: the agents' side of the board."
+
+_THREAD_MORE = (
+    "Each verb changes one thread, or for send-review one PR's review, and says why when "
+    "it refuses. The agents run the reporting "
+    "verbs from their briefs; a HUMAN ONLY verb runs only when a person asked for it. Run "
+    "thread <verb> --help for a verb's options.")
+
+
+def _verb(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser], verb: str, line: str, more: str) -> argparse.ArgumentParser:
+    return thread_sub.add_parser(verb, help=line, description=f"{line} {more}",
+                                 formatter_class=OptionHelp)
+
+
 def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo", type=parse_repo, required=True,
                         help="The PR's repo, as owner/name")
     parser.add_argument("--pr", type=int, required=True, help="PR number")
 
 
+def _thread_id(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--thread-id", required=True,
+                        help="The thread's key, as the brief names it or thread list prints it")
+
+
 HUMAN_ONLY = ("HUMAN ONLY: {what} An agent runs this only when a human told it to, "
               "and quotes them in --human-direction.")
 
 
-def _human_only(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser], verb: str,
-                what: str, *, thread: bool = True) -> argparse.ArgumentParser:
-    parser = thread_sub.add_parser(verb, help=HUMAN_ONLY.format(what=what),
-                                   description=HUMAN_ONLY.format(what=what))
+def _human_only(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser], verb: str, what: str, more: str, *,
+                thread: bool = True) -> argparse.ArgumentParser:
+    parser = _verb(thread_sub, verb, HUMAN_ONLY.format(what=what), more)
     _common(parser)
     if thread:
-        parser.add_argument("--thread-id", required=True)
+        _thread_id(parser)
     parser.add_argument("--human-direction", required=True,
                         help="The human's instruction, quoted, with who gave it; "
                              "kept in the thread's history")
@@ -492,25 +511,31 @@ def _anchor_fields(parser: argparse.ArgumentParser) -> None:
                         choices=[side.value for side in Side],
                         help="The side the first line is on; --side where not given")
     parser.add_argument("--side", default=Side.AFTER.value,
-                        choices=[side.value for side in Side])
+                        choices=[side.value for side in Side],
+                        help="The side of the diff the line is on: after for the PR's "
+                             "head, before for its base")
 
 
 def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     place_parser = _human_only(
         thread_sub, "place", "move a thread to the outcome the operator chose, as the "
-                             "board's move does; deferred parks it and done confirms it.")
-    place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE])
+                             "board's move does; deferred parks it and done confirms it.",
+        "Use it to file a thread where the board would, without opening the board.")
+    place_parser.add_argument("--to", required=True, choices=[state.value for state in PLACEABLE],
+                              help="The outcome to move the thread to")
     place_parser.add_argument("--until", default="manual",
                               help="With --to deferred: what wakes it, one of "
                                    "manual, reply, ci, push or pr:<number>")
     place_parser.add_argument("--note", default="",
                               help="With --to deferred: why it waits")
 
-    _human_only(thread_sub, "unpark", "wake a deferred thread now.")
+    _human_only(thread_sub, "unpark", "wake a deferred thread now.",
+                "Use it to wake the thread before what it was parked until happens.")
 
     approve_parser = _human_only(thread_sub, "approve",
                                  "accept the agent's proposal: push its fix, post its reply "
-                                 "or file its ticket.")
+                                 "or file its ticket.",
+                                 "For a split, --part accepts one part at a time.")
     approve_parser.add_argument("--reply", default="", help="The reply to post with it")
     approve_parser.add_argument("--delete-comment", action="store_true",
                                 help="Delete the comment instead of answering it")
@@ -528,7 +553,8 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
 
     edit_part_parser = _human_only(thread_sub, "edit-part",
                                    "save new words for a split's ticket or reply without "
-                                   "accepting it.")
+                                   "accepting it.",
+                                   "Use it to fix the wording now and accept the part later.")
     edit_part_parser.add_argument("--part", required=True, choices=("ticket", "reply"),
                                   help="The part of the split to edit")
     edit_part_parser.add_argument("--reply", default="", help="The reply, for --part reply")
@@ -538,7 +564,9 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
     edit_part_parser.add_argument("--ticket-body", default="", help="The ticket's description")
 
     rework_parser = _human_only(thread_sub, "rework",
-                                "send the agent's proposal back with a note on what to change.")
+                                "send the agent's proposal back with a note on what to change.",
+                                "The agent runs again on the thread with the note, the lines "
+                                "pointed at and the files included.")
     rework_parser.add_argument("--note", default="", help="What to change")
     rework_parser.add_argument("--part", default=None, choices=SPLIT_PARTS,
                                help="The part of a split to send back; the whole proposal "
@@ -546,16 +574,24 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
     _brief_fields(rework_parser)
 
     session_parser = _human_only(thread_sub, "session",
-                                 "open an interactive agent session on the thread.")
+                                 "open an interactive agent session on the thread.",
+                                 "For a thread that needs a conversation rather than a run: "
+                                 "the session starts with --steer and is briefed on the lines "
+                                 "and files given.")
     session_parser.add_argument("--steer", default="", help="What to start the session with")
     _brief_fields(session_parser)
 
-    _human_only(thread_sub, "fix", "ask the agent to write a fix for the thread.")
-    _human_only(thread_sub, "retry", "run the agent again on a thread whose attempts failed.")
-    _human_only(thread_sub, "stop", "stop the agent's run on the thread.")
+    _human_only(thread_sub, "fix", "ask the agent to write a fix for the thread.",
+                "Queues a fix run on the thread.")
+    _human_only(thread_sub, "retry", "run the agent again on a thread whose attempts failed.",
+                "Use it once whatever made the attempts fail is out of the way.")
+    _human_only(thread_sub, "stop", "stop the agent's run on the thread.",
+                "Use it when the run is going the wrong way or is no longer wanted.")
 
     resolve_parser = _human_only(thread_sub, "resolve",
-                                 "close the thread as done, with a reply if one is given.")
+                                 "close the thread as done, with a reply if one is given.",
+                                 "Use it when the comment is dealt with and nothing of the "
+                                 "agent's needs to land.")
     resolve_parser.add_argument("--reply", default="", help="The reply to post")
     resolve_parser.add_argument("--delete-comment", action="store_true",
                                 help="Delete the comment instead of answering it")
@@ -565,112 +601,128 @@ def _add_human_only_parsers(thread_sub: argparse._SubParsersAction[argparse.Argu
                                 help="Leave the comment without a thumbs-up")
 
     reject_parser = _human_only(thread_sub, "reject",
-                                "turn the agent's proposal down and close the thread.")
+                                "turn the agent's proposal down and close the thread.",
+                                "Nothing the agent proposed lands; the reply, if one is "
+                                "given, is posted on the comment.")
     reject_parser.add_argument("--reply", default="", help="The reply to post")
     reject_parser.add_argument("--delete-comment", action="store_true",
                                help="Delete the comment instead of answering it")
 
     answer_parser = _human_only(thread_sub, "answer",
-                                "post the human's own reply on the thread now.")
+                                "post the human's own reply on the thread now.",
+                                "Posts the words as given, with no proposal from the agent.")
     answer_parser.add_argument("--body", required=True, help="The reply, in full")
 
-    edit_parser = _human_only(thread_sub, "edit", "rewrite a draft or move it to another line.")
+    edit_parser = _human_only(thread_sub, "edit", "rewrite a draft or move it to another line.",
+                              "The draft stays off GitHub.")
     _anchor_fields(edit_parser)
     edit_parser.add_argument("--body-file", required=True, help="File holding the comment")
 
-    _human_only(thread_sub, "enrol", "put a draft in the review that goes out next.")
-    _human_only(thread_sub, "withdraw", "take a draft back out of the review.")
-    _human_only(thread_sub, "discard", "throw a draft away.")
-    _human_only(thread_sub, "post-now", "post a draft on GitHub on its own, now.")
+    _human_only(thread_sub, "enrol", "put a draft in the review that goes out next.",
+                "thread send-review posts every enrolled draft together.")
+    _human_only(thread_sub, "withdraw", "take a draft back out of the review.",
+                "The draft stays on the board for later.")
+    _human_only(thread_sub, "discard", "throw a draft away.",
+                "Nothing of it reaches GitHub.")
+    _human_only(thread_sub, "post-now", "post a draft on GitHub on its own, now.",
+                "Use it for a finding that should not wait for the review.")
 
     review_parser = _human_only(thread_sub, "send-review",
                                 "send the review with every enrolled draft in it. Prints "
-                                "its id.", thread=False)
+                                "its id.",
+                                "Takes no --thread-id: the review covers the whole PR.",
+                                thread=False)
     review_parser.add_argument("--verdict", required=True,
-                               choices=[verdict.value for verdict in Verdict])
+                               choices=[verdict.value for verdict in Verdict],
+                               help="What the review says of the PR")
     review_parser.add_argument("--body", default=None, help="The review's summary")
 
 
 def _comment_fields(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--thread-id", required=True)
-    parser.add_argument("--comment-id", type=int, required=True)
-    parser.add_argument("--author", required=True)
+    parser.add_argument("--thread-id", required=True,
+                        help="The key to save the thread under")
+    parser.add_argument("--comment-id", type=int, required=True,
+                        help="The GitHub id of the comment the thread is about")
+    parser.add_argument("--author", required=True, help="The comment author's GitHub login")
     parser.add_argument("--path", default=None,
                         help="Anchored file path (omit for a non-anchored comment)")
-    parser.add_argument("--line", type=int, default=None)
-    parser.add_argument("--comment-type", default="review")
+    parser.add_argument("--line", type=int, default=None,
+                        help="The line of --path the comment hangs on")
+    parser.add_argument("--comment-type", default="review",
+                        help="What kind of comment it is, such as review, issue or "
+                             "review-summary")
     parser.add_argument("--body-file", required=True,
                         help="File holding the comment body")
 
 
-def add_thread_parsers(
-    sub: argparse._SubParsersAction[argparse.ArgumentParser],
-) -> argparse.ArgumentParser:
+def add_thread_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> argparse.ArgumentParser:
     thread_parser = sub.add_parser(
-        "thread",
-        description="Manage comment-fix threads (review-board Phase 1).",
+        "thread", description=f"{THREAD_LINE} {_THREAD_MORE}",
+        epilog="Example: github-orchestrator thread list --repo acme/widgets --pr 88",
     )
-    thread_sub = thread_parser.add_subparsers(dest="thread_command")
+    thread_sub = thread_parser.add_subparsers(dest="thread_command", metavar="<verb>")
 
-    open_parser = thread_sub.add_parser(
-        "open",
-        help="Create worktree + branch off PR head, record status=pending, print the worktree path.",
-    )
+    open_parser = _verb(
+        thread_sub, "open",
+        "Create worktree + branch off PR head, record status=pending, print the worktree path.",
+        "The watcher opens a thread for each new comment itself; this opens one by hand, "
+        "for a comment it has not picked up.")
     _common(open_parser)
     _comment_fields(open_parser)
 
-    plan_parser = thread_sub.add_parser(
-        "plan",
-        help="Write down the steps the fix will take, before making it.",
-    )
+    plan_parser = _verb(
+        thread_sub, "plan",
+        "Write down the steps the fix will take, before making it.",
+        "Run it once the brief is understood and before the first edit; the board shows the "
+        "steps, and thread step marks each one finished.")
     _common(plan_parser)
-    plan_parser.add_argument("--thread-id", required=True)
+    _thread_id(plan_parser)
     plan_parser.add_argument("--step", action="append", required=True,
                              help="One step, in the order you will do them")
     plan_parser.add_argument("--file", action="append", default=None,
                              help="The file that step touches; one per --step "
                                   "or none at all")
 
-    step_parser = thread_sub.add_parser(
-        "step", help="Mark a step of the plan finished, as you finish it."
-    )
+    step_parser = _verb(
+        thread_sub, "step", "Mark a step of the plan finished, as you finish it.",
+        "Name each step by its number in the plan thread plan wrote down.")
     _common(step_parser)
-    step_parser.add_argument("--thread-id", required=True)
+    _thread_id(step_parser)
     step_parser.add_argument("--done", action="append", type=int, required=True,
                              help="The number of a step, counting from 1")
 
-    skip_parser = thread_sub.add_parser(
-        "skip",
-        help="The comment needs neither code nor an answer from the agent: working -> skipped.",
-    )
+    skip_parser = _verb(
+        thread_sub, "skip",
+        "The comment needs neither code nor an answer from the agent: working -> skipped.",
+        "The thread ends skipped, with the classification and the reason on the board.")
     _common(skip_parser)
-    skip_parser.add_argument("--thread-id", required=True)
-    skip_parser.add_argument(
-        "--classification", required=True, choices=SKIPPED_AS,
-    )
-    skip_parser.add_argument("--reason", required=True)
+    _thread_id(skip_parser)
+    skip_parser.add_argument("--classification", required=True, choices=SKIPPED_AS,
+                             help="What kind of comment it is")
+    skip_parser.add_argument("--reason", required=True,
+                             help="One line: why the comment needs nothing")
 
-    reply_parser = thread_sub.add_parser(
-        "reply",
-        help="The comment needs an answer and no code: propose the reply for the author "
-             "to accept.",
-    )
+    reply_parser = _verb(
+        thread_sub, "reply",
+        "The comment needs an answer and no code: propose the reply for the author "
+        "to accept.",
+        "Nothing is posted until the author accepts the reply on the board.")
     _common(reply_parser)
-    reply_parser.add_argument("--thread-id", required=True)
-    reply_parser.add_argument(
-        "--classification", required=True, choices=REPLIED_AS,
-    )
+    _thread_id(reply_parser)
+    reply_parser.add_argument("--classification", required=True, choices=REPLIED_AS,
+                              help="What kind of comment it is")
     reply_parser.add_argument("--body", required=True,
                               help="The reply to post on the comment, in full")
 
-    ticket_parser = thread_sub.add_parser(
-        "ticket",
-        help="The comment asks for work outside this pull request and the tracker has no "
-             "ticket for it: propose a ticket, and the reply that says so, for the author "
-             "to accept.",
-    )
+    ticket_parser = _verb(
+        thread_sub, "ticket",
+        "The comment asks for work outside this pull request and the tracker has no "
+        "ticket for it: propose a ticket, and the reply that says so, for the author "
+        "to accept.",
+        "Nothing is filed or posted until the author accepts; once the ticket is filed, "
+        "thread filed reports its key and link.")
     _common(ticket_parser)
-    ticket_parser.add_argument("--thread-id", required=True)
+    _thread_id(ticket_parser)
     ticket_parser.add_argument("--project", required=True,
                                help="The Jira project key, or owner/name for GitHub issues")
     ticket_parser.add_argument("--title", required=True, help="The ticket's title")
@@ -678,14 +730,16 @@ def add_thread_parsers(
     ticket_parser.add_argument("--reply", required=True,
                                help="The reply to post on the comment once the ticket is filed")
 
-    split_parser = thread_sub.add_parser(
-        "split",
-        help="The comment's code is already in this pull request but belongs in another: "
-             "propose the commit that takes it out, the branch that carries it to a new PR, "
-             "and the reply that says where it went, for the author to accept.",
-    )
+    split_parser = _verb(
+        thread_sub, "split",
+        "The comment's code is already in this pull request but belongs in another: "
+        "propose the commit that takes it out, the branch that carries it to a new PR, "
+        "and the reply that says where it went, for the author to accept.",
+        "Pass exactly one of --same-ticket; --ticket-key with --ticket-url for an existing "
+        "ticket; or --project, --title and --body for a new one. Nothing leaves the worktree "
+        "until the author accepts; once the new PR is open, thread opened reports its link.")
     _common(split_parser)
-    split_parser.add_argument("--thread-id", required=True)
+    _thread_id(split_parser)
     split_parser.add_argument("--sha", required=True,
                               help="The commit that takes the code out of this PR")
     split_parser.add_argument("--branch", required=True,
@@ -711,32 +765,34 @@ def add_thread_parsers(
     split_parser.add_argument("--reply", required=True,
                               help="The reply to post on the comment once the new PR is open")
 
-    filed_parser = thread_sub.add_parser(
-        "filed",
-        help="The ticket the author accepted is filed: the board posts the reply with its "
-             "link.",
-    )
+    filed_parser = _verb(
+        thread_sub, "filed",
+        "The ticket the author accepted is filed: the board posts the reply with its "
+        "link.",
+        "Run it after filing the ticket an accepted thread ticket proposed.")
     _common(filed_parser)
-    filed_parser.add_argument("--thread-id", required=True)
+    _thread_id(filed_parser)
     filed_parser.add_argument("--key", required=True,
                               help="The key the tracker gave the ticket, such as PROJ-12 or #12")
     filed_parser.add_argument("--url", required=True, help="The ticket's link")
 
-    opened_parser = thread_sub.add_parser(
-        "opened",
-        help="The new PR the author accepted is open: the board posts the reply with its link.",
-    )
+    opened_parser = _verb(
+        thread_sub, "opened",
+        "The new PR the author accepted is open: the board posts the reply with its link.",
+        "Run it after opening the new PR an accepted thread split proposed.")
     _common(opened_parser)
-    opened_parser.add_argument("--thread-id", required=True)
+    _thread_id(opened_parser)
     opened_parser.add_argument("--url", required=True, help="The new PR's link")
 
-    reconciled_parser = thread_sub.add_parser(
-        "reconciled",
-        help="The PR worktree holds origin's branch plus what still belongs on the PR: "
-             "the board carries the accept on.",
-    )
+    reconciled_parser = _verb(
+        thread_sub, "reconciled",
+        "The PR worktree holds origin's branch plus what still belongs on the PR: "
+        "the board carries the accept on.",
+        "Run it at the end of a reconcile run, when an accepted fix could not land because "
+        "origin's branch was rewritten from somewhere else. Do not push: the board pushes "
+        "when it lands.")
     _common(reconciled_parser)
-    reconciled_parser.add_argument("--thread-id", required=True)
+    _thread_id(reconciled_parser)
     reconciled_parser.add_argument("--note", required=True,
                                    help="Who rewrote origin and why, and each local commit "
                                         "kept, carried over or dropped")
@@ -744,15 +800,19 @@ def add_thread_parsers(
                                    help="The sha the accepted fix ended up as, when it was "
                                         "already on the PR branch and you carried it over")
 
-    ready_parser = thread_sub.add_parser(
-        "ready", help="The subagent committed in its worktree: status=ready."
-    )
+    ready_parser = _verb(
+        thread_sub, "ready", "The subagent committed in its worktree: status=ready.",
+        "The board shows the commit for the author to accept, rework or reject. Prints the "
+        "thread's saved record, as thread show does.")
     _common(ready_parser)
-    ready_parser.add_argument("--thread-id", required=True)
+    _thread_id(ready_parser)
     ready_parser.add_argument("--sha", required=True,
                               help="The commit the subagent made")
-    ready_parser.add_argument("--tests", required=True, choices=TEST_OUTCOMES)
-    ready_parser.add_argument("--tests-note", default=None)
+    ready_parser.add_argument("--tests", required=True, choices=TEST_OUTCOMES,
+                              help="Whether the tests passed, failed or could not be run")
+    ready_parser.add_argument("--tests-note", default=None,
+                              help="One line about the test run, such as what failed or why "
+                                   "it could not run")
     ready_parser.add_argument("--note", default=None,
                               help="One line: what the subagent changed")
     ready_parser.add_argument("--summary", default=None,
@@ -762,11 +822,12 @@ def add_thread_parsers(
     ready_parser.add_argument("--confidence-note", default=None,
                               help="One sentence behind that level")
 
-    ask_parser = thread_sub.add_parser(
-        "ask", help="The brief cannot be met as stated, or the way forward goes beyond "
-                    "what was asked: stop and put a question to the author.")
+    ask_parser = _verb(
+        thread_sub, "ask", "The brief cannot be met as stated, or the way forward goes beyond "
+                           "what was asked: stop and put a question to the author.",
+        "The board shows the question and its options to the author.")
     _common(ask_parser)
-    ask_parser.add_argument("--thread-id", required=True)
+    _thread_id(ask_parser)
     ask_parser.add_argument("--question", required=True,
                             help="One line: what the author must decide")
     ask_parser.add_argument("--context", required=True,
@@ -775,51 +836,58 @@ def add_thread_parsers(
                             help="One concrete way forward; repeat for each, or leave "
                                  "out when you have not narrowed it down")
 
-    base_parser = thread_sub.add_parser(
-        "base", help="Move the commit the thread's fix is built on, after rebasing "
-                     "the fix onto a newer tip of the PR branch.")
+    base_parser = _verb(
+        thread_sub, "base", "Move the commit the thread's fix is built on, after rebasing "
+                            "the fix onto a newer tip of the PR branch.",
+        "Run it when thread ready or thread split refuses a commit because the thread's base "
+        "is not one of its ancestors, then report again.")
     _common(base_parser)
-    base_parser.add_argument("--thread-id", required=True)
+    _thread_id(base_parser)
     base_parser.add_argument("--sha", required=True,
                              help="The PR branch's tip the fix now sits on")
 
-    fail_parser = thread_sub.add_parser(
-        "fail", help="The attempt failed: status=failed, worktree kept for rework."
-    )
+    fail_parser = _verb(
+        thread_sub, "fail", "The attempt failed: status=failed, worktree kept for rework.",
+        "Use it when the fix cannot be made; the board shows the reason.")
     _common(fail_parser)
-    fail_parser.add_argument("--thread-id", required=True)
-    fail_parser.add_argument("--reason", required=True)
+    _thread_id(fail_parser)
+    fail_parser.add_argument("--reason", required=True,
+                             help="One line: why the attempt failed")
 
-    check_parser = thread_sub.add_parser(
-        "check", help="Set by hand whether the commit the PR author named addresses "
-                      "your comment, over the commit check's verdict.")
+    check_parser = _verb(
+        thread_sub, "check", "Set by hand whether the commit the PR author named addresses "
+                             "your comment, over the commit check's verdict.",
+        "Use it when the commit check got it wrong.")
     _common(check_parser)
-    check_parser.add_argument("--thread-id", required=True)
+    _thread_id(check_parser)
     check_parser.add_argument("--verdict", required=True,
-                              choices=[verdict.value for verdict in CommitVerdict])
+                              choices=[verdict.value for verdict in CommitVerdict],
+                              help="Whether the commit addresses the comment")
     check_parser.add_argument("--reason", default="set by hand",
                               help="One line: why the commit does or does not address it")
 
     _add_human_only_parsers(thread_sub)
 
-    draft_parser = thread_sub.add_parser(
-        "draft",
-        help="A review finding on one line of the diff: a draft on the "
-             "board, nothing on GitHub. Prints its key.",
-    )
+    draft_parser = _verb(
+        thread_sub, "draft",
+        "A review finding on one line of the diff: a draft on the "
+        "board, nothing on GitHub. Prints its key.",
+        "The author enrols, edits, posts or discards it from the board.")
     _common(draft_parser)
     _anchor_fields(draft_parser)
     draft_parser.add_argument("--body-file", required=True,
                               help="File holding the comment")
 
-    list_parser = thread_sub.add_parser(
-        "list", help="Print a PR's threads, one a line: key, state, where it hangs, what it is about.")
+    list_parser = _verb(
+        thread_sub, "list",
+        "Print a PR's threads, one a line: key, state, where it hangs, what it is about.",
+        "Use it to find a thread's key, or to see what every thread on the PR is doing.")
     _common(list_parser)
 
-    show_parser = thread_sub.add_parser(
-        "show", help="Print one thread's saved record as JSON: state, sha, tests, notes.")
+    show_parser = _verb(
+        thread_sub, "show", "Print one thread's saved record as JSON: state, sha, tests, notes.",
+        "Use it to read back what was reported on a thread.")
     _common(show_parser)
-    show_parser.add_argument("--thread-id", required=True)
+    _thread_id(show_parser)
 
     return thread_parser
-

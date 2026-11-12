@@ -1,7 +1,8 @@
 import argparse
 import functools
 
-from github_orchestrator.cli._threads import add_thread_parsers, parse_repo
+from github_orchestrator.cli._help_format import OptionHelp
+from github_orchestrator.cli._threads import THREAD_LINE, add_thread_parsers, parse_repo
 
 _PROG = "github-orchestrator"
 
@@ -9,10 +10,11 @@ _GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("everyday", ("open", "status", "logs", "runs")),
     ("service", ("start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts")),
     ("maintenance", ("update", "doctor", "config", "uninstall", "setup", "skill")),
-    ("learning", ("tutorial",)),
+    ("learning", ("tutorial", "help")),
 )
 
 _DEBUGGING: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("agents", ("thread",)),
     ("debugging", ("queue", "undismiss")),
 )
 
@@ -26,7 +28,7 @@ class Commands:
     def __init__(self, version: str | None = None) -> None:
         self.parser = argparse.ArgumentParser(
             prog=_PROG,
-            usage=f"{_PROG} <command> [options]\n       {_PROG} help [<command>]",
+            usage=f"{_PROG} <command> [options]\n       {_PROG} help [<command> [<verb>]]",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             add_help=False,
         )
@@ -47,17 +49,30 @@ class Commands:
             self._lines[name] = line
             return sub.add_parser(
                 name, description=f"{line} {more}".strip(), epilog=f"Example: {_PROG} {example}",
-                parents=[instance])
+                parents=[instance], formatter_class=OptionHelp)
 
-        help_parser = command("help", "List the commands, or show one command's help.", "help logs")
-        help_parser.add_argument("topic", nargs="?", metavar="<command>", help="The command to explain")
+        help_parser = command(
+            "help", "List the commands, or show one command's help.", "help logs",
+            "With a command, prints the same page as <command> --help; name a verb after "
+            "thread, as in help thread ready, for that verb's page. Without one, lists the "
+            "commands people run day to day; --help lists the agents' and the debugging "
+            "commands too.")
+        help_parser.add_argument(
+            "topic", nargs="*", metavar="<command>",
+            help="The command to explain, and for thread the verb (default: list the commands)")
 
         command(
             "open", "Open this instance's board in the browser.", "open",
             "Starts the watcher first if it is not running, waits for its hub, and always "
             "prints the board's address in case no browser opens.")
 
-        command("status", "Show overall system status.", "status")
+        command(
+            "status", "Show overall system status.", "status",
+            "Prints the installed version and any newer release, the hub's and the watcher's "
+            "health, every tracked PR's CI, mergeability and review with its hold or "
+            "dismissal, and how many events wait in each PR's queue. Exits 1 when the "
+            "watcher is not watching or its last poll failed or is overdue, so a script can "
+            "check it too.")
 
         logs_parser = command(
             "logs", "Tail the watcher's, the agent managers' or the service's log.", "logs agent -n 50",
@@ -65,13 +80,17 @@ class Commands:
         logs_parser.add_argument(
             "which", nargs="?", default="watcher",
             choices=("watcher", "agent", "service", "all"),
-            help="Which log to tail (default: watcher)",
+            help="Which log to tail: all for every one of them",
         )
-        logs_parser.add_argument("-n", "--lines", type=int, default=20, help="Number of lines")
+        logs_parser.add_argument("-n", "--lines", type=int, default=20, help="How many of the last lines to print")
         logs_parser.add_argument("-f", "--follow", action="store_true",
                                  help="Keep printing the log as it grows, until Ctrl-C")
 
-        command("runs", "Summarise today's agent runs: count, total time, longest.", "runs")
+        command(
+            "runs", "Summarise today's agent runs: count, total time, longest.", "runs",
+            "Counts the agent runs that finished today, adds up their time, names the "
+            "longest and its PR, and says what the same work would have cost at API prices "
+            "where the agent reports a cost. Use it to see how much the agents did today.")
 
         start_parser = command(
             "start", "Start this instance's watcher as a service and wait for its hub.", "start",
@@ -111,7 +130,9 @@ class Commands:
             "restart-all say why and change nothing while the hold lasts.")
 
         command("allow-restarts", "Let restarts through again after hold-restarts.",
-                "allow-restarts")
+                "allow-restarts",
+                "Lifts the hold once the stress test is over, so restart and restart-all "
+                "do their work again.")
 
         update_parser = command(
             "update", "Install the newest release and restart every instance on it.", "update",
@@ -133,7 +154,12 @@ class Commands:
             "anything not ok. Changes nothing, so it is safe to run anywhere and paste into an "
             "issue. Exits 1 when any check fails.")
 
-        command("config", "Print every setting's effective value and where it came from.", "config")
+        command(
+            "config", "Print every setting's effective value and where it came from.", "config",
+            "Prints the config file's path, then one line a setting: its name, the value in "
+            "effect, and whether the file set it or it is the default. Use it to see what "
+            "the orchestrator runs with before changing the file or the setup page. Exits 2 "
+            "when the file cannot be read.")
 
         uninstall_parser = command(
             "uninstall", "Stop every instance, remove their services and the command.",
@@ -172,24 +198,31 @@ class Commands:
             "--terminal", action="store_true",
             help="Print what the installer set up on this machine instead.")
 
-        queue_parser = command("queue", "Show pending events for a PR.", "queue 88")
-        queue_parser.add_argument("pr", type=int, help="PR number")
+        queue_parser = command(
+            "queue", "Show pending events for a PR.", "queue 88",
+            "For each watched repo with a PR of that number, prints the events its agent "
+            "manager is processing and the ones still waiting. Use it when a PR's board "
+            "seems stuck, to see whether its events are queued, in hand or corrupt.")
+        queue_parser.add_argument("pr", type=int, help="The PR's number, in any watched repo")
 
         undismiss_parser = command(
             "undismiss", "Clear a PR's dismissal so it comes back to the wall.",
-            "undismiss --repo acme/widgets 88")
+            "undismiss --repo acme/widgets 88",
+            "A dismissed PR stays off the wall until this clears its dismissal. Use it when a "
+            "PR was dismissed by mistake or needs you again.")
         undismiss_parser.add_argument("--repo", type=parse_repo, required=True,
                                       help="The PR's repo, as owner/name")
-        undismiss_parser.add_argument("pr", type=int, help="PR number")
+        undismiss_parser.add_argument("pr", type=int, help="The PR's number")
 
+        self._lines["thread"] = THREAD_LINE
         self.thread_parser = add_thread_parsers(sub)
         self.parser.description = self._listing(_GROUPS + _DEBUGGING)
 
-    def help(self, topic: str | None) -> None:
-        if topic is None:
+    def help(self, topic: list[str]) -> None:
+        if not topic:
             print(self._listing(_GROUPS))
         else:
-            self.parser.parse_args([topic, "--help"])
+            self.parser.parse_args([*topic, "--help"])
 
     def _listing(self, groups: tuple[tuple[str, tuple[str, ...]], ...]) -> str:
         width = max(len(name) for _, names in groups for name in names)
