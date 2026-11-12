@@ -221,6 +221,7 @@ module('Acceptance | keyboard', function (hooks) {
       'm Move',
       'b Not fixed',
       'i Write a fix',
+      '⇧A Ask the agent to draft a reply to a mention',
       "q Open a shell in the comment's own worktree",
       't Try again',
       'x Stop',

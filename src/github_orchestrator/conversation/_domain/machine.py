@@ -585,6 +585,14 @@ def reports_only_a_split(fix: Fix) -> bool:
     return fix.kind == ProposalKind.SPLIT and (any_run(fix.steps) or reworking_a_part)
 
 
+def _the_authors_to_change(conversation: Conversation, command: Any) -> Refused | None:
+    if conversation.role != ROLE_REVIEWER:
+        return None
+    return Refused(conversation, ErrorCode.INTERNAL_REFUSAL,
+                   "this pull request is someone else's, so its thread takes a reply or a "
+                   "skip, never a change: report it with `thread reply` or `thread skip`")
+
+
 def _a_split_report(conversation: Conversation, command: Any) -> Refused | None:
     if not reports_only_a_split(conversation.fix):
         return None
@@ -787,7 +795,9 @@ WAITING_FOR_A_SESSION = (PROPOSED, ASKING, DECLINED, FAILED)
 
 def _a_fix_for_a_session(conversation: Conversation,
                          command: StartSession) -> Refused | Deferred | None:
-    states = ((*WAITING_FOR_A_SESSION, ABSENT) if conversation.comment_type == KIND_REQUEST
+    states = ((*WAITING_FOR_A_SESSION, ABSENT)
+              if conversation.comment_type == KIND_REQUEST
+              or conversation.role == ROLE_REVIEWER
               else WAITING_FOR_A_SESSION)
     return _a_fix_in(states, "is not waiting for anyone")(conversation, command)
 
@@ -1064,7 +1074,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     StepDone: (_planning((QUEUED, RUNNING, IN_SESSION, PROPOSED), "marks no step"),
                _step_in_the_plan),
     ReportReady: (_reported_on((ABSENT, RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
-                  _a_split_report, _a_commit, _on_the_base, _a_known_confidence),
+                  _the_authors_to_change, _a_split_report, _a_commit, _on_the_base, _a_known_confidence),
     MoveBase: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                _a_commit),
     ReportDeclined: (_reported_on((QUEUED, RUNNING, IN_SESSION), "no agent holds"),
@@ -1072,9 +1082,9 @@ RULES: dict[type, tuple[Rule, ...]] = {
     ReportReply: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                   _a_split_report),
     ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
-                   _a_split_report),
+                   _the_authors_to_change, _a_split_report),
     ReportSplit: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
-                  _a_commit, _on_the_base, _a_branch_the_worktree_has),
+                  _the_authors_to_change, _a_commit, _on_the_base, _a_branch_the_worktree_has),
     ReportAsk: (_reported_on((RUNNING, IN_SESSION), "nobody is working on"),),
     ReportFiled: (_reported_on((RUNNING,), "nobody is filing a ticket for"), _a_filing_run),
     ReportOpened: (_reported_on((RUNNING,), "nobody is opening a PR for"), _an_opening_run),

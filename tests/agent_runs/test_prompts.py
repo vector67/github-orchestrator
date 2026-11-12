@@ -315,6 +315,23 @@ def test_the_fix_of_a_thread(runs, claude, at_wt):
     _pinned("thread-fix", prompt, at_wt)
 
 
+def test_a_reviewer_mentioned_in_a_thread_is_asked_only_for_a_reply(runs, claude, at_wt):
+    prompt = _prompted(runs, claude, runs.fix(_thread(at_wt,
+        reviewing=True,
+        comments=(FixComment("octocat", "@reviewer does this cover the empty cart?",
+                             "2026-08-28T10:00:00Z"),))))
+
+    _pinned("mention-reply", prompt, at_wt)
+
+
+def test_a_reviewer_watching_a_session_on_a_mention_is_asked_only_for_a_reply(
+        world, runs, at_wt):
+    runs.fix_in_session(_thread(at_wt, reviewing=True))
+    [session] = world.pr_processes.sessions[ACME]
+
+    _pinned("mention-reply-session", shlex.join(session.argv), at_wt)
+
+
 def test_the_fix_of_a_thread_on_no_line(runs, claude, at_wt):
     prompt = _prompted(runs, claude, runs.fix(_thread(at_wt,
         path=None, line=None, comments=(), body="Please tidy up.",

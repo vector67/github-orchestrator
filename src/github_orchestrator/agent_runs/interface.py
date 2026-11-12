@@ -95,6 +95,7 @@ class ThreadFix:
     ticket_key: str | None = None
     ticket_url: str | None = None
     landed_sha: str | None = None
+    reviewing: bool = False
 
 
 Replied = Sequence[tuple[str | None, int | None, Sequence[FixComment]]]

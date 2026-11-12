@@ -392,6 +392,56 @@ def test_handing_the_pr_back_makes_a_thread_handed_to_you_the_reviewers_again(se
     assert _held(threads).role == "reviewer"
 
 
+def test_asking_the_agent_on_a_reviewers_thread_runs_it_for_a_reply_alone(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+
+    asked = _asked(threads, "fix")
+
+    assert not isinstance(asked, Denied)
+    [started] = here.agent_runs.started
+    assert started.work.fix.reviewing
+
+
+def test_asking_the_agent_in_a_session_on_a_reviewers_thread_opens_one_for_a_reply(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+
+    asked = _asked(threads, "start_session")
+
+    assert not isinstance(asked, Denied)
+    [session] = here.agent_runs.sessions
+    assert (session.first, session.fix.reviewing) == (True, True)
+
+
+def test_accepting_the_reply_the_agent_drafted_on_a_reviewers_thread_posts_it(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+    here.agent_runs.script(RunOutcome(finishes=False))
+    _asked(threads, "fix")
+    with threads.editing(KEY) as editable:
+        editable.not_a_fix(Classification.QUESTION, "Yes, the empty cart takes the early return.")
+    drain(threads)
+
+    accepted = _asked(threads, "approve", reply="Yes, the empty cart takes the early return.")
+
+    assert not isinstance(accepted, Denied)
+    assert here.github.thread(KEY).comments[-1].body == (
+        "Yes, the empty cart takes the early return.")
+
+
+def test_a_run_on_a_reviewers_thread_cannot_propose_a_commit(settings):
+    here = _here(settings)
+    threads = _reviewer(here)
+    _asked(threads, "fix")
+    sha = commit_fix(here, KEY)
+
+    with threads.editing(KEY) as editable:
+        reported = editable.ready(sha)
+
+    assert isinstance(reported, Denied)
+
+
 def test_handing_the_pr_back_stops_a_fix_run_the_take_over_started_as_stop_does(settings):
     here = _here(settings)
     threads = _reviewer(here)

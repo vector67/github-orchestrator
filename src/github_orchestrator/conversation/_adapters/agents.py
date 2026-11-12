@@ -15,6 +15,7 @@ from github_orchestrator.conversation._application.ports import (
 from github_orchestrator.conversation._domain.conversation import (
     ABSENT,
     PROPOSED,
+    ROLE_REVIEWER,
     Brief,
     Comment,
     ConfidenceLevel,
@@ -105,6 +106,7 @@ class ThreadAgents:
             ticket_key=fix.ticket_key if existing is None else existing.key,
             ticket_url=fix.ticket_url if existing is None else existing.url,
             landed_sha=None if fix.landed_sha is None else str(fix.landed_sha),
+            reviewing=conversation.role == ROLE_REVIEWER,
         )
 
     def _thread_url(self, conversation: Conversation) -> str | None:

@@ -9,6 +9,7 @@ import DecideDialog from 'frontend/components/decide-dialog';
 import Glyphs from 'frontend/components/glyphs';
 import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
+import RequestSessionAsk from 'frontend/components/request-session-ask';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
   POSTING_TO_GITHUB,
@@ -35,6 +36,7 @@ import type HereService from 'frontend/services/here';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type PrControlsService from 'frontend/services/pr-controls';
+import type RequestSessionService from 'frontend/services/request-session';
 import type ReworkService from 'frontend/services/rework';
 import type StoreService from 'frontend/services/store';
 
@@ -67,6 +69,14 @@ const CLOSES_A_MENTION: Decision[] = [
   'defer',
 ];
 
+const SESSION_QUESTION = 'Ask the agent in a visible session?';
+
+const SESSION_NOTE =
+  'A visible session drafts your reply in the terminal, where you can ' +
+  'watch it and type to it. Without one it drafts unwatched. Either way the ' +
+  'reply comes back to the board for you to accept, and nothing is posted ' +
+  'to GitHub before you do.';
+
 interface Warned {
   decision: Decision;
   gathered: Gathered;
@@ -80,12 +90,18 @@ export default class PanelActions extends Component<PanelActionsSignature> {
   @service declare here: HereService;
   @service declare keys: KeysService;
   @service declare rework: ReworkService;
+  @service('request-session') declare requestSession: RequestSessionService;
   @service declare store: StoreService;
 
   @tracked asking: Decision | null = null;
   @tracked spec: DialogSpec | null = null;
   @tracked warned: Warned | null = null;
   @tracked red: { decision: Decision; asking: AreYouSureAsking } | null = null;
+  @tracked choosingSession = false;
+
+  readonly sessionQuestion = SESSION_QUESTION;
+
+  readonly sessionNote = SESSION_NOTE;
 
   get lastMentionOnAHeldPr(): boolean {
     const pr = this.here.pr;
@@ -102,6 +118,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
 
   opensDialog = (offered: Offer): boolean =>
     offered.opensDialog ||
+    (offered.asks === 'session' && this.requestSession.asks) ||
     (CLOSES_A_MENTION.includes(offered.decision) && this.lastMentionOnAHeldPr);
 
   held = (offered: Offer): boolean => {
@@ -157,6 +174,8 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     const red = redAsksOf(offered);
     if (red) {
       this.red = { decision: offered.decision, asking: red };
+    } else if (offered.asks === 'session') {
+      this.askTheAgent();
     } else if (offered.asks === 'rework') {
       this.rework.open(
         this.args.conversationId,
@@ -171,6 +190,26 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       this.spec = offered.asks;
     }
   };
+
+  private askTheAgent(): void {
+    const chosen = this.requestSession.chosen;
+    if (chosen === 'ask') this.choosingSession = true;
+    else void this.sessionChosen(chosen === 'visible');
+  }
+
+  chooseSession = (visible: boolean, remember: boolean) => {
+    this.choosingSession = false;
+    if (remember) this.requestSession.remember(visible);
+    void this.sessionChosen(visible);
+  };
+
+  stopChoosingSession = () => {
+    this.choosingSession = false;
+  };
+
+  private sessionChosen(visible: boolean): Promise<boolean> {
+    return this.post(visible ? 'start-session' : 'fix');
+  }
 
   confirmRed = () => {
     const red = this.red;
@@ -314,6 +353,14 @@ export default class PanelActions extends Component<PanelActionsSignature> {
         @asking={{this.red.asking}}
         @confirm={{this.confirmRed}}
         @cancel={{this.cancelRed}}
+      />
+    {{/if}}
+    {{#if this.choosingSession}}
+      <RequestSessionAsk
+        @question={{this.sessionQuestion}}
+        @note={{this.sessionNote}}
+        @choose={{this.chooseSession}}
+        @cancel={{this.stopChoosingSession}}
       />
     {{/if}}
     {{#if this.warned}}

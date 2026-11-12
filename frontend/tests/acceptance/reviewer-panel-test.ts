@@ -1,6 +1,13 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { visit, click, fillIn, select } from '@ember/test-helpers';
+import {
+  visit,
+  click,
+  currentURL,
+  fillIn,
+  findAll,
+  select,
+} from '@ember/test-helpers';
 import {
   added,
   comment,
@@ -15,7 +22,7 @@ import {
   type DashboardOver,
   type FakeBoard,
 } from 'frontend/tests/helpers/fake-board';
-import type { CommitVerdict } from 'frontend/data/api';
+import type { CommitVerdict, Conversation } from 'frontend/data/api';
 
 const KEY = 'PRRT_aa';
 
@@ -465,15 +472,16 @@ module('Acceptance | mention card', function (hooks) {
     mentioned(board());
   });
 
-  test('a mention offers Reply and mark done, Mark done, and Defer', async function (assert) {
+  test('a mention offers Reply and mark done, Ask the agent, Mark done, and Defer', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 
     assert.deepEqual(
       [...document.querySelectorAll('[data-test-decision]')].map((one) =>
         one.getAttribute('data-test-decision'),
       ),
-      ['reply-and-mark-done', 'mark-done', 'defer'],
+      ['reply-and-mark-done', 'ask', 'mark-done', 'defer'],
     );
+    assert.dom('[data-test-decision="ask"]').includesText('Ask the agent');
     assert
       .dom('[data-test-decision="reply-and-mark-done"]')
       .includesText('Reply and mark done');
@@ -534,6 +542,140 @@ module('Acceptance | mention card', function (hooks) {
 
     assert.strictEqual(board().posted[0]!.verb, 'mark-done');
     assert.deepEqual(board().posted[0]!.body, {});
+  });
+
+  function marked(selector: string): string[] {
+    return findAll(selector).map((one) =>
+      [
+        one.hasAttribute('data-runs-agent') ? '✦' : '',
+        one.hasAttribute('data-opens-dialog') ? '⧉' : '',
+      ].join(''),
+    );
+  }
+
+  async function sessionsChosen(choice: string) {
+    await click('[data-test-settings-open]');
+    await click('[data-test-agent-session-open]');
+    await click(`[data-test-agent-session-choice="${choice}"]`);
+    await click('[aria-label="close the settings"]');
+  }
+
+  test('Ask the agent carries the star, and the window icon while Agent sessions asks', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    assert.deepEqual(marked('[data-test-decision="ask"]'), ['✦⧉']);
+
+    await sessionsChosen('visible');
+
+    assert.deepEqual(marked('[data-test-decision="ask"]'), ['✦']);
+  });
+
+  test('Ask the agent asks whether to watch, and without a session puts an agent on the mention', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    await click('[data-test-decision="ask"]');
+
+    assert.dom('[data-test-request-session]').exists();
+    assert.strictEqual(board().posted.length, 0);
+
+    await click('[data-test-request-visible="no"]');
+
+    assert.deepEqual(
+      board().posted.map((one) => [one.verb, one.body]),
+      [['fix', {}]],
+    );
+    assert.strictEqual(currentURL(), `/pr/o/r/7/conversations/${MENTION}`);
+  });
+
+  test('Ask the agent in a visible session opens one and goes to the terminal', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    await click('[data-test-decision="ask"]');
+    await click('[data-test-request-visible="yes"]');
+
+    assert.deepEqual(
+      board().posted.map((one) => [one.verb, one.body]),
+      [['start-session', {}]],
+    );
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+  });
+
+  test('once Agent sessions is chosen, Ask the agent acts at once', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+    await sessionsChosen('invisible');
+
+    await click('[data-test-decision="ask"]');
+
+    assert.dom('[data-test-request-session]').doesNotExist();
+    assert.deepEqual(
+      board().posted.map((one) => one.verb),
+      ['fix'],
+    );
+  });
+
+  function replyProposed(): void {
+    const shown = board().conversations[0]!;
+    board().actAs('author');
+    const over: Partial<Conversation> = {
+      key: shown.key,
+      kind: shown.kind,
+      mention: true,
+      anchor: shown.anchor,
+      comments: shown.comments,
+    };
+    const proposed = board().threadIn('proposed', over);
+    board().actAs('reviewer');
+    board().conversations = [proposed];
+    board().operations[MENTION] = [
+      operation({ id: `${MENTION}.1`, conversation: MENTION, plan: [] }),
+    ];
+    board().proposals[MENTION] = [
+      proposal({
+        id: `${MENTION}.1.proposal`,
+        kind: 'reply',
+        reply:
+          'It does: the guard keeps an empty export from writing a header.',
+        commits: null,
+        summary: null,
+        commit_message: null,
+      }),
+    ];
+  }
+
+  test('the reply the agent drafted on a mention comes back with Accept and the rest', async function (assert) {
+    replyProposed();
+
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    assert.deepEqual(
+      findAll('[data-test-decision]').map((one) =>
+        one.getAttribute('data-test-decision'),
+      ),
+      ['approve', 'rework', 'defer', 'reject', 'mark-done'],
+    );
+    assert
+      .dom('[data-test-proposed-reply]')
+      .hasText(
+        'It does: the guard keeps an empty export from writing a header.',
+      );
+  });
+
+  test('Accept posts the reply the agent drafted on the mention', async function (assert) {
+    replyProposed();
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    await click('[data-test-decision="approve"]');
+    assert
+      .dom('[data-test-dialog-body]')
+      .hasValue(
+        'It does: the guard keeps an empty export from writing a header.',
+      );
+    await click('[data-test-dialog-submit]');
+
+    assert.deepEqual(
+      board().posted.map((one) => one.verb),
+      ['approve'],
+    );
   });
 
   test('a deferred mention comes back or is answered, never resolved on GitHub', async function (assert) {

@@ -492,8 +492,61 @@ WATCHED = ("in a terminal session the author is watching and may type into. Do t
            "running exactly one of the report commands below yourself.")
 
 
+MENTION_UNATTENDED = ("Nobody is watching this run, so a question asked in your last "
+                      "message goes unread. Finish by running exactly one of the report "
+                      "commands below yourself.")
+
+MENTION_WATCHED = ("The reviewer is watching this terminal session and may type into it: "
+                   "answer them here when they write to you. The board takes the outcome "
+                   "only from a report, so finish by running exactly one of the report "
+                   "commands below yourself.")
+
+
+def mention_prompt(commands: ReportCommands, fix: ThreadFix, *, watched: bool) -> str:
+    path, line_text = _anchor(fix)
+    return f"""You are drafting a reply for the reviewer of {fix.pr}, who was mentioned \
+in one of its threads. {MENTION_WATCHED if watched else MENTION_UNATTENDED}
+
+This pull request is someone else's: the reviewer you write for did not open it. \
+Read the code in `{fix.worktree}` only to answer. Change no file and make no commit, \
+there or anywhere else.
+
+## The thread
+- Path: {path}  (`general` means the thread is on the pull request, not on a line)
+- Line: {line_text}
+- Every comment, oldest first:
+```
+{_render_thread(fix)}
+```
+
+## What to do
+
+Read the whole thread, and the code it points at where that helps. If it asks the \
+reviewer something, or a reply from them would move it on, write that reply, report it \
+and stop:
+
+    {_reply(commands, fix)}
+
+`--body` is the whole reply, written as the reviewer and posted as it stands once they \
+accept it; they can edit it first. Answer what was asked. Where the code does not settle \
+it, say so rather than guess. Pass `--classification question`.
+
+If nothing is asked of the reviewer, or a reply would add nothing, report that with \
+`--classification acknowledgement` and stop:
+
+    {commands.skip(fix.pr, fix.key, reason='"<why>"')}
+
+## Hard rules
+
+- Never change a file, commit or push.
+- Never post to GitHub yourself: nothing is posted until the reviewer accepts.
+"""
+
+
 def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int, *,
                   watched: bool = False) -> str:
+    if fix.reviewing:
+        return mention_prompt(commands, fix, watched=watched)
     pr = fix.pr
     worktree = fix.worktree
     skip_cmd = commands.skip(pr, fix.key, reason='"<why>"')

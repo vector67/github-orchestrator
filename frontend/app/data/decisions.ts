@@ -83,9 +83,9 @@ export interface Gathered {
 
 type Weight = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
-type Asks = DialogSpec | 'rework' | null;
+type Asks = DialogSpec | 'rework' | 'session' | null;
 
-type EntryAsks = Asking | 'rework' | null;
+type EntryAsks = Asking | 'rework' | 'session' | null;
 
 interface Request {
   verb: string;
@@ -349,6 +349,18 @@ const ENTRIES = {
     asks: null,
     offeredWhen: (conversation) => !agentHasRun(conversation),
     doing: 'writing a fix',
+    square: 'rework',
+  },
+  ask: {
+    key: 'A',
+    label: 'Ask the agent',
+    weight: 'secondary',
+    title:
+      'puts an agent on this mention to draft your reply, which comes back ' +
+      'for you to accept, change or turn down — nothing is posted to GitHub ' +
+      'until you accept',
+    asks: 'session',
+    doing: 'asking the agent',
     square: 'rework',
   },
   retry: {
@@ -1246,7 +1258,20 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   enrolled: ENROLLED,
 };
 
+const ASKED: Decision[] = ['approve', 'rework', 'defer', 'reject', 'mark-done'];
+
+const REVIEWER_RUN_OFFERS: Partial<Record<Phase, Decision[]>> = {
+  proposed: ASKED,
+  'reply failed': ASKED,
+  queued: AT_WORK,
+  working: AT_WORK,
+  session: AT_WORK,
+  rework: AT_WORK,
+  landing: ['stop'],
+};
+
 const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
+  ...REVIEWER_RUN_OFFERS,
   answered: ['resolve', 'not-fixed', 'place', 'defer'],
   removed: ['mark-done'],
   waiting: ['resolve', 'mark-done', 'defer', 'place'],
@@ -1262,8 +1287,9 @@ const REVIEWER_OFFERS: Partial<Record<Phase, Decision[]>> = {
 };
 
 const MENTION_OFFERS: Partial<Record<Phase, Decision[]>> = {
-  answered: ['reply-and-mark-done', 'mark-done', 'defer'],
-  waiting: ['reply-and-mark-done', 'mark-done', 'defer'],
+  ...REVIEWER_RUN_OFFERS,
+  answered: ['reply-and-mark-done', 'ask', 'mark-done', 'defer'],
+  waiting: ['reply-and-mark-done', 'ask', 'mark-done', 'defer'],
   'assumed-done': ['confirm', 'place', 'reply-and-mark-done', 'mark-done'],
   'not-mine': ['place', 'reply-and-mark-done', 'mark-done'],
   deferred: ['unpark', 'reply-and-mark-done'],
@@ -1325,6 +1351,7 @@ const STARTS_A_RUN: Starter[] = [
   'rework',
   'start-session',
   'answer-in-session',
+  'ask',
   'answer',
   'answer-watched',
   'request-change',
@@ -1359,7 +1386,7 @@ export function asksFirst(kind: Kind): boolean {
 }
 
 function asksInADialog(decision: Decision, asks: EntryAsks): boolean {
-  if (asks === null) return false;
+  if (asks === null || asks === 'session') return false;
   return !RED_ARE_YOU_SURE.includes(decision);
 }
 
@@ -1498,14 +1525,21 @@ function reviewerOffer(
   );
 }
 
-function reviewerPhase(conversation: Conversation): Phase {
+const REPLY_PHASES: Phase[] = ['proposed', 'reply failed'];
+
+function reviewerPhase(
+  conversation: Conversation,
+  proposal: Proposal | undefined,
+): Phase {
   const phase = phaseOf(conversation);
+  if (REPLY_PHASES.includes(phase) && proposal?.kind === 'reply') return phase;
   if (conversation.state === 'ready' && phase !== 'removed') return 'answered';
   return phase;
 }
 
 const NEED_A_LIVE_PR: Decision[] = [
   'fix',
+  'ask',
   'retry',
   'rework',
   'start-session',
@@ -1534,7 +1568,7 @@ function offeredOn(
 ): Offer[] {
   if (busy(conversation)) return [];
   if (role === 'reviewer') {
-    const phase = reviewerPhase(conversation);
+    const phase = reviewerPhase(conversation, proposal);
     const mentionOffers =
       conversation.kind === 'review' ? REVIEW_MENTION_OFFERS : MENTION_OFFERS;
     const offers =
@@ -1542,7 +1576,9 @@ function offeredOn(
       REVIEWER_OFFERS[phase] ??
       [];
     return finishing(conversation, offers).map((decision) =>
-      reviewerOffer(decision, conversation, phase),
+      REPLY_PHASES.includes(phase)
+        ? authorOffer(decision, conversation, proposal, unsent)
+        : reviewerOffer(decision, conversation, phase),
     );
   }
   const phase = phaseOf(conversation);

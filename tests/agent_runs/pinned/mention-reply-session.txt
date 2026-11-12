@@ -1,0 +1,30 @@
+claude 'You are drafting a reply for the reviewer of acme/widgets#7, who was mentioned in one of its threads. The reviewer is watching this terminal session and may type into it: answer them here when they write to you. The board takes the outcome only from a report, so finish by running exactly one of the report commands below yourself.
+
+This pull request is someone else'"'"'s: the reviewer you write for did not open it. Read the code in `/tmp/wt` only to answer. Change no file and make no commit, there or anywhere else.
+
+## The thread
+- Path: src/foo.py  (`general` means the thread is on the pull request, not on a line)
+- Line: 4
+- Every comment, oldest first:
+```
+--- reviewer (2026-08-28T10:00:00Z)
+rename this
+```
+
+## What to do
+
+Read the whole thread, and the code it points at where that helps. If it asks the reviewer something, or a reply from them would move it on, write that reply, report it and stop:
+
+    <python> -m github_orchestrator.cli thread reply --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification unclear|out-of-scope|already-done|question --body "<the reply, in full>"
+
+`--body` is the whole reply, written as the reviewer and posted as it stands once they accept it; they can edit it first. Answer what was asked. Where the code does not settle it, say so rather than guess. Pass `--classification question`.
+
+If nothing is asked of the reviewer, or a reply would add nothing, report that with `--classification acknowledgement` and stop:
+
+    <python> -m github_orchestrator.cli thread skip --repo acme/widgets --pr 7 --thread-id PRRT_1 --classification risky|acknowledgement|needs-human --reason "<why>"
+
+## Hard rules
+
+- Never change a file, commit or push.
+- Never post to GitHub yourself: nothing is posted until the reviewer accepts.
+'
