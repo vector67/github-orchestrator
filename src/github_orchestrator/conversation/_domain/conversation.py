@@ -614,6 +614,7 @@ class Conversation:
     closing_without_thumbs_up: bool = False
     wake_on: str | None = None
     defer_note: str = ""
+    parked_from: str | None = None
     approved_reply: str = ""
     approved_reply_id: int | None = None
     panel_reply_ids: tuple[int, ...] = ()

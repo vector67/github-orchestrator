@@ -1603,10 +1603,12 @@ def defer_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
              summary="Bring a parked thread back.", responses=ACCEPTED)
 def unpark_thread(key: ThreadKey, board: Serving,
                   if_match: IfMatch) -> Response:
-    """From rejected or landed this also re-runs the agent, because both
-    dropped the worktree. From resolved on a reviewer's thread it unresolves
-    it on GitHub, which is public. Refused on a thread that is not waiting,
-    deferred or done.
+    """The thread goes back to where it stood before the move that closed or
+    deferred it (waiting, assumed done, not mine or deferred), and to ready
+    when it stood nowhere else or is waiting. From rejected or landed this also
+    re-runs the agent, because both dropped the worktree. From resolved on a
+    reviewer's thread it unresolves it on GitHub, which is public. Refused on a
+    thread that is not waiting, deferred or done.
     """
     return _queued(board, _thread(board, key), if_match, lambda editable: editable.unpark())
 

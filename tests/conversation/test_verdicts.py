@@ -231,7 +231,7 @@ def test_a_verdict_is_asked_once_per_newest_comment_however_many_ticks_pass(sett
     assert len(board.agent_runs.verdicts_asked()) == 1
 
 
-def test_deferring_then_waking_by_hand_puts_the_thread_back_unread_and_asks_again(settings):
+def test_bringing_back_a_deferred_thread_returns_it_where_its_verdict_placed_it(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("their-move")
     with board.manager.editing("PRRT_one") as editable:
@@ -243,8 +243,8 @@ def test_deferring_then_waking_by_hand_puts_the_thread_back_unread_and_asks_agai
 
     held = board.get("PRRT_one")
 
-    assert (held.standing, held.unread) == (ConversationState.READY, True)
-    assert len(board.agent_runs.verdicts_asked()) == 2
+    assert held.standing is ConversationState.WAITING
+    assert len(board.agent_runs.verdicts_asked()) == 1
 
 
 def test_a_mention_waiting_on_its_writer_is_no_longer_lifted_into_my_move(settings):

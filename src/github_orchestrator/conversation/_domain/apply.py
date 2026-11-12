@@ -80,6 +80,7 @@ from github_orchestrator.conversation._domain.conversation import (
     SESSION_GONE,
     THUMBS_UP,
     WAITING_ON_REVIEWER,
+    WAKE_MANUAL,
     WITHDRAWN,
     Anchor,
     Brief,
@@ -241,6 +242,12 @@ REOPENED_BY_A_REPLY = (WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE, CONFIRMED, R
 
 REPLIED_WHILE_ASKING = ("A new reply arrived on the thread while you waited for the "
                         "author to answer your question.")
+
+PARKING_MOVES = (Resolve, Reject, Defer, Confirm, Discard, Place)
+
+SETTLES_A_PARKING_MOVE = (ClosingReplyPosted, ClosingCommentDeleted, ThreadResolved)
+
+BROUGHT_BACK_TO = (WAITING_ON_REVIEWER, ASSUMED_DONE, NOT_MINE, DEFERRED)
 
 FOLLOW_UP_NOTE = ("A new reply arrived on the thread while the last attempt "
                   "was being made. Change the attempt so it answers the "
@@ -1297,6 +1304,14 @@ def _wake(conversation: Conversation, command: Wake) -> Accepted:
                               reply_note=f"woken: {command.reason}"))
 
 
+def _returned(conversation: Conversation, place: str, at: str | None) -> Accepted:
+    if place == DEFERRED:
+        return Accepted(replace(conversation, state=DEFERRED, decidable_at=at,
+                                wake_on=conversation.wake_on or WAKE_MANUAL))
+    return Accepted(replace(conversation, state=place, wake_on=None, defer_note="",
+                            decidable_at=at))
+
+
 def _unpark(conversation: Conversation, at: str | None) -> Accepted:
     landed = conversation.state == OPEN and conversation.fix.state == LANDED
     if conversation.state == RESOLVED and _unresolves_on_github(conversation):
@@ -1304,6 +1319,9 @@ def _unpark(conversation: Conversation, at: str | None) -> Accepted:
     if conversation.state == DISCARDED:
         return Accepted(replace(conversation, state=DRAFT,
                                 decidable_at=at))
+    if (conversation.state in (RESOLVED, CONFIRMED, DEFERRED)
+            and conversation.parked_from in BROUGHT_BACK_TO):
+        return _returned(conversation, conversation.parked_from, at)
     back = replace(_my_move(conversation), wake_on=None, defer_note="",
                    decidable_at=at)
     if conversation.state != REJECTED and not landed:
@@ -1392,6 +1410,16 @@ def _followed_up(outcome: Accepted) -> Accepted:
                     outcome.effects + (CutWorkspace(),))
 
 
+def _remembered(before: Conversation, after: Conversation, command: Change) -> Conversation:
+    if isinstance(command, PARKING_MOVES):
+        if before.state == after.state and not isinstance(command, (Resolve, Reject)):
+            return after
+        return replace(after, parked_from=before.state)
+    if before.state != after.state and not isinstance(command, SETTLES_A_PARKING_MOVE):
+        return replace(after, parked_from=None)
+    return after
+
+
 def _moved(before: Conversation, after: Conversation) -> bool:
     try:
         return before.standing != after.standing
@@ -1417,7 +1445,7 @@ def apply(conversation: Conversation, command: Change, at: str | None = None,
         return replace(outcome, conversation=history.deferred(
             conversation, outcome.conversation, command, asked, at))
     followed = _read_and_asked(_followed_up(outcome), at)
-    settled = followed.conversation
+    settled = _remembered(conversation, followed.conversation, command)
     if isinstance(command, CLEARS_THE_REOPENED_MARK):
         settled = replace(settled, reopened=False)
     if at is not None and _moved(conversation, settled):

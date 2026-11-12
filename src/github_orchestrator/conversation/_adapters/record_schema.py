@@ -500,6 +500,7 @@ def _migrated(version: int, document: Document) -> Document:
         "closing_without_thumbs_up": bool(document.get("closing_without_thumbs_up")),
         "wake_on": document.get("wake_on"),
         "defer_note": str(document.get("defer_note") or ""),
+        "parked_from": document.get("parked_from"),
         "approved_reply": str(document.get("approved_reply") or ""),
         "approved_reply_id": document.get("approved_reply_id"),
         "panel_reply_ids": list(_list_of(document, "panel_reply_ids")),

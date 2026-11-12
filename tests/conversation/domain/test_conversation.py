@@ -1,3 +1,4 @@
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -1586,6 +1587,96 @@ def test_unparking_a_waiting_on_reviewer_conversation_leaves_the_fix_alone(setti
     assert stored.standing is ConversationState.READY
     assert stored.fix.is_proposed
     assert stored.fix.thread_sha == before.fix.thread_sha
+
+
+def test_bringing_back_a_thread_marked_done_from_waiting_returns_it_to_waiting(settings):
+    _, threads = _author(settings, _waiting)
+    _asked(threads, "resolve")
+    assert _held(threads).standing is ConversationState.DONE
+
+    _asked(threads, "unpark")
+
+    stored = _held(threads)
+    assert stored.standing is ConversationState.WAITING
+    assert stored.fix.is_proposed
+
+
+def test_bringing_back_a_thread_deferred_from_waiting_returns_it_to_waiting(settings):
+    _, threads = _author(settings, _waiting)
+    _asked(threads, "place", ConversationState.DEFERRED, until="ci")
+
+    _asked(threads, "unpark")
+
+    stored = _held(threads)
+    assert stored.standing is ConversationState.WAITING
+    assert stored.wake_on is None
+
+
+def test_bringing_back_a_thread_marked_done_while_deferred_defers_it_again(settings):
+    _, threads = _author(settings, _deferred)
+    _asked(threads, "resolve")
+
+    _asked(threads, "unpark")
+
+    stored = _held(threads)
+    assert stored.standing is ConversationState.DEFERRED
+    assert (stored.wake_on, stored.defer_note) == ("ci", "after the CI fix")
+
+
+def test_bringing_back_a_thread_moved_to_not_mine_and_marked_done_returns_it_to_not_mine(settings):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+    _asked(threads, "place", ConversationState.NOT_MINE)
+    _asked(threads, "resolve")
+
+    _asked(threads, "unpark")
+
+    assert _held(threads).standing is ConversationState.NOT_MINE
+
+
+def test_bringing_back_a_thread_github_resolved_on_its_own_returns_it_to_your_move(settings):
+    here, threads = _author(settings, _waiting)
+    _asked(threads, "place", ConversationState.DEFERRED, until="ci")
+    _polled(here, threads, ROOT, is_resolved=True)
+    assert _held(threads).standing is ConversationState.DONE
+
+    _asked(threads, "unpark")
+
+    assert _held(threads).standing is ConversationState.READY
+
+
+def test_a_record_written_before_it_kept_where_a_card_stood_brings_it_back_to_your_move(settings):
+    here, threads = _author(settings, _waiting)
+    _asked(threads, "resolve")
+    stored = here.thread_records.of(THE_PR)
+    document = json.loads(stored.load("json", KEY))
+    stored.save("json", KEY, json.dumps(
+        {name: value for name, value in document.items() if name != "parked_from"}).encode())
+
+    _asked(threads, "unpark")
+
+    assert _held(threads).standing is ConversationState.READY
+
+
+def test_stop_waiting_returns_a_thread_moved_to_waiting_to_ready(settings):
+    here = _here(settings)
+    threads = _reviewer(here, *ANSWERED_THREAD)
+    _asked(threads, "place", ConversationState.NOT_MINE)
+    _asked(threads, "place", ConversationState.WAITING)
+
+    _asked(threads, "unpark")
+
+    assert _held(threads).standing is ConversationState.READY
+
+
+def test_deferring_a_deferred_thread_again_keeps_where_it_stood_before(settings):
+    _, threads = _author(settings, _waiting)
+    _asked(threads, "place", ConversationState.DEFERRED, until="ci")
+    _asked(threads, "place", ConversationState.DEFERRED, until="manual")
+
+    _asked(threads, "unpark")
+
+    assert _held(threads).standing is ConversationState.WAITING
 
 
 def _landed_and_resolved(here, threads):

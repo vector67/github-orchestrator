@@ -135,7 +135,10 @@ attempts and a run that committed nothing are one case here.
 **(closed by `approve`), (closed by `reject`), (closed by `resolve`),
 (closed by `confirm`) and (closed by `discard`).** Which of the five applied
 operations put the thread in `done`. `unpark` takes every one of them back, and
-needs it to know where to put it.
+needs it to know where to put it. Within those, it returns the thread to the
+place the closing move took it from (the record's `parked_from`), so a thread
+confirmed out of `assumed-done` goes back there; a record without
+`parked_from` goes back to `ready`.
 
 **`place` is read with `to: waiting`.** It moves a thread an agent placed in
 `assumed-done` or `not-mine` to the state it names, which only someone else's
@@ -519,7 +522,7 @@ where they found it, so `settle-refused` needs no qualifier here either.
 | `done`         | `unpark` (closed by `reject`)             | `queued`       | —                       |
 | `done`         | `unpark` (closed by `discard`)            | `draft`        | —                       |
 | `done`         | `unpark` (closed by `approve`)            | `queued`       | —                       |
-| `done`         | `unpark` (closed by `confirm`)            | `ready`        | —                       |
+| `done`         | `unpark` (closed by `confirm`)            | `assumed-done` | —                       |
 | `done`         | `confirm`                                 | —              | `not-parked`            |
 | `done`         | `place`                                   | —              | `not-parked`            |
 | `done`         | `reply`                                   | —              | `already-closed`        |
@@ -626,8 +629,9 @@ under one.
 **`done` maps four histories onto one state, and `unpark` has four answers.**
 A landed thread and a rejected thread go back to `queued`, because both
 dropped the worktree and the comment that brings either back is asking for
-another fix; a resolved
-thread goes back to `ready`; a discarded draft goes back to `draft`. The state
+another fix; a resolved or confirmed thread, or a deferred one, goes back to
+where it stood before that move (`parked_from`); a discarded draft goes back to
+`draft`. The state
 decides none of this and the operation history decides all of it. This is the
 clearest evidence against the plan's bet that every history maps to exactly one
 state that answers for it: four histories map to one state that answers for

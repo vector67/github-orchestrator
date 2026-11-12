@@ -258,7 +258,7 @@ def test_a_new_comment_on_a_confirmed_thread_brings_it_back_unread_and_asks_agai
     assert len(board.agent_runs.verdicts_asked()) == 2
 
 
-def test_a_confirmed_thread_reopens_by_hand_and_takes_no_reply(settings):
+def test_a_confirmed_thread_comes_back_by_hand_to_assumed_done_and_takes_no_reply(settings):
     board = _one_review_thread(settings)
     board.agent_runs.give("assumed-done")
     _confirmed(board)
@@ -270,7 +270,7 @@ def test_a_confirmed_thread_reopens_by_hand_and_takes_no_reply(settings):
 
     assert _code(replied) is ErrorCode.ALREADY_CLOSED
     assert not isinstance(reopened, Denied), reopened
-    assert board.get("PRRT_one").standing is ConversationState.READY
+    assert board.get("PRRT_one").standing is ConversationState.ASSUMED_DONE
 
 
 def test_a_reviewers_new_comment_on_my_confirmed_thread_reopens_it_and_runs_the_agent(settings):
