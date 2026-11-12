@@ -827,7 +827,8 @@ export type Slot =
   | 'session'
   | 'ask'
   | 'summary'
-  | 'reviewers';
+  | 'reviewers'
+  | 'importance';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -924,6 +925,18 @@ const PR_WRITES = {
     slot: 'read',
     unsent: 'Not marked unread',
   },
+  'set-importance': {
+    doing: 'setting its importance',
+    square: null,
+    slot: 'importance',
+    unsent: 'Importance not set',
+  },
+  nudged: {
+    doing: 'noting the nudge',
+    square: null,
+    slot: 'importance',
+    unsent: 'Nudge not noted',
+  },
   git: {
     doing: 'running git',
     square: null,
@@ -964,6 +977,7 @@ const SLOTS: Slot[] = [
   'ask',
   'summary',
   'reviewers',
+  'importance',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {

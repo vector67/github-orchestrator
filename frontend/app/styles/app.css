@@ -2655,6 +2655,44 @@ kbd {
   border-color: var(--red);
 }
 
+.problem-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--page);
+  background: var(--red);
+  border-radius: 9px;
+  box-sizing: border-box;
+}
+
+.unset-dot {
+  display: inline-block;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  background: var(--red);
+  border-radius: 50%;
+}
+
+.wall-row[data-importance="someday"] :is(.verb, .ttl) {
+  color: var(--muted);
+}
+
+.state-chip.tone-strong {
+  color: var(--page);
+  background: var(--text);
+  border-color: var(--text);
+}
+
 .state-chip.tone-accent {
   color: var(--link);
   border-color: currentcolor;
@@ -2907,7 +2945,7 @@ kbd {
 
 @media (hover: hover) {
   .wall-row:not(:hover, :focus-within, [aria-current="true"])
-    .row-control:not(.release) {
+    .row-control:not(.release, .always) {
     opacity: 0;
   }
 }

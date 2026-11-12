@@ -451,3 +451,18 @@ def test_a_nudge_falls_due_a_day_after_the_last_one(settings, tmp_path, hours_ag
     dashboard = _ranked(settings, tmp_path, PrImportance(Importance.IMPORTANT, nudged_at))
 
     assert dashboard.nudge_due is due
+
+
+def test_setting_importance_stamps_the_flags_anew(settings, tmp_path):
+    seed(settings, POLLED)
+    clock = ManualClock()
+    manager = manager_over(settings, None, worktree=tmp_path, is_author=True, clock=clock)
+    manager.run()
+    dashboards = manager.container.get(Dashboards)
+    before = dashboards.dashboard(THE_PR).flags_changed_at
+
+    clock.advance(10)
+    PrImportance(Importance.IMPORTANT).keep(manager.container.get(Shelves).of(THE_PR))
+    after = dashboards.dashboard(THE_PR).flags_changed_at
+
+    assert before is not None and after is not None and after > before

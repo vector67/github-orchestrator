@@ -1,12 +1,14 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
+import { waitForPromise } from '@ember/test-waiters';
 import { on } from '@ember/modifier';
 import { fn, uniqueId } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import { pageTitle } from 'ember-page-title';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
+import ImportanceConfirm from 'frontend/components/importance-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import type { AssignReviewersRequest } from 'frontend/data/api';
 import HubBar from 'frontend/components/hub-bar';
@@ -14,7 +16,7 @@ import MigrationWait from 'frontend/components/migration-wait';
 import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
-import type { DismissUntil } from 'frontend/data/api';
+import type { DismissUntil, Importance } from 'frontend/data/api';
 import { ageOf, type Reading } from 'frontend/data/dashboard';
 import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
@@ -53,6 +55,7 @@ export default class Wall extends Component<WallSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked confirming: Pick<WallRow, 'key' | 'arrived'> | null = null;
+  @tracked ranking: Pick<WallRow, 'key' | 'arrived'> | null = null;
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private lastAt = -1;
@@ -188,6 +191,33 @@ export default class Wall extends Component<WallSignature> {
     this.confirming = null;
   };
 
+  importanceOf = (pr: WallRow): Importance | null =>
+    pr.flags?.importance ?? null;
+
+  isRanking = (pr: WallRow): boolean =>
+    pr.key === this.ranking?.key && pr.arrived === this.ranking.arrived;
+
+  askImportance = (pr: WallRow) => {
+    this.ranking = { key: pr.key, arrived: pr.arrived };
+  };
+
+  cancelRanking = () => {
+    this.ranking = null;
+  };
+
+  setImportance = async (pr: WallRow, importance: Importance) => {
+    this.ranking = null;
+    const taken = await waitForPromise(
+      this.store.setImportance(pr, importance),
+    );
+    if (!taken.done) this.toasts.say(taken.why, 'failed');
+  };
+
+  nudged = async (pr: WallRow) => {
+    const taken = await waitForPromise(this.store.nudged(pr));
+    if (!taken.done) this.toasts.say(taken.why, 'failed');
+  };
+
   private move(by: number): void {
     const order = this.order;
     const chosen = this.chosen;
@@ -287,6 +317,7 @@ export default class Wall extends Component<WallSignature> {
                 data-flip-key={{keyOf pr}}
                 data-flip-group={{section.group}}
                 data-move={{reading.code}}
+                data-importance={{pr.flags.importance}}
                 data-pending={{if (this.pending pr) "true"}}
                 data-refused={{if
                   pr.summaries.pressing.controls.refused
@@ -401,7 +432,27 @@ export default class Wall extends Component<WallSignature> {
                       data-test-wall-control="dismiss"
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.pressed pr "dismiss")}}
-                    >Dismiss</button>{{/unless}}
+                    >Dismiss</button>{{/unless}}{{#if
+                    (eq reading.code "nudge")
+                  }}<button
+                      type="button"
+                      class="row-control always"
+                      title="Say you nudged them: puts the next nudge a day off"
+                      data-test-nudged
+                      {{on "focus" (fn this.select pr)}}
+                      {{on "click" (fn this.nudged pr)}}
+                    >I nudged them</button>{{/if}}<button
+                    type="button"
+                    class="row-control {{if pr.summaries.unranked 'always'}}"
+                    title="Say how much this pull request matters to you"
+                    data-test-set-importance
+                    {{on "focus" (fn this.select pr)}}
+                    {{on "click" (fn this.askImportance pr)}}
+                  >{{#if pr.summaries.unranked}}<span
+                        class="unset-dot"
+                        aria-label="not set"
+                        data-test-importance-unset
+                      ></span>{{/if}}Set importance</button>
                 </span>
               </div>
               {{#if (this.isConfirming pr)}}
@@ -410,6 +461,14 @@ export default class Wall extends Component<WallSignature> {
                   @wording={{reading.dismiss}}
                   @dismiss={{fn this.dismiss pr}}
                   @cancel={{this.cancel}}
+                />
+              {{/if}}
+              {{#if (this.isRanking pr)}}
+                <ImportanceConfirm
+                  @number={{pr.number}}
+                  @current={{this.importanceOf pr}}
+                  @pick={{fn this.setImportance pr}}
+                  @cancel={{this.cancelRanking}}
                 />
               {{/if}}
               {{#if (this.isReadying pr)}}

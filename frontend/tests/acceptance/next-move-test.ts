@@ -343,6 +343,67 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
+  test('a draft with only bot fixes to decide stays parked', async function (assert) {
+    assert.deepEqual(
+      await moveAndGroup({
+        facts: { ...CI_FAILING, draft: true },
+        threads: [row('PRRT_1', 'ready', 'open', 'bot')],
+      }),
+      ['bot-comments', 'parked'],
+    );
+  });
+
+  const DUE: DashboardOver['manager'] = {
+    importance: 'important',
+    nudge_due: true,
+  };
+
+  const NUDGES: [string, DashboardOver, string[]][] = [
+    [
+      'your pull request waiting on review',
+      { facts: WAITING_ON_REVIEW, manager: DUE },
+      ['nudge', 'needs-you'],
+    ],
+    [
+      'your pull request waiting on a re-review',
+      {
+        facts: { ...WAITING_ON_REVIEW, changes_requested_by: ['grace'] },
+        manager: DUE,
+      },
+      ['nudge', 'needs-you'],
+    ],
+    [
+      'a review waiting on its author',
+      { facts: WAITING_ON_THE_AUTHOR, manager: DUE },
+      ['nudge', 'needs-you'],
+    ],
+    [
+      'your pull request failing ci',
+      { facts: CI_FAILING, manager: DUE },
+      ['fix-ci', 'needs-you'],
+    ],
+    [
+      'not due yet',
+      {
+        facts: WAITING_ON_REVIEW,
+        manager: { importance: 'important', nudge_due: false },
+      },
+      ['await-review', 'waiting-on-others'],
+    ],
+  ];
+
+  for (const [name, over, expected] of NUDGES) {
+    test(`an important pull request due a nudge: ${name}`, async function (assert) {
+      assert.deepEqual(await moveAndGroup(over), expected);
+    });
+  }
+
+  test('a nudge names who it waits on', async function (assert) {
+    const shown = await seen({ facts: WAITING_ON_REVIEW, manager: DUE });
+
+    assert.strictEqual(shown.verb, 'Nudge grace');
+  });
+
   test('an agent working on a draft has the move', async function (assert) {
     assert.deepEqual(
       await moveAndGroup({
