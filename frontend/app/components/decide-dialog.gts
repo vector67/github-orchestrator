@@ -294,46 +294,6 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
           >×</button>
         </header>
         <p class="note" data-test-dialog-note>{{this.note}}</p>
-        {{#if this.accepting}}
-          {{#if this.accepting.message}}
-            <div class="commit-head">
-              <p class="dialog-kicker">Commit</p>
-              {{#unless this.wordingOpen}}
-                <button
-                  type="button"
-                  class="commit-edit"
-                  data-test-edit-message
-                  {{on "click" this.editMessage}}
-                >Edit message</button>
-              {{/unless}}
-            </div>
-            {{#if this.wordingOpen}}
-              <textarea
-                aria-label="commit message"
-                data-test-message-body
-                rows="4"
-                value={{this.wording}}
-                {{on "input" this.reword}}
-              ></textarea>
-            {{else}}
-              <pre
-                class="commit-message"
-                data-test-commit-message
-              >{{this.accepting.message}}</pre>
-            {{/if}}
-          {{/if}}
-          {{#if this.accepting.files}}
-            <div class="commit-files">
-              {{#each this.accepting.files key="path" as |file|}}
-                <p class="commit-file" data-test-commit-file>
-                  <span class="commit-path">{{file.path}}</span>
-                  <span class="commit-stat">+{{file.added}}
-                    &minus;{{file.removed}}</span>
-                </p>
-              {{/each}}
-            </div>
-          {{/if}}
-        {{/if}}
         {{#if this.ticket}}
           <fieldset class="dialog-ticket" data-test-ticket>
             <legend class="dialog-kicker">Ticket</legend>
@@ -408,6 +368,46 @@ export default class DecideDialog extends Component<DecideDialogSignature> {
             {{on "input" this.type}}
             {{autocomplete}}
           ></textarea>
+        {{/if}}
+        {{#if this.accepting}}
+          {{#if this.accepting.message}}
+            <div class="commit-head">
+              <p class="dialog-kicker">Commit</p>
+              {{#unless this.wordingOpen}}
+                <button
+                  type="button"
+                  class="commit-edit"
+                  data-test-edit-message
+                  {{on "click" this.editMessage}}
+                >Edit message</button>
+              {{/unless}}
+            </div>
+            {{#if this.wordingOpen}}
+              <textarea
+                aria-label="commit message"
+                data-test-message-body
+                rows="4"
+                value={{this.wording}}
+                {{on "input" this.reword}}
+              ></textarea>
+            {{else}}
+              <pre
+                class="commit-message"
+                data-test-commit-message
+              >{{this.accepting.message}}</pre>
+            {{/if}}
+          {{/if}}
+          {{#if this.accepting.files}}
+            <div class="commit-files">
+              {{#each this.accepting.files key="path" as |file|}}
+                <p class="commit-file" data-test-commit-file>
+                  <span class="commit-path">{{file.path}}</span>
+                  <span class="commit-stat">+{{file.added}}
+                    &minus;{{file.removed}}</span>
+                </p>
+              {{/each}}
+            </div>
+          {{/if}}
         {{/if}}
         {{#if this.offersGithubTicks}}
           <fieldset class="dialog-ticks" data-test-github-ticks>

@@ -162,6 +162,21 @@ module('Acceptance | dialog', function (hooks) {
     assert.dom('[data-test-message-body]').doesNotExist();
   });
 
+  test('the accept dialog shows the reply that will be sent above the commit message', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+
+    await click('[data-test-decision="approve"]');
+
+    const reply = document.querySelector('[data-test-dialog-body]')!;
+    const commit = document.querySelector('[data-test-commit-message]')!;
+    assert.true(
+      Boolean(
+        reply.compareDocumentPosition(commit) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    );
+  });
+
   test('editing the message lands the commit with the words you gave it', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     await click('[data-test-decision="approve"]');
