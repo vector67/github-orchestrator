@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Protocol
 
 from github_orchestrator.board_api._contract import PullRequestCommit, ReviewedCommits
-from github_orchestrator.board_api.interface import REVIEWED, Shelf
+from github_orchestrator.board_api.interface import REVIEWED, Shelf, ShelfKey
 from github_orchestrator.domain import Sha, UtcClock
 
 
@@ -32,5 +32,6 @@ def commit_of(commit: Commit) -> PullRequestCommit:
 
 
 def kept(shelf: Shelf, sha: str) -> ReviewedCommits | None:
-    document = shelf.list(REVIEWED).get(sha)
+    key = ShelfKey.parse(sha)
+    document = None if key is None else shelf.list(REVIEWED).get(key)
     return None if document is None else ReviewedCommits.model_validate_json(document)

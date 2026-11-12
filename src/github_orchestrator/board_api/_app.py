@@ -147,6 +147,7 @@ from github_orchestrator.board_api.interface import (
     Mentionable,
     ResetToOrigin,
     Shelf,
+    ShelfKey,
 )
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -1019,8 +1020,8 @@ READ = "read"
 
 
 def _read_marks(board: Board) -> ReadMarks:
-    return ReadMarks(marks=[ReadMark(sha=sha, subject=subject.decode())
-                            for sha, subject in board.shelf.list(READ).items()
+    return ReadMarks(marks=[ReadMark(sha=str(key), subject=subject.decode())
+                            for key, subject in board.shelf.list(READ).items()
                             if subject is not None])
 
 
@@ -1041,8 +1042,9 @@ def read_read_marks(request: Request, board: Serving) -> Response:
              summary="Mark one of the pull request's commits read.")
 def mark_read(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
     """Its subject is kept beside its sha. Answered with every mark."""
-    message = board.git.revisions.commit_message(_commit(board, asked.sha)) or ""
-    board.shelf.save(READ, asked.sha, message.split("\n", 1)[0].encode())
+    commit = _commit(board, asked.sha)
+    message = board.git.revisions.commit_message(commit) or ""
+    board.shelf.save(READ, ShelfKey(str(commit)), message.split("\n", 1)[0].encode())
     return _read_marks(board)
 
 
@@ -1051,7 +1053,7 @@ def mark_read(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
              summary="Take the read mark off one of the pull request's commits.")
 def mark_unread(board: Serving, asked: ReadMarkRequest) -> ReadMarks:
     """Answered with every mark left."""
-    board.shelf.delete(READ, asked.sha)
+    board.shelf.delete(READ, ShelfKey(asked.sha))
     return _read_marks(board)
 
 

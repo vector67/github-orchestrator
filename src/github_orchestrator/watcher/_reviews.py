@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import UTC
 
-from github_orchestrator.board_api.interface import REVIEWED, Shelves
+from github_orchestrator.board_api.interface import REVIEWED, ShelfKey, Shelves
 from github_orchestrator.domain import Pr, Sha, UtcClock
 from github_orchestrator.working_copies import WorkingCopies
 
@@ -17,7 +17,10 @@ class ShelvedReviews:
     def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None:
         shelf = self._shelves.of(pr)
         head = Sha.parse(sha)
-        if head is None or sha in shelf.list(REVIEWED):
+        if head is None:
+            return
+        key = ShelfKey(str(head))
+        if key in shelf.list(REVIEWED):
             return
         history = self._working_copies.checkout(pr).revisions.pr_commits(base_branch, head)
         if history is None:
@@ -28,4 +31,4 @@ class ShelvedReviews:
              "subject": commit.subject, "author": commit.author,
              "authored_at": commit.authored_at.astimezone(UTC).strftime(UtcClock.STAMP)}
             for commit in history.commits]}
-        shelf.save(REVIEWED, sha, json.dumps(saw, ensure_ascii=False, separators=(",", ":")).encode())
+        shelf.save(REVIEWED, key, json.dumps(saw, ensure_ascii=False, separators=(",", ":")).encode())

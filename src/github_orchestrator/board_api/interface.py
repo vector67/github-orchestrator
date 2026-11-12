@@ -1,4 +1,5 @@
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -83,9 +84,28 @@ class UnpushedCommit:
     subject: str
 
 
+_SHELF_KEY = re.compile(r"[0-9A-Za-z]+")
+
+
+@dataclass(frozen=True)
+class ShelfKey:
+    name: str
+
+    def __post_init__(self) -> None:
+        if _SHELF_KEY.fullmatch(self.name) is None:
+            raise ValueError(f"{self.name!r} is not a shelf key")
+
+    @classmethod
+    def parse(cls, text: str) -> "ShelfKey | None":
+        return None if _SHELF_KEY.fullmatch(text) is None else cls(text)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 RESET_TO_ORIGIN = "reset"
 REVIEWED = "reviewed"
-_RESET_STATE = "state"
+_RESET_STATE = ShelfKey("state")
 
 
 class ResetRefusalCode(StrEnum):
@@ -446,11 +466,11 @@ class ReleaseRecord(Protocol):
 
 
 class Shelf(Protocol):
-    def save(self, kind: str, key: str, document: bytes) -> None: ...
+    def save(self, kind: str, key: ShelfKey, document: bytes) -> None: ...
 
-    def list(self, kind: str) -> Mapping[str, bytes | None]: ...
+    def list(self, kind: str) -> Mapping[ShelfKey, bytes | None]: ...
 
-    def delete(self, kind: str, key: str) -> None: ...
+    def delete(self, kind: str, key: ShelfKey) -> None: ...
 
 
 class Shelves(Protocol):
