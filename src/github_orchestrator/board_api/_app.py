@@ -1812,8 +1812,9 @@ def send_review(board: Serving, asked: SendReviewRequest) -> Response:
     this operation settles `refused` with `github-rejected` and GitHub's
     words, so the operator fixes and sends again.
 
-    `body` is required for `REQUEST_CHANGES` and `COMMENT` and refused
-    `empty-body` here, before anything reaches GitHub. Nothing enrolled is
+    `body` is required for `REQUEST_CHANGES`, and for a `COMMENT` with no
+    enrolled draft, and refused `empty-body` here, before anything reaches
+    GitHub. Nothing enrolled is
     not refused: an approval, or a summary on its own, is a review GitHub
     takes.
     """

@@ -1640,7 +1640,8 @@ class SendReviewRequest(BaseModel):
     body: str | None = Field(
         default=None,
         description="The review's summary. GitHub requires it for "
-                    "`REQUEST_CHANGES` and `COMMENT`, and a request without "
+                    "`REQUEST_CHANGES`, and for a `COMMENT` that carries no "
+                    "enrolled draft, and a request without "
                     "one is refused before anything is sent. Longer than "
                     "GitHub will take is a 413.")
 

@@ -44,10 +44,17 @@ export default class ReviewDialog extends Component {
   }
 
   get summaryNote(): string {
-    return this.review.needsSummary
-      ? 'GitHub takes no comment or change request without a summary.'
+    if (this.review.needsSummary)
+      return this.review.verdict === 'COMMENT'
+        ? 'GitHub takes no comment without a summary or a draft.'
+        : 'GitHub takes no change request without a summary.';
+    return this.review.verdict === 'COMMENT'
+      ? 'Optional on a comment that carries drafts.'
       : 'Optional on an approval.';
   }
+
+  offered = (verdict: ReviewVerdict): boolean =>
+    !this.review.ownPr || verdict === 'COMMENT';
 
   get goesOut(): boolean {
     const { enrolled, pendingOnGitHub } = this.review.review;
@@ -96,12 +103,17 @@ export default class ReviewDialog extends Component {
                 name="verdict"
                 value={{verdict.value}}
                 checked={{eq this.review.verdict verdict.value}}
+                disabled={{unless (this.offered verdict.value) true}}
                 data-test-verdict={{verdict.value}}
                 {{on "change" (fn this.pick verdict.value)}}
               />
               {{verdict.label}}
             </label>
           {{/each}}
+          {{#if this.review.ownPr}}
+            <p class="note" data-test-review-own-pr>GitHub takes no approval or
+              change request from the author of the pull request.</p>
+          {{/if}}
         </fieldset>
         <textarea
           aria-label="the review's summary"

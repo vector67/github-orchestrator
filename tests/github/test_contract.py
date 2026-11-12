@@ -761,7 +761,12 @@ def test_a_body_is_too_long_past_the_bytes_github_takes(github):
 
 
 def test_github_takes_an_approval_on_its_own_and_nothing_else_without_words():
-    assert Verdict.APPROVE.takes(None)
-    assert not Verdict.REQUEST_CHANGES.takes("  ")
-    assert not Verdict.COMMENT.takes(None)
-    assert Verdict.COMMENT.takes("a few things")
+    assert Verdict.APPROVE.takes(None, carries_comments=False)
+    assert not Verdict.REQUEST_CHANGES.takes("  ", carries_comments=False)
+    assert not Verdict.COMMENT.takes(None, carries_comments=False)
+    assert Verdict.COMMENT.takes("a few things", carries_comments=False)
+
+
+def test_github_takes_a_comment_without_words_when_it_carries_comments():
+    assert Verdict.COMMENT.takes(None, carries_comments=True)
+    assert not Verdict.REQUEST_CHANGES.takes(None, carries_comments=True)

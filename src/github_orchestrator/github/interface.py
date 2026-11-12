@@ -42,8 +42,10 @@ class Verdict(Enum):
     REQUEST_CHANGES = "REQUEST_CHANGES"
     COMMENT = "COMMENT"
 
-    def takes(self, body: str | None) -> bool:
-        return self is Verdict.APPROVE or bool((body or "").strip())
+    def takes(self, body: str | None, *, carries_comments: bool) -> bool:
+        if self is Verdict.APPROVE or (self is Verdict.COMMENT and carries_comments):
+            return True
+        return bool((body or "").strip())
 
 
 @dataclass(frozen=True)

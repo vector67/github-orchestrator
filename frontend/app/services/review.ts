@@ -47,8 +47,16 @@ export default class ReviewService extends Service {
     return this.pr.open;
   }
 
+  get ownPr(): boolean {
+    const at = this.here.pr;
+    return (
+      at !== null &&
+      this.store.pr(at.repo, at.number)?.facts?.is_author === true
+    );
+  }
+
   get verdict(): ReviewVerdict {
-    return this.pr.verdict;
+    return this.ownPr ? 'COMMENT' : this.pr.verdict;
   }
 
   set verdict(verdict: ReviewVerdict) {
@@ -83,7 +91,8 @@ export default class ReviewService extends Service {
   }
 
   get needsSummary(): boolean {
-    return this.verdict !== 'APPROVE';
+    if (this.verdict === 'COMMENT') return !this.review.enrolled.length;
+    return this.verdict === 'REQUEST_CHANGES';
   }
 
   private get going(): Operation | undefined {
@@ -119,7 +128,7 @@ export default class ReviewService extends Service {
     const at = this.here.pr;
     if (this.unsendable || at === null) return;
     await this.store.sendReview(at, {
-      verdict: pr.verdict,
+      verdict: this.verdict,
       body: pr.body.trim() || null,
     });
   }

@@ -170,11 +170,29 @@ module('Acceptance | send review', function (hooks) {
     });
   });
 
-  test('a comment or a change request is not sent without a summary', async function (assert) {
+  test('a comment carrying drafts goes without a summary', async function (assert) {
+    await opened();
+
+    assert.dom('[data-test-review-send]').isNotDisabled();
+    await click('[data-test-review-send]');
+
+    assert.deepEqual(sent()[0]?.body, { verdict: 'COMMENT', body: null });
+  });
+
+  test('a comment carrying no drafts is not sent without a summary', async function (assert) {
+    board().conversations = [];
     await opened();
 
     assert.dom('[data-test-review-send]').isDisabled();
+    await fillIn('[data-test-review-body]', 'one thing');
+    assert.dom('[data-test-review-send]').isNotDisabled();
+  });
+
+  test('a change request is not sent without a summary', async function (assert) {
+    await opened();
+
     await click('[data-test-verdict="REQUEST_CHANGES"]');
+    assert.dom('[data-test-review-send]').isDisabled();
     await fillIn('[data-test-review-body]', '   ');
     assert.dom('[data-test-review-send]').isDisabled();
     await fillIn('[data-test-review-body]', 'two leaks');
@@ -191,6 +209,40 @@ module('Acceptance | send review', function (hooks) {
     assert.strictEqual(sent()[0]?.url, '/pr/o/r/7/api/operations:send-review');
     assert.strictEqual(sent()[0]?.ifMatch, null);
     assert.deepEqual(sent()[0]?.body, { verdict: 'APPROVE', body: null });
+  });
+
+  module('on your own pull request', function (hooks) {
+    hooks.beforeEach(function () {
+      board().actAs('author');
+    });
+
+    test('only Comment is offered, and the dialog says why', async function (assert) {
+      await opened();
+
+      assert.dom('[data-test-verdict="COMMENT"]').isChecked().isNotDisabled();
+      assert.dom('[data-test-verdict="REQUEST_CHANGES"]').isDisabled();
+      assert.dom('[data-test-verdict="APPROVE"]').isDisabled();
+      assert
+        .dom('[data-test-review-own-pr]')
+        .hasText(
+          'GitHub takes no approval or change request from the author of the pull request.',
+        );
+    });
+
+    test('Comment sends its drafts without a summary', async function (assert) {
+      await opened();
+      await click('[data-test-review-send]');
+
+      assert.deepEqual(sent()[0]?.body, { verdict: 'COMMENT', body: null });
+    });
+  });
+
+  test('on a pull request you did not open, every verdict is offered', async function (assert) {
+    await opened();
+
+    assert.dom('[data-test-verdict="REQUEST_CHANGES"]').isNotDisabled();
+    assert.dom('[data-test-verdict="APPROVE"]').isNotDisabled();
+    assert.dom('[data-test-review-own-pr]').doesNotExist();
   });
 
   test('a review is sent with its verdict and summary', async function (assert) {

@@ -336,17 +336,17 @@ _SAID_AS = {Verdict.APPROVE: "approval", Verdict.REQUEST_CHANGES: "change reques
 
 def send_review(ports: Ports, verdict: Verdict, body: str | None,
                 direction: HumanDirection = NO_DIRECTION) -> Review | Denied:
-    if not ports.github.takes_review(verdict, body):
-        return Denied(ErrorCode.EMPTY_BODY,
-                      f"GitHub takes no {_SAID_AS[verdict]} without a summary")
     records = ports.records
     with records.update_reviews() as held:
+        drafts = tuple(conversation.key for conversation in records.list()
+                       if conversation.state == ENROLLED)
+        if not ports.github.takes_review(verdict, body, carries_comments=bool(drafts)):
+            return Denied(ErrorCode.EMPTY_BODY,
+                          f"GitHub takes no {_SAID_AS[verdict]} without a summary")
         if _going_out(held.reviews):
             return Denied(ErrorCode.REVIEW_IN_FLIGHT, "a review is already going out")
         review = Review(
             id=_operation_id(), verdict=verdict, body=body,
-            requested_at=ports.clock.now(), direction=direction,
-            drafts=tuple(conversation.key for conversation in records.list()
-                         if conversation.state == ENROLLED))
+            requested_at=ports.clock.now(), direction=direction, drafts=drafts)
         held.save(review)
     return review

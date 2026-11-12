@@ -230,8 +230,9 @@ class GitHubThreads:
         return self._github.comment_exists(self._pr, kind,
                                            conversation.comment_id or 0)
 
-    def takes_review(self, verdict: Verdict, body: str | None) -> bool:
-        return _VERDICTS[verdict].takes(body)
+    def takes_review(self, verdict: Verdict, body: str | None, *,
+                     carries_comments: bool) -> bool:
+        return _VERDICTS[verdict].takes(body, carries_comments=carries_comments)
 
     def page(self) -> str:
         return self._prs.url(self._pr)

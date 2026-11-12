@@ -78,7 +78,6 @@ def test_a_verdict_that_is_not_an_approval_needs_a_body_before_anything_is_sent(
     github = fake.github
     board = _board(fake, head)
     client = client_of(board)
-    _enrolled(board, client, 1)
 
     for verdict, body in (("REQUEST_CHANGES", None), ("COMMENT", "  ")):
         answer = client.post(SEND, json={"verdict": verdict, "body": body})
@@ -88,6 +87,35 @@ def test_a_verdict_that_is_not_an_approval_needs_a_body_before_anything_is_sent(
     board.threads.tick(FakeNotifications(), on_hold=False)
     assert board.threads.reviews() == []
     assert _reviews_sent(github) == ()
+
+
+def test_a_change_request_carrying_drafts_still_needs_a_body():
+    fake, head = reviewing()
+    board = _board(fake, head)
+    client = client_of(board)
+    _enrolled(board, client, 1)
+
+    answer = client.post(SEND, json={"verdict": "REQUEST_CHANGES", "body": None})
+
+    assert answer.json()["errors"][0]["code"] == "empty-body"
+
+
+def test_a_comment_carrying_drafts_goes_out_without_a_body():
+    fake, head = reviewing()
+    github = fake.github
+    board = _board(fake, head)
+    client = client_of(board)
+    _enrolled(board, client, 1)
+
+    answer = client.post(SEND, json={"verdict": "COMMENT", "body": None})
+    board.threads.tick(FakeNotifications(), on_hold=False)
+
+    assert answer.status_code == 202
+    [sent] = _reviews_sent(github)
+    assert (sent.approves, sent.requests_changes) == (False, False)
+    assert _summaries(github) == []
+    [drafts] = github.prs[(THE_PR)].review_comments.values()
+    assert [draft.comment.body for draft in drafts] == ["finding 0"]
 
 
 def test_an_approval_needs_no_body():
