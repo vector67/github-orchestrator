@@ -3,6 +3,7 @@ import logging
 from collections.abc import Set
 from pathlib import Path
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import DismissUntil, Pr, Repo, ReviewerPick
 from github_orchestrator.settings._paths import repo_subdir
 
@@ -167,11 +168,8 @@ class JsonFileReviewerPicks:
             return None
 
     def save(self, pr: Pr, pick: ReviewerPick) -> None:
-        path = self._path(pr)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        written = path.with_suffix(".tmp")
-        written.write_text(json.dumps({"reviewers": list(pick.reviewers), "detailed": pick.detailed}))
-        written.replace(path)
+        write_atomically(self._path(pr), json.dumps(
+            {"reviewers": list(pick.reviewers), "detailed": pick.detailed}).encode())
 
     def forget(self, pr: Pr) -> bool:
         return _remove(pr, self._path(pr))
