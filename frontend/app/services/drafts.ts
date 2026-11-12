@@ -35,6 +35,10 @@ export interface DraftRequest {
   side: DiffSide;
 }
 
+export interface ChangeRequest extends DraftRequest {
+  visible: boolean;
+}
+
 export const NEW_DRAFT = '';
 
 export const BLANK: Saved = {
@@ -115,6 +119,18 @@ export default class DraftsService extends Service {
     return made;
   }
 
+  async request(visible: boolean): Promise<boolean> {
+    const asked = requestOf(this.copyOf(NEW_DRAFT, BLANK));
+    if (!asked || this.requesting.pending !== null) return false;
+    const made = await this.board.requestChange({ ...asked, visible });
+    if (made) this.forget(NEW_DRAFT);
+    return made;
+  }
+
+  get requesting(): { pending: string | null; refused: string | null } {
+    return this.newest('request-change');
+  }
+
   copyOf(key: string, saved: Saved): Copy {
     return this.copies[key] ?? copied(saved);
   }
@@ -141,8 +157,15 @@ export default class DraftsService extends Service {
   }
 
   get making(): { pending: string | null; refused: string | null } {
+    return this.newest('create-draft');
+  }
+
+  private newest(kind: string): {
+    pending: string | null;
+    refused: string | null;
+  } {
     const made = this.threads.inFlight.findLast(
-      (one) => one.kind === 'create-draft',
+      (one) => (one.kind as string) === kind,
     );
     return {
       pending: made && sent(made) ? inFlight(made.kind) : null,

@@ -2,14 +2,20 @@ import secrets
 from collections.abc import Sequence
 
 from github_orchestrator.conversation._application.ports import Ports
-from github_orchestrator.conversation._domain.apply import create_draft
+from github_orchestrator.conversation._application.runner import perform
+from github_orchestrator.conversation._domain.apply import create, create_draft
 from github_orchestrator.conversation._domain.conversation import (
+    ROLE_AUTHOR,
+    Anchor,
+    Comment,
     Conversation,
 )
+from github_orchestrator.conversation._domain.diff import KIND_REQUEST
 from github_orchestrator.domain import Location, Side
 from github_orchestrator.working_copies import FileDiff
 
 DRAFT_PREFIX = "draft_"
+REQUEST_PREFIX = "request_"
 
 
 def draft_key() -> str:
@@ -38,6 +44,30 @@ def open_draft(ports: Ports, body: str, anchor: Location, role: str,
                 at=ports.clock.now(), operation=operation or f"{key}.1")
             update.conversation = drafted
             return drafted
+
+
+def open_request(ports: Ports, body: str, anchor: Location, *,
+                 runs_now: bool) -> Conversation:
+    """A change the author asks of their own pull request, kept on the board
+    alone: a thread like a comment that just arrived, whose root is the body."""
+    while True:
+        key = f"{REQUEST_PREFIX}{secrets.token_hex(8)}"
+        with ports.records.update(key) as update:
+            if update.conversation is not None:
+                continue
+            at = ports.clock.now()
+            author = ports.config.gh_account
+            created = create(
+                key=key, comment_type=KIND_REQUEST, author=author,
+                path=anchor.path, line=anchor.line, body=body,
+                comments=(Comment(author=author, body=body, created_at=at, updated_at=at),),
+                comment_created_at=at, created_at=at,
+                anchor=Anchor(side=anchor.side, line=anchor.line,
+                              start_line=anchor.start_line, start_side=anchor.start_side),
+                role=ROLE_AUTHOR, fixes_allowed=runs_now)
+            opened = perform(ports, created).conversation
+            update.conversation = opened
+            return opened
 
 
 _SIDE_NAMES = {Side.BEFORE: "old", Side.AFTER: "new"}

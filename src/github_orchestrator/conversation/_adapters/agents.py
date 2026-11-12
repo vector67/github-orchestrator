@@ -13,6 +13,7 @@ from github_orchestrator.conversation._application.ports import (
     RunProgress,
 )
 from github_orchestrator.conversation._domain.conversation import (
+    ABSENT,
     PROPOSED,
     Brief,
     Comment,
@@ -153,8 +154,10 @@ class ThreadAgents:
     def open_session(self, worktree: str | None,
                      conversation: Conversation, steer: str | None,
                      skipped: bool, brief: Brief | None) -> str | None:
-        return self.thread_work.open_session(
-            self._asked(conversation, _worktree_of(worktree), skipped, brief), steer)
+        asked = self._asked(conversation, _worktree_of(worktree), skipped, brief)
+        if conversation.fix.session_from == ABSENT:
+            return self.thread_work.fix_in_session(asked)
+        return self.thread_work.open_session(asked, steer)
 
     def answer_in_session(self, worktree: str | None,
                           conversation: Conversation) -> str | None:

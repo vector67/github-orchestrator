@@ -16,6 +16,11 @@ import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type ThemeService from 'frontend/services/theme';
+import {
+  REQUEST_SESSIONS,
+  type RequestSession,
+} from 'frontend/services/request-session';
+import type RequestSessionService from 'frontend/services/request-session';
 import TerminalColours from 'frontend/components/terminal-colours';
 import eq from 'frontend/helpers/eq';
 
@@ -49,16 +54,29 @@ const AUTO_READ_CHOICES = AUTO_READS.map((when) => ({
   name: AUTO_READ_NAMES[when],
 }));
 
+const REQUEST_SESSION_NAMES: Record<RequestSession, string> = {
+  ask: 'Ask me each time',
+  visible: 'Always visible',
+  invisible: 'Always invisible',
+};
+
+const REQUEST_SESSION_CHOICES = REQUEST_SESSIONS.map((session) => ({
+  session,
+  name: REQUEST_SESSION_NAMES[session],
+}));
+
 export default class SettingsMenu extends Component {
   @service declare harvestSwitch: HarvestSwitchService;
   @service declare hub: HubService;
   @service declare keys: KeysService;
   @service declare theme: ThemeService;
   @service declare commitBox: CommitBoxService;
+  @service declare requestSession: RequestSessionService;
 
   @tracked showing = false;
   @tracked sizing = false;
   @tracked autoReading = false;
+  @tracked requesting = false;
   @tracked colouring = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
@@ -85,6 +103,7 @@ export default class SettingsMenu extends Component {
     this.showing = false;
     this.sizing = false;
     this.autoReading = false;
+    this.requesting = false;
     this.keys.drop(this.keymap);
   };
 
@@ -103,6 +122,13 @@ export default class SettingsMenu extends Component {
   };
 
   autoRead = (when: AutoRead) => this.commitBox.chooseAutoRead(when);
+
+  openRequesting = () => {
+    this.requesting = !this.requesting;
+  };
+
+  chooseSession = (session: RequestSession) =>
+    this.requestSession.choose(session);
 
   openColours = () => {
     this.close();
@@ -211,6 +237,32 @@ export default class SettingsMenu extends Component {
                     checked={{eq this.commitBox.autoRead choice.when}}
                     data-test-auto-read={{choice.when}}
                     {{on "change" (fn this.autoRead choice.when)}}
+                  />
+                  {{choice.name}}
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/if}}
+          <button
+            type="button"
+            class="setting"
+            aria-expanded={{if this.requesting "true" "false"}}
+            data-test-setting
+            data-test-request-session-open
+            {{on "click" this.openRequesting}}
+          >Request change sessions</button>
+          {{#if this.requesting}}
+            <fieldset class="setting-choices" data-test-request-session-choices>
+              <legend class="visually-hidden">Request change sessions</legend>
+              {{#each REQUEST_SESSION_CHOICES key="session" as |choice|}}
+                <label class="setting-choice">
+                  <input
+                    type="radio"
+                    name="request-change-session"
+                    value={{choice.session}}
+                    checked={{eq this.requestSession.chosen choice.session}}
+                    data-test-request-session-choice={{choice.session}}
+                    {{on "change" (fn this.chooseSession choice.session)}}
                   />
                   {{choice.name}}
                 </label>

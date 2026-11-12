@@ -99,6 +99,7 @@ from github_orchestrator.conversation._domain.conversation import (
 )
 from github_orchestrator.conversation._domain.diff import (
     KIND_DRAFT,
+    KIND_REQUEST,
     KIND_REVIEW,
     within_cutoff,
 )
@@ -938,7 +939,13 @@ def _resolved_on_landing(conversation: Conversation,
                     (DropWorkspace(),))
 
 
+def _on_the_board_alone(conversation: Conversation) -> bool:
+    return conversation.comment_type == KIND_REQUEST
+
+
 def _answer(conversation: Conversation, command: Approve) -> Accepted:
+    if _on_the_board_alone(conversation):
+        return _answered(conversation)
     if conversation.comment_deleted:
         if command.delete_comment:
             return _answered(conversation)
@@ -1229,6 +1236,8 @@ def _settled(conversation: Conversation, state: str = RESOLVED,
 
 
 def _closing(conversation: Conversation, command: Resolve) -> Accepted:
+    if _on_the_board_alone(conversation):
+        return _settled(conversation)
     conversation = replace(conversation, closing_on_github=command.resolve,
                            closing_without_thumbs_up=not command.thumbs_up)
     if command.delete_comment:
@@ -1243,6 +1252,8 @@ def _closing(conversation: Conversation, command: Resolve) -> Accepted:
 
 
 def _reject(conversation: Conversation, command: Reject) -> Accepted:
+    if _on_the_board_alone(conversation):
+        return _settled(conversation, REJECTED)
     if command.delete_comment and not conversation.comment_deleted:
         return Accepted(replace(conversation, closing_into=REJECTED),
                         (DeleteComment(),))

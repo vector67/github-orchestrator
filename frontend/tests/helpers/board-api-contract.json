@@ -1297,6 +1297,110 @@
     }
    }
   },
+  "/api/operations:request-change": {
+   "post": {
+    "202": {
+     "discriminator": {
+      "mapping": {
+       "approve": "#/components/schemas/ApproveOperation",
+       "confirm": "#/components/schemas/PlaceOperation",
+       "create-draft": "#/components/schemas/DraftOperation",
+       "defer": "#/components/schemas/DeferOperation",
+       "discard": "#/components/schemas/DraftOperation",
+       "drop-question": "#/components/schemas/DropQuestionOperation",
+       "edit-draft": "#/components/schemas/DraftOperation",
+       "edit-part": "#/components/schemas/EditPartOperation",
+       "enrol": "#/components/schemas/DraftOperation",
+       "file": "#/components/schemas/FileOperation",
+       "first": "#/components/schemas/FixOperation",
+       "open": "#/components/schemas/OpenOperation",
+       "open-shell": "#/components/schemas/ShellOperation",
+       "place": "#/components/schemas/PlaceOperation",
+       "post-now": "#/components/schemas/DraftOperation",
+       "posted": "#/components/schemas/PostedOperation",
+       "rebase": "#/components/schemas/FixOperation",
+       "reconcile": "#/components/schemas/ReconcileOperation",
+       "reject": "#/components/schemas/CloseOperation",
+       "reply": "#/components/schemas/ReplyOperation",
+       "resolve": "#/components/schemas/CloseOperation",
+       "retry": "#/components/schemas/FixOperation",
+       "rework": "#/components/schemas/FixOperation",
+       "send-review": "#/components/schemas/ReviewOperation",
+       "start-session": "#/components/schemas/SessionOperation",
+       "stop": "#/components/schemas/StopOperation",
+       "unpark": "#/components/schemas/UnparkOperation",
+       "withdraw-from-review": "#/components/schemas/DraftOperation"
+      },
+      "propertyName": "kind"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/components/schemas/FixOperation"
+      },
+      {
+       "$ref": "#/components/schemas/SessionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ApproveOperation"
+      },
+      {
+       "$ref": "#/components/schemas/FileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/OpenOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReconcileOperation"
+      },
+      {
+       "$ref": "#/components/schemas/EditPartOperation"
+      },
+      {
+       "$ref": "#/components/schemas/StopOperation"
+      },
+      {
+       "$ref": "#/components/schemas/CloseOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DeferOperation"
+      },
+      {
+       "$ref": "#/components/schemas/UnparkOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ShellOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PlaceOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DropQuestionOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReplyOperation"
+      },
+      {
+       "$ref": "#/components/schemas/DraftOperation"
+      },
+      {
+       "$ref": "#/components/schemas/ReviewOperation"
+      },
+      {
+       "$ref": "#/components/schemas/PostedOperation"
+      }
+     ]
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "413": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/operations:send-review": {
    "post": {
     "202": {
@@ -7368,6 +7472,57 @@
    ],
    "type": "object"
   },
+  "RequestChangeBody": {
+   "properties": {
+    "body": {
+     "maxLength": 65536,
+     "minLength": 1,
+     "type": "string"
+    },
+    "line": {
+     "minimum": 1.0,
+     "type": "integer"
+    },
+    "path": {
+     "minLength": 1,
+     "type": "string"
+    },
+    "side": {
+     "$ref": "#/components/schemas/DiffSide"
+    },
+    "start_line": {
+     "anyOf": [
+      {
+       "minimum": 1.0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "start_side": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/DiffSide"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "visible": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "body",
+    "path",
+    "line",
+    "visible"
+   ],
+   "type": "object"
+  },
   "ResetRefusal": {
    "properties": {
     "code": {
@@ -8657,6 +8812,7 @@
   "ThreadKind": {
    "enum": [
     "draft",
+    "request",
     "review",
     "issue",
     "review-summary",

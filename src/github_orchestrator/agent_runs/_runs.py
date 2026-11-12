@@ -468,6 +468,10 @@ class AgentRuns:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
                         rework_prompt(self._commands, fix, steer, self._workers))
 
+    def fix_in_session(self, fix: ThreadFix) -> str | None:
+        return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
+                               thread_prompt(self._commands, fix, self._workers))
+
     def answer_in_session(self, fix: ThreadFix) -> str | None:
         try:
             session: str | None = self._session_file(fix).read_text().strip() or None

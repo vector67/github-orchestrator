@@ -381,9 +381,12 @@ class ThreadKind(StrEnum):
     """What kind of thing this thread is, which is what decides whether a
     reply can be threaded under it. `draft` is the board's own: a comment
     being composed, with nothing on GitHub for it yet. `pr-body` is the pull
-    request's description, held as a thread when it mentions the viewer."""
+    request's description, held as a thread when it mentions the viewer.
+    `request` is a change the author asked of their own pull request from the
+    board, which lives on the board alone and is never posted to GitHub."""
 
     DRAFT = "draft"
+    REQUEST = "request"
     REVIEW = "review"
     ISSUE = "issue"
     REVIEW_SUMMARY = "review-summary"
@@ -1633,6 +1636,15 @@ class DraftBody(BaseModel):
         default=DiffSide.RIGHT,
         description="Which side of the diff. Defaults to the new side, which "
                     "is what a reviewer almost always means.")
+
+
+class RequestChangeBody(DraftBody):
+    """The body of `:request-change`: the change asked for and the line it is
+    asked on, and whether its run opens in a session you can watch."""
+
+    visible: bool = Field(
+        description="Run the agent in a terminal session you can watch and type "
+                    "into, rather than on its own.")
 
 
 class SendReviewRequest(BaseModel):

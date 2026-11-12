@@ -25,7 +25,10 @@ from github_orchestrator.conversation._application.asking import (
     send_review,
 )
 from github_orchestrator.conversation._application.decide import decide
-from github_orchestrator.conversation._application.drafts import open_draft
+from github_orchestrator.conversation._application.drafts import (
+    open_draft,
+    open_request,
+)
 from github_orchestrator.conversation._application.poll import (
     RoleUnknown,
     ask_due_commit_checks,
@@ -578,6 +581,22 @@ class _ConversationManager:
         except RoleUnknown as unknown:
             return Denied(ErrorCode.INTERNAL_REFUSAL, str(unknown))
         return open_draft(self._pr.ports, body, anchor, role, operation)
+
+    def open_request(self, body: str, anchor: Location, *,
+                     visible: bool) -> Conversation | Denied:
+        ports = self._pr.ports
+        if ports.pull_requests.role() != ROLE_AUTHOR:
+            return Denied(ErrorCode.MALFORMED_REQUEST,
+                          "a change is requested only on a pull request of your own")
+        if not ports.config.agents_enabled:
+            return Denied(ErrorCode.AGENTS_DISABLED,
+                          "agents are disabled (agents_enabled=false), so nothing would "
+                          "start on the change")
+        requested = open_request(ports, body, anchor, runs_now=not visible)
+        if not visible:
+            return requested
+        with self.editing(requested.key) as editable:
+            return editable.start_session()
 
     def open_thread(self, key: str, *, kind: str, path: str | None, line: int | None,
                     comment_id: int, author: str, body: str) -> str | None | Denied:

@@ -686,7 +686,7 @@ def test_no_test_imports_a_private_name_of_conversation():
 CONVERSATION_MEMBERS = frozenset({"of"})
 ROLE_MEMBERS = {
     "ConversationManager": frozenset({
-        "editing", "get", "all", "open_draft", "open_thread", "send_review", "reviews",
+        "editing", "get", "all", "open_draft", "open_request", "open_thread", "send_review", "reviews",
         "sent_since", "facts", "activity", "comment_url", "too_long", "poll", "absorb", "tick", "counts",
         "recheck", "check_for_fixes"}),
     "EditableConversation": frozenset({

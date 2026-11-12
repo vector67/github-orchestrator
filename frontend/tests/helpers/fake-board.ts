@@ -794,6 +794,7 @@ export class FakeBoard {
   output: OutputLine[] = [];
   gitRuns: Record<string, GitRun> = {};
   created = 'draft_0000000000000001';
+  requested = 'request_0000000000000001';
   refusal: ErrorDetail | null = null;
   down = false;
   unheld: { code: ErrorCode; detail: string } | null = null;
@@ -1608,6 +1609,27 @@ export class FakeBoard {
           conversation: this.created,
           kind: verb,
           state: 'applied',
+        }),
+      );
+    }
+    if (verb === 'request-change') {
+      const visible = (body as { visible?: boolean } | null)?.visible === true;
+      if (visible) {
+        this.drain({
+          key: this.requested,
+          id,
+          kind: 'start-session',
+          argv: ['claude', this.requested],
+          worktree: `/wt/thread-${this.requested}`,
+        });
+      }
+      return this.json(
+        202,
+        operation({
+          id,
+          conversation: this.requested,
+          kind: visible ? 'start-session' : 'first',
+          state: 'pending',
         }),
       );
     }

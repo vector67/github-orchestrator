@@ -1,7 +1,7 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
-import type { DraftRequest } from 'frontend/services/drafts';
+import type { ChangeRequest, DraftRequest } from 'frontend/services/drafts';
 import { MOVED } from 'frontend/data/tried';
 import { after, durationOf, flip } from 'frontend/motion';
 import {
@@ -97,5 +97,18 @@ export default class BoardService extends Service {
     const made = await this.store.createDraft(this.here.at, draft);
     if (made) await this.loader.refreshList();
     return made;
+  }
+
+  async requestChange(request: ChangeRequest): Promise<boolean> {
+    const made = await waitForPromise(
+      this.store.requestChange(this.here.at, request),
+    );
+    if (!made) return false;
+    if (request.visible) {
+      this.terminal.expect();
+      void this.router.transitionTo('terminal');
+    }
+    await waitForPromise(this.loader.refreshList());
+    return true;
   }
 }

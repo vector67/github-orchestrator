@@ -1552,14 +1552,26 @@ export default class StoreService extends Service {
     return answer;
   }
 
-  async createDraft(pr: Numbered, draft: unknown): Promise<string | null> {
-    const local = this.hold(pr, this.sending(null, 'create-draft', null));
+  createDraft(pr: Numbered, draft: unknown): Promise<string | null> {
+    return this.minted(pr, 'create-draft', draft);
+  }
+
+  requestChange(pr: Numbered, request: unknown): Promise<string | null> {
+    return this.minted(pr, 'request-change', request);
+  }
+
+  private async minted(
+    pr: Numbered,
+    verb: 'create-draft' | 'request-change',
+    asked: unknown,
+  ): Promise<string | null> {
+    const local = this.hold(pr, this.sending(null, verb, null));
     const made = await tried(
       'write',
       write<Operation>(
-        `${this.here.prefixOf(pr)}/api/operations:create-draft`,
+        `${this.here.prefixOf(pr)}/api/operations:${verb}`,
         null,
-        draft,
+        asked,
       ),
     );
     if (!made.done) {

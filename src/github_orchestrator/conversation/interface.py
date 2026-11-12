@@ -194,6 +194,9 @@ class ConversationManager(Protocol):
     def open_draft(self, body: str, anchor: Location,
                    operation: str | None = None) -> Conversation | Denied: ...
 
+    def open_request(self, body: str, anchor: Location, *,
+                     visible: bool) -> Conversation | Denied: ...
+
     def open_thread(self, key: str, *, kind: str, path: str | None, line: int | None,
                     comment_id: int, author: str, body: str) -> str | None | Denied: ...
 

@@ -74,6 +74,7 @@ from github_orchestrator.board_api._contract import (
     ReadMarkRequest,
     ReadMarks,
     ReplyRequest,
+    RequestChangeBody,
     ResetRequest,
     ResolveRequest,
     ReviewedCommits,
@@ -1708,6 +1709,29 @@ def create_draft(board: Serving, asked: DraftBody) -> Response:
         raise _denied(drafted)
     made = newest_operation(board.conversations, drafted)
     return _accepted(board, made, made.id, drafted.key)
+
+
+@writes.post("/operations:request-change", status_code=202,
+             response_model=Operation, tags=["review"],
+             operation_id="requestChange",
+             summary="Ask an agent for a change on a line of your own pull request.",
+             responses={202: QUEUED, 409: OUTSTANDING, 413: TOO_LONG})
+def request_change(board: Serving, asked: RequestChangeBody) -> Response:
+    """Creates a conversation with kind `request`, a key the board mints and
+    `github_node_id` null, whose one comment is the body given here. It is
+    never posted to GitHub. It is treated as a comment that just arrived: its
+    first run is queued, or, when `visible`, opened as a terminal session.
+
+    Refused on a pull request that is not the viewer's own, and while agents
+    are disabled.
+    """
+    _within_githubs_limit(board, asked.body)
+    requested = board.conversations.open_request(asked.body, _anchored(asked),
+                                                 visible=asked.visible)
+    if isinstance(requested, Denied):
+        raise _denied(requested)
+    started = newest_operation(board.conversations, _thread(board, requested.key))
+    return _accepted(board, started, started.id, requested.key)
 
 
 @writes.post("/conversations/{key}/operations:edit-draft", status_code=202,

@@ -974,6 +974,173 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-comment-box] textarea').hasValue('');
     });
 
+    module('Request change', function () {
+      const ASKED = 'stop at the first match';
+
+      async function typed(line = '+20') {
+        await click(`${row(line)} [data-test-add]`);
+        await fillIn('[data-test-comment-box] textarea', ASKED);
+      }
+
+      function requested(): unknown[] {
+        return board()
+          .posted.filter((one) => one.verb === 'request-change')
+          .map((one) => one.body);
+      }
+
+      function asked(visible: boolean, line = 20): unknown {
+        return {
+          body: ASKED,
+          path: 'src/widgets/changes.py',
+          line,
+          start_line: null,
+          start_side: null,
+          side: 'RIGHT',
+          visible,
+        };
+      }
+
+      async function chosen(choice: string) {
+        await click('[data-test-settings-open]');
+        await click('[data-test-request-session-open]');
+        await click(`[data-test-request-session-choice="${choice}"]`);
+        await click('[aria-label="close the settings"]');
+      }
+
+      test('it sits beside the other actions in the new-comment box', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+
+        assert.deepEqual(texts('[data-test-comment-box] .box-foot button'), [
+          'Cancel',
+          'Ask the agent',
+          'Request change',
+          'Save as local draft',
+          'Add to review',
+        ]);
+      });
+
+      test('it is not offered on a pull request you are reviewing', async function (assert) {
+        board().actAs('reviewer');
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+
+        assert.dom('[data-test-box-request]').doesNotExist();
+        assert.dom('[data-test-box-ask]').exists();
+      });
+
+      test('it asks whether to run in a visible session before it sends anything', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+
+        await click('[data-test-box-request]');
+
+        assert.dom('[data-test-request-session]').exists();
+        assert.dom('[data-test-request-remember]').isNotChecked();
+        assert.deepEqual(requested(), []);
+      });
+
+      test('answering visible sends the text with the line and opens the terminal', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+        await click('[data-test-box-request]');
+
+        await click('[data-test-request-visible="yes"]');
+
+        assert.deepEqual(requested(), [asked(true)]);
+        assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+      });
+
+      test('answering not visible sends it, closes the box and opens the next one empty', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+        await click('[data-test-box-request]');
+
+        await click('[data-test-request-visible="no"]');
+
+        assert.deepEqual(requested(), [asked(false)]);
+        assert.dom('[data-test-request-session]').doesNotExist();
+        assert.dom('[data-test-comment-box]').doesNotExist();
+        assert.strictEqual(
+          currentURL(),
+          '/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py',
+        );
+
+        await click(`${row('+19')} [data-test-add]`);
+
+        assert.dom('[data-test-comment-box] textarea').hasValue('');
+      });
+
+      test('Remember my choice stops the question and becomes the setting', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+        await click('[data-test-box-request]');
+        await click('[data-test-request-remember]');
+        await click('[data-test-request-visible="no"]');
+
+        await typed('+19');
+        await click('[data-test-box-request]');
+
+        assert.dom('[data-test-request-session]').doesNotExist();
+        assert.deepEqual(requested(), [asked(false), asked(false, 19)]);
+
+        await click('[data-test-settings-open]');
+        await click('[data-test-request-session-open]');
+
+        assert
+          .dom('[data-test-request-session-choice="invisible"]')
+          .isChecked();
+      });
+
+      test('the setting offers ask, always visible and always invisible, and asking again brings the question back', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await click('[data-test-settings-open]');
+        await click('[data-test-request-session-open]');
+
+        assert.deepEqual(texts('[data-test-request-session-choices] label'), [
+          'Ask me each time',
+          'Always visible',
+          'Always invisible',
+        ]);
+        assert.dom('[data-test-request-session-choice="ask"]').isChecked();
+
+        await click('[data-test-request-session-choice="visible"]');
+        await click('[aria-label="close the settings"]');
+        await typed();
+        await click('[data-test-box-request]');
+
+        assert.dom('[data-test-request-session]').doesNotExist();
+        assert.deepEqual(requested(), [asked(true)]);
+
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await chosen('ask');
+        await typed('+19');
+        await click('[data-test-box-request]');
+
+        assert.dom('[data-test-request-session]').exists();
+      });
+
+      test('a request the board refuses stays in the box, which says why', async function (assert) {
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+        board().refusal = {
+          status: 409,
+          code: 'agents-disabled',
+          detail: 'agents are off',
+        };
+        await click('[data-test-box-request]');
+
+        await click('[data-test-request-visible="no"]');
+
+        assert.dom('[data-test-comment-box]').hasAttribute('data-refused');
+        assert
+          .dom('[data-test-comment-box] [data-test-refusal]')
+          .includesText('Agents are switched off on this board');
+        assert.dom('[data-test-comment-box] textarea').hasValue(ASKED);
+        assert.dom('[data-test-toast]').doesNotExist();
+      });
+    });
+
     test('a draft being edited has no Add to review in its box', async function (assert) {
       board().conversations = [
         thread({

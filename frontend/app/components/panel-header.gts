@@ -74,6 +74,10 @@ export default class PanelHeader extends Component<PanelHeaderSignature> {
             </a>
           {{/if}}
         </span>
+        {{#if @panel.board_only}}
+          <span class="board-only" data-test-board-only>On the board only · not
+            posted to GitHub</span>
+        {{/if}}
         <span class="panel-name">
           <span
             class="author"

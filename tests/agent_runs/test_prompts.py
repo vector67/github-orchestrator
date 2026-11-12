@@ -372,6 +372,13 @@ def test_a_session_nobody_steered(world, runs, at_wt):
     _pinned("session", _session(world, runs, _thread(at_wt), None), at_wt)
 
 
+def test_a_first_fix_run_in_a_session_is_briefed_as_the_run_would_be(world, runs, at_wt):
+    runs.fix_in_session(_thread(at_wt))
+    [session] = world.pr_processes.sessions[ACME]
+
+    _pinned("session-first", shlex.join(session.argv), at_wt)
+
+
 def test_the_fix_of_a_thread_with_jira_tickets(runs, claude, at_wt):
     prompt = _prompted(runs, claude, runs.fix(_thread(at_wt,
         tracker="jira", tracker_project="PROJ", branch_ticket="PROJ-21")))

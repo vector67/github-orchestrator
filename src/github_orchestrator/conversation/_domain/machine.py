@@ -81,7 +81,11 @@ from github_orchestrator.conversation._domain.conversation import (
     ProposalKind,
     Run,
 )
-from github_orchestrator.conversation._domain.diff import KIND_ISSUE, KIND_REVIEW
+from github_orchestrator.conversation._domain.diff import (
+    KIND_ISSUE,
+    KIND_REQUEST,
+    KIND_REVIEW,
+)
 from github_orchestrator.conversation._domain.events import (
     GistWritten,
     Posted,
@@ -776,6 +780,16 @@ def _a_fix_in(states: tuple[str, ...], refusing: str) -> Rule:
     return a_fix_in
 
 
+WAITING_FOR_A_SESSION = (PROPOSED, ASKING, DECLINED, FAILED)
+
+
+def _a_fix_for_a_session(conversation: Conversation,
+                         command: StartSession) -> Refused | Deferred | None:
+    states = ((*WAITING_FOR_A_SESSION, ABSENT) if conversation.comment_type == KIND_REQUEST
+              else WAITING_FOR_A_SESSION)
+    return _a_fix_in(states, "is not waiting for anyone")(conversation, command)
+
+
 def _a_brief(conversation: Conversation, command: Rework) -> Refused | None:
     brief = Brief(note=command.note, pointed=command.pointed,
                   include=command.include)
@@ -989,6 +1003,14 @@ def _drafting(*wanted: str) -> Rule:
     return drafting
 
 
+def _on_github_to_reply(conversation: Conversation, command: Reply) -> Refused | None:
+    if conversation.comment_type == KIND_REQUEST:
+        return _refuse_decision(
+            conversation, ErrorCode.MALFORMED_REQUEST,
+            "a requested change lives on the board alone, with no GitHub thread to reply in")
+    return None
+
+
 def _not_closed_to_reply(conversation: Conversation, command: Reply) -> Refused | None:
     if conversation.state in CLOSED or conversation.fix.state == LANDED:
         return _refuse_decision(
@@ -1058,7 +1080,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Rework: (_agents_enabled_for_a_rework, _open_to("sends nothing back"),
              _a_fix_to_send_back, _a_part_to_rework, _a_brief),
     StartSession: (_agents_enabled_for_a_session, _open_to("opens no session"),
-                   _a_fix_in((PROPOSED, ASKING, DECLINED, FAILED), "is not waiting for anyone")),
+                   _a_fix_for_a_session),
     OpenShell: (_open_to("opens no shell"),),
     Retry: (_open_to("retries nothing"), _a_fix_in((ABSENT, DECLINED, FAILED), "is not failed")),
     WriteFix: (_open_to_a_fix, _a_fix_in((ABSENT,), "has a fix already")),
@@ -1082,7 +1104,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     Discard: (_drafting(DRAFT),),
     PostNow: (_drafting(DRAFT),),
     Posted: (_drafting(ENROLLED),),
-    Reply: (_not_closed_to_reply, _something_said),
+    Reply: (_on_github_to_reply, _not_closed_to_reply, _something_said),
 }
 
 _REFUSED_ON_A_DRAFT: dict[type, ErrorCode] = {

@@ -934,6 +934,16 @@ export interface ReplyRequest {
   body: string;
 }
 
+export interface RequestChangeBody {
+  body: string;
+  path: string;
+  line: number;
+  start_line?: number | null;
+  start_side?: DiffSide | null;
+  side?: DiffSide;
+  visible: boolean;
+}
+
 export interface ResetRefusal {
   code: ResetRefusalCode;
   detail: string | null;
@@ -1194,7 +1204,7 @@ export interface TerminalSessionList {
   sessions: TerminalSession[];
 }
 
-export type ThreadKind = 'draft' | 'review' | 'issue' | 'review-summary' | 'pr-body';
+export type ThreadKind = 'draft' | 'request' | 'review' | 'issue' | 'review-summary' | 'pr-body';
 
 export interface ThreadNamesMigration {
   migrated: boolean;

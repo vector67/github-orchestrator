@@ -128,6 +128,7 @@ class Reconciling:
 class Session:
     fix: ThreadFix
     steer: str | None
+    first: bool = False
 
 
 Work = (Reviewing | Rereviewing | FixingCheck | Rebasing | CarryingOn | FixingThread | RebasingFix
@@ -404,6 +405,13 @@ class FakeAgentRuns:
                                   f"session on {fix.key}")
         if refused is None:
             self.sessions.append(Session(fix, steer))
+        return refused
+
+    def fix_in_session(self, fix: ThreadFix) -> str | None:
+        refused = open_session_in(self.pr_processes, fix.pr, fix.worktree, ["claude"],
+                                  f"first fix on {fix.key}")
+        if refused is None:
+            self.sessions.append(Session(fix, None, first=True))
         return refused
 
     def answer_in_session(self, fix: ThreadFix) -> str | None:

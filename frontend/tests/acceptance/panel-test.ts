@@ -286,6 +286,50 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-decision="approve"]').exists();
   });
 
+  module('a requested change', function (hooks) {
+    hooks.beforeEach(function () {
+      board().conversations = [
+        board().threadIn('proposed', { key: KEY, kind: 'request' }),
+      ];
+    });
+
+    test('says it lives on the board alone, not on GitHub', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-board-only]')
+        .hasText('On the board only · not posted to GitHub');
+    });
+
+    test('offers no reply, which would have no GitHub thread to go to', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.dom('[data-test-reply-open]').doesNotExist();
+      assert.dom('[data-test-reply]').doesNotExist();
+    });
+
+    test('accepting it asks for no reply and says nothing goes to GitHub', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      await click('[data-test-decision="approve"]');
+
+      assert.dom('[data-test-dialog-body]').doesNotExist();
+      assert.dom('[data-test-delete]').doesNotExist();
+      assert
+        .dom('[data-test-dialog-note]')
+        .hasText(
+          'The change was requested on the board alone, so nothing is posted to GitHub.',
+        );
+    });
+
+    test('a GitHub thread still says nothing of the board alone', async function (assert) {
+      board().conversations = [board().threadIn('proposed', { key: KEY })];
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.dom('[data-test-board-only]').doesNotExist();
+    });
+  });
+
   module('an accepted reply', function () {
     function posted(reply: string) {
       const reached = board().threadIn('landed', { key: KEY });

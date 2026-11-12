@@ -362,6 +362,13 @@ def test_a_session_opens_in_the_threads_worktree_running_claude(world):
     assert session.argv[0] == "claude"
 
 
+def test_a_first_fix_in_a_session_opens_in_the_threads_worktree_and_is_kept(world):
+    assert world.runs.fix_in_session(_thread("/tmp/wt")) is None
+
+    [session] = world.fake.pr_processes.sessions[THE_PR]
+    assert (session.worktree, session.argv[0], session.kept) == ("/tmp/wt", "claude", True)
+
+
 def test_a_threads_session_and_shell_are_kept_until_a_page_claims_them(world):
     world.runs.open_session(_thread("/tmp/wt"), None)
     world.runs.open_shell(THE_PR, "/tmp/wt")

@@ -1061,6 +1061,7 @@ const CARRIED: Record<
   | 'edit-draft'
   | 'edit-part'
   | 'create-draft'
+  | 'request-change'
   | 'send-review'
   | 'prepare-harvest-extension'
   | SetupWrite,
@@ -1070,6 +1071,10 @@ const CARRIED: Record<
   ...PR_WRITES,
   'create-draft': {
     doing: 'saving the draft',
+    square: null,
+  },
+  'request-change': {
+    doing: 'requesting the change',
     square: null,
   },
   'edit-draft': {
@@ -1323,6 +1328,14 @@ function forProposal(
   };
 }
 
+const ON_THE_BOARD_ALONE: Partial<DialogSpec> = {
+  note: 'The change was requested on the board alone, so nothing is posted to GitHub.',
+  reply: false,
+  del: false,
+  resolves: false,
+  thumbsUp: false,
+};
+
 function authorOffer(
   decision: Decision,
   conversation: Conversation,
@@ -1340,6 +1353,7 @@ function authorOffer(
           ...(unsent && entry.asks.accept ? { prefill: unsent } : {}),
           ...entry.dialogFor?.(conversation),
           ...dialog,
+          ...(conversation.kind === 'request' ? ON_THE_BOARD_ALONE : {}),
           resolving: conversation.author_kind === 'bot',
         }
       : entry.asks;

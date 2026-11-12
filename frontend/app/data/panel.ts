@@ -211,6 +211,7 @@ export interface Panel {
   started_at: string;
   kicker: string;
   kicker_hint: string;
+  board_only: boolean;
   location: string;
   url: string;
   anchor: string;
@@ -719,7 +720,8 @@ function replyOf(
   if (
     UNREPLIED.includes(conversation.state) ||
     comments[0]?.deleted ||
-    conversation.mention
+    conversation.mention ||
+    conversation.kind === 'request'
   ) {
     return null;
   }
@@ -1073,7 +1075,33 @@ function repliersOf(comments: Comment[], context: Context): Reviewer[] {
   }));
 }
 
+const ON_THE_BOARD_ALONE =
+  'The change was requested on the board alone, so nothing is posted to GitHub.';
+
 function acceptOf(
+  conversation: Conversation,
+  proposal: Proposal | undefined,
+  plan: PlanStep[],
+  files: FileStat[],
+  reviewer: string,
+  comments: Comment[],
+  context: Context,
+): AcceptView {
+  const accepting = acceptingOf(
+    conversation,
+    proposal,
+    plan,
+    files,
+    reviewer,
+    comments,
+    context,
+  );
+  return conversation.kind === 'request'
+    ? { ...accepting, lead: ON_THE_BOARD_ALONE }
+    : accepting;
+}
+
+function acceptingOf(
   conversation: Conversation,
   proposal: Proposal | undefined,
   plan: PlanStep[],
@@ -1437,6 +1465,7 @@ export function panelOf(
     kicker_hint: conversation.reopened
       ? REOPENED_HINT
       : PHASE_HINTS[phaseOf(conversation)],
+    board_only: conversation.kind === 'request',
     location: locationOf(conversation),
     url: comments[0]?.html_url ?? context.pullRequest?.url ?? '',
     anchor: anchorOf(conversation),

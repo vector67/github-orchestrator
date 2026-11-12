@@ -11,6 +11,7 @@ KIND_REVIEW = "review"
 KIND_ISSUE = "issue"
 KIND_REVIEW_SUMMARY = "review-summary"
 KIND_DRAFT = "draft"
+KIND_REQUEST = "request"
 
 BOT_MARKER = "\U0001F916"
 

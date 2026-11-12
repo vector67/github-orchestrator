@@ -14,9 +14,14 @@ import { inLatestOf } from 'frontend/data/anchors';
 import didChange from 'frontend/modifiers/did-change';
 import { NEW_DRAFT, type Copy, type Saved } from 'frontend/services/drafts';
 import PendingRing from 'frontend/components/pending-ring';
+import RequestSessionAsk from 'frontend/components/request-session-ask';
+import { tracked } from '@glimmer/tracking';
 import type { Pressing } from 'frontend/data/decisions';
 import type BoardService from 'frontend/services/board';
 import type DraftsService from 'frontend/services/drafts';
+import type HereService from 'frontend/services/here';
+import type RequestSessionService from 'frontend/services/request-session';
+import type StoreService from 'frontend/services/store';
 import type TerminalService from 'frontend/services/terminal';
 import autocomplete from 'frontend/modifiers/autocomplete';
 
@@ -36,6 +41,11 @@ export default class CommentBox extends Component<CommentBoxSignature> {
   @service declare board: BoardService;
   @service declare terminal: TerminalService;
   @service declare router: RouterService;
+  @service declare here: HereService;
+  @service declare store: StoreService;
+  @service declare requestSession: RequestSessionService;
+
+  @tracked choosing = false;
 
   get copy(): Copy {
     return this.drafts.copyOf(this.args.draft, this.args.saved);
@@ -62,12 +72,20 @@ export default class CommentBox extends Component<CommentBoxSignature> {
 
   get pending(): string | null {
     if (!this.creating) return null;
-    return this.asking?.pending ?? this.drafts.making.pending;
+    return (
+      this.asking?.pending ??
+      this.drafts.requesting.pending ??
+      this.drafts.making.pending
+    );
   }
 
   get refused(): string | null {
     if (!this.creating) return null;
-    return this.asking?.refused ?? this.drafts.making.refused;
+    return (
+      this.asking?.refused ??
+      this.drafts.requesting.refused ??
+      this.drafts.making.refused
+    );
   }
 
   focus = (element: HTMLElement) => {
@@ -123,6 +141,42 @@ export default class CommentBox extends Component<CommentBoxSignature> {
     }
   };
 
+  get requestable(): boolean {
+    const at = this.here.at;
+    return (
+      this.creating &&
+      this.store.pr(at.repo, at.number)?.facts?.is_author === true
+    );
+  }
+
+  get unrequestable(): boolean {
+    return (
+      this.drafts.requesting.pending !== null ||
+      this.args.selection === null ||
+      this.copy.body.trim() === ''
+    );
+  }
+
+  request = () => {
+    const chosen = this.requestSession.chosen;
+    if (chosen === 'ask') this.choosing = true;
+    else void this.send(chosen === 'visible');
+  };
+
+  choose = (visible: boolean, remember: boolean) => {
+    this.choosing = false;
+    if (remember) this.requestSession.remember(visible);
+    void this.send(visible);
+  };
+
+  stopChoosing = () => {
+    this.choosing = false;
+  };
+
+  private async send(visible: boolean): Promise<void> {
+    if ((await this.drafts.request(visible)) && !visible) this.args.close();
+  }
+
   <template>
     <form
       class="comment-box"
@@ -166,6 +220,15 @@ export default class CommentBox extends Component<CommentBoxSignature> {
             disabled={{this.unaskable}}
             {{on "click" this.ask}}
           >Ask the agent</button>
+          {{#if this.requestable}}
+            <button
+              type="button"
+              class="box-draft"
+              data-test-box-request
+              disabled={{this.unrequestable}}
+              {{on "click" this.request}}
+            >Request change</button>
+          {{/if}}
           <button
             type="submit"
             class="box-draft"
@@ -188,6 +251,12 @@ export default class CommentBox extends Component<CommentBoxSignature> {
           >Save draft</button>
         {{/if}}
       </div>
+      {{#if this.choosing}}
+        <RequestSessionAsk
+          @choose={{this.choose}}
+          @cancel={{this.stopChoosing}}
+        />
+      {{/if}}
     </form>
   </template>
 }

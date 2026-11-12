@@ -646,6 +646,11 @@ input[type="radio"] {
   flex: none;
 }
 
+.board-only {
+  font-size: var(--fs-s);
+  color: var(--muted);
+}
+
 .panel-kicker .anchor-out {
   display: inline-flex;
   align-items: baseline;
@@ -1216,6 +1221,15 @@ button.copy-directory {
   align-items: center;
   justify-content: center;
   background: var(--scrim);
+}
+
+.request-ask {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
 }
 
 .decide-dialog > form,
