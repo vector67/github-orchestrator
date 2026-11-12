@@ -2,6 +2,7 @@ import logging
 from collections.abc import Mapping
 from typing import Protocol
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import HubState, Pr, UtcClock
 from github_orchestrator.github import Access
 from github_orchestrator.notifications import Polling, ThreadNews
@@ -88,7 +89,7 @@ class CycleSaving:
     def mentions_unread(self, exc: BaseException) -> None:
         error = " ".join(str(exc).split()) or type(exc).__name__
         try:
-            self._config.mentions_failure.write_text(error)
+            write_atomically(self._config.mentions_failure, error.encode())
         except OSError as unwritten:
             log.warning("Could not write %s: %s", self._config.mentions_failure, unwritten)
         self._polling.mentions_failed(error, self._config.log_file)
