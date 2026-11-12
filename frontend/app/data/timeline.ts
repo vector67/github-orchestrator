@@ -250,6 +250,7 @@ export interface DivergedHeader {
   other: string;
   from: string;
   chip: string;
+  dropped: { short: string; subject: string }[];
 }
 
 export type CurveKind = 'fork' | 'merge' | 'ghost';
@@ -1174,6 +1175,12 @@ export function timelineBuilt(input: TimelineInput): Timeline | null {
             other: `${plural(there.length, 'other commit')}`,
             from: there[0]?.parents[0]?.slice(0, SHORT) ?? '',
             chip: `diverged from origin · ${diverged.here} here, ${there.length} on origin`,
+            dropped: history.commits
+              .filter((one) => input.standing.offOrigin.has(one.sha))
+              .map((one) => ({
+                short: one.sha.slice(0, SHORT),
+                subject: one.subject,
+              })),
           }
         : null,
     },

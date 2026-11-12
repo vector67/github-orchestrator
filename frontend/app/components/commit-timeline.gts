@@ -5,14 +5,20 @@ import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
 import type { Picked, Timeline } from 'frontend/data/timeline';
+import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import type { ResetControls } from 'frontend/services/pull-request-diff';
 import didChange from 'frontend/modifiers/did-change';
+import modal from 'frontend/modifiers/modal';
 import fits from 'frontend/modifiers/fits';
 import { staysInThisTab } from 'frontend/modifiers/navigates';
 import eq from 'frontend/helpers/eq';
 
 type End = 'from' | 'to';
+
+const RESET_NOW = 'Reset to origin';
+
+const RESET_LATER = 'Reset when the agent finishes';
 
 const pushedOf = (pushed: boolean | null): string | null =>
   pushed === null ? null : String(pushed);
@@ -76,18 +82,43 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       : `Its ${here} commits that aren't on origin`;
   }
 
-  get dropped(): string {
-    return `${this.counted} will be dropped.`;
+  get later(): boolean {
+    return this.args.reset.confirming === 'later';
   }
 
-  get droppedLater(): string {
-    return `${this.counted} will be dropped, and so will any commits the agent makes before then.`;
+  get resetQuestion(): string {
+    return this.later
+      ? 'Reset the worktree to origin when the agent finishes?'
+      : 'Reset the worktree to origin?';
+  }
+
+  get resetNote(): string {
+    return this.later
+      ? `${this.counted} will be dropped, and so will any commits the agent makes before then:`
+      : `${this.counted} will be dropped:`;
+  }
+
+  get resetSubmit(): string {
+    return this.later ? RESET_LATER : RESET_NOW;
   }
 
   get confirmSending(): boolean {
     const pressed = this.args.reset.pressing?.pressed;
     return pressed === 'reset-to-origin' || pressed === 'queue-reset-to-origin';
   }
+
+  readonly resetNow = RESET_NOW;
+
+  readonly resetLater = RESET_LATER;
+
+  cancelReset = () => {
+    if (!this.confirmSending) this.args.reset.cancel();
+  };
+
+  confirmReset = (event: Event) => {
+    event.preventDefault();
+    if (!this.confirmSending) this.args.reset.confirm();
+  };
 
   get unqueueSending(): boolean {
     return this.args.reset.pressing?.pressed === 'cancel-reset-to-origin';
@@ -214,9 +245,10 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
                 type="button"
                 class="btn timeline-reset"
                 disabled={{if @reset.confirming true false}}
+                data-opens-dialog="true"
                 data-test-reset-to-origin
                 {{on "click" @reset.ask}}
-              >Reset to origin</button>
+              >{{this.resetNow}}<Glyphs @opensDialog={{true}} /></button>
             {{/if}}
           {{/if}}
         </p>
@@ -235,41 +267,56 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
       </header>
       {{#if @timeline.header.diverged}}
         {{#if @reset.confirming}}
-          <div
-            class="timeline-reset-confirm"
-            role="alertdialog"
-            aria-label="reset the worktree to origin"
-            data-pending={{if this.confirmSending "true"}}
-            data-test-reset-confirm
-          >
-            {{#if (eq @reset.confirming "later")}}
-              <p class="timeline-reset-question">Reset the worktree to origin
-                when the agent finishes?
-                {{this.droppedLater}}</p>
-            {{else}}
-              <p class="timeline-reset-question">Reset the worktree to origin?
-                {{this.dropped}}</p>
-            {{/if}}
-            <span class="timeline-reset-choices" data-test-reset-choices>
-              <button
-                type="button"
-                class="btn"
-                disabled={{this.confirmSending}}
-                data-test-reset-yes
-                {{on "click" @reset.confirm}}
-              >{{#if this.confirmSending}}{{#if
-                    @reset.pressing.ring
-                  }}<PendingRing />{{/if}}{{@reset.pressing.doing}}{{else if
-                  (eq @reset.confirming "later")
-                }}Reset when it finishes{{else}}Reset{{/if}}</button>
-              <button
-                type="button"
-                class="btn"
-                disabled={{this.confirmSending}}
-                data-test-reset-no
-                {{on "click" @reset.cancel}}
-              >Cancel</button>
-            </span>
+          <div class="decide-dialog">
+            <form
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="reset-question"
+              tabindex="-1"
+              data-pending={{if this.confirmSending "true"}}
+              data-test-reset-confirm
+              {{modal this.cancelReset}}
+              {{on "submit" this.confirmReset}}
+            >
+              <div class="dialog-head">
+                <p
+                  class="question"
+                  id="reset-question"
+                  data-test-reset-question
+                >{{this.resetQuestion}}</p>
+                <button
+                  type="button"
+                  class="dialog-close"
+                  aria-label="cancel"
+                  disabled={{this.confirmSending}}
+                  {{on "click" this.cancelReset}}
+                >×</button>
+              </div>
+              <p class="note" data-test-reset-note>{{this.resetNote}}</p>
+              <ul class="reset-dropped" data-test-reset-dropped>
+                {{#each @timeline.header.diverged.dropped key="short" as |one|}}
+                  <li><code>{{one.short}}</code> {{one.subject}}</li>
+                {{/each}}
+              </ul>
+              <div class="dialog-actions">
+                <button
+                  type="submit"
+                  class="primary"
+                  disabled={{this.confirmSending}}
+                  data-test-reset-yes
+                >{{#if this.confirmSending}}{{#if
+                      @reset.pressing.ring
+                    }}<PendingRing
+                      />{{/if}}{{@reset.pressing.doing}}{{else}}{{this.resetSubmit}}{{/if}}</button>
+                <button
+                  type="button"
+                  class="ghost"
+                  disabled={{this.confirmSending}}
+                  data-test-reset-no
+                  {{on "click" this.cancelReset}}
+                >Cancel <kbd>Esc</kbd></button>
+              </div>
+            </form>
           </div>
         {{/if}}
       {{/if}}
@@ -284,9 +331,10 @@ export default class CommitTimeline extends Component<CommitTimelineSignature> {
             <button
               type="button"
               class="btn timeline-reset"
+              data-opens-dialog="true"
               data-test-reset-later
               {{on "click" @reset.askLater}}
-            >Reset when the agent finishes</button>
+            >{{this.resetLater}}<Glyphs @opensDialog={{true}} /></button>
           {{/if}}
         </p>
       {{/if}}

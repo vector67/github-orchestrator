@@ -26,6 +26,12 @@ import {
 import type { PullRequestCommits } from 'frontend/data/api';
 import { leftToTheBrowser } from 'frontend/tests/helpers/browser';
 
+function texts(selector: string): string[] {
+  return findAll(selector).map((one) =>
+    (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
+  );
+}
+
 const FORK = 'ba5e000';
 const FIRST = 'a1a1a1a';
 const SECOND = 'b2b2b2b';
@@ -1881,23 +1887,35 @@ module(
         .length;
     }
 
-    test('Reset to origin asks on the page first, then puts the worktree on origin', async function (assert) {
+    test('Reset to origin asks in a dialog naming the commits it drops, then puts the worktree on origin', async function (assert) {
       await openLocal();
+      assert
+        .dom('[data-test-reset-to-origin]')
+        .hasAttribute('data-opens-dialog', 'true');
+      assert.dom('[data-test-reset-to-origin] [data-glyph="dialog"]').exists();
 
       await click('[data-test-reset-to-origin]');
 
       assert
         .dom('[data-test-reset-confirm]')
-        .hasText(
-          "Reset the worktree to origin? Its 2 commits that aren't on origin will be dropped. Reset Cancel",
-        );
+        .hasAttribute('role', 'dialog')
+        .hasAttribute('aria-modal', 'true');
+      assert
+        .dom('[data-test-reset-question]')
+        .hasText('Reset the worktree to origin?');
+      assert
+        .dom('[data-test-reset-note]')
+        .hasText("Its 2 commits that aren't on origin will be dropped:");
+      assert.deepEqual(texts('[data-test-reset-dropped] li'), [
+        `${STALE_ONE} Add the widget`,
+        `${STALE_TWO} Name the widget`,
+      ]);
+      assert.dom('[data-test-reset-yes]').hasText('Reset to origin');
+      assert.dom('[data-test-reset-no]').includesText('Cancel');
       assert.strictEqual(resets(), 0, 'nothing is sent before Reset');
       assert
         .dom('[data-test-reset-to-origin]')
         .isDisabled('the question is already open');
-      assert
-        .dom('[data-test-reset-confirm] [data-test-reset-choices]')
-        .containsText('Reset Cancel', 'Reset and Cancel wrap together');
 
       await click('[data-test-reset-yes]');
 
@@ -2064,13 +2082,22 @@ module(
         .hasText(
           'Not reset: an agent is working in the worktree, so it was left as it is. Reset when the agent finishes',
         );
+      assert
+        .dom('[data-test-reset-later]')
+        .hasAttribute('data-opens-dialog', 'true');
       await click('[data-test-reset-later]');
 
       assert
-        .dom('[data-test-reset-confirm]')
+        .dom('[data-test-reset-question]')
+        .hasText('Reset the worktree to origin when the agent finishes?');
+      assert
+        .dom('[data-test-reset-note]')
         .hasText(
-          "Reset the worktree to origin when the agent finishes? Its 2 commits that aren't on origin will be dropped, and so will any commits the agent makes before then. Reset when it finishes Cancel",
+          "Its 2 commits that aren't on origin will be dropped, and so will any commits the agent makes before then:",
         );
+      assert
+        .dom('[data-test-reset-yes]')
+        .hasText('Reset when the agent finishes');
       assert.strictEqual(posted('queue-reset-to-origin'), 0);
 
       await click('[data-test-reset-yes]');

@@ -5543,33 +5543,14 @@ button.tree-row[aria-current="true"] {
   font-size: var(--fs-s);
 }
 
-.timeline-reset-confirm {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid var(--text);
-  box-shadow: inset 4px 0 0 var(--yellow);
-}
-
-.timeline-reset-question {
-  margin: 0 8px 0 0;
+.reset-dropped {
+  margin: 0;
+  padding-left: 20px;
   font-size: var(--fs-s);
   line-height: 1.5;
 }
 
 .comment-unplaced-dismiss {
-  padding: 4px 12px;
-  font-size: var(--fs-s);
-}
-
-.timeline-reset-choices {
-  display: flex;
-  gap: 8px;
-}
-
-.timeline-reset-confirm .btn {
   padding: 4px 12px;
   font-size: var(--fs-s);
 }
