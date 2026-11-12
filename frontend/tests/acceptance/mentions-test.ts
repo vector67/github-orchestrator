@@ -42,6 +42,14 @@ function clearOf(box: DOMRect, by: DOMRect): boolean {
   return box.bottom <= by.top || box.top >= by.bottom;
 }
 
+function scrolledToTheEnd(box: Element): Promise<void> {
+  const landed = new Promise<void>((resolve) =>
+    box.addEventListener('scroll', () => resolve(), { once: true }),
+  );
+  box.scrollTop = box.scrollHeight;
+  return landed;
+}
+
 function many(count: number) {
   return Array.from({ length: count }, (_, at) =>
     outstandingMention({ thread: `k${at + 1}`, comment_id: at + 1 }),
@@ -117,7 +125,7 @@ module('Acceptance | mentions', function (hooks) {
     board().mentions.mentions = many(30);
     await listed();
     const list = find('[data-test-mentions-menu]')!;
-    list.scrollTop = list.scrollHeight;
+    await scrolledToTheEnd(list);
     const arrow = find('[data-test-mention="k30"] [data-test-mention-more]')!;
 
     await click(arrow);
