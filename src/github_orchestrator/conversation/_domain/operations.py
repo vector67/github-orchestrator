@@ -522,6 +522,22 @@ def _settle_the_reconcile(operations: list[Operation], command: Change, after: C
                                       reason=reason, reason_code=code, settled_at=at)
 
 
+FIX_WENT_WITH_THE_WORKTREE = "the fix went with its worktree when the thread was resolved"
+
+
+def _drops_the_fix(before: Conversation, after: Conversation, command: Change) -> bool:
+    return (isinstance(command, Unpark | ThreadUnresolved)
+            and before.fix.state != ABSENT and after.fix.state == ABSENT)
+
+
+def _record_the_dropped_fix(operations: list[Operation]) -> None:
+    for index in range(len(operations) - 1, -1, -1):
+        if operations[index].kind == OperationKind.UNPARK:
+            operations[index] = replace(operations[index], reason=FIX_WENT_WITH_THE_WORKTREE,
+                                        reason_code=ReasonCode.WORKTREE_MISSING)
+            return
+
+
 def _opened(after: Conversation, operations: list[Operation], kind: OperationKind,
             at: str | None) -> None:
     _upserted(operations, _synced(
@@ -592,6 +608,8 @@ def accepted(before: Conversation, after: Conversation, command: Change,
         _settle(operations, settling, at)
     if isinstance(command, ShellRefused):
         _refuse_the_shell(operations, command.reason, at)
+    if _drops_the_fix(before, after, command):
+        _record_the_dropped_fix(operations)
     return _stored(before, after, operations)
 
 

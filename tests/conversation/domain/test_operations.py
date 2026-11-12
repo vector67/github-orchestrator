@@ -2,6 +2,8 @@ import json
 from dataclasses import replace
 from datetime import datetime
 
+import pytest
+
 from github_orchestrator.agent_runs.fake import Outcome as RunOutcome
 from github_orchestrator.change_detection import Poll
 from github_orchestrator.conversation import (
@@ -459,6 +461,29 @@ def test_unparking_a_rejected_thread_records_the_unpark_and_the_run_it_asks_for(
     unpark, first = unparked.operations[-2:]
     assert (unpark.kind, unpark.state) == (OperationKind.UNPARK, OperationState.APPLIED)
     assert first.kind == OperationKind.FIRST and first.in_flight
+
+
+@pytest.mark.parametrize("resolve", [False, True], ids=["marked done", "resolved on github"])
+def test_bringing_back_a_resolved_proposal_records_that_its_worktree_went(settings, resolve):
+    here = _world(settings)
+    threads = _proposed(here)
+    _asked(threads, lambda conversation: conversation.resolve(resolve=resolve))
+
+    unparked = _asked(threads, lambda conversation: conversation.unpark())
+
+    unpark = _only(unparked, OperationKind.UNPARK)
+    assert (unpark.state, unpark.reason_code) == (OperationState.APPLIED,
+                                                  ReasonCode.WORKTREE_MISSING)
+
+
+def test_bringing_back_a_deferred_proposal_keeps_its_run(settings):
+    here = _world(settings)
+    threads = _proposed(here)
+    _asked(threads, lambda conversation: conversation.place(ConversationState.DEFERRED))
+
+    unparked = _asked(threads, lambda conversation: conversation.unpark())
+
+    assert _only(unparked, OperationKind.UNPARK).reason_code is None
 
 
 def test_a_record_written_before_the_history_gives_its_fix_the_id_the_history_keeps(settings):

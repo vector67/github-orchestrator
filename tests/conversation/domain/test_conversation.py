@@ -1711,7 +1711,7 @@ def test_unparking_a_waiting_on_reviewer_conversation_leaves_the_fix_alone(setti
     assert stored.fix.thread_sha == before.fix.thread_sha
 
 
-def test_bringing_back_a_thread_marked_done_from_waiting_returns_it_to_waiting(settings):
+def test_bringing_back_a_thread_marked_done_from_waiting_returns_it_to_waiting_with_no_fix(settings):
     _, threads = _author(settings, _waiting)
     _asked(threads, "resolve")
     assert _held(threads).standing is ConversationState.DONE
@@ -1720,7 +1720,7 @@ def test_bringing_back_a_thread_marked_done_from_waiting_returns_it_to_waiting(s
 
     stored = _held(threads)
     assert stored.standing is ConversationState.WAITING
-    assert stored.fix.is_proposed
+    assert stored.proposal is None
 
 
 def test_bringing_back_a_thread_deferred_from_waiting_returns_it_to_waiting(settings):
@@ -1818,6 +1818,36 @@ def test_unparking_a_resolved_conversation_leaves_the_fix_alone(settings):
     assert stored.fix.pushed and stored.fix.answered
     assert stored.fix.commits == before.fix.commits
     assert stored.fix.thread_sha == before.fix.thread_sha
+
+
+def test_bringing_back_a_proposed_fix_marked_done_leaves_no_fix_to_accept(settings):
+    here, threads = _author(settings, _proposed)
+    _asked(threads, "resolve")
+    runs = len(here.agent_runs.asked)
+
+    _asked(threads, "unpark")
+
+    stored = _held(threads)
+    assert stored.standing is ConversationState.READY
+    assert stored.proposal is None
+    assert len(here.agent_runs.asked) == runs
+    assert not isinstance(_asked(threads, "fix"), Denied)
+
+
+def test_unresolving_a_proposed_fix_on_github_leaves_no_fix_to_accept(settings):
+    here, threads = _author(settings, _proposed)
+    _asked(threads, "resolve", resolve=True)
+    runs = len(here.agent_runs.asked)
+    comments = len(_on_github(here).comments)
+
+    _asked(threads, "unpark")
+
+    stored = _held(threads)
+    assert not _on_github(here).is_resolved
+    assert stored.standing is ConversationState.READY
+    assert stored.proposal is None
+    assert len(_on_github(here).comments) == comments
+    assert len(here.agent_runs.asked) == runs
 
 
 def test_replying_on_a_conversation_that_was_yours_parks_it_on_the_reviewer(settings):

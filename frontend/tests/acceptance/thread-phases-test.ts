@@ -251,6 +251,32 @@ module('Acceptance | thread phases', function (hooks) {
     });
   });
 
+  test('a fix brought back after its worktree went offers a fresh one, not Accept', async function (assert) {
+    const resolved = board().threadIn('resolved', { key: 'k1' });
+    board().conversations = [
+      {
+        ...resolved,
+        state: 'ready',
+        record_state: 'open',
+        github_resolved: false,
+        operations: [
+          ...resolved.operations,
+          summary({
+            id: 'op_000000000009',
+            kind: 'unpark',
+            reason_code: 'worktree-missing',
+          }),
+        ],
+      },
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-decision="fix"]').exists();
+    assert.dom('[data-test-decision="approve"]').doesNotExist();
+    assert.dom('[data-test-fix-label]').doesNotExist();
+  });
+
   test('a discarded draft says nothing about a fix and offers it back', async function (assert) {
     board().actAs('reviewer');
     board().conversations = [board().threadIn('discarded')];

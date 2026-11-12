@@ -591,6 +591,19 @@ def test_unpark_brings_a_deferred_thread_back(ready):
     assert back.state_changed_at == NOW
 
 
+@pytest.mark.parametrize("verb", ["mark-done", "resolve"])
+def test_unpark_after_a_fix_was_closed_leaves_it_to_write_a_fix_again(ready, verb):
+    settled_by(ready, verb)
+
+    settled_by(ready, "unpark")
+
+    served = client_of(ready).get(f"/api/conversations/{KEY}").json()
+    assert served["operations"][-1]["kind"] == "unpark"
+    assert served["operations"][-1]["reason_code"] == "worktree-missing"
+    assert asked(client_of(ready), "approve").status_code == 409
+    assert asked(client_of(ready), "fix").status_code == 202
+
+
 def test_unpark_refuses_a_thread_that_was_never_parked(ready):
     answer = asked(client_of(ready), "unpark")
 

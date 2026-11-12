@@ -1243,7 +1243,7 @@ def _settled_with_thumbs_up(told: Conversation, viewer: str) -> Accepted:
 
 def _thread_unresolved(conversation: Conversation,
                        command: ThreadUnresolved) -> Accepted:
-    told = _github_resolved(conversation, False, None, command.at)
+    told = _github_resolved(_without_the_dropped_fix(conversation), False, None, command.at)
     back = replace(_my_move(told), wake_on=None, defer_note="",
                    decidable_at=command.at)
     return Accepted(with_fix(back, decision_error=None))
@@ -1309,10 +1309,20 @@ def _returned(conversation: Conversation, place: str, at: str | None) -> Accepte
                             decidable_at=at))
 
 
+NEEDED_THE_WORKTREE = (PROPOSED, ASKING)
+
+
+def _without_the_dropped_fix(conversation: Conversation) -> Conversation:
+    if conversation.state == RESOLVED and conversation.fix.state in NEEDED_THE_WORKTREE:
+        return replace(conversation, fix=Fix(state=ABSENT))
+    return conversation
+
+
 def _unpark(conversation: Conversation, at: str | None) -> Accepted:
     landed = conversation.state == OPEN and conversation.fix.state == LANDED
     if conversation.state == RESOLVED and _unresolves_on_github(conversation):
         return Accepted(conversation, (UnresolveThread(),))
+    conversation = _without_the_dropped_fix(conversation)
     if conversation.state == DISCARDED:
         return Accepted(replace(conversation, state=DRAFT,
                                 decidable_at=at))

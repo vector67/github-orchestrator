@@ -172,16 +172,25 @@ export function newestOf(
   );
 }
 
-const RUN_OR_DROP: string[] = [...RUN_KINDS, 'drop-question'];
+function dropsTheRun(one: {
+  kind: string;
+  reason_code: string | null;
+}): boolean {
+  return (
+    one.kind === 'drop-question' ||
+    (one.kind === 'unpark' && one.reason_code === 'worktree-missing')
+  );
+}
 
 export function runDropped(
   operations: readonly { kind: string; reason_code: string | null }[],
 ): boolean {
-  return (
-    operations.findLast(
-      (one) => RUN_OR_DROP.includes(one.kind) && heldARun(one),
-    )?.kind === 'drop-question'
+  const newest = operations.findLast(
+    (one) =>
+      dropsTheRun(one) ||
+      ((RUN_KINDS as string[]).includes(one.kind) && heldARun(one)),
   );
+  return newest !== undefined && dropsTheRun(newest);
 }
 
 export function newestRun(
