@@ -285,10 +285,10 @@ def _log_of(settings, session: str) -> str:
 
 
 def test_a_session_stamps_each_line_of_its_log_with_its_utc_offset(settings, worktree):
-    sessions = real_terminal_sessions(settings, first_connection_seconds=2.0)
+    sessions = real_terminal_sessions(settings, first_connection_seconds=0.05, clamp=("nohup",))
     before = datetime.now().astimezone().replace(microsecond=0)
-    started = sessions.start(str(worktree), ["sh", "-c", "trap '' HUP; while :; do sleep 0.1; done"])
-    assert until(lambda: "no page connected" in _log_of(settings, started), seconds=10)
+    started = sessions.start(str(worktree), FOREVER)
+    assert until(lambda: "no page connected" in _log_of(settings, started))
     after = datetime.now().astimezone()
 
     logged = datetime.fromisoformat(_log_of(settings, started).split(" ", 1)[0])
