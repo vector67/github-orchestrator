@@ -134,6 +134,35 @@ module('Acceptance | code context', function (hooks) {
     ]);
   });
 
+  test('a thread on removed lines reads them from the merge base of the head the poll found, when the author merged the base in since the fetch', async function (assert) {
+    board().pullRequest = {
+      ...board().pullRequest,
+      head_sha: 'f00d000',
+      merge_base: 'ba5e001',
+    };
+    board().conversations = [
+      thread({
+        key: 'k1',
+        anchor: {
+          ...thread().anchor,
+          line: 42,
+          side: 'LEFT',
+          original_line: 42,
+        },
+      }),
+    ];
+    board().sources['ba5e001:src/foo.py'] = sourceWith({
+      42: '    "amount >= 0"',
+    });
+
+    await visit('/pr/o/r/7/conversations/k1');
+
+    assert.dom('[data-test-context]').containsText('"amount >= 0"');
+    assert.deepEqual(codeAsks(board()), [
+      '/pr/o/r/7/api/files?sha=ba5e001&path=src%2Ffoo.py&from_line=39&to_line=45',
+    ]);
+  });
+
   test('an outdated thread says so, and names the commit its code is from', async function (assert) {
     board().conversations = [
       thread({
