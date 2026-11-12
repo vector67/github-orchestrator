@@ -143,3 +143,7 @@ class News:
     def failed(self, consecutive: int | None, error: str, log_file: Path) -> None:
         self._post(None, Badge.FAILED, "Watcher not polling",
                    f"{_cycles(consecutive)}: {error}. Details in {log_file}")
+
+    def mentions_failed(self, error: str, log_file: Path) -> None:
+        self._post(None, Badge.FAILED, "Mentions search failed",
+                   f"{error}. Details in {log_file}")

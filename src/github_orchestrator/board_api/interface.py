@@ -441,6 +441,9 @@ class Pulse(Protocol):
     def fix(self) -> str | None: ...
 
     @property
+    def mentions_error(self) -> str | None: ...
+
+    @property
     def overdue(self) -> bool: ...
 
     @property

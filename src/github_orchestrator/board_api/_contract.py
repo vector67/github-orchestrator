@@ -322,6 +322,10 @@ class WatcherHealth(BaseModel):
         description="What to do about `last_error`, in plain words, where the watcher "
                     "recognises it: gh holding no token for the account, or the "
                     "account unable to see a watched repo. Null otherwise.")
+    mentions_error: str | None = Field(
+        description="Why the last search for mentions did not run, while polls go on: "
+                    "a `mentions_start` in the config that will not read. Null once "
+                    "a search runs.")
 
 
 class NewestRelease(BaseModel):

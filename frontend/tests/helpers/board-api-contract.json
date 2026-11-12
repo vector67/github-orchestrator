@@ -9283,6 +9283,16 @@
       }
      ]
     },
+    "mentions_error": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "next_poll_at": {
      "anyOf": [
       {
@@ -9312,7 +9322,8 @@
     "next_poll_at",
     "overdue",
     "last_error",
-    "fix"
+    "fix",
+    "mentions_error"
    ],
    "type": "object"
   },
