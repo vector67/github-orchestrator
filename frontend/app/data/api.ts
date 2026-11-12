@@ -547,7 +547,7 @@ export interface HeldPullRequest {
 
 export interface HeldPullRequests {
   watching: string[];
-  groups: WallGroupName[];
+  groups: WallGroup[];
   pull_requests: HeldPullRequest[];
 }
 
@@ -1242,11 +1242,6 @@ export interface UnpushedCommit {
 }
 
 export type WallGroup = 'needs-you' | 'agent-working' | 'waiting-on-others' | 'parked';
-
-export interface WallGroupName {
-  group: WallGroup;
-  name: string;
-}
 
 export interface WatcherHealth {
   polled_at: string | null;

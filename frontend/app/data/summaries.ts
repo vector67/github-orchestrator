@@ -20,7 +20,6 @@ import type {
   ResetToOrigin,
   WitnessProgress,
   WallGroup,
-  WallGroupName,
 } from 'frontend/data/api';
 import { edgeOf } from 'frontend/data/dashboard';
 import { MILESTONES, whenOf } from 'frontend/data/defer-time';
@@ -37,7 +36,7 @@ import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
 import { referenceOf } from 'frontend/data/rows';
 import { atWork } from 'frontend/data/thread';
 import { saidOf, type ThreadNamed } from 'frontend/data/tried';
-import { levelOf, type Level } from 'frontend/data/wall';
+import { levelOf, nameOf, type Level } from 'frontend/data/wall';
 import {
   dayOf,
   drawnAs,
@@ -907,7 +906,7 @@ export function enteredAt(
 type Placed = WallRow & { joined: number; group: WallGroup | null };
 
 function wallBuilt(
-  groups: WallGroupName[],
+  groups: WallGroup[],
   prs: Record<string, PrEntity>,
   threads: Record<string, Threads>,
   operations: Record<string, Operations>,
@@ -920,9 +919,9 @@ function wallBuilt(
       : [];
   });
   return groups
-    .map(({ group, name }) => ({
+    .map((group) => ({
       group,
-      name,
+      name: nameOf(group),
       level: levelOf(group),
       edge: edgeOf(group),
       prs: placed
@@ -933,7 +932,7 @@ function wallBuilt(
 }
 
 let lastWall: {
-  groups: WallGroupName[];
+  groups: WallGroup[];
   prs: Record<string, PrEntity>;
   threads: Record<string, Threads>;
   operations: Record<string, Operations>;
@@ -941,7 +940,7 @@ let lastWall: {
 } | null = null;
 
 export function wallOf(
-  groups: WallGroupName[] | null,
+  groups: WallGroup[] | null,
   prs: Record<string, PrEntity>,
   threads: Record<string, Threads>,
   operations: Record<string, Operations>,

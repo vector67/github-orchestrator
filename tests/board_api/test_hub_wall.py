@@ -24,12 +24,7 @@ REPO = "acme/widgets"
 SECOND = a_pr(54, REPO)
 THIRD = a_pr(55, REPO)
 
-GROUPS = [
-    {"group": "needs-you", "name": "Needs you"},
-    {"group": "agent-working", "name": "Agent working"},
-    {"group": "waiting-on-others", "name": "Waiting on others"},
-    {"group": "parked", "name": "Parked"},
-]
+GROUPS = ["needs-you", "agent-working", "waiting-on-others", "parked"]
 
 
 def snapshot(pr, **fields):
@@ -89,7 +84,7 @@ def test_every_row_links_to_its_pull_requests_page_on_the_hub():
     assert row["board_url"] == "/pr/acme/widgets/54"
 
 
-def test_the_wall_lists_its_groups_in_order_with_their_names():
+def test_the_wall_lists_its_groups_in_order():
     web = wall()
 
     assert web.get("/api/pull-requests").json()["groups"] == GROUPS

@@ -60,7 +60,7 @@ import type {
   TerminalSessionList,
   ThreadNamesMigration,
   Tour,
-  WallGroupName,
+  WallGroup,
   WatcherHealth,
 } from 'frontend/data/api';
 import {
@@ -384,21 +384,29 @@ type ShelvedBeforeManyRepos = Omit<HeldPullRequests, 'watching'> & {
   watching: string;
 };
 
+type ShelvedGroup = WallGroup | { group: WallGroup };
+
 function unshelved(): HeldPullRequests | null {
   return recalledAs(
     SHELVED_WALL,
     (kept) => {
-      const held = kept as HeldPullRequests | ShelvedBeforeManyRepos;
+      const held = kept as Omit<
+        HeldPullRequests | ShelvedBeforeManyRepos,
+        'groups'
+      > & { groups: ShelvedGroup[] };
       const threaded = held.pull_requests.every(
         (row) =>
           Array.isArray(row.dashboard.threads as unknown) &&
           typeof (row.dashboard.notice as unknown) !== 'string',
       );
       if (!threaded) return null;
-      const { watching } = held;
+      const { watching, groups } = held;
       return {
         ...held,
         watching: typeof watching === 'string' ? [watching] : watching,
+        groups: groups.map((one) =>
+          typeof one === 'string' ? one : one.group,
+        ),
       };
     },
     null,
@@ -452,7 +460,7 @@ export default class StoreService extends Service {
   @tracked private anchored: Record<string, DiffAnchors> = {};
   @tracked private lines: Record<string, FileLines> = {};
   @tracked private managers: Record<string, Manager> = {};
-  @tracked private groups: WallGroupName[] | null = null;
+  @tracked private groups: WallGroup[] | null = null;
   @tracked watching: string[] = [];
   @tracked ledger: Omit<RunLedger, 'watcher'> | null = null;
   @tracked mentions: Mentions | null = null;

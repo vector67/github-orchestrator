@@ -2164,11 +2164,6 @@ class HeldPullRequest(BaseModel):
                     "summary is stored or its judge's output would not read.")
 
 
-class WallGroupName(BaseModel):
-    group: WallGroup
-    name: str = Field(description="The group's heading, such as `Needs you`.")
-
-
 class HeldPullRequests(BaseModel):
     """Every pull request the watcher held after its last cycle, as the wall
     shows them."""
@@ -2176,7 +2171,7 @@ class HeldPullRequests(BaseModel):
     watching: list[str] = Field(
         description="Every repository this instance watches, `owner/name`, in name "
                     "order, from its own settings.")
-    groups: list[WallGroupName] = Field(
+    groups: list[WallGroup] = Field(
         description="Every group, in the order the wall shows them.")
     pull_requests: list[HeldPullRequest] = Field(
         description="By repository, then number; the page sorts the wall "

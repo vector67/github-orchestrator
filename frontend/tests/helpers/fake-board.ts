@@ -42,7 +42,7 @@ import type {
   RunsToday,
   TerminalSession,
   ThreadRow,
-  WallGroupName,
+  WallGroup,
   WatcherHealth,
   HubState,
   AddToWallRequest,
@@ -545,11 +545,11 @@ export interface HeldOver extends Partial<Omit<HeldPullRequest, 'dashboard'>> {
   dashboard?: DashboardOver;
 }
 
-export const WALL_GROUPS: WallGroupName[] = [
-  { group: 'needs-you', name: 'Needs you' },
-  { group: 'agent-working', name: 'Agent working' },
-  { group: 'waiting-on-others', name: 'Waiting on others' },
-  { group: 'parked', name: 'Parked' },
+export const WALL_GROUPS: WallGroup[] = [
+  'needs-you',
+  'agent-working',
+  'waiting-on-others',
+  'parked',
 ];
 
 export function finishedRun(over: Partial<FinishedRun> = {}): FinishedRun {

@@ -18,6 +18,17 @@ export function levelOf(group: WallGroup): Level {
   return LEVELS[group];
 }
 
+const NAMES: Record<WallGroup, string> = {
+  'needs-you': 'Needs you',
+  'agent-working': 'Agent working',
+  'waiting-on-others': 'Waiting on others',
+  parked: 'Parked',
+};
+
+export function nameOf(group: WallGroup): string {
+  return NAMES[group];
+}
+
 export function keyOf(pr: Numbered): string {
   return `${pr.repo}#${pr.number}`;
 }
