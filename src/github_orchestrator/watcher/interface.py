@@ -34,6 +34,7 @@ class Health:
     last_error: str | None
     fix: str | None
     polls_every: timedelta
+    mentions_error: str | None = None
 
     @property
     def since_last_poll(self) -> timedelta | None:

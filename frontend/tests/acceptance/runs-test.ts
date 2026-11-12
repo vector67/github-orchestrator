@@ -150,6 +150,25 @@ module('Acceptance | runs', function (hooks) {
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
 
+  test('a mentions search that fails while polls go on says only the search fails, and why', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        mentions_error: 'config.toml: mentions_start must be in quotes',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/');
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      'mentions search failing: config.toml: mentions_start must be in quotes',
+    );
+    assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
+  });
+
   test('a long failure stays on the bar’s one row and gives its whole text on hover', async function (assert) {
     const failure = `watcher cannot search acme/gadgets-api as vector67 — ${'check [[repos]] and gh_account '.repeat(12)}`;
     onTheHub();

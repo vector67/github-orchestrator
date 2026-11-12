@@ -30,6 +30,10 @@ class Saving(Protocol):
 
     def failed(self, exc: BaseException) -> None: ...
 
+    def mentions_unread(self, exc: BaseException) -> None: ...
+
+    def mentions_read(self) -> None: ...
+
 
 class CycleSaving:
     def __init__(self, config: WatcherConfig, clock: UtcClock, *, dismissals: Dismissals,
@@ -80,6 +84,20 @@ class CycleSaving:
             self._polling.failed(consecutive, error, self._config.log_file)
         except Exception:
             log.exception("Could not report the failed cycle")
+
+    def mentions_unread(self, exc: BaseException) -> None:
+        error = " ".join(str(exc).split()) or type(exc).__name__
+        try:
+            self._config.mentions_failure.write_text(error)
+        except OSError as unwritten:
+            log.warning("Could not write %s: %s", self._config.mentions_failure, unwritten)
+        self._polling.mentions_failed(error, self._config.log_file)
+
+    def mentions_read(self) -> None:
+        try:
+            self._config.mentions_failure.unlink(missing_ok=True)
+        except OSError as exc:
+            log.warning("Could not clear %s: %s", self._config.mentions_failure, exc)
 
     def _fix(self) -> str | None:
         account = self._config.gh_account

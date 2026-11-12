@@ -20,7 +20,8 @@ def watcher_read(pulse: Pulse) -> contract.WatcherHealth:
     return contract.WatcherHealth(
         polled_at=None if polled is None else polled.isoformat(),
         next_poll_at=None if next_at is None else next_at.isoformat(),
-        overdue=pulse.overdue, last_error=pulse.last_error, fix=pulse.fix)
+        overdue=pulse.overdue, last_error=pulse.last_error, fix=pulse.fix,
+        mentions_error=pulse.mentions_error)
 
 
 def _today(day: RunDay) -> contract.RunsToday:

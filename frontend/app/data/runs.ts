@@ -59,6 +59,12 @@ export function pollOf(
   if (watcher.last_error) {
     return { text: `polls failing: ${watcher.last_error}`, alarm: true };
   }
+  if (watcher.mentions_error) {
+    return {
+      text: `mentions search failing: ${watcher.mentions_error}`,
+      alarm: true,
+    };
+  }
   if (!polled) return { text: 'no poll yet', alarm: false };
   if (watcher.overdue) {
     return { text: `no poll since ${agedAt(polled, now)}`, alarm: true };

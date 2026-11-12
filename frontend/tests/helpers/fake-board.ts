@@ -603,6 +603,7 @@ export function runLedger(
       overdue: false,
       last_error: null,
       fix: null,
+      mentions_error: null,
       ...over.watcher,
     },
     today: { runs: 0, cost_usd: null, unpriced: 0, ...over.today },

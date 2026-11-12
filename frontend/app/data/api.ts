@@ -1282,6 +1282,7 @@ export interface WatcherHealth {
   overdue: boolean;
   last_error: string | null;
   fix: string | null;
+  mentions_error: string | null;
 }
 
 export interface WitnessProgress {
