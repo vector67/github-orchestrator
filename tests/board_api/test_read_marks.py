@@ -1,4 +1,5 @@
 from tests.board_api.support import (
+    THE_PR,
     board_on,
     branched_from_main,
     client_of,
@@ -55,6 +56,26 @@ def test_read_marks_outlive_the_board_that_wrote_them(tmp_path):
         f"{MARKS}/operations:mark-read", json={"sha": head})
 
     answer = marks_board(copies, disk_thread_records(tmp_path)).get(MARKS)
+
+    assert answer.json() == {"marks": [{"sha": head, "subject": "check first"}]}
+
+
+def test_a_read_mark_is_kept_on_disk_as_its_subject_under_its_sha(tmp_path):
+    copies, _, head = branched_from_main()
+
+    marks_board(copies, disk_thread_records(tmp_path)).post(
+        f"{MARKS}/operations:mark-read", json={"sha": head})
+
+    assert (tmp_path / "acme" / "widgets" / "54" / f"{head}-0.read").read_bytes() == b"check first"
+
+
+def test_a_read_mark_kept_under_a_name_that_is_no_key_is_passed_over(tmp_path):
+    copies, _, head = branched_from_main()
+    records = disk_thread_records(tmp_path)
+    records.of(THE_PR).save("read", "not a sha", b"stray")
+    board = marks_board(copies, records)
+
+    answer = board.post(f"{MARKS}/operations:mark-read", json={"sha": head})
 
     assert answer.json() == {"marks": [{"sha": head, "subject": "check first"}]}
 

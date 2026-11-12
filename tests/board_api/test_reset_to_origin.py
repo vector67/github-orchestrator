@@ -12,6 +12,7 @@ from github_orchestrator.board_api.interface import (
 )
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.thread_records.fake import FakeThreadRecords
+from github_orchestrator.wiring import RecordShelves
 from tests.board_api.support import (
     KEY,
     THE_PR,
@@ -125,7 +126,7 @@ def test_a_worktree_only_ahead_of_origin_keeps_its_unpushed_commits(operation, w
     assert answer.status_code == 409
     assert answer.json()["errors"][0]["code"] == "not-diverged"
     assert copies.head_of(WORKTREE) == unpushed
-    assert ResetToOrigin.kept(records.of(THE_PR)) is None
+    assert ResetToOrigin.kept(RecordShelves(records).of(THE_PR)) is None
 
 
 @pytest.mark.parametrize("fields", [
@@ -138,14 +139,14 @@ def test_a_worktree_only_ahead_of_origin_keeps_its_unpushed_commits(operation, w
     {"ran_at": "2026-01-01T00:00:00Z", "refused": {"code": "reset-refused", "detail": ""}},
 ])
 def test_a_kept_reset_with_a_field_that_is_not_text_or_is_empty_reads_as_none_kept(fields):
-    shelf = FakeThreadRecords().of(THE_PR)
-    shelf.save("reset", "state", json.dumps(fields).encode())
+    records = FakeThreadRecords()
+    records.of(THE_PR).save("reset", "state", json.dumps(fields).encode())
 
-    assert ResetToOrigin.kept(shelf) is None
+    assert ResetToOrigin.kept(RecordShelves(records).of(THE_PR)) is None
 
 
 def test_a_kept_refusal_reads_back_as_its_code_and_detail():
-    shelf = FakeThreadRecords().of(THE_PR)
+    shelf = RecordShelves(FakeThreadRecords()).of(THE_PR)
     refused = ResetRefusal(ResetRefusalCode.FETCH_FAILED, "fatal: could not read from remote")
 
     ResetToOrigin(ran_at="2026-01-01T00:00:00Z", refused=refused).keep(shelf)
@@ -155,10 +156,10 @@ def test_a_kept_refusal_reads_back_as_its_code_and_detail():
 
 
 def test_a_kept_reset_nested_too_deep_to_parse_reads_as_none_kept():
-    shelf = FakeThreadRecords().of(THE_PR)
-    shelf.save("reset", "state", b"[" * 100_000 + b"]" * 100_000)
+    records = FakeThreadRecords()
+    records.of(THE_PR).save("reset", "state", b"[" * 100_000 + b"]" * 100_000)
 
-    assert ResetToOrigin.kept(shelf) is None
+    assert ResetToOrigin.kept(RecordShelves(records).of(THE_PR)) is None
 
 
 def test_a_reset_queued_while_an_agent_works_is_kept_for_when_its_run_ends():
@@ -169,7 +170,7 @@ def test_a_reset_queued_while_an_agent_works_is_kept_for_when_its_run_ends():
     answer = reset_board(copies, WORKING, records).post(QUEUE)
 
     assert answer.status_code == 204
-    kept = ResetToOrigin.kept(records.of(THE_PR))
+    kept = ResetToOrigin.kept(RecordShelves(records).of(THE_PR))
     assert kept is not None and kept.queued_at is not None
     assert (kept.ran_at, kept.refused) == (None, None)
     assert copies.head_of(WORKTREE) == before
@@ -183,7 +184,7 @@ def test_a_reset_is_not_queued_when_no_agent_is_working():
 
     assert answer.status_code == 409
     assert answer.json()["errors"][0]["code"] == "no-agent-working"
-    assert ResetToOrigin.kept(records.of(THE_PR)) is None
+    assert ResetToOrigin.kept(RecordShelves(records).of(THE_PR)) is None
 
 
 def test_cancelling_a_queued_reset_forgets_it():
@@ -195,7 +196,7 @@ def test_cancelling_a_queued_reset_forgets_it():
     answer = board.post(CANCEL)
 
     assert answer.status_code == 204
-    assert ResetToOrigin.kept(records.of(THE_PR)) is None
+    assert ResetToOrigin.kept(RecordShelves(records).of(THE_PR)) is None
 
 
 def test_a_fix_picked_but_not_pushed_keeps_the_worktree_from_a_reset():

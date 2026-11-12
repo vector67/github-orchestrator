@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import IO, Protocol
 
-from github_orchestrator.board_api.interface import KeptReviews
 from github_orchestrator.change_detection import (
     ChangeDetection,
     Facts,
@@ -29,7 +28,7 @@ from github_orchestrator.watcher._saving import Saving
 from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup_files import SetupFiles
 from github_orchestrator.watcher._teardown import Reason, Teardown
-from github_orchestrator.watcher.interface import Releases
+from github_orchestrator.watcher.interface import KeptReviews, Releases
 
 log = logging.getLogger(__name__)
 

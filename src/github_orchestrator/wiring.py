@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import shutil
 import subprocess
@@ -45,7 +46,6 @@ from github_orchestrator.board_api.interface import (
     FolderInUse,
     HarvestSetup,
     Holdings,
-    KeptReviews,
     ManagerPanels,
     ManagerStanding,
     Mentionable,
@@ -53,6 +53,8 @@ from github_orchestrator.board_api.interface import (
     NamesMigration,
     ServerApp,
     SetupDesk,
+    Shelf,
+    ShelfKey,
     Shelves,
     Told,
     TourMarker,
@@ -190,9 +192,15 @@ from github_orchestrator.terminal_sessions._pty import PtyTerminals
 from github_orchestrator.thread_names import HeldFolder, NameMigration
 from github_orchestrator.thread_names._gate import LockedNameMigration
 from github_orchestrator.thread_names._pass import ThreadNames
-from github_orchestrator.thread_records import ThreadRecords
+from github_orchestrator.thread_records import PrRecords, ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
-from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
+from github_orchestrator.watcher import (
+    Health,
+    KeptReviews,
+    Releases,
+    Watcher,
+    WatcherHealth,
+)
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._cycle import PollingWatcher, Say, said_to_the_log
 from github_orchestrator.watcher._health import HealthFiles
@@ -205,6 +213,7 @@ from github_orchestrator.watcher._releases import (
     ReleasesApi,
     http_get,
 )
+from github_orchestrator.watcher._reviews import ShelvedReviews
 from github_orchestrator.watcher._saving import CycleSaving, Saving
 from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
@@ -224,6 +233,8 @@ from github_orchestrator.watcher._would import (
 )
 from github_orchestrator.working_copies import WorkingCopies
 from github_orchestrator.working_copies._git import GitWorkingCopies
+
+log = logging.getLogger(__name__)
 
 
 class Wiring:
@@ -973,8 +984,7 @@ class WatcherProvider(Provider):
 
     @provide
     def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
-        from github_orchestrator.board_api._reviewed import ShelvedReviews
-        return ShelvedReviews(working_copies, shelves)
+        return ShelvedReviews(working_copies, RecordShelves(shelves))
 
     @provide
     def archives(self, change_detection: ChangeDetection, queues: Queues, history: History,
@@ -1149,7 +1159,7 @@ class ServerAppProvider(Provider):
                          told=told, holdings=holdings, mentions=mentions,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
-                         summaries=summaries, lane=lane, shelves=shelves,
+                         summaries=summaries, lane=lane, shelves=RecordShelves(shelves),
                          migration=migration, check_presence=wiring.check_presence,
                          first_names_only=wiring.first_names_only,
                          heartbeat_seconds=wiring.heartbeat_seconds,
@@ -1246,7 +1256,37 @@ class DashboardSourceProvider(Provider):
 
     @provide
     def shelves(self, records: ThreadRecords) -> Shelves:
-        return records
+        return RecordShelves(records)
+
+
+class RecordShelf:
+    def __init__(self, records: PrRecords) -> None:
+        self._records = records
+
+    def save(self, kind: str, key: ShelfKey, document: bytes) -> None:
+        self._records.save(kind, str(key), document)
+
+    def list(self, kind: str) -> dict[ShelfKey, bytes | None]:
+        listed: dict[ShelfKey, bytes | None] = {}
+        for name, document in self._records.list(kind).items():
+            key = ShelfKey.parse(name)
+            if key is None:
+                log.warning("Passing over the %s record %r: it is not named by a shelf key",
+                            kind, name)
+                continue
+            listed[key] = document
+        return listed
+
+    def delete(self, kind: str, key: ShelfKey) -> None:
+        self._records.delete(kind, str(key))
+
+
+class RecordShelves:
+    def __init__(self, records: ThreadRecords) -> None:
+        self._records = records
+
+    def of(self, pr: Pr) -> Shelf:
+        return RecordShelf(self._records.of(pr))
 
 
 class CommandsAndStatus:
@@ -1671,8 +1711,7 @@ class PreviewHubProvider(Provider):
 
     @provide
     def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
-        from github_orchestrator.board_api._reviewed import ShelvedReviews
-        return ShelvedReviews(working_copies, shelves)
+        return ShelvedReviews(working_copies, RecordShelves(shelves))
 
     @provide
     def told(self, hub: PreviewHub) -> Told:
