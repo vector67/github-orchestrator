@@ -105,6 +105,15 @@ def test_reading_the_commits_keeps_nothing_of_a_review(tmp_path):
     assert answer["reviewed"] is None
 
 
+def test_the_watcher_keeps_nothing_for_a_review_sha_the_board_would_refuse(tmp_path):
+    copies, _, _, tidied = two_commits()
+
+    watched_reviewing(tmp_path, copies, tidied.upper())
+
+    pr_dir = tmp_path / "threads" / "acme" / "widgets" / str(PR)
+    assert list(pr_dir.glob("*.reviewed")) == []
+
+
 def test_the_watcher_keeps_what_the_review_saw_as_one_document_on_disk(tmp_path):
     copies, base, head, tidied = two_commits()
 

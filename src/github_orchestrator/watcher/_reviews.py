@@ -17,7 +17,7 @@ class ShelvedReviews:
     def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None:
         shelf = self._shelves.of(pr)
         head = Sha.parse(sha)
-        if head is None:
+        if head is None or sha != sha.lower():
             return
         key = ShelfKey(str(head))
         if key in shelf.list(REVIEWED):
