@@ -27,6 +27,7 @@ const FACES: Face[] = [
 ];
 
 const EDGE = 8;
+const GAP = 4;
 
 function faceOf(kind: ReactionKind): string {
   return FACES.find((one) => one.kind === kind)?.face ?? '';
@@ -63,8 +64,11 @@ export default class CommentReactions extends Component<CommentReactionsSignatur
       .closest('.comment-reactions')!
       .querySelector('.reaction-add')!;
     const smiley = trigger.getBoundingClientRect();
-    element.style.top = `${smiley.bottom + 4}px`;
     element.showPopover();
+    const below = smiley.bottom + GAP;
+    const above = smiley.top - GAP - element.offsetHeight;
+    const fitsBelow = below + element.offsetHeight <= window.innerHeight - EDGE;
+    element.style.top = `${fitsBelow || above < EDGE ? below : above}px`;
     const room = window.innerWidth - element.offsetWidth - EDGE;
     element.style.left = `${Math.max(EDGE, Math.min(smiley.left, room))}px`;
     const moved = (scrolled: Event) => {

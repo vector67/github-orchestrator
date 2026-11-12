@@ -181,6 +181,37 @@ module('Acceptance | reactions', function (hooks) {
     assert.true(box.top >= placed.bottom, 'it still opens below the smiley');
   });
 
+  test('a picker with no room under the smiley opens above it, inside the window', async function (assert) {
+    seed([]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const smiley = find('[data-test-react]') as HTMLElement;
+    const drawn = smiley.getBoundingClientRect();
+    const scale = drawn.height / smiley.offsetHeight;
+    const shift = (window.innerHeight - 2 - drawn.bottom) / scale;
+    smiley.style.transform = `translateY(${shift}px)`;
+    const placed = smiley.getBoundingClientRect();
+
+    await triggerEvent(smiley, 'click');
+
+    const box = picker().getBoundingClientRect();
+    assert.true(
+      placed.bottom > window.innerHeight - 40,
+      `the smiley sits at the foot (${placed.bottom} of ${window.innerHeight})`,
+    );
+    assert.true(
+      insideTheWindow(box),
+      `the picker fits (${JSON.stringify(box)})`,
+    );
+    assert.true(
+      box.bottom <= placed.top,
+      `it opens above the smiley (${box.bottom} over ${placed.top})`,
+    );
+    assert.true(
+      box.bottom >= placed.top - 12,
+      `it opens right by it (${box.bottom} over ${placed.top})`,
+    );
+  });
+
   test('the smiley on a diff card opens its picker over the page, under it, and Escape closes it', async function (assert) {
     board().pullRequestDiff = prDiff(
       changed('src/widgets/changes.py', [
