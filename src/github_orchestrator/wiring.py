@@ -45,7 +45,6 @@ from github_orchestrator.board_api.interface import (
     FolderInUse,
     HarvestSetup,
     Holdings,
-    KeptReviews,
     ManagerPanels,
     ManagerStanding,
     Mentionable,
@@ -192,7 +191,13 @@ from github_orchestrator.thread_names._gate import LockedNameMigration
 from github_orchestrator.thread_names._pass import ThreadNames
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records._files import DiskThreadRecords
-from github_orchestrator.watcher import Health, Releases, Watcher, WatcherHealth
+from github_orchestrator.watcher import (
+    Health,
+    KeptReviews,
+    Releases,
+    Watcher,
+    WatcherHealth,
+)
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.watcher._cycle import PollingWatcher, Say, said_to_the_log
 from github_orchestrator.watcher._health import HealthFiles
@@ -205,6 +210,7 @@ from github_orchestrator.watcher._releases import (
     ReleasesApi,
     http_get,
 )
+from github_orchestrator.watcher._reviews import ShelvedReviews
 from github_orchestrator.watcher._saving import CycleSaving, Saving
 from github_orchestrator.watcher._server import Server
 from github_orchestrator.watcher._setup import Archives, ConfigSetup, SetupSeams
@@ -973,7 +979,6 @@ class WatcherProvider(Provider):
 
     @provide
     def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
-        from github_orchestrator.board_api._reviewed import ShelvedReviews
         return ShelvedReviews(working_copies, shelves)
 
     @provide
@@ -1671,7 +1676,6 @@ class PreviewHubProvider(Provider):
 
     @provide
     def kept_reviews(self, working_copies: WorkingCopies, shelves: ThreadRecords) -> KeptReviews:
-        from github_orchestrator.board_api._reviewed import ShelvedReviews
         return ShelvedReviews(working_copies, shelves)
 
     @provide

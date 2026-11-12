@@ -5,9 +5,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.domain import HubState
+from github_orchestrator.domain import HubState, Pr
 
 OVERDUE_GRACE = timedelta(minutes=2)
+
+
+class KeptReviews(Protocol):
+    def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None: ...
 
 
 class Watcher(Protocol):

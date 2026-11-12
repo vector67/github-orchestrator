@@ -59,6 +59,15 @@ def test_read_marks_outlive_the_board_that_wrote_them(tmp_path):
     assert answer.json() == {"marks": [{"sha": head, "subject": "check first"}]}
 
 
+def test_a_read_mark_is_kept_on_disk_as_its_subject_under_its_sha(tmp_path):
+    copies, _, head = branched_from_main()
+
+    marks_board(copies, disk_thread_records(tmp_path)).post(
+        f"{MARKS}/operations:mark-read", json={"sha": head})
+
+    assert (tmp_path / "acme" / "widgets" / "54" / f"{head}-0.read").read_bytes() == b"check first"
+
+
 def test_a_commit_git_does_not_have_cannot_be_marked_read():
     copies, _, _ = branched_from_main()
     board = marks_board(copies)

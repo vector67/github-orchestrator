@@ -36,7 +36,6 @@ from github_orchestrator.board_api.fake import (
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Held,
-    KeptReviews,
     ManagerStanding,
     ServerApp,
 )
@@ -64,6 +63,7 @@ from github_orchestrator.github.fake import FakeGitHub, PushEvent, Review
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
+from github_orchestrator.watcher import KeptReviews
 from github_orchestrator.wiring import PreviewHub, preview_container
 
 __all__: list[str] = []

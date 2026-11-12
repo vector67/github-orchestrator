@@ -5,7 +5,7 @@ import pytest
 from github_orchestrator import preview
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, HeldVerdicts
 from github_orchestrator.board_api.fake import IDLE
-from github_orchestrator.board_api.interface import Dashboards, KeptReviews, ServerApp
+from github_orchestrator.board_api.interface import Dashboards, ServerApp
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -14,6 +14,7 @@ from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.terminal_sessions.fake import FakeTerminalSessions
+from github_orchestrator.watcher import KeptReviews
 from github_orchestrator.wiring import dashboard_source_wiring, preview_container
 from github_orchestrator.working_copies import WorkingCopies
 from tests.board_api.support import OneLoopClient, served_board

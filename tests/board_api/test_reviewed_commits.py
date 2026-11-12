@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from github_orchestrator.github import PullRequestState, ReviewState
 from github_orchestrator.github.fake import Review
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.board_api.support import (
+    PR,
     THE_PR,
     WORKTREE,
     board_on,
@@ -101,3 +103,21 @@ def test_reading_the_commits_keeps_nothing_of_a_review(tmp_path):
     answer = board_of(copies, reviewed_on(tidied), records).get(COMMITS).json()
 
     assert answer["reviewed"] is None
+
+
+def test_the_watcher_keeps_what_the_review_saw_as_one_document_on_disk(tmp_path):
+    copies, base, head, tidied = two_commits()
+
+    watched_reviewing(tmp_path, copies, tidied)
+
+    kept = tmp_path / "threads" / "acme" / "widgets" / str(PR) / f"{tidied}-0.reviewed"
+    assert kept.read_bytes() == json.dumps({
+        "sha": tidied,
+        "fork": base,
+        "commits": [
+            {"sha": head, "parents": [base], "subject": "check first",
+             "author": "T", "authored_at": "2026-01-01T00:02:00Z"},
+            {"sha": tidied, "parents": [head], "subject": "tidy up",
+             "author": "T", "authored_at": "2026-01-01T00:04:00Z"},
+        ],
+    }, separators=(",", ":")).encode()

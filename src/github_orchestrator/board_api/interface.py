@@ -84,6 +84,7 @@ class UnpushedCommit:
 
 
 RESET_TO_ORIGIN = "reset"
+REVIEWED = "reviewed"
 _RESET_STATE = "state"
 
 
@@ -454,10 +455,6 @@ class Shelf(Protocol):
 
 class Shelves(Protocol):
     def of(self, pr: Pr) -> Shelf: ...
-
-
-class KeptReviews(Protocol):
-    def keep(self, pr: Pr, sha: str, base_branch: str | None) -> None: ...
 
 
 @dataclass(frozen=True)
