@@ -13,6 +13,7 @@ import threading
 import time
 from pathlib import Path
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.terminal_sessions._frames import (
     EXIT,
     INPUT,
@@ -247,11 +248,9 @@ def _held(directory: Path, session: str, worktree: str, argv: list[str]) -> _Hel
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(str(directory / f"{session}{SOCKET}"))
     server.listen()
-    record = directory / f"{session}{RECORD}"
-    written = record.with_suffix(".writing")
-    written.write_text(json.dumps({"pid": os.getpid(), "argv": argv, "worktree": worktree,
-                                   "started": time.time_ns()}))
-    written.replace(record)
+    write_atomically(directory / f"{session}{RECORD}",
+                     json.dumps({"pid": os.getpid(), "argv": argv, "worktree": worktree,
+                                 "started": time.time_ns()}).encode())
     log.info("terminal session %s started in %s: %s", session, worktree, argv)
     return _Held(directory, session, process, master, server)
 

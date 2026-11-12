@@ -1,13 +1,13 @@
 import fcntl
 import json
 import logging
-import os
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.board_api.interface import (
     NO_MENTIONS_LISTED,
     DeferredUntilPr,
@@ -105,10 +105,8 @@ def change_deferrals(path: Path,
         fcntl.flock(lock, fcntl.LOCK_EX)
         held = deferrals(path)
         change(held)
-        writing = at.with_name(f"{at.name}.writing")
-        writing.write_text(json.dumps({key: _stored_deferral(deferral)
-                                       for key, deferral in sorted(held.items())}))
-        os.replace(writing, at)
+        write_atomically(at, json.dumps({key: _stored_deferral(deferral)
+                                         for key, deferral in sorted(held.items())}).encode())
 
 
 def _stored_deferral(deferral: MentionDeferral) -> dict[str, Any]:
@@ -176,13 +174,11 @@ def _change_openings(path: Path, change: Callable[[dict[Pr, _Opening]], None]) -
         fcntl.flock(lock, fcntl.LOCK_EX)
         held = _openings(path)
         change(held)
-        writing = at.with_name(f"{at.name}.writing")
-        writing.write_text(json.dumps([
+        write_atomically(at, json.dumps([
             {"repo": str(opening.pr.repo), "number": opening.pr.number,
              "comment_id": opening.comment_id, "on_wall": opening.on_wall,
              "opened_at": opening.opened_at}
-            for opening in held.values()]))
-        os.replace(writing, at)
+            for opening in held.values()]).encode())
 
 
 def _opened(openings: Mapping[Pr, _Opening],
@@ -199,13 +195,11 @@ def _opened(openings: Mapping[Pr, _Opening],
 
 def write_listing(path: Path, searched_at: datetime, started: Mapping[str, str],
                   mentions: Sequence[ListedMention], building: Mapping[str, str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    writing = path.with_name(f"{path.name}.writing")
-    writing.write_text(json.dumps({"searched_at": searched_at.isoformat(),
-                                   "started": dict(started),
-                                   "building_since": dict(building),
-                                   "mentions": [_entry(mention) for mention in mentions]}))
-    os.replace(writing, path)
+    write_atomically(path, json.dumps({"searched_at": searched_at.isoformat(),
+                                       "started": dict(started),
+                                       "building_since": dict(building),
+                                       "mentions": [_entry(mention) for mention in mentions]}
+                                      ).encode())
 
 
 class ListingFile:
@@ -228,10 +222,8 @@ class ListingFile:
         at.parent.mkdir(parents=True, exist_ok=True)
         with at.with_name(f"{at.name}.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
-            writing = at.with_name(f"{at.name}.writing")
-            writing.write_text(json.dumps(sorted(dismissed(self._path)
-                                                 | {dismissal(pr, comment_id)})))
-            os.replace(writing, at)
+            write_atomically(at, json.dumps(sorted(dismissed(self._path)
+                                                   | {dismissal(pr, comment_id)})).encode())
 
     def open(self, pr: Pr, comment_id: int | None) -> None:
         def opening(held: dict[Pr, _Opening]) -> None:

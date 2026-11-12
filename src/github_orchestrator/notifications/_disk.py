@@ -3,7 +3,6 @@ import itertools
 import json
 import logging
 import os
-import tempfile
 import threading
 import time
 from dataclasses import dataclass
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.agent_runs import Summaries
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.desktop import Badge, Desktop
 from github_orchestrator.domain import LocalClock, Pr
 from github_orchestrator.notifications._batches import (
@@ -49,13 +49,8 @@ _counter = itertools.count()
 
 
 def _write(directory: Path, document: dict[str, Any]) -> str:
-    directory.mkdir(parents=True, exist_ok=True)
     key = f"{time.time_ns()}-{os.getpid()}-{next(_counter)}"
-    with tempfile.NamedTemporaryFile("w", dir=directory, suffix=".tmp", delete=False) as tmp:
-        json.dump(document, tmp)
-        tmp.flush()
-        os.fsync(tmp.fileno())
-    Path(tmp.name).replace(directory / f"{key}.json")
+    write_atomically(directory / f"{key}.json", json.dumps(document).encode())
     return key
 
 

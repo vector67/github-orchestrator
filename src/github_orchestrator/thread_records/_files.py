@@ -1,14 +1,13 @@
 import logging
-import os
 import re
 import shutil
 import stat
-import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
+from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.domain import Pr, Repo, ThreadName
 from github_orchestrator.thread_records._lock import locked
 from github_orchestrator.thread_records.interface import PrRecords, UnreadableThread
@@ -30,28 +29,6 @@ def _suffix(kind: str) -> str:
 
 def thread_dir(threads_dir: Path, pr: Pr) -> Path:
     return _repo_dir(threads_dir, pr.repo) / str(pr.number)
-
-
-def _write_atomically(path: Path, content: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = tempfile.NamedTemporaryFile(
-        mode="wb", dir=path.parent, suffix=".tmp", delete=False
-    )
-    tmp_path = Path(tmp.name)
-    try:
-        try:
-            tmp.write(content)
-            tmp.flush()
-            os.fsync(tmp.fileno())
-        finally:
-            tmp.close()
-        tmp_path.replace(path)
-    except BaseException:
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
 
 
 def _read(path: Path) -> bytes:
@@ -76,7 +53,7 @@ class DiskPrRecords:
         return self._dir / f"{ThreadName(key)}{_suffix(kind)}"
 
     def save(self, kind: str, key: str, document: bytes) -> None:
-        _write_atomically(self._named(kind, key), document)
+        write_atomically(self._named(kind, key), document)
 
     def load(self, kind: str, key: str) -> bytes | None:
         named = self._named(kind, key)
