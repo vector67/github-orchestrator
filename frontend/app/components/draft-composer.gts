@@ -89,10 +89,12 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
     return !this.drafts.saveable(this.key, this.saved);
   }
 
+  get posting(): boolean {
+    return this.args.draft?.posting ?? false;
+  }
+
   get going(): boolean {
-    const draft = this.args.draft;
-    if (!draft) return false;
-    return draft.posting || draft.outgoing;
+    return this.args.draft?.outgoing ?? false;
   }
 
   get pending(): string | null {
@@ -105,9 +107,10 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
     return this.args.draft?.refused ?? null;
   }
 
-  get note(): string {
+  get note(): string | null {
     const refused = this.refused;
     if (refused && !this.locked) return refused;
+    if (this.posting) return null;
     if (this.going) return GOING_NOTE;
     if (this.pending) return this.pending;
     if (this.locked) return SAVING_NOTE;
@@ -235,7 +238,9 @@ export default class DraftComposer extends Component<DraftComposerSignature> {
               disabled={{this.unsaveable}}
             >Save draft</button>
           {{/unless}}
-          <p class="composer-note" data-test-draft-note>{{this.note}}</p>
+          {{#if this.note}}
+            <p class="composer-note" data-test-draft-note>{{this.note}}</p>
+          {{/if}}
         </div>
       </form>
     </div>

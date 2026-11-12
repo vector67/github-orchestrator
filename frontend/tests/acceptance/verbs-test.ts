@@ -3,6 +3,7 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import {
   click,
   fillIn,
+  findAll,
   triggerEvent,
   visit,
   waitFor,
@@ -594,6 +595,13 @@ module('Acceptance | verbs | a draft', function (hooks) {
   });
 });
 
+function goingSigns(): string[] {
+  return findAll('#panel-body *, [data-test-toast]')
+    .filter((one) => one.children.length === 0)
+    .map((one) => one.textContent.trim())
+    .filter((text) => /posting|on its way|queued/i.test(text));
+}
+
 module('Acceptance | verbs | posting to GitHub', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
@@ -624,6 +632,23 @@ module('Acceptance | verbs | posting to GitHub', function (hooks) {
 
     assert.dom(POSTING).doesNotExist();
     assert.deepEqual(offered(), ['Resolve', 'Mark done', 'Defer', 'Move']);
+  });
+
+  test('Post now says Posting to GitHub… in place of the buttons and nowhere else says it is going', async function (assert) {
+    board().actAs('reviewer');
+    await open(board(), 'draft');
+    const release = board().hold(/operations:post-now$/);
+
+    const posting = click('[data-test-decision="post-now"]');
+    await waitFor(POSTING);
+
+    assert.deepEqual(goingSigns(), ['Posting to GitHub…']);
+
+    release();
+    await posting;
+
+    assert.deepEqual(goingSigns(), ['Posting to GitHub…']);
+    assert.dom('[data-test-toast]').doesNotExist();
   });
 
   test('a reply posted with Not fixed shows Posting to GitHub… in place of the buttons', async function (assert) {

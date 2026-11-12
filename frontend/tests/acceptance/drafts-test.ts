@@ -430,18 +430,15 @@ module('Acceptance | drafts', function (hooks) {
     assert.dom('[data-test-composer]').doesNotHaveAttribute('data-pending');
   });
 
-  test('a draft on its way to GitHub is not changed, and says why', async function (assert) {
+  test('a draft on its way to GitHub is not changed, and says only Posting to GitHub… in place of its buttons', async function (assert) {
     seed(board(), {
       operations: [summary({ id: 'op_1', kind: 'post-now', state: 'pending' })],
     });
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.dom('[data-test-draft-body]').isDisabled();
-    assert
-      .dom('[data-test-draft-note]')
-      .hasText(
-        'On its way to GitHub; it cannot change until the board has it.',
-      );
+    assert.dom('[data-test-draft-note]').doesNotExist();
+    assert.dom('[data-test-posting]').hasText('Posting to GitHub…');
   });
 
   test('a new draft opens on the changed files, and is created on the lines selected in the one chosen', async function (assert) {

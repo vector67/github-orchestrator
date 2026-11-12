@@ -310,7 +310,7 @@ module('Acceptance | thread phases', function (hooks) {
   });
 
   test('a verb waiting for the board holds a thread nobody is working on', async function (assert) {
-    const asked = summary({ id: 'op_1', kind: 'reply', state: 'pending' });
+    const asked = summary({ id: 'op_1', kind: 'defer', state: 'pending' });
 
     await each(
       board(),
@@ -320,7 +320,7 @@ module('Acceptance | thread phases', function (hooks) {
       ],
       (state) => {
         assert.deepEqual(offered(), [], state);
-        assert.dom('[data-test-notes]').hasText('replying…', state);
+        assert.dom('[data-test-notes]').hasText('deferring…', state);
       },
     );
   });

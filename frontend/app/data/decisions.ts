@@ -1674,7 +1674,7 @@ export function carriedOut(
   return {
     request: carrying.request?.(gathered) ?? { verb: decision, body: {} },
     toast:
-      carrying.square === null
+      carrying.square === null || POSTS_TO_GITHUB.includes(decision)
         ? null
         : {
             text: carrying.toast?.(gathered) ?? `Queued: ${carrying.doing}.`,

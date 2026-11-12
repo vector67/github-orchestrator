@@ -471,7 +471,9 @@ export function draftOf(
     side: side ?? 'RIGHT',
     editable: !busy(conversation),
     enrolled: conversation.state === 'enrolled',
-    posting: outstanding(conversation)?.kind === 'post-now',
+    posting:
+      outstanding(conversation)?.kind === 'post-now' ||
+      postingToGitHub(details.operations),
     ...writtenOn(conversation, reviewSending),
   };
 }
@@ -937,9 +939,9 @@ function deferralNotes(
 }
 
 function queuedNote(conversation: Conversation): Note[] {
-  if (!busy(conversation)) return [];
-  const kind = outstanding(conversation)?.kind ?? '';
-  return [{ kind: 'queued', text: inFlight(kind) }];
+  const going = outstanding(conversation);
+  if (!busy(conversation) || (going && postsToGitHub(going))) return [];
+  return [{ kind: 'queued', text: inFlight(going?.kind ?? '') }];
 }
 
 function workNotes(
