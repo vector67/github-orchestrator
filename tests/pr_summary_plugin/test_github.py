@@ -1,8 +1,17 @@
 import subprocess
+from collections.abc import Callable
 from typing import Any
 
 import pytest
-from pr_summary.github import GhFailed, gh_cli, pull_request
+from pr_summary.github import (
+    Gh,
+    GhFailed,
+    changed_files,
+    contents,
+    gh_cli,
+    pull_request,
+    target,
+)
 
 CUT_OFF = subprocess.CompletedProcess(["gh"], 1, b"", b"unexpected end of JSON input\n")
 NOT_FOUND = subprocess.CompletedProcess(["gh"], 1, b"", b"gh: Not Found (HTTP 404)\n")
@@ -47,3 +56,31 @@ def test_any_other_failure_is_not_asked_for_again(monkeypatch: pytest.MonkeyPatc
 def test_a_cut_off_body_from_a_gh_that_exited_cleanly_fails(body: bytes) -> None:
     with pytest.raises(GhFailed, match="not JSON"):
         pull_request(lambda args: body, "acme", "widgets", 1)
+
+
+CUT_OFF_BODY = b'{"data": {"repos'
+
+
+def answering_first(first: bytes) -> Gh:
+    calls: list[list[str]] = []
+
+    def gh(args: list[str]) -> bytes:
+        calls.append(args)
+        return first if len(calls) == 1 else CUT_OFF_BODY
+
+    return gh
+
+
+@pytest.mark.parametrize(
+    "read",
+    [
+        pytest.param(lambda: target(lambda args: CUT_OFF_BODY, "7"), id="repository"),
+        pytest.param(lambda: pull_request(answering_first(b'{"data": {"repository": {"pullRequest": {}}}}'), "acme", "widgets", 1), id="paged"),
+        pytest.param(lambda: changed_files(lambda args: CUT_OFF_BODY, "acme", "widgets", 1), id="changed files"),
+        pytest.param(lambda: contents(lambda args: CUT_OFF_BODY, "acme", "widgets")("abc", "a.py"), id="contents"),
+        pytest.param(lambda: contents(answering_first(b'{"type": "file", "sha": "def"}'), "acme", "widgets")("abc", "a.py"), id="blob"),
+    ],
+)
+def test_every_read_of_a_cut_off_body_fails_cleanly(read: Callable[[], object]) -> None:
+    with pytest.raises(GhFailed, match="not JSON"):
+        read()

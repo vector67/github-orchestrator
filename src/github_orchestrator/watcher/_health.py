@@ -13,6 +13,7 @@ class HealthFiles:
         self._heartbeat = config.heartbeat
         self._lock = config.lock
         self._failures = config.failures
+        self._mentions_failure = config.mentions_failure
         self._poll_interval = config.poll_interval
         self._clock = clock
 
@@ -25,6 +26,7 @@ class HealthFiles:
             last_error=failures.last_error if failures.consecutive else None,
             fix=failures.fix if failures.consecutive else None,
             polls_every=datetime.timedelta(seconds=self._poll_interval),
+            mentions_error=_mentions_error(self._mentions_failure),
         )
 
 
@@ -39,6 +41,13 @@ def _watcher_lock_held(path: Path) -> bool | None:
                 return True
             fcntl.flock(handle, fcntl.LOCK_UN)
             return False
+    except OSError:
+        return None
+
+
+def _mentions_error(path: Path) -> str | None:
+    try:
+        return path.read_text() or None
     except OSError:
         return None
 

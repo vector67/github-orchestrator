@@ -59,6 +59,12 @@ export function pollOf(
   if (watcher.last_error) {
     return { text: `polls failing: ${watcher.last_error}`, alarm: true };
   }
+  if (watcher.mentions_error) {
+    return {
+      text: `mentions search failing: ${watcher.mentions_error}`,
+      alarm: true,
+    };
+  }
   if (!polled) return { text: 'no poll yet', alarm: false };
   if (watcher.overdue) {
     return { text: `no poll since ${agedAt(polled, now)}`, alarm: true };
@@ -144,6 +150,13 @@ export function factsOf(
   }
   if (watcher.last_error) {
     facts.push({ label: 'Last error', text: watcher.last_error, alarm: true });
+  }
+  if (watcher.mentions_error) {
+    facts.push({
+      label: 'Mentions search',
+      text: `failing: ${watcher.mentions_error}`,
+      alarm: true,
+    });
   }
   facts.push({
     label: 'Today',

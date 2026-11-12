@@ -122,6 +122,15 @@ def test_a_stopped_watcher_with_a_streak_still_says_it_is_not_running(machine, r
     assert "poll blew up" in health
 
 
+def test_a_failing_mentions_search_is_named_on_its_own_line_with_its_reason(machine, run_cli):
+    _beat(machine, 42)
+    machine.settings().mentions_failure.write_text("config.toml: mentions_start must be in quotes")
+    with _lock(machine):
+        assert (_health(run_cli), _line(run_cli, "Mentions search:")) == (
+            "Watcher: alive, last polled 42s ago",
+            "Mentions search: failing — config.toml: mentions_start must be in quotes")
+
+
 def test_a_multi_line_error_stays_on_one_status_line(machine, run_cli):
     _fail(machine, "gh: Not Found\nrun gh auth login")
     assert _health(run_cli).endswith("last error: gh: Not Found run gh auth login")

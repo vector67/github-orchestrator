@@ -422,10 +422,13 @@ class PollingWatcher:
             log.exception("Could not start the next summary")
         try:
             self._mentions_inbox.search_if_due()
-        except StartUnread:
-            raise
+        except StartUnread as unread:
+            log.warning("mentions not searched: %s", unread)
+            self._saving.mentions_unread(unread)
         except Exception:
             log.exception("Could not search for mentions")
+        else:
+            self._saving.mentions_read()
         try:
             self._mentions_inbox.settle_deferrals(self._polled_now())
         except Exception:

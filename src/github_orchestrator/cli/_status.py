@@ -106,6 +106,8 @@ def status(config: CliConfig, config_file: ConfigFile, *, queues: Queues, change
         print("Watcher: running, polling nothing until the config is complete")
     else:
         print(_health_line(health, alive=answer is not None or health.alive))
+        if health.mentions_error is not None:
+            print(f"Mentions search: failing — {' '.join(health.mentions_error.split())}")
     print_agents_disabled_notice(config, config_file)
     if config.font_problem is not None:
         print(f"Font: {config.font_problem}")

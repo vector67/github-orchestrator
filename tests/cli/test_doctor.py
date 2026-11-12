@@ -426,6 +426,18 @@ def test_a_failing_watcher_names_its_last_error(machine, run_cli):
     assert failing.fix == "github-orchestrator logs shows the whole error"
 
 
+def test_a_failing_mentions_search_names_its_reason_and_leaves_the_watcher_ok(machine, run_cli):
+    _beat(machine, 34)
+    machine.settings().mentions_failure.write_text("config.toml: mentions_start must be in quotes")
+    with _watcher_lock(machine):
+        ran = run_cli("doctor")
+
+    failing = _finding(ran.out, "the mentions search is failing")
+    assert failing.level == "FAIL"
+    assert failing.reason.endswith("config.toml: mentions_start must be in quotes")
+    assert _finding(ran.out, "the watcher last polled 34s ago").level == "ok"
+
+
 def test_a_watcher_that_stopped_polling_says_to_restart(machine, run_cli):
     _beat(machine, 3600)
     with _watcher_lock(machine):
