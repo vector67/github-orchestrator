@@ -165,6 +165,37 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(rows(), ['o/r#8']);
   });
 
+  test('a wall shelved while the feed named its groups still shows them', async function (assert) {
+    localStorage.setItem(
+      'hub-pull-requests',
+      wallOf(
+        [
+          heldPr(),
+          heldPr({
+            number: 10,
+            dashboard: { facts: factsFor('fix-ci', { draft: true }) },
+          }),
+        ],
+        {
+          groups: [
+            { group: 'needs-you', name: 'Needs you' },
+            { group: 'agent-working', name: 'Agent working' },
+            { group: 'waiting-on-others', name: 'Waiting on others' },
+            { group: 'parked', name: 'Parked' },
+          ],
+        },
+      ),
+    );
+    board().broken = /\/api\/pull-requests$/;
+
+    await visit('/');
+
+    assert.deepEqual(texts('[data-test-wall-group]'), [
+      'Waiting on others 1',
+      'Parked 1',
+    ]);
+  });
+
   test('the hub opens on the wall, its groups in the feed’s order and each row led by its verb', async function (assert) {
     onTheHub(
       heldPr(),

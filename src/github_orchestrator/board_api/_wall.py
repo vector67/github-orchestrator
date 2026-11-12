@@ -11,13 +11,6 @@ from github_orchestrator.board_api.interface import (
 from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.pr_summaries import PrSummaries
 
-GROUP_NAMES = {
-    WallGroup.NEEDS_YOU: "Needs you",
-    WallGroup.AGENT_WORKING: "Agent working",
-    WallGroup.WAITING_ON_OTHERS: "Waiting on others",
-    WallGroup.PARKED: "Parked",
-}
-
 
 class Wall:
     def __init__(self, dashboards: Dashboards, watching: Collection[Repo],
@@ -29,8 +22,7 @@ class Wall:
     def read(self, held: Held) -> contract.HeldPullRequests:
         return contract.HeldPullRequests(
             watching=self._watching,
-            groups=[contract.WallGroupName(group=group, name=GROUP_NAMES[group])
-                    for group in WallGroup],
+            groups=list(WallGroup),
             pull_requests=[self._row(pr, manager) for pr, manager in sorted(
                 held.managers.items(), key=lambda one: (str(one[0].repo), one[0].number))])
 

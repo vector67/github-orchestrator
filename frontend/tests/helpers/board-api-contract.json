@@ -4945,7 +4945,7 @@
    "properties": {
     "groups": {
      "items": {
-      "$ref": "#/components/schemas/WallGroupName"
+      "$ref": "#/components/schemas/WallGroup"
      },
      "type": "array"
     },
@@ -8867,21 +8867,6 @@
     "parked"
    ],
    "type": "string"
-  },
-  "WallGroupName": {
-   "properties": {
-    "group": {
-     "$ref": "#/components/schemas/WallGroup"
-    },
-    "name": {
-     "type": "string"
-    }
-   },
-   "required": [
-    "group",
-    "name"
-   ],
-   "type": "object"
   },
   "WatcherHealth": {
    "properties": {
