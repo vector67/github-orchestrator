@@ -1002,8 +1002,8 @@ module('Acceptance | pr diff', function (hooks) {
 
       async function chosen(choice: string) {
         await click('[data-test-settings-open]');
-        await click('[data-test-request-session-open]');
-        await click(`[data-test-request-session-choice="${choice}"]`);
+        await click('[data-test-agent-session-open]');
+        await click(`[data-test-agent-session-choice="${choice}"]`);
         await click('[aria-label="close the settings"]');
       }
 
@@ -1116,26 +1116,24 @@ module('Acceptance | pr diff', function (hooks) {
         assert.deepEqual(requested(), [asked(false), asked(false, 19)]);
 
         await click('[data-test-settings-open]');
-        await click('[data-test-request-session-open]');
+        await click('[data-test-agent-session-open]');
 
-        assert
-          .dom('[data-test-request-session-choice="invisible"]')
-          .isChecked();
+        assert.dom('[data-test-agent-session-choice="invisible"]').isChecked();
       });
 
       test('the setting offers ask, always visible and always invisible, and asking again brings the question back', async function (assert) {
         await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
         await click('[data-test-settings-open]');
-        await click('[data-test-request-session-open]');
+        await click('[data-test-agent-session-open]');
 
-        assert.deepEqual(texts('[data-test-request-session-choices] label'), [
+        assert.deepEqual(texts('[data-test-agent-session-choices] label'), [
           'Ask me each time',
           'Always visible',
           'Always invisible',
         ]);
-        assert.dom('[data-test-request-session-choice="ask"]').isChecked();
+        assert.dom('[data-test-agent-session-choice="ask"]').isChecked();
 
-        await click('[data-test-request-session-choice="visible"]');
+        await click('[data-test-agent-session-choice="visible"]');
         await click('[aria-label="close the settings"]');
         await typed();
         await click('[data-test-box-request]');

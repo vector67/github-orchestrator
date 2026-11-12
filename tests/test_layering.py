@@ -105,6 +105,22 @@ def test_the_kernel_imports_nothing():
         )
 
 
+ATOMIC_WRITE = "github_orchestrator.atomic_write"
+
+
+def _file_helper(module):
+    return _under(module, ATOMIC_WRITE)
+
+
+def test_the_atomic_write_imports_nothing():
+    path = SOURCE / "atomic_write.py"
+    for imported in _imported(ATOMIC_WRITE, path, False):
+        assert _stdlib(imported), (
+            f"{ATOMIC_WRITE} imports {imported}; every package may write a file "
+            f"through it, so it imports nothing of theirs"
+        )
+
+
 @pytest.mark.parametrize("entry", sorted(KERNEL_ENTRIES))
 def test_a_kernel_entry_is_an_immutable_value(entry):
     value = getattr(importlib.import_module(KERNEL), entry)
@@ -479,7 +495,8 @@ def test_a_package_imports_only_what_it_may(short):
         if name in {f"{_full(short)}.{entry}" for entry in package.builds_the_container}:
             allowed = (*allowed, "wiring")
         for imported in _imported(name, path, is_package):
-            assert _shared(imported) or any(_reaches(imported, a) for a in allowed), (
+            assert (_shared(imported) or _file_helper(imported)
+                    or any(_reaches(imported, a) for a in allowed)), (
                 f"{name} imports {imported}; {package.role}"
             )
     assert walked > 3, f"the walk found no {short} package to check"

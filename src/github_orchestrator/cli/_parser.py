@@ -11,9 +11,6 @@ _GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("service", ("start", "stop", "restart", "restart-all", "hold-restarts", "allow-restarts")),
     ("maintenance", ("update", "doctor", "config", "uninstall", "setup", "skill")),
     ("learning", ("tutorial", "help")),
-)
-
-_DEBUGGING: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("agents", ("thread",)),
     ("debugging", ("queue", "undismiss")),
 )
@@ -54,9 +51,8 @@ class Commands:
         help_parser = command(
             "help", "List the commands, or show one command's help.", "help logs",
             "With a command, prints the same page as <command> --help; name a verb after "
-            "thread, as in help thread ready, for that verb's page. Without one, lists the "
-            "commands people run day to day; --help lists the agents' and the debugging "
-            "commands too.")
+            "thread, as in help thread ready, for that verb's page. Without one, lists every "
+            "command, as --help does.")
         help_parser.add_argument(
             "topic", nargs="*", metavar="<command>",
             help="The command to explain, and for thread the verb (default: list the commands)")
@@ -216,19 +212,16 @@ class Commands:
 
         self._lines["thread"] = THREAD_LINE
         self.thread_parser = add_thread_parsers(sub)
-        self.parser.description = self._listing(_GROUPS + _DEBUGGING)
+        self.parser.description = self._listing()
 
     def help(self, topic: list[str]) -> None:
-        if not topic:
-            print(self._listing(_GROUPS))
-        else:
-            self.parser.parse_args([*topic, "--help"])
+        self.parser.parse_args([*topic, "--help"])
 
-    def _listing(self, groups: tuple[tuple[str, tuple[str, ...]], ...]) -> str:
-        width = max(len(name) for _, names in groups for name in names)
+    def _listing(self) -> str:
+        width = max(len(name) for _, names in _GROUPS for name in names)
         sections = [
             "\n".join([f"{title}:", *(f"  {name.ljust(width)}  {self._lines[name]}" for name in names)])
-            for title, names in groups
+            for title, names in _GROUPS
         ]
         return "\n\n".join([_ABOUT, *sections])
 

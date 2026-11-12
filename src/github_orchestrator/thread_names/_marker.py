@@ -1,6 +1,7 @@
 import json
-import os
 from pathlib import Path
+
+from github_orchestrator.atomic_write import write_atomically
 
 LAYOUT = 1
 
@@ -14,6 +15,5 @@ def layout_of(marker: Path) -> int:
 
 
 def write_marker(marker: Path, version: str | None) -> None:
-    written = marker.with_name(f".{marker.name}.{os.getpid()}")
-    written.write_text(json.dumps({"layout": LAYOUT, "written_by": version}) + "\n")
-    os.replace(written, marker)
+    write_atomically(marker,
+                     (json.dumps({"layout": LAYOUT, "written_by": version}) + "\n").encode())

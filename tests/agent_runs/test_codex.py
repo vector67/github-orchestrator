@@ -307,23 +307,23 @@ def test_an_answer_carries_on_the_thread_its_own_run_started_not_the_pr_s_newest
     assert "widen the bound" in codex.prompts[-1]
 
 
-def test_an_answer_in_a_session_with_no_codex_session_on_record_is_refused(runs, world, tmp_path):
-    refused = runs.answer_in_session(_thread_fix(tmp_path), "widen the bound")
+def test_an_answer_in_a_session_with_no_codex_session_on_record_resumes_the_newest_with_it(
+        runs, world, tmp_path):
+    assert runs.answer_in_session(_thread_fix(tmp_path), "widen the bound") is None
 
-    assert "no Codex session is recorded for this thread" in refused
-    assert world.pr_processes.sessions.get(THE_PR, []) == []
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv[:3] == ["codex", "resume", "--last"]
+    assert "widen the bound" in session.argv[3]
+    assert len(session.argv) == 4
 
 
-def test_an_answer_with_no_codex_session_on_record_is_refused_and_starts_nothing(
-        runs, world, codex, tmp_path):
-    world.script(Outcome(events=({"type": "thread.started", "thread_id": OTHER_THREAD},)))
-    finish(_start(runs, tmp_path))
-    spawned = len(codex.spawned)
+def test_an_answer_with_no_codex_session_on_record_resumes_the_newest_with_it_on_stdin(
+        runs, codex, tmp_path):
+    finish(runs.answer_thread(_thread_fix(tmp_path, note="widen the bound")))
 
-    refused = runs.answer_thread(_thread_fix(tmp_path, note="widen the bound"))
-
-    assert "no Codex session is recorded for this thread" in refused
-    assert len(codex.spawned) == spawned
+    [spawned] = codex.spawned
+    assert spawned.argv[-3:] == ["resume", "--last", "-"]
+    assert "widen the bound" in codex.prompts[-1]
 
 
 def test_a_codex_turn_reads_on_the_board_as_what_it_said_and_ran(runs, world, tmp_path):

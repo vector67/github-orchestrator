@@ -347,7 +347,7 @@ def test_an_interrupted_count_keeps_the_old_record_and_leaves_no_partial_file(
     _fail_once(settings, "second")
 
     assert health(settings).last_error.endswith("; first")
-    assert list(settings.watcher_failures.parent.glob("*.tmp")) == []
+    assert list(settings.watcher_failures.parent.glob("*.writing")) == []
 
 
 def test_a_cycle_failing_while_gh_has_no_token_for_the_account_says_to_log_in(settings):
