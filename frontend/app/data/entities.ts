@@ -28,6 +28,7 @@ export type StoredOperation = { id: string } & Partial<
     conversation: string | null;
     state?: HeldState;
     body?: string | null;
+    reply?: string | null;
     local?: boolean;
     listed?: string[];
     answer?: string;

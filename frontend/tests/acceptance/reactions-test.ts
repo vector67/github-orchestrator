@@ -6,6 +6,8 @@ import {
   find,
   triggerEvent,
   visit,
+  waitFor,
+  waitUntil,
 } from '@ember/test-helpers';
 import {
   added,
@@ -92,6 +94,27 @@ module('Acceptance | reactions', function (hooks) {
     ]);
     assert.deepEqual(pills(), [['heart', '❤️ 1', true]]);
     assert.dom('[data-test-reaction-option]').doesNotExist('the picker closes');
+  });
+
+  test('a reaction shows Posting to GitHub… in place of the card’s buttons until GitHub has it', async function (assert) {
+    seed([{ content: 'eyes', count: 1, mine: false }]);
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const release = board().hold(/:react$/);
+
+    const reacting = click('[data-test-reaction="eyes"]');
+    await waitFor('#panel-actions [data-test-posting]');
+
+    assert
+      .dom('#panel-actions [data-test-posting]')
+      .hasText('Posting to GitHub…');
+    assert.dom('#panel-actions [data-test-decision]').doesNotExist();
+
+    release();
+    await reacting;
+    await waitUntil(() => pills()[0]?.[2] === true);
+
+    assert.dom('#panel-actions [data-test-posting]').doesNotExist();
+    assert.dom('#panel-actions [data-test-decision]').exists();
   });
 
   test('the picker opens over the page just under the smiley and moves nothing in the thread', async function (assert) {

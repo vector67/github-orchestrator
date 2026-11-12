@@ -1,6 +1,12 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, fillIn, triggerEvent, visit } from '@ember/test-helpers';
+import {
+  click,
+  fillIn,
+  triggerEvent,
+  visit,
+  waitFor,
+} from '@ember/test-helpers';
 import type { Conversation } from 'frontend/data/api';
 import {
   operation,
@@ -9,6 +15,11 @@ import {
   type FakeBoard,
   type Phase,
 } from 'frontend/tests/helpers/fake-board';
+import { setupFakeClock } from 'frontend/tests/helpers/fake-clock';
+
+const LIST = 5000;
+
+const POSTING = '#panel-actions [data-test-posting]';
 
 function offered(): readonly string[] {
   return [...document.querySelectorAll('[data-test-decision]')].map((button) =>
@@ -463,13 +474,20 @@ module('Acceptance | verbs | a draft', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
 
-  test('Post now asks in a dialog that submits with Post now', async function (assert) {
+  test('Post now posts the draft at once, with no dialog', async function (assert) {
     board().actAs('reviewer');
     await open(board(), 'draft');
 
+    assert
+      .dom('[data-test-decision="post-now"]')
+      .doesNotHaveAttribute('data-opens-dialog');
     await click('[data-test-decision="post-now"]');
 
-    assert.dom('[data-test-dialog-submit]').hasText('Post now');
+    assert.dom('[data-test-dialog]').doesNotExist();
+    assert.deepEqual(
+      board().posted.map((one) => one.verb),
+      ['post-now'],
+    );
   });
 
   for (const role of ['author', 'reviewer'] as const) {
@@ -489,7 +507,7 @@ module('Acceptance | verbs | a draft', function (hooks) {
     });
   }
 
-  test('a draft being posted offers nothing more', async function (assert) {
+  test('a draft being posted shows Posting to GitHub… in place of its buttons', async function (assert) {
     board().actAs('reviewer');
 
     await open(
@@ -505,6 +523,7 @@ module('Acceptance | verbs | a draft', function (hooks) {
     );
 
     assert.deepEqual(offered(), []);
+    assert.dom(POSTING).hasText('Posting to GitHub…');
   });
 
   test('every draft verb says what it does and answers to a key of its own', async function (assert) {
@@ -524,19 +543,16 @@ module('Acceptance | verbs | a draft', function (hooks) {
     assert
       .dom('[data-test-dialog]')
       .doesNotExist('g is the Git palette on the Dashboard, not Post now');
-    await triggerEvent(document, 'keydown', { key: 'G' });
-    assert
-      .dom('[data-test-dialog-question]')
-      .hasText('Post this comment to GitHub now, on its own?');
-    await triggerEvent(document, 'keydown', { key: 'Escape' });
     await triggerEvent(document, 'keydown', { key: 'e' });
     await triggerEvent(document, 'keydown', { key: 'd' });
     await visit('/pr/o/r/7/conversations/k1');
     await triggerEvent(document, 'keydown', { key: 'l' });
+    await visit('/pr/o/r/7/conversations/k0');
+    await triggerEvent(document, 'keydown', { key: 'G' });
 
     assert.deepEqual(
       board().posted.map((one) => one.verb),
-      ['enrol', 'discard', 'withdraw-from-review'],
+      ['enrol', 'discard', 'withdraw-from-review', 'post-now'],
     );
   });
 
@@ -551,7 +567,6 @@ module('Acceptance | verbs | a draft', function (hooks) {
     await click('[data-test-decision="enrol"]');
     await click('[data-test-decision="discard"]');
     await click('[data-test-decision="post-now"]');
-    await click('[data-test-dialog-submit]');
     await visit('/pr/o/r/7/conversations/k1');
     await click('[data-test-decision="withdraw-from-review"]');
 
@@ -564,5 +579,87 @@ module('Acceptance | verbs | a draft', function (hooks) {
         ['/pr/o/r/7/api/conversations/k1/operations:withdraw-from-review', {}],
       ],
     );
+  });
+});
+
+module('Acceptance | verbs | posting to GitHub', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+  const clock = setupFakeClock(hooks);
+
+  test('Post now shows Posting to GitHub… in place of the buttons until GitHub has the comment, then the waiting card’s buttons', async function (assert) {
+    board().actAs('reviewer');
+    await open(board(), 'draft');
+    const release = board().hold(/operations:post-now$/);
+
+    const posting = click('[data-test-decision="post-now"]');
+    await waitFor(POSTING);
+
+    assert.dom(POSTING).hasText('Posting to GitHub…');
+    assert.dom('#panel-actions').hasAttribute('data-pending');
+    assert.deepEqual(offered(), []);
+
+    release();
+    await posting;
+
+    assert
+      .dom(POSTING)
+      .hasText('Posting to GitHub…', 'the board has it, GitHub not yet');
+    assert.deepEqual(offered(), []);
+
+    board().conversations = [board().threadIn('waiting', { key: 'k1' })];
+    await clock().tick(LIST);
+
+    assert.dom(POSTING).doesNotExist();
+    assert.deepEqual(offered(), ['Resolve', 'Mark done', 'Defer', 'Move']);
+  });
+
+  test('a reply posted with Not fixed shows Posting to GitHub… in place of the buttons', async function (assert) {
+    board().actAs('reviewer');
+    await open(board(), 'answered');
+    await click('[data-test-decision="not-fixed"]');
+    await fillIn('[data-test-dialog-body]', 'Not fixed — still in the loop.');
+    const release = board().hold(/operations:reply$/);
+
+    const posting = click('[data-test-dialog-submit]');
+    await waitFor(POSTING);
+
+    assert.dom(POSTING).hasText('Posting to GitHub…');
+    assert.deepEqual(offered(), []);
+
+    release();
+    await posting;
+  });
+
+  test('Reply and mark done shows Posting to GitHub… in place of the buttons until GitHub has the reply', async function (assert) {
+    const answered = board().threadIn('answered', { key: 'k1', kind: 'issue' });
+    board().conversations = [answered];
+    await visit('/pr/o/r/7/conversations/k1');
+    await click('[data-test-decision="reply-and-mark-done"]');
+    await fillIn('[data-test-dialog-body]', 'Thanks, done in the next commit.');
+    const release = board().hold(/operations:mark-done$/);
+
+    const posting = click('[data-test-dialog-submit]');
+    await waitFor(POSTING);
+
+    assert.dom(POSTING).hasText('Posting to GitHub…');
+    assert.deepEqual(offered(), []);
+
+    release();
+    await posting;
+    board().conversations = [
+      {
+        ...answered,
+        operations: [
+          ...answered.operations,
+          summary({ id: 'op_1', kind: 'resolve', state: 'pending' }),
+        ],
+      },
+    ];
+    await clock().tick(LIST);
+
+    assert
+      .dom(POSTING)
+      .hasText('Posting to GitHub…', 'the board has it, GitHub not yet');
   });
 });

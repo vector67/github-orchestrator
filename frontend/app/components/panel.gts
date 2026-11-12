@@ -27,6 +27,7 @@ function offersAnything(panel: Panel) {
   return (
     Boolean(panel.actions?.length) ||
     Boolean(panel.footer.refused) ||
+    panel.footer.posting ||
     panel.check_for_fixes
   );
 }

@@ -11,6 +11,7 @@ import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
+  POSTING_TO_GITHUB,
   redAsksOf,
   REPLY_KEY,
   type AreYouSure as AreYouSureAsking,
@@ -109,8 +110,14 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     return this.drafts.unsaved(this.args.conversationId, draft);
   };
 
+  readonly postingWord = POSTING_TO_GITHUB;
+
+  get posting(): boolean {
+    return this.args.footer.posting;
+  }
+
   get pending(): boolean {
-    return this.args.footer.pressed !== null;
+    return this.args.footer.pressed !== null || this.posting;
   }
 
   pressed = (offered: Offer): boolean =>
@@ -252,25 +259,29 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       {{#if @footer.refused}}
         <p class="refusal" data-test-refusal>{{@footer.refused}}</p>
       {{/if}}
-      {{#each @actions key="decision" as |offered|}}
-        <button
-          type="button"
-          class="decide {{offered.decision}}"
-          data-weight={{offered.weight}}
-          title={{this.titleOf offered}}
-          disabled={{this.unavailable offered}}
-          data-opens-dialog={{if (this.opensDialog offered) "true"}}
-          data-runs-agent={{if offered.runsAgent "true"}}
-          data-test-decision={{offered.decision}}
-          {{on "click" (fn this.decide offered)}}
-        >{{#if (this.ringed offered)}}<PendingRing />{{/if}}{{this.labelOf
-            offered
-          }}<Glyphs
-            @opensDialog={{this.opensDialog offered}}
-            @runsAgent={{offered.runsAgent}}
-          />
-          <kbd>{{offered.cap}}</kbd></button>
-      {{/each}}
+      {{#if this.posting}}
+        <p class="posting" data-test-posting>{{this.postingWord}}</p>
+      {{else}}
+        {{#each @actions key="decision" as |offered|}}
+          <button
+            type="button"
+            class="decide {{offered.decision}}"
+            data-weight={{offered.weight}}
+            title={{this.titleOf offered}}
+            disabled={{this.unavailable offered}}
+            data-opens-dialog={{if (this.opensDialog offered) "true"}}
+            data-runs-agent={{if offered.runsAgent "true"}}
+            data-test-decision={{offered.decision}}
+            {{on "click" (fn this.decide offered)}}
+          >{{#if (this.ringed offered)}}<PendingRing />{{/if}}{{this.labelOf
+              offered
+            }}<Glyphs
+              @opensDialog={{this.opensDialog offered}}
+              @runsAgent={{offered.runsAgent}}
+            />
+            <kbd>{{offered.cap}}</kbd></button>
+        {{/each}}
+      {{/if}}
       {{#if @checksForFixes}}
         <CheckForFixes @conversation={{@conversationId}} />
       {{/if}}

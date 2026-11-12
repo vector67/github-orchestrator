@@ -2460,6 +2460,12 @@ button.expander:focus-visible {
   color: var(--muted);
 }
 
+#panel-actions .posting {
+  margin: 0;
+  font-size: var(--fs-m);
+  color: var(--muted);
+}
+
 #panel-actions .actions-note {
   flex: 1;
   min-width: 0;

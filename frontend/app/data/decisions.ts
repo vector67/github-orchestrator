@@ -662,16 +662,10 @@ const ENTRIES = {
     label: 'Post now',
     weight: 'secondary',
     title:
-      'posts this draft to GitHub on its own, as a single review comment, ' +
-      'without waiting for the review — public, and the board cannot take it back',
-    asks: {
-      question: 'Post this comment to GitHub now, on its own?',
-      note:
-        'It goes out as a single review comment on its line, and the author ' +
-        'is told of it alone rather than with your review. The board cannot ' +
-        'take it back.',
-      reply: false,
-    },
+      'posts this draft to GitHub now, on its own, as a single review comment ' +
+      'on its line, without waiting for the review — public, and the board ' +
+      'cannot take it back',
+    asks: null,
     savedFirst: true,
     doing: 'posting it',
     square: 'waiting',
@@ -1013,6 +1007,7 @@ export type Kind =
   | 'create-draft'
   | 'request-change'
   | 'check-session'
+  | 'react'
   | AnswerKind
   | 'send-review'
   | 'prepare-harvest-extension'
@@ -1036,6 +1031,10 @@ const CARRIED: Record<Kind, Carrying> = {
   },
   'check-session': {
     doing: 'checking the session',
+    square: null,
+  },
+  react: {
+    doing: 'reacting',
     square: null,
   },
   answer: {
@@ -1747,6 +1746,29 @@ export function editAsks(
     placeholder: '',
     submit: () => EDIT,
   };
+}
+
+export const POSTING_TO_GITHUB = 'Posting to GitHub…';
+
+const POSTS_TO_GITHUB: Kind[] = [
+  'post-now',
+  'reply',
+  'not-fixed',
+  'reply-and-mark-done',
+  'react',
+];
+
+const CLOSES: Kind[] = ['resolve', 'reject'];
+
+export function postsToGitHub(write: {
+  kind?: string;
+  reply?: string | null;
+}): boolean {
+  const kind = (write.kind ?? '') as Kind;
+  return (
+    POSTS_TO_GITHUB.includes(kind) ||
+    (CLOSES.includes(kind) && Boolean(write.reply))
+  );
 }
 
 export function inFlight(kind: string): string {

@@ -1674,7 +1674,10 @@ export class FakeBoard {
         : verb === 'mark-done'
           ? 'resolve'
           : (verb as Exclude<OperationKind, 'file' | 'open' | 'reconcile'>);
-    const listed = verb === 'reply' ? this.listReply(asked, id) : asked;
+    const listed =
+      verb === 'reply' || verb === 'post-now'
+        ? this.listPost(asked, id, verb)
+        : asked;
     return this.json(202, {
       operation: operation({
         id,
@@ -1687,17 +1690,24 @@ export class FakeBoard {
         ...(verb === 'answer'
           ? { answer: (body as { text: string }).text }
           : {}),
+        ...(verb === 'mark-done' || verb === 'resolve'
+          ? { reply: (body as { reply?: string }).reply ?? null }
+          : {}),
       } as Partial<Operation>),
       conversation: listed,
     });
   }
 
-  private listReply(asked: Conversation, id: string): Conversation {
+  private listPost(
+    asked: Conversation,
+    id: string,
+    kind: 'reply' | 'post-now',
+  ): Conversation {
     const listed = {
       ...asked,
       operations: [
         ...asked.operations,
-        summary({ id, kind: 'reply', state: 'running' }),
+        summary({ id, kind, state: 'running' }),
       ],
     };
     this.conversations = this.conversations.map((one) =>

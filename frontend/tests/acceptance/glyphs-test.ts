@@ -133,6 +133,16 @@ module('Acceptance | glyphs', function (hooks) {
     assert.strictEqual(find('[data-test-dialog-cancel]')?.tagName, 'BUTTON');
   });
 
+  test('a local draft’s footer acts at once: no button opens a dialog', async function (assert) {
+    board().actAs('reviewer');
+
+    assert.deepEqual(await footerIn(board(), 'draft'), [
+      'enrol',
+      'post-now',
+      'discard',
+    ]);
+  });
+
   test('the reviewer’s answered footer marks each of its dialog openers', async function (assert) {
     board().actAs('reviewer');
 

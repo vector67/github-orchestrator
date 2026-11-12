@@ -35,6 +35,8 @@ function entries(): [string, string][] {
 
 const OPEN = '[data-test-reply-open]';
 
+const POSTING = '#panel-actions [data-test-posting]';
+
 const CLOSE = '[data-test-reply-close]';
 
 const BOX = '[data-test-reply]';
@@ -439,6 +441,45 @@ module('Acceptance | reply', function (hooks) {
 
     assert.dom('[data-test-entry][data-pending]').doesNotExist();
     assert.dom('[data-test-toast]').doesNotExist();
+  });
+
+  test('a reply shows Posting to GitHub… in place of the card’s buttons until GitHub has it, then the next state’s', async function (assert) {
+    await visit('/pr/o/r/7/conversations/k1');
+    await click(OPEN);
+    await fillIn(BOX, 'good catch');
+    const release = board().hold(/operations:reply$/);
+
+    const posting = click('[data-test-reply-send]');
+    await waitFor(POSTING);
+
+    assert.dom(POSTING).hasText('Posting to GitHub…');
+    assert.dom('#panel-actions').hasAttribute('data-pending');
+    assert.dom('#panel-actions [data-test-decision]').doesNotExist();
+
+    release();
+    await posting;
+
+    assert
+      .dom(POSTING)
+      .hasText('Posting to GitHub…', 'the board has it, GitHub not yet');
+
+    const id = `op_${board().posted.length}`;
+    board().conversations = board().conversations.map((one) =>
+      one.key === 'k1'
+        ? {
+            ...one,
+            state: 'waiting',
+            etag: '"k1-v2"',
+            operations: [summary({ id, kind: 'reply', state: 'applied' })],
+          }
+        : one,
+    );
+    await clock().tick(LIST);
+
+    assert.dom(POSTING).doesNotExist();
+    assert
+      .dom('#panel-actions [data-test-decision="unpark"]')
+      .hasText(/Stop waiting/);
   });
 
   test('a pending reply on a long thread is scrolled into view', async function (assert) {

@@ -451,6 +451,11 @@ function askedIn(router: RouterService): string | null {
   return typeof asked === 'string' && asked ? asked : null;
 }
 
+function replied(body: Record<string, unknown>): { reply?: string } {
+  const reply = body['reply'];
+  return typeof reply === 'string' && reply ? { reply } : {};
+}
+
 export default class StoreService extends Service {
   @service declare here: HereService;
   @service declare router: RouterService;
@@ -1452,12 +1457,10 @@ export default class StoreService extends Service {
     etag: string,
     body: Record<string, unknown>,
   ): Promise<Tried<() => void>> {
+    const sent = { ...this.sending(key, kind, body['body']), ...replied(body) };
     const local = opensTerminal(kind)
-      ? await this.listing(
-          pr,
-          this.hold(pr, this.sending(key, kind, body['body'])),
-        )
-      : this.hold(pr, this.sending(key, kind, body['body']));
+      ? await this.listing(pr, this.hold(pr, sent))
+      : this.hold(pr, sent);
     const written = await tried(
       'write',
       write<Outcome>(
@@ -1482,6 +1485,7 @@ export default class StoreService extends Service {
     comment: number,
     asked: ReactRequest,
   ): Promise<Tried<void>> {
+    const local = this.hold(pr, this.sending(key, 'react', null));
     const answer = await tried(
       'react',
       posted<Conversation>(
@@ -1490,6 +1494,7 @@ export default class StoreService extends Service {
         asked,
       ),
     );
+    this.drop(pr, local);
     if (!answer.done) return answer;
     this.takeThread(pr, answer.body.body);
     return { done: true, body: undefined };

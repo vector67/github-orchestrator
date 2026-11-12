@@ -47,6 +47,7 @@ import {
 } from 'frontend/data/thread';
 import {
   inFlight,
+  postsToGitHub,
   offered,
   partOffers,
   writtenOn,
@@ -192,6 +193,7 @@ export interface Footer {
   pressed: string | null;
   ring: boolean;
   refused: string | null;
+  posting: boolean;
 }
 
 export interface AgentLine {
@@ -1515,6 +1517,11 @@ function agentLineOf(
   };
 }
 
+function postingToGitHub(operations: Operation[]): boolean {
+  const going = operations.findLast(unsettled);
+  return going !== undefined && postsToGitHub(going);
+}
+
 export function panelOf(
   conversation: Conversation,
   details: Details | null,
@@ -1578,6 +1585,7 @@ export function panelOf(
       pressed: written.sending,
       ring: written.ring,
       refused: draft || reply?.refused ? null : written.refused,
+      posting: postingToGitHub(operations),
     },
     can_delete: canDelete(conversation, comments, context.viewer),
     check_for_fixes: checksForFixes(conversation, context),
