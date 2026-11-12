@@ -124,6 +124,8 @@ function outdated(conversation: Conversation): boolean {
   return conversation.kind === 'review' && path !== null && line === null;
 }
 
+const ON_THE_DIFF: Conversation['kind'][] = ['review', 'draft', 'request'];
+
 export function inlineOf(
   conversations: Conversation[],
   seeing: Seeing,
@@ -137,9 +139,7 @@ export function inlineOf(
       stale[path] = [...(stale[path] ?? []), conversation.key];
       continue;
     }
-    if (conversation.kind !== 'review' && conversation.kind !== 'draft') {
-      continue;
-    }
+    if (!ON_THE_DIFF.includes(conversation.kind)) continue;
     const one = inlined(conversation, seeing);
     if (one) shown.push(one);
   }

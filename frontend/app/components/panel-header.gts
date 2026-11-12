@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { squareTitleOf } from 'frontend/data/groups';
 import navigates from 'frontend/modifiers/navigates';
 import type { Panel } from 'frontend/data/panel';
+import { BOARD_ONLY } from 'frontend/data/thread';
 import type BoardKeysService from 'frontend/services/board-keys';
 
 export interface PanelHeaderSignature {
@@ -75,8 +76,7 @@ export default class PanelHeader extends Component<PanelHeaderSignature> {
           {{/if}}
         </span>
         {{#if @panel.board_only}}
-          <span class="board-only" data-test-board-only>On the board only · not
-            posted to GitHub</span>
+          <span class="board-only" data-test-board-only>{{BOARD_ONLY}}</span>
         {{/if}}
         <span class="panel-name">
           <span

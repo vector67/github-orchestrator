@@ -1071,6 +1071,37 @@ module('Acceptance | pr diff', function (hooks) {
         assert.dom('[data-test-comment-box] textarea').hasValue('');
       });
 
+      test('the request shows at its line as soon as the board takes it, marked as on the board only', async function (assert) {
+        const KEY = board().requested;
+        await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
+        await typed();
+        board().conversations = [
+          ...board().conversations,
+          thread({
+            key: KEY,
+            kind: 'request',
+            anchor: {
+              ...thread().anchor,
+              path: 'src/widgets/changes.py',
+              line: 20,
+            },
+            comments: [],
+          }),
+        ];
+        board().comments = {
+          [KEY]: [comment({ id: null, author: 'octocat', body: ASKED })],
+        };
+        await click('[data-test-box-request]');
+
+        await click('[data-test-request-visible="no"]');
+
+        const card = `[data-test-end="+20"] + [data-test-inline] [data-test-card="${KEY}"]`;
+        assert.dom(`${card} [data-test-entry-body]`).hasText(ASKED);
+        assert
+          .dom(`${card} [data-test-standing]`)
+          .hasText('On the board only · not posted to GitHub');
+      });
+
       test('Remember my choice stops the question and becomes the setting', async function (assert) {
         await visit('/pr/o/r/7/diff?file=src%2Fwidgets%2Fchanges.py');
         await typed();
@@ -1311,6 +1342,45 @@ module('Acceptance | pr diff', function (hooks) {
       assert
         .dom(`${folded} [data-test-show-resolved]`)
         .hasText('Comment on lines R17 to R19 Resolved');
+    });
+
+    test('a requested change shows under its line, says it is on the board only and offers nothing that reaches GitHub', async function (assert) {
+      board().conversations = [
+        thread({ key: 'r1', kind: 'request', anchor: anchored(20) }),
+      ];
+      board().comments = {
+        r1: [comment({ id: null, author: 'octocat', body: 'stop early' })],
+      };
+      await visit('/pr/o/r/7/diff');
+
+      const card = `${under('+20')} [data-test-card="r1"]`;
+      assert.dom(`${card} [data-test-entry-body]`).hasText('stop early');
+      assert
+        .dom(`${card} [data-test-standing]`)
+        .hasText('On the board only · not posted to GitHub');
+      assert.dom(`${card} [data-test-react]`).doesNotExist();
+      assert.dom(`${card} [data-test-card-edit]`).doesNotExist();
+      assert.dom(`${card} [data-test-card-ask]`).doesNotExist();
+      assert.dom(`${card} [data-test-card-link]`).hasText('On the board');
+    });
+
+    test('a requested change that is done folds like a resolved thread', async function (assert) {
+      board().conversations = [
+        thread({
+          key: 'r1',
+          kind: 'request',
+          state: 'done',
+          anchor: anchored(20),
+        }),
+      ];
+      board().comments = {
+        r1: [comment({ id: null, author: 'octocat', body: 'stop early' })],
+      };
+      await visit('/pr/o/r/7/diff');
+
+      const folded = `${under('+20')} [data-test-card="r1"]`;
+      assert.dom(`${folded} [data-test-entry-body]`).doesNotExist();
+      assert.dom(`${folded} [data-test-show-resolved]`).exists();
     });
 
     test('a posted comment in the diff takes a reaction, and a draft offers none', async function (assert) {

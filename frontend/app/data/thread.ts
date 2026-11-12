@@ -112,15 +112,19 @@ export const PHASE_HINTS: Record<Phase, string> = {
 export const REOPENED_HINT =
   'you replied, and it is yours again whatever the agent is doing';
 
-export type Standing = 'local' | 'pending' | 'posted';
+export type Standing = 'local' | 'pending' | 'posted' | 'board';
+
+export const BOARD_ONLY = 'On the board only · not posted to GitHub';
 
 export const STANDING_LABELS: Record<Standing, string> = {
   local: 'Local draft',
   pending: 'In your pending review',
   posted: 'Posted',
+  board: BOARD_ONLY,
 };
 
 export function standingOf(conversation: Conversation): Standing {
+  if (conversation.kind === 'request') return 'board';
   if (conversation.kind !== 'draft') return 'posted';
   return conversation.state === 'enrolled' ? 'pending' : 'local';
 }

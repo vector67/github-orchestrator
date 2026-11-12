@@ -6109,6 +6109,11 @@ button.tree-row[aria-current="true"] {
   background: var(--blue-fill);
 }
 
+.standing[data-standing="board"] {
+  color: var(--muted);
+  background: var(--grey-fill);
+}
+
 .inline-card + .inline-card {
   margin-top: 8px;
 }
