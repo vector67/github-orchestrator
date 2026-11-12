@@ -39,7 +39,7 @@ module('Acceptance | harvest timer', function (hooks) {
 
     await switchedOn();
 
-    assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: on');
+    assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: On');
     assert.strictEqual(localStorage.getItem(HARVEST_TIMER), 'on');
     assert.dom('[data-test-harvest-setup]').doesNotExist();
   });

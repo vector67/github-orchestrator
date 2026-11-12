@@ -741,7 +741,7 @@ it lists them to pick from; when none does, it says so.
 
 ### Harvest timer
 
-**Harvest timer: off** in the gear turns it on, and the browser remembers the
+**Harvest timer: Off** in the gear turns it on, and the browser remembers the
 choice. With it on, each PR's title bar has a stopwatch button beside the gear,
 which the Harvest Time Tracker Chrome extension turns into its own timer: the
 entry is named `#<number>: <title>`, filed under the repo's name, and links to

@@ -140,11 +140,11 @@ export default class SettingsMenu extends Component {
   };
 
   get harvestLabel(): string {
-    return `Harvest timer: ${this.harvestSwitch.on ? 'on' : 'off'}`;
+    return `Harvest timer: ${this.harvestSwitch.on ? 'On' : 'Off'}`;
   }
 
   get themeLabel(): string {
-    return `Theme: ${this.theme.dark ? 'dark' : 'light'}`;
+    return `Theme: ${this.theme.dark ? 'Dark' : 'Light'}`;
   }
 
   get sizingLabel(): string {

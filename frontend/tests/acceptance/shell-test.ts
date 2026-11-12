@@ -138,7 +138,7 @@ module('Acceptance | shell', function (hooks) {
       assert
         .dom(document.documentElement)
         .hasAttribute('data-theme', wasDark ? 'light' : 'dark');
-      assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: on');
+      assert.dom('[data-test-harvest-toggle]').hasText('Harvest timer: On');
     } finally {
       Object.defineProperty(window, 'localStorage', storage);
     }
@@ -166,9 +166,9 @@ module('Acceptance | shell', function (hooks) {
         ].map((one) => one.textContent.trim()),
         [
           window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'Theme: dark'
-            : 'Theme: light',
-          'Harvest timer: off',
+            ? 'Theme: Dark'
+            : 'Theme: Light',
+          'Harvest timer: Off',
           'Commit box sizing: Full',
           'Auto read: Off',
           'Agent sessions: Ask me each time',
@@ -186,7 +186,7 @@ module('Acceptance | shell', function (hooks) {
       await visit(page);
       await click('[data-test-settings-open]');
       const wasDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const named = (dark: boolean) => (dark ? 'Theme: dark' : 'Theme: light');
+      const named = (dark: boolean) => (dark ? 'Theme: Dark' : 'Theme: Light');
 
       assert
         .dom('[data-test-theme-toggle]')
