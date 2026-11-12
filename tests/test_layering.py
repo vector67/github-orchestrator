@@ -105,19 +105,20 @@ def test_the_kernel_imports_nothing():
         )
 
 
-ATOMIC_WRITE = "github_orchestrator.atomic_write"
+FILE_HELPERS = ("atomic_write", "log_stamps")
 
 
 def _file_helper(module):
-    return _under(module, ATOMIC_WRITE)
+    return any(_under(module, f"github_orchestrator.{helper}") for helper in FILE_HELPERS)
 
 
-def test_the_atomic_write_imports_nothing():
-    path = SOURCE / "atomic_write.py"
-    for imported in _imported(ATOMIC_WRITE, path, False):
+@pytest.mark.parametrize("helper", FILE_HELPERS)
+def test_a_file_helper_imports_nothing(helper):
+    path = SOURCE / f"{helper}.py"
+    for imported in _imported(f"github_orchestrator.{helper}", path, False):
         assert _stdlib(imported), (
-            f"{ATOMIC_WRITE} imports {imported}; every package may write a file "
-            f"through it, so it imports nothing of theirs"
+            f"github_orchestrator.{helper} imports {imported}; every package may write a "
+            f"file through it, so it imports nothing of theirs"
         )
 
 

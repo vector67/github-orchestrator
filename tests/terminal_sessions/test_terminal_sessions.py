@@ -2,6 +2,7 @@ import os
 import secrets
 import subprocess
 import time
+from datetime import datetime
 
 import pytest
 
@@ -10,6 +11,7 @@ from github_orchestrator.terminal_sessions.fake import (
     FakeTerminals,
     FakeTerminalSessions,
 )
+from github_orchestrator.wiring import terminal_sessions_dir
 from tests.builders import a_pr
 from tests.terminal_sessions.support import real_terminal_sessions, real_terminals
 from tests.waiting import until
@@ -275,6 +277,25 @@ def test_a_session_no_page_connects_to_ends_after_the_wait(settings, worktree):
 
     assert until(lambda: sessions.listed() == [], seconds=5)
     assert sessions.attach(started) is None
+
+
+def _log_of(settings, session: str) -> str:
+    return "".join(log.read_text()
+                   for log in terminal_sessions_dir(settings).rglob(f"{session}.log"))
+
+
+def test_a_session_stamps_each_line_of_its_log_with_its_utc_offset(settings, worktree):
+    sessions = real_terminal_sessions(settings, first_connection_seconds=2.0)
+    before = datetime.now().astimezone().replace(microsecond=0)
+    started = sessions.start(str(worktree), ["sh", "-c", "trap '' HUP; while :; do sleep 0.1; done"])
+    assert until(lambda: "no page connected" in _log_of(settings, started), seconds=10)
+    after = datetime.now().astimezone()
+
+    logged = datetime.fromisoformat(_log_of(settings, started).split(" ", 1)[0])
+    _ended_everything(sessions)
+
+    assert logged.tzinfo is not None
+    assert before <= logged <= after
 
 
 def test_a_kept_session_no_page_connects_to_outlives_the_wait(settings, worktree):

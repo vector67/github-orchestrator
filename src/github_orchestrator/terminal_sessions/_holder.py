@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 from github_orchestrator.atomic_write import write_atomically
+from github_orchestrator.log_stamps import OffsetStampedFormatter
 from github_orchestrator.terminal_sessions._frames import (
     EXIT,
     INPUT,
@@ -263,8 +264,9 @@ def _detached(directory: Path, session: str) -> None:
     os.dup2(written, 2)
     os.close(quiet)
     os.close(written)
-    logging.basicConfig(level=logging.INFO, stream=sys.stderr,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    stderr = logging.StreamHandler(sys.stderr)
+    stderr.setFormatter(OffsetStampedFormatter("%(asctime)s %(levelname)s %(message)s"))
+    logging.basicConfig(level=logging.INFO, handlers=[stderr])
 
 
 def main(arguments: list[str]) -> int:
