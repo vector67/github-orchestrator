@@ -235,15 +235,15 @@ module('Acceptance | dialog', function (hooks) {
     assert.dom('[data-test-reply-kicker]').hasText('Reply to Anna on GitHub');
   });
 
-  test('the accept button says whether it will post the reply too', async function (assert) {
+  test('the accept dialog submits with Accept, with or without a reply typed', async function (assert) {
     await visit('/pr/o/r/7/conversations/k1');
     await click('[data-test-decision="approve"]');
 
-    assert.dom('[data-test-dialog-submit]').hasText('Push commit');
+    assert.dom('[data-test-dialog-submit]').hasText('Accept');
 
     await fillIn('[data-test-dialog-body]', 'thanks, pushed');
 
-    assert.dom('[data-test-dialog-submit]').hasText('Push and post reply');
+    assert.dom('[data-test-dialog-submit]').hasText('Accept');
   });
 
   test('closing the accept dialog with the cross posts nothing', async function (assert) {
@@ -518,9 +518,9 @@ module('Acceptance | dialog', function (hooks) {
       assert.dom('[data-test-commit-message]').doesNotExist();
       assert.dom('[data-test-edit-message]').doesNotExist();
       assert.dom('[data-test-commit-file]').doesNotExist();
-      assert.dom('[data-test-dialog-submit]').hasText('Post the commit link');
+      assert.dom('[data-test-dialog-submit]').hasText('Retry the reply');
       await fillIn('[data-test-dialog-body]', 'pushed, thanks');
-      assert.dom('[data-test-dialog-submit]').hasText('Post the reply');
+      assert.dom('[data-test-dialog-submit]').hasText('Retry the reply');
     });
 
     test('pushing again says nothing new is committed and why it may be refused', async function (assert) {
@@ -536,7 +536,7 @@ module('Acceptance | dialog', function (hooks) {
       assert.dom('[data-test-dialog]').containsText('newer commits');
       assert.dom('[data-test-edit-message]').doesNotExist();
       assert.dom('[data-test-commit-file]').exists({ count: 2 });
-      assert.dom('[data-test-dialog-submit]').hasText('Push again');
+      assert.dom('[data-test-dialog-submit]').hasText('Push it');
     });
 
     test('reject once the fix is pushed says the commit stays on GitHub', async function (assert) {
@@ -573,7 +573,7 @@ module('Acceptance | dialog', function (hooks) {
     assert.dom('[data-test-dialog-body]').doesNotExist();
     assert.dom('[data-test-reply-kicker]').doesNotExist();
     assert.dom('[data-test-resolve]').doesNotExist();
-    assert.dom('[data-test-dialog-submit]').hasText('Push commit');
+    assert.dom('[data-test-dialog-submit]').hasText('Accept');
   });
 
   test('resolving a removed comment asks first, with no reply to write', async function (assert) {
@@ -615,7 +615,7 @@ module('Acceptance | dialog', function (hooks) {
       assert.dom('[data-test-commit-message]').doesNotExist();
       assert.dom('[data-test-commit-file]').doesNotExist();
       assert.dom('[data-test-delete]').doesNotExist();
-      assert.dom('[data-test-dialog-submit]').hasText('Post reply');
+      assert.dom('[data-test-dialog-submit]').hasText('Accept');
     });
 
     test('shows the comment it answers above the reply box', async function (assert) {
@@ -705,9 +705,7 @@ module('Acceptance | dialog', function (hooks) {
       assert.dom('[data-test-commit-message]').doesNotExist();
       assert.dom('[data-test-commit-file]').doesNotExist();
       assert.dom('[data-test-delete]').doesNotExist();
-      assert
-        .dom('[data-test-dialog-submit]')
-        .hasText('File ticket and post reply');
+      assert.dom('[data-test-dialog-submit]').hasText('Accept');
     });
 
     test('retrying the reply once the ticket is filed asks only for the reply', async function (assert) {
@@ -723,7 +721,7 @@ module('Acceptance | dialog', function (hooks) {
       assert
         .dom('[data-test-dialog-body]')
         .hasValue('That belongs outside this PR, so I have proposed a ticket.');
-      assert.dom('[data-test-dialog-submit]').hasText('Post the reply');
+      assert.dom('[data-test-dialog-submit]').hasText('Retry the reply');
     });
 
     test('asks to file the ticket and post the reply as you left them', async function (assert) {

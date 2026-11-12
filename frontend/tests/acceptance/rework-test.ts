@@ -70,6 +70,7 @@ module('Acceptance | rework', function (hooks) {
     await click('[data-test-rework-dialog] [data-test-row="added"]');
     await click('[data-test-include="anna"] input');
     await click('[data-test-rework-visible] input');
+    assert.dom('[data-test-send-rework]').hasText('Start a steered session');
     await click('[data-test-send-rework]');
 
     assert.strictEqual(board().posted.length, 1);
@@ -296,7 +297,7 @@ module('Acceptance | rework', function (hooks) {
     await click('[data-test-decision="rework"]');
 
     assert.dom('[data-test-send-rework]').isDisabled();
-    assert.dom('[data-test-send-rework]').hasText('Send to agent for rework');
+    assert.dom('[data-test-send-rework]').hasText('Send back for rework');
 
     await fillIn('[data-test-rework-body]', '   ');
     assert

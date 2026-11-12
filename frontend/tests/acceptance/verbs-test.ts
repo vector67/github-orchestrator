@@ -126,6 +126,20 @@ module('Acceptance | verbs | the author board', function (hooks) {
     ]);
   });
 
+  test('each dialog a proposal opens submits with its opener’s words', async function (assert) {
+    await open(board(), 'proposed');
+
+    for (const [decision, label] of [
+      ['defer', 'Defer'],
+      ['reject', 'Reject'],
+      ['start-session', 'Steer it yourself'],
+    ] as const) {
+      await click(`[data-test-decision="${decision}"]`);
+      assert.dom('[data-test-dialog-submit]').hasText(label, decision);
+      await click('[data-test-dialog-cancel]');
+    }
+  });
+
   test('a declined run is argued with in its own words', async function (assert) {
     await open(board(), 'declined');
 
@@ -391,6 +405,20 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
       .hasAttribute('title', /resolved on GitHub too/);
   });
 
+  test('each dialog an answered thread opens submits with its opener’s words', async function (assert) {
+    await open(board(), 'answered');
+
+    for (const [decision, label] of [
+      ['not-fixed', 'Not fixed'],
+      ['place', 'Move'],
+      ['defer', 'Defer'],
+    ] as const) {
+      await click(`[data-test-decision="${decision}"]`);
+      assert.dom('[data-test-dialog-submit]').hasText(label, decision);
+      await click('[data-test-dialog-cancel]');
+    }
+  });
+
   test('no agent verb reaches a reviewer', async function (assert) {
     const agents = [
       'approve',
@@ -466,6 +494,15 @@ module('Acceptance | verbs | the reviewer board', function (hooks) {
 module('Acceptance | verbs | a draft', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
+
+  test('Post now asks in a dialog that submits with Post now', async function (assert) {
+    board().actAs('reviewer');
+    await open(board(), 'draft');
+
+    await click('[data-test-decision="post-now"]');
+
+    assert.dom('[data-test-dialog-submit]').hasText('Post now');
+  });
 
   for (const role of ['author', 'reviewer'] as const) {
     test(`a draft on the ${role}'s board is added, posted on its own, thrown away or brought back`, async function (assert) {

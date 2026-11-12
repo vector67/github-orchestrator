@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import DiffSlot from 'frontend/components/diff-slot';
 import modal from 'frontend/modifiers/modal';
+import { reworkSubmit } from 'frontend/data/decisions';
 import { PART_KICKERS, type Fold, type ReworkView } from 'frontend/data/panel';
 import type ReworkService from 'frontend/services/rework';
 
@@ -26,6 +27,10 @@ export default class ReworkDialog extends Component<ReworkDialogSignature> {
   get partName(): string | null {
     const part = this.rework.part;
     return part ? PART_KICKERS[part] : null;
+  }
+
+  get submit(): string {
+    return reworkSubmit(this.rework.part, this.rework.visible);
   }
 
   get counted(): string {
@@ -156,7 +161,7 @@ export default class ReworkDialog extends Component<ReworkDialogSignature> {
             class="primary"
             data-test-send-rework
             disabled={{this.rework.empty}}
-          >{{@rework.send_label}}</button>
+          >{{this.submit}}</button>
           <button
             type="button"
             class="ghost"

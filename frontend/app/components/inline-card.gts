@@ -233,7 +233,9 @@ export default class InlineCard extends Component<InlineCardSignature> {
                   data-runs-agent={{if (runsAgent "ask-the-agent") "true"}}
                   data-test-ask-send
                   disabled={{this.unaskable}}
-                >Ask<Glyphs @runsAgent={{runsAgent "ask-the-agent"}} /></button>
+                >Ask the agent<Glyphs
+                    @runsAgent={{runsAgent "ask-the-agent"}}
+                  /></button>
               </div>
             </form>
           {{/if}}

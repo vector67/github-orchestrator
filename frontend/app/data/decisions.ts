@@ -47,6 +47,8 @@ export interface DialogSpec {
   ) => string;
 }
 
+type Asking = Omit<DialogSpec, 'submit'> & Partial<Pick<DialogSpec, 'submit'>>;
+
 export interface Outcome {
   to: string;
   label: string;
@@ -83,14 +85,12 @@ function droppedOutcomes(proposed: boolean): Outcome[] {
   ];
 }
 
-function placing(outcomes: Outcome[]): DialogSpec {
+function placing(outcomes: Outcome[]): Asking {
   return {
     question: 'Where does this thread stand instead?',
     note: 'Nothing is posted to GitHub. Later… asks when it should come back.',
     reply: false,
     outcomes,
-    submit: (_typed, _resolving, _thumbing, outcome) =>
-      outcome === LATER ? 'Choose when…' : 'Move it',
   };
 }
 
@@ -118,6 +118,8 @@ type Weight = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
 type Asks = DialogSpec | 'rework' | null;
 
+type EntryAsks = Asking | 'rework' | null;
+
 interface Request {
   verb: string;
   body: Record<string, unknown>;
@@ -144,7 +146,7 @@ interface Entry extends Carrying {
   label: string;
   weight: Weight;
   title: string;
-  asks: Asks;
+  asks: EntryAsks;
   savedFirst?: boolean;
   offeredWhen?: (conversation: Conversation) => boolean;
   dialogFor?: (conversation: Conversation) => Partial<DialogSpec>;
@@ -152,7 +154,7 @@ interface Entry extends Carrying {
   inPhase?: Partial<Record<Phase, Shade & { dialog?: Partial<DialogSpec> }>>;
   reviewer?: {
     title?: string;
-    asks?: DialogSpec;
+    asks?: Asking;
     inPhase?: Partial<Record<Phase, Shade>>;
   };
 }
@@ -236,7 +238,6 @@ const ENTRIES = {
       placeholder:
         'Optional. Posted to the thread with the commit linked. ' +
         'Leave empty to push silently.',
-      submit: (typed) => (typed ? 'Push and post reply' : 'Push commit'),
     },
     offeredWhen: proposalWaiting,
     forKind: {
@@ -247,7 +248,6 @@ const ENTRIES = {
           'accept. Nothing is pushed.',
         del: false,
         placeholder: '',
-        submit: () => 'Post reply',
       },
       ticket: {
         question: 'This files this ticket and posts this reply. Are you sure?',
@@ -257,25 +257,12 @@ const ENTRIES = {
           'the reply. Nothing is pushed.',
         del: false,
         placeholder: '',
-        submit: () => 'File ticket and post reply',
       },
     },
     inPhase: {
-      'push failed': {
-        label: 'Push it',
-        dialog: {
-          submit: (typed) =>
-            typed ? 'Push again and post reply' : 'Push again',
-        },
-      },
+      'push failed': { label: 'Push it' },
       'filing failed': { label: 'File it again' },
-      'reply failed': {
-        label: 'Retry the reply',
-        dialog: {
-          submit: (typed) =>
-            typed ? 'Post the reply' : 'Post the commit link',
-        },
-      },
+      'reply failed': { label: 'Retry the reply' },
       removed: { dialog: { reply: false } },
     },
     request: (gathered) => ({
@@ -321,7 +308,6 @@ const ENTRIES = {
         'worktree, and reach nothing on GitHub. Leave it blank to start the ' +
         'session with no steer.',
       reply: true,
-      submit: () => 'start the session',
     },
     request: ({ body, brief }) => ({
       verb: 'start-session',
@@ -561,7 +547,6 @@ const ENTRIES = {
       note: 'Anything you write here is posted as the reply, in your own words.',
       reply: true,
       del: true,
-      submit: (typed) => (typed ? 'reply and reject' : 'reject'),
     },
     inPhase: {
       'reply failed': {
@@ -599,7 +584,6 @@ const ENTRIES = {
         'board until the condition you pick is met.',
       reply: false,
       wake: true,
-      submit: () => 'defer it',
     },
     reviewer: {
       title:
@@ -645,7 +629,6 @@ const ENTRIES = {
       resolves: true,
       resolving: true,
       thumbsUp: true,
-      submit: () => 'Confirm',
     },
     request: resolveRequest,
     doing: 'resolving',
@@ -716,7 +699,6 @@ const ENTRIES = {
         'Whatever is queued or running here halts with nothing posted to ' +
         'GitHub, and the thread is yours to decide again.',
       reply: false,
-      submit: () => 'Stop',
     },
     doing: 'stopping',
     square: 'ready',
@@ -736,7 +718,6 @@ const ENTRIES = {
       reply: true,
       requiresReply: true,
       prefill: 'Not fixed — ',
-      submit: () => 'post the reply',
     },
     request: ({ body }) => ({ verb: 'reply', body: { body: body ?? '' } }),
     doing: 'replying that it is not fixed',
@@ -768,7 +749,6 @@ const ENTRIES = {
         'is told of it alone rather than with your review. The board cannot ' +
         'take it back.',
       reply: false,
-      submit: () => 'post it',
     },
     savedFirst: true,
     doing: 'posting it',
@@ -1340,7 +1320,7 @@ function doingOf(doing: string): string {
 
 const OUTCOME_OF_PHASE: Partial<Record<Phase, string>> = { answered: 'ready' };
 
-function besides(asks: Asks, phase: Phase): Asks {
+function besides(asks: EntryAsks, phase: Phase): EntryAsks {
   if (typeof asks !== 'object' || asks === null || !asks.outcomes) return asks;
   const here = OUTCOME_OF_PHASE[phase] ?? phase;
   return {
@@ -1386,27 +1366,45 @@ export function asksFirst(kind: Kind): boolean {
   return opensDialog(kind) || RED_ARE_YOU_SURE.includes(kind);
 }
 
-function asksInADialog(decision: Decision, asks: Asks): boolean {
+function asksInADialog(decision: Decision, asks: EntryAsks): boolean {
   if (asks === null) return false;
   return !RED_ARE_YOU_SURE.includes(decision);
+}
+
+const SUBMITS_IN_ITS_OWN_WORDS: Decision[] = [
+  'resolve',
+  'resolve-here',
+  'drop',
+];
+
+function submittedBy(asks: Asking, label: string): DialogSpec {
+  return { ...asks, submit: () => label };
+}
+
+function asksOf(decision: Decision, asks: EntryAsks, label: string): Asks {
+  if (typeof asks !== 'object' || asks === null) return asks;
+  if (asks.submit && SUBMITS_IN_ITS_OWN_WORDS.includes(decision))
+    return { ...asks, submit: asks.submit };
+  return submittedBy(asks, label);
 }
 
 function offerOf(
   decision: Decision,
   shade: Shade,
   title: string,
-  asks: Asks,
+  asks: EntryAsks,
 ): Offer {
   const entry: Entry = ENTRIES[decision];
+  const label = shade.label ?? entry.label;
   return {
     decision,
-    label: shade.label ?? entry.label,
+    label,
     title: shade.title ?? title,
     weight: shade.weight ?? entry.weight,
     key: entry.key,
     cap: capOf(entry.key),
     doing: doingOf(entry.doing),
-    asks,
+    asks: asksOf(decision, asks, label),
     savedFirst: Boolean(entry.savedFirst),
     opensDialog: asksInADialog(decision, asks),
     runsAgent: Boolean(shade.runsAgent) || runsAgent(decision),
@@ -1600,17 +1598,13 @@ function acceptAllNote(parts: SplitPart[]): string {
   return `${sentence} A part that has run cannot be undone.`;
 }
 
-function acceptAllAsks(
-  conversation: Conversation,
-  parts: SplitPart[],
-): DialogSpec {
+function acceptAllAsks(conversation: Conversation, parts: SplitPart[]): Asking {
   return {
     question: 'Accept every part not yet accepted?',
     note: acceptAllNote(parts),
     reply: false,
     resolves: conversation.kind === 'review' && !conversation.github_removed,
     resolving: conversation.author_kind === 'bot',
-    submit: () => 'Accept all',
   };
 }
 
@@ -1693,6 +1687,18 @@ const ACCEPT_TITLES: Record<SplitPartName, string> = {
 
 const WORDED: SplitPartName[] = ['ticket', 'reply'];
 
+const EDIT = 'Edit';
+
+const PART_REWORK = 'Rework';
+
+export function reworkSubmit(
+  part: SplitPartName | null,
+  visible: boolean,
+): string {
+  if (part) return PART_REWORK;
+  return visible ? 'Start a steered session' : ENTRIES.rework.label;
+}
+
 const DECIDING_PARTS: Phase[] = ['proposed', 'landing'];
 
 export function partOffers(
@@ -1716,7 +1722,7 @@ export function partOffers(
   if (WORDED.includes(part.part)) {
     offers.push({
       act: 'edit',
-      label: 'Edit',
+      label: EDIT,
       title: 'changes its words and saves them; nothing is accepted',
       weight: 'secondary',
       opensDialog: true,
@@ -1726,7 +1732,7 @@ export function partOffers(
   if (!running) {
     offers.push({
       act: 'rework',
-      label: 'Rework',
+      label: PART_REWORK,
       title:
         'sends this part back to the agent with your note; the other parts ' +
         'keep what they have',
@@ -1750,7 +1756,7 @@ export function editAsks(
         'filed now.',
       reply: false,
       ticket: words.ticket,
-      submit: () => 'Save',
+      submit: () => EDIT,
     };
   }
   return {
@@ -1761,16 +1767,16 @@ export function editAsks(
     reply: true,
     prefill: words.reply ?? '',
     placeholder: '',
-    submit: () => 'Save',
+    submit: () => EDIT,
   };
 }
 
 export function laterAsks(): DialogSpec {
-  return ENTRIES.defer.asks;
+  return submittedBy(ENTRIES.defer.asks, ENTRIES.defer.label);
 }
 
 export function rejectAsks(): DialogSpec {
-  return ENTRIES.reject.asks;
+  return submittedBy(ENTRIES.reject.asks, ENTRIES.reject.label);
 }
 
 export function inFlight(kind: string): string {

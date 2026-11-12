@@ -1818,7 +1818,7 @@ module('Acceptance | pr diff', function (hooks) {
       assert.dom('[data-test-card="d1"]').doesNotHaveAttribute('data-pending');
     });
 
-    test('a draft’s card marks Ask the agent and its Ask with the star, and nothing else on the card', async function (assert) {
+    test('a draft’s card marks Ask the agent and its box’s Ask the agent with the star, and nothing else on the card', async function (assert) {
       await visit('/pr/o/r/7/diff');
       await click('[data-test-card="d1"] [data-test-card-ask]');
 
@@ -1826,7 +1826,7 @@ module('Acceptance | pr diff', function (hooks) {
         findAll('[data-test-card="d1"] [data-runs-agent]').map((one) =>
           one.textContent.trim(),
         ),
-        ['Ask the agent', 'Ask'],
+        ['Ask the agent', 'Ask the agent'],
       );
       assert.dom('[data-test-card="d1"] [data-opens-dialog]').doesNotExist();
     });
@@ -1837,7 +1837,10 @@ module('Acceptance | pr diff', function (hooks) {
       await click('[data-test-card="d1"] [data-test-card-ask]');
 
       assert.dom('[data-test-card="d1"] [data-test-ask] textarea').isFocused();
-      assert.dom('[data-test-card="d1"] [data-test-ask-send]').isDisabled();
+      assert
+        .dom('[data-test-card="d1"] [data-test-ask-send]')
+        .isDisabled()
+        .hasText('Ask the agent');
 
       await fillIn(
         '[data-test-card="d1"] [data-test-ask] textarea',

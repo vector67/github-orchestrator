@@ -156,7 +156,9 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
   }
 
   get primary(): string {
-    return this.args.draft ? 'Assign when ready for review' : 'Assign now';
+    return this.args.draft
+      ? 'Assign when ready for review'
+      : 'Assign reviewers';
   }
 
   assign = () => {

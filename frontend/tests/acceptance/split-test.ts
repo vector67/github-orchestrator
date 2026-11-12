@@ -270,7 +270,7 @@ module('Acceptance | split', function (hooks) {
     await click('[data-test-split-card="reply"] [data-test-part-act="edit"]');
 
     assert.dom('[data-test-dialog-body]').hasValue(REPLY);
-    assert.dom('[data-test-dialog-submit]').hasText('Save');
+    assert.dom('[data-test-dialog-submit]').hasText('Edit');
     await fillIn('[data-test-dialog-body]', 'Moved to its own PR.');
     await click('[data-test-dialog-submit]');
 

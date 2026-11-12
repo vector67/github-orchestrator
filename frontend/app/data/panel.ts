@@ -133,7 +133,6 @@ export interface Reviewer {
 export interface ReworkView {
   kicker: string;
   placeholder: string;
-  send_label: string;
   note: string;
   reviewers: Reviewer[];
   unsent: string;
@@ -425,7 +424,6 @@ const FOLD_PLACEHOLDERS: Partial<Record<Phase, string>> = {
 const REWORK: Omit<ReworkView, 'reviewers' | 'unsent'> = {
   kicker: 'Send back for rework',
   placeholder: 'Tell the agent what to change and why…',
-  send_label: 'Send to agent for rework',
   note:
     'Comment moves to "Sent back for rework"; the agent re-runs with your ' +
     'note and the pointed lines.',

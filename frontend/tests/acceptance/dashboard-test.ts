@@ -1369,7 +1369,7 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(texts('[data-test-login]'), ['anna', 'bob']);
     assert.deepEqual(
       texts('[data-test-assign-reviewers] .dialog-actions button'),
-      ['Assign now ↵', 'Cancel Esc'],
+      ['Assign reviewers ↵', 'Cancel Esc'],
     );
     assert.dom('[data-test-assign-option]').isDisabled();
 

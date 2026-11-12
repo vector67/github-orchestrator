@@ -103,7 +103,7 @@ module('Acceptance | action bar', function (hooks) {
 
     assert
       .dom('[data-test-rework-dialog] [data-test-send-rework]')
-      .hasText('Send to agent for rework');
+      .hasText('Send back for rework');
     assert.dom('[data-test-rework-dialog] [data-test-cancel-rework]').exists();
     assert
       .dom('[data-test-rework-note]')
