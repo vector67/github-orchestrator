@@ -270,14 +270,18 @@ def test_the_preview_lands_its_seeded_fixes_where_git_has_no_identity(tmp_path, 
     assert landed["state"] == "done"
 
 
-@pytest.mark.no_replay
 def test_the_preview_removes_its_folder_when_ctrl_c_stops_it(tmp_path, monkeypatch):
     def interrupted(self, sockets=None):
         raise KeyboardInterrupt
 
+    def made(prefix):
+        folder = tmp_path / f"{prefix}made"
+        folder.mkdir()
+        return str(folder)
+
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    monkeypatch.setattr(preview.tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setattr(preview.tempfile, "mkdtemp", made)
     monkeypatch.setattr(preview.uvicorn.Server, "run", interrupted)
     handler = signal.getsignal(signal.SIGINT)
 
