@@ -126,6 +126,7 @@ class Machine:
     hub_state: str = "watching"
     located: dict[str, str] = field(default_factory=dict)
     graphical: bool = True
+    interactive: bool = False
     extra_environment: dict[str, str] = field(default_factory=dict)
     newest_release: Mapping[str, object] | None = None
     pinned_config: bool = True
@@ -265,6 +266,7 @@ class Machine:
             CliWiring(cli_config(settings, self.home, platform=self.platform,
                                  uid=self.system.uid, shell_path=self.shell_path,
                                  cache_home=self.cache_home, python=self.python, graphical=self.graphical,
+                                 interactive=self.interactive,
                                  tool_dir=self.tool_dir, env=self.environment),
                       self.system, self.read_line, self.which, self.hub_health),
             clocks=clocks_of(lambda: self.now, sleep=self.sleep))

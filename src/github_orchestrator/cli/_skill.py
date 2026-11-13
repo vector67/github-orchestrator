@@ -1,3 +1,4 @@
+import json
 import shutil
 import sys
 from collections.abc import Iterator
@@ -7,8 +8,17 @@ from pathlib import Path
 from typing import Literal
 
 from github_orchestrator.cli._findings import Finding, ok, warn
+from github_orchestrator.cli._setup import ReadLine
+from github_orchestrator.settings import ConfigFile
 
 State = Literal["missing", "current", "different"]
+
+CREATE_PR = "create-pr"
+PURPOSES = {
+    "create-pr": "agents run it to open a new pull request, such as the one a split carries "
+                 "code into; without it they open the pull request themselves",
+    "rebase-on-main": "agents run it to rebase a pull request's branch when it stops merging",
+}
 
 
 def shipped_skills() -> list[str]:
@@ -62,29 +72,63 @@ def _install(skills: Path, name: str, *, replace: bool) -> bool:
     return True
 
 
-def install_skills(skills: Path, *, replace: bool) -> None:
+def _record(config_file: ConfigFile, name: str, why: str) -> None:
+    config_file.record_pr_skill(name)
+    print(f"Recorded pr_skill = {json.dumps(name)} in {config_file.location()}: {why}")
+
+
+def _put_back_create_pr(skills: Path, config_file: ConfigFile) -> None:
+    if config_file.pr_skill() == "" and skill_state(skills, CREATE_PR) != "missing":
+        _record(config_file, CREATE_PR, "agents open pull requests with it again.")
+
+
+def leave_out(skills: Path, config_file: ConfigFile) -> None:
+    if config_file.pr_skill() == CREATE_PR and skill_state(skills, CREATE_PR) == "missing":
+        _record(config_file, "", "agents open pull requests themselves, and "
+                "github-orchestrator skill installs the skills later.")
+
+
+def install_skills(skills: Path, config_file: ConfigFile, *, replace: bool) -> None:
     installed = [_install(skills, name, replace=replace) for name in shipped_skills()]
+    _put_back_create_pr(skills, config_file)
     if not all(installed):
         sys.exit(1)
 
 
-def update_skills(skills: Path) -> None:
+def _wanted(skills: Path, missing: list[str], read_line: ReadLine) -> bool:
+    print(f"The orchestrator's skills missing from {skills}:")
+    for name in missing:
+        print(f"  {name}: {PURPOSES[name]}")
+    try:
+        return read_line("Install them? [Y/n] ").strip().lower() not in ("n", "no")
+    except EOFError:
+        return False
+
+
+def update_skills(skills: Path, config_file: ConfigFile, read_line: ReadLine | None) -> None:
     print("==> Updating the orchestrator's skills", flush=True)
     names = shipped_skills()
-    if all(skill_state(skills, name) == "missing" for name in names):
-        print(f"Skills left out: {', '.join(names)}; github-orchestrator skill installs them "
-              "later.")
-        return
+    missing = [name for name in names if skill_state(skills, name) == "missing"]
+    left_out = bool(missing) and (config_file.pr_skill() == "" or (
+        read_line is not None and not _wanted(skills, missing, read_line)))
+    if left_out:
+        print(f"Skills left out: {', '.join(missing)}. github-orchestrator skill installs "
+              "them later.")
+        leave_out(skills, config_file)
     for name in names:
-        _install(skills, name, replace=False)
+        if not (left_out and name in missing):
+            _install(skills, name, replace=False)
 
 
-def skill(skills: Path, *, status: bool, replace: bool) -> None:
+def skill(skills: Path, config_file: ConfigFile, *, status: bool, replace: bool,
+          leaving_out: bool) -> None:
     if status:
         for name in shipped_skills():
             print(f"{name} {skill_state(skills, name)}")
+    elif leaving_out:
+        leave_out(skills, config_file)
     else:
-        install_skills(skills, replace=replace)
+        install_skills(skills, config_file, replace=replace)
 
 
 def skill_findings(skills: Path) -> list[Finding]:

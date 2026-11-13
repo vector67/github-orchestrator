@@ -152,7 +152,8 @@ class OperatorCli:
         for instance in instances:
             clear_the_way(instance, self._read_line, force=force)
         if not config.installer_offers_skills:
-            update_skills(config.agent.skill_folder(config.home, config.agent_command))
+            update_skills(config.agent.skill_folder(config.home, config.agent_command),
+                          self._config_file, self._read_line if config.interactive else None)
         for instance in instances:
             named = "the default instance" if instance.name is None else instance.name
             print(f"==> Starting the watcher for {named}", flush=True)
@@ -217,8 +218,9 @@ class OperatorCli:
                 *(("Default instance" if instance.name is None else f"Instance {instance.name}",
                    instance.checks.findings()) for instance in self._every_instance())]),
             "setup": lambda a: setup(config.hub_url, self._open),
-            "skill": lambda a: skill(config.agent.skill_folder(config.home, config.agent_command), status=a.status,
-                                    replace=a.replace),
+            "skill": lambda a: skill(config.agent.skill_folder(config.home, config.agent_command),
+                                     self._config_file, status=a.status, replace=a.replace,
+                                     leaving_out=a.leave_out),
             "open": lambda a: self._open(""),
             "tutorial": lambda a: tutorial(config.hub_url, self._open, terminal=a.terminal,
                                           agent=config.agent.value,
