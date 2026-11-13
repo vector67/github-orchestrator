@@ -599,6 +599,40 @@ def test_writing_the_repos_keeps_a_repo_s_pr_skill_and_draft_and_adds_neither_wh
     assert toml_file.read_text().count("pr_skill") == 1
 
 
+def test_recording_the_pr_skill_writes_one_top_level_line_and_leaves_a_repo_s_own_alone(tmp_path):
+    toml_file = write_config(tmp_path, (
+        'hub_port = 8721\n\n[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+        'pr_skill = "open-acme-pr"\n'))
+
+    read_from(toml_file).get(ConfigFile).record_pr_skill("")
+
+    config = load_config(toml_file)
+    assert (config.pr_skill, config.hub_port) == ("", 8721)
+    assert [entry.pr_skill for entry in config.repos] == ["open-acme-pr"]
+
+
+def test_recording_the_pr_skill_again_rewrites_its_line_in_place(tmp_path):
+    toml_file = write_config(tmp_path, (
+        'pr_skill = ""\n\n[[repos]]\nrepo = "acme/widgets"\nlocal_path = "/src/widgets"\n'
+        'pr_skill = "open-acme-pr"\n'))
+
+    read_from(toml_file).get(ConfigFile).record_pr_skill("create-pr")
+
+    assert load_config(toml_file).pr_skill == "create-pr"
+    assert toml_file.read_text().count("pr_skill") == 2
+
+
+def test_the_recorded_pr_skill_reads_back_before_setup_has_written_the_config(tmp_path):
+    toml_file = tmp_path / "config.toml"
+    config_file = read_from(toml_file).get(ConfigFile)
+
+    before = config_file.pr_skill()
+    config_file.record_pr_skill("")
+
+    assert (before, config_file.pr_skill()) == ("create-pr", "")
+    assert toml_file.read_text() == 'pr_skill = ""\n'
+
+
 def test_writing_true_false_and_numbers_reads_them_back_as_written(tmp_path):
     toml_file = write_config(tmp_path)
 

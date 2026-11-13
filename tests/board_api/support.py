@@ -398,10 +398,10 @@ def board_for(pr_title: str | None = TITLE, base_branch: str | None = "main",
               working_copies: FakeWorkingCopies | None = None,
               github: FakeGitHub | None = None, created_at: str | None = None,
               commits: int | None = None, additions: int | None = None,
-              deletions: int | None = None,
+              deletions: int | None = None, branch: str = "rename-the-helper",
               **serving: Unpack[Serving]) -> Served:
     return board_on(fake_threads(github, working_copies), is_author=is_author, title=pr_title,
-                    base_branch=base_branch, head_sha=head_sha, branch="rename-the-helper",
+                    base_branch=base_branch, head_sha=head_sha, branch=branch,
                     created_at=created_at, commits=commits, additions=additions,
                     deletions=deletions, **serving)
 

@@ -7,6 +7,7 @@ import pytest
 from github_orchestrator.agent_runs.fake import FilingTicket, HeldVerdicts, Outcome
 from github_orchestrator.board_api.fake import FakeMentionable
 from github_orchestrator.conversation import Classification
+from github_orchestrator.domain import fork_pr_branch
 from github_orchestrator.github import CommentKind
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications.fake import FakeNotifications
@@ -853,6 +854,32 @@ def test_accepting_one_part_of_a_split_runs_it_and_the_proposal_says_so():
     assert [(part["part"], part["state"]) for part in proposal["split"]["parts"]] == [
         ("changes", "run"), ("new-pr", "proposed"), ("reply", "proposed")]
     assert client.get(f"/api/conversations/{KEY}").json()["state"] == "ready"
+
+
+@pytest.mark.parametrize("part", [{}, {"part": "new-pr"}])
+def test_accepting_a_splits_new_pr_on_a_fork_pr_is_refused_and_runs_nothing(part):
+    board = board_for(branch=fork_pr_branch(THE_PR))
+    card(board)
+    _split(board)
+    client = client_of(board)
+
+    answer = asked(client, "approve", **part)
+    drain(board)
+
+    assert (answer.status_code, answer.json()["errors"][0]["code"]) == (
+        409, "fork-pull-request")
+    [proposal] = client.get(f"/api/conversations/{KEY}/proposals").json()
+    assert {part["state"] for part in proposal["split"]["parts"]} == {"proposed"}
+
+
+def test_accepting_a_splits_changes_on_a_fork_pr_is_not_refused_at_the_door():
+    board = board_for(branch=fork_pr_branch(THE_PR))
+    card(board)
+    _split(board)
+
+    answer = asked(client_of(board), "approve", part="changes")
+
+    assert answer.status_code == 202, answer.json()
 
 
 def test_a_split_whose_parts_have_run_shows_each_result_and_its_link():

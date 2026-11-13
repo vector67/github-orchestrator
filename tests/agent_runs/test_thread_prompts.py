@@ -86,8 +86,8 @@ THREAD_URL = "https://github.com/acme/widgets/pull/7#discussion_r101"
 def _opening(runs, claude, worktree, **fields):
     return _ran(runs, claude, runs.open_pr(_fix(
         worktree, split_branch="split/cache-tax-rates", split_base="main",
-        split_base_reason="the cache stands alone", pr_skill="create-pr", pr_url=PR_URL,
-        thread_url=THREAD_URL, **fields)))
+        split_base_reason="the cache stands alone", pr_url=PR_URL,
+        thread_url=THREAD_URL, **{"pr_skill": "create-pr", **fields})))
 
 
 DIVERGED = ("origin's PR branch was rewritten: it is at aaaaaaaaaaaa, and the PR worktree at "
@@ -185,6 +185,25 @@ def test_the_opening_prompt_pushes_the_branch_and_opens_it_into_its_base_with_th
     assert "- Base: main (the cache stands alone)" in prompt
     for link in (PR_URL, THREAD_URL):
         assert link in prompt
+
+
+def test_the_opening_prompt_with_no_pr_skill_has_the_agent_open_the_pr_itself_as_a_draft(
+        runs, claude, worktree):
+    prompt = _opening(runs, claude, worktree, pr_skill="")
+
+    assert "Invoke" not in prompt and "skill`" not in prompt
+    assert "do not invoke any skill" in prompt
+    assert "gh pr create --head split/cache-tax-rates --base main --draft" in prompt
+    for link in (PR_URL, THREAD_URL):
+        assert link in prompt
+
+
+def test_the_opening_prompt_with_no_pr_skill_opens_a_ready_pr_when_the_repo_wants_no_draft(
+        runs, claude, worktree):
+    prompt = _opening(runs, claude, worktree, pr_skill="", draft=False)
+
+    assert "gh pr create --head split/cache-tax-rates --base main`" in prompt
+    assert "--draft" not in prompt
 
 
 def test_the_opening_prompt_names_the_filed_ticket_or_this_prs_own(runs, claude, worktree):

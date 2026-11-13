@@ -5740,7 +5740,8 @@
     "reopen-refused",
     "mark-ready-refused",
     "convert-to-draft-refused",
-    "assign-reviewers-refused"
+    "assign-reviewers-refused",
+    "fork-pull-request"
    ],
    "type": "string"
   },

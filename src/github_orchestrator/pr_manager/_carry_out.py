@@ -3,6 +3,7 @@ import signal
 from pathlib import Path
 
 from github_orchestrator.agent_runs import FixComment, LastRun, PrWork, Run
+from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.change_detection import (
     BecameMergeable,
     BecameUnmergeable,
@@ -17,7 +18,7 @@ from github_orchestrator.change_detection import (
     ReviewRequested,
 )
 from github_orchestrator.conversation import ConversationManager, ThreadActivity
-from github_orchestrator.domain import LocalClock, Pr
+from github_orchestrator.domain import LocalClock, Pr, fork_pr_number
 from github_orchestrator.notifications import PrStatus, Runs
 from github_orchestrator.pr_event_queue import Intake, Response
 from github_orchestrator.pr_manager._config import ManagerConfig
@@ -99,6 +100,11 @@ def _launch_note(pr: Pr, launch: Launch) -> str:
                     "See review findings below.")
 
 
+def _fork_note(failed: CiFailed) -> str:
+    return ("The pull request comes from a fork, which is pushed from the fork, never from "
+            f"here — skipped the CI fix for '{failed.check}'; no agent run.")
+
+
 def _disabled_note(kind: str) -> str:
     return f"Agents are disabled (agents_enabled=false) — skipped {kind}; no agent run."
 
@@ -123,7 +129,7 @@ class EventCarryOut:
         self._fixing: tuple[Run, CiFailed] | None = None
 
     def carry_out(self, response: Response, *, is_author: bool, active_run: Run | None,
-                  conversations: ConversationManager) -> Run | str | None:
+                  conversations: ConversationManager) -> Run | str | ManagerRefusal | None:
         pr, event = self._pr, response.event
         if isinstance(response.launch, ReviewRequested) and not is_author:
             self._summaries.want(pr)
@@ -134,8 +140,11 @@ class EventCarryOut:
             if response.skipped:
                 self._skipped(event.kind)
                 return None
-            started = self._launch(response.launch, push=not response.more_failures_wait,
-                                   conversations=conversations)
+            push = not response.more_failures_wait
+            if isinstance(response.launch, CiFailed) and push and self._fork():
+                self._note(_fork_note(response.launch))
+                return ManagerRefusal.FORK_PULL_REQUEST
+            started = self._launch(response.launch, push=push, conversations=conversations)
             if isinstance(response.launch, CiFailed) and not isinstance(started, str):
                 self._fixing = (started, response.launch)
             return started
@@ -178,6 +187,11 @@ class EventCarryOut:
         log.warning("loop %s: %s", self._pr, note)
         self._note(note)
         return going_on
+
+    def _fork(self) -> bool:
+        facts = self._change_detection.facts(self._pr)
+        return (facts is not None and facts.branch is not None
+                and fork_pr_number(facts.branch) is not None)
 
     def _note(self, text: str) -> None:
         self._agent_changes.note(Path(self._worktree), text, self._clock())

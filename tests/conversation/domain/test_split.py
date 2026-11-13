@@ -361,6 +361,40 @@ def test_the_open_run_invokes_the_pr_skill_the_repo_names(tmp_path):
     assert opening.fix.pr_skill == "team-pr"
 
 
+def _opening_under(tmp_path, **config):
+    built = world(fake_settings(tmp_path / "data", **config))
+    repo_at(built.working_copies, WORKTREE, {"f": "old\n", "README": "hello"})
+    threads = built.threads()
+    on_github(built.github, KEY, said(101, "can this go in a separate PR?"))
+    hear(threads)
+    start_run(built, threads)
+    _split(threads, _removed(built))
+    _asked(threads, "approve", part="new-pr")
+    [opening] = _openings(built)
+    return opening.fix
+
+
+def test_the_open_run_is_told_whether_the_repo_wants_a_draft(tmp_path):
+    fix = _opening_under(tmp_path, repos=(
+        RepoEntry(Repo("acme", "widgets"), "/tmp/widgets", draft=False),))
+
+    assert fix.draft is False
+
+
+def test_the_open_run_gets_the_top_level_pr_skill_when_the_repo_names_none(tmp_path):
+    fix = _opening_under(tmp_path, pr_skill="", repos=(
+        RepoEntry(Repo("acme", "widgets"), "/tmp/widgets"),))
+
+    assert fix.pr_skill == ""
+
+
+def test_a_repo_s_pr_skill_wins_over_the_top_level_one(tmp_path):
+    fix = _opening_under(tmp_path, pr_skill="", repos=(
+        RepoEntry(Repo("acme", "widgets"), "/tmp/widgets", pr_skill="team-pr"),))
+
+    assert fix.pr_skill == "team-pr"
+
+
 def test_a_set_draft_pr_flipped_from_ready_is_made_a_draft(tmp_path):
     here, threads = _drafting(tmp_path, True)
     here.github.prs[NEW_PR].state = PullRequestState(draft=False)

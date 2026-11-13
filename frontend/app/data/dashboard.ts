@@ -1209,6 +1209,8 @@ const NOTICES: Record<NoticeCode, (detail: string | null) => string> = {
     `GitHub would not convert the pull request to a draft: ${detail ?? ''}`,
   'assign-reviewers-refused': (detail) =>
     `GitHub would not ask those reviewers: ${detail ?? ''}`,
+  'fork-pull-request': () =>
+    'The CI fix was not started: this pull request comes from a fork, which is pushed from the fork, never from here.',
 };
 
 function noticeOf(notice: Notice): string {

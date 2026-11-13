@@ -601,6 +601,7 @@ offer_skill() {
                 || say "The skills were not installed; github-orchestrator skill tries again."
         else
             say "Skills left out: $missing; github-orchestrator skill installs them later."
+            "$COMMAND" skill --leave-out
         fi
     fi
     if [ -n "$different" ]; then

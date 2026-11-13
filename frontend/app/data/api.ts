@@ -668,7 +668,7 @@ export interface Notice {
   detail: string | null;
 }
 
-export type NoticeCode = 'worktree-frozen' | 'agents-disabled' | 'agent-running' | 'agent-wont-start' | 'not-your-draft' | 'not-yours-to-assign' | 'close-refused' | 'reopen-refused' | 'mark-ready-refused' | 'convert-to-draft-refused' | 'assign-reviewers-refused';
+export type NoticeCode = 'worktree-frozen' | 'agents-disabled' | 'agent-running' | 'agent-wont-start' | 'not-your-draft' | 'not-yours-to-assign' | 'close-refused' | 'reopen-refused' | 'mark-ready-refused' | 'convert-to-draft-refused' | 'assign-reviewers-refused' | 'fork-pull-request';
 
 export interface OpenOperation {
   id: string;

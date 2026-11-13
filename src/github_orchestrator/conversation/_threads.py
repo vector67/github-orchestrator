@@ -261,7 +261,8 @@ class _Pr:
                                     account=config.gh_account, tracker=config.tracker,
                                     tracker_project=config.tracker_project,
                                     pull_requests=self._pull_requests,
-                                    pr_skill=config.pr_skill, pages=self._github)
+                                    pr_skill=config.pr_skill, draft=config.draft,
+                                    pages=self._github)
         self.runs = Runs()
         self.ports = self.built()
 

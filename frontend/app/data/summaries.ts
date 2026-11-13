@@ -146,6 +146,7 @@ export interface Summaries {
   answering: AnswerReply[];
   unranked: boolean;
   problems: number;
+  fork: boolean;
 }
 
 type Threads = Record<string, Thread>;
@@ -537,6 +538,7 @@ function summarised(
     answering: answeringOf(all, operations, pr?.author ?? null),
     unranked,
     problems: wrong.length + (unranked ? 1 : 0),
+    fork: /^orchestrator\/pr\/\d+$/.test(pr?.branch ?? ''),
   };
 }
 

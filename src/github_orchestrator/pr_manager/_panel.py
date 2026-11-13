@@ -6,7 +6,7 @@ from typing import Any
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.interface import ManagerRefusal
-from github_orchestrator.change_detection import ChangeDetection
+from github_orchestrator.change_detection import ChangeDetection, CiFailed
 from github_orchestrator.domain import DismissUntil, Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
@@ -71,7 +71,11 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         return self._hand(Command.HOLD if on_hold else Command.RESUME)
 
     def carry_on(self) -> ManagerRefusal | None:
-        return self._hand(Command.CARRY_ON)
+        return self._hand(Command.CARRY_ON, pushes=self._last_run_fixed_ci())
+
+    def _last_run_fixed_ci(self) -> bool:
+        last = self._history.last_run(self._pr)
+        return last is not None and last.event_type == CiFailed.kind
 
     def start_review(self) -> ManagerRefusal | None:
         return self._hand(Command.START_REVIEW)
@@ -100,7 +104,7 @@ class FilePanel(ManagerPanel, ManagerWorktree):
                           {"reviewers": list(reviewers), "detailed": detailed})
 
     def take_over(self) -> ManagerRefusal | None:
-        return self._hand(Command.TAKE_OVER)
+        return self._hand(Command.TAKE_OVER, pushes=True)
 
     def hand_back(self) -> ManagerRefusal | None:
         return self._hand(Command.HAND_BACK)
@@ -158,9 +162,9 @@ class FilePanel(ManagerPanel, ManagerWorktree):
             log.info("%s: %s refused — %s", self._pr, what, refused)
         return refused
 
-    def _hand(self, command: Command,
-              fields: dict[str, Any] | None = None) -> ManagerRefusal | None:
-        refused = self._refusal(command, command)
+    def _hand(self, command: Command, fields: dict[str, Any] | None = None, *,
+              pushes: bool = False) -> ManagerRefusal | None:
+        refused = self._refusal(command, command, pushes=pushes)
         if refused is None:
             self._command_files.write(self._pr, command, fields or {})
         return refused
