@@ -442,7 +442,7 @@ class AgentRuns:
     def _fix_thread(self, fix: ThreadFix, prompt: str, *,
                     continuing: bool = False) -> AgentRun | str:
         run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
-                          project_settings=True, continuing=continuing,
+                          project_settings=not fix.reviewing, continuing=continuing,
                           session_file=self._session_file(fix))
         if not isinstance(run, str):
             self._thread_runs = [*(one for one in self._thread_runs if not one.over), run]
@@ -477,12 +477,19 @@ class AgentRuns:
     def answer_thread(self, fix: ThreadFix) -> AgentRun | str:
         return self._fix_thread(fix, answered_prompt(self._commands, fix), continuing=True)
 
+    def _thread_command(self, fix: ThreadFix) -> list[str]:
+        if not fix.reviewing:
+            return self._command
+        return [*self._command, *self._lines.user_settings_only(fix.worktree)]
+
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
-        return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
-                        rework_prompt(self._commands, fix, steer, self._workers))
+        return open_session_in(self._pr_processes, fix.pr, fix.worktree,
+                               self._thread_command(fix),
+                               rework_prompt(self._commands, fix, steer, self._workers))
 
     def fix_in_session(self, fix: ThreadFix) -> str | None:
-        return open_session_in(self._pr_processes, fix.pr, fix.worktree, self._command,
+        return open_session_in(self._pr_processes, fix.pr, fix.worktree,
+                               self._thread_command(fix),
                                thread_prompt(self._commands, fix, self._workers,
                                              watched=True))
 
@@ -490,7 +497,8 @@ class AgentRuns:
         first = (None if answer is None
                  else watched_answer_prompt(self._commands, fix, answer))
         argv = self._lines.answering(_kept_session(self._session_file(fix)), first)
-        return self._pr_processes.split_kept(fix.pr, fix.worktree, [*self._command, *argv])
+        return self._pr_processes.split_kept(fix.pr, fix.worktree,
+                                             [*self._thread_command(fix), *argv])
 
     def open_shell(self, pr: Pr, worktree: str) -> str | None:
         return self._pr_processes.split_kept(pr, worktree, shell_argv())

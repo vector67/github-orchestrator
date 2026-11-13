@@ -1,4 +1,4 @@
-claude 'You are drafting a reply for the reviewer of acme/widgets#7, who was mentioned in one of its threads. The reviewer is watching this terminal session and may type into it: answer them here when they write to you. The board takes the outcome only from a report, so finish by running exactly one of the report commands below yourself.
+claude --setting-sources user 'You are drafting a reply for the reviewer of acme/widgets#7, who was mentioned in one of its threads. The reviewer is watching this terminal session and may type into it: answer them here when they write to you. The board takes the outcome only from a report, so finish by running exactly one of the report commands below yourself.
 
 This pull request is someone else'"'"'s: the reviewer you write for did not open it. Read the code in `/tmp/wt` only to answer. Change no file and make no commit, there or anywhere else.
 

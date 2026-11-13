@@ -180,6 +180,65 @@ def test_a_review_turns_off_every_skill_the_branch_carries(runs, codex, tmp_path
               f'{{path="{skills / "tidy" / "SKILL.md"}",enabled=false}}]']
 
 
+def _reviewer_s_fix(tmp_path, *, reviewing):
+    return ThreadFix(pr=THE_PR, key="2313088871", worktree=str(tmp_path), author="octocat",
+                     path="src/foo.py", line=4, body="rename this", reviewing=reviewing)
+
+
+def test_a_reviewer_s_thread_run_treats_the_branch_as_an_untrusted_project(
+        runs, codex, tmp_path):
+    finish(runs.fix(_reviewer_s_fix(tmp_path, reviewing=True)))
+
+    [spawned] = codex.spawned
+    assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL,
+                            *_untrusted(tmp_path), "-"]
+
+
+@pytest.mark.parametrize("started", [
+    pytest.param(lambda runs, fix: runs.carry_on_thread(fix), id="carry-on"),
+    pytest.param(lambda runs, fix: runs.answer_thread(fix), id="answer"),
+])
+def test_carrying_on_a_reviewer_s_thread_run_treats_the_branch_as_an_untrusted_project(
+        runs, codex, tmp_path, started):
+    finish(started(runs, _reviewer_s_fix(tmp_path, reviewing=True)))
+
+    [spawned] = codex.spawned
+    assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL,
+                            *_untrusted(tmp_path), "resume", "--last", "-"]
+
+
+def test_a_thread_run_on_your_own_pr_trusts_the_project(runs, codex, tmp_path):
+    finish(runs.fix(_reviewer_s_fix(tmp_path, reviewing=False)))
+
+    [spawned] = codex.spawned
+    assert spawned.argv == ["codex", "exec", "--json", "--approve-for-me", "-m", MODEL, "-"]
+
+
+def test_a_reviewer_s_thread_session_treats_the_branch_as_an_untrusted_project(
+        runs, world, tmp_path):
+    assert runs.open_session(_reviewer_s_fix(tmp_path, reviewing=True), None) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv[:3] == ["codex", *_untrusted(tmp_path)]
+    assert "rename this" in session.argv[3]
+
+
+def test_a_reviewer_s_first_fix_in_a_session_treats_the_branch_as_an_untrusted_project(
+        runs, world, tmp_path):
+    assert runs.fix_in_session(_reviewer_s_fix(tmp_path, reviewing=True)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv[:3] == ["codex", *_untrusted(tmp_path)]
+
+
+def test_answering_a_reviewer_s_thread_in_a_session_treats_the_branch_as_an_untrusted_project(
+        runs, world, tmp_path):
+    assert runs.answer_in_session(_reviewer_s_fix(tmp_path, reviewing=True), None) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["codex", *_untrusted(tmp_path), "resume", "--last"]
+
+
 def test_a_commit_check_treats_the_checkout_as_an_untrusted_project(
         runs, world, codex, tmp_path):
     world.answer("addressed || it renames the helper")

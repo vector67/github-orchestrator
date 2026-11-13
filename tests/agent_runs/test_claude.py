@@ -121,7 +121,62 @@ def test_carrying_on_on_your_own_pr_loads_its_project_settings(runs, claude, tmp
     assert "--setting-sources" not in spawned.argv
 
 
-WORK = "CLAUDE_CONFIG_DIR=~/.claude-work claude"
+def _thread_fix(tmp_path, *, reviewing):
+    return ThreadFix(pr=THE_PR, key="2313088871", worktree=str(tmp_path), author="octocat",
+                     path="src/foo.py", line=4, body="rename this", reviewing=reviewing)
+
+
+THREAD_RUNS = [
+    pytest.param(lambda runs, fix: runs.fix(fix), id="fix"),
+    pytest.param(lambda runs, fix: runs.carry_on_thread(fix), id="carry-on"),
+    pytest.param(lambda runs, fix: runs.answer_thread(fix), id="answer"),
+]
+
+
+@pytest.mark.parametrize("started", THREAD_RUNS)
+def test_a_reviewer_s_thread_run_loads_none_of_the_branch_s_project_settings(
+        runs, claude, tmp_path, started):
+    finish(started(runs, _thread_fix(tmp_path, reviewing=True)))
+
+    [spawned] = claude.spawned
+    assert _loads_only_user_settings(spawned.argv)
+
+
+@pytest.mark.parametrize("started", THREAD_RUNS)
+def test_a_thread_run_on_your_own_pr_loads_its_project_settings(
+        runs, claude, tmp_path, started):
+    finish(started(runs, _thread_fix(tmp_path, reviewing=False)))
+
+    [spawned] = claude.spawned
+    assert "--setting-sources" not in spawned.argv
+
+
+THREAD_SESSIONS = [
+    pytest.param(lambda runs, fix: runs.open_session(fix, None), id="open"),
+    pytest.param(lambda runs, fix: runs.fix_in_session(fix), id="first-fix"),
+    pytest.param(lambda runs, fix: runs.answer_in_session(fix, "widen the bound"), id="answer"),
+]
+
+
+@pytest.mark.parametrize("opened", THREAD_SESSIONS)
+def test_a_reviewer_s_thread_session_loads_none_of_the_branch_s_project_settings(
+        runs, world, tmp_path, opened):
+    assert opened(runs, _thread_fix(tmp_path, reviewing=True)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv[1:3] == USER_SETTINGS_ONLY
+
+
+@pytest.mark.parametrize("opened", THREAD_SESSIONS)
+def test_a_thread_session_on_your_own_pr_loads_its_project_settings(
+        runs, world, tmp_path, opened):
+    assert opened(runs, _thread_fix(tmp_path, reviewing=False)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert "--setting-sources" not in session.argv
+
+
+WORK ="CLAUDE_CONFIG_DIR=~/.claude-work claude"
 WORK_ARGV = ["env", "CLAUDE_CONFIG_DIR=/home/me/.claude-work", "claude"]
 
 

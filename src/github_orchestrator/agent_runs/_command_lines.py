@@ -14,6 +14,8 @@ class CommandLines(Protocol):
     def headless(self, model: str, *, carrying_on: bool, thread: str | None,
                  project_settings: bool, cwd: str) -> list[str]: ...
 
+    def user_settings_only(self, cwd: str) -> list[str]: ...
+
     def gist(self, model: str) -> list[str]: ...
 
     def read_only(self, model: str, cwd: str) -> list[str]: ...
@@ -35,8 +37,11 @@ class ClaudeCommandLines:
         argv = ["--print", "--output-format", "stream-json", "--verbose",
                 "--permission-mode", "auto", "--model", model]
         if not project_settings:
-            argv += ["--setting-sources", "user"]
+            argv += self.user_settings_only(cwd)
         return [*argv, "--continue"] if carrying_on else argv
+
+    def user_settings_only(self, cwd: str) -> list[str]:
+        return ["--setting-sources", "user"]
 
     def gist(self, model: str) -> list[str]:
         return ["--print", "--model", model, "--tools", "", "--strict-mcp-config"]
@@ -82,10 +87,13 @@ class CodexCommandLines:
                  project_settings: bool, cwd: str) -> list[str]:
         argv = ["exec", "--json", "--approve-for-me", "-m", model]
         if not project_settings:
-            argv += _untrusted_project(cwd)
+            argv += self.user_settings_only(cwd)
         if carrying_on:
             argv += ["resume", thread or "--last"]
         return [*argv, "-"]
+
+    def user_settings_only(self, cwd: str) -> list[str]:
+        return _untrusted_project(cwd)
 
     def gist(self, model: str) -> list[str]:
         return ["exec", "--ephemeral", "--skip-git-repo-check", "-s", "read-only",
