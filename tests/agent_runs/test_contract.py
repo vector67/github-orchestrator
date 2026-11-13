@@ -377,8 +377,8 @@ def test_a_threads_session_and_shell_are_kept_until_a_page_claims_them(world):
 
 
 def test_a_rebase_or_question_session_ends_when_no_page_claims_it(world):
-    world.runs.rebase_in_session(THE_PR, "/tmp/wt")
-    world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?")
+    world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True)
+    world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?", yours=True)
 
     assert [session.kept for session in world.fake.pr_processes.sessions[THE_PR]] == [False, False]
 
@@ -392,24 +392,38 @@ def test_a_session_that_will_not_start_answers_the_reason(world):
 
 
 def test_a_rebase_session_runs_claude_on_the_skill_in_the_worktree(world):
-    assert world.runs.rebase_in_session(THE_PR, "/tmp/wt") is None
+    assert world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
     assert (session.worktree, session.argv) == ("/tmp/wt", ["claude", "/rebase-on-main"])
 
 
+def test_a_rebase_session_on_someone_else_s_pr_loads_none_of_its_project_settings(world):
+    assert world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=False) is None
+
+    [session] = world.fake.pr_processes.sessions[THE_PR]
+    assert session.argv == ["claude", "--setting-sources", "user", "/rebase-on-main"]
+
+
 def test_a_question_session_runs_claude_on_the_prompt_in_the_worktree(world):
-    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?") is None
+    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?", yours=True) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
     assert (session.worktree, session.argv[0], session.argv[-1]) == ("/tmp/wt", "claude", "Why this name?")
 
 
 def test_a_question_starting_with_a_dash_reaches_claude_as_the_prompt_not_a_flag(world):
-    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "-p or --print?") is None
+    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "-p or --print?", yours=True) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
     assert session.argv == ["claude", "--", "-p or --print?"]
+
+
+def test_a_question_on_someone_else_s_pr_loads_none_of_its_project_settings(world):
+    assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?", yours=False) is None
+
+    [session] = world.fake.pr_processes.sessions[THE_PR]
+    assert session.argv == ["claude", "--setting-sources", "user", "--", "Why this name?"]
 
 
 def test_a_gist_is_the_first_line_the_model_writes(world):

@@ -433,11 +433,20 @@ class AgentRuns:
         return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, project_settings=yours,
                             continuing=True)
 
-    def rebase_in_session(self, pr: Pr, worktree: str) -> str | None:
-        return self._pr_processes.split(pr, worktree, [*self._command, *self._lines.rebase_session()])
+    def _session_command(self, worktree: str, *, project_settings: bool) -> list[str]:
+        if project_settings:
+            return self._command
+        return [*self._command, *self._lines.user_settings_only(worktree)]
 
-    def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
-        return self._pr_processes.split(pr, worktree, [*self._command, "--", prompt])
+    def rebase_in_session(self, pr: Pr, worktree: str, *, yours: bool) -> str | None:
+        return self._pr_processes.split(pr, worktree,
+                                        [*self._session_command(worktree, project_settings=yours),
+                                         *self._lines.rebase_session()])
+
+    def ask_in_session(self, pr: Pr, worktree: str, prompt: str, *, yours: bool) -> str | None:
+        return self._pr_processes.split(pr, worktree,
+                                        [*self._session_command(worktree, project_settings=yours),
+                                         "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, prompt: str, *,
                     continuing: bool = False) -> AgentRun | str:
@@ -478,9 +487,7 @@ class AgentRuns:
         return self._fix_thread(fix, answered_prompt(self._commands, fix), continuing=True)
 
     def _thread_command(self, fix: ThreadFix) -> list[str]:
-        if not fix.reviewing:
-            return self._command
-        return [*self._command, *self._lines.user_settings_only(fix.worktree)]
+        return self._session_command(fix.worktree, project_settings=not fix.reviewing)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,

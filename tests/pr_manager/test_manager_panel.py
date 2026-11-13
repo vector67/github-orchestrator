@@ -311,6 +311,52 @@ def _reviewer_of(settings, tmp_path, *script, **modules):
     return board
 
 
+AGENT_SESSIONS = {
+    "a question": lambda worktree: worktree.ask("Why this name?"),
+    "a rebase session": lambda worktree: worktree.open_terminal("r"),
+}
+
+
+def _sessions_opened(settings, tmp_path, script, *, is_author):
+    board = ServerPanel()
+    processes = managed_in(tmp_path)
+    seed_state(settings, title="Fix bug", url=URL, is_author=is_author)
+    run_manager(settings, *script(board), worktree=tmp_path, is_author=is_author, board=board,
+                pr_processes=processes)
+    return processes.sessions[THE_PR]
+
+
+@pytest.mark.parametrize("opening", AGENT_SESSIONS.values(), ids=AGENT_SESSIONS.keys())
+def test_an_agent_session_on_someone_else_s_pr_loads_none_of_its_project_settings(
+        settings, tmp_path, opening):
+    [session] = _sessions_opened(settings, tmp_path,
+                                 lambda board: [lambda: opening(board.worktree)],
+                                 is_author=False)
+
+    assert session.argv[1:3] == ["--setting-sources", "user"]
+
+
+@pytest.mark.parametrize("opening", AGENT_SESSIONS.values(), ids=AGENT_SESSIONS.keys())
+def test_an_agent_session_on_your_own_pr_loads_its_project_settings(
+        settings, tmp_path, opening):
+    [session] = _sessions_opened(settings, tmp_path,
+                                 lambda board: [lambda: opening(board.worktree)],
+                                 is_author=True)
+
+    assert "--setting-sources" not in session.argv
+
+
+@pytest.mark.parametrize("opening", AGENT_SESSIONS.values(), ids=AGENT_SESSIONS.keys())
+def test_an_agent_session_on_a_pr_you_took_over_loads_its_project_settings(
+        settings, tmp_path, opening):
+    [session] = _sessions_opened(settings, tmp_path,
+                                 lambda board: [lambda: board.panel.take_over(),
+                                                lambda: opening(board.worktree)],
+                                 is_author=False)
+
+    assert "--setting-sources" not in session.argv
+
+
 def test_take_over_from_the_board_makes_you_the_author_of_someone_elses_pr(settings, tmp_path):
     board = ServerPanel()
     seen = []

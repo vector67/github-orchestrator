@@ -1120,11 +1120,13 @@ class ManagerPanelsProvider(Provider):
     def panels(self, wiring: ManagerPanelsWiring, config_of: ConfigOf, monotonic: Monotonic,
                status_files: StatusFiles, command_files: CommandFiles,
                dashboards: DashboardSource, agent_changes: AgentChanges, history: History,
-               pr_processes: PrProcesses, pr_work: PrWork) -> ManagerPanels:
+               pr_processes: PrProcesses, pr_work: PrWork,
+               change_detection: ChangeDetection) -> ManagerPanels:
         return FilePanels(config_of, wiring.run, monotonic, status_files=status_files,
                           command_files=command_files, dashboards=dashboards,
                           agent_changes=agent_changes, history=history,
-                          pr_processes=pr_processes, pr_work=pr_work)
+                          pr_processes=pr_processes, pr_work=pr_work,
+                          change_detection=change_detection)
 
 
 @dataclass(frozen=True)

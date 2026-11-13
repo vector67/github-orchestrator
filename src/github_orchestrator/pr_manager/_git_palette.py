@@ -73,9 +73,9 @@ def argv_for(command: GitCommand, buffer: str) -> list[str]:
 
 
 def open_in_terminal(command: GitCommand, argv: list[str], pr: Pr, worktree: str,
-                     pr_processes: PrProcesses, pr_work: PrWork) -> str | None:
+                     pr_processes: PrProcesses, pr_work: PrWork, *, yours: bool) -> str | None:
     if command.mode == "agent":
-        return pr_work.rebase_in_session(pr, worktree)
+        return pr_work.rebase_in_session(pr, worktree, yours=yours)
     return pr_processes.split(pr, worktree, argv)
 
 

@@ -293,6 +293,10 @@ class FakeRun:
             self._pr, self.event_type, self.elapsed(), exit_code, self._reported))
 
 
+def _claude(yours: bool) -> list[str]:
+    return ["claude"] if yours else ["claude", "--setting-sources", "user"]
+
+
 @dataclass
 class FakeAgentRuns:
     pr_processes: PrProcesses
@@ -374,11 +378,11 @@ class FakeAgentRuns:
         self.ledger.append(entry)
         return self
 
-    def rebase_in_session(self, pr: Pr, worktree: str) -> str | None:
-        return self.pr_processes.split(pr, worktree, ["claude", REBASE_ON_MAIN])
+    def rebase_in_session(self, pr: Pr, worktree: str, *, yours: bool) -> str | None:
+        return self.pr_processes.split(pr, worktree, [*_claude(yours), REBASE_ON_MAIN])
 
-    def ask_in_session(self, pr: Pr, worktree: str, prompt: str) -> str | None:
-        return self.pr_processes.split(pr, worktree, ["claude", "--", prompt])
+    def ask_in_session(self, pr: Pr, worktree: str, prompt: str, *, yours: bool) -> str | None:
+        return self.pr_processes.split(pr, worktree, [*_claude(yours), "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, work: Work) -> FakeRun | str:
         run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", work)
