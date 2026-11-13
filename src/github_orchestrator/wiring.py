@@ -1449,7 +1449,7 @@ def uv_tool_dir(env: Mapping[str, str], home: Path) -> Path:
 
 def cli_config(settings: Settings, home: Path, *, platform: str, uid: int,
                shell_path: str, cache_home: str | None, python: str, graphical: bool,
-               tool_dir: Path) -> CliConfig:
+               tool_dir: Path, env: Mapping[str, str]) -> CliConfig:
     config = settings.config
     runs_on = service_python(python, tool_dir)
     return CliConfig(
@@ -1480,6 +1480,7 @@ def cli_config(settings: Settings, home: Path, *, platform: str, uid: int,
         version=installed_version(),
         graphical=graphical,
         check_for_updates=config.check_for_updates,
+        installer_offers_skills=bool(env.get("GITHUB_ORCHESTRATOR_LEAVE_SKILLS")),
     )
 
 
@@ -1877,7 +1878,7 @@ def make_container(env: Mapping[str, str], home: Path,
         CliWiring(cli_config(settings, home, platform=sys.platform, uid=os.getuid(),
                              shell_path=env.get("PATH", ""), cache_home=env.get("XDG_CACHE_HOME"),
                              python=sys.executable,
-                             tool_dir=uv_tool_dir(env, home),
+                             tool_dir=uv_tool_dir(env, home), env=env,
                              graphical=sys.platform == "darwin" or bool(
                                  env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"))),
                   subprocess.run, input, which, hub_health),

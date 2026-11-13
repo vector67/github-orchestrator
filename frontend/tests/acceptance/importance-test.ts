@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, findAll, visit } from '@ember/test-helpers';
+import { click, find, findAll, visit } from '@ember/test-helpers';
 import type { Importance, PrFacts } from 'frontend/data/api';
 import {
   dashboard,
@@ -36,12 +36,37 @@ module('Acceptance | importance', function (hooks) {
     return board().posted.map((one) => [one.verb, one.body]);
   }
 
-  test('a row with no importance offers Set importance with a red dot', async function (assert) {
+  function said(): string[] {
+    const id = find(`${ROW} [data-test-wall-lead]`)!.getAttribute(
+      'aria-describedby',
+    )!;
+    return Array.from(document.getElementById(id)!.children).map((part) =>
+      part.textContent.trim(),
+    );
+  }
+
+  function hidesLikeHold(selector: string): boolean {
+    const hold = find(`${ROW} [data-test-wall-control="hold"]`)!;
+    return find(`${ROW} ${selector}`)!.className === hold.className;
+  }
+
+  test('a row with no importance marks its move with a red dot, and offers Set importance on hover like Hold', async function (assert) {
     serve(ranked(null));
     await visit('/');
 
+    const dot = find(`${ROW} [data-test-importance-unset]`)!;
+    assert.strictEqual(
+      dot.previousElementSibling,
+      find(`${ROW} [data-test-verb]`),
+      'the dot sits right after the move',
+    );
+    assert.dom(dot).hasAttribute('aria-label', 'importance not set');
+    assert
+      .dom(`${ROW} [data-test-set-importance] [data-test-importance-unset]`)
+      .doesNotExist();
     assert.dom(`${ROW} [data-test-set-importance]`).hasText('Set importance');
-    assert.dom(`${ROW} [data-test-importance-unset]`).exists();
+    assert.true(hidesLikeHold('[data-test-set-importance]'));
+    assert.true(said().includes('importance not set.'), said().join(' '));
   });
 
   test('a row whose importance is set still offers Set importance, without the dot', async function (assert) {
@@ -50,6 +75,8 @@ module('Acceptance | importance', function (hooks) {
 
     assert.dom(`${ROW} [data-test-set-importance]`).hasText('Set importance');
     assert.dom(`${ROW} [data-test-importance-unset]`).doesNotExist();
+    assert.true(hidesLikeHold('[data-test-set-importance]'));
+    assert.false(said().includes('importance not set.'), said().join(' '));
   });
 
   test('Set importance on a row asks which, marks the current one and saves the pick', async function (assert) {
@@ -84,6 +111,7 @@ module('Acceptance | importance', function (hooks) {
     await visit('/');
 
     assert.dom(ROW).hasAttribute('data-move', 'nudge');
+    assert.true(hidesLikeHold('[data-test-nudged]'));
 
     await click(`${ROW} [data-test-nudged]`);
 
