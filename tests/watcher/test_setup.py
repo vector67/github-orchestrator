@@ -14,11 +14,12 @@ from github_orchestrator.domain import HubState, Repo
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
+from github_orchestrator.settings import ConfigFile
 from github_orchestrator.settings.fake import fake_settings
 from github_orchestrator.watcher import Watcher
 from tests.board_api.support import served_hub
 from tests.builders import a_pr
-from tests.settings.support import disk_holds
+from tests.settings.support import disk_holds, read_from
 from tests.watcher.support import watcher_container
 
 ME = "octocat"
@@ -283,6 +284,20 @@ def test_starting_to_watch_clones_what_is_missing_writes_the_config_and_restarts
     assert read["clones"] == [{"repo": "acme/widgets",
                                "path": str(world.home / "repositories" / "widgets"),
                                "state": "cloned", "error": None}]
+    assert world.left()
+
+
+def test_a_config_holding_only_the_installer_s_empty_pr_skill_is_still_set_up_and_keeps_it(world):
+    read_from(world.config).get(ConfigFile).record_pr_skill("")
+    serve(world)
+
+    before = world.web.get("/api/setup").json()
+    answer = world.put(request(("acme/widgets", "~/repositories/widgets", "")))
+
+    assert (before["state"], before["gh_account"], before["repos"]) == ("setup", None, [])
+    assert answer.status_code == 202
+    assert world.read()["pr_skill"] == ""
+    assert world.read()["gh_account"] == ME
     assert world.left()
 
 
