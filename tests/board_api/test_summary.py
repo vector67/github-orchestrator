@@ -1,6 +1,9 @@
+import fcntl
 import json
+import os
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -58,7 +61,7 @@ def test_a_pr_never_summarised_serves_a_summary_with_nothing_stored_and_nothing_
     served = answer.json()
     assert {name: value for name, value in served.items() if name != "etag"} == {
         "repo": "acme/widgets", "number": 54, "head_sha": None, "wanted": None,
-        "answered": None, "started": None, "finished": None, "exit_status": None,
+        "answered": None, "asked": None, "started": None, "finished": None, "exit_status": None,
         "stderr": None, "markdown": None, "mismatches": None, "running": False,
         "since": None, "witnesses": [], "agents": None, "behind": None}
 
@@ -87,7 +90,7 @@ def test_a_finished_summary_serves_what_was_stored_and_how_many_commits_the_head
     assert {name: value for name, value in served.items() if name != "etag"} == {
         "repo": "acme/widgets", "number": 54, "head_sha": first,
         "wanted": "2026-08-28T09:00:00+00:00", "answered": "2026-08-28T09:00:00+00:00",
-        "started": STARTED, "finished": STARTED, "exit_status": 0, "stderr": "",
+        "asked": None, "started": STARTED, "finished": STARTED, "exit_status": 0, "stderr": "",
         "markdown": "# Summary\n\nIt does what it says.\n", "mismatches": 2,
         "running": False, "since": None, "witnesses": [], "agents": None, "behind": 2}
 
@@ -187,16 +190,31 @@ def test_each_operation_says_whether_the_run_reads_over_the_github_api(tmp_path)
     assert (plain, over_the_api) == (False, True)
 
 
-def test_summarise_while_another_summary_runs_is_refused_with_the_code_for_why(tmp_path):
-    held = Held()
-    client = client_for(summaries=summary_parts(tmp_path, run_in=held))
-    summarised(client)
+@contextmanager
+def another_summary_running(tmp_path: Path) -> Iterator[None]:
+    lock = tmp_path / "summaries" / "lane.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    slot = os.open(lock, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        fcntl.flock(slot, fcntl.LOCK_EX)
+        os.write(slot, json.dumps({"owner": "acme", "repo": "widgets", "number": 55,
+                                   "since": STARTED, "head": None, "wanted": None}).encode())
+        yield
+    finally:
+        os.close(slot)
 
-    answer = summarised(client)
 
-    held.finish()
-    assert answer.status_code == 409
-    assert answer.json()["errors"][0]["code"] == "summary-running"
+def test_summarise_while_another_summary_runs_queues_it_and_answers_it_queued(tmp_path):
+    client = client_for(summaries=summary_parts(tmp_path))
+
+    with another_summary_running(tmp_path):
+        answer = summarised(client)
+
+    assert answer.status_code == 202
+    served = answer.json()
+    assert (served["running"], served["asked"]) == (False, STARTED)
+    assert client.get("/api/summary").json()["asked"] == STARTED
+    assert not folder(tmp_path).exists()
 
 
 def test_summarise_with_agents_disabled_is_refused_and_runs_nothing(tmp_path):

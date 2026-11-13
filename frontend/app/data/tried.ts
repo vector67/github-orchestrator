@@ -112,7 +112,6 @@ const SAID: Record<Code, Said> = {
     'That login cannot see that repository, or it does not exist.',
   'setup-refused': 'The setup was not saved; fix what each field says.',
   'not-broken': 'The config reads, so it stays where it is.',
-  'summary-running': 'Another summary is running; wait for it to finish.',
   'repo-not-watched':
     'This repository is not watched, so the board has no clone to summarise it in.',
   'harvest-extension-missing':

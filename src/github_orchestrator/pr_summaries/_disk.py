@@ -25,6 +25,8 @@ def _decoded(document: bytes) -> Summary:
     fields = json.loads(document)
     return Summary(wanted=_moment(fields.get("wanted")),
                    answered=_moment(fields.get("answered")),
+                   asked=_moment(fields.get("asked")),
+                   asked_over_github_api=fields.get("asked_over_github_api", False),
                    head_sha=fields.get("head_sha"),
                    started=_moment(fields.get("started")),
                    finished=_moment(fields.get("finished")),
@@ -37,6 +39,8 @@ def _decoded(document: bytes) -> Summary:
 def _encoded(summary: Summary) -> bytes:
     return json.dumps({"wanted": _text(summary.wanted),
                        "answered": _text(summary.answered),
+                       "asked": _text(summary.asked),
+                       "asked_over_github_api": summary.asked_over_github_api,
                        "head_sha": summary.head_sha,
                        "started": _text(summary.started),
                        "finished": _text(summary.finished),
@@ -67,13 +71,28 @@ class DiskPrSummaries:
             stored = self.load(pr) or Summary()
             write_atomically(self._file(pr), _encoded(replace(stored, wanted=self._clock())))
 
+    def ask(self, pr: Pr, *, use_github_api: bool) -> None:
+        with self._locked(pr):
+            stored = self.load(pr) or Summary()
+            write_atomically(self._file(pr), _encoded(replace(
+                stored, asked=self._clock(), asked_over_github_api=use_github_api)))
+
+    def unask(self, pr: Pr) -> None:
+        with self._locked(pr):
+            stored = self.load(pr)
+            if stored is None or stored.asked is None:
+                return
+            write_atomically(self._file(pr), _encoded(replace(
+                stored, asked=None, asked_over_github_api=False)))
+
     def unwant(self, pr: Pr) -> bool:
         if not self._file(pr).exists():
             return True
         try:
             with self._locked(pr):
                 stored = self.load(pr) or Summary()
-                write_atomically(self._file(pr), _encoded(replace(stored, wanted=None)))
+                write_atomically(self._file(pr), _encoded(replace(
+                    stored, wanted=None, asked=None, asked_over_github_api=False)))
         except OSError:
             return False
         return True
@@ -87,7 +106,9 @@ class DiskPrSummaries:
     def save(self, pr: Pr, summary: Summary) -> None:
         with self._locked(pr):
             stored = self.load(pr) or Summary()
-            write_atomically(self._file(pr), _encoded(replace(summary, wanted=stored.wanted)))
+            write_atomically(self._file(pr), _encoded(replace(
+                summary, wanted=stored.wanted, asked=stored.asked,
+                asked_over_github_api=stored.asked_over_github_api)))
 
     def due(self, in_flight: Set[Pr]) -> list[Pr]:
         stored = {}
