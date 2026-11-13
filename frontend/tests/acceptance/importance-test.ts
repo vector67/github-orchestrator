@@ -50,7 +50,7 @@ module('Acceptance | importance', function (hooks) {
     return find(`${ROW} ${selector}`)!.className === hold.className;
   }
 
-  test('a row with no importance marks its move with a red dot, and offers Set importance on hover like Hold', async function (assert) {
+  test('a row with no importance marks its move and its Set importance with a red dot, labelled once, and offers Set importance on hover like Hold', async function (assert) {
     serve(ranked(null));
     await visit('/');
 
@@ -61,9 +61,10 @@ module('Acceptance | importance', function (hooks) {
       'the dot sits right after the move',
     );
     assert.dom(dot).hasAttribute('aria-label', 'importance not set');
-    assert
-      .dom(`${ROW} [data-test-set-importance] [data-test-importance-unset]`)
-      .doesNotExist();
+    const buttonDot = `${ROW} [data-test-set-importance] [data-test-importance-unset]`;
+    assert.dom(buttonDot).exists();
+    assert.dom(buttonDot).hasAttribute('aria-hidden', 'true');
+    assert.dom(buttonDot).doesNotHaveAttribute('aria-label');
     assert.dom(`${ROW} [data-test-set-importance]`).hasText('Set importance');
     assert.true(hidesLikeHold('[data-test-set-importance]'));
     assert.true(said().includes('importance not set.'), said().join(' '));
