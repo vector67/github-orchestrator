@@ -34,7 +34,7 @@ from github_orchestrator.cli._restart_all import (
 from github_orchestrator.cli._runs import logs, runs
 from github_orchestrator.cli._service import Service, launchd_label
 from github_orchestrator.cli._setup import ReadLine, setup, show_config
-from github_orchestrator.cli._skill import skill
+from github_orchestrator.cli._skill import skill, update_skills
 from github_orchestrator.cli._start import (
     await_hub,
     hub_line,
@@ -125,7 +125,7 @@ class OperatorCli:
     def _start(self, args: argparse.Namespace) -> None:
         config = self._config
         if args.from_installer:
-            self._start_from_installer(force=args.force)
+            self._start_from_installer(force=args.force, leave_skills=args.leave_skills)
             return
         migrate(self._config_file, self._run, "Migrating the config")
         if args.foreground:
@@ -133,7 +133,7 @@ class OperatorCli:
         else:
             start(self._service, config.hub_url, self._hub_health, self._sleep)
 
-    def _start_from_installer(self, *, force: bool) -> None:
+    def _start_from_installer(self, *, force: bool, leave_skills: bool) -> None:
         config = self._config
         moved = self._moved_old_config()
         if moved:
@@ -151,6 +151,8 @@ class OperatorCli:
             stop_managers_and_server(instance)
         for instance in instances:
             clear_the_way(instance, self._read_line, force=force)
+        if not leave_skills:
+            update_skills(config.agent.skill_folder(config.home, config.agent_command))
         for instance in instances:
             named = "the default instance" if instance.name is None else instance.name
             print(f"==> Starting the watcher for {named}", flush=True)

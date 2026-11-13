@@ -150,3 +150,59 @@ def test_a_claude_instance_with_its_own_config_dir_installs_the_skill_there(mach
     assert ran.code == 0, ran.out
     assert _contents(work_skill) == _contents(PACKAGED)
     assert not _skill(machine).exists()
+
+
+def _upgrading(machine) -> None:
+    machine.configure()
+    machine.answering_hubs.add("http://127.0.0.1:8720")
+
+
+def test_the_installer_s_start_installs_a_shipped_skill_missing_beside_one_already_there(
+        machine, run_cli):
+    _upgrading(machine)
+    _skill(machine).parent.mkdir(parents=True)
+    shutil.copytree(PACKAGED, _skill(machine))
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
+    assert f"Installed the create-pr skill in {_create_pr(machine)}" in ran.out
+
+
+def test_the_installer_s_start_leaves_an_edited_skill_alone_and_names_the_replace_option(
+        machine, run_cli):
+    _upgrading(machine)
+    _skill(machine).parent.mkdir(parents=True)
+    shutil.copytree(PACKAGED, _skill(machine))
+    (_skill(machine) / "SKILL.md").write_text("my own rebase rules\n")
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert (_skill(machine) / "SKILL.md").read_text() == "my own rebase rules\n"
+    assert "github-orchestrator skill --replace" in ran.out
+
+
+def test_the_installer_s_start_leaves_the_skills_out_when_none_was_installed(machine, run_cli):
+    _upgrading(machine)
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert not _skill(machine).exists() and not _create_pr(machine).exists()
+    assert ("Skills left out: create-pr, rebase-on-main; github-orchestrator skill installs "
+            "them later.") in ran.out
+
+
+def test_the_installer_s_start_leaves_the_skills_to_the_install_script_when_it_offers_them(
+        machine, run_cli):
+    _upgrading(machine)
+    _skill(machine).parent.mkdir(parents=True)
+    shutil.copytree(PACKAGED, _skill(machine))
+
+    ran = run_cli("start", "--from-installer", "--leave-skills")
+
+    assert ran.code == 0, ran.out
+    assert not _create_pr(machine).exists()
+    assert "skill" not in ran.out

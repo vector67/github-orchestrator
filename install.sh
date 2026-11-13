@@ -550,11 +550,11 @@ step "Starting the watcher"
 note "It runs as a $([ "$PLATFORM" = macos ] && echo LaunchAgent || echo systemd user unit) and serves the board."
 started() {
     if [ -n "$YES" ]; then
-        "$COMMAND" start --from-installer --force </dev/null
+        "$COMMAND" start --from-installer --force --leave-skills </dev/null
     elif [ -n "$TTY" ]; then
-        "$COMMAND" start --from-installer </dev/tty
+        "$COMMAND" start --from-installer --leave-skills </dev/tty
     else
-        "$COMMAND" start --from-installer </dev/null
+        "$COMMAND" start --from-installer --leave-skills </dev/null
     fi
 }
 started || fail "The watcher did not start; github-orchestrator doctor says why."

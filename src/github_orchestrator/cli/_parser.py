@@ -98,6 +98,7 @@ class Commands:
             help="Run the watcher in this terminal instead, for a Linux without a user manager.")
         start_parser.add_argument("--from-installer", action="store_true", help=argparse.SUPPRESS)
         start_parser.add_argument("-f", "--force", action="store_true", help=argparse.SUPPRESS)
+        start_parser.add_argument("--leave-skills", action="store_true", help=argparse.SUPPRESS)
 
         stop_parser = command(
             "stop", "Stop this instance's watcher and agent managers.", "stop --all",
