@@ -28,7 +28,7 @@ from tests.conversation.support import world
 from tests.thread_records.support import disk_thread_records
 from tests.working_copies.support import clone_of, real_working_copies
 
-pytestmark = pytest.mark.xdist_group("preview")
+SHARES_A_SEEDED_BOARD = pytest.mark.xdist_group("preview")
 
 
 @pytest.fixture
@@ -79,6 +79,7 @@ def test_the_reviewer_fixtures_leave_the_author_previews_repo_alone():
         "reviewer card brought would move the author card's own diff")
 
 
+@SHARES_A_SEEDED_BOARD
 def test_the_preview_seeds_a_thread_in_every_state_the_author_board_draws(
         seeded):
     threads = seeded.get("/api/conversations").json()["conversations"]
@@ -91,6 +92,7 @@ def test_the_preview_seeds_a_thread_in_every_state_the_author_board_draws(
     assert any(thread["reopened"] for thread in threads)
 
 
+@SHARES_A_SEEDED_BOARD
 def test_the_preview_seeds_a_reviewer_pr_in_every_state_a_reviewer_draws(
         reviewed):
     threads = reviewed.get("/api/conversations").json()["conversations"]
@@ -107,6 +109,7 @@ def test_the_preview_seeds_a_reviewer_pr_in_every_state_a_reviewer_draws(
     assert any(thread["record_state"] == "confirmed" for thread in threads)
 
 
+@SHARES_A_SEEDED_BOARD
 def test_a_reviewer_card_can_read_the_code_its_comment_sits_on(reviewed):
     head = reviewed.get("/api/pull-request").json()["head_sha"]
     anchor = reviewed.get(
@@ -120,6 +123,7 @@ def test_a_reviewer_card_can_read_the_code_its_comment_sits_on(reviewed):
     assert answer.json()["lines"][0]["text"] == "    return sorted(line_items)"
 
 
+@SHARES_A_SEEDED_BOARD
 def test_the_reviewer_preview_checks_the_commit_its_assumed_done_thread_names(reviewed):
     check = reviewed.get("/api/conversations/PRRT_assumed_done").json()["commit_check"]
 
@@ -129,6 +133,7 @@ def test_the_reviewer_preview_checks_the_commit_its_assumed_done_thread_names(re
     assert [file["path"] for file in diff.json()["files"]] == ["billing/units.py"]
 
 
+@SHARES_A_SEEDED_BOARD
 @pytest.mark.parametrize("fixture", ["seeded", "reviewed"])
 def test_every_seeded_thread_answers_every_read_its_card_makes(fixture,
                                                                request):
@@ -270,14 +275,18 @@ def test_the_preview_lands_its_seeded_fixes_where_git_has_no_identity(tmp_path, 
     assert landed["state"] == "done"
 
 
-@pytest.mark.no_replay
 def test_the_preview_removes_its_folder_when_ctrl_c_stops_it(tmp_path, monkeypatch):
     def interrupted(self, sockets=None):
         raise KeyboardInterrupt
 
+    def made(prefix):
+        folder = tmp_path / f"{prefix}made"
+        folder.mkdir()
+        return str(folder)
+
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    monkeypatch.setattr(preview.tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setattr(preview.tempfile, "mkdtemp", made)
     monkeypatch.setattr(preview.uvicorn.Server, "run", interrupted)
     handler = signal.getsignal(signal.SIGINT)
 
@@ -311,6 +320,7 @@ def test_the_previews_terminal_opens_a_shell_in_its_worktree_for_a_question(tmp_
     assert argv[0] == "sh" and argv[-1] == "Why this name?"
 
 
+@SHARES_A_SEEDED_BOARD
 def test_the_preview_serves_a_manager_panel_with_something_in_every_part(seeded):
     dashboard = seeded.get("/api/dashboard").json()
 
@@ -323,6 +333,7 @@ def test_the_preview_serves_a_manager_panel_with_something_in_every_part(seeded)
     assert seeded.get("/api/manager/agent-output").json()["lines"]
 
 
+@SHARES_A_SEEDED_BOARD
 @pytest.mark.parametrize("fixture", ["seeded", "reviewed"])
 def test_the_previews_dashboard_rows_the_threads_its_board_holds(fixture, request):
     client = request.getfixturevalue(fixture)
@@ -343,6 +354,7 @@ def test_the_previews_dashboard_rows_the_threads_its_board_holds(fixture, reques
     assert fixture == "seeded" or dashboard["pr"]["author"] == "mei"
 
 
+@SHARES_A_SEEDED_BOARD
 def test_the_reviewer_preview_seeds_a_mention_in_a_comment_and_in_the_description(reviewed):
     threads = reviewed.get("/api/conversations").json()["conversations"]
 
