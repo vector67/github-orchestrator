@@ -232,7 +232,7 @@ def test_a_gist_is_asked_under_the_clamp(clamped_runs, world, claude):
 
 
 def test_a_rebase_session_runs_the_configured_command(work_runs, world):
-    assert work_runs.rebase_in_session(THE_PR, "/tmp/wt") is None
+    assert work_runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert session.argv == [*WORK_ARGV, "/rebase-on-main"]

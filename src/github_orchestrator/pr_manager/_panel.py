@@ -6,6 +6,7 @@ from typing import Any
 from github_orchestrator.agent_runs import History, PrWork
 from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.interface import ManagerRefusal
+from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.domain import DismissUntil, Monotonic, Pr
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
@@ -38,7 +39,7 @@ class FilePanel(ManagerPanel, ManagerWorktree):
                  run: GitRun, monotonic: Monotonic, status_files: StatusFiles,
                  command_files: CommandFiles, dashboards: DashboardSource,
                  agent_changes: AgentChanges, history: History, pr_processes: PrProcesses,
-                 pr_work: PrWork) -> None:
+                 pr_work: PrWork, change_detection: ChangeDetection) -> None:
         self._pr = pr
         self._worktree = worktree
         self._agents_enabled = agents_enabled
@@ -51,6 +52,11 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         self._history = history
         self._pr_processes = pr_processes
         self._pr_work = pr_work
+        self._change_detection = change_detection
+
+    def _yours(self) -> bool:
+        facts = self._change_detection.facts(self._pr)
+        return facts is not None and facts.is_author is True
 
     def dashboard(self) -> Dashboard:
         return self._dashboards.dashboard(self._pr)
@@ -129,7 +135,7 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         if command is None:
             return self._pr_processes.split(pr, worktree, shell_argv())
         return open_in_terminal(command, argv_for(command, keys), pr, worktree,
-                                self._pr_processes, self._pr_work)
+                                self._pr_processes, self._pr_work, yours=self._yours())
 
     def ask(self, prompt: str) -> ManagerRefusal | str | None:
         worktree = self._worktree()
@@ -142,7 +148,7 @@ class FilePanel(ManagerPanel, ManagerWorktree):
             log.info("%s: a question for the agent refused — agents are disabled", self._pr)
             return ManagerRefusal.AGENTS_DISABLED
         log.info("%s: asking the agent in a terminal", self._pr)
-        return self._pr_work.ask_in_session(self._pr, worktree, prompt)
+        return self._pr_work.ask_in_session(self._pr, worktree, prompt, yours=self._yours())
 
     def _refusal(self, what: str, command: Command | None = None, *,
                  pushes: bool = False) -> ManagerRefusal | None:
@@ -164,7 +170,8 @@ class FilePanels:
     def __init__(self, config_of: ConfigOf, run: GitRun, monotonic: Monotonic, *,
                  status_files: StatusFiles, command_files: CommandFiles,
                  dashboards: DashboardSource, agent_changes: AgentChanges, history: History,
-                 pr_processes: PrProcesses, pr_work: PrWork) -> None:
+                 pr_processes: PrProcesses, pr_work: PrWork,
+                 change_detection: ChangeDetection) -> None:
         self._config_of = config_of
         self._run = run
         self._monotonic = monotonic
@@ -175,6 +182,7 @@ class FilePanels:
         self._history = history
         self._pr_processes = pr_processes
         self._pr_work = pr_work
+        self._change_detection = change_detection
 
     def of(self, pr: Pr) -> ManagerPanel:
         return self._panel(pr)
@@ -188,4 +196,5 @@ class FilePanels:
                          monotonic=self._monotonic, status_files=self._status_files,
                          command_files=self._command_files, dashboards=self._dashboards,
                          agent_changes=self._agent_changes, history=self._history,
-                         pr_processes=self._pr_processes, pr_work=self._pr_work)
+                         pr_processes=self._pr_processes, pr_work=self._pr_work,
+                         change_detection=self._change_detection)

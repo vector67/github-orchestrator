@@ -291,10 +291,33 @@ def test_a_run_never_sees_the_platform_api_key(runs, codex, tmp_path, monkeypatc
 
 
 def test_a_rebase_session_asks_codex_for_the_skill(runs, world):
-    assert runs.rebase_in_session(THE_PR, "/tmp/wt") is None
+    assert runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
     assert session.argv == ["codex", "$rebase-on-main"]
+
+
+def test_a_rebase_session_on_someone_else_s_pr_treats_it_as_an_untrusted_project(
+        runs, world, tmp_path):
+    assert runs.rebase_in_session(THE_PR, str(tmp_path), yours=False) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["codex", *_untrusted(tmp_path), "$rebase-on-main"]
+
+
+def test_a_question_on_your_own_pr_trusts_the_project(runs, world, tmp_path):
+    assert runs.ask_in_session(THE_PR, str(tmp_path), "Why this name?", yours=True) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["codex", "--", "Why this name?"]
+
+
+def test_a_question_on_someone_else_s_pr_treats_it_as_an_untrusted_project(
+        runs, world, tmp_path):
+    assert runs.ask_in_session(THE_PR, str(tmp_path), "Why this name?", yours=False) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert session.argv == ["codex", *_untrusted(tmp_path), "--", "Why this name?"]
 
 
 def test_a_rework_session_starts_codex_on_the_prompt(runs, world):
