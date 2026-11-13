@@ -284,6 +284,6 @@ def _listed_mention(entry: Mapping[str, Any]) -> ListedMention:
     return ListedMention(pr=Pr(Repo.parse(entry["repo"]), entry["number"]),
                          thread=entry["thread"], comment_id=entry["comment_id"],
                          kind=entry["kind"], author=entry["author"], at=entry["at"],
-                         body=entry["body"], url=entry["url"], on_board=entry["on_board"],
-                         building=entry["building"],
+                         body=entry["body"], url=entry["url"], on_board=entry["on_board"] if "on_board" in entry else entry["card"],
+                         building=entry.get("building", False),
                          ended=None if ended is None else PrEnded(ended))
