@@ -118493,7 +118493,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -118501,6 +118501,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -118924,7 +118925,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -118932,6 +118933,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -119242,7 +119244,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -119250,6 +119252,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -119560,7 +119563,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -119568,6 +119571,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -119878,7 +119882,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -119886,6 +119890,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -120196,7 +120201,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -120204,6 +120209,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -120514,7 +120520,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -120522,6 +120528,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -120832,7 +120839,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -120840,6 +120847,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -121150,7 +121158,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -121158,6 +121166,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
@@ -121468,7 +121477,7 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
     {
      "argv": [
       "git",
@@ -121476,6 +121485,7 @@
       "<TMP>/repo",
       "worktree",
       "add",
+      "--end-of-options",
       "<TMP>/feature",
       "feature"
      ],
