@@ -76,6 +76,15 @@ leaves it alone, and `github-orchestrator skill --replace` puts this version's
 in its place. `github-orchestrator skill --status` prints one line per skill,
 its name and then `missing`, `current` or `different`.
 
+`github-orchestrator update` brings the skills along under an **Updating the
+orchestrator's skills** heading. A shipped skill that is missing is installed.
+One that differs from this version's is left alone, and the output names
+`github-orchestrator skill --replace`. When none of the shipped skills is
+installed, they stay left out, and `github-orchestrator skill` installs them
+later. It updates only the default instance's skills folder; for another
+instance whose agent reads its skills elsewhere, run
+`github-orchestrator skill --instance <name>`.
+
 A dry run names every consequence a real cycle would have: each event it would
 queue, which of them would launch a Claude run, and the worktrees it would cut
 and the agent managers it would start:
@@ -387,12 +396,14 @@ Grouping wins over rows staying put, so a row moves when its PR changes group,
 and it carries a **moved here** chip until you open that PR. The tab title
 counts the PRs that need you.
 
-Each row leads with its move line: your move, the reason for that move, chips
-for the facts that matter, and at the right end how long the PR has been in its
-group. Below it are the title, the number, whose PR it is and the branch.
+Each row leads with its move line: your move, a red dot when the PR's
+importance is not set, the reason for that move, and chips for the facts that
+matter. Below it are the title, the number, whose PR it is and the branch.
 Clicking a row only opens the PR, whatever its move says; hovering it adds
 **Open →** to its last line. Hovering, focusing or selecting a row also shows
-its **Hold** (or **Resume**) and **Dismiss** buttons, which do what the keys do.
+its buttons, and only then: **Hold** (or **Resume**) and **Dismiss**, which do
+what the keys do, **Release** on a worktree frozen on the wrong branch, **I
+nudged them** while the move is Nudge, and **Set importance**.
 The selected row, the one the keys act on, is framed; tabbing to a row selects
 it, and `j` or `k` take the focus off the row they leave.
 
@@ -412,15 +423,15 @@ reviewer** (the PR description's `Detailed reviewer: @<login>` line names you),
 named for what started it: CI fix, rebase on main, review, re-review, thread
 fix, clean-up, or **carry on**, which is Claude started again with `--continue`
 to pick up its last conversation in the worktree, with no new instructions. A
-PR frozen on the wrong branch has a **Release** button on its row, which asks
-first.
+row's **Release** asks first.
 
 Inside a group, PRs you marked Important come first, then those whose
 importance is not set, then Normal, then Someday, and within each rank the one
-that joined the group first leads. **Set importance** on the Dashboard sets it.
-An Important PR that has waited on others for a day since its last event moves
-to Needs you, its move reading **Nudge** and the people it waits on. **I nudged
-them** on the Dashboard puts the next nudge a day off.
+that joined the group first leads; Someday rows are greyed. **Set importance**, on the row or the
+Dashboard, sets it. An Important PR that has waited on others for a day since
+its last event moves to Needs you, its move reading **Nudge** and the people it
+waits on. **I nudged them**, on the row or the Dashboard, puts the next nudge a
+day off.
 
 | Key       | What it does                                                            |
 | --------- | ----------------------------------------------------------------------- |
@@ -1042,7 +1053,7 @@ became yours to decide.
 | `queued`         | waiting for an agent                                                            |
 | `working`        | an agent is running                                                             |
 | `rework`         | an agent is working from your rework note                                       |
-| `session`        | a session you steer is open in the Terminal tab or a tmux pane                  |
+| `session`        | a session you steer is open in the Terminal tab                                 |
 | `landing`        | accepted: the fix is on its way to the PR branch, then the reply                |
 | `filing`         | accepted: an agent is filing the ticket, and the reply follows once it is filed |
 | `rebasing`       | the fix conflicted on accept; an agent is rebasing it onto the PR head          |

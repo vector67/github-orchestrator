@@ -81,7 +81,7 @@ when the config's `agent_command` sets `CLAUDE_CONFIG_DIR`, or
 `~/.agents/skills` for Codex):
 `rebase-on-main`, which the agents run when a branch stops merging, and
 `create-pr`, which opens a new PR; `github-orchestrator skill` installs them
-later.
+later, and [Updating](#updating) says what `update` does with them.
 
 Desktop notifications are optional. On macOS the installer asks whether to
 build the notification apps, which needs the Command Line Tools. On Linux they
@@ -247,6 +247,11 @@ An upgrade can rename the folders of review threads' worktrees. A terminal
 session left open in one of them holds that up: `update` names each one and
 asks before closing them. Until they close the watcher waits, and the board
 lists them with a **Close sessions and migrate** button.
+
+`update` also updates the shipped skills in the default instance's skills
+folder: a missing one is installed, one that differs from this version's is
+left alone (`github-orchestrator skill --replace` replaces it), and when none
+was installed at all they stay left out until `github-orchestrator skill`.
 
 ## Uninstall
 
