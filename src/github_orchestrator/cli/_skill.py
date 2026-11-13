@@ -68,6 +68,17 @@ def install_skills(skills: Path, *, replace: bool) -> None:
         sys.exit(1)
 
 
+def update_skills(skills: Path) -> None:
+    print("==> Updating the orchestrator's skills", flush=True)
+    names = shipped_skills()
+    if all(skill_state(skills, name) == "missing" for name in names):
+        print(f"Skills left out: {', '.join(names)}; github-orchestrator skill installs them "
+              "later.")
+        return
+    for name in names:
+        _install(skills, name, replace=False)
+
+
 def skill(skills: Path, *, status: bool, replace: bool) -> None:
     if status:
         for name in shipped_skills():

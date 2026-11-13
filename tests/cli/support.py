@@ -126,6 +126,7 @@ class Machine:
     hub_state: str = "watching"
     located: dict[str, str] = field(default_factory=dict)
     graphical: bool = True
+    extra_environment: dict[str, str] = field(default_factory=dict)
     newest_release: Mapping[str, object] | None = None
     pinned_config: bool = True
     releases_api: ScriptedReleasesApi = field(default_factory=ScriptedReleasesApi)
@@ -209,7 +210,8 @@ class Machine:
     def environment(self) -> dict[str, str]:
         pinned = {"GITHUB_ORCHESTRATOR_CONFIG": str(self.config_path)} if (
             self.pinned_config or self.instance is not None) else {}
-        return {"GITHUB_ORCHESTRATOR_DATA_DIR": str(self.data_dir), **pinned}
+        return {"GITHUB_ORCHESTRATOR_DATA_DIR": str(self.data_dir), **pinned,
+                **self.extra_environment}
 
     def settings(self) -> Settings:
         return load_settings(self.environment, self.home)
@@ -263,7 +265,7 @@ class Machine:
             CliWiring(cli_config(settings, self.home, platform=self.platform,
                                  uid=self.system.uid, shell_path=self.shell_path,
                                  cache_home=self.cache_home, python=self.python, graphical=self.graphical,
-                                 tool_dir=self.tool_dir),
+                                 tool_dir=self.tool_dir, env=self.environment),
                       self.system, self.read_line, self.which, self.hub_health),
             clocks=clocks_of(lambda: self.now, sleep=self.sleep))
 

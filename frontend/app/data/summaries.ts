@@ -869,7 +869,6 @@ export interface Place {
   joined: number;
   arrived: number;
   moved: boolean;
-  entered: number;
 }
 
 export interface WallRow extends ShownPr {
@@ -877,7 +876,6 @@ export interface WallRow extends ShownPr {
   summaries: Summaries;
   arrived: number;
   moved: boolean;
-  entered: number;
 }
 
 export interface WallSection {
@@ -892,7 +890,6 @@ export function placeOf(
   was: Place | null,
   summaries: Summaries,
   joined: () => number,
-  entered: (group: WallGroup | null, seenMoving: boolean) => number,
 ): Place {
   const group = summaries.move.group;
   if (was && was.group === group) return was;
@@ -902,26 +899,7 @@ export function placeOf(
     joined: at,
     arrived: was?.arrived ?? at,
     moved: was !== null,
-    entered: entered(group, was !== null),
   };
-}
-
-export interface Entered {
-  group: WallGroup | null;
-  at: number;
-}
-
-export function enteredAt(
-  remembered: Entered | undefined,
-  group: WallGroup | null,
-  seenMoving: boolean,
-  lastEventAt: string | null,
-  now: number,
-): number {
-  if (seenMoving) return now;
-  if (remembered?.group === group) return remembered.at;
-  const lastEvent = Date.parse(lastEventAt ?? '');
-  return Number.isNaN(lastEvent) ? now : Math.min(lastEvent, now);
 }
 
 type Placed = WallRow & { joined: number; group: WallGroup | null };
@@ -1057,6 +1035,7 @@ export type SummaryState =
 
 export interface SummaryTab {
   state: SummaryState;
+  queued: boolean;
   sha: string | null;
   head: string | null;
   behind: string | null;
@@ -1127,6 +1106,7 @@ function summaryTabBuilt(
   const calls = API_CALLS.exec(summary.stderr ?? '')?.[1];
   return {
     state,
+    queued: state !== 'running' && summary.asked !== null,
     sha: shortOf(summary.head_sha),
     head: shortOf(head),
     behind: behindOf(summary.behind),

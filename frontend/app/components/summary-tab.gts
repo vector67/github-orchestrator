@@ -15,6 +15,8 @@ import type ThemeService from 'frontend/services/theme';
 import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
 import eq from 'frontend/helpers/eq';
 
+const QUEUED = 'Waiting for another summary to finish';
+
 export default class SummaryTab extends Component {
   @service declare here: HereService;
   @service declare hub: HubService;
@@ -119,17 +121,21 @@ export default class SummaryTab extends Component {
             <span>Waiting for its turn</span>
           {{else if (eq this.tab.state "none-yet-author")}}
             <span>No summary</span>
-            <button
-              type="button"
-              class="btn"
-              data-test-summary-run
-              disabled={{if this.pressing.pressed true}}
-              {{on "click" this.run}}
-            >{{if
-                this.pressing.pressed
-                this.pressing.doing
-                "Summarise"
-              }}</button>
+            {{#if this.tab.queued}}
+              <span data-test-summary-queued>{{QUEUED}}</span>
+            {{else}}
+              <button
+                type="button"
+                class="btn"
+                data-test-summary-run
+                disabled={{if this.pressing.pressed true}}
+                {{on "click" this.run}}
+              >{{if
+                  this.pressing.pressed
+                  this.pressing.doing
+                  "Summarise"
+                }}</button>
+            {{/if}}
           {{else if (eq this.tab.state "running")}}
             {{#if this.tab.markdown}}
               <span><code>{{this.tab.sha}}</code>
@@ -153,33 +159,41 @@ export default class SummaryTab extends Component {
             {{/if}}
           {{else if (eq this.tab.state "needs-github-api")}}
             <span>{{this.tab.reason}}</span>
-            <button
-              type="button"
-              class="btn"
-              data-test-summary-github-api
-              disabled={{if this.pressing.pressed true}}
-              {{on "click" this.runWithGithubApi}}
-            >{{if
-                this.pressing.pressed
-                this.pressing.doing
-                this.githubApi
-              }}</button>
+            {{#if this.tab.queued}}
+              <span data-test-summary-queued>{{QUEUED}}</span>
+            {{else}}
+              <button
+                type="button"
+                class="btn"
+                data-test-summary-github-api
+                disabled={{if this.pressing.pressed true}}
+                {{on "click" this.runWithGithubApi}}
+              >{{if
+                  this.pressing.pressed
+                  this.pressing.doing
+                  this.githubApi
+                }}</button>
+            {{/if}}
           {{else if (eq this.tab.state "failed")}}
             <span>{{exitWordOf this.tab.exitStatus}}
               ·
               {{this.tab.reason}}</span>
             <span class="strip-end" data-test-summary-end>
-              <button
-                type="button"
-                class="btn"
-                data-test-summary-run
-                disabled={{if this.pressing.pressed true}}
-                {{on "click" this.run}}
-              >{{if
-                  this.pressing.pressed
-                  this.pressing.doing
-                  "Summarise"
-                }}</button>
+              {{#if this.tab.queued}}
+                <span data-test-summary-queued>{{QUEUED}}</span>
+              {{else}}
+                <button
+                  type="button"
+                  class="btn"
+                  data-test-summary-run
+                  disabled={{if this.pressing.pressed true}}
+                  {{on "click" this.run}}
+                >{{if
+                    this.pressing.pressed
+                    this.pressing.doing
+                    "Summarise"
+                  }}</button>
+              {{/if}}
             </span>
           {{else if (eq this.tab.state "stale")}}
             <span>Written for
@@ -187,40 +201,48 @@ export default class SummaryTab extends Component {
               <code>{{this.tab.head}}</code>{{#if this.tab.behind}},
                 {{this.tab.behind}}{{/if}}</span>
             <span class="strip-end" data-test-summary-end>
-              <span
-                title={{this.tab.finished}}
-                data-test-summary-finished
-              >finished {{this.finished}}</span>
-              <button
-                type="button"
-                class="btn"
-                data-test-summary-run
-                disabled={{if this.pressing.pressed true}}
-                {{on "click" this.run}}
-              >{{if
-                  this.pressing.pressed
-                  this.pressing.doing
-                  "Summarise"
-                }}</button>
+              {{#if this.tab.queued}}
+                <span data-test-summary-queued>{{QUEUED}}</span>
+              {{else}}
+                <span
+                  title={{this.tab.finished}}
+                  data-test-summary-finished
+                >finished {{this.finished}}</span>
+                <button
+                  type="button"
+                  class="btn"
+                  data-test-summary-run
+                  disabled={{if this.pressing.pressed true}}
+                  {{on "click" this.run}}
+                >{{if
+                    this.pressing.pressed
+                    this.pressing.doing
+                    "Summarise"
+                  }}</button>
+              {{/if}}
             </span>
           {{else}}
             <span><code>{{this.tab.sha}}</code></span>
             <span class="strip-end" data-test-summary-end>
-              <span
-                title={{this.tab.finished}}
-                data-test-summary-finished
-              >finished {{this.finished}}</span>
-              <button
-                type="button"
-                class="btn"
-                data-test-summary-run
-                disabled={{if this.pressing.pressed true}}
-                {{on "click" this.run}}
-              >{{if
-                  this.pressing.pressed
-                  this.pressing.doing
-                  "Summarise"
-                }}</button>
+              {{#if this.tab.queued}}
+                <span data-test-summary-queued>{{QUEUED}}</span>
+              {{else}}
+                <span
+                  title={{this.tab.finished}}
+                  data-test-summary-finished
+                >finished {{this.finished}}</span>
+                <button
+                  type="button"
+                  class="btn"
+                  data-test-summary-run
+                  disabled={{if this.pressing.pressed true}}
+                  {{on "click" this.run}}
+                >{{if
+                    this.pressing.pressed
+                    this.pressing.doing
+                    "Summarise"
+                  }}</button>
+              {{/if}}
             </span>
           {{/if}}
           {{#if this.pressing.refused}}

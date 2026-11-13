@@ -1165,10 +1165,10 @@ module('Acceptance | wall', function (hooks) {
     };
     const verb = middleOf('[data-test-verb]');
     assert.deepEqual(
-      ['[data-test-reason]', '[data-test-state]', '[data-test-age]'].map(
+      ['[data-test-reason]', '[data-test-state]'].map(
         (selector) => Math.abs(middleOf(selector) - verb) <= 3,
       ),
-      [true, true, true],
+      [true, true],
     );
   });
 
@@ -1415,11 +1415,10 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('h1').hasText('Pull requests');
   });
 
-  test('a row’s button is named by its move and title alone, and describes its reason, each chip with what it means, its age and its meta one by one', async function (assert) {
+  test('a row’s button is named by its move and title alone, and describes its reason, each chip with what it means and its meta one by one', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
-          status: { last_event_at: minutesAgo(47) },
           facts: factsFor('await-author', {
             ci_status: 'failing',
             merge_state: 'conflicts',
@@ -1442,12 +1441,7 @@ module('Acceptance | wall', function (hooks) {
       (chip) => `${chip.textContent.trim()}: ${chip.getAttribute('title')}.`,
     );
     assert.true(hints.length >= 2, hints.join(' '));
-    assert.deepEqual(describedBy(lead), [
-      `${reason}.`,
-      ...hints,
-      'In Waiting on others for 47m.',
-      `${meta}.`,
-    ]);
+    assert.deepEqual(describedBy(lead), [`${reason}.`, ...hints, `${meta}.`]);
   });
 
   test('a row that moved group says moved here until you open it', async function (assert) {
@@ -1515,62 +1509,6 @@ module('Acceptance | wall', function (hooks) {
 
     assert.dom('[data-test-wall-row="o/r#7"]').exists();
     assert.dom('[data-test-moved]').doesNotExist();
-  });
-
-  const MINUTE = 60_000;
-  const DAY = 24 * 60 * MINUTE;
-
-  function minutesAgo(minutes: number): string {
-    return new Date(clock().now - minutes * MINUTE).toISOString();
-  }
-
-  function ageOf(key: string): string {
-    return texts(`[data-test-wall-row="${key}"] [data-test-age]`).join('');
-  }
-
-  test('each row ends its move line with how long it has been in its section, and starts again when it moves', async function (assert) {
-    const lastEvent = { status: { last_event_at: minutesAgo(47) } };
-    onTheHub(heldPr({ dashboard: lastEvent }));
-    await visit('/');
-
-    assert.strictEqual(ageOf('o/r#7'), '47m');
-    assert
-      .dom('[data-test-wall-row="o/r#7"] [data-test-age]')
-      .hasAttribute('title', 'In Waiting on others for 47m');
-
-    board().held = [
-      heldPr({ dashboard: { ...lastEvent, facts: factsFor('fix-ci') } }),
-    ];
-    await clock().tick(LIST);
-    assert.strictEqual(ageOf('o/r#7'), 'now');
-
-    await clock().tick(LIST * 24);
-    assert.strictEqual(ageOf('o/r#7'), '2m');
-  });
-
-  test('a row remembers when it entered its section from an earlier visit', async function (assert) {
-    localStorage.setItem(
-      'hub-sections-entered',
-      JSON.stringify({
-        'o/r#7': { group: 'waiting-on-others', at: clock().now - 3 * DAY },
-        'o/r#8': { group: 'needs-you', at: clock().now - 3 * DAY },
-      }),
-    );
-    onTheHub(
-      heldPr({ dashboard: { status: { last_event_at: minutesAgo(5) } } }),
-      heldPr({
-        number: 8,
-        dashboard: { status: { last_event_at: minutesAgo(5) } },
-      }),
-    );
-
-    await visit('/');
-
-    assert.deepEqual(
-      [ageOf('o/r#7'), ageOf('o/r#8')],
-      ['3d', '5m'],
-      'a section it has left since is not remembered',
-    );
   });
 
   test('the tab title counts the pull requests that need you', async function (assert) {
@@ -2542,6 +2480,48 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-row="o/r#8"] [data-test-release]')
       .doesNotExist();
     assert.true(reasonOf(8).startsWith('release asked for'), reasonOf(8));
+  });
+
+  test('every row button, Release, I nudged them and Set importance among them, waits for hover like Hold', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-review'),
+          manager: { importance: null, nudge_due: true },
+        },
+      }),
+      heldPr({
+        number: 8,
+        dashboard: {
+          manager: { frozen_on: 'main' },
+          frozen: {
+            worktree: '/wt',
+            here: 'main',
+            expected: 'tidy',
+            seconds_left: 60,
+            run_working: false,
+            release_requested: false,
+          },
+        },
+      }),
+    );
+    await visit('/');
+
+    assert.dom('[data-test-wall-row="o/r#7"] [data-test-nudged]').exists();
+    assert.dom('[data-test-wall-row="o/r#8"] [data-test-release]').exists();
+    const hold = find(
+      '[data-test-wall-row="o/r#7"] [data-test-wall-control="hold"]',
+    )!;
+    assert.deepEqual(
+      [
+        ...new Set(
+          findAll('[data-test-wall-row] .row-controls button').map(
+            (button) => button.className,
+          ),
+        ),
+      ],
+      [hold.className],
+    );
   });
 
   test('o opens the selected pull request on GitHub and y copies its address', async function (assert) {

@@ -22,12 +22,30 @@ browser.
   branch stops merging.
 - Serves a review board, from one server process for every PR: one row per
   review thread on your PR, each with a fix
-  an agent wrote for it in its own worktree, approved or rejected one at a time.
-- Lands an approved fix as a single commit on the PR branch and replies on the
+  an agent wrote for it in its own worktree, accepted or rejected one at a time.
+- Lands an accepted fix as a single commit on the PR branch and replies on the
   thread in your words.
 - Notifies on the desktop for the events that need telling rather than doing:
   macOS notifications whose click opens the PR, or `notify-send` on Linux.
 - Records every run, so `status`, `logs` and `runs` say what happened.
+
+Before you install, know what it does on your machine and your branches:
+
+- It cuts a git worktree for each pull request it watches, yours and the ones
+  you review, as a folder beside that repo's clone named after the branch, and
+  the git palette leaves a `<worktree>.git-palette.lock` file beside it.
+- Agents run in their tool's own auto mode (`--permission-mode auto` for Claude
+  Code, `--approve-for-me` for Codex), with no one asked about each command.
+- A CI-fix run commits its fix and pushes it to your PR branch without asking,
+  with `git push --force-with-lease` when history was rewritten. A rebase run
+  rebases in the worktree and stops short of the force-push the
+  `rebase-on-main` skill wants you to approve. Review-thread fixes are the ones
+  that wait: nothing reaches the branch until you press Accept.
+
+For a first look with nothing at stake, `make preview` in a checkout serves the
+board at `http://127.0.0.1:8791/pr/acme/widgets/7/` from made-up pull requests:
+a fake GitHub, agents disabled, and its state in a temporary folder. It builds
+the front end first, so it needs uv, Node and npm.
 
 Full documentation is in [docs/how-to-use.md](docs/how-to-use.md).
 
@@ -58,10 +76,12 @@ install what is missing:
 It asks which agent to use; `--agent codex` (or `GITHUB_ORCHESTRATOR_AGENT=codex`)
 chooses Codex without asking, `-y` keeps Claude, and the choice goes into the
 config as `agent = "codex"`. It also offers to copy the skills it ships into
-that agent's skills folder (`~/.claude/skills` or `~/.agents/skills`):
+that agent's skills folder (`~/.claude/skills`, or `<CLAUDE_CONFIG_DIR>/skills`
+when the config's `agent_command` sets `CLAUDE_CONFIG_DIR`, or
+`~/.agents/skills` for Codex):
 `rebase-on-main`, which the agents run when a branch stops merging, and
 `create-pr`, which opens a new PR; `github-orchestrator skill` installs them
-later.
+later, and [Updating](#updating) says what `update` does with them.
 
 Desktop notifications are optional. On macOS the installer asks whether to
 build the notification apps, which needs the Command Line Tools. On Linux they
@@ -70,13 +90,18 @@ go through `notify-send` when it is on `PATH`.
 The installer then installs the newest release with `uv tool install`, starts
 the watcher as a service (a LaunchAgent on macOS, a systemd user unit on Linux)
 and opens the board. `sh -s -- --help` in place of `sh` lists its options, such as `-y` to
-answer yes to everything and `--version X` for an older release. An install
+answer yes to every install question and `--version X` for an older release.
+Under `-y` the agent is Claude unless you chose another, the macOS notification
+apps are not built, the Linux watcher does not keep running after logout,
+missing skills are installed, and a skill that differs from this version's is
+left alone. An install
 from an older checkout is found and replaced, with its config and data moved
 over.
 
 The board opens on its setup screen: your GitHub account, the repos to watch,
 where their clones are, and a few options. **Start watching** writes the config,
-clones what is missing and restarts the watcher into watching. The first time
+clones what is missing and restarts the watcher into watching; once it is
+watching, the same button reads **Save and restart**. The first time
 the wall has pull requests it shows a short tour, which
 `github-orchestrator tutorial` shows again.
 
@@ -142,15 +167,42 @@ fonts, and the environment variables that move the config and data files.
 
 ## Day to day
 
-`github-orchestrator help`, like `--help`, lists every command in its group:
+`github-orchestrator help`, like `--help`, lists every command under its group,
+each with one line on what it does:
 
 ```text
-everyday     open, status, logs, runs
-service      start, stop, restart, restart-all, hold-restarts, allow-restarts
-maintenance  update, doctor, config, uninstall, setup, skill
-learning     tutorial, help
-agents       thread
-debugging    queue, undismiss
+everyday:
+  open            Open this instance's board in the browser.
+  status          Show overall system status.
+  logs            Tail the watcher's, the agent managers' or the service's log.
+  runs            Summarise today's agent runs: count, total time, longest.
+
+service:
+  start           Start this instance's watcher as a service and wait for its hub.
+  stop            Stop this instance's watcher and agent managers.
+  restart         Restart this instance's watcher and agent managers.
+  restart-all     Restart every instance's watcher and agent managers.
+  hold-restarts   Make every restart skip until allow-restarts.
+  allow-restarts  Let restarts through again after hold-restarts.
+
+maintenance:
+  update          Install the newest release and restart every instance on it.
+  doctor          Check the install, the service, GitHub and each repo, and say how to fix what fails.
+  config          Print every setting's effective value and where it came from.
+  uninstall       Stop every instance, remove their services and the command.
+  setup           Open the board's setup page, where the account, the repos and the options are chosen.
+  skill           Install the skills the orchestrator ships (rebase-on-main, create-pr) where this instance's agent reads its skills.
+
+learning:
+  tutorial        Open the board's tour of the wall and a pull request's page.
+  help            List the commands, or show one command's help.
+
+agents:
+  thread          Report on and act on a pull request's comment threads: the agents' side of the board.
+
+debugging:
+  queue           Show pending events for a PR.
+  undismiss       Clear a PR's dismissal so it comes back to the wall.
 ```
 
 ```bash
@@ -163,7 +215,8 @@ github-orchestrator stop                # stop this instance (--all: every insta
 ```
 
 `help COMMAND` is the same as `COMMAND --help`, which says what it does and
-shows an example. Every command takes `--instance NAME`.
+shows an example. Every command but `thread` takes `--instance NAME`; for
+`thread`, put it before the command (`github-orchestrator --instance work thread list ...`) or set `GITHUB_ORCHESTRATOR_INSTANCE`.
 
 `runs` totals cost as `~$8.14 API-equivalent` rather than as money, because
 every run bills against your subscription and none of it is a charge.
@@ -195,6 +248,11 @@ session left open in one of them holds that up: `update` names each one and
 asks before closing them. Until they close the watcher waits, and the board
 lists them with a **Close sessions and migrate** button.
 
+`update` also updates the shipped skills in the default instance's skills
+folder: a missing one is installed, one that differs from this version's is
+left alone (`github-orchestrator skill --replace` replaces it), and when none
+was installed at all they stay left out until `github-orchestrator skill`.
+
 ## Uninstall
 
 ```bash
@@ -203,13 +261,15 @@ github-orchestrator uninstall
 
 It stops every instance, removes their services and the command, and asks
 before removing the config, the data and the notification apps too. It never
-touches your clones, and leaves uv, gh and claude installed.
+touches your clones, and leaves uv, gh and claude installed, and the shipped
+skills in the agent's skills folder.
 [Removing it](docs/how-to-use.md#removing-it) has the details.
 
 ## Developing
 
-This repository is the source of truth; a release is a tag of it. To run your
-checkout as the installed tool:
+This repository is the source of truth; a release is a tag of it. Building the
+front end needs Node and npm besides uv. To run your checkout as the installed
+tool:
 
 ```bash
 make dev-install   # uv tool install --force --editable ., then build the front end
