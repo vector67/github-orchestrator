@@ -5385,8 +5385,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5399,8 +5403,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5413,8 +5421,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5427,8 +5439,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5441,8 +5457,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5455,8 +5475,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5469,8 +5493,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -14389,95 +14417,7 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_a_current_skill_is_left_as_it_is#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_a_current_skill_is_left_as_it_is#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs#1756c0920ccd": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--agent\", \"gemini\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--agent",
-      "gemini"
-     ],
-     "fs": {},
-     "returncode": 2,
-     "stderr": "the agent is claude or codex, not gemini\n",
-     "stdout": ""
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--agent\", \"gemini\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--agent",
-      "gemini"
-     ],
-     "fs": {},
-     "returncode": 2,
-     "stderr": "the agent is claude or codex, not gemini\n",
-     "stdout": ""
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs#a5bb6884ca5b": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--agent\", \"gemini\"], null, null]": [
     {
      "argv": [
@@ -14508,36 +14448,6 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_an_unknown_option_is_refused_before_anything_runs#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--colour\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--colour"
-     ],
-     "fs": {},
-     "returncode": 2,
-     "stderr": "unknown option: --colour (install.sh --help lists them)\n",
-     "stdout": ""
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_an_unknown_option_is_refused_before_anything_runs#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--colour\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--colour"
-     ],
-     "fs": {},
-     "returncode": 2,
-     "stderr": "unknown option: --colour (install.sh --help lists them)\n",
-     "stdout": ""
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_choosing_claude_for_a_codex_config_switches_it_back#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"claude\"], null, null]": [
     {
@@ -14554,72 +14464,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"claude\"\ngh_account = \"octocat\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"claude\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_claude_for_a_codex_config_switches_it_back#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"claude\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "claude"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"claude\"\ngh_account = \"octocat\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"claude\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_claude_for_a_codex_config_switches_it_back#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"claude\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "claude"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
       },
       "home/.config/github-orchestrator/config.toml": {
        "text": "agent = \"claude\"\ngh_account = \"octocat\"\n"
@@ -14670,72 +14514,6 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tables#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "codex"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\ngh_account = \"octocat\"\n\n[[repos]]\nrepo = \"acme/widgets\"\nlocal_path = \"/src/w\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tables#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "codex"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\ngh_account = \"octocat\"\n\n[[repos]]\nrepo = \"acme/widgets\"\nlocal_path = \"/src/w\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv0-environment0]#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
     {
@@ -14752,84 +14530,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
-      },
-      "home/.config": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv0-environment0]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "codex"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\nskill\n"
-      },
-      "home/.config": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv0-environment0]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--agent",
-      "codex"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
       },
       "home/.config": {
        "dir": true
@@ -14890,111 +14590,7 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv1-environment1]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\nskill\n"
-      },
-      "home/.config": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv1-environment1]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
-      },
-      "home/.config": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator": {
-       "dir": true
-      },
-      "home/.config/github-orchestrator/config.toml": {
-       "text": "agent = \"codex\"\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#1756c0920ccd": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#a5bb6884ca5b": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
     {
      "argv": [
@@ -15024,67 +14620,7 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_help_lists_the_agent_flag_and_its_environment_twin#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_help_lists_the_agent_flag_and_its_environment_twin#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_help_lists_the_skill_flags_and_their_environment_twin#1756c0920ccd": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_help_lists_the_skill_flags_and_their_environment_twin#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--help"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_help_lists_the_skill_flags_and_their_environment_twin#a5bb6884ca5b": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
     {
      "argv": [
@@ -15128,64 +14664,6 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv0-environment0]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--no-skill\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--no-skill"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv0-environment0]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--no-skill\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--no-skill"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv1-environment1]#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -15214,93 +14692,7 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv1-environment1]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv1-environment1]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_the_installer_is_plain_posix_sh#1756c0920ccd": {
-   "[[\"dash\", \"-n\", \"<REPO>/install.sh\"], null, null]": [
-    {
-     "argv": [
-      "dash",
-      "-n",
-      "<REPO>/install.sh"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_the_installer_is_plain_posix_sh#877145845e2e": {
-   "[[\"dash\", \"-n\", \"<REPO>/install.sh\"], null, null]": [
-    {
-     "argv": [
-      "dash",
-      "-n",
-      "<REPO>/install.sh"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_the_installer_is_plain_posix_sh#a5bb6884ca5b": {
    "[[\"dash\", \"-n\", \"<REPO>/install.sh\"], null, null]": [
     {
      "argv": [
@@ -15343,63 +14735,7 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_the_installer_s_start_leaves_the_skills_to_the_installer_s_own_offer#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing#1756c0920ccd": {
-   "[[\"sh\", \"<REPO>/install.sh\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh"
-     ],
-     "fs": {},
-     "returncode": 1,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  missing  uv          runs the install; from astral.sh\n  missing  gh          talks to GitHub; from github.com/cli/cli releases\n  missing  claude      runs the agents; Anthropic's installer\n\nWith no terminal to ask on, nothing was changed. This would install uv, gh and claude and\ngithub-orchestrator, then start its watcher. Run it again with a terminal, or\nanswer yes to everything with: curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh -s -- -y\nOr install the requirements by hand first:\n    curl -LsSf https://astral.sh/uv/install.sh | sh\n    download the macOS zip from https://github.com/cli/cli/releases/latest and put its bin/gh in ~/.local/bin\n    curl -fsSL https://claude.ai/install.sh | bash\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh"
-     ],
-     "fs": {},
-     "returncode": 1,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  missing  uv          runs the install; from astral.sh\n  missing  gh          talks to GitHub; from github.com/cli/cli releases\n  missing  claude      runs the agents; Anthropic's installer\n\nWith no terminal to ask on, nothing was changed. This would install uv, gh and claude and\ngithub-orchestrator, then start its watcher. Run it again with a terminal, or\nanswer yes to everything with: curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh -s -- -y\nOr install the requirements by hand first:\n    curl -LsSf https://astral.sh/uv/install.sh | sh\n    download the macOS zip from https://github.com/cli/cli/releases/latest and put its bin/gh in ~/.local/bin\n    curl -fsSL https://claude.ai/install.sh | bash\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing#a5bb6884ca5b": {
    "[[\"sh\", \"<REPO>/install.sh\"], null, null]": [
     {
      "argv": [
@@ -15427,62 +14763,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_alone_keeps_claude_and_writes_no_agent#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_alone_keeps_claude_and_writes_no_agent#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
       },
       "home/.local": {
        "dir": true
@@ -15525,62 +14805,6 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_yes_installs_a_missing_skill_beside_a_different_one_it_leaves_alone#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -15595,62 +14819,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_installs_a_missing_skill_beside_a_different_one_it_leaves_alone#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_installs_a_missing_skill_beside_a_different_one_it_leaves_alone#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
       },
       "home/.local": {
        "dir": true
@@ -15693,62 +14861,6 @@
     }
    ]
   },
-  "tests/cli/test_install_script.py::test_yes_installs_the_missing_skills_and_names_them#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_installs_the_missing_skills_and_names_them#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
   "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv0]#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -15763,62 +14875,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv0]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv0]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
       },
       "home/.local": {
        "dir": true
@@ -15848,64 +14904,6 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv1]#877145845e2e": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--skill\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--skill"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force\nskill --status\n"
-      },
-      "home/.local": {
-       "dir": true
-      },
-      "home/.local/bin": {
-       "dir": true
-      }
-     },
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
-    }
-   ]
-  },
-  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv1]#a5bb6884ca5b": {
-   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--skill\"], null, null]": [
-    {
-     "argv": [
-      "sh",
-      "<REPO>/install.sh",
-      "--wheel",
-      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
-      "--no-open",
-      "-y",
-      "--skill"
-     ],
-     "fs": {
-      "calls": {
-       "text": "start --from-installer --force --leave-skills\nskill --status\n"
       },
       "home/.local": {
        "dir": true
@@ -16296,8 +15294,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -45908,8 +44910,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45922,8 +44928,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45936,8 +44946,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45950,8 +44964,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45964,8 +44982,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45978,8 +45000,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -45992,8 +45018,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -56128,8 +55158,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56142,8 +55176,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56156,8 +55194,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56170,8 +55212,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56184,8 +55230,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56198,8 +55248,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -56212,8 +55266,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -61197,36 +60255,46 @@
    ]
   },
   "tests/preview/test_preview.py::test_the_preview_serves_a_manager_panel_with_something_in_every_part": {
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "f3f4429 a teammate's push\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjNmNDQyOSBhIHRlYW1tYXRlJ3MgcHVzaAA="
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a8e6741 what the agent proposes for PRRT_push_rejected\n1e8d9b9 a change the fix now conflicts with\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YThlNjc0MSB3aGF0IHRoZSBhZ2VudCBwcm9wb3NlcyBmb3IgUFJSVF9wdXNoX3JlamVjdGVkADFlOGQ5YjkgYSBjaGFuZ2UgdGhlIGZpeCBub3cgY29uZmxpY3RzIHdpdGgA"
+     }
     }
    ]
   },
@@ -65802,8 +64870,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65816,8 +64888,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65830,8 +64906,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65844,8 +64924,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65858,8 +64942,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65872,8 +64960,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -65886,8 +64978,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -70944,20 +70040,25 @@
    ]
   },
   "tests/preview/test_preview.py::test_the_previews_dashboard_rows_the_threads_its_board_holds[reviewed]": {
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"rev-list\", \"--oneline\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": ""
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ]
   },
@@ -78117,6 +77218,48 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjdjMWJkNyBhIHRlYW1tYXRlJ3MgcHVzaAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ODk4Y2I4ZCB3aGF0IHRoZSBhZ2VudCBwcm9wb3NlcyBmb3IgUFJSVF9wdXNoX3JlamVjdGVkADg4NzgwYWMgYSBjaGFuZ2UgdGhlIGZpeCBub3cgY29uZmxpY3RzIHdpdGgA"
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"03991748f18018512c9c4a31fd678b51925478b6\", \"03991748f18018512c9c4a31fd678b51925478b6\"], null, null]": [
     {
      "argv": [
@@ -78519,38 +77662,6 @@
      "stdout": "1\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-list\", \"--oneline\", \"HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/worktree",
-      "rev-list",
-      "--oneline",
-      "HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "b7c1bd7 a teammate's push\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-list\", \"--oneline\", \"b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/worktree",
-      "rev-list",
-      "--oneline",
-      "b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "898cb8d what the agent proposes for PRRT_push_rejected\n88780ac a change the fix now conflicts with\n"
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -78563,8 +77674,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78577,8 +77692,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78591,8 +77710,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78605,8 +77728,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78619,8 +77746,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78633,8 +77764,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -78647,8 +77782,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"03991748f18018512c9c4a31fd678b51925478b6^{commit}\"], null, null]": [
@@ -87427,8 +86566,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -87741,8 +86884,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -88216,8 +87363,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -89327,8 +88478,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -89606,8 +88761,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -90835,8 +89994,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -91344,8 +90507,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "hotfix\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "aG90Zml4Cg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/hotfix^{commit}\"], null, null]": [
@@ -91762,8 +90929,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -92219,6 +91390,27 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6\", \"6a7c386af39134dfaf613876b1b098509a02b723\"], null, null]": [
     {
      "argv": [
@@ -92262,22 +91454,6 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "rev-list",
-      "--oneline",
-      "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -92290,8 +91466,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -92304,8 +91484,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -92805,8 +91989,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -93252,8 +92440,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -93653,8 +92845,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -94383,8 +93579,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -94995,8 +94195,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -95653,8 +94857,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -96247,8 +95455,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"f0132b51e707408968b9d8dcd59806ebf0af8115^{commit}\"], null, null]": [
@@ -96654,6 +95866,27 @@
      "stdout": "second half\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MGE1ODAzMiBzZWNvbmQgaGFsZgA="
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
     {
      "argv": [
@@ -96710,22 +95943,6 @@
      "stdout": "2\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "rev-list",
-      "--oneline",
-      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "0a58032 second half\n"
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -96738,8 +95955,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"db60ac57252f0ed8ca55ff4deef9e77734df8c6e^{commit}\"], null, null]": [
@@ -97251,8 +96472,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -97884,8 +97109,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -98477,8 +97706,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -98491,8 +97724,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -99945,8 +99182,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -101561,8 +100802,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -102305,8 +101550,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -103465,8 +102714,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -103479,8 +102732,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -104013,8 +103270,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -106473,8 +105734,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -107153,8 +106418,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -107246,8 +106515,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -108011,8 +107284,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -108815,8 +108092,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -109019,8 +108300,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -109363,8 +108648,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -111195,8 +110484,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -112089,36 +111382,46 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "b4678ad feature work\n1fdb7cd more main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjQ2NzhhZCBmZWF0dXJlIHdvcmsAMWZkYjdjZCBtb3JlIG1haW4A"
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "6a7c386 local work\n971346d feature work\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NmE3YzM4NiBsb2NhbCB3b3JrADk3MTM0NmQgZmVhdHVyZSB3b3JrAA=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
@@ -112133,8 +111436,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -112456,50 +111763,65 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"0000000000000000000000000000000000000000..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"0000000000000000000000000000000000000000..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "0000000000000000000000000000000000000000..HEAD"
      ],
      "fs": {},
      "returncode": 128,
-     "stderr": "fatal: Invalid revision range 0000000000000000000000000000000000000000..HEAD\n",
-     "stdout": ""
+     "stderr": {
+      "b64": "ZmF0YWw6IEludmFsaWQgcmV2aXNpb24gcmFuZ2UgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMC4uSEVBRAo="
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": ""
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
     },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "6a7c386 local work\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NmE3YzM4NiBsb2NhbCB3b3JrAA=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -113013,8 +112335,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -114060,8 +113386,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -116289,8 +115619,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "orchestrator/pr/83\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JjaGVzdHJhdG9yL3ByLzgzCg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/orchestrator/pr/83\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -116731,8 +116065,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "orchestrator/pr/83\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "b3JjaGVzdHJhdG9yL3ByLzgzCg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/origin.git\", \"for-each-ref\", \"--format=%(refname)\", \"refs/heads\"], null, null]": [
@@ -117443,8 +116781,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "HEAD\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "SEVBRAo="
+     }
     }
    ]
   },
@@ -117461,8 +116803,12 @@
      ],
      "fs": {},
      "returncode": 128,
-     "stderr": "fatal: not a git repository (or any of the parent directories): .git\n",
-     "stdout": ""
+     "stderr": {
+      "b64": "ZmF0YWw6IG5vdCBhIGdpdCByZXBvc2l0b3J5IChvciBhbnkgb2YgdGhlIHBhcmVudCBkaXJlY3Rvcmllcyk6IC5naXQK"
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ]
   },
@@ -117503,8 +116849,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ]
   },
@@ -118228,6 +117578,1446 @@
     }
    ]
   },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[carriage\\rreturn in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"carriage\\rreturn in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "carriage\rreturn in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "1d4b35521218bcfb897c0702050e66004a714c0a\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MWQ0YjM1NSBjYXJyaWFnZQ1yZXR1cm4gaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1d4b355\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1d4b35521218bcfb897c0702050e66004a714c0a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[file\\x1cseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"file\\u001cseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "file\u001cseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "7dc367ec8a90bdc69e721255aeb15fbe77acbe2e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "N2RjMzY3ZSBmaWxlHHNlcGFyYXRvciBpbiB0aGUgc3ViamVjdAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "7dc367e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "7dc367ec8a90bdc69e721255aeb15fbe77acbe2e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[form\\x0cfeed in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"form\\ffeed in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "form\ffeed in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "b48ee5c2ec7c6387adb8a2ea7cde515d3c453764\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjQ4ZWU1YyBmb3JtDGZlZWQgaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "b48ee5c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "b48ee5c2ec7c6387adb8a2ea7cde515d3c453764\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[group\\x1dseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"group\\u001dseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "group\u001dseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "624a13923fb4c8652124977589fd169a51de544e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NjI0YTEzOSBncm91cB1zZXBhcmF0b3IgaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "624a139\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "624a13923fb4c8652124977589fd169a51de544e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[line\\u2028separator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"line\\u2028separator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "line separator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "4fabf5a6bb768547efd880101ffb12636b72e527\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NGZhYmY1YSBsaW5l4oCoc2VwYXJhdG9yIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4fabf5a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4fabf5a6bb768547efd880101ffb12636b72e527\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[next\\x85line in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"next\\u0085line in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "nextline in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "83ce3d90ca3a44c5ef2c9eb271ed3b455b837917\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ODNjZTNkOSBuZXh0woVsaW5lIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "83ce3d9\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "83ce3d90ca3a44c5ef2c9eb271ed3b455b837917\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[record\\x1eseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"record\\u001eseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "record\u001eseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "e20d7f3d58165e5fd99907c694ad97a061b231c9\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTIwZDdmMyByZWNvcmQec2VwYXJhdG9yIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e20d7f3\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e20d7f3d58165e5fd99907c694ad97a061b231c9\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[unit\\x1fseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"unit\\u001fseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "unit\u001fseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "c4eb1dc3bef3800780cb14f268cc3e20328e0eee\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YzRlYjFkYyB1bml0H3NlcGFyYXRvciBpbiB0aGUgc3ViamVjdAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c4eb1dc\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c4eb1dc3bef3800780cb14f268cc3e20328e0eee\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"--end-of-options\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "--end-of-options",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/working_copies/test_pr_commits.py::test_a_main_commit_whose_subject_holds_a_carriage_return_is_listed_whole": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"-c\", \"diff.suppressBlankEmpty=false\", \"merge-base\", \"--end-of-options\", \"origin/HEAD\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\"], null, null]": [
     {
@@ -118454,8 +119244,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -122089,8 +122883,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -122499,8 +123297,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -122906,8 +123708,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -123459,8 +124265,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -123657,8 +124467,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -125173,8 +125987,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -125675,8 +126493,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--path-format=absolute\", \"--git-common-dir\"], null, null]": [
@@ -126044,8 +126866,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -126376,8 +127202,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -126684,8 +127514,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -126698,8 +127532,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -127222,8 +128060,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -127236,8 +128078,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "hotfix\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "aG90Zml4Cg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -127752,8 +128598,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -127766,8 +128616,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -127780,8 +128634,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -128516,8 +129374,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -128530,8 +129392,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -129388,8 +130254,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -129780,8 +130650,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -130302,8 +131176,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -130688,8 +131566,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c23483df18e1a9a98e7e0f7643c06ff3295392d4^{commit}\"], null, null]": [
@@ -131114,8 +131996,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -131749,8 +132635,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -132162,8 +133052,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -132627,8 +133521,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"2eb94be8fcb62c7a20cb52f3f4c6b15a76371053^{commit}\"], null, null]": [
@@ -133179,8 +134077,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -133634,8 +134536,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -134009,8 +134915,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -134110,8 +135020,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -134309,8 +135223,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"f3974d155ce3a3d1f90be93af750ca22ee8cf5bb^{commit}\"], null, null]": [
@@ -135006,8 +135924,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -135481,8 +136403,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -135940,8 +136866,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -136393,8 +137323,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -139539,8 +140473,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113^{commit}\"], null, null]": [
@@ -139846,8 +140784,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113^{commit}\"], null, null]": [
@@ -140150,8 +141092,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -140431,8 +141377,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -141716,8 +142666,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -142227,8 +143181,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -142697,8 +143655,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -142715,8 +143677,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -142733,8 +143699,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -142751,8 +143721,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -142769,8 +143743,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   }

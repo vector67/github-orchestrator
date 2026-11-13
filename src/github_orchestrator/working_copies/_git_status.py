@@ -7,18 +7,17 @@ log = logging.getLogger(__name__)
 HeadState = tuple[str, str]
 
 
-def _run(worktree: Path, *args: str) -> subprocess.CompletedProcess[str] | None:
+def _run(worktree: Path, *args: str) -> subprocess.CompletedProcess[bytes] | None:
     try:
         return subprocess.run(
             ["git", "-C", str(worktree), *args],
             capture_output=True,
-            text=True,
             check=True,
             timeout=5,
         )
     except subprocess.CalledProcessError as e:
         log.warning("git %s failed in %s: %s", " ".join(args), worktree,
-                    (e.stderr or "").strip() or f"exit {e.returncode}")
+                    e.stderr.decode(errors="replace").strip() or f"exit {e.returncode}")
     except subprocess.TimeoutExpired:
         log.warning("git %s timed out in %s", " ".join(args), worktree)
     except FileNotFoundError as e:
@@ -92,7 +91,7 @@ class GitStatus:
         result = _run(worktree, *args)
         if result is None:
             return None
-        answer = result.stdout.strip()
+        answer = result.stdout.decode(errors="replace").strip()
         if state is not None:
             self._answers[(worktree, question)] = (state, asked, answer)
         return answer
@@ -114,7 +113,7 @@ class GitStatus:
         if not worktree.exists():
             return None
         span = f"HEAD..{sha}" if behind else f"{sha}..HEAD"
-        listed = self._git(worktree, "behind" if behind else "since", "rev-list", "--oneline", span)
+        listed = self._git(worktree, "behind" if behind else "since", "log", "-z", "--format=%h %s", span)
         if listed is None:
             return None
-        return tuple(listed.splitlines())
+        return tuple(listed.split("\0")[:-1])
