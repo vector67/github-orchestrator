@@ -5,11 +5,19 @@ import {
   setupFakeBoard,
   type FakeBoard,
 } from 'frontend/tests/helpers/fake-board';
+import {
+  setupFakeClock,
+  type FakeClock,
+} from 'frontend/tests/helpers/fake-clock';
 import type { Conversation } from 'frontend/data/api';
 
 const KEY = 'PRRT_undo';
 
 const CARD = `/pr/o/r/7/conversations/${KEY}`;
+
+const SETTLING_MS = 500;
+
+let clock: () => FakeClock;
 
 async function open(
   board: FakeBoard,
@@ -34,6 +42,7 @@ function verbs(board: FakeBoard): string[] {
 
 async function undone(board: FakeBoard, verb: string): Promise<string> {
   await click('[data-test-toast-undo]');
+  await clock().tick(SETTLING_MS);
   await waitUntil(() => verbs(board).includes(verb), { timeout: 5000 });
   return board.posted.at(-1)!.url;
 }
@@ -41,6 +50,7 @@ async function undone(board: FakeBoard, verb: string): Promise<string> {
 module('Acceptance | toast undo', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);
+  clock = setupFakeClock(hooks);
 
   test('Mark done says so with Bring back, which sends what the card’s Bring back sends', async function (assert) {
     await open(board(), 'waiting');
@@ -85,6 +95,7 @@ module('Acceptance | toast undo', function (hooks) {
       'nothing is sent while the resolve is still on its way to GitHub',
     );
     settledIn(board(), 'resolved', { github_resolved: true });
+    await clock().tick(SETTLING_MS);
     await waitUntil(() => verbs(board()).includes('unpark'), {
       timeout: 5000,
     });
@@ -101,6 +112,7 @@ module('Acceptance | toast undo', function (hooks) {
 
     assert.deepEqual(verbs(board()), ['resolve']);
     settledIn(board(), 'resolved', { github_resolved: true });
+    await clock().tick(SETTLING_MS);
     await waitUntil(() => verbs(board()).includes('unpark'), {
       timeout: 5000,
     });
