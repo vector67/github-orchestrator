@@ -176,20 +176,28 @@ class LocalSummaryLane:
         self._store_an_orphaned_run()
         due = [pr for pr in self._summaries.due(set()) if pr.repo in self._clones and self._holds(pr)]
         if due:
-            self.start(due[0], use_github_api=False)
+            stored = self._summaries.load(due[0]) or Summary()
+            self._begin(due[0], use_github_api=stored.asked_over_github_api)
 
     def start(self, pr: Pr, *, use_github_api: bool) -> SummaryRefusal | None:
         if not self._agents_enabled:
             return SummaryRefusal.AGENTS_DISABLED
         if pr.repo not in self._clones:
             return SummaryRefusal.REPO_NOT_WATCHED
+        if not self._begin(pr, use_github_api=use_github_api):
+            held = self._held()
+            if held is None or held.pr != pr:
+                self._summaries.ask(pr, use_github_api=use_github_api)
+        return None
+
+    def _begin(self, pr: Pr, *, use_github_api: bool) -> bool:
         slot = self._slot()
         glanced_until = time.monotonic() + GLANCE_SECONDS
         while slot is None and self._held() is None and time.monotonic() < glanced_until:
             time.sleep(0.01)
             slot = self._slot()
         if slot is None:
-            return SummaryRefusal.SUMMARY_RUNNING
+            return False
         try:
             self._store(slot)
             run = _Run(pr, self._clock(), self._head_of(pr),
@@ -204,7 +212,8 @@ class LocalSummaryLane:
         except BaseException:
             os.close(slot)
             raise
-        return None
+        self._summaries.unask(pr)
+        return True
 
     def progress(self, pr: Pr) -> Progress | None:
         held = self._held()

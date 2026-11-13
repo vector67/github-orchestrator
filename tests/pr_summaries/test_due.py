@@ -112,6 +112,37 @@ def test_the_oldest_request_is_due_first(tmp_path):
     assert summaries.due(set()) == [earlier, middle, later]
 
 
+def test_a_summary_asked_for_by_hand_is_due_before_requests_made_earlier(tmp_path):
+    summaries = summaries_in(tmp_path)
+    requested, asked, asked_later = a_pr(1, "a/a"), a_pr(2, "b/b"), a_pr(3, "c/c")
+
+    summaries.want(requested)
+    summaries.ask(asked, use_github_api=False)
+    summaries.ask(asked_later, use_github_api=False)
+
+    assert summaries.due(set()) == [asked, asked_later, requested]
+
+
+def test_a_summary_asked_for_by_hand_is_still_due_after_a_restart(tmp_path):
+    summaries_in(tmp_path).ask(THE_PR, use_github_api=True)
+
+    restarted = summaries_in(tmp_path)
+
+    assert restarted.due(set()) == [THE_PR]
+    stored = restarted.load(THE_PR)
+    assert stored is not None
+    assert stored.asked_over_github_api is True
+
+
+def test_an_unwanted_summary_asked_for_by_hand_is_no_longer_due(tmp_path):
+    summaries = summaries_in(tmp_path)
+    summaries.ask(THE_PR, use_github_api=False)
+
+    summaries.unwant(THE_PR)
+
+    assert summaries.due(set()) == []
+
+
 def test_a_request_made_during_a_run_stays_due_after_the_run_saves(tmp_path):
     summaries = summaries_in(tmp_path)
     summaries.want(THE_PR)
