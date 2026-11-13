@@ -26,7 +26,8 @@ def _hangs(*args, **kwargs):
 
 
 def _refuses(*args, **kwargs):
-    refused = subprocess.CompletedProcess(args[0], 128, "", "fatal: not a git repository")
+    said = "fatal: not a git repository"
+    refused = subprocess.CompletedProcess(args[0], 128, "", said if kwargs.get("text") or kwargs.get("encoding") else said.encode())
     if kwargs.get("check"):
         refused.check_returncode()
     return refused

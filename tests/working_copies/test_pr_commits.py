@@ -74,3 +74,13 @@ def test_a_main_commit_whose_subject_holds_a_carriage_return_is_listed_whole(
     assert history is not None
     assert [(commit.sha, commit.subject) for commit in history.base_commits] == [
         (tip, "more\rmain")]
+
+
+@pytest.mark.parametrize("subject", ODD_SUBJECTS)
+def test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry(
+        world, pr_worktree, subject):
+    pushed = world.head_of(pr_worktree)
+    _commit_as(Path(pr_worktree), "T", subject)
+    short = git(Path(pr_worktree), "rev-parse", "--short", "HEAD")
+
+    assert world.copies.commits_since(pr_worktree, pushed) == (f"{short} {subject}",)

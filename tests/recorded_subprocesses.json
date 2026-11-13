@@ -5385,8 +5385,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5399,8 +5403,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5413,8 +5421,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5427,8 +5439,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5441,8 +5457,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5455,8 +5475,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -5469,8 +5493,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TPL:tests.preview.test_preview.client_for_preview:be2787a5>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -44515,8 +44543,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44529,8 +44561,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44543,8 +44579,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44557,8 +44597,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44571,8 +44615,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44585,8 +44633,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -44599,8 +44651,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -54735,8 +54791,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54749,8 +54809,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54763,8 +54827,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54777,8 +54845,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54791,8 +54863,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54805,8 +54881,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -54819,8 +54899,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -59804,36 +59888,46 @@
    ]
   },
   "tests/preview/test_preview.py::test_the_preview_serves_a_manager_panel_with_something_in_every_part": {
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "f3f4429 a teammate's push\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjNmNDQyOSBhIHRlYW1tYXRlJ3MgcHVzaAA="
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"rev-list\", \"--oneline\", \"f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a8e6741 what the agent proposes for PRRT_push_rejected\n1e8d9b9 a change the fix now conflicts with\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YThlNjc0MSB3aGF0IHRoZSBhZ2VudCBwcm9wb3NlcyBmb3IgUFJSVF9wdXNoX3JlamVjdGVkADFlOGQ5YjkgYSBjaGFuZ2UgdGhlIGZpeCBub3cgY29uZmxpY3RzIHdpdGgA"
+     }
     }
    ]
   },
@@ -64409,8 +64503,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64423,8 +64521,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64437,8 +64539,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64451,8 +64557,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64465,8 +64575,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64479,8 +64593,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -64493,8 +64611,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"320f1d8bf25167f3e68feea9ce2e7f4cdc53d913^{commit}\"], null, null]": [
@@ -69551,20 +69673,25 @@
    ]
   },
   "tests/preview/test_preview.py::test_the_previews_dashboard_rows_the_threads_its_board_holds[reviewed]": {
-   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"rev-list\", \"--oneline\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": ""
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ]
   },
@@ -76724,6 +76851,48 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjdjMWJkNyBhIHRlYW1tYXRlJ3MgcHVzaAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ODk4Y2I4ZCB3aGF0IHRoZSBhZ2VudCBwcm9wb3NlcyBmb3IgUFJSVF9wdXNoX3JlamVjdGVkADg4NzgwYWMgYSBjaGFuZ2UgdGhlIGZpeCBub3cgY29uZmxpY3RzIHdpdGgA"
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"03991748f18018512c9c4a31fd678b51925478b6\", \"03991748f18018512c9c4a31fd678b51925478b6\"], null, null]": [
     {
      "argv": [
@@ -77126,38 +77295,6 @@
      "stdout": "1\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-list\", \"--oneline\", \"HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/worktree",
-      "rev-list",
-      "--oneline",
-      "HEAD..b7c1bd721564c6fcb787f8bfdce75fa41f5fb004"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "b7c1bd7 a teammate's push\n"
-    }
-   ],
-   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-list\", \"--oneline\", \"b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/worktree",
-      "rev-list",
-      "--oneline",
-      "b7c1bd721564c6fcb787f8bfdce75fa41f5fb004..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "898cb8d what the agent proposes for PRRT_push_rejected\n88780ac a change the fix now conflicts with\n"
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -77170,8 +77307,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77184,8 +77325,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77198,8 +77343,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77212,8 +77361,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77226,8 +77379,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77240,8 +77397,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     },
     {
      "argv": [
@@ -77254,8 +77415,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "rework-the-invoice-writer\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "cmV3b3JrLXRoZS1pbnZvaWNlLXdyaXRlcgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"03991748f18018512c9c4a31fd678b51925478b6^{commit}\"], null, null]": [
@@ -86034,8 +86199,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -86347,8 +86516,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -86821,8 +86994,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -87928,8 +88105,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -88206,8 +88387,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -89431,8 +89616,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -89939,8 +90128,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "hotfix\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "aG90Zml4Cg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/hotfix^{commit}\"], null, null]": [
@@ -90356,8 +90549,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -90812,6 +91009,27 @@
      "stdout": ""
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6\", \"6a7c386af39134dfaf613876b1b098509a02b723\"], null, null]": [
     {
      "argv": [
@@ -90855,22 +91073,6 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "rev-list",
-      "--oneline",
-      "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": ""
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -90883,8 +91085,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -90897,8 +91103,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -91397,8 +91607,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -91843,8 +92057,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--git-path\", \"FETCH_HEAD\"], null, null]": [
@@ -92243,8 +92461,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -92971,8 +93193,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -93582,8 +93808,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -94239,8 +94469,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -94832,8 +95066,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"f0132b51e707408968b9d8dcd59806ebf0af8115^{commit}\"], null, null]": [
@@ -95238,6 +95476,27 @@
      "stdout": "second half\n\n"
     }
    ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MGE1ODAzMiBzZWNvbmQgaGFsZgA="
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"merge-base\", \"--is-ancestor\", \"--end-of-options\", \"971346d94231895fcf62bd66bb9b198edde3cf67\", \"971346d94231895fcf62bd66bb9b198edde3cf67\"], null, null]": [
     {
      "argv": [
@@ -95294,22 +95553,6 @@
      "stdout": "2\n"
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
-    {
-     "argv": [
-      "git",
-      "-C",
-      "<TMP>/feature",
-      "rev-list",
-      "--oneline",
-      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
-     ],
-     "fs": {},
-     "returncode": 0,
-     "stderr": "",
-     "stdout": "0a58032 second half\n"
-    }
-   ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
     {
      "argv": [
@@ -95322,8 +95565,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"db60ac57252f0ed8ca55ff4deef9e77734df8c6e^{commit}\"], null, null]": [
@@ -95834,8 +96081,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -96465,8 +96716,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -97056,8 +97311,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -97070,8 +97329,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -98519,8 +98782,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -100109,8 +100376,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -100850,8 +101121,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -102006,8 +102281,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -102020,8 +102299,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -102553,8 +102836,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -105002,8 +105289,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -105680,8 +105971,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -105772,8 +106067,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -106535,8 +106834,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"75c86c543ca1885fefa292032eefefc1f3700856^{commit}\"], null, null]": [
@@ -107336,8 +107639,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -107539,8 +107846,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -107882,8 +108193,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -109708,8 +110023,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -110599,36 +110918,46 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "HEAD..b4678ad7950d79b9ccab0c7cd42a5551825e25a6"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "b4678ad feature work\n1fdb7cd more main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjQ2NzhhZCBmZWF0dXJlIHdvcmsAMWZkYjdjZCBtb3JlIG1haW4A"
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "b4678ad7950d79b9ccab0c7cd42a5551825e25a6..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "6a7c386 local work\n971346d feature work\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NmE3YzM4NiBsb2NhbCB3b3JrADk3MTM0NmQgZmVhdHVyZSB3b3JrAA=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"], null, null]": [
@@ -110643,8 +110972,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -110965,50 +111298,65 @@
      "stdout": ""
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"0000000000000000000000000000000000000000..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"0000000000000000000000000000000000000000..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "0000000000000000000000000000000000000000..HEAD"
      ],
      "fs": {},
      "returncode": 128,
-     "stderr": "fatal: Invalid revision range 0000000000000000000000000000000000000000..HEAD\n",
-     "stdout": ""
+     "stderr": {
+      "b64": "ZmF0YWw6IEludmFsaWQgcmV2aXNpb24gcmFuZ2UgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMC4uSEVBRAo="
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-list\", \"--oneline\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": ""
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
     },
     {
      "argv": [
       "git",
       "-C",
       "<TMP>/feature",
-      "rev-list",
-      "--oneline",
+      "log",
+      "-z",
+      "--format=%h %s",
       "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "6a7c386 local work\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NmE3YzM4NiBsb2NhbCB3b3JrAA=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -111520,8 +111868,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -112564,8 +112916,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -114736,8 +115092,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "HEAD\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "SEVBRAo="
+     }
     }
    ]
   },
@@ -114754,8 +115114,12 @@
      ],
      "fs": {},
      "returncode": 128,
-     "stderr": "fatal: not a git repository (or any of the parent directories): .git\n",
-     "stdout": ""
+     "stderr": {
+      "b64": "ZmF0YWw6IG5vdCBhIGdpdCByZXBvc2l0b3J5IChvciBhbnkgb2YgdGhlIHBhcmVudCBkaXJlY3Rvcmllcyk6IC5naXQK"
+     },
+     "stdout": {
+      "b64": ""
+     }
     }
    ]
   },
@@ -114796,8 +115160,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ]
   },
@@ -115521,6 +115889,1438 @@
     }
    ]
   },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[carriage\\rreturn in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"carriage\\rreturn in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "carriage\rreturn in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "1d4b35521218bcfb897c0702050e66004a714c0a\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MWQ0YjM1NSBjYXJyaWFnZQ1yZXR1cm4gaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1d4b355\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "1d4b35521218bcfb897c0702050e66004a714c0a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[file\\x1cseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"file\\u001cseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "file\u001cseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "7dc367ec8a90bdc69e721255aeb15fbe77acbe2e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "N2RjMzY3ZSBmaWxlHHNlcGFyYXRvciBpbiB0aGUgc3ViamVjdAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "7dc367e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "7dc367ec8a90bdc69e721255aeb15fbe77acbe2e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[form\\x0cfeed in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"form\\ffeed in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "form\ffeed in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "b48ee5c2ec7c6387adb8a2ea7cde515d3c453764\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YjQ4ZWU1YyBmb3JtDGZlZWQgaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "b48ee5c\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "b48ee5c2ec7c6387adb8a2ea7cde515d3c453764\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[group\\x1dseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"group\\u001dseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "group\u001dseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "624a13923fb4c8652124977589fd169a51de544e\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NjI0YTEzOSBncm91cB1zZXBhcmF0b3IgaW4gdGhlIHN1YmplY3QA"
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "624a139\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "624a13923fb4c8652124977589fd169a51de544e\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[line\\u2028separator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"line\\u2028separator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "line separator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "4fabf5a6bb768547efd880101ffb12636b72e527\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NGZhYmY1YSBsaW5l4oCoc2VwYXJhdG9yIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4fabf5a\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "4fabf5a6bb768547efd880101ffb12636b72e527\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[next\\x85line in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"next\\u0085line in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "nextline in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "83ce3d90ca3a44c5ef2c9eb271ed3b455b837917\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ODNjZTNkOSBuZXh0woVsaW5lIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "83ce3d9\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "83ce3d90ca3a44c5ef2c9eb271ed3b455b837917\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[record\\x1eseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"record\\u001eseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "record\u001eseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "e20d7f3d58165e5fd99907c694ad97a061b231c9\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTIwZDdmMyByZWNvcmQec2VwYXJhdG9yIGluIHRoZSBzdWJqZWN0AA=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e20d7f3\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "e20d7f3d58165e5fd99907c694ad97a061b231c9\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/working_copies/test_pr_commits.py::test_a_commit_since_a_sha_whose_subject_holds_a_line_break_python_knows_is_one_entry[unit\\x1fseparator in the subject]": {
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"-c\", \"user.name=T\", \"commit\", \"-q\", \"-m\", \"unit\\u001fseparator in the subject\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "-c",
+      "user.name=T",
+      "commit",
+      "-q",
+      "-m",
+      "unit\u001fseparator in the subject"
+     ],
+     "fs": {
+      "repo/.git/refs/heads/feature": {
+       "text": "c4eb1dc3bef3800780cb14f268cc3e20328e0eee\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"add\", \"h\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "add",
+      "h"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"log\", \"-z\", \"--format=%h %s\", \"971346d94231895fcf62bd66bb9b198edde3cf67..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "971346d94231895fcf62bd66bb9b198edde3cf67..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YzRlYjFkYyB1bml0H3NlcGFyYXRvciBpbiB0aGUgc3ViamVjdAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--short\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "--short",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c4eb1dc\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/feature",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "c4eb1dc3bef3800780cb14f268cc3e20328e0eee\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "fetch",
+      "origin",
+      "+refs/heads/feature:refs/remotes/origin/feature"
+     ],
+     "fs": {
+      "repo/.git/FETCH_HEAD": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\t\tbranch 'feature' of <TMP>/origin\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"add\", \"<TMP>/feature\", \"feature\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "add",
+      "<TMP>/feature",
+      "feature"
+     ],
+     "fs": {
+      "feature": {
+       "dir": true
+      },
+      "feature/.git": {
+       "text": "gitdir: <TMP>/repo/.git/worktrees/feature\n"
+      },
+      "feature/f": {
+       "text": "1\n"
+      },
+      "feature/g": {
+       "text": "one\ntwo\nthree\n"
+      },
+      "repo/.git/refs/heads/feature": {
+       "text": "971346d94231895fcf62bd66bb9b198edde3cf67\n"
+      },
+      "repo/.git/worktrees/feature/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "repo/.git/worktrees/feature/commondir": {
+       "text": "../..\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "Preparing worktree (new branch 'feature')\n",
+     "stdout": "branch 'feature' set up to track 'origin/feature'.\nHEAD is now at 971346d feature work\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/repo\", \"worktree\", \"prune\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/repo",
+      "worktree",
+      "prune"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/working_copies/test_pr_commits.py::test_a_main_commit_whose_subject_holds_a_carriage_return_is_listed_whole": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/feature\", \"-c\", \"diff.suppressBlankEmpty=false\", \"merge-base\", \"--end-of-options\", \"origin/HEAD\", \"7e39035e431d1b7d75cde4b06d0a4d7c922f104f\"], null, null]": [
     {
@@ -115747,8 +117547,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"HEAD\"], null, null]": [
@@ -119371,8 +121175,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -119780,8 +121588,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -120186,8 +121998,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -120737,8 +122553,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -120934,8 +122754,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/repo\", \"fetch\", \"origin\", \"+refs/heads/feature:refs/remotes/origin/feature\"], null, null]": [
@@ -122449,8 +124273,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -122950,8 +124778,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--path-format=absolute\", \"--git-common-dir\"], null, null]": [
@@ -123318,8 +125150,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -123649,8 +125485,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -123956,8 +125796,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -123970,8 +125814,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -124493,8 +126341,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -124507,8 +126359,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "hotfix\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "aG90Zml4Cg=="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--quiet\", \"refs/remotes/origin/feature^{commit}\"], null, null]": [
@@ -125022,8 +126878,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -125036,8 +126896,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -125050,8 +126914,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -125785,8 +127653,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     },
     {
      "argv": [
@@ -125799,8 +127671,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "feature\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZmVhdHVyZQo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/feature\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"1f4016b6f035b763d4469580e82440c890af2ea4^{commit}\"], null, null]": [
@@ -126655,8 +128531,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -127047,8 +128927,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -127569,8 +129453,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -127955,8 +129843,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c23483df18e1a9a98e7e0f7643c06ff3295392d4^{commit}\"], null, null]": [
@@ -128381,8 +130273,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -129016,8 +130912,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -129429,8 +131329,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -129894,8 +131798,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"2eb94be8fcb62c7a20cb52f3f4c6b15a76371053^{commit}\"], null, null]": [
@@ -130446,8 +132354,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -130901,8 +132813,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -131276,8 +133192,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -131377,8 +133297,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
@@ -131576,8 +133500,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"f3974d155ce3a3d1f90be93af750ca22ee8cf5bb^{commit}\"], null, null]": [
@@ -132273,8 +134201,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -132748,8 +134680,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -133207,8 +135143,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -133660,8 +135600,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -136806,8 +138750,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113^{commit}\"], null, null]": [
@@ -137113,8 +139061,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113^{commit}\"], null, null]": [
@@ -137417,8 +139369,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -137698,8 +139654,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"e562a0113d53195ca87119e3bb0aafef96013ce0^{commit}\"], null, null]": [
@@ -138983,8 +140943,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"fc04d2c0b815267af695625121de8ceb3b8e32fb^{commit}\"], null, null]": [
@@ -139494,8 +141458,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "main\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "bWFpbgo="
+     }
     }
    ],
    "[[\"git\", \"-C\", \"<TMP>/prwork\", \"rev-parse\", \"--verify\", \"--end-of-options\", \"c11dda9589ae2acbcfdef30c10753bb84c5650a9^{commit}\"], null, null]": [
@@ -139964,8 +141932,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -139982,8 +141954,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -140000,8 +141976,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -140018,8 +141998,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   },
@@ -140036,8 +142020,12 @@
      ],
      "fs": {},
      "returncode": 0,
-     "stderr": "",
-     "stdout": "a\n"
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YQo="
+     }
     }
    ]
   }
