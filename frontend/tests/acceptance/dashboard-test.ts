@@ -1855,6 +1855,60 @@ module('Acceptance | dashboard', function (hooks) {
     );
   });
 
+  test('a pull request from a fork holds Take over back and says why', async function (assert) {
+    onTheHub({
+      pr: { branch: 'orchestrator/pr/7' },
+      facts: { is_author: false },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-control="take-over"]').isDisabled();
+    assert
+      .dom('[data-test-control="take-over"]')
+      .hasAttribute(
+        'title',
+        'This pull request comes from a fork, so it cannot be taken over: the fixes its agents would push belong in the fork.',
+      );
+
+    await press('T');
+
+    assert.deepEqual(verbs(), []);
+    assert
+      .dom('[data-test-toast]')
+      .hasText(
+        'This pull request comes from a fork, so it cannot be taken over: the fixes its agents would push belong in the fork.',
+      );
+  });
+
+  test('a carry on the manager refuses on a fork says the fork is pushed from the fork', async function (assert) {
+    onTheHub({ system: { last_run: EARLIER_RUN } });
+    await visit('/pr/o/r/7/dashboard');
+    board().refusal = {
+      status: 409,
+      code: 'fork-pull-request',
+      detail: 'the pull request comes from a fork',
+    };
+
+    await click('[data-test-control="carry-on"]');
+
+    assert
+      .dom('[data-test-refusal]')
+      .hasText(
+        'This pull request comes from a fork, so it is pushed from the fork, never from here.',
+      );
+  });
+
+  test('a CI fix not started on a fork says so on the dashboard', async function (assert) {
+    onTheHub({ notice: { code: 'fork-pull-request', detail: null } });
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-notice]')
+      .hasText(
+        'The CI fix was not started: this pull request comes from a fork, which is pushed from the fork, never from here.',
+      );
+  });
+
   test('Take over offers Hand back on its toast, which hands it back through the manager', async function (assert) {
     onTheHub({ facts: { is_author: false } });
     await visit('/pr/o/r/7/dashboard');

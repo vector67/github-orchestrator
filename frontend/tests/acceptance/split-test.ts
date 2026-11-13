@@ -243,6 +243,26 @@ module('Acceptance | split', function (hooks) {
     assert.propContains(posted.body, { part: 'changes' });
   });
 
+  test('accepting the new PR on a pull request from a fork says why the board refused it', async function (assert) {
+    seed(board());
+    board().refusal = {
+      status: 409,
+      code: 'fork-pull-request',
+      detail: 'the pull request comes from a fork',
+    };
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click(
+      '[data-test-split-card="new-pr"] [data-test-part-act="accept"]',
+    );
+
+    assert
+      .dom('[data-test-refusal]')
+      .includesText(
+        'This pull request comes from a fork, so it is pushed from the fork, never from here.',
+      );
+  });
+
   test('a part accepted and waiting its turn offers no Accept, and keeps its Edit', async function (assert) {
     seed(board(), {
       parts: [

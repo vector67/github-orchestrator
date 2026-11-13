@@ -87,6 +87,7 @@ from github_orchestrator.board_api._contract import (
     SetImportanceRequest,
     Sha,
     SkippedFixCheck,
+    SplitPartName,
     Stack,
     StartSessionRequest,
     TerminalRequest,
@@ -163,7 +164,7 @@ from github_orchestrator.conversation import (
     Denied,
     EditableConversation,
 )
-from github_orchestrator.domain import Location, Pr, UtcClock
+from github_orchestrator.domain import Location, Pr, UtcClock, fork_pr_number
 from github_orchestrator.domain import Sha as CommitSha
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane, SummaryRefusal
 from github_orchestrator.terminal_sessions import TerminalSessions
@@ -840,7 +841,8 @@ def resume_manager(board: Serving) -> Response:
                      "from where its last session left off.")
 def carry_on(board: Serving) -> Response:
     """The dashboard's `r`. Refused when agents are disabled or a run is
-    already going.
+    already going, and `fork-pull-request` when the last run was a CI fix on a
+    pull request from a fork, since that run pushes.
     """
     return _handed_over(board, board.manager.carry_on())
 
@@ -941,7 +943,9 @@ def assign_reviewers_when_ready(board: Serving, asked: AssignReviewersRequest) -
              summary="Treat this pull request as yours though someone else opened it.")
 def take_over_pull_request(board: Serving) -> Response:
     """From then on the orchestrator treats you as the pull request's author:
-    its agents, its next move and the author's controls.
+    its agents, its next move and the author's controls. Refused
+    `fork-pull-request` on a pull request from a fork, whose agents would push
+    their fixes from here.
     """
     return _handed_over(board, board.manager.take_over())
 
@@ -1373,11 +1377,21 @@ def approve_thread(key: ThreadKey, board: Serving, if_match: IfMatch,
     committed nothing, or when a landing is already under way. An approve
     over a proposal a rebase caught up whose tests did not pass is refused
     `confirm-again`: nothing failed, and the same request repeated lands it.
+    Accepting a split's new pull request on a pull request from a fork, alone
+    or with every part, is refused `fork-pull-request`: its run would push a
+    branch cut from the fork's code to origin.
     """
     _within_githubs_limit(board, asked.reply)
+    conversation = _thread(board, key)
+    branch = board.conversations.facts().branch
+    if (conversation.fix.split is not None and asked.part in (None, SplitPartName.NEW_PR)
+            and branch is not None and fork_pr_number(branch) is not None):
+        raise Refusal(409, ErrorCode.FORK_PULL_REQUEST,
+                      "the pull request comes from a fork, so no new pull request is "
+                      "pushed from its code here")
     ticket = asked.ticket
     return _queued(
-        board, _thread(board, key), if_match,
+        board, conversation, if_match,
         lambda editable: editable.approve(
             reply=asked.reply or "", delete_comment=asked.delete_comment,
             resolve=asked.resolve, message=asked.message or "",

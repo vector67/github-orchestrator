@@ -60,6 +60,7 @@ class NoticeCode(StrEnum):
     MARK_READY_REFUSED = "mark-ready-refused"
     CONVERT_TO_DRAFT_REFUSED = "convert-to-draft-refused"
     ASSIGN_REVIEWERS_REFUSED = "assign-reviewers-refused"
+    FORK_PULL_REQUEST = "fork-pull-request"
 
 
 @dataclass(frozen=True)

@@ -21,6 +21,7 @@ from github_orchestrator.change_detection.fake import (
 )
 from github_orchestrator.conversation import ConversationState
 from github_orchestrator.desktop import Badge
+from github_orchestrator.domain import fork_pr_branch
 from github_orchestrator.github import (
     CommentKind,
     PullRequestState,
@@ -175,6 +176,31 @@ def test_queued_work_is_taken_once_the_prs_role_is_known(settings, tmp_path):
 def test_a_fix_run_with_more_failures_queued_is_told_not_to_push(settings, tmp_path):
     manager = _carried_out(settings, _worktree(tmp_path),
                            ci_failed("tests", "boom"), ci_failed("lint"))
+    assert _work(manager) == FixingCheck("tests", "boom", False)
+
+
+def test_a_fix_run_that_would_push_a_fork_pr_is_not_started_and_says_why(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+    worktree = _worktree(tmp_path)
+
+    manager = manager_over(settings, None, is_author=True, worktree=worktree)
+    manager.event_queue.add(THE_PR, ci_failed("tests", "boom"))
+    manager.run()
+
+    assert manager.agent_runs.started == []
+    notice = manager.board.panel.dashboard().notice
+    assert notice is not None and notice.code is NoticeCode.FORK_PULL_REQUEST
+    assert _changes(manager, worktree).endswith(
+        "The pull request comes from a fork, which is pushed from the fork, never from "
+        "here — skipped the CI fix for 'tests'; no agent run.\n")
+
+
+def test_a_fix_run_told_not_to_push_still_starts_on_a_fork_pr(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+
+    manager = _carried_out(settings, _worktree(tmp_path),
+                           ci_failed("tests", "boom"), ci_failed("lint"))
+
     assert _work(manager) == FixingCheck("tests", "boom", False)
 
 

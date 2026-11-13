@@ -60,6 +60,7 @@ export interface Controlled {
   showing: 'board' | 'hub';
   pending: boolean;
   waitingOnAuthor: boolean;
+  fork: boolean;
 }
 
 export type Offer =
@@ -69,6 +70,9 @@ export type Offer =
   | { state: 'absent' };
 
 const ONLY_W = 'Only w works here: the worktree holds another branch.';
+
+const FORK_TAKE_OVER =
+  'This pull request comes from a fork, so it cannot be taken over: the fixes its agents would push belong in the fork.';
 
 const HINTS = {
   close: 'Closes this pull request on GitHub, after you confirm',
@@ -187,6 +191,7 @@ function offerOf(on: Controlled, control: Control): Offer {
   if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
   if (control === 'take-over' && shown.facts?.is_author !== false)
     return ABSENT;
+  if (control === 'take-over' && on.fork) return held(FORK_TAKE_OVER);
   if (control === 'check-for-fixes' && !on.waitingOnAuthor) return ABSENT;
   const why = heldBackOf(control, shown);
   if (why) return held(why);
@@ -254,6 +259,7 @@ export default class PrControlsService extends Service {
       showing: live ? 'board' : 'hub',
       pending: summary ? controlsPending(summary) : false,
       waitingOnAuthor: summary ? waitingOnAuthor(summary) : false,
+      fork: summary?.fork ?? false,
     };
   }
 
@@ -268,6 +274,7 @@ export default class PrControlsService extends Service {
       showing: 'hub',
       pending: controlsPending(row.summaries),
       waitingOnAuthor: waitingOnAuthor(row.summaries),
+      fork: row.summaries.fork,
     };
   }
 

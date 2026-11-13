@@ -230,6 +230,36 @@ def test_the_manager_refuses_to_push_a_fork_prs_worktree_and_runs_the_rest(setti
     assert side.ran == [(["git", "status"], str(tmp_path))]
 
 
+def test_the_manager_refuses_to_take_over_a_fork_pr(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+
+    panel = ManagerSide(settings, tmp_path).settle()
+
+    assert panel.take_over() == ManagerRefusal.FORK_PULL_REQUEST
+
+
+def test_the_manager_refuses_to_carry_on_a_ci_fix_on_a_fork_pr(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+    side = ManagerSide(settings, tmp_path)
+    side.said("pushing the fix")
+
+    panel = side.settle()
+
+    assert panel.carry_on() == ManagerRefusal.FORK_PULL_REQUEST
+
+
+def test_the_manager_carries_on_a_review_on_a_fork_pr(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+    side = ManagerSide(settings, tmp_path)
+    side.runs.script(Outcome())
+    side.runs.review(str(tmp_path), THE_PR, "review-requested", title="t", url="u",
+                     branch=fork_pr_branch(THE_PR), additions=0, deletions=0).pump()
+
+    panel = side.settle()
+
+    assert panel.carry_on() is None
+
+
 def test_the_manager_refuses_git_the_palette_opens_in_a_terminal(settings, tmp_path):
     side = ManagerSide(settings, tmp_path)
     panel = side.settle()

@@ -584,7 +584,8 @@ there; on a draft `↵` is **Assign when ready for review**, which the manager
 keeps on disk and assigns as soon as the PR leaves draft, however it was marked
 ready, and **Assign now** asks them at once; opening it again starts from the
 waiting pick, and assigning when ready again replaces it, **Take over**
-(`⇧T`, then `y`) on someone else's PR, after which the orchestrator treats it as yours:
+(`⇧T`, then `y`) on someone else's PR, except one from a fork (see
+[A PR from a fork](#a-pr-from-a-fork)), after which the orchestrator treats it as yours:
 agents fix CI, rebase and answer its comments, the author's buttons appear, and
 the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
@@ -884,6 +885,17 @@ force-push answer **This pull request comes from a fork, so it is pushed from
 the fork, never from here.**, Accept refuses before landing with **… comes
 from another repository, so nothing is pushed to it from here: push from the
 fork**, and a plain `git push` in the worktree fails.
+
+No agent that would push starts on it either. **Take over** is held back, its
+tooltip saying **This pull request comes from a fork, so it cannot be taken
+over: the fixes its agents would push belong in the fork.** A failed check on
+your own PR from a fork starts no CI fix that pushes: the Dashboard says **The
+CI fix was not started: this pull request comes from a fork, which is pushed
+from the fork, never from here.**, and the agent's notes keep why. **Carry on**
+after a CI fix, and accepting a split's **New PR** (alone or through **Accept
+all**), are refused with the palette's words above. Take over, Carry on and
+New PR asked for through the API answer `409` with the code
+`fork-pull-request`, the code the Dashboard's CI fix notice carries too.
 
 ## Review board
 

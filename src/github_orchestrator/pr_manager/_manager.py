@@ -3,7 +3,7 @@ from threading import Thread
 
 from github_orchestrator.agent_runs import History, LastRun, Run, ThreadWork
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import Notice, NoticeCode
+from github_orchestrator.board_api.interface import ManagerRefusal, Notice, NoticeCode
 from github_orchestrator.change_detection import ChangeDetection, CiFailed, Facts
 from github_orchestrator.conversation import (
     ConversationManager,
@@ -123,6 +123,11 @@ class ManagerLoop:
         except Exception:
             log.exception("Handler failed for %s event %s", pr, kind)
             taken.failed()
+            return True
+        if isinstance(run, ManagerRefusal):
+            log.info("loop %s: %s refused — %s", pr, kind, run)
+            self._commands.notify(Notice(NoticeCode(run.value)))
+            self._finish(taken, kind)
             return True
         if isinstance(run, str):
             log.error("loop %s: %s for %s", pr, run, kind)

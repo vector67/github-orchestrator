@@ -86,7 +86,9 @@ class ErrorCode(StrEnum):
 
     FORK_PULL_REQUEST is a git push asked of a pull request whose head lives
     in another repository; its worktree reads the pull request's head from
-    origin and is never pushed there, so the push belongs in the fork.
+    origin and is never pushed there, so the push belongs in the fork. It also
+    refuses on such a pull request what would start an agent that pushes: Take
+    over, carry on after a CI fix, and accepting a split's new pull request.
 
     NO_GH_TOKEN is gh holding no token for the login the setup screen asked
     about; the detail says to run `gh auth login`.
@@ -1880,7 +1882,9 @@ class Notice(BaseModel):
                     "are mark ready and assign reviewers on a pull request that "
                     "is not yours; `close-refused`, `reopen-refused`, "
                     "`mark-ready-refused`, `convert-to-draft-refused` and "
-                    "`assign-reviewers-refused` are GitHub refusing the command.")
+                    "`assign-reviewers-refused` are GitHub refusing the command; "
+                    "`fork-pull-request` is a CI fix that would push not started, "
+                    "because the pull request comes from a fork.")
     detail: str | None = Field(
         description="What GitHub or the system said, where it said something: "
                     "set for `agent-wont-start` and the five GitHub refusals, "
