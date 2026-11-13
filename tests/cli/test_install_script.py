@@ -159,11 +159,12 @@ def test_yes_installs_the_missing_skills_and_names_them(tmp_path):
 @_ON_A_MAC
 @pytest.mark.parametrize(("argv", "environment"), [
     (("--no-skill",), {}), ((), {"GITHUB_ORCHESTRATOR_SKILL": "no"})])
-def test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it(
+def test_no_skill_leaves_a_missing_skill_out_records_it_and_names_the_command_that_adds_it(
         tmp_path, argv, environment):
     said, calls = _installed(tmp_path, "-y", *argv, state="missing", **environment)
 
     assert "skill" not in calls
+    assert "skill --leave-out" in calls
     assert "github-orchestrator skill" in said
 
 
