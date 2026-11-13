@@ -74,6 +74,7 @@ from github_orchestrator.agent_runs._verdict_state import (
     verdict_state,
 )
 from github_orchestrator.agent_runs.interface import (
+    AGENT_SETTINGS_HELD,
     AgentConfigTrust,
     FinishedRun,
     FixComment,
@@ -401,9 +402,18 @@ class AgentRuns:
     def _project_settings(self, pr: Pr, worktree: str, *, yours: bool) -> bool:
         return yours or self._trust.trusts(pr, worktree)
 
+    def _held(self, pr: Pr, worktree: str, *, yours: bool) -> bool:
+        if yours or not self._trust.held(pr, worktree):
+            return False
+        log.info("agent_run %s: refused in %s — %s", pr, worktree, AGENT_SETTINGS_HELD)
+        return True
+
     def _pr_run(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
-                project_settings: bool, continuing: bool = False) -> AgentRun | str:
-        run = self._start(worktree, pr, event_type, prompt, project_settings=project_settings,
+                yours: bool, continuing: bool = False) -> AgentRun | str:
+        if self._held(pr, worktree, yours=yours):
+            return AGENT_SETTINGS_HELD
+        run = self._start(worktree, pr, event_type, prompt,
+                          project_settings=self._project_settings(pr, worktree, yours=yours),
                           continuing=continuing, in_flight=self._in_flight(pr))
         if not isinstance(run, str):
             self._pr_runs[pr] = run
@@ -413,7 +423,7 @@ class AgentRuns:
                branch: str, additions: int, deletions: int) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, review_prompt(
             self._commands, self._changes_file, pr, title, url, branch, additions, deletions),
-            project_settings=self._project_settings(pr, worktree, yours=False))
+            yours=False)
 
     def rereview(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                  branch: str, verdict: str, said: FixComment | None, since: str | None,
@@ -421,22 +431,20 @@ class AgentRuns:
         return self._pr_run(worktree, pr, event_type, rereview_prompt(
             self._commands, self._changes_file, pr, title, url, branch, verdict=verdict,
             said=said, since=since, commits=commits, replied=replied),
-            project_settings=self._project_settings(pr, worktree, yours=False))
+            yours=False)
 
     def fix_check(self, worktree: str, pr: Pr, event_type: str, *, check: str,
                   summary: str | None, push: bool) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type,
                             fix_check_prompt(self._changes_file, pr, check, summary, push,
                                              self._workers),
-                            project_settings=True)
+                            yours=True)
 
     def rebase(self, worktree: str, pr: Pr, event_type: str, *, reason: str) -> AgentRun | str:
-        return self._pr_run(worktree, pr, event_type, rebase_prompt(pr, reason),
-                            project_settings=True)
+        return self._pr_run(worktree, pr, event_type, rebase_prompt(pr, reason), yours=True)
 
     def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> AgentRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT,
-                            project_settings=self._project_settings(pr, worktree, yours=yours),
+        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, yours=yours,
                             continuing=True)
 
     def _session_command(self, pr: Pr, worktree: str, *, yours: bool) -> list[str]:
@@ -445,17 +453,23 @@ class AgentRuns:
         return [*self._command, *self._lines.user_settings_only(worktree)]
 
     def rebase_in_session(self, pr: Pr, worktree: str, *, yours: bool) -> str | None:
+        if self._held(pr, worktree, yours=yours):
+            return AGENT_SETTINGS_HELD
         return self._pr_processes.split(pr, worktree,
                                         [*self._session_command(pr, worktree, yours=yours),
                                          *self._lines.rebase_session()])
 
     def ask_in_session(self, pr: Pr, worktree: str, prompt: str, *, yours: bool) -> str | None:
+        if self._held(pr, worktree, yours=yours):
+            return AGENT_SETTINGS_HELD
         return self._pr_processes.split(pr, worktree,
                                         [*self._session_command(pr, worktree, yours=yours),
                                          "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, prompt: str, *,
                     continuing: bool = False) -> AgentRun | str:
+        if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
+            return AGENT_SETTINGS_HELD
         run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
                           project_settings=self._project_settings(
                               fix.pr, fix.worktree, yours=not fix.reviewing),
@@ -498,17 +512,23 @@ class AgentRuns:
         return self._session_command(fix.pr, fix.worktree, yours=not fix.reviewing)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
+        if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
+            return AGENT_SETTINGS_HELD
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,
                                self._thread_command(fix),
                                rework_prompt(self._commands, fix, steer, self._workers))
 
     def fix_in_session(self, fix: ThreadFix) -> str | None:
+        if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
+            return AGENT_SETTINGS_HELD
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,
                                self._thread_command(fix),
                                thread_prompt(self._commands, fix, self._workers,
                                              watched=True))
 
     def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
+        if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
+            return AGENT_SETTINGS_HELD
         first = (None if answer is None
                  else watched_answer_prompt(self._commands, fix, answer))
         argv = self._lines.answering(_kept_session(self._session_file(fix)), first)

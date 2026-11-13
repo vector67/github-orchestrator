@@ -1211,6 +1211,8 @@ const NOTICES: Record<NoticeCode, (detail: string | null) => string> = {
     `GitHub would not ask those reviewers: ${detail ?? ''}`,
   'fork-pull-request': () =>
     'The CI fix was not started: this pull request comes from a fork, which is pushed from the fork, never from here.',
+  'agent-settings-held': () =>
+    'No agent was started: agents are stopped on this pull request until you answer the changes it makes to the files they load.',
 };
 
 function noticeOf(notice: Notice): string {

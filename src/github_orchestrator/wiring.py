@@ -879,6 +879,10 @@ class TrustedAgentConfig:
         config = self._working_copies.agent_config(pr, worktree)
         return config is not None and config.project_settings
 
+    def held(self, pr: Pr, worktree: str) -> bool:
+        config = self._working_copies.agent_config(pr, worktree)
+        return config is not None and config.held
+
 
 @dataclass(frozen=True)
 class AgentRunsWiring(Wiring):

@@ -536,6 +536,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       importance: 'normal',
       nudge_due: false,
       threads_live: 0,
+      agent_settings: null,
       changed_at: '2026-09-12T08:30:00Z',
       ...manager,
     },

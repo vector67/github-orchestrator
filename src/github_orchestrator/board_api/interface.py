@@ -46,6 +46,7 @@ class ManagerRefusal(StrEnum):
     AGENTS_DISABLED = "agents-disabled"
     AGENT_RUNNING = "agent-running"
     FORK_PULL_REQUEST = "fork-pull-request"
+    AGENT_SETTINGS_HELD = "agent-settings-held"
 
 
 class NoticeCode(StrEnum):
@@ -61,6 +62,7 @@ class NoticeCode(StrEnum):
     CONVERT_TO_DRAFT_REFUSED = "convert-to-draft-refused"
     ASSIGN_REVIEWERS_REFUSED = "assign-reviewers-refused"
     FORK_PULL_REQUEST = "fork-pull-request"
+    AGENT_SETTINGS_HELD = "agent-settings-held"
 
 
 @dataclass(frozen=True)
@@ -188,6 +190,12 @@ class PrImportance:
 
 
 @dataclass(frozen=True)
+class HeldAgentSettings:
+    changed: tuple[str, ...]
+    digest: str
+
+
+@dataclass(frozen=True)
 class Dashboard:
     pr: Pr
     worktree: str
@@ -248,6 +256,7 @@ class Dashboard:
     seconds_left: float | None
     run_working: bool
     release_requested: bool
+    agent_settings: HeldAgentSettings | None
     hidden: bool
     importance: Importance | None
     nudge_due: bool
@@ -288,6 +297,8 @@ class ManagerPanel(Protocol):
     def take_over(self) -> ManagerRefusal | None: ...
 
     def hand_back(self) -> ManagerRefusal | None: ...
+
+    def answer_agent_settings(self, digest: str, *, allowed: bool) -> bool: ...
 
 
 class ManagerWorktree(Protocol):

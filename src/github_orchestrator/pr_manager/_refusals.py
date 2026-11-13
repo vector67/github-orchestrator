@@ -12,23 +12,27 @@ class Conditions:
     running: bool
     answering: bool
     fork: bool = False
+    agents_held: bool = False
 
 
 DOWN = Conditions(frozen=False, running=False, answering=False)
 
 
 def refusal(conditions: Conditions, command: Command | None, *,
-            agents_enabled: bool, pushes: bool = False) -> ManagerRefusal | None:
+            agents_enabled: bool, pushes: bool = False,
+            starts_an_agent: bool = False) -> ManagerRefusal | None:
     if command is not None and not conditions.answering:
         return ManagerRefusal.MANAGER_DOWN
     if conditions.frozen:
         return ManagerRefusal.WORKTREE_FROZEN
     if pushes and conditions.fork:
         return ManagerRefusal.FORK_PULL_REQUEST
-    if command not in _STARTS_AN_AGENT:
+    if command not in _STARTS_AN_AGENT and not starts_an_agent:
         return None
     if not agents_enabled:
         return ManagerRefusal.AGENTS_DISABLED
-    if conditions.running:
+    if conditions.agents_held:
+        return ManagerRefusal.AGENT_SETTINGS_HELD
+    if conditions.running and command in _STARTS_AN_AGENT:
         return ManagerRefusal.AGENT_RUNNING
     return None

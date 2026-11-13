@@ -28,6 +28,7 @@ from github_orchestrator.board_api import _routes as routes
 from github_orchestrator.board_api._anchors import anchors_of
 from github_orchestrator.board_api._contract import (
     AgentOutput,
+    AgentSettingsAnswer,
     AnswerRequest,
     ApproveRequest,
     AskedReviewer,
@@ -802,6 +803,8 @@ RULED_OUT = {
     ManagerRefusal.AGENT_RUNNING: "an agent is already running",
     ManagerRefusal.FORK_PULL_REQUEST: "the pull request comes from a fork, so it is pushed "
                                       "from the fork, never from here",
+    ManagerRefusal.AGENT_SETTINGS_HELD: "agents are stopped on this pull request until you "
+                                        "answer the changes it makes to the files they load",
 }
 
 
@@ -1029,6 +1032,29 @@ def reset_to_origin(board: Serving, asked: ResetRequest) -> Response:
         raise Refusal(500 if code is ErrorCode.RESET_REFUSED else 409, code,
                       refused.detail or "")
     board.shelf.delete(RESET_TO_ORIGIN, RESET_STATE)
+    return Response(status_code=204)
+
+
+@writes.post("/pull-request/operations:answer-agent-settings", status_code=204,
+             tags=["pull request"], operation_id="answerAgentSettings",
+             responses={409: {"description": "The agent files changed since the page showed "
+                                             "them, or are no longer held: "
+                                             "`agent-settings-moved`.",
+                              "model": Errors}},
+             summary="Allow the agent files someone else's pull request changes, or run "
+                     "agents without them.")
+def answer_agent_settings(board: Serving, asked: AgentSettingsAnswer) -> Response:
+    """One answer covers every changed file the dashboard's
+    `manager.agent_settings` names, and lasts while they stay exactly as they
+    are: a push that changes them holds the pull request again. Allowing them
+    runs agents with the pull request's project settings; the other answer runs
+    them on your user settings only. Either lifts the hold, and an automatic run
+    that waited starts on the manager's next tick.
+    """
+    if not board.manager.answer_agent_settings(asked.digest, allowed=asked.allowed):
+        raise Refusal(409, ErrorCode.AGENT_SETTINGS_MOVED,
+                      "the agent files this pull request changes are not the ones the "
+                      "page showed, so nothing was answered")
     return Response(status_code=204)
 
 

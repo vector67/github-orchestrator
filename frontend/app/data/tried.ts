@@ -108,6 +108,12 @@ const SAID: Record<Code, Said> = {
   'fork-pull-request':
     'This pull request comes from a fork, so it is pushed from the fork, ' +
     'never from here.',
+  'agent-settings-held':
+    'Agents are stopped on this pull request until you answer the changes ' +
+    'it makes to the files they load.',
+  'agent-settings-moved':
+    'A push changed the files agents load since you saw them, so nothing ' +
+    'was answered. Read them again before you answer.',
   'no-gh-token':
     'gh holds no token for that login; run gh auth login in a terminal, ' +
     'then try again.',

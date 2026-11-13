@@ -84,6 +84,17 @@ class ErrorCode(StrEnum):
     answering, it has no worktree yet, the worktree holds another branch,
     agents are disabled, or an agent is already running.
 
+    AGENT_SETTINGS_HELD is an agent asked for on someone else's pull request
+    that changes files agents load, before you have allowed those changes or
+    said to run agents without them: a question, a terminal that starts an
+    agent, carry on, a review, or a thread verb that would start an agent.
+    Answering on the dashboard's `manager.agent_settings` lifts it.
+
+    AGENT_SETTINGS_MOVED is an answer to those changes given for files that
+    are no longer the ones the pull request changes: a push changed them
+    after the page showed them. The answer is not kept; the page shows the
+    files as they are now to answer again.
+
     FORK_PULL_REQUEST is a git push asked of a pull request whose head lives
     in another repository; its worktree reads the pull request's head from
     origin and is never pushed there, so the push belongs in the fork. It also
@@ -188,6 +199,8 @@ class ErrorCode(StrEnum):
     WORKTREE_FROZEN = "worktree-frozen"
     AGENT_RUNNING = "agent-running"
     FORK_PULL_REQUEST = "fork-pull-request"
+    AGENT_SETTINGS_HELD = "agent-settings-held"
+    AGENT_SETTINGS_MOVED = "agent-settings-moved"
     NO_GH_TOKEN = "no-gh-token"
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"
@@ -1330,6 +1343,15 @@ class ResetRequest(BaseModel):
                                   "once the worktree has moved on from it.")
 
 
+class AgentSettingsAnswer(BaseModel):
+    digest: str = Field(description="The digest of the changed agent files the page showed, "
+                                    "from `manager.agent_settings`. The answer refuses once "
+                                    "a push has changed them.")
+    allowed: bool = Field(description="True allows the changes, so agents load the pull "
+                                      "request's project settings; false runs agents "
+                                      "without them, on your user settings only.")
+
+
 class PullRequestLine(BaseModel):
     """A line as a comment on the pull request names it: its side and its
     number in the pull request's diff."""
@@ -1884,7 +1906,9 @@ class Notice(BaseModel):
                     "`mark-ready-refused`, `convert-to-draft-refused` and "
                     "`assign-reviewers-refused` are GitHub refusing the command; "
                     "`fork-pull-request` is a CI fix that would push not started, "
-                    "because the pull request comes from a fork.")
+                    "because the pull request comes from a fork; "
+                    "`agent-settings-held` is a carry on or review the manager drained "
+                    "after the pull request was held for its agent settings.")
     detail: str | None = Field(
         description="What GitHub or the system said, where it said something: "
                     "set for `agent-wont-start` and the five GitHub refusals, "
@@ -1976,6 +2000,16 @@ class PrFacts(BaseModel):
         description="Review threads unresolved on GitHub. Null where GitHub did not say.")
 
 
+class HeldAgentSettings(BaseModel):
+    """Someone else's pull request changes files agents load, and you have not
+    said whether to allow the changes, so no agent runs on it."""
+
+    changed: list[str] = Field(
+        description="Every changed file agents load, by path, sorted.")
+    digest: str = Field(
+        description="Names the files as they are at the head; an answer is given for it.")
+
+
 class ManagerFlags(BaseModel):
     """What the PR manager holds of the pull request beside GitHub's facts."""
 
@@ -1991,6 +2025,10 @@ class ManagerFlags(BaseModel):
         description="Important, and a day has passed since its last event and since "
                     "you last said you nudged.")
     threads_live: int = Field(description="Threads an agent is working on now.")
+    agent_settings: HeldAgentSettings | None = Field(
+        description="The agent files a pull request held for them changes. Null on "
+                    "your own pull requests, ones you took over, and ones whose changes "
+                    "you answered or that change none.")
     changed_at: str | None = Field(
         description="When one of these last changed, as this process saw it. "
                     "Of two copies the one with the later stamp is newer.")

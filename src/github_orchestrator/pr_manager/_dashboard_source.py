@@ -5,6 +5,7 @@ from github_orchestrator.agent_runs import History, Run
 from github_orchestrator.board_api import Dashboard
 from github_orchestrator.board_api.interface import (
     BaseStanding,
+    HeldAgentSettings,
     Importance,
     Notice,
     PrImportance,
@@ -30,7 +31,8 @@ from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
 ConfigOf = Callable[[Pr, str], ManagerConfig]
 
-Flags = tuple[str | None, bool, str | None, bool, int, Importance | None, bool]
+Flags = tuple[str | None, bool, str | None, bool, int, Importance | None, bool,
+              HeldAgentSettings | None]
 
 
 def _unpushed_commit(line: str) -> UnpushedCommit:
@@ -87,10 +89,28 @@ class DashboardSource:
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0,
                                               draft=facts is None or facts.draft),
             assign_when_ready=self._picks.saved(pr),
+            agent_settings=self.agent_settings(pr, config.worktree),
         )
         return self._stamped(replace(
             drawn, importance=ranked.importance,
             nudge_due=ranked.nudge_due(drawn.last_event_at, self._clock())))
+
+    def agent_settings(self, pr: Pr, worktree: str) -> HeldAgentSettings | None:
+        facts = self._change_detection.facts(pr)
+        if facts is None or facts.is_author is not False or not worktree:
+            return None
+        config = self._working_copies.agent_config(pr, worktree)
+        if config is None or not config.held:
+            return None
+        return HeldAgentSettings(config.changed, config.digest)
+
+    def answer_agent_settings(self, pr: Pr, worktree: str, digest: str, *,
+                              allowed: bool) -> bool:
+        held = self.agent_settings(pr, worktree)
+        if held is None or held.digest != digest:
+            return False
+        self._working_copies.answer_agent_config(pr, digest, allowed=allowed)
+        return True
 
     def _queue(self, pr: Pr) -> tuple[QueuedEvent, ...]:
         return tuple(QueuedEvent(None if entry.event is None else entry.event.kind,
@@ -123,7 +143,7 @@ class DashboardSource:
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,
                  dashboard.hidden, len(dashboard.threads_live), dashboard.importance,
-                 dashboard.nudge_due)
+                 dashboard.nudge_due, dashboard.agent_settings)
         seen = self._flags_seen.get(dashboard.pr)
         if seen is None or seen[0] != flags:
             seen = (flags, self._clock().strftime(STAMP))

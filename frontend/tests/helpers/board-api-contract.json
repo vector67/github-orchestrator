@@ -1670,6 +1670,17 @@
     }
    }
   },
+  "/api/pull-request/operations:answer-agent-settings": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/operations:cancel-reset-to-origin": {
    "post": {
     "204": null
@@ -2090,6 +2101,21 @@
    },
    "required": [
     "lines"
+   ],
+   "type": "object"
+  },
+  "AgentSettingsAnswer": {
+   "properties": {
+    "allowed": {
+     "type": "boolean"
+    },
+    "digest": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "digest",
+    "allowed"
    ],
    "type": "object"
   },
@@ -4560,6 +4586,8 @@
     "worktree-frozen",
     "agent-running",
     "fork-pull-request",
+    "agent-settings-held",
+    "agent-settings-moved",
     "no-gh-token",
     "repo-not-visible",
     "setup-refused",
@@ -5294,6 +5322,24 @@
    ],
    "type": "object"
   },
+  "HeldAgentSettings": {
+   "properties": {
+    "changed": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "digest": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "changed",
+    "digest"
+   ],
+   "type": "object"
+  },
   "HeldPullRequest": {
    "properties": {
     "board_url": {
@@ -5464,6 +5510,16 @@
   },
   "ManagerFlags": {
    "properties": {
+    "agent_settings": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/HeldAgentSettings"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "changed_at": {
      "anyOf": [
       {
@@ -5525,6 +5581,7 @@
     "importance",
     "nudge_due",
     "threads_live",
+    "agent_settings",
     "changed_at"
    ],
    "type": "object"
@@ -5741,7 +5798,8 @@
     "mark-ready-refused",
     "convert-to-draft-refused",
     "assign-reviewers-refused",
-    "fork-pull-request"
+    "fork-pull-request",
+    "agent-settings-held"
    ],
    "type": "string"
   },

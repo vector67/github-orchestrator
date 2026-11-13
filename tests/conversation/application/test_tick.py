@@ -829,7 +829,7 @@ def test_a_tick_that_may_not_schedule_still_settles_the_decisions_and_starts_no_
     with threads.editing(KEY) as editable:
         editable.reply("on it")
 
-    threads.tick(FakeNotifications(), on_hold=False, schedule=False)
+    threads.tick(FakeNotifications(), on_hold=False, start_agents=False)
 
     assert _read(threads).operations[-1].state is OperationState.APPLIED
     assert here.agent_runs.started == []

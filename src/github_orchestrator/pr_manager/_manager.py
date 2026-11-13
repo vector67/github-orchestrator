@@ -87,7 +87,8 @@ class ManagerLoop:
                         log.info("Agent manager for %s exiting after pr-closed", pr)
                         break
                     self._front.wait(config.refresh_interval)
-                    self._commands.obey(frozen=self._frozen_on is not None)
+                    self._commands.obey(frozen=self._frozen_on is not None,
+                                        agents_held=self._agents_held_now)
                     if self._commands.dismissed:
                         log.info("Agent manager for %s exiting after its dismissal", pr)
                         break
@@ -102,6 +103,9 @@ class ManagerLoop:
                         active_run.interrupt()
                     except Exception:
                         log.exception("loop %s: interrupt during shutdown raised", pr)
+
+    def _agents_held_now(self) -> bool:
+        return self._dashboards.agent_settings(self._config.pr, self._config.worktree) is not None
 
     def _process_next_event(self, busy: bool = False) -> bool:
         config = self._config
@@ -250,17 +254,18 @@ class ManagerLoop:
         if wrong is not None:
             return
         drawn_with = self._commands.active_run
+        agents_held = dashboard.agent_settings is not None
 
-        if self._interrupted:
+        if self._interrupted and not agents_held:
             self._interrupted = False
             log.info("loop %s: the agent was interrupted by the last manager's end", pr)
-            self._commands.carry_out(Command.CARRY_ON, frozen=False)
+            self._commands.carry_out(Command.CARRY_ON, frozen=False, agents_held=False)
 
         conversations = self._conversations()
         on_hold = dashboard.on_hold
         agent = agent_status(dashboard.working_on)
 
-        conversations.tick(self._thread_news, on_hold=on_hold)
+        conversations.tick(self._thread_news, on_hold=on_hold, start_agents=not agents_held)
 
         if waiting.closing and self._commands.keeps_the_close():
             log.debug("loop %s: pr-closed queued — kept until its reopen can no longer come", pr)
@@ -270,8 +275,9 @@ class ManagerLoop:
                 pr, on_hold, agent,
             )
             self._process_next_event()
-        elif on_hold:
-            log.debug("loop %s: ON HOLD — carrying out only what runs no agent", pr)
+        elif on_hold or agents_held:
+            log.debug("loop %s: %s — carrying out only what runs no agent", pr,
+                      "ON HOLD" if on_hold else "agents held for its agent settings")
             self._process_next_event(busy=True)
         elif self._commands.active_run is None:
             log.debug("loop %s: agent idle, checking queue (%d pending)", pr,

@@ -127,8 +127,14 @@ class Run(Protocol):
     def finished(self) -> LastRun: ...
 
 
+AGENT_SETTINGS_HELD = ("agents are stopped on this pull request: it changes files they load, "
+                       "and you have not said whether to allow those changes")
+
+
 class AgentConfigTrust(Protocol):
     def trusts(self, pr: Pr, worktree: str) -> bool: ...
+
+    def held(self, pr: Pr, worktree: str) -> bool: ...
 
 
 class PrWork(Protocol):

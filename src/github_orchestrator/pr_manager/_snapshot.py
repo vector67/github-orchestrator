@@ -2,7 +2,12 @@ from dataclasses import replace
 
 from github_orchestrator.agent_runs import LastRun, Run
 from github_orchestrator.board_api import Dashboard
-from github_orchestrator.board_api.interface import ManagerStanding, Notice, QueuedEvent
+from github_orchestrator.board_api.interface import (
+    HeldAgentSettings,
+    ManagerStanding,
+    Notice,
+    QueuedEvent,
+)
 from github_orchestrator.change_detection import (
     CiStatus,
     Facts,
@@ -43,7 +48,8 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  last_run: LastRun | None, queue: tuple[QueuedEvent, ...], on_hold: bool,
                  threads: ConversationManager, wrong: WrongBranch | None,
                  notice: Notice | None, hidden: bool,
-                 assign_when_ready: ReviewerPick | None) -> Dashboard:
+                 assign_when_ready: ReviewerPick | None,
+                 agent_settings: HeldAgentSettings | None) -> Dashboard:
     counts = threads.counts()
     facts = None if facts is None else _as_sent(facts, threads)
     since = None if facts is None or facts.is_author is True else facts.since_review
@@ -109,6 +115,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         seconds_left=None if wrong is None else wrong.seconds_left,
         run_working=wrong is not None and wrong.run_working,
         release_requested=wrong is not None and wrong.release_requested,
+        agent_settings=agent_settings,
         hidden=hidden,
         importance=None,
         nudge_due=False,

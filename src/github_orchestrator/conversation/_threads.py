@@ -253,7 +253,8 @@ class _Pr:
         self.modules = modules
         self.pr = pr
         self.config = for_repo(modules.config, pr.repo)
-        self._pull_requests = PullRequests(modules.change_detection, pr, modules.github_prs)
+        self._pull_requests = PullRequests(modules.change_detection, pr, modules.github_prs,
+                                           modules.working_copies)
         config = self.config
         self._github = GitHubThreads(modules.github_prs, modules.threads, modules.reviews, pr)
         self._agents = ThreadAgents(modules.thread_work, pr,
@@ -741,7 +742,7 @@ class _ConversationManager:
         return Absorbed(threads=len(activity.threads), created=tuple(created),
                         refreshed=tuple(refreshed))
 
-    def tick(self, news: ThreadNews, *, on_hold: bool, schedule: bool = True) -> None:
+    def tick(self, news: ThreadNews, *, on_hold: bool, start_agents: bool = True) -> None:
         pr, ports = self._pr.pr, self._pr.ports
         try:
             if not on_hold:
@@ -764,11 +765,12 @@ class _ConversationManager:
         except Exception:
             log.exception("loop %s: the threads waiting on a verdict could not be asked", pr)
         try:
-            ask_due_commit_checks(ports)
+            if start_agents:
+                ask_due_commit_checks(ports)
         except Exception:
             log.exception("loop %s: the commits named in threads could not be checked", pr)
         for settled in self._pr.runs.pump_and_schedule(pr, ports,
-                                                       schedule=schedule and not on_hold):
+                                                       schedule=start_agents and not on_hold):
             _announce_settled(news, pr, settled)
 
     def counts(self) -> Counts:

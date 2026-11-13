@@ -928,7 +928,7 @@ def preview_github() -> FakeGitHub:
 
 
 def settle(conversations: ConversationManager) -> None:
-    conversations.tick(FakeNotifications(), on_hold=False, schedule=False)
+    conversations.tick(FakeNotifications(), on_hold=False, start_agents=False)
 
 
 def _settle_until(stopped: threading.Event, conversations: ConversationManager) -> None:

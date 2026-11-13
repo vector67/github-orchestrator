@@ -6,6 +6,7 @@ from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel
 from github_orchestrator.board_api.interface import (
     BaseStanding,
     DismissUntil,
+    HeldAgentSettings,
     Importance,
     ManagerRefusal,
     ManagerStanding,
@@ -88,7 +89,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                   "unresolved_threads": 0},
         "manager": {"frozen_on": None, "on_hold": True, "working_on": "new-comments",
                     "hidden": False, "importance": None, "nudge_due": False,
-                    "threads_live": 2, "changed_at": None},
+                    "threads_live": 2, "agent_settings": None, "changed_at": None},
         "threads": [],
         "unreadable": [],
         "listed_at": None,
@@ -127,11 +128,45 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
     assert answer["manager"] == {
         "frozen_on": None, "on_hold": True, "working_on": "new-comments", "hidden": True,
         "importance": "important", "nudge_due": True,
-        "threads_live": 2, "changed_at": "2026-10-08T09:01:00Z"}
+        "threads_live": 2, "agent_settings": None, "changed_at": "2026-10-08T09:01:00Z"}
     assert answer["threads"] == [{"key": "PRRT_1", "state": "ready", "record_state": "open",
                                   "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z",
                                   "mention": False}]
     assert answer["listed_at"] == "2026-10-08T08:59:00Z"
+
+
+HELD = HeldAgentSettings((".claude/settings.json", "CLAUDE.md"), "d1g35t")
+
+
+def test_the_dashboard_ships_the_agent_files_a_held_pull_request_changes():
+    held = replace(IDLE, agent_settings=HELD)
+
+    answer = client_for(manager=FakeManagerPanel(now=held)).get("/api/dashboard").json()
+
+    assert answer["manager"]["agent_settings"] == {
+        "changed": [".claude/settings.json", "CLAUDE.md"], "digest": "d1g35t"}
+
+
+@pytest.mark.parametrize("allowed", [True, False], ids=["allow", "without"])
+def test_an_answer_to_the_agent_files_shown_is_kept(allowed):
+    panel = FakeManagerPanel(now=replace(IDLE, agent_settings=HELD))
+
+    answer = client_for(manager=panel).post(
+        "/api/pull-request/operations:answer-agent-settings",
+        json={"digest": "d1g35t", "allowed": allowed})
+
+    assert (answer.status_code, panel.agent_settings_answers) == (204, [("d1g35t", allowed)])
+
+
+def test_an_answer_to_agent_files_a_push_has_since_changed_is_refused_and_not_kept():
+    panel = FakeManagerPanel(now=replace(IDLE, agent_settings=HELD))
+
+    answer = client_for(manager=panel).post(
+        "/api/pull-request/operations:answer-agent-settings",
+        json={"digest": "0ld", "allowed": True})
+
+    assert (answer.status_code, answer.json()["errors"][0]["code"],
+            panel.agent_settings_answers) == (409, "agent-settings-moved", [])
 
 
 def test_a_dashboard_before_the_first_poll_ships_no_facts():

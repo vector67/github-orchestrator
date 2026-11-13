@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from github_orchestrator.agent_runs import PrWork, Run
@@ -41,12 +42,13 @@ class ManagerCommands:
         self._notice_at = 0.0
         self._closed_at: float | None = None
 
-    def obey(self, *, frozen: bool) -> None:
+    def obey(self, *, frozen: bool, agents_held: Callable[[], bool]) -> None:
         for pending in self._command_files.pending(self._config.pr):
-            self.carry_out(pending.command, frozen=frozen, fields=pending.fields)
+            self.carry_out(pending.command, frozen=frozen, agents_held=agents_held(),
+                           fields=pending.fields)
             self._command_files.delete(pending)
 
-    def carry_out(self, command: Command, *, frozen: bool,
+    def carry_out(self, command: Command, *, frozen: bool, agents_held: bool,
                   fields: dict[str, Any] | None = None) -> None:
         pr = self._config.pr
         if self._dismissed:
@@ -55,7 +57,7 @@ class ManagerCommands:
         log.info("%s: %s", pr, command)
         run = self.active_run
         refused = refusal(Conditions(frozen=frozen, running=run is not None and run.is_alive(),
-                                     answering=True),
+                                     answering=True, agents_held=agents_held),
                           command, agents_enabled=self._config.agents_enabled)
         if refused is not None:
             log.info("%s: %s refused — %s", pr, command, refused)

@@ -5,14 +5,26 @@ from github_orchestrator.conversation._domain.conversation import (
 )
 from github_orchestrator.domain import Pr
 from github_orchestrator.github import PullRequests as GitHubPullRequests
+from github_orchestrator.working_copies import WorkingCopies
 
 
 class PullRequests:
     def __init__(self, change_detection: ChangeDetection, pr: Pr,
-                 github: GitHubPullRequests) -> None:
+                 github: GitHubPullRequests, working_copies: WorkingCopies) -> None:
         self._change_detection = change_detection
         self._pr = pr
         self._github = github
+        self._working_copies = working_copies
+
+    def agents_held(self) -> bool:
+        facts = self._facts()
+        if facts is None or facts.is_author is not False:
+            return False
+        worktree = self._working_copies.checkout(self._pr).path()
+        if worktree is None:
+            return False
+        config = self._working_copies.agent_config(self._pr, worktree)
+        return config is not None and config.held
 
     def ci_green(self) -> bool | None:
         facts = self._change_detection.facts(self._pr)

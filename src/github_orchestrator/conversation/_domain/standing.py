@@ -47,4 +47,5 @@ class ErrorCode(StrEnum):
     GIT_FAILED = "git-failed"
     GITHUB_REJECTED = "github-rejected"
     AGENTS_DISABLED = "agents-disabled"
+    AGENT_SETTINGS_HELD = "agent-settings-held"
     INTERNAL_REFUSAL = "internal-refusal"

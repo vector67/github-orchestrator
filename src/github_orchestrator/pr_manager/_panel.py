@@ -109,6 +109,14 @@ class FilePanel(ManagerPanel, ManagerWorktree):
     def hand_back(self) -> ManagerRefusal | None:
         return self._hand(Command.HAND_BACK)
 
+    def answer_agent_settings(self, digest: str, *, allowed: bool) -> bool:
+        answered = self._dashboards.answer_agent_settings(self._pr, self._worktree(), digest,
+                                                          allowed=allowed)
+        log.info("%s: agent settings %s — %s", self._pr, digest[:12],
+                 ("allowed" if allowed else "run without them") if answered
+                 else "refused, they changed since the page showed them")
+        return answered
+
     def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:
         command = resolve(keys)
         if command is None or (command.mode != "captured" and command.keys not in SHOWN_READ_ONLY):
@@ -132,7 +140,8 @@ class FilePanel(ManagerPanel, ManagerWorktree):
             raise ValueError(f"terminal keys {keys!r} name nothing the terminal opens")
         if not worktree:
             return ManagerRefusal.NO_WORKTREE
-        refused = self._refusal(f"a terminal for {keys!r}")
+        refused = self._refusal(f"a terminal for {keys!r}",
+                                starts_an_agent=command is not None and command.mode == "agent")
         if refused is not None:
             return refused
         log.info("%s: opening %r in a terminal", pr, keys)
@@ -145,19 +154,17 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         worktree = self._worktree()
         if not worktree:
             return ManagerRefusal.NO_WORKTREE
-        refused = self._refusal("a question for the agent")
+        refused = self._refusal("a question for the agent", starts_an_agent=True)
         if refused is not None:
             return refused
-        if not self._agents_enabled:
-            log.info("%s: a question for the agent refused — agents are disabled", self._pr)
-            return ManagerRefusal.AGENTS_DISABLED
         log.info("%s: asking the agent in a terminal", self._pr)
         return self._pr_work.ask_in_session(self._pr, worktree, prompt, yours=self._yours())
 
     def _refusal(self, what: str, command: Command | None = None, *,
-                 pushes: bool = False) -> ManagerRefusal | None:
+                 pushes: bool = False, starts_an_agent: bool = False) -> ManagerRefusal | None:
         refused = refusal(self._status_files.conditions(self._pr), command,
-                          agents_enabled=self._agents_enabled, pushes=pushes)
+                          agents_enabled=self._agents_enabled, pushes=pushes,
+                          starts_an_agent=starts_an_agent)
         if refused is not None:
             log.info("%s: %s refused — %s", self._pr, what, refused)
         return refused

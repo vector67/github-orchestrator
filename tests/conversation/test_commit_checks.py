@@ -86,6 +86,19 @@ def test_a_reply_naming_a_commit_asks_about_that_commit_in_the_prs_checkout(sett
         True, True)
 
 
+def test_a_tick_that_may_start_no_agent_asks_no_commit_check_until_one_may(settings):
+    board = Board(settings)
+    sha = board.commit({"helpers.py": "def new_name():\n"}, "Rename the helper")
+    board.thread(_said(1, ME, "rename old_name"),
+                 _said(2, AUTHOR, f"Fixed in {sha[:7]}", "2026-09-01T11:00:00Z"))
+
+    board.manager.tick(FakeNotifications(), on_hold=False, start_agents=False)
+    held = board.agent_runs.commit_checks_asked()
+    board.tick_after()
+
+    assert (held, [asked.sha for asked in board.agent_runs.commit_checks_asked()]) == ([], [sha])
+
+
 def test_a_commit_link_is_checked_like_a_bare_hash(settings):
     board, sha = _answered_with_a_commit(
         settings, "Done: https://github.com/acme/widgets/pull/7/commits/{sha}")

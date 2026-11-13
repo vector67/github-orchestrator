@@ -16027,6 +16027,20 @@
      "returncode": 128,
      "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
      "stdout": ""
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/prwork",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": "fatal: cannot change to '<TMP>/prwork': No such file or directory\n",
+     "stdout": ""
     }
    ]
   },
@@ -70860,6 +70874,27 @@
    ]
   },
   "tests/preview/test_preview.py::test_the_previews_dashboard_rows_the_threads_its_board_holds[reviewed]": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IGFtYmlndW91cyBhcmd1bWVudCAncmVmcy9yZW1vdGVzL29yaWdpbi9IRUFEJzogdW5rbm93biByZXZpc2lvbiBvciBwYXRoIG5vdCBpbiB0aGUgd29ya2luZyB0cmVlLgpVc2UgJy0tJyB0byBzZXBhcmF0ZSBwYXRocyBmcm9tIHJldmlzaW9ucywgbGlrZSB0aGlzOgonZ2l0IDxjb21tYW5kPiBbPHJldmlzaW9uPi4uLl0gLS0gWzxmaWxlPi4uLl0nCg=="
+     },
+     "stdout": {
+      "b64": "NDYyZmMyMTZmMzBkMzU1YjNhM2ZiYzEyNTE4N2U1NGVkYmQ0OTZkNgpyZWZzL3JlbW90ZXMvb3JpZ2luL0hFQUQK"
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
     {
      "argv": [
@@ -70878,6 +70913,50 @@
      },
      "stdout": {
       "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/preview/test_preview.py::test_the_previews_dashboard_rows_the_threads_its_board_holds[seeded]": {
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "HEAD..f3f4429a770c3d7c03ae0ed77d41af715c6c9af4"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjNmNDQyOSBhIHRlYW1tYXRlJ3MgcHVzaAA="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-be2787a5/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "f3f4429a770c3d7c03ae0ed77d41af715c6c9af4..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YThlNjc0MSB3aGF0IHRoZSBhZ2VudCBwcm9wb3NlcyBmb3IgUFJSVF9wdXNoX3JlamVjdGVkADFlOGQ5YjkgYSBjaGFuZ2UgdGhlIGZpeCBub3cgY29uZmxpY3RzIHdpdGgA"
      }
     }
    ]

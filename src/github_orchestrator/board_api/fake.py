@@ -51,7 +51,7 @@ IDLE = Dashboard(
     last_run_exit_code=None, last_run_ended_at=None, queue=(), on_hold=False,
     assign_when_ready=None, unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_live=frozenset(),
     frozen_on=None, expected_branch=None,
-    seconds_left=None, run_working=False, release_requested=False,
+    seconds_left=None, run_working=False, release_requested=False, agent_settings=None,
     hidden=False, importance=None, nudge_due=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
     undismiss_command="github-orchestrator undismiss --repo o/n 1",
     notice=None, standing=ManagerStanding.ANSWERING)
@@ -72,6 +72,7 @@ class FakeManagerPanel:
     assigned: list[tuple[tuple[str, ...], str | None]] = field(default_factory=list)
     taken_over: int = 0
     handed_back: int = 0
+    agent_settings_answers: list[tuple[str, bool]] = field(default_factory=list)
     git_answer: tuple[int, list[str], float] = (0, [], 0.1)
     ran: list[str] = field(default_factory=list)
     opened: list[str] = field(default_factory=list)
@@ -149,6 +150,13 @@ class FakeManagerPanel:
         if self.refusal is None:
             self.handed_back += 1
         return self.refusal
+
+    def answer_agent_settings(self, digest: str, *, allowed: bool) -> bool:
+        held = self.now.agent_settings
+        if held is None or held.digest != digest:
+            return False
+        self.agent_settings_answers.append((digest, allowed))
+        return True
 
     def run_git(self, keys: str) -> tuple[int, list[str], float] | ManagerRefusal:
         if self.git_refusal is not None:

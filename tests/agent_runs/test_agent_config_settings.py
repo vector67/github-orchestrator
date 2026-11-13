@@ -9,6 +9,7 @@ from tests.agent_runs.support import finish, real_agent_runs
 from tests.builders import a_pr
 
 THE_PR = a_pr(12, "acme/widgets")
+STOPPED = "agents are stopped on this pull request"
 CHANGED = {"CLAUDE.md": "be bold\n", ".mcp.json": "{}\n"}
 
 
@@ -137,11 +138,11 @@ def test_a_run_on_someone_else_s_pr_whose_changes_you_turned_down_loads_user_set
 
 
 @pytest.mark.parametrize("started", SOMEONE_ELSES_RUNS)
-def test_a_run_on_someone_else_s_pr_whose_changes_wait_for_an_answer_loads_user_settings_only(
+def test_a_run_on_someone_else_s_pr_whose_changes_wait_for_an_answer_is_refused(
         runs, program, copies, worktree, started):
     copies.change_agent_config(worktree, CHANGED)
 
-    assert _loads_only_user_settings(_run_argv(runs, program, worktree, started), worktree)
+    assert (STOPPED in started(runs, worktree), program.spawned) == (True, [])
 
 
 @pytest.mark.parametrize("started", SOMEONE_ELSES_RUNS)
@@ -175,8 +176,9 @@ def test_a_session_on_someone_else_s_pr_whose_changes_you_turned_down_loads_user
 
 
 @pytest.mark.parametrize("opened", SOMEONE_ELSES_SESSIONS)
-def test_a_session_on_someone_else_s_pr_whose_changes_wait_for_an_answer_loads_user_settings_only(
+def test_a_session_on_someone_else_s_pr_whose_changes_wait_for_an_answer_is_refused(
         runs, world, copies, worktree, opened):
     copies.change_agent_config(worktree, CHANGED)
 
-    assert _loads_only_user_settings(_session_argv(runs, world, worktree, opened), worktree)
+    assert (STOPPED in opened(runs, worktree), world.pr_processes.sessions.get(THE_PR, [])) == (
+        True, [])

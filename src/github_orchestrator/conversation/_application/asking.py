@@ -203,6 +203,9 @@ def _intent_of(command: Command) -> Intent:
     raise NotImplementedError(type(command).__name__)
 
 
+_STARTS_AN_AGENT = (Rework, StartSession, Answer, Retry, WriteFix)
+
+
 def _allowed(command: Command, config: ThreadsConfig) -> Command:
     if isinstance(command, Rework):
         return replace(command, reworks_allowed=config.agents_enabled)
@@ -312,6 +315,10 @@ def ask(ports: Ports, conversation: Conversation, command: Command,
         return Denied(ErrorCode.OPERATION_OUTSTANDING,
                       f"thread {key} already has an operation waiting for the board "
                       f"to take it")
+    if isinstance(command, _STARTS_AN_AGENT) and ports.pull_requests.agents_held():
+        return Denied(ErrorCode.AGENT_SETTINGS_HELD,
+                      "agents are stopped on this pull request until you answer the changes "
+                      "it makes to the files they load")
     command = _allowed(command, ports.config)
     operation, requested_at = _operation_id(), ports.clock.now()
     asked = replace(_intent_of(command), operation=operation, requested_at=requested_at,

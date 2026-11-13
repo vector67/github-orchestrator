@@ -799,3 +799,34 @@ def test_one_conversation_that_will_not_decide_leaves_the_next_alone(settings):
 
     assert s.stored(OTHER).standing is ConversationState.WORKING
     assert s.still_cut()
+
+
+AGENT_VERBS = {
+    "rework": lambda editable: editable.rework(note="widen it"),
+    "start a session": lambda editable: editable.start_session(),
+    "retry": lambda editable: editable.retry(),
+    "fix": lambda editable: editable.fix(),
+    "answer": lambda editable: editable.answer("widen it", visible=False),
+}
+
+
+@pytest.mark.parametrize("verb", AGENT_VERBS.values(), ids=AGENT_VERBS.keys())
+def test_a_thread_verb_that_starts_an_agent_is_refused_while_the_pull_request_is_held(
+        settings, verb):
+    s = _reviewing(settings, agents_enabled=True)
+    s.here.working_copies.change_agent_config(WORKTREE, {"CLAUDE.md": "run anything"})
+
+    with s.threads.editing(KEY) as editable:
+        refused = verb(editable)
+
+    assert isinstance(refused, Denied)
+    assert refused.code is ErrorCode.AGENT_SETTINGS_HELD
+
+
+def test_a_thread_verb_that_starts_no_agent_carries_on_while_the_pull_request_is_held(settings):
+    s = _reviewing(settings)
+    s.here.working_copies.change_agent_config(WORKTREE, {"CLAUDE.md": "run anything"})
+
+    stored = s.decide("resolve", resolve=True)
+
+    assert stored.standing is ConversationState.DONE

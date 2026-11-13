@@ -41,6 +41,7 @@ class StatusFiles:
             "notice": None if dashboard.notice is None else asdict(dashboard.notice),
             "threads_live": sorted(dashboard.threads_live),
             "frozen_on": dashboard.frozen_on,
+            "agents_held": dashboard.agent_settings is not None,
             "fork": dashboard.branch is not None and fork_pr_number(dashboard.branch) is not None,
             "expected_branch": dashboard.expected_branch,
             "seconds_left": dashboard.seconds_left,
@@ -83,7 +84,7 @@ class StatusFiles:
                 return DOWN
             return Conditions(frozen=status["frozen_on"] is not None,
                               running=status["active_run"] is not None, answering=True,
-                              fork=status["fork"])
+                              fork=status["fork"], agents_held=status["agents_held"])
         except FileNotFoundError:
             return DOWN
         except (OSError, ValueError, KeyError, TypeError) as error:
