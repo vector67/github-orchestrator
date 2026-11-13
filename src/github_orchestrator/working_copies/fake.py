@@ -40,6 +40,7 @@ from github_orchestrator.working_copies._trouble import (
     Mismatch,
 )
 from github_orchestrator.working_copies.interface import (
+    AgentConfig,
     BaseStanding,
     FileDiff,
     Picked,
@@ -140,6 +141,8 @@ class FakeWorkingCopies:
         self._diff_shown = False
         self._binary_paths: set[str] = set()
         self._serializing: dict[Pr, threading.Lock] = {}
+        self._agent_configs: dict[str, dict[str, str]] = {}
+        self.agent_config_answers: dict[Pr, tuple[str, bool]] = {}
 
     def refuse_pushes(self, reason: str | None, *, times: int | None = None) -> None:
         self._push_refusal = reason
@@ -354,6 +357,24 @@ class FakeWorkingCopies:
 
     def wrong_branch(self, pr: Pr, *, now: float) -> WrongBranch | None:
         return self._trouble.wrong_branch(pr, now=now)
+
+    def change_agent_config(self, worktree: Path | str, files: dict[str, str]) -> None:
+        self._agent_configs[_key(worktree)] = dict(files)
+
+    def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None:
+        files = self._agent_configs.get(_key(worktree))
+        if files is None:
+            return None
+        if not files:
+            return AgentConfig((), "", None)
+        changed = tuple(sorted(files))
+        digest = hashlib.sha256(repr(sorted(files.items())).encode()).hexdigest()
+        answer = self.agent_config_answers.get(pr)
+        return AgentConfig(changed, digest,
+                           answer[1] if answer is not None and answer[0] == digest else None)
+
+    def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None:
+        self.agent_config_answers[pr] = (digest, allowed)
 
     def thread_checkout(self, pr: Pr, key: str) -> str:
         return self._thread_path(pr, key)

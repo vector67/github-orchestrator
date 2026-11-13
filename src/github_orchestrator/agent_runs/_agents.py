@@ -6,6 +6,21 @@ import shutil
 from collections.abc import Callable
 from pathlib import Path
 
+_AGENT_CONFIG_PATHS = (
+    ".claude/",
+    ".mcp.json",
+    ":(glob)**/CLAUDE.md",
+    ":(glob)**/CLAUDE.local.md",
+    ":(glob)**/AGENTS.md",
+    ".codex/",
+    ".agents/",
+)
+
+
+def agent_config_paths() -> tuple[str, ...]:
+    return _AGENT_CONFIG_PATHS
+
+
 CHATGPT_APP_CODEX = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex"
 
 Which = Callable[[str], str | None]

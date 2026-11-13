@@ -74,6 +74,7 @@ from github_orchestrator.agent_runs._verdict_state import (
     verdict_state,
 )
 from github_orchestrator.agent_runs.interface import (
+    AgentConfigTrust,
     FinishedRun,
     FixComment,
     LastRun,
@@ -313,8 +314,9 @@ class AgentRuns:
                  pr_processes: PrProcesses, report_commands: ReportCommands, changes_file: str,
                  agent: Agent, command: str, model: str,
                  summary_model: str, pytest_workers: int, transcripts_dir: Path,
-                 runs_log: Path, clamp: Sequence[str]) -> None:
+                 runs_log: Path, clamp: Sequence[str], trust: AgentConfigTrust) -> None:
         self._popen = popen
+        self._trust = trust
         self._clamp = tuple(clamp)
         self._command = command_argv(command)
         self._commands = report_commands
@@ -396,6 +398,9 @@ class AgentRuns:
             session_file=session_file,
         )
 
+    def _project_settings(self, pr: Pr, worktree: str, *, yours: bool) -> bool:
+        return yours or self._trust.trusts(pr, worktree)
+
     def _pr_run(self, worktree: str, pr: Pr, event_type: str, prompt: str, *,
                 project_settings: bool, continuing: bool = False) -> AgentRun | str:
         run = self._start(worktree, pr, event_type, prompt, project_settings=project_settings,
@@ -408,7 +413,7 @@ class AgentRuns:
                branch: str, additions: int, deletions: int) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, review_prompt(
             self._commands, self._changes_file, pr, title, url, branch, additions, deletions),
-            project_settings=False)
+            project_settings=self._project_settings(pr, worktree, yours=False))
 
     def rereview(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                  branch: str, verdict: str, said: FixComment | None, since: str | None,
@@ -416,7 +421,7 @@ class AgentRuns:
         return self._pr_run(worktree, pr, event_type, rereview_prompt(
             self._commands, self._changes_file, pr, title, url, branch, verdict=verdict,
             said=said, since=since, commits=commits, replied=replied),
-            project_settings=False)
+            project_settings=self._project_settings(pr, worktree, yours=False))
 
     def fix_check(self, worktree: str, pr: Pr, event_type: str, *, check: str,
                   summary: str | None, push: bool) -> AgentRun | str:
@@ -430,28 +435,31 @@ class AgentRuns:
                             project_settings=True)
 
     def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> AgentRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, project_settings=yours,
+        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT,
+                            project_settings=self._project_settings(pr, worktree, yours=yours),
                             continuing=True)
 
-    def _session_command(self, worktree: str, *, project_settings: bool) -> list[str]:
-        if project_settings:
+    def _session_command(self, pr: Pr, worktree: str, *, yours: bool) -> list[str]:
+        if self._project_settings(pr, worktree, yours=yours):
             return self._command
         return [*self._command, *self._lines.user_settings_only(worktree)]
 
     def rebase_in_session(self, pr: Pr, worktree: str, *, yours: bool) -> str | None:
         return self._pr_processes.split(pr, worktree,
-                                        [*self._session_command(worktree, project_settings=yours),
+                                        [*self._session_command(pr, worktree, yours=yours),
                                          *self._lines.rebase_session()])
 
     def ask_in_session(self, pr: Pr, worktree: str, prompt: str, *, yours: bool) -> str | None:
         return self._pr_processes.split(pr, worktree,
-                                        [*self._session_command(worktree, project_settings=yours),
+                                        [*self._session_command(pr, worktree, yours=yours),
                                          "--", prompt])
 
     def _fix_thread(self, fix: ThreadFix, prompt: str, *,
                     continuing: bool = False) -> AgentRun | str:
         run = self._start(fix.worktree, fix.pr, f"{THREAD_EVENT_PREFIX}{fix.key}", prompt,
-                          project_settings=not fix.reviewing, continuing=continuing,
+                          project_settings=self._project_settings(
+                              fix.pr, fix.worktree, yours=not fix.reviewing),
+                          continuing=continuing,
                           session_file=self._session_file(fix))
         if not isinstance(run, str):
             self._thread_runs = [*(one for one in self._thread_runs if not one.over), run]
@@ -487,7 +495,7 @@ class AgentRuns:
         return self._fix_thread(fix, answered_prompt(self._commands, fix), continuing=True)
 
     def _thread_command(self, fix: ThreadFix) -> list[str]:
-        return self._session_command(fix.worktree, project_settings=not fix.reviewing)
+        return self._session_command(fix.pr, fix.worktree, yours=not fix.reviewing)
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,

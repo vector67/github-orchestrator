@@ -20,6 +20,7 @@ from github_orchestrator.working_copies import (
     _threads,
     _worktree,
 )
+from github_orchestrator.working_copies._agent_config import AgentConfigs
 from github_orchestrator.working_copies._diff import PrBase, resolve_pr_base
 from github_orchestrator.working_copies._flags import DiskFlags
 from github_orchestrator.working_copies._handles import (
@@ -31,6 +32,7 @@ from github_orchestrator.working_copies._layout import pr_worktrees, thread_work
 from github_orchestrator.working_copies._progress import Progress
 from github_orchestrator.working_copies._trouble import BranchTrouble, Grace
 from github_orchestrator.working_copies.interface import (
+    AgentConfig,
     BaseStanding,
     FileDiff,
     Picked,
@@ -57,8 +59,10 @@ class GitWorkingCopies:
     def __init__(self, github: PullRequests, notifications: Worktrees,
                  mismatched_dir: Path, worktree_conflicts_dir: Path,
                  thread_worktrees_dir: Path, clones: Mapping[Repo, Clone], *, grace_seconds: int,
-                 run_idle_seconds: int) -> None:
+                 run_idle_seconds: int, agent_config_dir: Path,
+                 agent_config_paths: tuple[str, ...]) -> None:
         self._github = github
+        self._agent_configs = AgentConfigs(agent_config_dir, agent_config_paths)
         self._clones = clones
         self._pr_worktrees: dict[Pr, Path] = {}
         self._notifications = notifications
@@ -195,6 +199,12 @@ class GitWorkingCopies:
 
     def wrong_branch(self, pr: Pr, *, now: float) -> WrongBranch | None:
         return self._trouble.wrong_branch(pr, now=now)
+
+    def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None:
+        return self._agent_configs.agent_config(pr, worktree)
+
+    def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None:
+        self._agent_configs.answer_agent_config(pr, digest, allowed=allowed)
 
     def commits_since(self, worktree: Path | str, sha: str | None, *,
                       behind: bool = False) -> tuple[str, ...] | None:

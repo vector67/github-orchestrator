@@ -51,6 +51,10 @@ class Settings:
         return self.data_dir / "mismatched"
 
     @property
+    def agent_config_dir(self) -> Path:
+        return self.data_dir / "agent_config"
+
+    @property
     def pr_managers_dir(self) -> Path:
         return self.data_dir / "pr_managers"
 

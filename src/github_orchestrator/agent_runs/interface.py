@@ -126,6 +126,10 @@ class Run(Protocol):
     def finished(self) -> LastRun: ...
 
 
+class AgentConfigTrust(Protocol):
+    def trusts(self, pr: Pr, worktree: str) -> bool: ...
+
+
 class PrWork(Protocol):
     def review(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                branch: str, additions: int, deletions: int) -> Run | str: ...

@@ -9,6 +9,8 @@ from github_orchestrator.agent_runs import Agent, History, Run
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
 from github_orchestrator.pr_processes import AgentChanges, PrProcesses
 from github_orchestrator.wiring import AgentRunsWiring, ReportCommandsWiring, wire
+from github_orchestrator.working_copies import WorkingCopies
+from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.agent_runs.pinned import PYTHON
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.scripted_jev import ScriptedJev
@@ -24,9 +26,11 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
                     summary_model: str = SUMMARY_MODEL,
                     command: str = "claude", agent: Agent = Agent.CLAUDE,
                     model: str = MODEL, jev: ScriptedJev | None = None,
-                    clamp: tuple[str, ...] = ()) -> History:
+                    clamp: tuple[str, ...] = (),
+                    working_copies: FakeWorkingCopies | None = None) -> History:
     history: History = wire(
         fake_provider(PrProcesses, world.pr_processes),
+        fake_provider(WorkingCopies, working_copies or FakeWorkingCopies()),
         fake_provider(AgentChanges, world.pr_processes),
         ReportCommandsWiring(str(PYTHON)),
         clocks_of(monotonic=clock),

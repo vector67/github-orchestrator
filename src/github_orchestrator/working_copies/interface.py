@@ -28,6 +28,21 @@ class WrongBranch(Verdict):
     expected: str
 
 
+@dataclass(frozen=True)
+class AgentConfig:
+    changed: tuple[str, ...]
+    digest: str
+    allowed: bool | None
+
+    @property
+    def held(self) -> bool:
+        return bool(self.changed) and self.allowed is None
+
+    @property
+    def project_settings(self) -> bool:
+        return not self.changed or self.allowed is True
+
+
 class ResetRefusedCode(StrEnum):
     WORKTREE_MISSING = "worktree-missing"
     NO_ORIGIN_BRANCH = "no-origin-branch"
@@ -255,6 +270,10 @@ class WorkingCopies(Protocol):
     def request_release(self, pr: Pr) -> bool: ...
 
     def wrong_branch(self, pr: Pr, *, now: float) -> WrongBranch | None: ...
+
+    def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None: ...
+
+    def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None: ...
 
     def commits_since(self, worktree: Path | str, sha: str | None, *,
                       behind: bool = False) -> tuple[str, ...] | None: ...

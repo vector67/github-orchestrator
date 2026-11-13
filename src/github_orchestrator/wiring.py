@@ -20,10 +20,12 @@ from dishka import Provider, Scope, from_context, provide
 
 from github_orchestrator.agent_runs import (
     Agent,
+    AgentConfigTrust,
     History,
     PrWork,
     Summaries,
     ThreadWork,
+    agent_config_paths,
 )
 from github_orchestrator.agent_runs._jev import Ask as JevAsk
 from github_orchestrator.agent_runs._jev import post_to_jev
@@ -580,6 +582,8 @@ class WorkingCopiesWiring(Wiring):
     _: KW_ONLY
     grace_seconds: int
     run_idle_seconds: int
+    agent_config_dir: Path
+    agent_config_paths: tuple[str, ...]
 
 
 @wires(WorkingCopiesWiring)
@@ -594,7 +598,9 @@ class WorkingCopiesProvider(Provider):
                                 wiring.mismatched_dir, wiring.worktree_conflicts_dir,
                                 wiring.thread_worktrees_dir, wiring.clones,
                                 grace_seconds=wiring.grace_seconds,
-                                run_idle_seconds=wiring.run_idle_seconds)
+                                run_idle_seconds=wiring.run_idle_seconds,
+                                agent_config_dir=wiring.agent_config_dir,
+                                agent_config_paths=wiring.agent_config_paths)
 
 
 def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
@@ -606,6 +612,8 @@ def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
         clones=settings.repos,
         grace_seconds=config.mismatch_grace_seconds,
         run_idle_seconds=config.mismatch_run_idle_seconds,
+        agent_config_dir=settings.agent_config_dir,
+        agent_config_paths=agent_config_paths(),
     )
 
 
@@ -863,6 +871,15 @@ class ReportCommandsProvider(Provider):
         return CliReportCommands(wiring.python)
 
 
+class TrustedAgentConfig:
+    def __init__(self, working_copies: WorkingCopies) -> None:
+        self._working_copies = working_copies
+
+    def trusts(self, pr: Pr, worktree: str) -> bool:
+        config = self._working_copies.agent_config(pr, worktree)
+        return config is not None and config.project_settings
+
+
 @dataclass(frozen=True)
 class AgentRunsWiring(Wiring):
     popen: AgentPopen
@@ -885,9 +902,13 @@ class AgentRunsProvider(Provider):
     wiring = from_context(provides=AgentRunsWiring, scope=Scope.APP)
 
     @provide
+    def trust(self, working_copies: WorkingCopies) -> AgentConfigTrust:
+        return TrustedAgentConfig(working_copies)
+
+    @provide
     def runs(self, wiring: AgentRunsWiring, monotonic: Monotonic,
              pr_processes: PrProcesses, agent_changes: AgentChanges,
-             report_commands: ReportCommands) -> AgentRuns:
+             report_commands: ReportCommands, trust: AgentConfigTrust) -> AgentRuns:
         return AgentRuns(wiring.popen, wiring.run, wiring.jev, monotonic,
                                pr_processes=pr_processes, report_commands=report_commands,
                                changes_file=agent_changes.file_name(),
@@ -896,7 +917,7 @@ class AgentRunsProvider(Provider):
                                summary_model=wiring.summary_model,
                                pytest_workers=wiring.pytest_workers,
                                transcripts_dir=wiring.transcripts_dir,
-                               runs_log=wiring.runs_log, clamp=wiring.clamp)
+                               runs_log=wiring.runs_log, clamp=wiring.clamp, trust=trust)
 
     @provide
     def history(self, runs: AgentRuns) -> History:

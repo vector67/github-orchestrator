@@ -2,6 +2,7 @@ import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
+from github_orchestrator.agent_runs import agent_config_paths
 from github_orchestrator.domain import Clone, Pr, Repo, Sha
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import FakeGitHub
@@ -38,6 +39,8 @@ def real_working_copies(settings: Settings, github: FakeGitHub | None = None,
             clones=settings.repos if clones is None else clones,
             grace_seconds=settings.config.mismatch_grace_seconds,
             run_idle_seconds=settings.config.mismatch_run_idle_seconds,
+            agent_config_dir=settings.agent_config_dir,
+            agent_config_paths=agent_config_paths(),
         ),
     ).get(WorkingCopies)
     return working_copies
