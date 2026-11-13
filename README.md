@@ -255,9 +255,9 @@ lists them with a **Close sessions and migrate** button.
 `update` also updates the shipped skills in the default instance's skills
 folder. When some are missing and it runs in a terminal, it names each one and
 what the agents use it for, and asks whether to install them; a no writes
-`pr_skill = ""`, and later updates take that as the answer and ask nothing.
-With no terminal to ask on it does what the installer does under `-y`: a
-missing skill is installed. Either way, one that differs from this version's
+`pr_skill = ""`, and every later update asks again. With no terminal to ask on
+it does what the installer does under `-y`: a missing skill is installed,
+unless an earlier no is recorded. Either way, one that differs from this version's
 is left alone (`github-orchestrator skill --replace` replaces it), and
 `github-orchestrator skill` installs the skills and writes `create-pr` back.
 
