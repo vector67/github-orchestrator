@@ -1,7 +1,7 @@
 # How to use GitHub Orchestrator
 
 Everything the [README](../README.md) does not need to get you running: how
-the two processes fit together, every setting, and what each screen does.
+the three processes fit together, every setting, and what each screen does.
 
 ## How it works
 
@@ -24,8 +24,8 @@ nothing when it exits.
 Events are JSON files in per-PR queue directories. The watcher writes them, the
 agent manager reads them one at a time.
 
-`CLAUDE.md` is the other half of the docs: architecture, invariants, and the
-rules to follow when changing the code.
+`CLAUDE.md` holds the rules to follow when changing the code, and
+`CODE_ARCHITECTURE.md` the choices about its shape that are meant to stay.
 
 ## Platform
 
@@ -63,7 +63,8 @@ says where to get it and stops.
 
 The installer then offers to copy the skills the orchestrator ships into the
 agent's skills folder, `~/.claude/skills` for Claude Code or `~/.agents/skills`
-for Codex: `rebase-on-main`, which the agents run when a branch stops merging,
+for Codex (`<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
+`CLAUDE_CONFIG_DIR`): `rebase-on-main`, which the agents run when a branch stops merging,
 and `create-pr`, which opens a new PR from a branch, such as one a split carries
 code into. It runs `github-orchestrator skill`, which copies this version's
 skills there, and `doctor` names the same command for each skill that is
@@ -252,7 +253,9 @@ Add and remove repos on the setup screen.
 
 A separate instance is a separate watcher, hub and data dir: a config file
 `~/.config/github-orchestrator/<name>.toml` with a `hub_port` of its own. Every
-command takes `--instance <name>` to act on it, so
+command but `thread` takes `--instance <name>` to act on it; `thread` takes it
+before the command (`github-orchestrator --instance work thread list ...`) or
+from `GITHUB_ORCHESTRATOR_INSTANCE`. So
 `github-orchestrator start --instance work` writes and loads its service,
 labelled `com.github-orchestrator.watcher.work` on macOS and
 `github-orchestrator-work.service` on Linux, and comes back after a reboot.
@@ -368,14 +371,17 @@ otherwise they are parked, with PRs on hold. Someone else's PR you don't review
 that named you waits on others once you have answered every mention; a mention
 you have not answered, since your review if you gave one, needs you. The
 watcher looks for PRs that mention you at most once a minute and keeps one until
-it is merged or closed. On your own PR, changes a reviewer asked for and was
+it is merged or closed. The list behind the top bar's mention count is a
+separate search, run at most every 30 minutes. On your own PR, changes a reviewer asked for and was
 not asked to review again come first, then human comments waiting on you or an
 agent, then bot comments (from `claude`, `codex` or `copilot`), then CI, a
 rebase and the merge; a draft with nothing else in its way is marked ready for
 review. A PR you dismissed until its next event is off the wall, and out of the
 PR switcher, until that event comes, unless its worktree holds the wrong
-branch. So is a merged or closed PR, and someone else's PR you were never
-asked to review, never reviewed and were never mentioned on. A group with no
+branch. So is someone else's PR you were never asked to review, never reviewed
+and were never mentioned on. A merged or closed PR leaves the wall, unless the
+wall still holds it, as it does one you added from a mention: that one sits
+under Parked. A group with no
 PRs is not drawn, and a group's heading stays in view while its rows scroll.
 Grouping wins over rows staying put, so a row moves when its PR changes group,
 and it carries a **moved here** chip until you open that PR. The tab title
@@ -406,7 +412,15 @@ reviewer** (the PR description's `Detailed reviewer: @<login>` line names you),
 named for what started it: CI fix, rebase on main, review, re-review, thread
 fix, clean-up, or **carry on**, which is Claude started again with `--continue`
 to pick up its last conversation in the worktree, with no new instructions. A
-PR frozen on the wrong branch has a **Release** button on its row.
+PR frozen on the wrong branch has a **Release** button on its row, which asks
+first.
+
+Inside a group, PRs you marked Important come first, then those whose
+importance is not set, then Normal, then Someday, and within each rank the one
+that joined the group first leads. **Set importance** on the Dashboard sets it.
+An Important PR that has waited on others for a day since its last event moves
+to Needs you, its move reading **Nudge** and the people it waits on. **I nudged
+them** on the Dashboard puts the next nudge a day off.
 
 | Key       | What it does                                                            |
 | --------- | ----------------------------------------------------------------------- |
@@ -438,9 +452,19 @@ since local midnight, and what they cost. The wall reads the hub every five
 seconds.
 
 The bar also counts the mentions of you, made since the hub first ran this
-version, that the board has not closed; a PR's title bar shows the same count. Clicking the number lists each mention, with its author, PR and text:
-**Open on the board** opens that PR at its thread, and one the board does not
-hold says **not on the board** and links to the comment on GitHub.
+version, that the board has not closed; a PR's title bar shows the same count.
+Clicking the number lists each mention, with its author, PR and text. Each row
+is a link: it opens the PR at the mention's thread, building the PR's cards
+first when the board does not hold it, or opens the comment on GitHub when
+there is no thread to open. A note beside an off-board mention says which:
+**opens on GitHub**, **card being built**, **card built when opened**, or, for a
+PR that ended, that its page is rebuilt when opened. The row's **▾** menu has
+**See in context**, **See on GitHub**, **Defer…** (or **Stop deferring**) and
+**Dismiss**. Defer… waits for a time, or until a PR you pick lands in Needs
+you, is approved, gets a new commit, is merged, is closed or has any new
+activity; a deferred mention is greyed with when it comes back, and left out of
+the count. A merged or closed PR you opened for a mention, and that is not on
+your wall, shows a banner with **Add to Wall** and **Dismiss mention**.
 
 ### A PR's page
 
@@ -453,12 +477,22 @@ button opens the switcher, whose first entry is **Wall**. The gear, on the
 wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch,
 **Commit box sizing** for the Diff tab (Full, Minimal or Hidden),
 **Auto read** for marking commits read on their own,
+**Agent sessions** (below),
 **Terminal colours** for the Terminal tab and
 the watcher's last poll: a green dot, **Polled successfully** and how long ago,
 or a red dot and what went wrong when polls fail. **N mismatches** is the
 Alignment judge's count in the PR's latest summary, shown even once the summary
 is stale. A draft has a grey **Draft** pill before its title, and
 its move is outlined in grey, never yellow, since yellow means it needs you now.
+
+**Agent sessions** decides where an agent works when you start it from
+**Request change** in the Diff tab, **Ask the agent** on a mention card, or an
+answer to an agent's question: **Ask me each time** (the default), **Always
+visible**, which opens a session in the Terminal tab you can watch and type
+into, or **Always invisible**, which runs it unwatched. Either way the result
+comes back to the board for you to decide. Asking each time opens a dialog
+with **Visible session** and **Without a session**, and its **Remember my
+choice** tick sets this setting. The choice is kept in this browser.
 
 | Key       | What it does                              |
 | --------- | ----------------------------------------- |
@@ -535,12 +569,20 @@ there; on a draft `↵` is **Assign when ready for review**, which the manager
 keeps on disk and assigns as soon as the PR leaves draft, however it was marked
 ready, and **Assign now** asks them at once; opening it again starts from the
 waiting pick, and assigning when ready again replaces it, **Take over**
-(`⇧T`) on someone else's PR, after which the orchestrator treats it as yours:
+(`⇧T`, then `y`) on someone else's PR, after which the orchestrator treats it as yours:
 agents fix CI, rebase and answer its comments, the author's buttons appear, and
 the reviewer threads you had become your move, **Dismiss #N** (`d`, then `u`, `f`, or on a draft
 `r` until it is ready for review), which takes the PR off the wall, and **Close PR #N** (`⇧Q`, then `y`), which closes the PR on
-GitHub. Each button's tooltip says what
-it does, or why it is held back. From the press, by button or key, the band is
+GitHub. On a PR you review with threads waiting on the author, **Check all
+threads for fixes** (`⇧F`) asks an agent, for each of them, whether the
+changes since your comment address it: Assumed done if they do, My move if
+not. **Set importance** opens Important (`i`), Normal (`n`) and Someday (`s`),
+which rank the PR on the wall (see [The wall](#the-wall)); until one is set
+the button carries a dot and the Dashboard tab's problem count includes it. **I nudged them** shows
+while the move is Nudge. Each button's tooltip says what
+it does, or why it is held back. After Close, Ready for review and Take over,
+the toast offers the way back for eight seconds: **Reopen PR #N**, **Convert to
+draft** or **Hand back**. From the press, by button or key, the band is
 faded, the pressed button says what it is doing and the others wait; Ready for
 review and Close stay that way, with a turning ring, until the dashboard shows
 the PR ready or closed. A command the manager refuses says why on the band, in
@@ -554,7 +596,7 @@ output, newest last; `⇧C` flips between them. Both follow the board's streams,
 so they change as the files do. When the manager's board is not answering, the
 page shows the watcher's view from disk marked **Not live**, and carry on,
 dismiss and git wait for the board to come back. On a PR frozen on the wrong
-branch only `w`, **Release**, does anything; see
+branch only `w`, **Release**, does anything, and it asks first; see
 [A PR on the wrong branch](#a-pr-on-the-wrong-branch).
 
 Two keys have no button. `t` opens the Terminal tab, and `g` opens the
@@ -572,8 +614,10 @@ board's **Steer it yourself** opens its Claude session here, in the thread's
 own worktree, and the page switches to this tab. **Open a shell** (`q`), on
 your own thread with no fix, opens a login shell there instead, cutting the
 thread's worktree first; it runs no agent, so it works with agents disabled,
-which is when your new threads arrive with no fix. **Send back for rework** is the
-unattended one: the agent re-runs with your note and nothing opens here. A thread whose panel says
+which is when your new threads arrive with no fix. **Send back for rework** runs
+unattended: the agent re-runs with your note and nothing opens here, unless you
+tick **Do rework in visible terminal session** in its dialog, which turns its
+button into **Start a steered session** and opens the session here. A thread whose panel says
 **Session open** offers **Go to the session in the Terminal tab**, which
 switches here and picks the session running in that thread's worktree.
 
@@ -594,7 +638,7 @@ browser.
 A session outlives the page: it lives as long as its command. Moving between
 tabs or PRs, reloading or closing the browser tab leaves it running, and the
 page reattaches when the board lists it again. One started from the tab's own
-list, the git palette, **Rebase on main** or the comment box's **Ask** ends if
+list, the git palette, **Rebase on main** or the comment box's **Ask the agent** ends if
 no page connects within 30 seconds. A thread's **Steer it yourself** session
 and **Open a shell** wait however long the page takes, since the board opens
 them after it answers. Each connection is sent the session's last megabyte of
@@ -633,13 +677,15 @@ stays at the top of the pane while you scroll past it.
 
 When the worktree has diverged from origin, the timeline's header counts the
 commits in the worktree and the ones origin has since the fork, and a **Reset
-to origin** button sits beside them. It asks first, saying how many commits
-that aren't on origin will be dropped, and **Reset** moves the worktree to
-origin's head. A reset is refused, with the reason under the header, when the
-worktree has uncommitted changes, holds another branch, or moved since the page
-showed it. While an agent is working in the worktree the refusal offers
-**Reset when the agent finishes**, which asks again and warns that any commits
-the agent makes before then are dropped too. The queued reset shows as **Reset
+to origin** button sits beside them. It asks first, listing each commit that
+isn't on origin and will be dropped, by short sha and subject, and the
+dialog's **Reset to origin** moves the worktree to origin's head. A reset is
+refused, with the reason under the header, when the worktree has uncommitted
+changes, holds another branch, or moved since the page showed it. While an
+agent is working in the worktree the refusal offers **Reset when the agent
+finishes**, which asks again with the same list, warns that any commits the
+agent makes before then are dropped too, and confirms with **Reset when the
+agent finishes**. The queued reset shows as **Reset
 queued until the agent finishes** with a **Cancel** button. When the run ends
 the manager fetches origin and resets, and a note says **Reset to origin when
 the agent finished.**, or why the queued reset didn't run, such as a fix picked
@@ -683,6 +729,14 @@ review, and **Add to review** makes it and puts it in your review; either leaves
 the tab where it was. `Esc` or **Cancel** closes the box and keeps what you
 typed for the next new draft.
 
+On your own pull request the box also has **Request change**, which hands what
+you typed to an agent as a change to make on the selected lines. It becomes a
+card on the Board, with the fix the agent writes to accept or turn down like
+any other, and nothing about it is posted to GitHub: Accept lands the commit
+with no reply, and the card offers Mark done where a review thread offers
+Resolve. Whether the agent works in a visible session is the gear's **Agent
+sessions** setting.
+
 **Ask the agent** in the box sends what you typed as a question about the
 selected lines instead. The agent starts on it in a new session in the
 Terminal tab, in the PR's worktree, and the page switches to that tab. Its
@@ -690,14 +744,23 @@ prompt names the file and the lines and asks for an answer that changes no
 files. While agents are disabled the board refuses the question.
 
 Conversations sit under the last line they are on: posted threads with their
-comments, resolved ones folded behind **Show resolved**, fix proposals as their
-thread, and drafts as cards. Each card links to its conversation on the board.
+comments, fix proposals as their thread, and drafts as cards. A thread resolved
+or deleted on GitHub, or one Waiting or Done on the board, is folded to one
+line with its place and a tag: **Resolved**, **Deleted**, or the name of its
+group on the board. Click it to open it; its header then says **Resolved on
+GitHub** or **Deleted on GitHub** where one applies. Each card links to its conversation on the board.
 The one thing the tab changes is a draft: **Edit** on a draft card, open or in
 your review, turns the card into the comment box with its lines selected, and
 you can select others. A local draft's card also has **Add to review** and
 **Discard**. **Ask the agent** on a draft's card opens a question box in the
-card; **Ask** opens the agent in the Terminal tab as above, with the draft's
-text in its prompt. Outdated threads are not drawn; the file header counts
+card; its own **Ask the agent** opens the agent in the Terminal tab as above,
+with the draft's text in its prompt.
+
+Every posted comment, in the Diff tab and on the Board, has a smiley under it
+that opens GitHub's eight reactions, and the reactions it already has sit beside
+it with their counts. Clicking one adds yours, or takes it off when it is
+already yours. A reaction posts to
+GitHub straight away, with no dialog. Outdated threads are not drawn; the file header counts
 them.
 
 Every box whose text goes to GitHub (a new or edited draft, a reply, a decision
@@ -741,14 +804,15 @@ it lists them to pick from; when none does, it says so.
 
 ### Harvest timer
 
-**Harvest timer: Off** in the gear turns it on, and the browser remembers the
-choice. With it on, each PR's title bar has a stopwatch button beside the gear,
+**Harvest timer: Off** in the gear turns it on, and **Harvest timer: On** turns
+it off; the browser remembers the choice. With it on, each PR's title bar has a stopwatch button beside the gear,
 which the Harvest Time Tracker Chrome extension turns into its own timer: the
 entry is named `#<number>: <title>`, filed under the repo's name, and links to
 the PR on GitHub.
 
-The extension from the Chrome Web Store does not know the board, so turning the
-switch on where it is not loaded opens **Set up Harvest on the board**. **Set up
+The extension from the Chrome Web Store does not know the board, so while the
+board's copy is not loaded the gear has a **Set up Harvest** item under the
+switch, which opens **Set up Harvest on the board**. **Set up
 the extension** copies the newest Harvest Time Tracker Chrome has installed to
 `harvest-extension/` under the data dir, tells that copy about the hub's port,
 opens `chrome://extensions`, shows the folder in Finder and puts its path on
@@ -783,8 +847,9 @@ session in the Terminal tab.
 
 When the worktree ends up holding a different branch than the PR it manages,
 the usual state after a stacked-PR split, event dispatch freezes and the
-Dashboard says so. Only `w`, **Release**, does anything: it tells the
-watcher to set this worktree aside on its next poll and build a fresh one. The
+Dashboard says so. Only `w`, **Release**, does anything. It asks first
+(**Release the worktree?**, confirmed with `y`), then tells the watcher to set
+this worktree aside on its next poll and build a fresh one. The
 PR is left alone for an hour first (`mismatch_grace_seconds`), because
 releasing it stops whatever was moving the branch, usually a Claude session
 you were steering in the Terminal tab. `w` is you saying the work is finished,
@@ -800,7 +865,7 @@ The board is always up, and it is the Board tab of each PR's page on the hub. It
 two panes: a list of rows on
 the left, **one per review thread**, and a panel on the right holding the one
 thread you opened, with the fix an agent proposed for it. Nothing on the board
-reaches the PR until you approve it, which lands the fix on the PR branch and
+reaches the PR until you accept it, which lands the fix on the PR branch and
 replies on the thread.
 
 The server serves every board, at `/pr/<owner>/<name>/<number>/` on the hub,
@@ -820,7 +885,7 @@ comment, since that is the instruction the fix was built against — edit that a
 the thread comes back to you like a new reply would.
 
 Each safe thread gets its own branch and its own worktree, cut from the PR head,
-generated in parallel. That is what makes approving a subset possible without
+generated in parallel. That is what makes accepting a subset possible without
 rewriting history. Threads an agent will not touch arrive as `declined` rows with
 no fix, and those are exactly the ones worth a human.
 
@@ -871,7 +936,7 @@ edged in yellow rather than a solid slab; it follows the system setting, and `?t
 the board's URL forces one, which is how the two are compared without touching
 the machine's own setting.
 
-Outcomes arrive as a toast: a black bar at the top right for about four seconds,
+Outcomes arrive as a toast: a black bar at the top right for three seconds,
 one when the board queues a decision, one when that decision lands, and one when
 an agent finishes and a row moves into Ready for you. A move you can take back
 keeps its toast up for eight seconds with the way back on it: Mark done, the
@@ -891,7 +956,10 @@ banner under the header says when the board cannot be reached.
 
 While a decision is on its way, the button you pressed says what it is doing,
 the other buttons wait, and the footer, the thread's row and its card in the diff
-are faded until the board answers. A decision the board refuses says why on the
+are faded until the board answers. One that posts to GitHub (a reply, Post now,
+Not fixed, Reply and mark done, a reaction, or a Resolve or Reject that carries
+a reply) shows no buttons at all while it goes: the footer reads only
+**Posting to GitHub…**. A decision the board refuses says why on the
 footer, in red, with the buttons as they were.
 
 The reply box is the one way to answer a reviewer without deciding anything. It
@@ -935,15 +1003,20 @@ and says whose move it is: yours (Ready for you), someone else's (Waiting on aut
 settled for you to confirm (Assumed done), or nothing to do with you (Not my
 conversation). Until it has answered, the thread sits in Ready for you and its card
 says "not yet read". A reply you post from the board moves it to Waiting on
-author at once, and the agent reads it again. Only you move a thread to Done:
-an Assumed done card offers **Confirm** (`g`) and **Move** (`m`), which
-asks where it stands instead. Confirm moves the card to Done and asks first, with
-two ticks, both on: resolve the thread on GitHub, and put 👍 on the newest reply
-from someone else. Untick either to leave it undone on GitHub. Confirm posts no
-reply; **Reply and mark done** beside it does. A mention in a review thread gets the
-same Confirm, with Reply and mark done and Mark done moved to the right. On
-any other mention, or on a PR you wrote, Confirm moves the card to Done and
-touches nothing on GitHub. A Not my conversation card offers the same question as **Move**. It
+author at once, and the agent reads it again. A Waiting on author card on a
+line, whose last comment is yours, also offers **Check for fixes**: an agent
+reads the changes since your comment and puts the card in Assumed done if they
+address it, or My move if not. The Dashboard's **Check all threads for fixes**
+does that for every such card. Only you move a thread to Done:
+an Assumed done card's footer is **Confirm** (`g`) and **Move** (`m`), which
+asks where it stands instead. On a review thread, one left on a line, Confirm
+moves the card to Done and asks first, with two ticks, both on: resolve the
+thread on GitHub, and put 👍 on the newest reply from someone else. Untick
+either to leave it undone on GitHub. Confirm posts no reply. A mention in a
+review thread gets the same Confirm, with **Reply and mark done** and **Mark
+done** after Move. On a conversation comment, a review summary or the PR
+description, mention or not, and on a PR you wrote, Confirm asks nothing: it
+moves the card to Done and touches nothing on GitHub. A Not my conversation card offers the same question as **Move**. It
 lists My move, Their move and Not my conversation, leaving out the group the
 card is in; Defer is its own button. On a PR you wrote it lists
 Needs a fix, which starts a fresh agent run, Needs a reply from me, which puts
@@ -954,35 +1027,42 @@ recently comes first, except in Ready for you: there a conversation you replied
 to sits at the top until you act on it, and the rest read by the moment their fix
 became yours to decide.
 
-| Word           | Meaning                                                                 |
-| -------------- | ----------------------------------------------------------------------- |
-| `draft`        | a comment you wrote here, not on GitHub yet                             |
-| `enrolled`     | a draft in your review; it posts when you send the review               |
-| `proposed`     | there is a fix to decide on                                             |
-| `answered`     | someone answered; yours to reply to or resolve                          |
-| `reopened`     | you replied, and it is yours again whatever the agent is doing          |
-| `declined`     | the agent declined to write a fix, and said why                         |
-| `failed`       | three attempts failed                                                   |
-| `removed`      | the comment was deleted on GitHub before this row was finished          |
-| `queued`       | waiting for an agent                                                    |
-| `working`      | an agent is running                                                     |
-| `rework`       | an agent is working from your rework note                               |
-| `session`      | a session you steer is open in the Terminal tab                         |
-| `landing`      | accepted: the fix is on its way to the PR branch, then the reply        |
-| `push failed`  | accepted, but pushing the fix to the PR branch failed                   |
-| `reply failed` | pushed, but posting the reply on GitHub failed                          |
-| `rebasing`     | the fix conflicted on approve; an agent is rebasing it onto the PR head |
-| `waiting`      | their move; parked until the other side answers                         |
-| `assumed-done` | an agent read it as settled; only you can move it to Done               |
-| `not-mine`     | an agent read it as asking nothing of you                               |
-| `deferred`     | parked until something wakes it                                         |
-| `rejected`     | you turned it down                                                      |
-| `landed`       | on the PR branch                                                        |
-| `resolved`     | closed, worktree and branch gone; the row says whether it replied       |
-| `confirmed`    | you confirmed it was settled; nothing was posted to GitHub              |
-| `discarded`    | a draft thrown away with nothing posted                                 |
+| Word             | Meaning                                                                         |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `draft`          | a comment you wrote here, not on GitHub yet                                     |
+| `enrolled`       | a draft in your review; it posts when you send the review                       |
+| `proposed`       | there is a fix to decide on                                                     |
+| `asking`         | an agent stopped to ask you something before it goes on                         |
+| `answered`       | someone answered; yours to reply to or resolve                                  |
+| `reopened`       | you replied, and it is yours again whatever the agent is doing                  |
+| `declined`       | the agent declined to write a fix, and said why                                 |
+| `failed`         | three attempts failed                                                           |
+| `stopped`        | you stopped the agent before it finished                                        |
+| `removed`        | the comment was deleted on GitHub before this row was finished                  |
+| `queued`         | waiting for an agent                                                            |
+| `working`        | an agent is running                                                             |
+| `rework`         | an agent is working from your rework note                                       |
+| `session`        | a session you steer is open in the Terminal tab or a tmux pane                  |
+| `landing`        | accepted: the fix is on its way to the PR branch, then the reply                |
+| `filing`         | accepted: an agent is filing the ticket, and the reply follows once it is filed |
+| `rebasing`       | the fix conflicted on accept; an agent is rebasing it onto the PR head          |
+| `push failed`    | accepted, but pushing the fix to the PR branch failed                           |
+| `landing failed` | accepted, but the landing stopped before anything was pushed, and said why      |
+| `reply failed`   | pushed, but posting the reply on GitHub failed                                  |
+| `filing failed`  | accepted, but filing the ticket failed; nothing was posted to GitHub            |
+| `waiting`        | their move; parked until the other side answers                                 |
+| `assumed-done`   | an agent read it as settled; only you can move it to Done                       |
+| `not-mine`       | an agent read it as asking nothing of you                                       |
+| `deferred`       | parked until something wakes it                                                 |
+| `rejected`       | you turned it down                                                              |
+| `landed`         | on the PR branch                                                                |
+| `resolved`       | closed, worktree and branch gone                                                |
+| `marked done`    | closed on the board alone; GitHub was not asked to resolve it                   |
+| `confirmed`      | you confirmed it was settled; nothing was posted to GitHub                      |
+| `discarded`      | a draft thrown away with nothing posted                                         |
 
-Everything in Done is struck through.
+A closed card reads `resolved` only where GitHub resolved the thread; one closed
+on the board alone reads `marked done`. Everything in Done is struck through.
 
 On a PR you wrote, every new reply on a thread starts an agent, whatever you had
 decided before it: a rejected, resolved, landed or deferred thread comes back and
@@ -991,14 +1071,57 @@ that arrives while an agent, a session or a push is under way queues a rework on
 top of it once it finishes.
 
 Buttons say what they do rather than naming the state machine, so a rework
-renders as **Send back for rework**, and opening a session you steer as **Steer it yourself**. Every button that posts to GitHub, drops a worktree or stops
-an agent asks in a dialog that says what it is about to do, and resolve, reject,
-approve and opening a session give you a box to type in. **Stop** (`x`) asks
-before it halts the run. Approve takes the reply you
+renders as **Send back for rework**, and opening a session you steer as **Steer it yourself**. Almost every button that posts to GitHub, drops a worktree or stops
+an agent asks in a dialog that says what it is about to do, and Resolve, Reject,
+Accept and opening a session give you a box to type in. **Stop** (`x`) asks
+before it halts the run. Three post at once with no dialog: **Post now**,
+**Unresolve on GitHub** and a reaction. Accept takes the reply you
 want on the thread; leave it blank and the thread gets the commit link alone.
 Opening a session takes what the rework should do differently, which is the
 difference between steering the next attempt and starting it over blind; leave it
 blank and the session starts unsteered.
+
+On your own PR, which agent buttons a card offers depends on whether an agent
+has run on it yet. **Write a fix** (`i`) shows only where none has, such as a
+thread that arrived while agents were disabled. Once one has, a card with no
+fix waiting offers **Try again** (`t`), a fresh attempt; **Send back for
+rework** (`w`), a re-run from the commit it already wrote, carrying your note;
+and **Steer it yourself** (`o`). A proposed fix offers only Send back for
+rework of the three, as does a declined one; after a stopped or failed run all
+three show, and after a landing that failed, Send back for rework and Steer it
+yourself. On a merged or closed PR none of them shows, nor **Open a shell** or
+**Ask the agent**. On a Waiting card, Bring back reads **Stop waiting** (`u`):
+it brings the card back to Ready for you, with nothing posted.
+
+An agent working on your thread can stop and ask instead of guessing, when
+the comment cannot be done as stated or the way forward goes beyond it, such as
+a production change for a comment on a test. The card turns `asking` and the
+PR's move reads **Your move: an agent is asking you a question**. The panel
+shows **Agent question**, with how many of its planned steps it finished, then
+the question and one button per answer the agent offered, and **Other…**, which
+opens a box for your own words and **Answer**. An answer carries on the
+agent's own conversation, in a visible session or not as the gear's **Agent
+sessions** says, and comes back as a proposal or another question. The footer
+has **Answer in a session** (`o`), which opens that conversation in the
+Terminal tab for you to answer there, **Defer**, and **Drop** (`⇧D`), which
+asks first and then deletes the question, any proposal before it and the
+agent's worktree, as if no agent had run. None of this posts to GitHub. A note
+beside the heading says when the PR has moved since the question.
+
+When a comment asks for code already in the PR's diff to go elsewhere ("not
+part of this ticket", "move this to another PR"), the agent can propose a split
+instead of a fix. The panel shows a card per part, in the order they run:
+**Ticket**, when the agent proposes one; **Changes to this PR**, the commit
+that takes the code out; **New PR**, the branch that carries it and its base;
+and **Reply**, which names the new PR. Each part not yet run has **Accept**; the ticket and
+the reply also have **Edit**, which saves new words and accepts nothing, and
+each has **Rework**, which sends that part back to the agent with your note
+while the others keep theirs. **Accept all** in the footer accepts every part
+not yet accepted, one at a time in that order. A part that has run cannot be
+undone, and once one has, Reject and Send back for rework leave the footer. An
+agent files the ticket and opens the new PR, with the skill the repo's
+`[[repos]]` entry names as `pr_skill` (`create-pr` by default); a `draft` set
+on the entry decides whether the new PR is a draft, whatever the skill chose.
 
 **Resolve** (`s`) always resolves the thread on GitHub. Its dialog takes an
 optional reply, posted first. On a reviewer's card an empty Resolve puts 👍 on
@@ -1009,15 +1132,20 @@ GitHub to resolve, so it offers **Reply and mark done** (`v`) where a review
 thread offers Resolve. Its dialog will not post until you write a reply. A change
 you asked for on the board alone offers Mark done and no Resolve. Where the agent had something to
 say about the comment, the reason it skipped one or the note it left on a fix,
-the dialog offers **use the agent's own words**, which pastes that into the box
+the dialog offers **Use the agent's words**, which pastes that into the box
 for you to edit before it posts.
 
 On someone else's PR, a comment that mentions you and that you have not answered
 is a card of its own, and so is a mention in the PR description. A reply naming
 you on a review thread you started is not a mention: that thread is yours
 already. A mention card offers
-**Reply and mark done** (`v`) and **Mark done** (`h`), with **Defer** at the bottom right, and no
-reply link. Reply and mark done will not post until you write a reply. The reply goes on
+**Reply and mark done** (`v`), **Ask the agent** (`⇧A`) and **Mark done** (`h`), with **Defer** at the bottom right, and no
+reply link. Reply and mark done will not post until you write a reply. Ask the
+agent puts an agent on the mention to draft your reply, in a visible session or
+not as the gear's **Agent sessions** says; the draft comes back to the card for
+you to accept, change or turn down, and nothing posts before you accept. A
+mention on your own PR is a card too, with the author's buttons rather than
+these. The reply goes on
 the thread for a review comment, or to the PR's conversation quoting the comment
 for anything else (a mention in the description gets an @ to its author and no
 quote), and the card moves to Done on the board only: nothing is resolved on
@@ -1026,14 +1154,14 @@ all.
 
 On a comment you wrote yourself, and that nobody else has replied to, the same
 dialog offers **Delete the comment** under "On GitHub, also:". Tick it and the verb posts nothing:
-approve lands and pushes the fix and then takes your comment off GitHub, and
-resolve closes the card the same way, with no thread left to resolve. In the
-approve dialog, **Resolve the thread** greys out while delete
+Accept lands and pushes the fix and then takes your comment off GitHub, and
+Resolve closes the card the same way, with no thread left to resolve. In the
+Accept dialog, **Resolve the thread** greys out while delete
 is ticked and keeps whatever you had set, so unticking delete gives it back. It is the note you left for an
 agent rather than a question anybody is waiting on an answer to, so there is
 nothing to reply to once the fix is in. The tick is clear every time the dialog
 opens, it never appears on a reviewer's comment or a review summary, and the row
-settles in Done with **comment deleted** on its line. The board keeps the comment's text and
+settles in Done; in the Diff tab its card folds under **Deleted**. The board keeps the comment's text and
 everything said under it for the life of the PR.
 
 Confirming a decision walks on to the next thread the way `j` would, in the order
@@ -1041,13 +1169,13 @@ the list was in before the decision moved anything, and leaves the panel open on
 it. On the last thread it stays where it is, and the panel follows the thread you
 just decided.
 
-Approve cherry-picks the thread's whole commit range, squashes it into one
+Accept cherry-picks the thread's whole commit range, squashes it into one
 commit carrying the last one's message, pushes, and replies on the thread with
 the landed SHA. A reply you typed yourself posts in your words, with the commit
 link under it and no `🤖`. Every reply the board sends joins the panel's
 transcript, and none of them comes back to the board as a new comment.
-One approval is one commit and one push, so one CI run per approved comment.
-Every step is recorded before the next runs, and re-approving resumes at the one
+One Accept is one commit and one push, so one CI run per accepted comment.
+Every step is recorded before the next runs, and accepting again resumes at the one
 that failed. Once it has landed and replied the row drops to Done carrying the
 SHA that landed; a row whose reply failed is still `landing`, under that
 heading, with the button that retries the step that failed. A resolved row settles the
@@ -1057,7 +1185,7 @@ pull request itself, which the poller knows by the node id GitHub hands back.
 
 A cherry-pick that conflicts, because the PR branch moved since the fix was
 written, does not come back to you. The row turns `rebasing`, an agent rebases
-the fix onto the current head in the thread's own worktree, and your approve
+the fix onto the current head in the thread's own worktree, and your Accept
 waits: once the rebased fix reports its tests passed it lands, pushes and
 replies on its own. If its tests failed, or a second attempt against the same
 head still conflicts, the row comes back `proposed` with the reason and the
@@ -1071,13 +1199,13 @@ done closes the card on the board and leaves GitHub as it is.
 
 While a comment is open in the panel, the board asks GitHub whether it is still
 there. A comment deleted while its row still wanted work turns that row
-`removed`: it offers Mark done, and approve where there is a commit worth
-keeping, because the worktree holds real work that a deletion should not quietly
-bin. One that had already landed or been resolved keeps its status and says
-**GitHub no longer has this comment** at the top of the panel, which means
-somebody tidied the comment away after the work was done and nothing is wrong.
-Neither can reply, because the thread is gone with the comment, so the dialog
-drops its reply box.
+`removed`, its line reading **comment removed from GitHub**: it offers Mark
+done, and Accept where there is a commit worth keeping, because the worktree
+holds real work that a deletion should not quietly bin. One that had already
+landed or been resolved keeps its status, and in the Diff tab its card folds
+under **Deleted**: somebody tidied the comment away after the work was done and
+nothing is wrong. Neither can reply, because the thread is gone with the
+comment, so the dialog drops its reply box.
 
 At PR close, the thread worktrees and branches go with everything else.
 
@@ -1112,7 +1240,9 @@ whether to remove the config folder, the data dir and the notification apps too;
 command once uv is back.
 
 It never touches your clones, and leaves uv, gh and claude installed, since other
-tools use them too. It also leaves the `rebase-on-main` skill in
-`~/.claude/skills`, which Claude Code can use without the orchestrator, and says
-so; `rm -rf ~/.claude/skills/rebase-on-main` removes it. The worktrees the watcher
-cut next to your clones are yours to remove.
+tools use them too. It also leaves each skill it shipped, `rebase-on-main` and
+`create-pr`, in the agent's skills folder, since the agent can use them without
+the orchestrator: `~/.claude/skills` for Claude Code, `~/.agents/skills` for
+Codex, or `<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
+`CLAUDE_CONFIG_DIR`. It names each one it finds with the `rm -rf` that removes
+it. The worktrees the watcher cut next to your clones are yours to remove.
