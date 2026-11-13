@@ -200,8 +200,9 @@ def test_the_installer_s_start_leaves_the_skills_to_the_install_script_when_it_o
     _upgrading(machine)
     _skill(machine).parent.mkdir(parents=True)
     shutil.copytree(PACKAGED, _skill(machine))
+    machine.extra_environment["GITHUB_ORCHESTRATOR_LEAVE_SKILLS"] = "1"
 
-    ran = run_cli("start", "--from-installer", "--leave-skills")
+    ran = run_cli("start", "--from-installer")
 
     assert ran.code == 0, ran.out
     assert not _create_pr(machine).exists()

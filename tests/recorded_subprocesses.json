@@ -14026,6 +14026,34 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_a_current_skill_is_left_as_it_is#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_a_current_skill_is_left_as_it_is#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -14082,6 +14110,22 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--agent\", \"gemini\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--agent",
+      "gemini"
+     ],
+     "fs": {},
+     "returncode": 2,
+     "stderr": "the agent is claude or codex, not gemini\n",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_an_agent_the_installer_does_not_know_is_refused_before_anything_runs#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--agent\", \"gemini\"], null, null]": [
     {
@@ -14114,6 +14158,21 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_an_unknown_option_is_refused_before_anything_runs#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--colour\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--colour"
+     ],
+     "fs": {},
+     "returncode": 2,
+     "stderr": "unknown option: --colour (install.sh --help lists them)\n",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_an_unknown_option_is_refused_before_anything_runs#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--colour\"], null, null]": [
     {
@@ -14141,6 +14200,39 @@
      "returncode": 2,
      "stderr": "unknown option: --colour (install.sh --help lists them)\n",
      "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_choosing_claude_for_a_codex_config_switches_it_back#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"claude\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y",
+      "--agent",
+      "claude"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.config/github-orchestrator/config.toml": {
+       "text": "agent = \"claude\"\ngh_account = \"octocat\"\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"claude\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
     }
    ]
   },
@@ -14210,6 +14302,39 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tables#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y",
+      "--agent",
+      "codex"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.config/github-orchestrator/config.toml": {
+       "text": "agent = \"codex\"\ngh_account = \"octocat\"\n\n[[repos]]\nrepo = \"acme/widgets\"\nlocal_path = \"/src/w\"\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_choosing_codex_for_a_config_already_there_puts_the_agent_above_its_tables#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
     {
@@ -14276,6 +14401,45 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv0-environment0]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y",
+      "--agent",
+      "codex"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
+      },
+      "home/.config": {
+       "dir": true
+      },
+      "home/.config/github-orchestrator": {
+       "dir": true
+      },
+      "home/.config/github-orchestrator/config.toml": {
+       "text": "agent = \"codex\"\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv0-environment0]#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--agent\", \"codex\"], null, null]": [
     {
@@ -14331,6 +14495,43 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force --leave-skills\nskill --status\nskill\n"
+      },
+      "home/.config": {
+       "dir": true
+      },
+      "home/.config/github-orchestrator": {
+       "dir": true
+      },
+      "home/.config/github-orchestrator/config.toml": {
+       "text": "agent = \"codex\"\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       codex-cli 0.9.0 (codex)\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Writing agent = \"codex\" into <TMP>/home/.config/github-orchestrator/config.toml\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.agents/skills\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_choosing_codex_writes_it_into_the_config_and_finds_codex[argv1-environment1]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
       },
       "home/.config": {
        "dir": true
@@ -14428,6 +14629,21 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--help"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
     {
@@ -14444,6 +14660,21 @@
    ]
   },
   "tests/cli/test_install_script.py::test_help_lists_every_flag_and_its_environment_twin#a5bb6884ca5b": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--help"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_help_lists_the_agent_flag_and_its_environment_twin#1756c0920ccd": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
     {
      "argv": [
@@ -14488,6 +14719,21 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_help_lists_the_skill_flags_and_their_environment_twin#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--help"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_help_lists_the_skill_flags_and_their_environment_twin#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--help\"], null, null]": [
     {
@@ -14515,6 +14761,35 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "github-orchestrator installer\n\nUsage: install.sh [options]\n\n  -y, --yes          answer yes to every install question; notifications stay off\n  --agent claude|codex\n                     the agent that works on your pull requests: claude (Claude\n                     Code, the default) or codex (the Codex CLI)\n  --notifier         build the macOS notification apps without asking\n  --linger           keep the watcher running after you log out (Linux)\n  --skill            install the orchestrator's skills for the agent without asking\n  --no-skill         leave the orchestrator's skills out\n  --version X        install release X, not the newest\n  --no-modify-path   never edit shell profiles; print the line to add\n  --no-open          start the service but do not open the browser\n  --wheel URL|PATH   install this wheel instead of a release's\n  -h, --help         show this help\n\nEach option has an environment twin: GITHUB_ORCHESTRATOR_YES=1,\nGITHUB_ORCHESTRATOR_NOTIFIER=1, GITHUB_ORCHESTRATOR_LINGER=1,\nGITHUB_ORCHESTRATOR_VERSION=X, GITHUB_ORCHESTRATOR_NO_PATH=1,\nGITHUB_ORCHESTRATOR_NO_OPEN=1, GITHUB_ORCHESTRATOR_WHEEL=...,\nGITHUB_ORCHESTRATOR_AGENT=claude|codex and GITHUB_ORCHESTRATOR_SKILL=yes|no.\nUnder -y the agent is claude unless chosen, each skill is installed when it is\nmissing, one that differs from this version's is left alone, and a terminal\nsession in a folder the thread names migration moves is closed.\nGITHUB_ORCHESTRATOR_GITHUB_TOKEN, when set, is sent with the requests that\ndownload the release.\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv0-environment0]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--no-skill\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y",
+      "--no-skill"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
     }
    ]
   },
@@ -14562,6 +14837,34 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force --leave-skills\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills left out: create-pr rebase-on-main; github-orchestrator skill installs them later.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_no_skill_leaves_a_missing_skill_out_and_names_the_command_that_adds_it[argv1-environment1]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
       },
       "home/.local": {
        "dir": true
@@ -14632,6 +14935,21 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_the_installer_is_plain_posix_sh#1756c0920ccd": {
+   "[[\"dash\", \"-n\", \"<REPO>/install.sh\"], null, null]": [
+    {
+     "argv": [
+      "dash",
+      "-n",
+      "<REPO>/install.sh"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_the_installer_is_plain_posix_sh#877145845e2e": {
    "[[\"dash\", \"-n\", \"<REPO>/install.sh\"], null, null]": [
     {
@@ -14659,6 +14977,34 @@
      "returncode": 0,
      "stderr": "",
      "stdout": ""
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_the_installer_s_start_leaves_the_skills_to_the_installer_s_own_offer#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
     }
    ]
   },
@@ -14690,6 +15036,20 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh"
+     ],
+     "fs": {},
+     "returncode": 1,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  missing  uv          runs the install; from astral.sh\n  missing  gh          talks to GitHub; from github.com/cli/cli releases\n  missing  claude      runs the agents; Anthropic's installer\n\nWith no terminal to ask on, nothing was changed. This would install uv, gh and claude and\ngithub-orchestrator, then start its watcher. Run it again with a terminal, or\nanswer yes to everything with: curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh -s -- -y\nOr install the requirements by hand first:\n    curl -LsSf https://astral.sh/uv/install.sh | sh\n    download the macOS zip from https://github.com/cli/cli/releases/latest and put its bin/gh in ~/.local/bin\n    curl -fsSL https://claude.ai/install.sh | bash\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_with_no_terminal_and_no_yes_the_installer_says_what_it_would_do_and_changes_nothing#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\"], null, null]": [
     {
@@ -14715,6 +15075,34 @@
      "returncode": 1,
      "stderr": "",
      "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  missing  uv          runs the install; from astral.sh\n  missing  gh          talks to GitHub; from github.com/cli/cli releases\n  missing  claude      runs the agents; Anthropic's installer\n\nWith no terminal to ask on, nothing was changed. This would install uv, gh and claude and\ngithub-orchestrator, then start its watcher. Run it again with a terminal, or\nanswer yes to everything with: curl -LsSf https://github.com/vector67/github-orchestrator/releases/latest/download/install.sh | sh -s -- -y\nOr install the requirements by hand first:\n    curl -LsSf https://astral.sh/uv/install.sh | sh\n    download the macOS zip from https://github.com/cli/cli/releases/latest and put its bin/gh in ~/.local/bin\n    curl -fsSL https://claude.ai/install.sh | bash\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_yes_alone_keeps_claude_and_writes_no_agent#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr rebase-on-main into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
     }
    ]
   },
@@ -14774,6 +15162,34 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -14827,6 +15243,34 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_yes_installs_a_missing_skill_beside_a_different_one_it_leaves_alone#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
     }
    ]
   },
@@ -14886,6 +15330,34 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_yes_installs_the_missing_skills_and_names_them#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\nskill\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\n==> Installing create-pr into ~/.claude/skills\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_yes_installs_the_missing_skills_and_names_them#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -14942,6 +15414,34 @@
     }
    ]
   },
+  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv0]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
   "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv0]#877145845e2e": {
    "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\"], null, null]": [
     {
@@ -14984,6 +15484,35 @@
      "fs": {
       "calls": {
        "text": "start --from-installer --force --leave-skills\nskill --status\n"
+      },
+      "home/.local": {
+       "dir": true
+      },
+      "home/.local/bin": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "github-orchestrator installer\n\nChecking this Mac:\n  ok       macOS 27.0.1 (arm64)\n  ok       git 2.54.0 (Apple Git-157) (Command Line Tools)\n  ok       uv 0.9.0\n  ok       gh 2.80.0\n  ok       claude 2.0.0\n\n==> Installing github-orchestrator 0.1.0\n    uv puts it in its own environment, with a Python of its own if it needs one.\n==> Starting the watcher\n    It runs as a LaunchAgent and serves the board.\nNo desktop notifications; github-orchestrator doctor names the command that adds them later.\nSkills in ~/.claude/skills that differ from this version's: rebase-on-main.\nThey were left alone; github-orchestrator skill --replace puts this version's in their place.\nThe board is at http://127.0.0.1:8720\n"
+    }
+   ]
+  },
+  "tests/cli/test_install_script.py::test_yes_leaves_a_different_skill_alone_and_says_so[argv1]#1756c0920ccd": {
+   "[[\"sh\", \"<REPO>/install.sh\", \"--wheel\", \"<TMP>/github_orchestrator-0.1.0-py3-none-any.whl\", \"--no-open\", \"-y\", \"--skill\"], null, null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/install.sh",
+      "--wheel",
+      "<TMP>/github_orchestrator-0.1.0-py3-none-any.whl",
+      "--no-open",
+      "-y",
+      "--skill"
+     ],
+     "fs": {
+      "calls": {
+       "text": "start --from-installer --force\nwith GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1\nskill --status\n"
       },
       "home/.local": {
        "dir": true

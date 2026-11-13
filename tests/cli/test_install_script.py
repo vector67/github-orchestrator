@@ -204,7 +204,7 @@ def test_a_current_skill_is_left_as_it_is(tmp_path):
 def test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_migration(tmp_path):
     _, calls = _installed(tmp_path, "-y", state="current")
 
-    assert "--force" in next(call for call in calls if call.startswith("start")).split()
+    assert "start --from-installer --force" in calls
 
 
 @_REPLAYED
@@ -212,8 +212,9 @@ def test_yes_has_the_start_close_the_sessions_in_the_way_of_the_thread_names_mig
 def test_the_installer_s_start_leaves_the_skills_to_the_installer_s_own_offer(tmp_path):
     _, calls = _installed(tmp_path, "-y", state="current")
 
-    assert [call for call in calls if call.startswith("start")] == [
-        "start --from-installer --force --leave-skills"]
+    assert calls == ["start --from-installer --force",
+                     "with GITHUB_ORCHESTRATOR_LEAVE_SKILLS=1",
+                     "skill --status"]
 
 
 @_REPLAYED
