@@ -118,7 +118,6 @@ import {
 import { EventStream, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
-  enteredAt,
   filesOf,
   harvestPreparingOf,
   heldOf,
@@ -149,7 +148,6 @@ import {
   tickedOn,
   wallOf,
   type DeferTarget,
-  type Entered,
   type MentionCardSeen,
   type MentionPage,
   type MentionRow,
@@ -305,8 +303,6 @@ const SHELVED_WALL = 'hub-pull-requests';
 
 const CHOSEN_REPOS = 'hub-repos';
 
-const SECTIONS_ENTERED = 'hub-sections-entered';
-
 const SUMMARY_MOVED =
   'The summary moved before your click reached the board. It has been read ' +
   'again; look at it before you press.';
@@ -431,21 +427,6 @@ function remember(asked: string | null): void {
   else forget(CHOSEN_REPOS);
 }
 
-function recalledEntries(): Record<string, Entered> {
-  return recalledAs(
-    SECTIONS_ENTERED,
-    (entries) =>
-      entries && typeof entries === 'object'
-        ? (entries as Record<string, Entered>)
-        : {},
-    {},
-  );
-}
-
-function rememberEntries(entries: Record<string, Entered>): void {
-  keep(SECTIONS_ENTERED, JSON.stringify(entries));
-}
-
 function askedIn(router: RouterService): string | null {
   const asked = router.currentRoute?.queryParams['repos'];
   return typeof asked === 'string' && asked ? asked : null;
@@ -507,7 +488,6 @@ export default class StoreService extends Service {
 
   private joins = 0;
   private sends = 0;
-  private entries: Record<string, Entered> = recalledEntries();
   private tags: Record<string, string | null> = {};
   private asking: Record<string, Promise<Read>> = {};
 
@@ -2363,31 +2343,8 @@ export default class StoreService extends Service {
     const pr = this.prs[key];
     const summary = summaryOf(pr, this.threads[key], this.operations[key]);
     if (!pr || !summary || (!pr.place && !joining)) return;
-    const place = placeOf(
-      pr.place,
-      summary,
-      () => this.joins++,
-      (group, seenMoving) => this.enter(key, pr, group, seenMoving),
-    );
+    const place = placeOf(pr.place, summary, () => this.joins++);
     if (place === pr.place) return;
     this.prs = { ...this.prs, [key]: { ...pr, place } };
-  }
-
-  private enter(
-    key: string,
-    pr: PrEntity,
-    group: Entered['group'],
-    seenMoving: boolean,
-  ): number {
-    const at = enteredAt(
-      this.entries[key],
-      group,
-      seenMoving,
-      pr.drawn?.status.last_event_at ?? null,
-      Date.now(),
-    );
-    this.entries = { ...this.entries, [key]: { group, at } };
-    rememberEntries(this.entries);
-    return at;
   }
 }
