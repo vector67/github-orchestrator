@@ -69,7 +69,13 @@ and `create-pr`, which opens a new PR from a branch, such as one a split carries
 code into. It runs `github-orchestrator skill`, which copies this version's
 skills there, and `doctor` names the same command for each skill that is
 missing. `-y` installs them, `--no-skill` (or `GITHUB_ORCHESTRATOR_SKILL=no`)
-leaves them out, and `--skill` installs them without asking. A skill already
+leaves them out, and `--skill` installs them without asking. Leaving them out,
+by `--no-skill` or a no, runs `github-orchestrator skill --leave-out`, which
+writes `pr_skill = ""` at the top of the config while `create-pr` is missing:
+the name of the skill that opens pull requests, empty because none is
+installed, so the agents open them themselves with `gh pr create`.
+`github-orchestrator skill` writes `create-pr` back when it installs the skills;
+a `pr_skill` naming a skill of your own is never changed. A skill already
 there that differs from this version's, because you edited it or an older
 release put it there, is never overwritten unasked: the installer asks, `-y`
 leaves it alone, and `github-orchestrator skill --replace` puts this version's
@@ -77,11 +83,17 @@ in its place. `github-orchestrator skill --status` prints one line per skill,
 its name and then `missing`, `current` or `different`.
 
 `github-orchestrator update` brings the skills along under an **Updating the
-orchestrator's skills** heading. A shipped skill that is missing is installed.
-One that differs from this version's is left alone, and the output names
-`github-orchestrator skill --replace`. When none of the shipped skills is
-installed, they stay left out, and `github-orchestrator skill` installs them
-later. It updates only the default instance's skills folder; for another
+orchestrator's skills** heading. When a shipped skill is missing and `update`
+runs in a terminal, it lists each missing one with what the agents use it for
+and asks `Install them? [Y/n]`. Yes installs them. No leaves them out and, while
+`create-pr` is among them, writes `pr_skill = ""`, which later updates take as
+the answer: they ask nothing and install nothing until
+`github-orchestrator skill` does. With no terminal to ask on, it follows the
+installer's `-y` rule and installs each missing skill. A skill that differs
+from this version's is left alone, and the output names
+`github-orchestrator skill --replace`. It never guesses from an empty skills
+folder that you turned the skills down. It updates only the default instance's
+skills folder and config; for another
 instance whose agent reads its skills elsewhere, run
 `github-orchestrator skill --instance <name>`.
 
@@ -1146,8 +1158,11 @@ while the others keep theirs. **Accept all** in the footer accepts every part
 not yet accepted, one at a time in that order. A part that has run cannot be
 undone, and once one has, Reject and Send back for rework leave the footer. An
 agent files the ticket and opens the new PR, with the skill the repo's
-`[[repos]]` entry names as `pr_skill` (`create-pr` by default); a `draft` set
-on the entry decides whether the new PR is a draft, whatever the skill chose.
+`[[repos]]` entry names as `pr_skill`, or else the top-level `pr_skill`
+(`create-pr` by default). When that name is empty, no skill is installed, and
+the agent opens the PR itself with `gh pr create`, as a draft unless the entry
+sets `draft = false`. A `draft` set on the entry decides whether the new PR is
+a draft, whatever the skill chose.
 
 **Resolve** (`s`) always resolves the thread on GitHub. Its dialog takes an
 optional reply, posted first. On a reviewer's card an empty Resolve puts 👍 on

@@ -191,6 +191,14 @@ gh_account = "your-github-username"
 # each time nothing is left to count, so leave it to the hub.
 # mentions_start = "2026-10-23T09:00:00+00:00"
 
+# The skill an agent runs to open a new PR, such as the one a split carries
+# code into, for every repo whose [[repos]] entry names none. An empty name
+# means no such skill is installed: the agent opens the PR itself with
+# gh pr create. The installer and `github-orchestrator update` write "" when you
+# leave the skills out, and `github-orchestrator skill` writes "create-pr" back
+# when it installs them.
+# pr_skill = "create-pr"
+
 # Cap on concurrent per-thread agents.
 # max_thread_runs = 4
 
@@ -213,11 +221,11 @@ gh_account = "your-github-username"
 # top-level one for that repo's worktrees. `has_tests = false` says the repo has
 # no tests an agent can run, so a rebased fix that reports its tests unverified
 # lands on the first Accept instead of asking for a second one. `pr_skill`
-# names the skill an agent runs to open a new PR, such as the one a split
-# carries code into; it defaults to the create-pr skill the orchestrator ships,
-# and a repo can name its own team's instead. `draft` decides whether that new
-# PR is a draft: left unset, the skill decides (create-pr opens a draft); set,
-# it wins, and the orchestrator flips the PR to match once the skill is done.
+# names the skill an agent runs to open a new PR for that repo, and wins over
+# the top-level pr_skill, so a repo can name its own team's skill. `draft`
+# decides whether that new PR is a draft: left unset, the skill decides
+# (create-pr opens a draft, and so does an agent with no skill); set, it wins,
+# and the orchestrator flips the PR to match once the skill is done.
 [[repos]]
 repo = "owner/repo"
 local_path = "~/repositories/repo"

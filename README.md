@@ -81,7 +81,9 @@ when the config's `agent_command` sets `CLAUDE_CONFIG_DIR`, or
 `~/.agents/skills` for Codex):
 `rebase-on-main`, which the agents run when a branch stops merging, and
 `create-pr`, which opens a new PR; `github-orchestrator skill` installs them
-later, and [Updating](#updating) says what `update` does with them.
+later, and [Updating](#updating) says what `update` does with them. Leaving
+them out writes `pr_skill = ""` into the config, so the agents open new PRs
+themselves with `gh pr create` instead of looking for a skill that is not there.
 
 Desktop notifications are optional. On macOS the installer asks whether to
 build the notification apps, which needs the Command Line Tools. On Linux they
@@ -148,8 +150,10 @@ A `[[repos]]` entry may also set:
 - `has_tests = false`, when the repo has no tests an agent can run, so a
   rebased fix that reports its tests unverified lands on the first Accept
 - `pr_skill`, the skill an agent runs to open a new PR, such as the one a split
-  carries code into; it defaults to the `create-pr` skill the orchestrator
-  ships, so a repo can name its own team's PR skill instead
+  carries code into, so a repo can name its own team's PR skill; it wins over
+  the top-level `pr_skill`, which is `create-pr`, the skill the orchestrator
+  ships, unless the skills were left out, when it is `""` and the agent opens
+  the PR itself with `gh pr create`
 - `draft`, whether that new PR is a draft: left unset, the skill decides
   (`create-pr` opens a draft); set to `true` or `false`, it wins, and the
   orchestrator flips the PR to match once the skill returns
@@ -249,9 +253,13 @@ asks before closing them. Until they close the watcher waits, and the board
 lists them with a **Close sessions and migrate** button.
 
 `update` also updates the shipped skills in the default instance's skills
-folder: a missing one is installed, one that differs from this version's is
-left alone (`github-orchestrator skill --replace` replaces it), and when none
-was installed at all they stay left out until `github-orchestrator skill`.
+folder. When some are missing and it runs in a terminal, it names each one and
+what the agents use it for, and asks whether to install them; a no writes
+`pr_skill = ""`, and later updates take that as the answer and ask nothing.
+With no terminal to ask on it does what the installer does under `-y`: a
+missing skill is installed. Either way, one that differs from this version's
+is left alone (`github-orchestrator skill --replace` replaces it), and
+`github-orchestrator skill` installs the skills and writes `create-pr` back.
 
 ## Uninstall
 
