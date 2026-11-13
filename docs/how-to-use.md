@@ -403,7 +403,8 @@ Clicking a row only opens the PR, whatever its move says; hovering it adds
 **Open →** to its last line. Hovering, focusing or selecting a row also shows
 its buttons, and only then: **Hold** (or **Resume**) and **Dismiss**, which do
 what the keys do, **Release** on a worktree frozen on the wrong branch, **I
-nudged them** while the move is Nudge, and **Set importance**.
+nudged them** while the move is Nudge, and **Set importance**, which carries
+the same red dot while importance is not set.
 The selected row, the one the keys act on, is framed; tabbing to a row selects
 it, and `j` or `k` take the focus off the row they leave.
 

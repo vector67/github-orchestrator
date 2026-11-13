@@ -494,7 +494,11 @@ export default class Wall extends Component<WallSignature> {
                     data-test-set-importance
                     {{on "focus" (fn this.select pr)}}
                     {{on "click" (fn this.askImportance pr)}}
-                  >Set importance<Glyphs
+                  >{{#if pr.summaries.unranked}}<span
+                        class="unset-dot"
+                        aria-hidden="true"
+                        data-test-importance-unset
+                      ></span>{{/if}}Set importance<Glyphs
                       @opensDialog={{opensDialog "set-importance"}}
                       @runsAgent={{runsAgent "set-importance"}}
                     /></button>
