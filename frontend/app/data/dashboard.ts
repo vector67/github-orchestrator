@@ -1141,17 +1141,6 @@ function chipsOf(
   ];
 }
 
-const MINUTE_MS = 60_000;
-
-export function ageOf(entered: number, now: number): string {
-  const minutes = Math.floor(Math.max(0, now - entered) / MINUTE_MS);
-  if (minutes < 1) return 'now';
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
-
 export type Square = 'ready' | 'draft' | 'work' | 'wait' | 'alarm' | 'park';
 
 const SQUARES: Record<WallGroup, Square> = {

@@ -2964,16 +2964,12 @@ kbd {
   content: "— ";
 }
 
-.move-line .age {
-  margin-left: auto;
-  font-size: var(--fs-xs);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--muted);
+.move-line .unset-dot {
+  align-self: center;
+  margin: 0 0 0 -4px;
 }
 
-.wall-lead .state-chip,
-.wall-lead .age {
+.wall-lead .state-chip {
   position: relative;
   z-index: 1;
 }
@@ -3039,8 +3035,7 @@ kbd {
 }
 
 @media (hover: hover) {
-  .wall-row:not(:hover, :focus-within, [aria-current="true"])
-    .row-control:not(.release, .always) {
+  .wall-row:not(:hover, :focus-within, [aria-current="true"]) .row-control {
     opacity: 0;
   }
 }
