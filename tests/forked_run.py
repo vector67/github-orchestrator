@@ -67,10 +67,15 @@ def _recorded(config: pytest.Config) -> dict[str, float]:
     return seconds
 
 
+def _bucket_of(item: pytest.Item) -> str:
+    marker = item.get_closest_marker("xdist_group")
+    return f"xdist_group {marker.args[0]}" if marker else _file_of(item)
+
+
 def _heaviest_files_first(items: list[pytest.Item], seconds: dict[str, float]) -> list[pytest.Item]:
     by_file: dict[str, list[pytest.Item]] = {}
     for item in items:
-        by_file.setdefault(_file_of(item), []).append(item)
+        by_file.setdefault(_bucket_of(item), []).append(item)
     weight = {name: sum(seconds.get(item.nodeid, _UNTIMED) for item in tests)
               for name, tests in by_file.items()}
     return [item for name in sorted(by_file, key=lambda name: -weight[name]) for item in by_file[name]]
