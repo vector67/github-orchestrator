@@ -343,6 +343,26 @@ module('Acceptance | git palette', function (hooks) {
     assert.deepEqual(board().reported, []);
   });
 
+  test("a push of a fork's pull request says it is pushed from the fork", async function (assert) {
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+    board().refusal = {
+      status: 409,
+      code: 'fork-pull-request',
+      detail:
+        'the pull request comes from a fork, so it is pushed from the fork, never from here',
+    };
+
+    await press('g', 'p', 'Enter');
+
+    assert
+      .dom('[data-test-git-output-status]')
+      .hasText(
+        'git push did not run: This pull request comes from a fork, so it is pushed from the fork, never from here.',
+      )
+      .hasAttribute('data-refused');
+  });
+
   test('with the board down git waits for it and the palette does not open', async function (assert) {
     onTheHub();
     board().broken = /\/stream$/;

@@ -873,6 +873,17 @@ When the watcher does release it, it stops that PR's agent manager and closes
 its terminal sessions, and leaves the old worktree where it is. That worktree
 is yours to clean up.
 
+### A PR from a fork
+
+A PR whose head lives in another repository gets a worktree and a branch both
+named `orchestrator/pr/<n>`, and every fetch reads the PR's head from origin
+(`refs/pull/<n>/head`), so the worktree follows what the contributor pushes.
+Nothing is pushed to it from the board: the palette's `git push` and
+force-push answer **This pull request comes from a fork, so it is pushed from
+the fork, never from here.**, Accept refuses before landing with **… comes
+from another repository, so nothing is pushed to it from here: push from the
+fork**, and a plain `git push` in the worktree fails.
+
 ## Review board
 
 The board is always up, and it is the Board tab of each PR's page on the hub. It is

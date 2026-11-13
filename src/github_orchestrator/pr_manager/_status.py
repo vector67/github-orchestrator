@@ -12,7 +12,7 @@ from github_orchestrator.board_api.interface import (
     Notice,
     NoticeCode,
 )
-from github_orchestrator.domain import Pr, UtcClock
+from github_orchestrator.domain import Pr, UtcClock, fork_pr_number
 from github_orchestrator.pr_manager._refusals import DOWN, Conditions
 from github_orchestrator.pr_processes import ManagerPane
 
@@ -41,6 +41,7 @@ class StatusFiles:
             "notice": None if dashboard.notice is None else asdict(dashboard.notice),
             "threads_live": sorted(dashboard.threads_live),
             "frozen_on": dashboard.frozen_on,
+            "fork": dashboard.branch is not None and fork_pr_number(dashboard.branch) is not None,
             "expected_branch": dashboard.expected_branch,
             "seconds_left": dashboard.seconds_left,
             "run_working": dashboard.run_working,
@@ -81,7 +82,8 @@ class StatusFiles:
             if _seconds_since(self._clock(), status["written_at"]) >= STATUS_STALE_SECONDS:
                 return DOWN
             return Conditions(frozen=status["frozen_on"] is not None,
-                              running=status["active_run"] is not None, answering=True)
+                              running=status["active_run"] is not None, answering=True,
+                              fork=status["fork"])
         except FileNotFoundError:
             return DOWN
         except (OSError, ValueError, KeyError, TypeError) as error:

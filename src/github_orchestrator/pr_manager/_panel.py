@@ -107,7 +107,7 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         if not worktree:
             return ManagerRefusal.NO_WORKTREE
         with locked(Path(f"{worktree}.git-palette.lock")):
-            refused = self._refusal(command.display)
+            refused = self._refusal(command.display, pushes=command.pushes)
             if refused is not None:
                 return refused
             log.info("%s: git palette running %s", self._pr, command.display)
@@ -144,9 +144,10 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         log.info("%s: asking the agent in a terminal", self._pr)
         return self._pr_work.ask_in_session(self._pr, worktree, prompt)
 
-    def _refusal(self, what: str, command: Command | None = None) -> ManagerRefusal | None:
+    def _refusal(self, what: str, command: Command | None = None, *,
+                 pushes: bool = False) -> ManagerRefusal | None:
         refused = refusal(self._status_files.conditions(self._pr), command,
-                          agents_enabled=self._agents_enabled)
+                          agents_enabled=self._agents_enabled, pushes=pushes)
         if refused is not None:
             log.info("%s: %s refused — %s", self._pr, what, refused)
         return refused

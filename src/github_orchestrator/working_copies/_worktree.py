@@ -3,7 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import Pr, fork_pr_number
 from github_orchestrator.github import PullRequests
 from github_orchestrator.notifications import Worktrees
 from github_orchestrator.working_copies._diff import is_branch_name
@@ -15,6 +15,7 @@ NEW_WORKTREE_TIMEOUT = 300
 FALLBACK_NAMES = 20
 NO_MATCHING_REF = 2
 EVEN_IF_LOCKED_SINCE_NO_HUMAN_LOCKS_OURS = ("--force", "--force")
+NO_PUSH_REMOTE = "a-fork-pull-request-is-pushed-from-its-fork"
 
 
 def _git(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str] | None:
@@ -66,15 +67,20 @@ def run_new_worktree_command(worktree: Path, source_repo: Path, command: str,
         notifications.init_failed(worktree, result.returncode)
 
 
+def _origin_ref(branch: str) -> str:
+    fork_pr = fork_pr_number(branch)
+    return f"refs/heads/{branch}" if fork_pr is None else f"refs/pull/{fork_pr}/head"
+
+
 def fetch_branch(worktree: Path, branch: str) -> None:
     fetched = _git("-C", str(worktree), "fetch", "origin",
-                   f"+refs/heads/{branch}:refs/remotes/origin/{branch}")
+                   f"+{_origin_ref(branch)}:refs/remotes/origin/{branch}")
     if fetched is None:
         raise RuntimeError(
             f"git fetch origin {branch} in {worktree} timed out after {GIT_TIMEOUT}s"
         )
     if fetched.returncode != 0:
-        if _gone_from_origin(worktree, branch):
+        if fork_pr_number(branch) is None and _gone_from_origin(worktree, branch):
             _git("-C", str(worktree), "update-ref", "-d", f"refs/remotes/origin/{branch}")
         raise RuntimeError(
             f"git fetch origin {branch} in {worktree} failed: {fetched.stderr.strip()}"
@@ -122,13 +128,17 @@ def create_worktree(repo_dir: Path, branch: str, base_branch: str | None,
 
     last_error = ""
     for candidate in _candidate_paths(repo_dir, branch, pr):
-        added = _git("-C", str(repo_dir), "worktree", "add", str(candidate), branch)
+        added = _git("-C", str(repo_dir), "worktree", "add", "--end-of-options",
+                     str(candidate), branch)
         if added is None:
             raise RuntimeError(
                 f"git worktree add {candidate} timed out after {GIT_TIMEOUT}s"
             )
         if added.returncode == 0:
             log.info("Created worktree for %s at %s", branch, candidate)
+            if fork_pr_number(branch) is not None:
+                _git("-C", str(candidate), "config", f"branch.{branch}.pushRemote",
+                     NO_PUSH_REMOTE)
             run_new_worktree_command(candidate, repo_dir, new_worktree_command, notifications)
             return candidate
         last_error = added.stderr.strip()

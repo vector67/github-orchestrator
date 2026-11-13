@@ -54,6 +54,18 @@ class Pr:
         return f"{self.repo}{self.in_repo}"
 
 
+FORK_PR_BRANCHES = "orchestrator/pr/"
+
+
+def fork_pr_branch(pr: Pr) -> str:
+    return f"{FORK_PR_BRANCHES}{pr.number}"
+
+
+def fork_pr_number(branch: str) -> int | None:
+    number = branch.removeprefix(FORK_PR_BRANCHES)
+    return int(number) if number != branch and number.isdecimal() else None
+
+
 @dataclass(frozen=True)
 class ReviewerPick:
     reviewers: tuple[str, ...]

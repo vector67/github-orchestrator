@@ -96,6 +96,7 @@ def test_an_idle_manager_writes_that_nothing_is_running_or_frozen(settings, tmp_
         "notice": None,
         "threads_live": [],
         "frozen_on": None,
+        "fork": False,
         "expected_branch": None,
         "seconds_left": None,
         "run_working": False,

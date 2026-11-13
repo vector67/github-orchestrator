@@ -84,6 +84,10 @@ class ErrorCode(StrEnum):
     answering, it has no worktree yet, the worktree holds another branch,
     agents are disabled, or an agent is already running.
 
+    FORK_PULL_REQUEST is a git push asked of a pull request whose head lives
+    in another repository; its worktree reads the pull request's head from
+    origin and is never pushed there, so the push belongs in the fork.
+
     NO_GH_TOKEN is gh holding no token for the login the setup screen asked
     about; the detail says to run `gh auth login`.
 
@@ -181,6 +185,7 @@ class ErrorCode(StrEnum):
     NO_WORKTREE = "no-worktree"
     WORKTREE_FROZEN = "worktree-frozen"
     AGENT_RUNNING = "agent-running"
+    FORK_PULL_REQUEST = "fork-pull-request"
     NO_GH_TOKEN = "no-gh-token"
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"

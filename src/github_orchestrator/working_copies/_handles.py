@@ -3,7 +3,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 
-from github_orchestrator.domain import Pr, Sha
+from github_orchestrator.domain import Pr, Sha, fork_pr_number
 from github_orchestrator.working_copies._diff import PrBase, is_branch_name
 from github_orchestrator.working_copies._layout import thread_branch
 from github_orchestrator.working_copies._revisions import ShownCommit
@@ -113,6 +113,14 @@ def _text(sha: Sha | None) -> str | None:
     return None if sha is None else str(sha)
 
 
+def _fork_refusal(git: Git, pr: Pr, path: str) -> str | None:
+    branch = git._branch_at(path)
+    if branch is None or fork_pr_number(branch) is None:
+        return None
+    return (f"{pr} comes from another repository, so nothing is pushed to it from here: "
+            f"push from the fork")
+
+
 def _caught_up_with_origin(git: Git, path: str, outcome: str) -> str | Diverged | None:
     origin, head = git._origin_head(path), git._head_sha(path)
     if origin is None or head is None or git._descends(path, origin, head):
@@ -176,6 +184,9 @@ class BoundWorkspace:
                                   _text(thread_sha), message)
 
     def _caught_up_with_origin(self, path: str) -> str | Diverged | None:
+        fork = _fork_refusal(self.git, self.pr, path)
+        if fork is not None:
+            return fork
         failed = self.git._fetch(path, None)
         if failed is not None:
             return f"the PR branch would not fetch before landing, so nothing landed: {failed}"
@@ -324,6 +335,9 @@ class BoundCheckout:
         located = self.git._pr_worktree(self.pr)
         if located.path is None:
             return located.missing
+        fork = _fork_refusal(self.git, self.pr, located.path)
+        if fork is not None:
+            return fork
         with self.git._serialized(self.pr):
             behind = (None if self.git._fetch(located.path, None) is not None
                       else _caught_up_with_origin(self.git, located.path,
