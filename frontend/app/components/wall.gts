@@ -19,7 +19,7 @@ import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
 import { copyAddress, openOnGitHub } from 'frontend/data/address';
 import type { DismissUntil, Importance } from 'frontend/data/api';
-import { ageOf, type Reading } from 'frontend/data/dashboard';
+import { type Reading } from 'frontend/data/dashboard';
 import {
   opensDialog,
   prLabelOf,
@@ -109,11 +109,6 @@ export default class Wall extends Component<WallSignature> {
     const count = this.store.needYou;
     return count ? `(${count}) wall` : 'wall';
   }
-
-  ageOf = (pr: WallRow): string => ageOf(pr.entered, this.hub.now);
-
-  ageHintOf = (section: WallSection, pr: WallRow): string =>
-    `In ${section.name} for ${this.ageOf(pr)}`;
 
   get filteredOut(): string {
     const hidden = this.store.hidden;
@@ -367,8 +362,13 @@ export default class Wall extends Component<WallSignature> {
                           class="live-dot"
                           {{pulses reading.move}}
                         ></span>{{/if}}{{reading.move}}</span>{{#if
-                      reading.reason
+                      pr.summaries.unranked
                     }}<span
+                        class="unset-dot"
+                        role="img"
+                        aria-label="importance not set"
+                        data-test-importance-unset
+                      ></span>{{/if}}{{#if reading.reason}}<span
                         class="reason"
                         data-test-reason
                       >{{reading.reason}}</span>{{/if}}<span
@@ -383,11 +383,7 @@ export default class Wall extends Component<WallSignature> {
                       }}<span class="state-chip" data-test-pending>{{#if
                             pr.summaries.pressing.controls.ring
                           }}<PendingRing
-                            />{{/if}}{{pr.summaries.pressing.controls.pending}}</span>{{/if}}</span><span
-                      class="age"
-                      title={{this.ageHintOf section pr}}
-                      data-test-age
-                    >{{this.ageOf pr}}</span></span>
+                            />{{/if}}{{pr.summaries.pressing.controls.pending}}</span>{{/if}}</span></span>
                   <span
                     class="ttl"
                     data-test-wall-title
@@ -410,6 +406,8 @@ export default class Wall extends Component<WallSignature> {
                     >{{pr.summaries.pressing.controls.refused}}</span>
                   {{/if}}
                   <span id={{says}} class="wall-says">{{#if
+                      pr.summaries.unranked
+                    }}<span>importance not set.</span>{{/if}}{{#if
                       reading.reason
                     }}<span>{{reading.reason}}.</span>{{/if}}{{#each
                       reading.chips key="key"
@@ -423,7 +421,7 @@ export default class Wall extends Component<WallSignature> {
                       pr.summaries.pressing.controls.refused
                     }}<span
                       >{{pr.summaries.pressing.controls.refused}}.</span>{{/if}}<span
-                    >{{this.ageHintOf section pr}}.</span><span>{{#if
+                    >{{#if
                         this.store.severalReposShown
                       }}{{pr.repo}}{{/if}}#{{pr.number}}{{#if reading.whose}}
                         ·
@@ -434,7 +432,7 @@ export default class Wall extends Component<WallSignature> {
                 <span class="row-controls">
                   {{#if (this.releasable pr)}}<button
                       type="button"
-                      class="row-control release"
+                      class="row-control"
                       disabled={{this.pending pr}}
                       data-opens-dialog={{if (opensDialog "release") "true"}}
                       data-runs-agent={{if (runsAgent "release") "true"}}
@@ -480,14 +478,14 @@ export default class Wall extends Component<WallSignature> {
                     (eq reading.code "nudge")
                   }}<button
                       type="button"
-                      class="row-control always"
+                      class="row-control"
                       title="Say you nudged them: puts the next nudge a day off"
                       data-test-nudged
                       {{on "focus" (fn this.select pr)}}
                       {{on "click" (fn this.nudged pr)}}
                     >I nudged them</button>{{/if}}<button
                     type="button"
-                    class="row-control {{if pr.summaries.unranked 'always'}}"
+                    class="row-control"
                     title="Say how much this pull request matters to you"
                     data-opens-dialog={{if
                       (opensDialog "set-importance")
@@ -496,11 +494,7 @@ export default class Wall extends Component<WallSignature> {
                     data-test-set-importance
                     {{on "focus" (fn this.select pr)}}
                     {{on "click" (fn this.askImportance pr)}}
-                  >{{#if pr.summaries.unranked}}<span
-                        class="unset-dot"
-                        aria-label="not set"
-                        data-test-importance-unset
-                      ></span>{{/if}}Set importance<Glyphs
+                  >Set importance<Glyphs
                       @opensDialog={{opensDialog "set-importance"}}
                       @runsAgent={{runsAgent "set-importance"}}
                     /></button>
