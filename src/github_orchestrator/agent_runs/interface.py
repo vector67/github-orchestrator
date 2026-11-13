@@ -90,6 +90,7 @@ class ThreadFix:
     reworks_part: str | None = None
     parts_run: tuple[str, ...] = ()
     pr_skill: str = ""
+    draft: bool | None = None
     pr_url: str | None = None
     thread_url: str | None = None
     ticket_key: str | None = None

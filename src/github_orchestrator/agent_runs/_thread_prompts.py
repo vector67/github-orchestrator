@@ -277,13 +277,33 @@ def _new_prs_ticket(fix: ThreadFix) -> str:
             "and body, and leave the ticket out when it names none")
 
 
+def _opened_how(fix: ThreadFix) -> str:
+    if fix.pr_skill:
+        return f"with the `{fix.pr_skill}` skill"
+    return "yourself with `gh pr create`, not with a skill"
+
+
+def _open_step(fix: ThreadFix, branch: str | None) -> str:
+    if fix.pr_skill:
+        return f"""Invoke the `{fix.pr_skill}` skill to open a pull request from {branch} into \
+{fix.split_base}. Give it the branch, the base, the original PR's link, the review \
+thread's link, why the work moved as the thread above tells it, and the ticket above."""
+    draft = "" if fix.draft is False else " --draft"
+    return f"""Open the pull request yourself. No pull request skill is set up for this \
+repository, so do not invoke any skill to open it, even one whose name says it opens pull \
+requests. Run `gh pr create --head {branch} --base {fix.split_base}{draft}`, with a title that names the \
+change and a body that says why the work moved as the thread above tells it, links the \
+original PR and the review thread, and names the ticket above. Follow the repository's pull \
+request template when it has one."""
+
+
 def opening_prompt(commands: ReportCommands, fix: ThreadFix) -> str:
     branch = fix.split_branch
     opened_cmd = commands.opened(fix.pr, fix.key, url='"<the new PR\'s link>"')
     return f"""You are opening one pull request for the author of {fix.pr}, who accepted it \
 on the review board. A review comment on {fix.pr} asked for some of its code to move to a \
 pull request of its own, and that code is committed on the branch {branch} in this \
-worktree. Push the branch, open the pull request with the `{fix.pr_skill}` skill, report \
+worktree. Push the branch, open the pull request {_opened_how(fix)}, report \
 its link by running exactly one of the report commands below, and stop. Nobody is \
 watching this run: decide for yourself and say what you decided in the PR body.
 
@@ -312,9 +332,7 @@ PR body says in its own words what the reviewer asked for and why:
 `gh pr list --head {branch} --state open --json url`. If one is listed, report its link \
 and stop.
 2. Push the branch: `git push -u origin {branch}`.
-3. Invoke the `{fix.pr_skill}` skill to open a pull request from {branch} into \
-{fix.split_base}. Give it the branch, the base, the original PR's link, the review \
-thread's link, why the work moved as the thread above tells it, and the ticket above.
+3. {_open_step(fix, branch)}
 
 The pull request is open when GitHub has given it a link. Report that link:
 

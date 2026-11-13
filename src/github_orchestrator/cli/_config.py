@@ -57,6 +57,7 @@ class CliConfig:
     graphical: bool
     check_for_updates: bool
     installer_offers_skills: bool
+    interactive: bool
 
 
 def print_agents_disabled_notice(config: CliConfig, config_file: ConfigFile) -> None:

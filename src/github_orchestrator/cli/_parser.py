@@ -178,6 +178,10 @@ class Commands:
         skill_parser.add_argument(
             "--replace", action="store_true",
             help="Put this version's skill in place of a different one already there.")
+        skill_parser.add_argument(
+            "--leave-out", action="store_true",
+            help='Install nothing; while create-pr is missing, record pr_skill = "" so agents '
+                 "open pull requests themselves.")
 
         command(
             "setup", "Open the board's setup page, where the account, the repos and the "

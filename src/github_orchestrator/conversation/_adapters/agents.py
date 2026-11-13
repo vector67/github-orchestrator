@@ -37,7 +37,7 @@ class ThreadAgents:
     def __init__(self, thread_work: ThreadWork, pr: Pr,
                  manager_run_alive: Callable[[], bool], *, account: str,
                  tracker: str | None, tracker_project: str | None,
-                 pull_requests: PullRequests, pr_skill: str,
+                 pull_requests: PullRequests, pr_skill: str, draft: bool | None,
                  pages: GitHub) -> None:
         self.thread_work = thread_work
         self.pr = pr
@@ -46,6 +46,7 @@ class ThreadAgents:
         self.tracker_project = tracker_project
         self.pull_requests = pull_requests
         self.pr_skill = pr_skill
+        self.draft = draft
         self.pages = pages
         self.manager_run_alive = manager_run_alive
         self.runs: dict[str, Run] = {}
@@ -101,6 +102,7 @@ class ThreadAgents:
             parts_run=() if split is None else tuple(
                 part.value for part in parts(split) if has_run(fix.steps, part)),
             pr_skill=self.pr_skill,
+            draft=self.draft,
             pr_url=self.pages.page(),
             thread_url=self._thread_url(conversation),
             ticket_key=fix.ticket_key if existing is None else existing.key,

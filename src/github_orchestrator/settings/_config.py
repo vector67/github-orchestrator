@@ -85,6 +85,7 @@ class OrchestratorConfig:
     tracker_project: str = ""
     check_for_updates: bool = True
     mentions_start: str = ""
+    pr_skill: str = "create-pr"
     repos: tuple[RepoEntry, ...] = ()
 
 
@@ -473,15 +474,37 @@ def _mentions_start_line(at: datetime) -> str:
     return f"{_MENTIONS_START} = {_toml_string(at.isoformat())}"
 
 
-def _with_mentions_start(text: str, at: datetime) -> str:
+def _first_table(lines: list[str]) -> int | None:
+    return next((i for i, line in enumerate(lines) if _TABLE_HEADER.match(line)), None)
+
+
+def _with_top_level_line(text: str, added: str) -> str:
     lines = text.splitlines(keepends=True)
-    first_table = next((i for i, line in enumerate(lines) if _TABLE_HEADER.match(line)), None)
+    first_table = _first_table(lines)
     if first_table is None:
-        return text + ("" if not text or text.endswith("\n") else "\n") + _mentions_start_line(at) + "\n"
+        return text + ("" if not text or text.endswith("\n") else "\n") + added + "\n"
     opening = first_table
     while opening > 0 and lines[opening - 1].lstrip().startswith("#"):
         opening -= 1
-    return "".join(lines[:opening]) + _mentions_start_line(at) + "\n\n" + "".join(lines[opening:])
+    return "".join(lines[:opening]) + added + "\n\n" + "".join(lines[opening:])
+
+
+def _with_mentions_start(text: str, at: datetime) -> str:
+    return _with_top_level_line(text, _mentions_start_line(at))
+
+
+_PR_SKILL = "pr_skill"
+_PR_SKILL_LINE = re.compile(rf"""^[ \t]*(?:{_PR_SKILL}|"{_PR_SKILL}"|'{_PR_SKILL}')[ \t]*=""")
+
+
+def _with_pr_skill(text: str, name: str) -> str:
+    written = f"{_PR_SKILL} = {_toml_string(name)}"
+    lines = text.splitlines(keepends=True)
+    top_level = lines[:_first_table(lines)]
+    at = next((i for i, line in enumerate(top_level) if _PR_SKILL_LINE.match(line)), None)
+    if at is None:
+        return _with_top_level_line(text, written)
+    return "".join([*lines[:at], written + "\n", *lines[at + 1:]])
 
 
 class TomlConfigFile:
@@ -568,6 +591,18 @@ class TomlConfigFile:
             else:
                 self._replace(_with_mentions_start(self._path.read_text(), now))
             return now
+
+    def pr_skill(self) -> str:
+        try:
+            written = tomllib.loads(self._path.read_text()).get(_PR_SKILL)
+        except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+            written = None
+        return written if isinstance(written, str) else OrchestratorConfig.pr_skill
+
+    def record_pr_skill(self, name: str) -> None:
+        with self._locked():
+            text = self._path.read_text() if self._path.exists() else ""
+            self._replace(_with_pr_skill(text, name))
 
     def move_mentions_start(self, to: datetime) -> None:
         with self._locked():

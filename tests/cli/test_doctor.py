@@ -607,6 +607,19 @@ def test_each_shipped_skill_in_place_is_ok(machine, run_cli, name):
     assert _finding(ran.out, f"{name} skill is in").level == "ok"
 
 
+def test_create_pr_left_out_on_purpose_is_ok_and_says_the_agents_open_prs_themselves(
+        machine, run_cli):
+    machine.configure('pr_skill = ""\n')
+
+    ran = run_cli("doctor")
+
+    left_out = _finding(ran.out, "create-pr skill was left out")
+    assert left_out.level == "ok"
+    assert "agents open pull requests themselves" in ran.out
+    assert "github-orchestrator skill installs" in ran.out
+    assert _finding(ran.out, "rebase-on-main skill is not in").level == "warn"
+
+
 @pytest.mark.parametrize("name", SKILLS)
 def test_each_missing_shipped_skill_is_a_warning_fixed_by_the_skill_command(
         machine, run_cli, name):
