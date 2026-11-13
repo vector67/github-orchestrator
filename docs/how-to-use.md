@@ -533,8 +533,11 @@ after a push, naming both heads and how many commits behind, with **Summarise**;
 needing the GitHub API, with the plugin's reason and a button that runs it over
 the API; or failed, with the exit status, the end of what it printed and
 **Summarise**. While a rerun runs, the old summary stays, and the strip says when
-the rerun started and how many of its agents have finished. A refused run says
-why in the strip.
+the rerun started and how many of its agents have finished. Press **Summarise**
+while another PR's summary is running and yours is queued: the strip says
+**Waiting for another summary to finish** where the button was, and the run
+starts by itself when the other one ends, ahead of the summaries the watcher
+starts on its own. A refused run says why in the strip.
 
 The summary opens with **Before you review**, the primer: the concepts the diff
 cannot be judged without, each a folded section with the concepts it leans on
