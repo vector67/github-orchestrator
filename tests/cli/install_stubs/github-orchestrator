@@ -1,4 +1,5 @@
 #!/bin/sh
 printf '%s\n' "$*" >>"$CALLS"
+[ -n "$GITHUB_ORCHESTRATOR_LEAVE_SKILLS" ] && printf 'with GITHUB_ORCHESTRATOR_LEAVE_SKILLS=%s\n' "$GITHUB_ORCHESTRATOR_LEAVE_SKILLS" >>"$CALLS"
 [ "$*" = "skill --status" ] && echo "$SKILL_STATE"
 exit 0

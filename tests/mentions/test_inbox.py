@@ -372,6 +372,29 @@ def test_the_board_reads_a_damaged_listing_as_no_mentions_listed(tmp_path, on_di
     assert here.container.get(MentionsList).listed() == NO_MENTIONS_LISTED
 
 
+def test_the_board_reads_a_listing_written_by_0_3_0(tmp_path):
+    here = _here(tmp_path)
+    (here.settings.data_dir / "mentions.json").write_text(json.dumps({
+        "searched_at": SEARCHED, "started": {REPO: "2026-10-21T09:00:00+00:00"},
+        "mentions": [
+            {"repo": REPO, "number": 7, "thread": "IC_1", "comment_id": 1, "kind": "issue",
+             "author": "anna", "at": "2026-10-22T10:00:00Z", "body": "@octocat ping",
+             "url": "https://github.com/acme/widgets/pull/7#issuecomment-1", "card": True},
+            {"repo": REPO, "number": 8, "thread": None, "comment_id": None, "kind": "pr-body",
+             "author": "bob", "at": None, "body": "@octocat look",
+             "url": "https://github.com/acme/widgets/pull/8", "card": False}]}))
+
+    assert here.container.get(MentionsList).listed().mentions == (
+        ListedMention(pr=THE_PR, thread="IC_1", comment_id=1, kind="issue", author="anna",
+                      at="2026-10-22T10:00:00Z", body="@octocat ping",
+                      url="https://github.com/acme/widgets/pull/7#issuecomment-1",
+                      on_board=True, building=False),
+        ListedMention(pr=Pr(Repo.parse(REPO), 8), thread=None, comment_id=None,
+                      kind="pr-body", author="bob", at=None, body="@octocat look",
+                      url="https://github.com/acme/widgets/pull/8",
+                      on_board=False, building=False))
+
+
 def test_the_board_reads_a_folder_where_the_listing_belongs_as_no_mentions_listed(tmp_path):
     here = _here(tmp_path)
     (here.settings.data_dir / "mentions.json").mkdir()
