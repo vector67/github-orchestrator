@@ -195,6 +195,15 @@ class ManagerLoop:
             )
             self._run_ended(run, run.finished())
 
+    def _stop_the_run_in_a_held_checkout(self) -> None:
+        run = self._commands.active_run
+        if run is None:
+            return
+        log.warning("loop %s: the worktree now holds agent files nobody answered — stopping "
+                    "the agent run (event=%s)", self._config.pr, run.event_type)
+        run.terminate()
+        self._run_ended(run, run.finished())
+
     def _finish(self, taken: Taken, kind: str) -> None:
         try:
             taken.done()
@@ -255,6 +264,8 @@ class ManagerLoop:
             return
         drawn_with = self._commands.active_run
         agents_held = dashboard.agent_settings is not None
+        if agents_held:
+            self._stop_the_run_in_a_held_checkout()
 
         if self._interrupted and not agents_held:
             self._interrupted = False

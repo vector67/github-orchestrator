@@ -192,6 +192,21 @@ def test_the_flags_say_when_the_hold_began(settings, tmp_path):
         "2026-10-08T09:00:00.000000Z", "2026-10-08T09:01:00.000000Z")
 
 
+def test_a_run_whose_checkout_moves_to_unanswered_agent_files_is_stopped(settings, tmp_path):
+    working_copies = FakeWorkingCopies()
+    working_copies.change_agent_config(tmp_path, {})
+    runs = FakeAgentRuns(FakePrProcesses()).script(Outcome(finishes=False))
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: board.panel.carry_on(), None,
+                lambda: working_copies.change_agent_config(tmp_path, CHANGED), None,
+                lambda: seen.append(board.panel.dashboard().working_on),
+                worktree=tmp_path, is_author=False, board=board, agent_runs=runs,
+                working_copies=working_copies)
+
+    assert (len(runs.started), seen, runs.last_run(THE_PR).exit_code) == (1, [None], -15)
+
+
 def _carried_on(runs):
     return [started for started in runs.started if isinstance(started.work, CarryingOn)]
 
