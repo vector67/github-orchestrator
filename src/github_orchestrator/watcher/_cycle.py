@@ -346,7 +346,7 @@ class PollingWatcher:
                 self._placement.ensure(pr, fetch=pr in moved_heads,
                                        for_a_mention=pr in self._opened)
             except Exception:
-                log.exception("Failed to ensure window for %s", pr)
+                log.exception("Failed to ensure an agent manager for %s", pr)
 
         for pr, facts in reviewed.items():
             try:

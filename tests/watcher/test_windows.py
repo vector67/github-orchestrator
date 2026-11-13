@@ -302,7 +302,7 @@ def test_a_detached_window_loses_its_manager_and_says_so(settings, world, copies
     assert _detached(world)
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
         (Badge.FAILED, "PR #83 left on the wrong branch",
-         "Window kept as hello-world/#83-defunct; building a fresh worktree")]
+         "Stopped its agent manager and left its worktree as it was; building a fresh worktree")]
 
 
 def test_a_dead_manager_in_a_foreign_directory_is_revived_not_detached(settings, world, copies, notifications,
@@ -396,8 +396,7 @@ def test_the_conflict_is_recorded_and_said_once(settings, world, copies, notific
     assert (flag.since, flag.checks, flag.other_pr) == (NOW, 1, OTHER_PR)
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
         (Badge.FAILED, "PR #83 shares a worktree",
-         "wt is already PR #87's — not opening a window; press w on PR #87's screen "
-         "to release it")]
+         "wt is already PR #87's — not starting an agent manager in it")]
 
 
 def test_after_the_retry_budget_the_window_opens_there_anyway(settings, world, copies, notifications, shared):

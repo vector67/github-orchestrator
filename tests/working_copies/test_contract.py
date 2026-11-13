@@ -223,7 +223,7 @@ def test_a_handed_off_worktree_is_forgotten_and_said_once(world, pr_worktree):
                                        manager_running=True) is not None
     assert [(n.badge, n.title, n.body) for n in world.notifications.posted] == [
         (Badge.FAILED, f"PR #{PR} left on the wrong branch",
-         "Window kept as name/#7-defunct; building a fresh worktree")]
+         "Stopped its agent manager and left its worktree as it was; building a fresh worktree")]
 
 
 def _sharing(world, worktree, others, now):
@@ -252,8 +252,7 @@ def test_a_shared_worktree_holds_and_says_so_on_the_first_and_every_fifth_check(
     assert [v.seconds_left for v in verdicts] == [1200.0, 1140.0, 1080.0, 1020.0, 960.0]
     assert _said(world) == [f"PR #{PR} shares a worktree"] * 2
     assert world.notifications.posted[0].body == (
-        f"{tmp_path.name} is already PR #{PR + 1}'s — not opening a window; "
-        f"press w on PR #{PR + 1}'s screen to release it")
+        f"{tmp_path.name} is already PR #{PR + 1}'s — not starting an agent manager in it")
 
 
 @pytest.mark.parametrize("world", ["fake"], indirect=True)

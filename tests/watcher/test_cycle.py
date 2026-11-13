@@ -224,7 +224,7 @@ def test_dry_run_counts_the_review_request_and_names_the_window_it_would_open(se
     out = _dry_run(settings, capsys, github)
 
     assert f"[dry-run] would enqueue review-requested for {REPO}#23" in out
-    assert "would open or revive PR 23's window" in out
+    assert "would start or revive PR 23's agent manager" in out
     assert "worktree" in out
     assert "agent manager" in out
     assert "Polled 1 PRs, 1 events queued, 0 torn down" in out
@@ -446,7 +446,7 @@ def test_dry_run_does_not_promise_a_window_for_a_pr_dismissed_until_event(
     out = _dry_run(settings, capsys, dismissed_until_event)
 
     assert "would leave PR 23 alone (dismissed until the next event)" in out
-    assert "would open or revive PR 23's window" not in out
+    assert "would start or revive PR 23's agent manager" not in out
 
 
 def test_dry_run_promises_the_window_when_a_queued_event_would_clear_it(
@@ -457,7 +457,7 @@ def test_dry_run_promises_the_window_when_a_queued_event_would_clear_it(
 
     out = _dry_run(settings, capsys, dismissed_until_event)
 
-    assert "would open or revive PR 23's window" in out
+    assert "would start or revive PR 23's agent manager" in out
     assert "dismissed until the next event" not in out
 
 
@@ -469,7 +469,7 @@ def test_dry_run_promises_the_window_when_this_cycle_would_enqueue(
 
     out = _dry_run(settings, capsys, dismissed_until_event)
 
-    assert "would open or revive PR 23's window" in out
+    assert "would start or revive PR 23's agent manager" in out
     assert "dismissed until the next event" not in out
 
 
@@ -489,7 +489,7 @@ def test_dry_run_leaves_a_draft_dismissed_until_ready_for_review_alone(settings,
     out = _dry_run(settings, capsys, github)
 
     assert "would leave PR 23 alone (dismissed until ready for review)" in out
-    assert "would open or revive PR 23's window" not in out
+    assert "would start or revive PR 23's agent manager" not in out
 
 
 def test_dry_run_summary_counts_the_prs_the_events_and_the_teardowns(settings, capsys):

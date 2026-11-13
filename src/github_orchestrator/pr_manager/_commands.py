@@ -150,7 +150,7 @@ class ManagerCommands:
         if self.active_run is not None:
             self.active_run.terminate()
         self._worklist.drop_in_flight(pr)
-        log.info("Dismissed %s %s — exiting; the watcher closes its window", pr, how_long)
+        log.info("Dismissed %s %s — exiting; the watcher closes its record", pr, how_long)
         self._dismissed = True
 
     def _close(self) -> None:

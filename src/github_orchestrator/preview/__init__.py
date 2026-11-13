@@ -156,7 +156,7 @@ WORKING = Card(9000006, "PRRT_working",
 QUEUED = Card(9000007, "PRRT_queued",
               "a fix queued behind the run slots, with nothing to show yet",
               "billing/errors.py", 30)
-IN_SESSION = Card(9000008, "PRRT_rework", "a rework session you opened in a pane",
+IN_SESSION = Card(9000008, "PRRT_rework", "a rework session you opened in the Terminal tab",
                   "billing/guard.py", 17)
 REWORKING = Card(9000018, "PRRT_reworking",
                  "a fix you sent back with a note and a pointed line, queued for the "

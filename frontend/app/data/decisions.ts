@@ -921,9 +921,10 @@ export const RELEASE_ASKS: AreYouSure = {
   label: PR_LABELS.release,
   question: 'Release the worktree?',
   consequence:
-    'The watcher moves this worktree aside under another name, removing ' +
-    'nothing in it, and builds a fresh one on its next cycle. The board has ' +
-    'no way back to the old one.',
+    'The watcher stops this PR’s agent manager and its terminal sessions, ' +
+    'and leaves the worktree where it is, on the branch it holds, removing ' +
+    'nothing in it. Then it builds a fresh worktree for the PR. The board ' +
+    'has no way back to the old one.',
   danger: false,
 };
 

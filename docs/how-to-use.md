@@ -1082,8 +1082,8 @@ became yours to decide.
 | `deferred`       | parked until something wakes it                                                 |
 | `rejected`       | you turned it down                                                              |
 | `landed`         | on the PR branch                                                                |
-| `resolved`       | closed, worktree and branch gone                                                |
-| `marked done`    | closed on the board alone; GitHub was not asked to resolve it                   |
+| `resolved`       | closed, and GitHub resolved the thread                                          |
+| `marked done`    | closed on the board alone; GitHub did not resolve the thread                    |
 | `confirmed`      | you confirmed it was settled; nothing was posted to GitHub                      |
 | `discarded`      | a draft thrown away with nothing posted                                         |
 

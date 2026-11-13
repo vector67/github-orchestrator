@@ -150,7 +150,7 @@ class BranchTrouble:
                         since=now)
         self._flags.save_mismatch(pr, flag)
         log.error(
-            "ensure_pr_window %s: pane 0 in %s has %s, expected %s — "
+            "ensure_pr_window %s: the agent manager's worktree %s has %s, expected %s — "
             "starting the grace period",
             pr, pane, actual, expected,
         )
@@ -191,7 +191,7 @@ class BranchTrouble:
         if waited >= SHARED_RETRY_SECONDS:
             log.error(
                 "%s: %s is still PR %s's working directory after %.0fs — "
-                "opening the window there anyway",
+                "starting its agent manager there anyway",
                 pr, worktree, other.in_repo, waited,
             )
             self._notifications.still_shared(pr, worktree, other,

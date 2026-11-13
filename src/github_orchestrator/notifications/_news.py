@@ -99,12 +99,13 @@ class News:
 
     def wrong_branch(self, pr: Pr, kept_as: str) -> None:
         self._post(pr, Badge.FAILED, f"PR {pr.in_repo} left on the wrong branch",
-                   f"Window kept as {kept_as}; building a fresh worktree")
+                   "Stopped its agent manager and left its worktree as it was; "
+                   "building a fresh worktree")
 
     def shared(self, pr: Pr, worktree: Path, other: Pr) -> None:
         self._post(pr, Badge.FAILED, f"PR {pr.in_repo} shares a worktree",
-                   f"{worktree.name} is already PR {other.in_repo}'s — not opening a "
-                   f"window; press w on PR {other.in_repo}'s screen to release it")
+                   f"{worktree.name} is already PR {other.in_repo}'s — not starting "
+                   "an agent manager in it")
 
     def still_shared(self, pr: Pr, worktree: Path, other: Pr, minutes: int) -> None:
         self._post(pr, Badge.FAILED, f"PR {pr.in_repo} worktree still shared",

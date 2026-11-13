@@ -880,7 +880,7 @@ class FixOperation(OperationEnvelope):
 
 class SessionOperation(OperationEnvelope):
     """An interactive agent session on the thread's worktree. `running` from
-    the moment the pane opens until the operator tells the agent in the session
+    the moment the session opens in the Terminal tab until the operator tells the agent in the session
     to update the board."""
 
     kind: Literal[OperationKind.START_SESSION]

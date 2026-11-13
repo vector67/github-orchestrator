@@ -199,6 +199,6 @@ def undismiss(pr: Pr, *, change_detection: ChangeDetection, dismissals: Dismissa
     if pr not in change_detection.tracked():
         print(
             f"The watcher is not tracking {pr} yet — "
-            "no window opens until it discovers that PR.",
+            "no agent manager starts until it discovers that PR.",
             file=sys.stderr,
         )

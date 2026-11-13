@@ -80,7 +80,7 @@ export const PHASE_HINTS: Record<Phase, string> = {
   enrolled: 'a draft in your review; it posts when you send the review',
   queued: 'waiting for an agent',
   working: 'an agent is running',
-  session: 'a session you steer is open in the Terminal tab or a tmux pane',
+  session: 'a session you steer is open in the Terminal tab',
   rework: 'an agent is working from your rework note',
   landing: 'accepted: the fix is on its way to the PR branch, then the reply',
   rebasing:
@@ -106,9 +106,8 @@ export const PHASE_HINTS: Record<Phase, string> = {
   deferred: 'parked until something wakes it',
   landed: 'on the PR branch',
   rejected: 'you turned it down',
-  resolved: 'closed, worktree and branch gone',
-  'marked done':
-    'closed on the board alone; GitHub was not asked to resolve it',
+  resolved: 'closed, and GitHub resolved the thread',
+  'marked done': 'closed on the board alone; GitHub did not resolve the thread',
   confirmed: 'you confirmed it was settled; nothing was posted to GitHub',
   discarded: 'a draft thrown away with nothing posted',
 };

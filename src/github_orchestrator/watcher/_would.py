@@ -37,7 +37,7 @@ class WouldPlace:
             self._say(f"would leave PR {pr.number} alone (dismissed {lasts})")
             return
         clone = self._repos[pr.repo]
-        self._say(f"would open or revive PR {pr.number}'s window — a worktree for its head "
+        self._say(f"would start or revive PR {pr.number}'s agent manager — a worktree for its head "
                   f"branch beside {clone.path}, running its agent manager")
         if clone.new_worktree_command:
             self._say(f"would run new_worktree_command with sh -c in a newly cut worktree: "

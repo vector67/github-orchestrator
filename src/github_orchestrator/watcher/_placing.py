@@ -41,14 +41,14 @@ class WindowPlacement:
             if (not self._dismissals.is_dismissed_forever(pr)
                     and self._pr_processes.manager(pr) is ManagerPane.EXITED):
                 log.info("ensure_pr_window %s: dismissed and its manager has exited; "
-                         "closing its window", pr)
+                         "closing its record", pr)
                 self._pr_processes.close(pr)
             else:
                 log.debug("ensure_pr_window %s: dismissed; skipping", pr)
             return
         if facts is None or facts.is_author is None:
             log.info("ensure_pr_window %s: whose PR this is is not known yet; "
-                     "leaving its window for the next cycle", pr)
+                     "leaving its agent manager for the next cycle", pr)
             return
         is_author = facts.is_author
 
@@ -97,7 +97,7 @@ class WindowPlacement:
 
             if manager is ManagerPane.NO_WINDOW:
                 log.warning(
-                    "Pending events for %s but no window registered; skipping",
+                    "Pending events for %s but no agent manager registered; skipping",
                     pr,
                 )
                 continue
@@ -106,7 +106,7 @@ class WindowPlacement:
                 continue
 
             log.info(
-                "Reviving dead agent manager for %s (pane=%s, has pending events)",
+                "Reviving dead agent manager for %s (manager=%s, has pending events)",
                 pr,
                 manager.value,
             )
@@ -127,7 +127,7 @@ class WindowPlacement:
                 pr, verdict.trouble, verdict.seconds_left, verdict.run_working,
             )
             return True
-        log.error("ensure_pr_window %s: %s — detaching its window", pr, verdict.trouble)
+        log.error("ensure_pr_window %s: %s — stopping its agent manager", pr, verdict.trouble)
         defunct_name = self._pr_processes.detach(pr)
         if defunct_name is None:
             return True

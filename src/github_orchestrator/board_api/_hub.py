@@ -407,8 +407,8 @@ def resume(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
              responses={**HANDED_TO_THE_WATCHER, 409: NOT_FROZEN},
              summary="Let go of the worktree a frozen pull request's manager is on.")
 def release(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
-    """The frozen dashboard's `w`. The watcher keeps the old worktree
-    under another name and builds a fresh one on its next cycle.
+    """The frozen dashboard's `w`. The watcher stops the PR's agent manager,
+    leaves the old worktree where it is, and builds a fresh one for the PR.
     """
     pr = _held(desk, owner, name, number)
     if not desk.holdings.release(pr):
