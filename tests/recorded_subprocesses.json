@@ -87323,7 +87323,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"a46fc000affd7d03c36af6ee2b037b1a071d2911\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"a46fc000affd7d03c36af6ee2b037b1a071d2911\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87337,13 +87337,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "a46fc000affd7d03c36af6ee2b037b1a071d2911",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -87571,7 +87571,7 @@
    ]
   },
   "tests/working_copies/test_agent_config.py::test_a_branch_that_changes_agent_configuration_is_held_naming_each_file": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"d738a9f1bce571a5f0383a0bd89b85de3e414c63\", \"--\", \".agents/skills/s.md\", \".claude/settings.json\", \".codex/config.toml\", \".mcp.json\", \"lib/AGENTS.md\", \"lib/CLAUDE.local.md\", \"lib/deep/CLAUDE.md\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"97b654c13f2e2d834bbb9d6c036d0c32a2389eed\", \"--\", \".agents/skills/s.md\", \".claude/settings.json\", \".codex/config.toml\", \".mcp.json\", \"lib/.agents/skills/s.md\", \"lib/.claude/skills/s.md\", \"lib/.codex/config.toml\", \"lib/.mcp.json\", \"lib/AGENTS.md\", \"lib/CLAUDE.local.md\", \"lib/deep/CLAUDE.md\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87582,12 +87582,16 @@
       "ls-tree",
       "-r",
       "-z",
-      "d738a9f1bce571a5f0383a0bd89b85de3e414c63",
+      "97b654c13f2e2d834bbb9d6c036d0c32a2389eed",
       "--",
       ".agents/skills/s.md",
       ".claude/settings.json",
       ".codex/config.toml",
       ".mcp.json",
+      "lib/.agents/skills/s.md",
+      "lib/.claude/skills/s.md",
+      "lib/.codex/config.toml",
+      "lib/.mcp.json",
       "lib/AGENTS.md",
       "lib/CLAUDE.local.md",
       "lib/deep/CLAUDE.md"
@@ -87598,11 +87602,11 @@
       "b64": ""
      },
      "stdout": {
-      "b64": "MTAwNjQ0IGJsb2IgNTg3YmU2YjRjM2Y5M2Y5M2M0ODljMDExMWJiYTU1OTYxNDdhMjZjYgkuYWdlbnRzL3NraWxscy9zLm1kADEwMDY0NCBibG9iIDJkNDg3NDk0ZWUwZDYxOWE3YjdiNDU2YTk3ZjRlZDkxNjZkNWY3MWYJLmNsYXVkZS9zZXR0aW5ncy5qc29uADEwMDY0NCBibG9iIDU4N2JlNmI0YzNmOTNmOTNjNDg5YzAxMTFiYmE1NTk2MTQ3YTI2Y2IJLmNvZGV4L2NvbmZpZy50b21sADEwMDY0NCBibG9iIDA5NjdlZjQyNGJjZTY3OTE4OTNlOWE1N2JiOTUyZjgwZmQ1MzZlOTMJLm1jcC5qc29uADEwMDY0NCBibG9iIDU4N2JlNmI0YzNmOTNmOTNjNDg5YzAxMTFiYmE1NTk2MTQ3YTI2Y2IJbGliL0FHRU5UUy5tZAAxMDA2NDQgYmxvYiA1ODdiZTZiNGMzZjkzZjkzYzQ4OWMwMTExYmJhNTU5NjE0N2EyNmNiCWxpYi9DTEFVREUubG9jYWwubWQAMTAwNjQ0IGJsb2IgNTg3YmU2YjRjM2Y5M2Y5M2M0ODljMDExMWJiYTU1OTYxNDdhMjZjYglsaWIvZGVlcC9DTEFVREUubWQA"
+      "b64": "MTAwNjQ0IGJsb2IgNTg3YmU2YjRjM2Y5M2Y5M2M0ODljMDExMWJiYTU1OTYxNDdhMjZjYgkuYWdlbnRzL3NraWxscy9zLm1kADEwMDY0NCBibG9iIDJkNDg3NDk0ZWUwZDYxOWE3YjdiNDU2YTk3ZjRlZDkxNjZkNWY3MWYJLmNsYXVkZS9zZXR0aW5ncy5qc29uADEwMDY0NCBibG9iIDU4N2JlNmI0YzNmOTNmOTNjNDg5YzAxMTFiYmE1NTk2MTQ3YTI2Y2IJLmNvZGV4L2NvbmZpZy50b21sADEwMDY0NCBibG9iIDA5NjdlZjQyNGJjZTY3OTE4OTNlOWE1N2JiOTUyZjgwZmQ1MzZlOTMJLm1jcC5qc29uADEwMDY0NCBibG9iIDU4N2JlNmI0YzNmOTNmOTNjNDg5YzAxMTFiYmE1NTk2MTQ3YTI2Y2IJbGliLy5hZ2VudHMvc2tpbGxzL3MubWQAMTAwNjQ0IGJsb2IgNTg3YmU2YjRjM2Y5M2Y5M2M0ODljMDExMWJiYTU1OTYxNDdhMjZjYglsaWIvLmNsYXVkZS9za2lsbHMvcy5tZAAxMDA2NDQgYmxvYiA1ODdiZTZiNGMzZjkzZjkzYzQ4OWMwMTExYmJhNTU5NjE0N2EyNmNiCWxpYi8uY29kZXgvY29uZmlnLnRvbWwAMTAwNjQ0IGJsb2IgMDk2N2VmNDI0YmNlNjc5MTg5M2U5YTU3YmI5NTJmODBmZDUzNmU5MwlsaWIvLm1jcC5qc29uADEwMDY0NCBibG9iIDU4N2JlNmI0YzNmOTNmOTNjNDg5YzAxMTFiYmE1NTk2MTQ3YTI2Y2IJbGliL0FHRU5UUy5tZAAxMDA2NDQgYmxvYiA1ODdiZTZiNGMzZjkzZjkzYzQ4OWMwMTExYmJhNTU5NjE0N2EyNmNiCWxpYi9DTEFVREUubG9jYWwubWQAMTAwNjQ0IGJsb2IgNTg3YmU2YjRjM2Y5M2Y5M2M0ODljMDExMWJiYTU1OTYxNDdhMjZjYglsaWIvZGVlcC9DTEFVREUubWQA"
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"d738a9f1bce571a5f0383a0bd89b85de3e414c63\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"97b654c13f2e2d834bbb9d6c036d0c32a2389eed\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87614,15 +87618,15 @@
       "-z",
       "--no-renames",
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
-      "d738a9f1bce571a5f0383a0bd89b85de3e414c63",
+      "97b654c13f2e2d834bbb9d6c036d0c32a2389eed",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -87630,11 +87634,11 @@
       "b64": ""
      },
      "stdout": {
-      "b64": "LmFnZW50cy9za2lsbHMvcy5tZAAuY2xhdWRlL3NldHRpbmdzLmpzb24ALmNvZGV4L2NvbmZpZy50b21sAC5tY3AuanNvbgBsaWIvQUdFTlRTLm1kAGxpYi9DTEFVREUubG9jYWwubWQAbGliL2RlZXAvQ0xBVURFLm1kAA=="
+      "b64": "LmFnZW50cy9za2lsbHMvcy5tZAAuY2xhdWRlL3NldHRpbmdzLmpzb24ALmNvZGV4L2NvbmZpZy50b21sAC5tY3AuanNvbgBsaWIvLmFnZW50cy9za2lsbHMvcy5tZABsaWIvLmNsYXVkZS9za2lsbHMvcy5tZABsaWIvLmNvZGV4L2NvbmZpZy50b21sAGxpYi8ubWNwLmpzb24AbGliL0FHRU5UUy5tZABsaWIvQ0xBVURFLmxvY2FsLm1kAGxpYi9kZWVwL0NMQVVERS5tZAA="
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"d738a9f1bce571a5f0383a0bd89b85de3e414c63\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"97b654c13f2e2d834bbb9d6c036d0c32a2389eed\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87642,7 +87646,7 @@
       "-C",
       "<TMP>/work",
       "merge-base",
-      "d738a9f1bce571a5f0383a0bd89b85de3e414c63",
+      "97b654c13f2e2d834bbb9d6c036d0c32a2389eed",
       "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
      ],
      "fs": {},
@@ -87672,11 +87676,11 @@
       "b64": ""
      },
      "stdout": {
-      "b64": "ZDczOGE5ZjFiY2U1NzFhNWYwMzgzYTBiZDg5Yjg1ZGUzZTQxNGM2MwplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+      "b64": "OTdiNjU0YzEzZjJlMmQ4MzRiYmI5ZDZjMDM2ZDBjMzJhMjM4OWVlZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
      }
     }
    ],
-   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \".claude/settings.json\", \".mcp.json\", \"lib/AGENTS.md\", \"lib/CLAUDE.local.md\", \"lib/deep/CLAUDE.md\", \".codex/config.toml\", \".agents/skills/s.md\", \"app.py\", \"lib/.claude/settings.json\"], null, null]": [
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \".claude/settings.json\", \".mcp.json\", \"lib/AGENTS.md\", \"lib/CLAUDE.local.md\", \"lib/deep/CLAUDE.md\", \".codex/config.toml\", \".agents/skills/s.md\", \"app.py\", \"lib/.claude/skills/s.md\", \"lib/.codex/config.toml\", \"lib/.agents/skills/s.md\", \"lib/.mcp.json\", \"lib/claude/notes.md\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87692,7 +87696,11 @@
       ".codex/config.toml",
       ".agents/skills/s.md",
       "app.py",
-      "lib/.claude/settings.json"
+      "lib/.claude/skills/s.md",
+      "lib/.codex/config.toml",
+      "lib/.agents/skills/s.md",
+      "lib/.mcp.json",
+      "lib/claude/notes.md"
      ],
      "fs": {},
      "returncode": 0,
@@ -87741,7 +87749,7 @@
      ],
      "fs": {
       "work/.git/refs/heads/feature": {
-       "text": "d738a9f1bce571a5f0383a0bd89b85de3e414c63\n"
+       "text": "97b654c13f2e2d834bbb9d6c036d0c32a2389eed\n"
       }
      },
      "returncode": 0,
@@ -87830,7 +87838,7 @@
    ]
   },
   "tests/working_copies/test_agent_config.py::test_a_branch_that_changes_no_agent_configuration_holds_nothing": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"28cd2f9837a4ac7c989a71bc81dfa8cdf1a84b83\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"28cd2f9837a4ac7c989a71bc81dfa8cdf1a84b83\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -87844,13 +87852,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "28cd2f9837a4ac7c989a71bc81dfa8cdf1a84b83",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -88101,7 +88109,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"870b4bbb7c8371514726b851e77c73e6b792cbf2\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"870b4bbb7c8371514726b851e77c73e6b792cbf2\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -88115,13 +88123,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "870b4bbb7c8371514726b851e77c73e6b792cbf2",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -88133,7 +88141,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -88147,13 +88155,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -88478,7 +88486,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"4006d7fa97bb411f69007b459c31c061d95d34ba\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"4006d7fa97bb411f69007b459c31c061d95d34ba\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -88492,13 +88500,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "4006d7fa97bb411f69007b459c31c061d95d34ba",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -88510,7 +88518,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -88524,13 +88532,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -88832,7 +88840,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -88846,13 +88854,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -89096,7 +89104,7 @@
      }
     }
    ],
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -89110,13 +89118,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,
@@ -89335,7 +89343,7 @@
    ]
   },
   "tests/working_copies/test_agent_config.py::test_what_the_default_branch_changed_since_the_branch_left_it_is_not_counted": {
-   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"--\", \".claude/\", \".mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \".codex/\", \".agents/\"], null, null]": [
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
     {
      "argv": [
       "git",
@@ -89349,13 +89357,13 @@
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
       "--",
-      ".claude/",
-      ".mcp.json",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
       ":(glob)**/CLAUDE.md",
       ":(glob)**/CLAUDE.local.md",
       ":(glob)**/AGENTS.md",
-      ".codex/",
-      ".agents/"
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
      ],
      "fs": {},
      "returncode": 0,

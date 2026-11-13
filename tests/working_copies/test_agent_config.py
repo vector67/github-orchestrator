@@ -75,14 +75,18 @@ def test_a_branch_that_changes_agent_configuration_is_held_naming_each_file(clon
                     "lib/AGENTS.md": "x\n", "lib/CLAUDE.local.md": "x\n",
                     "lib/deep/CLAUDE.md": "x\n", ".codex/config.toml": "x\n",
                     ".agents/skills/s.md": "x\n", "app.py": "print(2)\n",
-                    "lib/.claude/settings.json": "{}\n"}, "work")
+                    "lib/.claude/skills/s.md": "x\n", "lib/.codex/config.toml": "x\n",
+                    "lib/.agents/skills/s.md": "x\n", "lib/.mcp.json": "{}\n",
+                    "lib/claude/notes.md": "x\n"}, "work")
 
     config = copies.agent_config(THE_PR, str(clone))
 
     assert config is not None
     assert config.changed == (".agents/skills/s.md", ".claude/settings.json",
-                              ".codex/config.toml", ".mcp.json", "lib/AGENTS.md",
-                              "lib/CLAUDE.local.md", "lib/deep/CLAUDE.md")
+                              ".codex/config.toml", ".mcp.json", "lib/.agents/skills/s.md",
+                              "lib/.claude/skills/s.md", "lib/.codex/config.toml",
+                              "lib/.mcp.json", "lib/AGENTS.md", "lib/CLAUDE.local.md",
+                              "lib/deep/CLAUDE.md")
     assert config.held
     assert not config.project_settings
 

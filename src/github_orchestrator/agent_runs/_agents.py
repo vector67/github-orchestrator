@@ -7,13 +7,13 @@ from collections.abc import Callable
 from pathlib import Path
 
 _AGENT_CONFIG_PATHS = (
-    ".claude/",
-    ".mcp.json",
+    ":(glob)**/.claude/**",
+    ":(glob)**/.mcp.json",
     ":(glob)**/CLAUDE.md",
     ":(glob)**/CLAUDE.local.md",
     ":(glob)**/AGENTS.md",
-    ".codex/",
-    ".agents/",
+    ":(glob)**/.codex/**",
+    ":(glob)**/.agents/**",
 )
 
 
