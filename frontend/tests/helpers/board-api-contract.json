@@ -4559,6 +4559,7 @@
     "no-worktree",
     "worktree-frozen",
     "agent-running",
+    "fork-pull-request",
     "no-gh-token",
     "repo-not-visible",
     "setup-refused",

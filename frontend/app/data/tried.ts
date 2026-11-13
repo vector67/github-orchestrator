@@ -105,6 +105,9 @@ const SAID: Record<Code, Said> = {
     'This pull request has no worktree yet, since its manager has not started.',
   'worktree-frozen': "The worktree holds another pull request's branch.",
   'agent-running': 'An agent is already running for this pull request.',
+  'fork-pull-request':
+    'This pull request comes from a fork, so it is pushed from the fork, ' +
+    'never from here.',
   'no-gh-token':
     'gh holds no token for that login; run gh auth login in a terminal, ' +
     'then try again.',

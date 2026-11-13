@@ -5,7 +5,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 
-from github_orchestrator.domain import Location, Pr, Repo
+from github_orchestrator.domain import Location, Pr, Repo, fork_pr_branch
 from github_orchestrator.github import _pages
 from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github.interface import (
@@ -71,9 +71,14 @@ class FakePullRequest:
     viewer_reviewed: bool = False
     mentioned: bool = False
     updated_at: str = FAKE_NOW
+    head_repo: Repo | None = None
     threads: list[Thread] = field(default_factory=list)
     review_comments: dict[int, list[ReviewComment]] = field(default_factory=dict)
     pending_review: int | None = None
+
+
+def _held_on(record: FakePullRequest) -> str | None:
+    return record.state.branch if record.head_repo is None else fork_pr_branch(record.pr)
 
 
 def _people_on(state: PullRequestState) -> set[str]:
@@ -132,10 +137,12 @@ class FakeGitHub:
                status: str = "OPEN", created_at: str | None = None,
                review_requested: bool = False,
                viewer_reviewed: bool = False,
-               mentioned: bool = False, updated_at: str = FAKE_NOW) -> FakePullRequest:
+               mentioned: bool = False, updated_at: str = FAKE_NOW,
+               head_repo: Repo | None = None) -> FakePullRequest:
         self.repos.add(pr.repo)
         record = FakePullRequest(pr, state, status, created_at,
-                                 review_requested, viewer_reviewed, mentioned, updated_at)
+                                 review_requested, viewer_reviewed, mentioned, updated_at,
+                                 head_repo)
         self.prs[pr] = record
         return record
 
@@ -245,6 +252,7 @@ class FakeGitHub:
             created_at=record.created_at,
             ready_for_review_at=(None if state.draft
                                  else state.ready_for_review_at or record.created_at),
+            branch=_held_on(record),
             push_events=() if mine else state.push_events,
             closed=record.status != "OPEN",
             merged=record.status == "MERGED",
@@ -252,7 +260,7 @@ class FakeGitHub:
 
     def head_branch(self, pr: Pr) -> str | None:
         record = self.prs.get(pr)
-        return None if record is None else record.state.branch or None
+        return None if record is None else _held_on(record) or None
 
     def close(self, pr: Pr) -> str | None:
         record = self.prs.get(pr)

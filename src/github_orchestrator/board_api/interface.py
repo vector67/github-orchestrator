@@ -45,6 +45,7 @@ class ManagerRefusal(StrEnum):
     WORKTREE_FROZEN = "worktree-frozen"
     AGENTS_DISABLED = "agents-disabled"
     AGENT_RUNNING = "agent-running"
+    FORK_PULL_REQUEST = "fork-pull-request"
 
 
 class NoticeCode(StrEnum):

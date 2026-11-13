@@ -24,6 +24,10 @@ class GitCommand:
     argv: list[str]
     takes_number: bool = False
 
+    @property
+    def pushes(self) -> bool:
+        return self.argv[:2] == ["git", "push"]
+
 
 GIT_COMMANDS: list[GitCommand] = [
     GitCommand("f", "captured", "git push --force-with-lease",
