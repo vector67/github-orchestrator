@@ -25,5 +25,5 @@ class ThreadsConfig:
 
 def for_repo(config: ThreadsConfig, repo: Repo) -> ThreadsConfig:
     return replace(config, has_tests=repo not in config.untested_repos,
-                   pr_skill=config.pr_skills.get(repo, CREATE_PR),
+                   pr_skill=config.pr_skills.get(repo, config.pr_skill),
                    draft=config.drafts.get(repo))

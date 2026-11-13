@@ -1556,6 +1556,7 @@ def conversation_config(settings: Settings) -> ThreadsConfig:
         untested_repos=frozenset(entry.repo for entry in config.repos if not entry.has_tests),
         pr_skills={entry.repo: entry.pr_skill for entry in config.repos
                    if entry.pr_skill is not None},
+        pr_skill=config.pr_skill,
         drafts={entry.repo: entry.draft for entry in config.repos if entry.draft is not None},
     )
 

@@ -85,6 +85,7 @@ class OrchestratorConfig:
     tracker_project: str = ""
     check_for_updates: bool = True
     mentions_start: str = ""
+    pr_skill: str = "create-pr"
     repos: tuple[RepoEntry, ...] = ()
 
 
