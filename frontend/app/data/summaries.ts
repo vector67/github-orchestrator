@@ -1035,6 +1035,7 @@ export type SummaryState =
 
 export interface SummaryTab {
   state: SummaryState;
+  queued: boolean;
   sha: string | null;
   head: string | null;
   behind: string | null;
@@ -1105,6 +1106,7 @@ function summaryTabBuilt(
   const calls = API_CALLS.exec(summary.stderr ?? '')?.[1];
   return {
     state,
+    queued: state !== 'running' && summary.asked !== null,
     sha: shortOf(summary.head_sha),
     head: shortOf(head),
     behind: behindOf(summary.behind),

@@ -4564,7 +4564,6 @@
     "repo-not-visible",
     "setup-refused",
     "not-broken",
-    "summary-running",
     "repo-not-watched",
     "harvest-extension-missing",
     "agent-working",
@@ -6824,6 +6823,16 @@
       }
      ]
     },
+    "asked": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "behind": {
      "anyOf": [
       {
@@ -6950,6 +6959,7 @@
     "head_sha",
     "wanted",
     "answered",
+    "asked",
     "started",
     "finished",
     "exit_status",

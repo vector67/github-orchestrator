@@ -100,9 +100,8 @@ class ErrorCode(StrEnum):
     NOT_BROKEN is the setup screen asking to move aside a config that parses,
     which is never moved from the page.
 
-    SUMMARY_RUNNING and REPO_NOT_WATCHED are the summary lane not starting a
-    run because another summary is running or the repository is not watched;
-    with agents disabled it answers AGENTS_DISABLED.
+    REPO_NOT_WATCHED is the summary lane not starting a run because the
+    repository is not watched; with agents disabled it answers AGENTS_DISABLED.
 
     HARVEST_EXTENSION_MISSING is the Harvest Time Tracker not installed in
     Chrome, so there is nothing to copy for the board.
@@ -191,7 +190,6 @@ class ErrorCode(StrEnum):
     REPO_NOT_VISIBLE = "repo-not-visible"
     SETUP_REFUSED = "setup-refused"
     NOT_BROKEN = "not-broken"
-    SUMMARY_RUNNING = "summary-running"
     REPO_NOT_WATCHED = "repo-not-watched"
     HARVEST_EXTENSION_MISSING = "harvest-extension-missing"
     AGENT_WORKING = "agent-working"
@@ -2101,6 +2099,10 @@ class PrSummary(BaseModel):
     answered: str | None = Field(
         description="The `wanted` the latest finished run was started for. A "
                     "summary is due again while `wanted` is later.")
+    asked: str | None = Field(
+        description="When Summarise was pressed while another pull request's "
+                    "summary ran. The lane starts this one first once it is free. "
+                    "Null when nothing is queued by hand.")
     started: str | None
     finished: str | None
     exit_status: int | None = Field(

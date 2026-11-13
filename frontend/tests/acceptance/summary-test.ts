@@ -597,8 +597,8 @@ module('Acceptance | summary tab', function (hooks) {
     await visit('/pr/o/r/7/summary');
     board().refusal = {
       status: 409,
-      code: 'summary-running',
-      detail: 'another summary is running',
+      code: 'repo-not-watched',
+      detail: 'the repository is not watched',
     };
 
     await click('[data-test-summary-run]');
@@ -609,11 +609,66 @@ module('Acceptance | summary tab', function (hooks) {
     assert
       .dom('[data-test-summary-said]')
       .hasAttribute('data-refused')
-      .hasText('Another summary is running; wait for it to finish.');
+      .hasText(
+        'This repository is not watched, so the board has no clone to summarise it in.',
+      );
     assert
       .dom('[data-test-summary-strip]')
       .doesNotHaveAttribute('data-pending');
     assert.dom('[data-test-summary-run]').hasText('Summarise').isNotDisabled();
+  });
+
+  test('Summarise pressed while another summary runs queues it, saying so where the time and the button stood, and it shows running once it starts', async function (assert) {
+    asReviewer();
+    board().summary = prSummary({
+      head_sha: 'abc1234',
+      exit_status: 0,
+      finished: ago(30),
+      markdown: '# What it asks',
+      behind: 9,
+    });
+    board().anotherSummaryRunning = true;
+    await visit('/pr/o/r/7/summary');
+
+    await click('[data-test-summary-run]');
+
+    assert.dom('[data-test-summary-strip]').hasAttribute('data-state', 'stale');
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasText(
+        'Written for abc1234, head is c0ffee1, 9 commits behind Waiting for another summary to finish',
+      );
+    assert
+      .dom('[data-test-summary-end]')
+      .hasText('Waiting for another summary to finish');
+    assert.dom('[data-test-summary-run]').doesNotExist();
+    assert.dom('[data-test-summary-finished]').doesNotExist();
+    assert.dom('[data-test-summary-said]').doesNotExist();
+
+    board().summary = {
+      ...board().summary,
+      asked: null,
+      running: true,
+      since: ago(0),
+      agents: 9,
+    };
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasAttribute('data-state', 'running');
+    assert.dom('[data-test-summary-rerun]').exists();
+  });
+
+  test('a summary queued with none written yet says it waits in place of Summarise', async function (assert) {
+    board().summary = prSummary({ asked: ago(1) });
+
+    await visit('/pr/o/r/7/summary');
+
+    assert
+      .dom('[data-test-summary-strip]')
+      .hasText('No summary Waiting for another summary to finish');
+    assert.dom('[data-test-summary-run]').doesNotExist();
   });
 
   test('a summary that moved before the click is read again, and the strip says so', async function (assert) {

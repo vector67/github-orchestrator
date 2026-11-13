@@ -11,6 +11,8 @@ from github_orchestrator.domain import Pr
 class Summary:
     wanted: datetime | None = None
     answered: datetime | None = None
+    asked: datetime | None = None
+    asked_over_github_api: bool = False
     head_sha: str | None = None
     started: datetime | None = None
     finished: datetime | None = None
@@ -22,6 +24,10 @@ class Summary:
 
 class PrSummaries(Protocol):
     def want(self, pr: Pr) -> None: ...
+
+    def ask(self, pr: Pr, *, use_github_api: bool) -> None: ...
+
+    def unask(self, pr: Pr) -> None: ...
 
     def unwant(self, pr: Pr) -> bool: ...
 
@@ -42,7 +48,6 @@ class Progress:
 class SummaryRefusal(StrEnum):
     AGENTS_DISABLED = "agents-disabled"
     REPO_NOT_WATCHED = "repo-not-watched"
-    SUMMARY_RUNNING = "summary-running"
 
 
 class SummaryLane(Protocol):

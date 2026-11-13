@@ -1979,13 +1979,14 @@ SummaryIfMatch = Annotated[str, Header(
     description="The summary's `etag` field, as the last read gave it.")]
 
 SUMMARY_STARTED: dict[int | str, dict[str, Any]] = {
-    202: {"description": "The run started. The body is the summary with it running.",
+    202: {"description": "The run started, or, while another pull request's summary "
+                         "runs, was queued to start first once the lane is free. The "
+                         "body is the summary with it running or `asked`.",
           "headers": {"Location": {
               "description": "The summary to poll.",
               "schema": {"type": "string", "format": "uri-reference"}}}},
-    409: {"description": "The summary lane started nothing: another summary is "
-                         "running, agents are disabled, or the repository is not "
-                         "watched. The code says which.",
+    409: {"description": "The summary lane started nothing: agents are disabled, or "
+                         "the repository is not watched. The code says which.",
           "model": Errors},
     412: {"description": "The summary moved under you; read it again.",
           "model": Errors}}
@@ -1994,7 +1995,6 @@ SUMMARY_STARTED: dict[int | str, dict[str, Any]] = {
 SUMMARY_RULED_OUT = {
     SummaryRefusal.AGENTS_DISABLED: "agents are disabled",
     SummaryRefusal.REPO_NOT_WATCHED: "the repository is not watched",
-    SummaryRefusal.SUMMARY_RUNNING: "another summary is running",
 }
 
 

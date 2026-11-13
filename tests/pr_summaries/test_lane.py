@@ -269,12 +269,60 @@ def test_the_lane_runs_one_summary_at_a_time(tmp_path):
     _partway(lane)
 
     lane.lane.poll()
-    refused = lane.lane.start(other, use_github_api=False)
 
     threads.finish(lane)
     assert len(threads.threads) == 1
-    assert refused == SummaryRefusal.SUMMARY_RUNNING
     assert lane.summaries.due(set()) == [other]
+
+
+def test_a_summary_asked_for_while_another_runs_is_queued_and_the_first_poll_with_the_lane_free_starts_it(tmp_path):
+    held = Held()
+    other = a_pr(8, "acme/widgets")
+    lane = Lane(tmp_path, "clean", run_in=held, held=(THE_PR, other))
+    lane.lane.start(other, use_github_api=False)
+
+    refused = lane.lane.start(THE_PR, use_github_api=False)
+    lane.lane.poll()
+    while_the_lane_is_busy = lane.lane.progress(THE_PR)
+    held.finish()
+    lane.lane.poll()
+    once_it_is_free = lane.lane.progress(THE_PR)
+    held.finish()
+
+    assert refused is None
+    assert while_the_lane_is_busy is None
+    assert once_it_is_free is not None
+    assert lane.summaries.load(THE_PR).exit_status == 0
+    assert lane.summaries.due(set()) == []
+
+
+def test_a_queued_summary_asked_for_over_the_github_api_reads_over_it_when_it_starts(tmp_path):
+    held = Held()
+    other = a_pr(8, "acme/widgets")
+    lane = Lane(tmp_path, "clean", run_in=held, held=(THE_PR, other))
+    lane.lane.start(other, use_github_api=False)
+
+    lane.lane.start(THE_PR, use_github_api=True)
+    held.finish()
+    lane.lane.poll()
+    held.finish()
+
+    assert lane.call()["use_github_api"] is True
+
+
+def test_a_summary_asked_for_by_hand_starts_before_one_wanted_earlier(tmp_path):
+    held = Held()
+    other, wanted_earlier = a_pr(8, "acme/widgets"), a_pr(9, "acme/widgets")
+    lane = Lane(tmp_path, "clean", run_in=held, held=(THE_PR, other, wanted_earlier))
+    lane.summaries.want(wanted_earlier)
+    lane.lane.start(other, use_github_api=False)
+    lane.lane.start(THE_PR, use_github_api=False)
+    held.finish()
+
+    lane.lane.poll()
+
+    assert lane.lane.progress(THE_PR) is not None
+    held.finish()
 
 
 def test_a_start_while_the_board_glances_at_an_idle_lane_waits_for_the_glance_and_runs(tmp_path):
@@ -415,7 +463,7 @@ def _until_it_stops_running(lane: Lane) -> None:
         time.sleep(0.02)
 
 
-def test_a_run_whose_server_died_still_shows_as_running_and_cannot_be_started_twice(tmp_path):
+def test_a_run_whose_server_died_still_shows_as_running_and_a_second_start_queues_nothing(tmp_path):
     lane = Lane(tmp_path, "partway", head="moved-on")
     lane.summaries.want(THE_PR)
     _a_server_that_dies_partway(tmp_path, lane, "partway")
@@ -427,7 +475,8 @@ def test_a_run_whose_server_died_still_shows_as_running_and_cannot_be_started_tw
     _until_it_stops_running(lane)
     assert progress is not None
     assert dict(progress.done) == {"claimed": True, "implementation": False}
-    assert refused == SummaryRefusal.SUMMARY_RUNNING
+    assert refused is None
+    assert lane.summaries.load(THE_PR).asked is None
 
 
 def test_a_run_whose_server_died_is_stored_by_the_next_lane_to_see_it_finish(tmp_path):

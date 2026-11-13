@@ -312,6 +312,7 @@ export function prSummary(over: Partial<PrSummary> = {}): PrSummary {
     head_sha: null,
     wanted: null,
     answered: null,
+    asked: null,
     started: null,
     finished: null,
     exit_status: null,
@@ -786,6 +787,7 @@ export class FakeBoard {
   reviews: Record<string, Operation> = {};
   fixChecks: FixChecks = { asked: [], skipped: [] };
   summary: PrSummary = prSummary();
+  anotherSummaryRunning = false;
   private managed: Dashboard = dashboard();
   private managerSet = false;
 
@@ -1735,14 +1737,20 @@ export class FakeBoard {
         ],
       });
     }
-    this.summary = {
-      ...this.summary,
-      running: true,
-      since: new Date(Date.now()).toISOString(),
-      witnesses: [],
-      agents: 9,
-      etag: `"summary-${this.posted.length}-running"`,
-    };
+    this.summary = this.anotherSummaryRunning
+      ? {
+          ...this.summary,
+          asked: new Date(Date.now()).toISOString(),
+          etag: `"summary-${this.posted.length}-asked"`,
+        }
+      : {
+          ...this.summary,
+          running: true,
+          since: new Date(Date.now()).toISOString(),
+          witnesses: [],
+          agents: 9,
+          etag: `"summary-${this.posted.length}-running"`,
+        };
     return respond(JSON.stringify(this.summary), {
       status: 202,
       headers: { 'Content-Type': 'application/json', Location: '/api/summary' },
