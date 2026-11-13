@@ -280,7 +280,7 @@ def _new_prs_ticket(fix: ThreadFix) -> str:
 def _opened_how(fix: ThreadFix) -> str:
     if fix.pr_skill:
         return f"with the `{fix.pr_skill}` skill"
-    return "yourself with `gh pr create`"
+    return "yourself with `gh pr create`, not with a skill"
 
 
 def _open_step(fix: ThreadFix, branch: str | None) -> str:
@@ -289,8 +289,9 @@ def _open_step(fix: ThreadFix, branch: str | None) -> str:
 {fix.split_base}. Give it the branch, the base, the original PR's link, the review \
 thread's link, why the work moved as the thread above tells it, and the ticket above."""
     draft = "" if fix.draft is False else " --draft"
-    return f"""No pull request skill is installed, so open the pull request yourself: \
-`gh pr create --head {branch} --base {fix.split_base}{draft}`, with a title that names the \
+    return f"""Open the pull request yourself. No pull request skill is set up for this \
+repository, so do not invoke any skill to open it, even one whose name says it opens pull \
+requests. Run `gh pr create --head {branch} --base {fix.split_base}{draft}`, with a title that names the \
 change and a body that says why the work moved as the thread above tells it, links the \
 original PR and the review thread, and names the ticket above. Follow the repository's pull \
 request template when it has one."""

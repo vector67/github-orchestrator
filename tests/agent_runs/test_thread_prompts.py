@@ -191,7 +191,8 @@ def test_the_opening_prompt_with_no_pr_skill_has_the_agent_open_the_pr_itself_as
         runs, claude, worktree):
     prompt = _opening(runs, claude, worktree, pr_skill="")
 
-    assert "skill" not in prompt.replace("No pull request skill is installed", "")
+    assert "Invoke" not in prompt and "skill`" not in prompt
+    assert "do not invoke any skill" in prompt
     assert "gh pr create --head split/cache-tax-rates --base main --draft" in prompt
     for link in (PR_URL, THREAD_URL):
         assert link in prompt
