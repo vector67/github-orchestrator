@@ -220,8 +220,9 @@ class InstanceChecks:
 class MachineChecks:
     def __init__(self, config: CliConfig, run: Run, which: Which, desktop: Desktop,
                  service: Service, hub_health: HubHealth,
-                 releases: Releases) -> None:
+                 releases: Releases, config_file: ConfigFile) -> None:
         self._config = config
+        self._config_file = config_file
         self._hub_health = hub_health
         self._releases = releases
         self._run = run
@@ -237,7 +238,8 @@ class MachineChecks:
             self._install(install),
             *([] if newer is None else [warn(f"github-orchestrator {newer} is out", UPDATE)]),
             self._command(install),
-            *skill_findings(self._config.agent.skill_folder(self._config.home, self._config.agent_command)),
+            *skill_findings(self._config.agent.skill_folder(self._config.home, self._config.agent_command),
+                            self._config_file),
             *agent_findings(self._config.agent, self._config.agent_argv, self._run),
             self._notifications(),
         ]

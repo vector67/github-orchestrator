@@ -131,9 +131,17 @@ def skill(skills: Path, config_file: ConfigFile, *, status: bool, replace: bool,
         install_skills(skills, config_file, replace=replace)
 
 
-def skill_findings(skills: Path) -> list[Finding]:
-    return [warn(f"the {name} skill is not in {skills}, so the orchestrator's agents that run it "
-                 "may not work as you expect",
-                 "github-orchestrator skill")
-            if skill_state(skills, name) == "missing" else ok(f"the {name} skill is in {skills}")
-            for name in shipped_skills()]
+def _skill_finding(skills: Path, name: str, pr_skill: str) -> Finding:
+    if skill_state(skills, name) != "missing":
+        return ok(f"the {name} skill is in {skills}")
+    if name == CREATE_PR and pr_skill == "":
+        return ok(f"the {name} skill was left out (pr_skill = \"\"), so agents open pull requests "
+                  "themselves; github-orchestrator skill installs it")
+    return warn(f"the {name} skill is not in {skills}, so the orchestrator's agents that run it "
+                "may not work as you expect",
+                "github-orchestrator skill")
+
+
+def skill_findings(skills: Path, config_file: ConfigFile) -> list[Finding]:
+    pr_skill = config_file.pr_skill()
+    return [_skill_finding(skills, name, pr_skill) for name in shipped_skills()]
