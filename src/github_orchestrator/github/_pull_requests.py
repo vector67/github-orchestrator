@@ -3,7 +3,7 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import Pr, Repo, fork_pr_branch
 from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github._gh_cli import Gh
 from github_orchestrator.github.interface import (
@@ -23,7 +23,7 @@ SUITES = 50
 
 STATE_FIELDS = """
       number title url body isDraft createdAt state
-      headRefName baseRefName headRefOid
+      headRefName baseRefName headRefOid isCrossRepository
       changedFiles additions deletions
       mergeable mergeStateStatus reviewDecision
       author { login __typename }
@@ -245,7 +245,7 @@ def state_of(gh: Gh, account: str, pr: Pr, pull: dict[str, Any]) -> PullRequestS
         title=pull.get("title"),
         url=pull.get("url"),
         author=author,
-        branch=pull.get("headRefName"),
+        branch=fork_pr_branch(pr) if pull.get("isCrossRepository") else pull.get("headRefName"),
         base_branch=pull.get("baseRefName"),
         head_sha=pull.get("headRefOid"),
         body=pull.get("body") or "",
@@ -305,8 +305,13 @@ def head_branch(gh: Gh, pr: Pr) -> str | None:
     except GhError as e:
         log.warning("could not read the head branch of %s: %s", pr, e)
         return None
-    branch = (answer.get("head") or {}).get("ref")
-    return branch if isinstance(branch, str) and branch else None
+    head = answer.get("head") or {}
+    branch = head.get("ref")
+    if not isinstance(branch, str) or not branch:
+        return None
+    base_repo = ((answer.get("base") or {}).get("repo") or {}).get("full_name")
+    head_repo = (head.get("repo") or {}).get("full_name")
+    return branch if head_repo == base_repo else fork_pr_branch(pr)
 
 
 _SET_DRAFT_MUTATIONS = {

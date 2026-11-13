@@ -236,6 +236,13 @@ def test_the_head_branch_of_a_pr(world, github):
     assert github.head_branch(a_pr(7, REPO)) == "PROJ-7-head"
 
 
+def test_a_pr_from_a_fork_is_held_on_a_branch_named_for_the_pr_not_its_head(world, github):
+    world.add_pr(a_pr(7, REPO), _state(branch="main"), head_repo=Repo.parse("anna/widgets"))
+
+    assert github.head_branch(a_pr(7, REPO)) == "orchestrator/pr/7"
+    assert github.pr_state(a_pr(7, REPO)).branch == "orchestrator/pr/7"
+
+
 def test_the_head_branch_of_a_pr_github_does_not_know_is_none(github):
     assert github.head_branch(a_pr(40, REPO)) is None
 

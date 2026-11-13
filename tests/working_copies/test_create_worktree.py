@@ -222,6 +222,18 @@ def test_the_new_worktree_command_does_not_run_when_the_worktree_was_not_cut(
     assert not any(argv[0] == "sh" for argv, _ in ran)
 
 
+def test_the_names_from_github_reach_worktree_add_after_its_options_end(
+    repo, settings, monkeypatch,
+):
+    ran = _spy_on_subprocesses(monkeypatch)
+
+    created = _create(settings, repo, "feature-x")
+
+    added = next(argv for argv, _ in ran if argv[3:5] == ["worktree", "add"])
+    assert added[5:] == ["--end-of-options", str(created), "feature-x"]
+    assert branch_at(created) == "feature-x"
+
+
 def test_nothing_is_added_when_the_fetch_fails(
     repo, settings, monkeypatch,
 ):

@@ -7,9 +7,10 @@ import pytest
 from github_orchestrator.agent_runs.fake import FakeAgentRuns, Outcome
 from github_orchestrator.board_api.fake import FakeManagerPanel
 from github_orchestrator.board_api.interface import ManagerRefusal
+from github_orchestrator.domain import fork_pr_branch
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from tests.builders import a_pr
-from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager
+from tests.pr_manager.support import PR, REPO, ServerPanel, run_manager, seed_state
 
 THE_PR = a_pr(PR, REPO)
 
@@ -215,6 +216,18 @@ def test_the_manager_runs_each_captured_git_command_in_the_prs_worktree(settings
         (["git", "log"], str(tmp_path)),
         (["git", "diff", "HEAD"], str(tmp_path)),
     ]
+
+
+def test_the_manager_refuses_to_push_a_fork_prs_worktree_and_runs_the_rest(settings, tmp_path):
+    seed_state(settings, branch=fork_pr_branch(THE_PR))
+    side = ManagerSide(settings, tmp_path)
+
+    panel = side.settle()
+    refused = [panel.run_git(keys) for keys in ("f", "p")]
+    panel.run_git("s")
+
+    assert refused == [ManagerRefusal.FORK_PULL_REQUEST, ManagerRefusal.FORK_PULL_REQUEST]
+    assert side.ran == [(["git", "status"], str(tmp_path))]
 
 
 def test_the_manager_refuses_git_the_palette_opens_in_a_terminal(settings, tmp_path):

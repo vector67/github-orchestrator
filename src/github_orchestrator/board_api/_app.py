@@ -799,6 +799,8 @@ RULED_OUT = {
     ManagerRefusal.WORKTREE_FROZEN: "the worktree holds another branch",
     ManagerRefusal.AGENTS_DISABLED: "agents are disabled",
     ManagerRefusal.AGENT_RUNNING: "an agent is already running",
+    ManagerRefusal.FORK_PULL_REQUEST: "the pull request comes from a fork, so it is pushed "
+                                      "from the fork, never from here",
 }
 
 
@@ -1127,8 +1129,9 @@ def mark_nudged(board: Serving) -> RankedPullRequest:
 @writes.post("/manager/git", response_model=GitRun, tags=["manager"],
              operation_id="runGit",
              responses={409: {"description": "The PR manager's last status rules it "
-                                             "out: it has no worktree yet, or the "
-                                             "worktree holds another branch. The code "
+                                             "out: it has no worktree yet, the "
+                                             "worktree holds another branch, or it is "
+                                             "a push of a fork's pull request. The code "
                                              "says which.",
                               "model": Errors}},
              summary="Run one of the git palette's captured commands in the "
