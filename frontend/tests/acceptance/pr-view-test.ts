@@ -729,6 +729,24 @@ module('Acceptance | agent settings band', function (hooks) {
     assert.dom('[data-test-agent-settings]').doesNotExist();
   });
 
+  test('each changed path links to that file on the Diff tab', async function (assert) {
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.deepEqual(
+      findAll('[data-test-agent-settings-file] a').map((one) =>
+        one.getAttribute('href'),
+      ),
+      [
+        '/pr/o/r/7/diff?file=.claude%2Fsettings.json',
+        '/pr/o/r/7/diff?file=CLAUDE.md',
+      ],
+    );
+
+    await click('[data-test-agent-settings-file]:last-child a');
+
+    assert.strictEqual(currentURL(), '/pr/o/r/7/diff?file=CLAUDE.md');
+  });
+
   test('See the changes opens the Diff tab on the first changed file', async function (assert) {
     await visit('/pr/o/r/7/dashboard');
 

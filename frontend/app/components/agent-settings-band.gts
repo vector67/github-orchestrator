@@ -2,7 +2,8 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, hash } from '@ember/helper';
+import { LinkTo } from '@ember/routing';
 import { waitForPromise } from '@ember/test-waiters';
 import type RouterService from '@ember/routing/router-service';
 import AreYouSure from 'frontend/components/are-you-sure';
@@ -93,7 +94,11 @@ export default class AgentSettingsBand extends Component<AgentSettingsBandSignat
             before any agent runs here.</div>
           <ul class="agent-settings-files">
             {{#each this.held.changed key="@identity" as |path|}}
-              <li class="mono" data-test-agent-settings-file>{{path}}</li>
+              <li class="mono" data-test-agent-settings-file><LinkTo
+                  class="linkish"
+                  @route="pr.diff"
+                  @query={{hash file=path line=null}}
+                >{{path}}</LinkTo></li>
             {{/each}}
           </ul>
           {{#if this.pressing.pressed}}
