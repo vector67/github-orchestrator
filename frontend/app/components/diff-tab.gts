@@ -155,7 +155,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   }
 
   private get cardsDrawn(): string {
-    if (!this.args.line || !this.pullRequestDiff.commenting) return '';
+    if (!this.args.file || !this.pullRequestDiff.commenting) return '';
     return this.pullRequestDiff.inline.shown.map((one) => one.key).join(',');
   }
 
@@ -235,10 +235,9 @@ export default class DiffTab extends Component<DiffTabSignature> {
       pane.scrollTop = 0;
       return;
     }
-    if (this.args.line) {
-      if (this.scrolledAwayFrom !== this.placing)
-        this.scrollToLine(this.args.file, this.args.line);
-    } else this.scrollTo(this.args.file);
+    if (this.scrolledAwayFrom === this.placing) return;
+    if (this.args.line) this.scrollToLine(this.args.file, this.args.line);
+    else this.scrollTo(this.args.file);
   };
 
   watchScrollingAway = (pane: HTMLElement) => {
