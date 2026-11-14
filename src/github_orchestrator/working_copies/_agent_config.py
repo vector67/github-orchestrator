@@ -87,20 +87,25 @@ class AgentConfigs:
                            self._answer(pr, changes.digest) if changes.changed else None)
 
     def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None:
-        write_atomically(self._path(pr), json.dumps({"digest": digest, "allowed": allowed}).encode())
+        with self._lock:
+            answers = {**self._answers(pr), digest: allowed}
+            write_atomically(self._path(pr), json.dumps(answers).encode())
 
     def _answer(self, pr: Pr, digest: str) -> bool | None:
+        return self._answers(pr).get(digest)
+
+    def _answers(self, pr: Pr) -> dict[str, bool]:
         try:
             stored = json.loads(self._path(pr).read_text())
         except FileNotFoundError:
-            return None
+            return {}
         except (OSError, ValueError) as exc:
-            log.warning("could not read the agent configuration answer for %s: %s", pr, exc)
-            return None
-        if not isinstance(stored, dict) or stored.get("digest") != digest:
-            return None
-        allowed = stored.get("allowed")
-        return allowed if isinstance(allowed, bool) else None
+            log.warning("could not read the agent configuration answers for %s: %s", pr, exc)
+            return {}
+        if not isinstance(stored, dict):
+            return {}
+        return {digest: allowed for digest, allowed in stored.items()
+                if isinstance(digest, str) and isinstance(allowed, bool)}
 
     def _path(self, pr: Pr) -> Path:
         return repo_dir(self._answers_dir, pr.repo) / f"{pr.number}.json"

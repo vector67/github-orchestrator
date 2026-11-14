@@ -142,7 +142,7 @@ class FakeWorkingCopies:
         self._binary_paths: set[str] = set()
         self._serializing: dict[Pr, threading.Lock] = {}
         self._agent_configs: dict[str, dict[str, str]] = {}
-        self.agent_config_answers: dict[Pr, tuple[str, bool]] = {}
+        self.agent_config_answers: dict[Pr, dict[str, bool]] = {}
 
     def refuse_pushes(self, reason: str | None, *, times: int | None = None) -> None:
         self._push_refusal = reason
@@ -369,12 +369,10 @@ class FakeWorkingCopies:
             return AgentConfig((), "", None)
         changed = tuple(sorted(files))
         digest = hashlib.sha256(repr(sorted(files.items())).encode()).hexdigest()
-        answer = self.agent_config_answers.get(pr)
-        return AgentConfig(changed, digest,
-                           answer[1] if answer is not None and answer[0] == digest else None)
+        return AgentConfig(changed, digest, self.agent_config_answers.get(pr, {}).get(digest))
 
     def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None:
-        self.agent_config_answers[pr] = (digest, allowed)
+        self.agent_config_answers[pr] = {**self.agent_config_answers.get(pr, {}), digest: allowed}
 
     def thread_checkout(self, pr: Pr, key: str) -> str:
         return self._thread_path(pr, key)

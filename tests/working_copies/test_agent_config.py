@@ -161,5 +161,19 @@ def test_a_push_that_leaves_the_configuration_alone_keeps_the_answer(clone, copi
     assert config.project_settings
 
 
+def test_answering_newer_files_keeps_the_answer_to_the_older_ones(clone, copies):
+    _commit(clone, {"CLAUDE.md": "be bold\n"}, "work")
+    older = copies.agent_config(THE_PR, str(clone))
+    copies.answer_agent_config(THE_PR, older.digest, allowed=False)
+    _commit(clone, {"CLAUDE.md": "be reckless\n"}, "more work")
+    newer = copies.agent_config(THE_PR, str(clone))
+    copies.answer_agent_config(THE_PR, newer.digest, allowed=True)
+
+    _git(clone, "reset", "-q", "--hard", "HEAD~1")
+
+    config = copies.agent_config(THE_PR, str(clone))
+    assert (config.digest, config.held, config.allowed) == (older.digest, False, False)
+
+
 def test_git_that_cannot_say_answers_none(tmp_path, copies):
     assert copies.agent_config(THE_PR, str(tmp_path / "nowhere")) is None
