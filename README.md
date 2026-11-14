@@ -88,8 +88,10 @@ config as `agent = "codex"`. It also offers to copy the skills it ships into
 that agent's skills folder (`~/.claude/skills`, or `<CLAUDE_CONFIG_DIR>/skills`
 when the config's `agent_command` sets `CLAUDE_CONFIG_DIR`, or
 `~/.agents/skills` for Codex):
-`rebase-on-main`, which the agents run when a branch stops merging, and
-`create-pr`, which opens a new PR; `github-orchestrator skill` installs them
+`rebase-on-main`, which the agents run when a branch stops merging,
+`create-pr`, which opens a new PR, and `github-orchestrator`, which tells an
+agent where the orchestrator keeps its worktrees, logs and state;
+`github-orchestrator skill` installs them
 later, and [Updating](#updating) says what `update` does with them. Leaving
 them out writes `pr_skill = ""` into the config, so the agents open new PRs
 themselves with `gh pr create` instead of looking for a skill that is not there.
@@ -204,7 +206,7 @@ maintenance:
   config          Print every setting's effective value and where it came from.
   uninstall       Stop every instance, remove their services and the command.
   setup           Open the board's setup page, where the account, the repos and the options are chosen.
-  skill           Install the skills the orchestrator ships (rebase-on-main, create-pr) where this instance's agent reads its skills.
+  skill           Install the skills the orchestrator ships (rebase-on-main, create-pr, github-orchestrator) where this instance's agent reads its skills.
 
 learning:
   tutorial        Open the board's tour of the wall and a pull request's page.

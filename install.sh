@@ -595,7 +595,7 @@ offer_skill() {
     different=$(skills_in different "$status")
     if [ -n "$missing" ]; then
         if [ "$SKILL" != no ] && { [ "$SKILL" = yes ] \
-            || agreed "Install the orchestrator's skills for $AGENT_NAME ($missing; agents run them to rebase and open PRs)?"; }; then
+            || agreed "Install the orchestrator's skills for $AGENT_NAME ($missing; agents run them to rebase, open PRs and find their way around the orchestrator)?"; }; then
             step "Installing $missing into $SKILLS_DIR"
             "$COMMAND" skill || [ -n "$different" ] \
                 || say "The skills were not installed; github-orchestrator skill tries again."

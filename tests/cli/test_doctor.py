@@ -590,7 +590,7 @@ def test_an_incomplete_config_skips_github_and_the_repo(machine, run_cli):
 CONNECTED = "atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - ✔ Connected\n"
 
 
-SKILLS = ("create-pr", "rebase-on-main")
+SKILLS = ("create-pr", "github-orchestrator", "rebase-on-main")
 
 
 def _skills_in_place(machine, *names):

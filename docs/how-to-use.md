@@ -65,8 +65,9 @@ The installer then offers to copy the skills the orchestrator ships into the
 agent's skills folder, `~/.claude/skills` for Claude Code or `~/.agents/skills`
 for Codex (`<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
 `CLAUDE_CONFIG_DIR`): `rebase-on-main`, which the agents run when a branch stops merging,
-and `create-pr`, which opens a new PR from a branch, such as one a split carries
-code into. It runs `github-orchestrator skill`, which copies this version's
+`create-pr`, which opens a new PR from a branch, such as one a split carries
+code into, and `github-orchestrator`, which tells an agent working beside the
+orchestrator where its worktrees, logs, state and commands are. It runs `github-orchestrator skill`, which copies this version's
 skills there, and `doctor` names the same command for each skill that is
 missing. `-y` installs them, `--no-skill` (or `GITHUB_ORCHESTRATOR_SKILL=no`)
 leaves them out, and `--skill` installs them without asking. Leaving them out,

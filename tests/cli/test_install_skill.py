@@ -32,7 +32,7 @@ def test_skill_copies_every_packaged_skill_into_claudes_skills(machine, run_cli)
 def test_status_says_missing_for_each_skill_before_any_is_there(machine, run_cli):
     ran = run_cli("skill", "--status")
 
-    assert (ran.code, ran.out) == (0, "create-pr missing\nrebase-on-main missing\n")
+    assert (ran.code, ran.out) == (0, "create-pr missing\ngithub-orchestrator missing\nrebase-on-main missing\n")
 
 
 def test_status_says_current_for_each_once_the_packaged_skills_are_there(machine, run_cli):
@@ -40,7 +40,7 @@ def test_status_says_current_for_each_once_the_packaged_skills_are_there(machine
 
     ran = run_cli("skill", "--status")
 
-    assert (ran.code, ran.out) == (0, "create-pr current\nrebase-on-main current\n")
+    assert (ran.code, ran.out) == (0, "create-pr current\ngithub-orchestrator current\nrebase-on-main current\n")
 
 
 def test_status_says_different_for_the_skill_there_that_was_edited(machine, run_cli):
@@ -49,7 +49,7 @@ def test_status_says_different_for_the_skill_there_that_was_edited(machine, run_
 
     ran = run_cli("skill", "--status")
 
-    assert (ran.code, ran.out) == (0, "create-pr current\nrebase-on-main different\n")
+    assert (ran.code, ran.out) == (0, "create-pr current\ngithub-orchestrator current\nrebase-on-main different\n")
 
 
 def test_skill_leaves_an_edited_skill_alone_installs_a_missing_one_and_names_the_replace_option(
@@ -217,6 +217,19 @@ def test_the_installer_s_start_on_a_terminal_names_each_missing_skill_and_instal
     assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
 
 
+def test_a_yes_on_the_terminal_installs_the_skill_about_the_orchestrator_itself(machine, run_cli):
+    _upgrading(machine)
+    machine.interactive = True
+    machine.answers = ["y"]
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert "github-orchestrator: agents read it to find the worktrees" in ran.out
+    installed = _skill(machine).parent / "github-orchestrator"
+    assert _contents(installed) == _contents(SHIPPED / "github-orchestrator")
+
+
 def test_the_installer_s_start_on_a_terminal_asks_only_about_the_skills_missing(
         machine, run_cli):
     _upgrading(machine)
@@ -243,7 +256,7 @@ def test_a_no_on_the_terminal_leaves_the_skills_out_and_records_an_empty_pr_skil
 
     assert ran.code == 0, ran.out
     assert not _skill(machine).exists() and not _create_pr(machine).exists()
-    assert "Skills left out: create-pr, rebase-on-main." in ran.out
+    assert "Skills left out: create-pr, github-orchestrator, rebase-on-main." in ran.out
     assert 'pr_skill = ""' in ran.out
     assert _recorded_pr_skill(machine) == ""
 
@@ -303,7 +316,7 @@ def test_an_empty_pr_skill_already_recorded_stands_where_there_is_no_terminal_to
     assert ran.code == 0, ran.out
     assert machine.prompts == []
     assert not _skill(machine).exists() and not _create_pr(machine).exists()
-    assert "Skills left out: create-pr, rebase-on-main" in ran.out
+    assert "Skills left out: create-pr, github-orchestrator, rebase-on-main" in ran.out
     assert "github-orchestrator skill" in ran.out
 
 

@@ -167,7 +167,7 @@ class Commands:
             help="Remove the config, the data and the notification apps too, without asking.")
 
         skill_parser = command(
-            "skill", "Install the skills the orchestrator ships (rebase-on-main, create-pr) where "
+            "skill", "Install the skills the orchestrator ships (rebase-on-main, create-pr, github-orchestrator) where "
             "this instance's agent reads its skills.",
             "skill",
             "The agents use it to rebase pull requests on their base branch.")

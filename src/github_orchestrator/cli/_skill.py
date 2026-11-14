@@ -17,6 +17,8 @@ CREATE_PR = "create-pr"
 PURPOSES = {
     "create-pr": "agents run it to open a new pull request, such as the one a split carries "
                  "code into; without it they open the pull request themselves",
+    "github-orchestrator": "agents read it to find the worktrees, logs, state and commands of "
+                           "the orchestrator itself",
     "rebase-on-main": "agents run it to rebase a pull request's branch when it stops merging",
 }
 
