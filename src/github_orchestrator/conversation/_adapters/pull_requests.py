@@ -23,8 +23,8 @@ class PullRequests:
         worktree = self._working_copies.checkout(self._pr).path()
         if worktree is None:
             return False
-        config = self._working_copies.agent_config(self._pr, worktree)
-        return config is not None and config.held
+        return self._working_copies.unanswered_agent_config(
+            self._pr, worktree, facts.branch) is not None
 
     def ci_green(self) -> bool | None:
         facts = self._change_detection.facts(self._pr)

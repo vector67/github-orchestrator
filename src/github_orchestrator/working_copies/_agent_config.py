@@ -24,7 +24,7 @@ class _Changes:
     digest: str
 
 
-def _git(worktree: str, *args: str) -> str | None:
+def _git(worktree: str, *args: str, quiet: bool = False) -> str | None:
     try:
         done = subprocess.run(
             ["git", "--no-optional-locks", "-C", worktree, *args],
@@ -35,6 +35,8 @@ def _git(worktree: str, *args: str) -> str | None:
         log.warning("git %s in %s failed to run: %s", args[0], worktree, exc)
         return None
     if done.returncode != 0:
+        if quiet:
+            return None
         log.warning("git %s in %s failed: %s", args[0], worktree,
                     done.stderr.decode(errors="replace").strip())
         return None
@@ -67,10 +69,22 @@ class AgentConfigs:
         self._seen: dict[tuple[str, str, str], _Changes] = {}
         self._lock = threading.Lock()
 
+    def unanswered_agent_config(self, pr: Pr, worktree: str,
+                                branch: str | None) -> AgentConfig | None:
+        fetched = () if branch is None else (f"refs/remotes/origin/{branch}",)
+        for at in (*fetched, "HEAD"):
+            config = self._config(pr, worktree, at, quiet=at != "HEAD")
+            if config is not None and config.held:
+                return config
+        return None
+
     def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None:
+        return self._config(pr, worktree, "HEAD", quiet=False)
+
+    def _config(self, pr: Pr, worktree: str, at: str, *, quiet: bool) -> AgentConfig | None:
         if not os.path.isdir(worktree):
             return None
-        tips = _git(worktree, "rev-parse", "HEAD", DEFAULT_BRANCH)
+        tips = _git(worktree, "rev-parse", at, DEFAULT_BRANCH, quiet=quiet)
         if tips is None:
             return None
         head, default = tips.split()

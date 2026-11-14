@@ -203,6 +203,10 @@ class GitWorkingCopies:
     def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None:
         return self._agent_configs.agent_config(pr, worktree)
 
+    def unanswered_agent_config(self, pr: Pr, worktree: str,
+                                branch: str | None) -> AgentConfig | None:
+        return self._agent_configs.unanswered_agent_config(pr, worktree, branch)
+
     def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None:
         self._agent_configs.answer_agent_config(pr, digest, allowed=allowed)
 

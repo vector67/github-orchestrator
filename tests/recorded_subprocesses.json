@@ -51666,7 +51666,9 @@
      "stdout": {
       "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYgo2N2VhYTNmNDJlYmNmNDA3ZGMzNzljMzRkMzgxYTM3ZWQzMDdiOTQ3Cg=="
      }
-    },
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"refs/remotes/origin/rework-the-invoice-writer\", \"refs/remotes/origin/HEAD\"], null, null]": [
     {
      "argv": [
       "git",
@@ -51674,7 +51676,7 @@
       "-C",
       "<TMP>/worktree",
       "rev-parse",
-      "HEAD",
+      "refs/remotes/origin/rework-the-invoice-writer",
       "refs/remotes/origin/HEAD"
      ],
      "fs": {},
@@ -51693,7 +51695,26 @@
       "-C",
       "<TMP>/worktree",
       "rev-parse",
-      "HEAD",
+      "refs/remotes/origin/rework-the-invoice-writer",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYgo2N2VhYTNmNDJlYmNmNDA3ZGMzNzljMzRkMzgxYTM3ZWQzMDdiOTQ3Cg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "rev-parse",
+      "refs/remotes/origin/rework-the-invoice-writer",
       "refs/remotes/origin/HEAD"
      ],
      "fs": {},
@@ -71664,6 +71685,27 @@
      }
     }
    ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"rev-parse\", \"refs/remotes/origin/rework-the-invoice-writer\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree",
+      "rev-parse",
+      "refs/remotes/origin/rework-the-invoice-writer",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IGFtYmlndW91cyBhcmd1bWVudCAncmVmcy9yZW1vdGVzL29yaWdpbi9IRUFEJzogdW5rbm93biByZXZpc2lvbiBvciBwYXRoIG5vdCBpbiB0aGUgd29ya2luZyB0cmVlLgpVc2UgJy0tJyB0byBzZXBhcmF0ZSBwYXRocyBmcm9tIHJldmlzaW9ucywgbGlrZSB0aGlzOgonZ2l0IDxjb21tYW5kPiBbPHJldmlzaW9uPi4uLl0gLS0gWzxmaWxlPi4uLl0nCg=="
+     },
+     "stdout": {
+      "b64": "NDYyZmMyMTZmMzBkMzU1YjNhM2ZiYzEyNTE4N2U1NGVkYmQ0OTZkNgpyZWZzL3JlbW90ZXMvb3JpZ2luL0hFQUQK"
+     }
+    }
+   ],
    "[[\"git\", \"-C\", \"<BASETEMP>/tests.preview.test_preview.client_for_preview-8917fe3d/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"462fc216f30d355b3a3fbc125187e54edbd496d6..HEAD\"], null, null]": [
     {
      "argv": [
@@ -88145,6 +88187,272 @@
     }
    ]
   },
+  "tests/working_copies/test_agent_config.py::test_a_branch_origin_has_not_fetched_holds_on_the_worktree_alone": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Q0xBVURFLm1kAA=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTA1MTkwODhmOGM4OGI4NDhkZDdlZjk1ZWIxOGEzZGJmOWNjZjE4MAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"refs/remotes/origin/never-fetched\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/never-fetched",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IGFtYmlndW91cyBhcmd1bWVudCAncmVmcy9yZW1vdGVzL29yaWdpbi9uZXZlci1mZXRjaGVkJzogdW5rbm93biByZXZpc2lvbiBvciBwYXRoIG5vdCBpbiB0aGUgd29ya2luZyB0cmVlLgpVc2UgJy0tJyB0byBzZXBhcmF0ZSBwYXRocyBmcm9tIHJldmlzaW9ucywgbGlrZSB0aGlzOgonZ2l0IDxjb21tYW5kPiBbPHJldmlzaW9uPi4uLl0gLS0gWzxmaWxlPi4uLl0nCg=="
+     },
+     "stdout": {
+      "b64": "cmVmcy9yZW1vdGVzL29yaWdpbi9uZXZlci1mZXRjaGVkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"feature\", \"main~1\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "feature",
+      "main~1"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "work"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.email\", \"octocat@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.email",
+      "octocat@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.name\", \"Octocat\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.name",
+      "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TMP>/origin.git\", \"<TMP>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TMP>/origin.git",
+      "<TMP>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.claude": {
+       "dir": true
+      },
+      "work/.claude/settings.json": {
+       "text": "{}\n"
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \neb871817f9fa14dd204a45e4c6a3d17508cdab9d refs/remotes/origin/main\n6a5de35047f0963d8bb4e96779f8b49b349ba57b refs/remotes/origin/stacked-base\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "eb871817f9fa14dd204a45e4c6a3d17508cdab9d\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be brief\n"
+      },
+      "work/app.py": {
+       "text": "print(1)\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
   "tests/working_copies/test_agent_config.py::test_a_branch_stacked_on_another_is_compared_with_the_default_branch": {
    "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"a46fc000affd7d03c36af6ee2b037b1a071d2911\", \"--\", \"CLAUDE.md\"], null, null]": [
     {
@@ -88851,6 +89159,407 @@
       "config",
       "user.name",
       "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TMP>/origin.git\", \"<TMP>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TMP>/origin.git",
+      "<TMP>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.claude": {
+       "dir": true
+      },
+      "work/.claude/settings.json": {
+       "text": "{}\n"
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \neb871817f9fa14dd204a45e4c6a3d17508cdab9d refs/remotes/origin/main\n6a5de35047f0963d8bb4e96779f8b49b349ba57b refs/remotes/origin/stacked-base\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "eb871817f9fa14dd204a45e4c6a3d17508cdab9d\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be brief\n"
+      },
+      "work/app.py": {
+       "text": "print(1)\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/working_copies/test_agent_config.py::test_a_push_fetched_from_origin_is_held_before_the_worktree_moves": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"563f295a09ab7afef2ec77737f0b2524bb1f26cd\", \"--\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "563f295a09ab7afef2ec77737f0b2524bb1f26cd",
+      "--",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"563f295a09ab7afef2ec77737f0b2524bb1f26cd\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "563f295a09ab7afef2ec77737f0b2524bb1f26cd",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Q0xBVURFLm1kAA=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"563f295a09ab7afef2ec77737f0b2524bb1f26cd\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "563f295a09ab7afef2ec77737f0b2524bb1f26cd",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"refs/remotes/origin/work\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NTYzZjI5NWEwOWFiN2FmZWYyZWM3NzczN2YwYjI1MjRiYjFmMjZjZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"branch\", \"-q\", \"-D\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "branch",
+      "-q",
+      "-D",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"feature\", \"main~1\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "feature",
+      "main~1"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/fetching\n"
+      },
+      "work/.git/refs/heads/fetching": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"pushed\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "pushed"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": {
+       "text": "563f295a09ab7afef2ec77737f0b2524bb1f26cd\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.email\", \"octocat@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.email",
+      "octocat@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.name\", \"Octocat\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.name",
+      "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"update-ref\", \"refs/remotes/origin/work\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "update-ref",
+      "refs/remotes/origin/work",
+      "HEAD"
      ],
      "fs": {},
      "returncode": 0,
@@ -90293,6 +91002,1350 @@
        "text": "be bold\n"
       }
      },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TMP>/origin.git\", \"<TMP>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TMP>/origin.git",
+      "<TMP>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.claude": {
+       "dir": true
+      },
+      "work/.claude/settings.json": {
+       "text": "{}\n"
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \neb871817f9fa14dd204a45e4c6a3d17508cdab9d refs/remotes/origin/main\n6a5de35047f0963d8bb4e96779f8b49b349ba57b refs/remotes/origin/stacked-base\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "eb871817f9fa14dd204a45e4c6a3d17508cdab9d\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be brief\n"
+      },
+      "work/app.py": {
+       "text": "print(1)\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/working_copies/test_agent_config.py::test_nothing_is_held_once_both_are_answered": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \".mcp.json\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ".mcp.json",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgMDk2N2VmNDI0YmNlNjc5MTg5M2U5YTU3YmI5NTJmODBmZDUzNmU5MwkubWNwLmpzb24AMTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Lm1jcC5qc29uAENMQVVERS5tZAA="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Q0xBVURFLm1kAA=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTA1MTkwODhmOGM4OGI4NDhkZDdlZjk1ZWIxOGEzZGJmOWNjZjE4MAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTA1MTkwODhmOGM4OGI4NDhkZDdlZjk1ZWIxOGEzZGJmOWNjZjE4MAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"refs/remotes/origin/work\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YmJhZWNjNzIxZjRlZGMwZjc0Njg4YmE1MGIyOTYzYTAzYzNhNGI3ZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YmJhZWNjNzIxZjRlZGMwZjc0Njg4YmE1MGIyOTYzYTAzYzNhNGI3ZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \".mcp.json\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      ".mcp.json"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"branch\", \"-q\", \"-D\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "branch",
+      "-q",
+      "-D",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.mcp.json": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"feature\", \"main~1\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "feature",
+      "main~1"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/fetching\n"
+      },
+      "work/.git/refs/heads/fetching": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"pushed\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "pushed"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": {
+       "text": "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "work"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.email\", \"octocat@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.email",
+      "octocat@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.name\", \"Octocat\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.name",
+      "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"update-ref\", \"refs/remotes/origin/work\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "update-ref",
+      "refs/remotes/origin/work",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TMP>/origin.git\", \"<TMP>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TMP>/origin.git",
+      "<TMP>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.claude": {
+       "dir": true
+      },
+      "work/.claude/settings.json": {
+       "text": "{}\n"
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \neb871817f9fa14dd204a45e4c6a3d17508cdab9d refs/remotes/origin/main\n6a5de35047f0963d8bb4e96779f8b49b349ba57b refs/remotes/origin/stacked-base\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "eb871817f9fa14dd204a45e4c6a3d17508cdab9d\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be brief\n"
+      },
+      "work/app.py": {
+       "text": "print(1)\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/working_copies/test_agent_config.py::test_origins_unanswered_files_are_named_before_the_worktrees": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \".mcp.json\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ".mcp.json",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgMDk2N2VmNDI0YmNlNjc5MTg5M2U5YTU3YmI5NTJmODBmZDUzNmU5MwkubWNwLmpzb24AMTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Lm1jcC5qc29uAENMQVVERS5tZAA="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"refs/remotes/origin/work\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YmJhZWNjNzIxZjRlZGMwZjc0Njg4YmE1MGIyOTYzYTAzYzNhNGI3ZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \".mcp.json\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      ".mcp.json"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"branch\", \"-q\", \"-D\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "branch",
+      "-q",
+      "-D",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.mcp.json": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"feature\", \"main~1\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "feature",
+      "main~1"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/fetching\n"
+      },
+      "work/.git/refs/heads/fetching": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"pushed\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "pushed"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": {
+       "text": "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "work"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.email\", \"octocat@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.email",
+      "octocat@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.name\", \"Octocat\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.name",
+      "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"update-ref\", \"refs/remotes/origin/work\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "update-ref",
+      "refs/remotes/origin/work",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"clone\", \"-q\", \"<TMP>/origin.git\", \"<TMP>/work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "clone",
+      "-q",
+      "<TMP>/origin.git",
+      "<TMP>/work"
+     ],
+     "fs": {
+      "work": {
+       "dir": true
+      },
+      "work/.claude": {
+       "dir": true
+      },
+      "work/.claude/settings.json": {
+       "text": "{}\n"
+      },
+      "work/.git": {
+       "dir": true
+      },
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      },
+      "work/.git/packed-refs": {
+       "text": "# pack-refs with: peeled fully-peeled sorted \neb871817f9fa14dd204a45e4c6a3d17508cdab9d refs/remotes/origin/main\n6a5de35047f0963d8bb4e96779f8b49b349ba57b refs/remotes/origin/stacked-base\n"
+      },
+      "work/.git/refs/heads/main": {
+       "text": "eb871817f9fa14dd204a45e4c6a3d17508cdab9d\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be brief\n"
+      },
+      "work/app.py": {
+       "text": "print(1)\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ]
+  },
+  "tests/working_copies/test_agent_config.py::test_the_worktrees_unanswered_files_hold_it_once_origins_are_answered": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \".mcp.json\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ".mcp.json",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgMDk2N2VmNDI0YmNlNjc5MTg5M2U5YTU3YmI5NTJmODBmZDUzNmU5MwkubWNwLmpzb24AMTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgNmJlMDMxMGRiMjA1NzY2ODBkZTk4NTBiOWIzNWM5ODc1MjA3MjE2YglDTEFVREUubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Lm1jcC5qc29uAENMQVVERS5tZAA="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Q0xBVURFLm1kAA=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"merge-base\", \"e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\", \"eb871817f9fa14dd204a45e4c6a3d17508cdab9d\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "merge-base",
+      "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180",
+      "eb871817f9fa14dd204a45e4c6a3d17508cdab9d"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "OWYzYjZlOTA4ZWRjZjhkNjE0NWJkOGI4MTc3NjMxYzAxOGM0ZWQ3YQo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZTA1MTkwODhmOGM4OGI4NDhkZDdlZjk1ZWIxOGEzZGJmOWNjZjE4MAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/work\", \"rev-parse\", \"refs/remotes/origin/work\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YmJhZWNjNzIxZjRlZGMwZjc0Njg4YmE1MGIyOTYzYTAzYzNhNGI3ZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/work",
+      "rev-parse",
+      "refs/remotes/origin/work",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "YmJhZWNjNzIxZjRlZGMwZjc0Njg4YmE1MGIyOTYzYTAzYzNhNGI3ZAplYjg3MTgxN2Y5ZmExNGRkMjA0YTQ1ZTRjNmEzZDE3NTA4Y2RhYjlkCg=="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \".mcp.json\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      ".mcp.json"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"add\", \"-f\", \"CLAUDE.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "add",
+      "-f",
+      "CLAUDE.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"branch\", \"-q\", \"-D\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "branch",
+      "-q",
+      "-D",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.mcp.json": null
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"feature\", \"main~1\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "feature",
+      "main~1"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/feature\n"
+      },
+      "work/.git/refs/heads/feature": {
+       "text": "9f3b6e908edcf8d6145bd8b8177631c018c4ed7a\n"
+      },
+      "work/CLAUDE.md": {
+       "text": "be kind\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"checkout\", \"-q\", \"-b\", \"fetching\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "checkout",
+      "-q",
+      "-b",
+      "fetching"
+     ],
+     "fs": {
+      "work/.git/HEAD": {
+       "text": "ref: refs/heads/fetching\n"
+      },
+      "work/.git/refs/heads/fetching": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"pushed\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "pushed"
+     ],
+     "fs": {
+      "work/.git/refs/heads/fetching": {
+       "text": "bbaecc721f4edc0f74688ba50b2963a03c3a4b7d\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"commit\", \"-q\", \"-m\", \"work\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "commit",
+      "-q",
+      "-m",
+      "work"
+     ],
+     "fs": {
+      "work/.git/refs/heads/feature": {
+       "text": "e0519088f8c88b848dd7ef95eb18a3dbf9ccf180\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.email\", \"octocat@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.email",
+      "octocat@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"config\", \"user.name\", \"Octocat\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "config",
+      "user.name",
+      "Octocat"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/work\", \"update-ref\", \"refs/remotes/origin/work\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/work",
+      "update-ref",
+      "refs/remotes/origin/work",
+      "HEAD"
+     ],
+     "fs": {},
      "returncode": 0,
      "stderr": "",
      "stdout": ""

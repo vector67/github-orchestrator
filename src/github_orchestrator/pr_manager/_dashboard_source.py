@@ -99,10 +99,8 @@ class DashboardSource:
         facts = self._change_detection.facts(pr)
         if facts is None or facts.is_author is not False or not worktree:
             return None
-        config = self._working_copies.agent_config(pr, worktree)
-        if config is None or not config.held:
-            return None
-        return HeldAgentSettings(config.changed, config.digest)
+        config = self._working_copies.unanswered_agent_config(pr, worktree, facts.branch)
+        return None if config is None else HeldAgentSettings(config.changed, config.digest)
 
     def answer_agent_settings(self, pr: Pr, worktree: str, digest: str, *,
                               allowed: bool) -> bool:

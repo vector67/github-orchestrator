@@ -584,7 +584,7 @@ def test_the_event_queue_says_what_waits_and_never_hands_out_the_events_it_holds
 WORKING_COPIES_MEMBERS = frozenset({
     "forget_pr", "pr_worktree", "fetch_pr_branch", "report_branch",
     "verdict", "handed_off", "request_release", "wrong_branch", "commits_since",
-    "checkout", "agent_config", "answer_agent_config",
+    "checkout", "agent_config", "unanswered_agent_config", "answer_agent_config",
 })
 PR_CHECKOUT_MEMBERS = frozenset({
     "workspace", "is_clean", "path", "push", "unpick", "fetch", "reset_to_origin", "base_standing",

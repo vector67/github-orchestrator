@@ -20,6 +20,7 @@ from tests.pr_manager.support import (
     managed_in,
     manager_over,
     run_manager,
+    seed_state,
 )
 
 CHANGED = {"CLAUDE.md": "Run the deploy check.", ".claude/settings.json": "{\"hooks\": {}}"}
@@ -205,6 +206,27 @@ def test_a_run_whose_checkout_moves_to_unanswered_agent_files_is_stopped(setting
                 working_copies=working_copies)
 
     assert (len(runs.started), seen, runs.last_run(THE_PR).exit_code) == (1, [None], -15)
+
+
+def test_a_push_seen_on_origin_holds_it_and_stops_the_run_before_the_worktree_moves(
+        settings, tmp_path):
+    seed_state(settings, is_author=False, branch="feature")
+    working_copies = FakeWorkingCopies()
+    working_copies.change_agent_config(tmp_path, {})
+    processes = managed_in(tmp_path)
+    runs = FakeAgentRuns(processes).script(Outcome(finishes=False))
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: board.panel.carry_on(), None,
+                lambda: working_copies.fetch_agent_config(tmp_path, "feature", CHANGED),
+                lambda: seen.append((board.panel.dashboard().working_on,
+                                     board.panel.dashboard().agent_settings.changed)),
+                worktree=tmp_path, is_author=False, board=board, agent_runs=runs,
+                pr_processes=processes, working_copies=working_copies)
+
+    assert (len(runs.started), seen, runs.last_run(THE_PR).exit_code) == (
+        1, [(None, (".claude/settings.json", "CLAUDE.md"))], -15)
+    assert working_copies.agent_config(THE_PR, str(tmp_path)).changed == ()
 
 
 def _carried_on(runs):

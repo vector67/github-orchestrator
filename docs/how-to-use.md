@@ -915,9 +915,12 @@ Agents load settings from the checkout they work in: `.claude/`, `.codex/` and
 `.agents/` folders, `.mcp.json`, and `CLAUDE.md`, `CLAUDE.local.md` and
 `AGENTS.md`, wherever they sit. On your own pull requests, and ones you took
 over, they load them as they are. On someone else's, the orchestrator compares
-those files at the pull request's head with where it left origin's default
-branch (`origin/HEAD`). When none changed, agents load the project's settings.
-When some did, no agent runs on it until you answer:
+those files with where the branch left origin's default branch (`origin/HEAD`),
+both at the worktree's HEAD and at the pull request's head as the watcher last
+fetched it, which it does on every poll that sees the head move. A push is
+held as soon as that fetch lands, before anything moves the worktree. When
+nothing changed, agents load the project's settings. When some did, no agent
+runs on it until you answer:
 
 - the wall puts it in Needs you with the move **Check its agent settings**, the
   why **agents stopped, N files they load changed** and an **agents stopped**
@@ -937,13 +940,16 @@ While it waits, events that would start an agent (a review request, a
 re-review, a run the last manager was interrupted in) stay queued, thread runs
 and commit checks wait, and each starts once you answer. Polling, your own
 review, comments and drafts carry on. An agent asked for through the API is
-refused with the code `agent-settings-held`. If the worktree comes to hold
-unanswered files while an agent runs in it, its manager stops that run on its
-next tick.
+refused with the code `agent-settings-held`. If a push brings unanswered files
+while an agent runs, its manager stops that run on its next tick, before the
+worktree moves to them.
 
 One answer covers every changed file, and lasts while they stay exactly the
 same: a push that changes any of them holds the pull request again, and a push
-that leaves them alone keeps your answer. The answer is sent with the digest of
+that leaves them alone keeps your answer. Each answer is kept, so answering a
+newer push's files does not forget the answer to the files the worktree still
+holds. When both the worktree and origin's head hold unanswered files, the band
+shows origin's. The answer is sent with the digest of
 the files the band showed (`POST pull-request/operations:answer-agent-settings`
 with `digest` and `allowed`), and is refused `agent-settings-moved` when a push
 has changed them since; the band then shows them as they are now.

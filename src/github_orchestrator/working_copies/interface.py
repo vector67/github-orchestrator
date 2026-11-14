@@ -273,6 +273,9 @@ class WorkingCopies(Protocol):
 
     def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None: ...
 
+    def unanswered_agent_config(self, pr: Pr, worktree: str,
+                                branch: str | None) -> AgentConfig | None: ...
+
     def answer_agent_config(self, pr: Pr, digest: str, *, allowed: bool) -> None: ...
 
     def commits_since(self, worktree: Path | str, sha: str | None, *,

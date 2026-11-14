@@ -175,5 +175,63 @@ def test_answering_newer_files_keeps_the_answer_to_the_older_ones(clone, copies)
     assert (config.digest, config.held, config.allowed) == (older.digest, False, False)
 
 
+def _fetched(clone, branch, files):
+    _git(clone, "checkout", "-q", "-b", "fetching")
+    _commit(clone, files, "pushed")
+    _git(clone, "update-ref", f"refs/remotes/origin/{branch}", "HEAD")
+    _git(clone, "checkout", "-q", "-")
+    _git(clone, "branch", "-q", "-D", "fetching")
+
+
+def test_a_push_fetched_from_origin_is_held_before_the_worktree_moves(clone, copies):
+    _fetched(clone, "work", {"CLAUDE.md": "be bold\n"})
+
+    held = copies.unanswered_agent_config(THE_PR, str(clone), "work")
+
+    assert (held.changed, held.held) == (("CLAUDE.md",), True)
+    assert copies.agent_config(THE_PR, str(clone)).changed == ()
+
+
+def test_origins_unanswered_files_are_named_before_the_worktrees(clone, copies):
+    _commit(clone, {"CLAUDE.md": "be bold\n"}, "work")
+    _fetched(clone, "work", {".mcp.json": "{}\n"})
+
+    held = copies.unanswered_agent_config(THE_PR, str(clone), "work")
+
+    assert held.changed == (".mcp.json", "CLAUDE.md")
+
+
+def test_the_worktrees_unanswered_files_hold_it_once_origins_are_answered(clone, copies):
+    _commit(clone, {"CLAUDE.md": "be bold\n"}, "work")
+    _fetched(clone, "work", {".mcp.json": "{}\n"})
+    copies.answer_agent_config(
+        THE_PR, copies.unanswered_agent_config(THE_PR, str(clone), "work").digest,
+        allowed=True)
+
+    held = copies.unanswered_agent_config(THE_PR, str(clone), "work")
+
+    assert held.changed == ("CLAUDE.md",)
+
+
+def test_nothing_is_held_once_both_are_answered(clone, copies):
+    _commit(clone, {"CLAUDE.md": "be bold\n"}, "work")
+    copies.answer_agent_config(THE_PR, copies.agent_config(THE_PR, str(clone)).digest,
+                               allowed=False)
+    _fetched(clone, "work", {".mcp.json": "{}\n"})
+    copies.answer_agent_config(
+        THE_PR, copies.unanswered_agent_config(THE_PR, str(clone), "work").digest,
+        allowed=True)
+
+    assert copies.unanswered_agent_config(THE_PR, str(clone), "work") is None
+
+
+def test_a_branch_origin_has_not_fetched_holds_on_the_worktree_alone(clone, copies):
+    _commit(clone, {"CLAUDE.md": "be bold\n"}, "work")
+
+    held = copies.unanswered_agent_config(THE_PR, str(clone), "never-fetched")
+
+    assert held.changed == ("CLAUDE.md",)
+
+
 def test_git_that_cannot_say_answers_none(tmp_path, copies):
     assert copies.agent_config(THE_PR, str(tmp_path / "nowhere")) is None

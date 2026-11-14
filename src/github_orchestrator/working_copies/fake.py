@@ -361,8 +361,24 @@ class FakeWorkingCopies:
     def change_agent_config(self, worktree: Path | str, files: dict[str, str]) -> None:
         self._agent_configs[_key(worktree)] = dict(files)
 
+    def fetch_agent_config(self, worktree: Path | str, branch: str,
+                           files: dict[str, str]) -> None:
+        self._agent_configs[f"{_key(worktree)}@origin/{branch}"] = dict(files)
+
+    def unanswered_agent_config(self, pr: Pr, worktree: str,
+                                branch: str | None) -> AgentConfig | None:
+        fetched = () if branch is None else (f"{_key(worktree)}@origin/{branch}",)
+        for key in (*fetched, _key(worktree)):
+            config = self._config_of(pr, key)
+            if config is not None and config.held:
+                return config
+        return None
+
     def agent_config(self, pr: Pr, worktree: str) -> AgentConfig | None:
-        files = self._agent_configs.get(_key(worktree))
+        return self._config_of(pr, _key(worktree))
+
+    def _config_of(self, pr: Pr, key: str) -> AgentConfig | None:
+        files = self._agent_configs.get(key)
         if files is None:
             return None
         if not files:
