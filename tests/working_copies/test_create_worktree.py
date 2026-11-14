@@ -62,8 +62,12 @@ def _create(settings, repo, branch, command="", notifications=None):
     return copies.pr_worktree(repo, THE_PR, None, None)
 
 
+def _worktrees(clone):
+    return clone.parent / f"{clone.name}-worktrees"
+
+
 def _occupy(path):
-    path.mkdir()
+    path.mkdir(parents=True)
     (path / "someone-elses-file").write_text("x")
 
 
@@ -80,31 +84,31 @@ def _spy_on_subprocesses(monkeypatch):
 
 
 def test_a_taken_directory_name_falls_back_to_the_pr_suffix(repo, settings):
-    squatter = repo.parent / "feature-x"
+    squatter = _worktrees(repo) / "feature-x"
     _occupy(squatter)
 
-    assert _create(settings, repo, "feature-x") == repo.parent / "feature-x-pr83"
+    assert _create(settings, repo, "feature-x") == _worktrees(repo) / "feature-x-pr83"
     assert (squatter / "someone-elses-file").read_text() == "x"
 
 
 def test_falls_back_to_a_number_when_the_pr_suffix_is_also_taken(repo, settings):
     for name in ("feature-x", "feature-x-pr83"):
-        _occupy(repo.parent / name)
+        _occupy(_worktrees(repo) / name)
 
-    assert _create(settings, repo, "feature-x") == repo.parent / "feature-x-1"
+    assert _create(settings, repo, "feature-x") == _worktrees(repo) / "feature-x-1"
 
 
 def test_falls_back_again_when_the_first_number_is_also_taken(repo, settings):
     for name in ("feature-x", "feature-x-pr83", "feature-x-1"):
-        _occupy(repo.parent / name)
+        _occupy(_worktrees(repo) / name)
 
-    assert _create(settings, repo, "feature-x") == repo.parent / "feature-x-2"
+    assert _create(settings, repo, "feature-x") == _worktrees(repo) / "feature-x-2"
 
 
 def test_an_empty_directory_is_not_a_collision(repo, settings):
-    (repo.parent / "feature-x").mkdir()
+    (_worktrees(repo) / "feature-x").mkdir(parents=True)
 
-    assert _create(settings, repo, "feature-x") == repo.parent / "feature-x"
+    assert _create(settings, repo, "feature-x") == _worktrees(repo) / "feature-x"
 
 
 def test_fails_when_the_branch_is_already_checked_out_elsewhere(repo, settings, caplog):
@@ -114,8 +118,8 @@ def test_fails_when_the_branch_is_already_checked_out_elsewhere(repo, settings, 
 
     assert "Failed to create worktree for PR #83" in caplog.text
     assert "feature-x" in caplog.text
-    assert first == repo.parent / "feature-x"
-    assert not (repo.parent / "feature-x-pr83").exists()
+    assert first == _worktrees(repo) / "feature-x"
+    assert not (_worktrees(repo) / "feature-x-pr83").exists()
 
 
 def test_a_worktree_deleted_without_git_is_cut_again(repo, settings):
@@ -131,7 +135,7 @@ def test_a_branch_the_remote_does_not_have_fails_with_gits_reason(repo, settings
 
     assert "no-such-branch" in caplog.text
     assert "fatal:" in caplog.text
-    assert not (repo.parent / "no-such-branch").exists()
+    assert not (_worktrees(repo) / "no-such-branch").exists()
 
 
 def _build_a_merged_pr(root):
@@ -152,7 +156,7 @@ def merged(tmp_path, git_template):
 def test_a_pr_whose_branch_is_gone_from_the_remote_is_cut_from_its_pull_head(merged, settings):
     created = _create(settings, merged, "merged-away")
 
-    assert created == merged.parent / "merged-away"
+    assert created == _worktrees(merged) / "merged-away"
     assert (created / "f").read_text() == "merged"
 
 
@@ -169,7 +173,7 @@ def test_a_failing_new_worktree_command_is_reported_but_keeps_the_worktree(
     created = _create(settings, repo, "feature-x", command="echo boom >&2; exit 3",
                       notifications=notifications)
 
-    assert created == repo.parent / "feature-x"
+    assert created == _worktrees(repo) / "feature-x"
     assert created.is_dir()
     assert "boom" in caplog.text
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
@@ -251,7 +255,7 @@ def test_nothing_is_added_when_the_fetch_fails(
     assert [argv[:4] for argv, _ in ran] == [["git", "-C", str(repo), "fetch"],
                                              ["git", "-C", str(repo), "ls-remote"],
                                              ["git", "-C", str(repo), "fetch"]]
-    assert not (repo.parent / "feature-x").exists()
+    assert not (_worktrees(repo) / "feature-x").exists()
 
 
 def test_a_main_checkout_that_will_not_leave_the_prs_branch_blocks_the_worktree(

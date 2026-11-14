@@ -1354,4 +1354,6 @@ tools use them too. It also leaves each skill it shipped, `rebase-on-main` and
 the orchestrator: `~/.claude/skills` for Claude Code, `~/.agents/skills` for
 Codex, or `<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
 `CLAUDE_CONFIG_DIR`. It names each one it finds with the `rm -rf` that removes
-it. The worktrees the watcher cut next to your clones are yours to remove.
+it. The worktrees the watcher cut are yours to remove: each repo's are in the
+`<clone>-worktrees` folder beside its clone, and ones an earlier version cut
+sit beside the clone itself.

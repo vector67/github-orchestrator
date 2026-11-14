@@ -27,6 +27,7 @@ from github_orchestrator.working_copies._handles import (
 from github_orchestrator.working_copies._hunks import parse_diff
 from github_orchestrator.working_copies._layout import (
     pr_worktrees,
+    pull_request_worktrees,
     thread_branch,
     thread_branch_prefix,
     thread_worktree,
@@ -240,12 +241,12 @@ class FakeWorkingCopies:
         self._fetch_base(base_branch)
         if self._holder(branch) is not None:
             raise RuntimeError(
-                f"no free directory beside {repo_dir} for a {branch} worktree; "
+                f"no free directory in {pull_request_worktrees(repo_dir)} for a {branch} worktree; "
                 f"the last attempt said: fatal: '{branch}' is already used by worktree"
             )
         names = [branch, f"{branch}-pr{pr.number}", *(f"{branch}-{i}" for i in range(1, 21))]
-        path = next(repo_dir.parent / name for name in names
-                    if _key(repo_dir.parent / name) not in self.checkouts)
+        path = next(pull_request_worktrees(repo_dir) / name for name in names
+                    if _key(pull_request_worktrees(repo_dir) / name) not in self.checkouts)
         self.branches.setdefault(branch, self.origin[branch])
         self.checkouts[_key(path)] = FakeCheckout(branch=branch)
         return path

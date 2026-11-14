@@ -71,7 +71,7 @@ def test_a_fork_pr_is_cut_from_its_pull_head_even_where_origin_has_a_branch_of_i
     created = _copies(settings, fork / "work").pr_worktree(fork / "work", THE_PR,
                                                            FORK_BRANCH, "main")
 
-    assert created == fork / FORK_BRANCH
+    assert created == fork / "work-worktrees" / FORK_BRANCH
     assert (created / "f").read_text() == "the fork's change"
 
 

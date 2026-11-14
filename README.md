@@ -32,8 +32,10 @@ browser.
 Before you install, know what it does on your machine and your branches:
 
 - It cuts a git worktree for each pull request it watches, yours and the ones
-  you review, as a folder beside that repo's clone named after the branch, and
-  the git palette leaves a `<worktree>.git-palette.lock` file beside it.
+  you review, as a folder named after the branch inside `<clone>-worktrees`,
+  which sits beside that repo's clone (`widgets-worktrees/` beside `widgets/`),
+  and the git palette leaves a `<worktree>.git-palette.lock` file beside it. A
+  worktree cut beside the clone by an earlier version stays where it is.
 - Agents run in their tool's own auto mode (`--permission-mode auto` for Claude
   Code, `--approve-for-me` for Codex), with no one asked about each command.
 - A CI-fix run commits its fix and pushes it to your PR branch without asking,

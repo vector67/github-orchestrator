@@ -296,7 +296,7 @@ def test_a_shared_worktree_that_moves_or_stops_being_shared_starts_counting_agai
 def test_a_pr_with_no_worktree_gets_one_cut_on_its_branch(world):
     cut = world.copies.pr_worktree(world.repo_dir, THE_PR, BRANCH, None)
 
-    assert cut == world.repo_dir.parent / BRANCH
+    assert cut == world.repo_dir.parent / f"{world.repo_dir.name}-worktrees" / BRANCH
     assert world.branch_at(cut) == BRANCH
 
 
@@ -309,7 +309,7 @@ def test_the_main_checkout_on_the_prs_branch_goes_back_to_main_for_a_fresh_cut(w
 
     cut = world.copies.pr_worktree(world.repo_dir, THE_PR, BRANCH, None)
 
-    assert cut == world.repo_dir.parent / BRANCH
+    assert cut == world.repo_dir.parent / f"{world.repo_dir.name}-worktrees" / BRANCH
     assert world.branch_at(world.repo_dir) == "main"
     assert world.branch_at(cut) == BRANCH
 
@@ -318,7 +318,7 @@ def test_a_pr_whose_worktree_cannot_be_cut_gets_none(world):
     world.github.add_pr(a_pr(PR + 1, REPO), PullRequestState(branch="not-on-origin"))
 
     assert world.copies.pr_worktree(world.repo_dir, a_pr(PR + 1, REPO), None, None) is None
-    assert not (world.repo_dir.parent / "not-on-origin").exists()
+    assert not (world.repo_dir.parent / f"{world.repo_dir.name}-worktrees" / "not-on-origin").exists()
 
 
 def test_a_reused_worktree_whose_branch_will_not_fetch_says_so(world, tmp_path):

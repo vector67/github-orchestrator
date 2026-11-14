@@ -287,7 +287,8 @@ def test_one_cycle_searches_every_watched_repo_at_once_and_cuts_each_worktree_by
 
     both = [GADGETS, REPO]
     assert sorted(github.searched) == [(both, "author"), (both, "mentions"), (both, "review-requested")]
-    assert set(windows.changes) == {tmp_path / "hello" / "b1", tmp_path / "gadgets" / "b2"}
+    assert set(windows.changes) == {tmp_path / "hello" / "clone-worktrees" / "b1",
+                                    tmp_path / "gadgets" / "clone-worktrees" / "b2"}
 
 
 def test_a_tracked_pr_of_a_repo_no_longer_watched_is_not_asked_about(settings):

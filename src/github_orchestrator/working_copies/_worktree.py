@@ -7,6 +7,7 @@ from github_orchestrator.domain import Pr, fork_pr_number
 from github_orchestrator.github import PullRequests
 from github_orchestrator.notifications import Worktrees
 from github_orchestrator.working_copies._diff import is_branch_name
+from github_orchestrator.working_copies._layout import pull_request_worktrees
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def _candidate_paths(repo_dir: Path, branch: str, pr: int | None) -> list[Path]:
     if pr is not None:
         names.append(f"{branch}-pr{pr}")
     names += [f"{branch}-{i}" for i in range(1, FALLBACK_NAMES + 1)]
-    return [repo_dir.parent / name for name in names]
+    return [pull_request_worktrees(repo_dir) / name for name in names]
 
 
 def run_new_worktree_command(worktree: Path, source_repo: Path, command: str,
@@ -143,7 +144,7 @@ def create_worktree(repo_dir: Path, branch: str, base_branch: str | None,
             return candidate
         last_error = added.stderr.strip()
     raise RuntimeError(
-        f"no free directory beside {repo_dir} for a {branch} worktree; "
+        f"no free directory in {pull_request_worktrees(repo_dir)} for a {branch} worktree; "
         f"the last attempt said: {last_error}"
     )
 

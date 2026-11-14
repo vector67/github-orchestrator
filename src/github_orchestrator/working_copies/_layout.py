@@ -7,6 +7,10 @@ def repo_dir(base: Path, repo: Repo) -> Path:
     return Path(base) / repo.owner / repo.name
 
 
+def pull_request_worktrees(clone: Path) -> Path:
+    return clone.parent / f"{clone.name}-worktrees"
+
+
 def thread_slug(key: str) -> str:
     return str(ThreadName(key))
 
