@@ -16,9 +16,9 @@ This skill caches what those leave out: how to find things on the machine you ar
 
 One machine can run several instances, each a separate watcher, hub and data dir. Find them before you read anything else:
 
-- The default instance's config is `~/.config/github-orchestrator/config.toml`. Every other `<name>.toml` in that folder is an instance called `<name>`.
-- `github-orchestrator config [--instance NAME]` prints the config path on its first line, then every effective setting and where it came from: the GitHub account, the hub's port, the data dir and the `[[repos]]` it watches. Read it rather than guess.
-- The data dir is `$XDG_DATA_HOME/github-orchestrator`, or `~/.local/share/github-orchestrator` where that is unset. A named instance's is `github-orchestrator-<name>` beside it.
+- `github-orchestrator config [--instance NAME]` prints the config path on its first line, then every effective setting and where it came from: the GitHub account, the hub's port and the `[[repos]]` it watches. Run it with no `--instance` for the default instance and trust the path it prints: the default config is usually `~/.config/github-orchestrator/config.toml`, but an older install keeps it elsewhere.
+- Each other instance is a file `~/.config/github-orchestrator/<name>.toml`. Only a name ending exactly in `.toml` counts: `.bak`, `.retired` and `.lock` files beside them are not instances.
+- `config` does not print the data dir. It is `$XDG_DATA_HOME/github-orchestrator`, or `~/.local/share/github-orchestrator` where that is unset (`printenv XDG_DATA_HOME` says which). A named instance's is `github-orchestrator-<name>` beside it.
 - Each instance's watcher is a service: a LaunchAgent labelled `com.github-orchestrator.watcher[.<name>]` on macOS, a systemd user unit `github-orchestrator[-<name>].service` on Linux.
 - Every command but `thread` takes `--instance NAME`. `thread` takes it before the command (`github-orchestrator --instance work thread list ...`) or from `GITHUB_ORCHESTRATOR_INSTANCE`.
 
@@ -28,7 +28,7 @@ There are two kinds, and they live in different places.
 
 **A PR's worktree** sits in a folder beside the repo's clone (`local_path`), named after the clone, and is itself named after the PR's head branch: `<local_path>-worktrees/<branch>`. For a clone at `~/code/widgets` that is `~/code/widgets-worktrees/<branch>`. When that folder is taken it tries `<branch>-pr<N>`, then `<branch>-1`, `<branch>-2`, and so on. It is checked out on the PR branch itself. A worktree cut by a release before this layout sits beside the clone instead, at `<parent of local_path>/<branch>`, and stays there.
 
-- **Look it up rather than guess:** `<data dir>/pr_managers/<owner>/<repo>/<N>.json` holds `{"pid", "worktree"}` for the PR's running agent manager. The board's Dashboard shows it too.
+- **Look it up rather than guess:** `<data dir>/pr_managers/<owner>/<repo>/<N>.json` holds `{"pid", "worktree"}` for the PR's running agent manager. The board's Dashboard shows it too. `git -C <local_path> worktree list` shows every worktree of the repo at once, PR and thread alike, whichever layout cut it.
 - **Reuse:** before cutting one, the watcher reuses any existing worktree that already has the PR branch checked out, wherever it is, including a session worktree under `.claude/worktrees/`. If the main clone has the branch checked out, the watcher switches the clone to `main` and cuts a fresh worktree.
 - **Reaping:** when the PR closes, the watcher removes whichever worktree holds the branch.
 - **Handing a branch over:** push it, then free it before the watcher picks the PR up. Detach any session worktree that holds it (`git -C <worktree> checkout --detach`), or the watcher adopts that worktree and later deletes it.
@@ -39,7 +39,7 @@ There are two kinds, and they live in different places.
 
 - Path: `<data dir>/thread-worktrees/<owner>/<repo>/<N>/<thread key>-<hash>`, for example `.../widgets/7/PRRT_kwDOAbCdEf5zXyZq-79f68`.
 - Branch: `orchestrator/thread/<N>/<thread key>-<hash>`, cut from the PR head.
-- The thread key is the GitHub node id: `PRRT_…` for a review thread, `IC_…` for a conversation comment.
+- The thread key is the GitHub node id: `PRRT_…` for a review thread, `IC_…` for a conversation comment. A key `request_<hex>` is a change asked for on the board alone, which GitHub never saw.
 
 ## Data dir
 
