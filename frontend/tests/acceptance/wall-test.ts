@@ -238,18 +238,18 @@ module('Acceptance | wall', function (hooks) {
     const lead = '[data-test-wall-row="o/r#8"] [data-test-wall-lead]';
     assert.deepEqual(
       texts(
-        `${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title], ${lead} .meta`,
+        `${lead} .meta, ${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title]`,
       ),
       [
+        '#8 · your PR · tidy',
         '1 comment · agents finished',
         'human threads, 0 of 1 done',
         'Tidy the importer',
-        '#8 · your PR · tidy',
       ],
     );
     assert
       .dom('[data-test-wall-row="o/r#7"] [data-test-wall-title]')
-      .hasText('PROJ-7 · Fix the widget');
+      .hasText('Fix the widget');
   });
 
   function ranked(
@@ -1145,7 +1145,7 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-cell]').doesNotExist();
   });
 
-  test('the move, its reason, its chips and its age share one line', async function (assert) {
+  test('the move and its reason share one line', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
@@ -1164,12 +1164,7 @@ module('Acceptance | wall', function (hooks) {
       return Math.round(box.top + box.height / 2);
     };
     const verb = middleOf('[data-test-verb]');
-    assert.deepEqual(
-      ['[data-test-reason]', '[data-test-state]'].map(
-        (selector) => Math.abs(middleOf(selector) - verb) <= 3,
-      ),
-      [true, true],
-    );
+    assert.true(Math.abs(middleOf('[data-test-reason]') - verb) <= 3);
   });
 
   test('negative counts read as none, not as a minus number', async function (assert) {
@@ -1434,8 +1429,11 @@ module('Acceptance | wall', function (hooks) {
     const title = texts(
       '[data-test-wall-row="o/r#7"] [data-test-wall-title]',
     )[0];
+    const ticket = texts('[data-test-wall-row="o/r#7"] [data-test-ticket]')[0];
     const meta = texts('[data-test-wall-row="o/r#7"] [data-test-wall-meta]')[0];
-    assert.dom(lead).hasAttribute('aria-label', `${move}: ${title}`);
+    assert
+      .dom(lead)
+      .hasAttribute('aria-label', `${move}: ${ticket} · ${title}`);
     const reason = reasonOf(7);
     const hints = findAll('[data-test-wall-row="o/r#7"] [data-test-state]').map(
       (chip) => `${chip.textContent.trim()}: ${chip.getAttribute('title')}.`,
@@ -2823,13 +2821,13 @@ module('Acceptance | wall', function (hooks) {
     const lead = '[data-test-wall-row="o/r#7"] [data-test-wall-lead]';
     assert.deepEqual(
       texts(
-        `${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title], ${lead} .meta`,
+        `${lead} .meta, ${lead} [data-test-verb], ${lead} [data-test-reason], ${lead} [data-test-wall-title]`,
       ),
       [
+        '#7',
         'Waiting for the first poll',
         'nothing known yet',
         'Title not known yet',
-        '#7',
       ],
     );
   });
@@ -2884,8 +2882,12 @@ module('Acceptance | wall', function (hooks) {
     await visit('/');
 
     assert.deepEqual(texts('[data-test-wall-title]'), [
-      'PROJ-31 · Share one summary shape',
-      'PROJ-32 · Split the mapper',
+      'Share one summary shape',
+      'Split the mapper',
+    ]);
+    assert.deepEqual(texts('[data-test-wall-row] [data-test-ticket]'), [
+      'PROJ-31',
+      'PROJ-32',
     ]);
 
     await click('[data-test-wall-row="o/r#7"] [data-test-wall-lead]');
@@ -2893,6 +2895,42 @@ module('Acceptance | wall', function (hooks) {
     assert
       .dom('[data-test-pr-title]')
       .hasText('#7 PROJ-31 · Share one summary shape');
+  });
+
+  test('a row reads ticket and number, then its move, then its title, then its chips, each on a line below the last', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          pr: { title: 'Fix the widget', ticket: 'proj-7' },
+          manager: { importance: 'important' },
+          facts: factsFor('await-author', { unresolved_threads: 2 }),
+        },
+      }),
+    );
+
+    await visit('/');
+
+    const lead = '[data-test-wall-row="o/r#7"] [data-test-wall-lead]';
+    const lines = [
+      `${lead} [data-test-ticket]`,
+      `${lead} [data-test-verb]`,
+      `${lead} [data-test-wall-title]`,
+      `${lead} [data-test-state="unresolved"]`,
+    ];
+    assert.dom(lines[0]).hasText('PROJ-7');
+    assert.dom(`${lead} [data-test-wall-pr]`).hasText('#7');
+    assert.dom(`${lead} [data-test-state="importance"]`).hasText('important');
+    const tops = lines.map((line) => find(line)!.getBoundingClientRect().top);
+    assert.deepEqual(
+      tops.map((top, at) => at === 0 || top > tops[at - 1]!),
+      [true, true, true, true],
+      tops.join(', '),
+    );
+    assert.true(
+      find(`${lead} [data-test-wall-pr]`)!.getBoundingClientRect().bottom <=
+        tops[1]!,
+      'the number sits on the ticket’s line, above the move',
+    );
   });
 
   test('a 2,000-character title does not take over the screen', async function (assert) {
