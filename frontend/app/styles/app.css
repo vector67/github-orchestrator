@@ -2782,6 +2782,31 @@ kbd {
   color: var(--muted);
 }
 
+.id-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+
+.ticket-badge {
+  display: inline-block;
+  padding: 0 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--page);
+  background: var(--link);
+  border-radius: 3px;
+}
+
+.pr-id {
+  font-weight: var(--fw-bold);
+  color: var(--text);
+}
+
 .state-chip.tone-strong {
   color: var(--page);
   background: var(--text);
@@ -2967,6 +2992,10 @@ kbd {
 .move-line .unset-dot {
   align-self: center;
   margin: 0 0 0 -4px;
+}
+
+.wall-lead > .state-chips {
+  margin-top: 4px;
 }
 
 .wall-lead .state-chip {
@@ -4340,7 +4369,12 @@ kbd {
 .switcher-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
+}
+
+.switcher-row .id-line {
+  font-size: var(--fs-xs);
 }
 
 .switcher-row .verb {

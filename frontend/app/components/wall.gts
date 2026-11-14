@@ -355,6 +355,25 @@ export default class Wall extends Component<WallSignature> {
                   {{on "focus" (fn this.select pr)}}
                   {{navigates (fn this.open pr)}}
                 >
+                  <span class="id-line">{{#if reading.ticket}}<span
+                        class="ticket-badge"
+                        data-test-ticket
+                      >{{reading.ticket}}</span>{{/if}}<span
+                      class="meta"
+                      data-test-wall-meta
+                    ><b class="pr-id" data-test-wall-pr>{{#if
+                          this.store.severalReposShown
+                        }}<span
+                            data-test-row-repo
+                          >{{pr.repo}}</span>{{/if}}#{{pr.number}}</b>{{#if
+                        reading.whose
+                      }}
+                        ·
+                        {{reading.whose}}{{/if}}{{#if reading.branch}}
+                        ·
+                        <span
+                          class="mono"
+                        >{{reading.branch}}</span>{{/if}}</span></span>
                   <span class="move-line"><span
                       class="verb"
                       data-test-verb
@@ -371,34 +390,20 @@ export default class Wall extends Component<WallSignature> {
                       ></span>{{/if}}{{#if reading.reason}}<span
                         class="reason"
                         data-test-reason
-                      >{{reading.reason}}</span>{{/if}}<span
-                      class="state-chips"
-                    >{{#each reading.chips key="key" as |chip|}}<StateChip
-                          @chip={{chip}}
-                        />{{/each}}{{#if pr.moved}}<span
-                          class="state-chip tone-accent moved"
-                          data-test-moved
-                        >moved here</span>{{/if}}{{#if
-                        pr.summaries.pressing.controls.pending
-                      }}<span class="state-chip" data-test-pending>{{#if
-                            pr.summaries.pressing.controls.ring
-                          }}<PendingRing
-                            />{{/if}}{{pr.summaries.pressing.controls.pending}}</span>{{/if}}</span></span>
-                  <span
-                    class="ttl"
-                    data-test-wall-title
-                  >{{reading.title}}</span>
-                  <span class="meta" data-test-wall-meta>{{#if
-                      this.store.severalReposShown
-                    }}<span
-                        data-test-row-repo
-                      >{{pr.repo}}</span>{{/if}}#{{pr.number}}{{#if
-                      reading.whose
-                    }}
-                      ·
-                      {{reading.whose}}{{/if}}{{#if reading.branch}}
-                      ·
-                      <span class="mono">{{reading.branch}}</span>{{/if}}</span>
+                      >{{reading.reason}}</span>{{/if}}</span>
+                  <span class="ttl" data-test-wall-title>{{reading.gist}}</span>
+                  <span class="state-chips">{{#each
+                      reading.rowChips key="key"
+                      as |chip|
+                    }}<StateChip @chip={{chip}} />{{/each}}{{#if pr.moved}}<span
+                        class="state-chip tone-accent moved"
+                        data-test-moved
+                      >moved here</span>{{/if}}{{#if
+                      pr.summaries.pressing.controls.pending
+                    }}<span class="state-chip" data-test-pending>{{#if
+                          pr.summaries.pressing.controls.ring
+                        }}<PendingRing
+                          />{{/if}}{{pr.summaries.pressing.controls.pending}}</span>{{/if}}</span>
                   {{#if pr.summaries.pressing.controls.refused}}
                     <span
                       class="refusal"
@@ -410,7 +415,7 @@ export default class Wall extends Component<WallSignature> {
                     }}<span>importance not set.</span>{{/if}}{{#if
                       reading.reason
                     }}<span>{{reading.reason}}.</span>{{/if}}{{#each
-                      reading.chips key="key"
+                      reading.rowChips key="key"
                       as |chip|
                     }}<span>{{chip.text}}: {{chip.hint}}.</span>{{/each}}{{#if
                       pr.moved

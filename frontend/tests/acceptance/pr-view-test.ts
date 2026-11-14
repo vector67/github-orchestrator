@@ -440,10 +440,11 @@ module('Acceptance | pr view', function (hooks) {
       .hasAttribute('aria-current', 'true');
   });
 
-  test('the switcher carries each pull request’s chips beside its verb', async function (assert) {
+  test('a switcher row reads ticket and number, then its move, then its title, then its chips, each on a line below the last', async function (assert) {
     onTheHub(
       heldPr({
         dashboard: {
+          pr: { title: 'Fix the widget', ticket: 'proj-7' },
           facts: { draft: true, unresolved_threads: 4 },
         },
       }),
@@ -453,13 +454,28 @@ module('Acceptance | pr view', function (hooks) {
 
     await click('[data-test-switcher-open]');
 
-    assert.deepEqual(
-      texts('[data-test-switcher-row="o/r#7"] [data-test-state]'),
-      ['4 unresolved', 'draft'],
-    );
+    const row = '[data-test-switcher-row="o/r#7"]';
+    assert.deepEqual(texts(`${row} [data-test-state]`), [
+      '4 unresolved',
+      'draft',
+    ]);
     assert
       .dom('[data-test-switcher-row="o/r#8"] [data-test-state]')
       .doesNotExist();
+    assert.dom(`${row} [data-test-ticket]`).hasText('PROJ-7');
+    assert.dom(`${row} [data-test-switcher-pr]`).hasText('#7');
+    assert.dom(`${row} [data-test-switcher-title]`).hasText('Fix the widget');
+    const tops = [
+      `${row} [data-test-ticket]`,
+      `${row} [data-test-verb]`,
+      `${row} [data-test-switcher-title]`,
+      `${row} [data-test-state]`,
+    ].map((line) => find(line)!.getBoundingClientRect().top);
+    assert.deepEqual(
+      tops.map((top, at) => at === 0 || top > tops[at - 1]!),
+      [true, true, true, true],
+      tops.join(', '),
+    );
   });
 
   test('the switcher keeps the last list it heard from the hub', async function (assert) {

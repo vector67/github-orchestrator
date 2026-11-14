@@ -830,10 +830,15 @@ function withoutLeadingTicket(title: string, ticket: string): string {
   return title.replace(leading, '') || title;
 }
 
-function titleOf(shown: ShownPr): string {
+function gistOf(shown: ShownPr): string {
   const { ticket } = shown;
   const title = shown.title ?? 'Title not known yet';
-  return ticket ? `${ticket} · ${withoutLeadingTicket(title, ticket)}` : title;
+  return ticket ? withoutLeadingTicket(title, ticket) : title;
+}
+
+function titleOf(shown: ShownPr): string {
+  const { ticket } = shown;
+  return ticket ? `${ticket} · ${gistOf(shown)}` : gistOf(shown);
 }
 
 export type ChipTone =
@@ -1235,12 +1240,15 @@ export interface Reading {
   edge: string;
   working: boolean;
   title: string;
+  ticket: string | null;
+  gist: string;
   titleKnown: boolean;
   whose: string | null;
   branch: string | null;
   detailedReviewer: Flag | null;
   reason: string;
   chips: Chip[];
+  rowChips: Chip[];
   band: Band;
   frozen: Frozen | null;
   onHold: boolean;
@@ -1274,6 +1282,7 @@ export function dashboardOf(
   const move = moveOf(shown, summaries);
   const since = sinceOf(shown);
   const frozen = shown.drawn.frozen;
+  const chips = chipsOf(shown, summaries, failing, now);
   return {
     number: shown.number,
     code: next.code,
@@ -1282,6 +1291,8 @@ export function dashboardOf(
     edge: EDGES[square],
     working: shown.drawn.system.agent.state === 'working',
     title: titleOf(shown),
+    ticket: shown.ticket?.toUpperCase() ?? null,
+    gist: gistOf(shown),
     titleKnown: shown.title !== null,
     whose: whoseOf(shown, summaries),
     branch: shown.branch,
@@ -1289,7 +1300,8 @@ export function dashboardOf(
       ? DETAILED_REVIEWER
       : null,
     reason: reasonOf(shown, summaries),
-    chips: chipsOf(shown, summaries, failing, now),
+    chips,
+    rowChips: chips.filter((one) => one.key !== 'mismatches'),
     band: bandOf(shown, action, move, since, next),
     frozen: frozen
       ? {

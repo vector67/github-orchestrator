@@ -68,23 +68,30 @@ export default class Switcher extends Component<SwitcherSignature> {
                 data-square={{reading.edge}}
                 data-test-switcher-row={{keyOf pr}}
                 {{navigates (fn @pick pr)}}
-              ><span class="switcher-text"><span
+              ><span class="switcher-text"><span class="id-line">{{#if
+                      reading.ticket
+                    }}<span
+                        class="ticket-badge"
+                        data-test-ticket
+                      >{{reading.ticket}}</span>{{/if}}<b
+                      class="pr-id"
+                      data-test-switcher-pr
+                    >{{#if this.store.severalReposShown}}<span
+                          data-test-row-repo
+                        >{{pr.repo}}</span>{{/if}}#{{pr.number}}</b></span><span
                     class="verb"
                     data-test-verb
                   >{{#if reading.working}}<span
                         class="live-dot"
                         {{pulses reading.move}}
-                      ></span>{{/if}}{{reading.move}}</span>{{#if
-                    reading.chips.length
-                  }}<span class="state-chips">{{#each
-                        reading.chips key="key"
-                        as |chip|
-                      }}<StateChip @chip={{chip}} />{{/each}}</span>{{/if}}<span
+                      ></span>{{/if}}{{reading.move}}</span><span
                     class="ttl"
-                  >{{#if this.store.severalReposShown}}<span
-                        data-test-row-repo
-                      >{{pr.repo}}</span>{{/if}}#{{pr.number}}
-                    {{reading.title}}</span></span></a>
+                    data-test-switcher-title
+                  >{{reading.gist}}</span>{{#if reading.rowChips.length}}<span
+                      class="state-chips"
+                    >{{#each reading.rowChips key="key" as |chip|}}<StateChip
+                          @chip={{chip}}
+                        />{{/each}}</span>{{/if}}</span></a>
             {{/let}}
           {{/each}}
         {{/each}}
