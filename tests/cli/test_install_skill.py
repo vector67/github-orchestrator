@@ -1,8 +1,6 @@
 import shutil
 from pathlib import Path
 
-import pytest
-
 SHIPPED = Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
 PACKAGED = SHIPPED / "rebase-on-main"
 CREATE_PR = SHIPPED / "create-pr"
@@ -264,12 +262,41 @@ def test_a_no_with_create_pr_there_leaves_the_pr_skill_as_it_was(machine, run_cl
     assert _recorded_pr_skill(machine) == "create-pr"
 
 
-@pytest.mark.parametrize("interactive", [True, False])
-def test_an_empty_pr_skill_already_recorded_is_the_answer_and_nothing_is_asked_or_installed(
-        machine, run_cli, interactive):
+def test_a_yes_on_the_terminal_after_an_earlier_no_installs_the_skills_and_puts_create_pr_back(
+        machine, run_cli):
     machine.configure('pr_skill = ""\n')
     machine.answering_hubs.add("http://127.0.0.1:8720")
-    machine.interactive = interactive
+    machine.interactive = True
+    machine.answers = ["y"]
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert machine.prompts == ["Install them? [Y/n] "]
+    assert _contents(_skill(machine)) == _contents(PACKAGED)
+    assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
+    assert _recorded_pr_skill(machine) == "create-pr"
+
+
+def test_a_no_on_the_terminal_after_an_earlier_no_is_asked_again_and_stays_left_out(
+        machine, run_cli):
+    machine.configure('pr_skill = ""\n')
+    machine.answering_hubs.add("http://127.0.0.1:8720")
+    machine.interactive = True
+    machine.answers = ["n"]
+
+    ran = run_cli("start", "--from-installer")
+
+    assert ran.code == 0, ran.out
+    assert machine.prompts == ["Install them? [Y/n] "]
+    assert not _skill(machine).exists() and not _create_pr(machine).exists()
+    assert _recorded_pr_skill(machine) == ""
+
+
+def test_an_empty_pr_skill_already_recorded_stands_where_there_is_no_terminal_to_ask_on(
+        machine, run_cli):
+    machine.configure('pr_skill = ""\n')
+    machine.answering_hubs.add("http://127.0.0.1:8720")
 
     ran = run_cli("start", "--from-installer")
 

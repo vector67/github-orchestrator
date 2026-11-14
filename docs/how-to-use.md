@@ -86,10 +86,11 @@ its name and then `missing`, `current` or `different`.
 orchestrator's skills** heading. When a shipped skill is missing and `update`
 runs in a terminal, it lists each missing one with what the agents use it for
 and asks `Install them? [Y/n]`. Yes installs them. No leaves them out and, while
-`create-pr` is among them, writes `pr_skill = ""`, which later updates take as
-the answer: they ask nothing and install nothing until
-`github-orchestrator skill` does. With no terminal to ask on, it follows the
-installer's `-y` rule and installs each missing skill. A skill that differs
+`create-pr` is among them, writes `pr_skill = ""`. Every later update in a
+terminal asks again, and a yes then installs them and puts `create-pr` back as
+`pr_skill`. With no terminal to ask on, it follows the installer's `-y` rule
+and installs each missing skill, unless an earlier no is recorded as
+`pr_skill = ""`, which then stands. A skill that differs
 from this version's is left alone, and the output names
 `github-orchestrator skill --replace`. It never guesses from an empty skills
 folder that you turned the skills down. It updates only the default instance's

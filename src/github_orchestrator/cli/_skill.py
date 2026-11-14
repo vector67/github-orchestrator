@@ -109,8 +109,12 @@ def update_skills(skills: Path, config_file: ConfigFile, read_line: ReadLine | N
     print("==> Updating the orchestrator's skills", flush=True)
     names = shipped_skills()
     missing = [name for name in names if skill_state(skills, name) == "missing"]
-    left_out = bool(missing) and (config_file.pr_skill() == "" or (
-        read_line is not None and not _wanted(skills, missing, read_line)))
+    if not missing:
+        left_out = False
+    elif read_line is None:
+        left_out = config_file.pr_skill() == ""
+    else:
+        left_out = not _wanted(skills, missing, read_line)
     if left_out:
         print(f"Skills left out: {', '.join(missing)}. github-orchestrator skill installs "
               "them later.")
@@ -118,6 +122,8 @@ def update_skills(skills: Path, config_file: ConfigFile, read_line: ReadLine | N
     for name in names:
         if not (left_out and name in missing):
             _install(skills, name, replace=False)
+    if not left_out:
+        _put_back_create_pr(skills, config_file)
 
 
 def skill(skills: Path, config_file: ConfigFile, *, status: bool, replace: bool,
