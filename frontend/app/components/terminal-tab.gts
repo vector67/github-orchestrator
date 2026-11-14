@@ -7,6 +7,7 @@ import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import showsSession from 'frontend/modifiers/shows-session';
 import {
+  AGENTS_STOPPED,
   runsAgent,
   type Pressed,
   type Pressing,
@@ -93,6 +94,12 @@ export default class TerminalTab extends Component {
     const opening = this.terminal.opening;
     return opening?.pending || opening?.refused ? opening : null;
   }
+
+  stopped = (one: Launcher): boolean =>
+    one.agent && Boolean(this.dashboard.shown?.flags?.agent_settings);
+
+  titleOf = (one: Launcher): string | null =>
+    this.stopped(one) ? AGENTS_STOPPED : null;
 
   launching = (one: Launcher): boolean => {
     const keys = this.launched?.pressed ? this.launched.on : null;
@@ -195,6 +202,8 @@ export default class TerminalTab extends Component {
                 type="button"
                 class="launch"
                 data-runs-agent={{if one.agent "true"}}
+                disabled={{this.stopped one}}
+                title={{this.titleOf one}}
                 data-test-launch={{one.keys}}
                 {{on "click" (fn this.launch one)}}
               ><span class="does">{{#if (this.launching one)}}{{#if

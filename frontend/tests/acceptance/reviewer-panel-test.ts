@@ -570,6 +570,25 @@ module('Acceptance | mention card', function (hooks) {
     assert.deepEqual(marked('[data-test-decision="ask"]'), ['✦']);
   });
 
+  test('Ask the agent is held back with the reason while the agent files wait for an answer, and Mark done is not', async function (assert) {
+    const held: DashboardOver = {
+      facts: { is_author: false },
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+    };
+    board().held = [heldPr({ dashboard: held })];
+    board().manager = dashboard(held);
+    await visit(`/pr/o/r/7/conversations/${MENTION}`);
+
+    assert
+      .dom('[data-test-decision="ask"]')
+      .isDisabled()
+      .hasAttribute(
+        'title',
+        'Agents are stopped on this pull request: it changes files they load. Allow the changes or run agents without them first.',
+      );
+    assert.dom('[data-test-decision="mark-done"]').isNotDisabled();
+  });
+
   test('Ask the agent asks whether to watch, and without a session puts an agent on the mention', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${MENTION}`);
 

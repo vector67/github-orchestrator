@@ -10,6 +10,7 @@ import type {
   WallGroup,
 } from 'frontend/data/api';
 import { tildeOf } from 'frontend/data/address';
+import { AGENTS_STOPPED } from 'frontend/data/decisions';
 import { countsOf as groupCountsOf, READY_GROUP } from 'frontend/data/groups';
 import type {
   AtWork,
@@ -322,6 +323,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
   switch (code) {
     case 'release-worktree':
       return 'Release the worktree';
+    case 'agent-settings':
+      return 'Check its agent settings';
     case 'on-hold':
       return 'On hold';
     case 'address-feedback':
@@ -478,6 +481,8 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
   const { move, human, bot } = summaries;
   const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
   switch (move.code) {
+    case 'agent-settings':
+      return `agents stopped, ${plural(shown.flags?.agent_settings?.changed.length ?? 0, 'file')} they load changed`;
     case 'on-hold':
       return heldOf(shown.drawn.system.queue.length);
     case 'first-poll':
@@ -1055,6 +1060,9 @@ function chipsOf(
   const system = shown.drawn.system;
   const facts = shown.facts;
   const found = [
+    shown.flags?.agent_settings
+      ? chip('agents', 'agents stopped', AGENTS_STOPPED, 'alarm')
+      : null,
     importanceChip(shown),
     ciChip(shown, code),
     mergeChip(shown, code),
@@ -1254,13 +1262,14 @@ export function dashboardOf(
   failing: FinishedRun[] = [],
 ): Reading {
   const next = summaries.move;
-  const square = shown.drawn.frozen
-    ? 'alarm'
-    : next.group === 'parked' && next.muted
-      ? 'draft'
-      : next.group
-        ? SQUARES[next.group]
-        : 'park';
+  const square =
+    shown.drawn.frozen || shown.flags?.agent_settings
+      ? 'alarm'
+      : next.group === 'parked' && next.muted
+        ? 'draft'
+        : next.group
+          ? SQUARES[next.group]
+          : 'park';
   const action = actionOf(shown, next);
   const move = moveOf(shown, summaries);
   const since = sinceOf(shown);

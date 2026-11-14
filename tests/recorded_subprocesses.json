@@ -51452,6 +51452,775 @@
     }
    ]
   },
+  "tests/preview/test_preview.py::test_the_agent_settings_preview_holds_the_reviewers_pull_request_until_answered": {
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"--literal-pathspecs\", \"ls-tree\", \"-r\", \"-z\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\", \"--\", \".agents/skills/deploy/SKILL.md\", \".mcp.json\", \"AGENTS.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "--literal-pathspecs",
+      "ls-tree",
+      "-r",
+      "-z",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b",
+      "--",
+      ".agents/skills/deploy/SKILL.md",
+      ".mcp.json",
+      "AGENTS.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "MTAwNjQ0IGJsb2IgMWUyNzFhMGE5NTEyYTcxMDVhMTJmODE5NzA3OTQ5ZTU5MjMwNzgwYwkuYWdlbnRzL3NraWxscy9kZXBsb3kvU0tJTEwubWQAMTAwNjQ0IGJsb2IgOTY0OTgzZDljMmI0NWU3MGM0ODMzYmJiYjAxYmRjNWViYzJlNGExYgkubWNwLmpzb24AMTAwNjQ0IGJsb2IgYzQxMDUzZDI3NDFiMjdjZmNkZGFkNWRiYzM4ZjlmNmI3N2I5MWNkYwlBR0VOVFMubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"diff\", \"--no-color\", \"--no-ext-diff\", \"--no-textconv\", \"-M\", \"-U3\", \"--src-prefix=a/\", \"--dst-prefix=b/\", \"--end-of-options\", \"67eaa3f42ebcf407dc379c34d381a37ed307b947\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "diff",
+      "--no-color",
+      "--no-ext-diff",
+      "--no-textconv",
+      "-M",
+      "-U3",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--end-of-options",
+      "67eaa3f42ebcf407dc379c34d381a37ed307b947",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "diff --git a/.agents/skills/deploy/SKILL.md b/.agents/skills/deploy/SKILL.md\nnew file mode 100644\nindex 0000000..1e271a0\n--- /dev/null\n+++ b/.agents/skills/deploy/SKILL.md\n@@ -0,0 +1,4 @@\n+---\n+name: deploy\n+---\n+Deploy the widgets.\ndiff --git a/.mcp.json b/.mcp.json\nnew file mode 100644\nindex 0000000..964983d\n--- /dev/null\n+++ b/.mcp.json\n@@ -0,0 +1 @@\n+{\"mcpServers\": {\"deploy\": {\"command\": \"./deploy/server.sh\"}}}\ndiff --git a/AGENTS.md b/AGENTS.md\nnew file mode 100644\nindex 0000000..c41053d\n--- /dev/null\n+++ b/AGENTS.md\n@@ -0,0 +1 @@\n+Run `make deploy-check` before a release.\ndiff --git a/billing/api.py b/billing/api.py\nindex 7f7bab6..7875b14 100644\n--- a/billing/api.py\n+++ b/billing/api.py\n@@ -67,7 +67,7 @@ def step_066(line_items):\n     return [item for item in line_items if item.id != 66]\n \n def step_069(line_items):\n-    return [item for item in line_items if item.id != 69]\n+    return sorted(line_items)\n \n def step_072(line_items):\n     return [item for item in line_items if item.id != 72]\ndiff --git a/billing/columns.py b/billing/columns.py\nindex 4f08a02..5c42bf1 100644\n--- a/billing/columns.py\n+++ b/billing/columns.py\n@@ -12,7 +12,7 @@ def step_009(line_items):\n def step_012(line_items):\n     return [item for item in line_items if item.id != 12]\n \n-def step_015(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 15]\n \n def step_018(line_items):\ndiff --git a/billing/constants.py b/billing/constants.py\nindex 48f4641..13eced9 100644\n--- a/billing/constants.py\n+++ b/billing/constants.py\n@@ -9,7 +9,7 @@ def step_006(line_items):\n def step_009(line_items):\n     return [item for item in line_items if item.id != 9]\n \n-def step_012(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 12]\n \n def step_015(line_items):\ndiff --git a/billing/format.py b/billing/format.py\nindex 37dc5aa..59973bd 100644\n--- a/billing/format.py\n+++ b/billing/format.py\n@@ -54,7 +54,7 @@ def step_051(line_items):\n def step_054(line_items):\n     return [item for item in line_items if item.id != 54]\n \n-def step_057(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 57]\n \n def step_060(line_items):\ndiff --git a/billing/guard.py b/billing/guard.py\nindex 5824c18..ffd6b73 100644\n--- a/billing/guard.py\n+++ b/billing/guard.py\n@@ -41,7 +41,7 @@ def step_039(line_items):\n \n def step_042(line_items):\n     return [item for item in line_items if item.id != 42]\n-\n+    return sorted(line_items)\n def step_045(line_items):\n     return [item for item in line_items if item.id != 45]\n \ndiff --git a/billing/header.py b/billing/header.py\nindex f5ec43f..606b752 100644\n--- a/billing/header.py\n+++ b/billing/header.py\n@@ -37,7 +37,7 @@ def step_036(line_items):\n     return [item for item in line_items if item.id != 36]\n \n def step_039(line_items):\n-    return [item for item in line_items if item.id != 39]\n+    return sorted(line_items)\n \n def step_042(line_items):\n     return [item for item in line_items if item.id != 42]\ndiff --git a/billing/invoice_writer.py b/billing/invoice_writer.py\nindex bbe0799..6d98825 100644\n--- a/billing/invoice_writer.py\n+++ b/billing/invoice_writer.py\n@@ -115,7 +115,7 @@ def step_114(line_items):\n     return [item for item in line_items if item.id != 114]\n \n def step_117(line_items):\n-    return [item for item in line_items if item.id != 117]\n+    return sorted(line_items)\n \n def step_120(line_items):\n     return [item for item in line_items if item.id != 120]\ndiff --git a/billing/parser.py b/billing/parser.py\nindex e760e84..6472713 100644\n--- a/billing/parser.py\n+++ b/billing/parser.py\n@@ -30,7 +30,7 @@ def step_027(line_items):\n def step_030(line_items):\n     return [item for item in line_items if item.id != 30]\n \n-def step_033(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 33]\n \n def step_036(line_items):\ndiff --git a/billing/reader.py b/billing/reader.py\nindex 5f1014c..8ac55ac 100644\n--- a/billing/reader.py\n+++ b/billing/reader.py\n@@ -93,7 +93,7 @@ def step_090(line_items):\n def step_093(line_items):\n     return [item for item in line_items if item.id != 93]\n \n-def step_096(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 96]\n \n def step_099(line_items):\ndiff --git a/billing/units.py b/billing/units.py\nindex c3b2851..c8f11d8 100644\n--- a/billing/units.py\n+++ b/billing/units.py\n@@ -19,8 +19,8 @@ def step_018(line_items):\n     return [item for item in line_items if item.id != 18]\n \n def step_021(line_items):\n-    return [item for item in line_items if item.id != 21]\n-\n+    return sorted(line_items)\n+    return [item.in_units() for item in line_items]\n def step_024(line_items):\n     return [item for item in line_items if item.id != 24]\n \n@@ -45,7 +45,7 @@ def step_042(line_items):\n def step_045(line_items):\n     return [item for item in line_items if item.id != 45]\n \n-def step_048(line_items):\n+    return sorted(line_items)\n     return [item for item in line_items if item.id != 48]\n \n def step_051(line_items):\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"merge-base\", \"--end-of-options\", \"67eaa3f42ebcf407dc379c34d381a37ed307b947\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "merge-base",
+      "--end-of-options",
+      "67eaa3f42ebcf407dc379c34d381a37ed307b947",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"-c\", \"diff.suppressBlankEmpty=false\", \"rev-parse\", \"--end-of-options\", \"f53bc08e95130a3b390095be47399f93d3e90b2b^{commit}\", \"origin/main^{commit}\", \"--\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "diff.suppressBlankEmpty=false",
+      "rev-parse",
+      "--end-of-options",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b^{commit}",
+      "origin/main^{commit}",
+      "--"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "--end-of-options\nf53bc08e95130a3b390095be47399f93d3e90b2b\n67eaa3f42ebcf407dc379c34d381a37ed307b947\n--\n"
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"67eaa3f42ebcf407dc379c34d381a37ed307b947\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\", \"--\", \":(glob)**/.claude/**\", \":(glob)**/.mcp.json\", \":(glob)**/CLAUDE.md\", \":(glob)**/CLAUDE.local.md\", \":(glob)**/AGENTS.md\", \":(glob)**/.codex/**\", \":(glob)**/.agents/**\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "diff",
+      "--name-only",
+      "-z",
+      "--no-renames",
+      "67eaa3f42ebcf407dc379c34d381a37ed307b947",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b",
+      "--",
+      ":(glob)**/.claude/**",
+      ":(glob)**/.mcp.json",
+      ":(glob)**/CLAUDE.md",
+      ":(glob)**/CLAUDE.local.md",
+      ":(glob)**/AGENTS.md",
+      ":(glob)**/.codex/**",
+      ":(glob)**/.agents/**"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "LmFnZW50cy9za2lsbHMvZGVwbG95L1NLSUxMLm1kAC5tY3AuanNvbgBBR0VOVFMubWQA"
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"b41c0d2^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-1",
+      "--format=%H %P",
+      "--end-of-options",
+      "b41c0d2^{commit}"
+     ],
+     "fs": {},
+     "returncode": 128,
+     "stderr": {
+      "b64": "ZmF0YWw6IGFtYmlndW91cyBhcmd1bWVudCAnYjQxYzBkMl57Y29tbWl0fSc6IHVua25vd24gcmV2aXNpb24gb3IgcGF0aCBub3QgaW4gdGhlIHdvcmtpbmcgdHJlZS4KVXNlICctLScgdG8gc2VwYXJhdGUgcGF0aHMgZnJvbSByZXZpc2lvbnMsIGxpa2UgdGhpczoKJ2dpdCA8Y29tbWFuZD4gWzxyZXZpc2lvbj4uLi5dIC0tIFs8ZmlsZT4uLi5dJwo="
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"log\", \"-1\", \"--format=%H %P\", \"--end-of-options\", \"f53bc08^{commit}\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-1",
+      "--format=%H %P",
+      "--end-of-options",
+      "f53bc08^{commit}"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYiA0NjJmYzIxNmYzMGQzNTViM2EzZmJjMTI1MTg3ZTU0ZWRiZDQ5NmQ2Cg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"merge-base\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\", \"67eaa3f42ebcf407dc379c34d381a37ed307b947\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "merge-base",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b",
+      "67eaa3f42ebcf407dc379c34d381a37ed307b947"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "NjdlYWEzZjQyZWJjZjQwN2RjMzc5YzM0ZDM4MWEzN2VkMzA3Yjk0Nwo="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"rev-parse\", \"HEAD\", \"refs/remotes/origin/HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYgo2N2VhYTNmNDJlYmNmNDA3ZGMzNzljMzRkMzgxYTM3ZWQzMDdiOTQ3Cg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYgo2N2VhYTNmNDJlYmNmNDA3ZGMzNzljMzRkMzgxYTM3ZWQzMDdiOTQ3Cg=="
+     }
+    },
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "rev-parse",
+      "HEAD",
+      "refs/remotes/origin/HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "ZjUzYmMwOGU5NTEzMGEzYjM5MDA5NWJlNDczOTlmOTNkM2U5MGIyYgo2N2VhYTNmNDJlYmNmNDA3ZGMzNzljMzRkMzgxYTM3ZWQzMDdiOTQ3Cg=="
+     }
+    }
+   ],
+   "[[\"git\", \"--no-optional-locks\", \"-C\", \"<TMP>/worktree\", \"show\", \"--end-of-options\", \"f53bc08e95130a3b390095be47399f93d3e90b2b\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "--no-optional-locks",
+      "-C",
+      "<TMP>/worktree",
+      "show",
+      "--end-of-options",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": "Y29tbWl0IGY1M2JjMDhlOTUxMzBhM2IzOTAwOTViZTQ3Mzk5ZjkzZDNlOTBiMmIKQXV0aG9yOiBwcmV2aWV3IDxwcmV2aWV3QGV4YW1wbGUuY29tPgpEYXRlOiAgIFRodSBKYW4gMSAwMDowMDowMCAyMDI2ICswMDAwCgogICAgQWRkIGEgZGVwbG95IGNoZWNrbGlzdCBmb3IgYWdlbnRzCgpkaWZmIC0tZ2l0IGEvLmFnZW50cy9za2lsbHMvZGVwbG95L1NLSUxMLm1kIGIvLmFnZW50cy9za2lsbHMvZGVwbG95L1NLSUxMLm1kCm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAuLjFlMjcxYTAKLS0tIC9kZXYvbnVsbAorKysgYi8uYWdlbnRzL3NraWxscy9kZXBsb3kvU0tJTEwubWQKQEAgLTAsMCArMSw0IEBACistLS0KK25hbWU6IGRlcGxveQorLS0tCitEZXBsb3kgdGhlIHdpZGdldHMuCmRpZmYgLS1naXQgYS8ubWNwLmpzb24gYi8ubWNwLmpzb24KbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uOTY0OTgzZAotLS0gL2Rldi9udWxsCisrKyBiLy5tY3AuanNvbgpAQCAtMCwwICsxIEBACit7Im1jcFNlcnZlcnMiOiB7ImRlcGxveSI6IHsiY29tbWFuZCI6ICIuL2RlcGxveS9zZXJ2ZXIuc2gifX19CmRpZmYgLS1naXQgYS9BR0VOVFMubWQgYi9BR0VOVFMubWQKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uYzQxMDUzZAotLS0gL2Rldi9udWxsCisrKyBiL0FHRU5UUy5tZApAQCAtMCwwICsxIEBACitSdW4gYG1ha2UgZGVwbG95LWNoZWNrYCBiZWZvcmUgYSByZWxlYXNlLgo="
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"--bare\", \"<TMP>/worktree-origin.git\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "init",
+      "-q",
+      "--bare",
+      "<TMP>/worktree-origin.git"
+     ],
+     "fs": {
+      "worktree-origin.git": {
+       "dir": true
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"add\", \"-A\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "-A"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"add\", \"-f\", \"AGENTS.md\", \".mcp.json\", \".agents/skills/deploy/SKILL.md\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "add",
+      "-f",
+      "AGENTS.md",
+      ".mcp.json",
+      ".agents/skills/deploy/SKILL.md"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"checkout\", \"-q\", \"-b\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "checkout",
+      "-q",
+      "-b",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/rework-the-invoice-writer\n"
+      },
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Sort the line items in billing\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Sort the line items in billing"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "00919756e4ad586dcbd2e0ba7ccffac1e5526346\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qam\", \"Spell the units out\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qam",
+      "Spell the units out"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "462fc216f30d355b3a3fbc125187e54edbd496d6\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"Add a deploy checklist for agents\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "Add a deploy checklist for agents"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/rework-the-invoice-writer": {
+       "text": "f53bc08e95130a3b390095be47399f93d3e90b2b\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"commit\", \"-qm\", \"the commit the PR branched from\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "commit",
+      "-qm",
+      "the commit the PR branched from"
+     ],
+     "fs": {
+      "worktree/.git/refs/heads/main": {
+       "text": "67eaa3f42ebcf407dc379c34d381a37ed307b947\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"config\", \"user.email\", \"preview@example.com\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "config",
+      "user.email",
+      "preview@example.com"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"config\", \"user.name\", \"preview\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "config",
+      "user.name",
+      "preview"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"init\", \"-q\", \"-b\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "init",
+      "-q",
+      "-b",
+      "main"
+     ],
+     "fs": {
+      "worktree/.git": {
+       "dir": true
+      },
+      "worktree/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"push\", \"-q\", \"-u\", \"origin\", \"rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "push",
+      "-q",
+      "-u",
+      "origin",
+      "rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"push\", \"-q\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "push",
+      "-q",
+      "origin",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"remote\", \"add\", \"origin\", \"<TMP>/worktree-origin.git\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "remote",
+      "add",
+      "origin",
+      "<TMP>/worktree-origin.git"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"remote\", \"set-head\", \"origin\", \"main\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "remote",
+      "set-head",
+      "origin",
+      "main"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-list\", \"--reverse\", \"main..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "00919756e4ad586dcbd2e0ba7ccffac1e5526346\n462fc216f30d355b3a3fbc125187e54edbd496d6\nf53bc08e95130a3b390095be47399f93d3e90b2b\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-list",
+      "--reverse",
+      "main..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "00919756e4ad586dcbd2e0ba7ccffac1e5526346\n462fc216f30d355b3a3fbc125187e54edbd496d6\nf53bc08e95130a3b390095be47399f93d3e90b2b\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"--short=7\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "--short=7",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "f53bc08\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "f53bc08e95130a3b390095be47399f93d3e90b2b\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"rev-parse\", \"origin/rework-the-invoice-writer\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "origin/rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "f53bc08e95130a3b390095be47399f93d3e90b2b\n"
+    },
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "-c",
+      "user.name=preview",
+      "-c",
+      "user.email=preview@example.com",
+      "rev-parse",
+      "origin/rework-the-invoice-writer"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "f53bc08e95130a3b390095be47399f93d3e90b2b\n"
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"log\", \"-z\", \"--format=%h %s\", \"f53bc08e95130a3b390095be47399f93d3e90b2b..HEAD\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "log",
+      "-z",
+      "--format=%h %s",
+      "f53bc08e95130a3b390095be47399f93d3e90b2b..HEAD"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-C\", \"<TMP>/worktree\", \"worktree\", \"list\", \"--porcelain\"], null, null]": [
+    {
+     "argv": [
+      "git",
+      "-C",
+      "<TMP>/worktree",
+      "worktree",
+      "list",
+      "--porcelain"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "worktree <TMP>/worktree\nHEAD f53bc08e95130a3b390095be47399f93d3e90b2b\nbranch refs/heads/rework-the-invoice-writer\n\n"
+    }
+   ]
+  },
   "tests/preview/test_preview.py::test_the_preview_says_the_reply_failure_it_logs_while_seeding_is_seeded": {
    "[[\"git\", \"-C\", \"<TMP>\", \"-c\", \"user.name=preview\", \"-c\", \"user.email=preview@example.com\", \"clone\", \"-q\", \"-b\", \"rework-the-invoice-writer\", \"<TMP>/worktree-origin.git\", \"<TMP>/worktree-elsewhere\"], null, null]": [
     {

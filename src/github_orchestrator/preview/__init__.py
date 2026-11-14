@@ -65,6 +65,7 @@ from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
 from github_orchestrator.watcher import KeptReviews
 from github_orchestrator.wiring import PreviewHub, preview_container
+from github_orchestrator.working_copies import WorkingCopies
 
 __all__: list[str] = []
 
@@ -361,7 +362,14 @@ def _move_main_on(root: Path) -> None:
 
 STACK_BRANCH = "split-out-the-header-writer"
 
-SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased", "diverged")
+SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased", "diverged",
+          "agent-settings")
+
+AGENT_FILES = {
+    "AGENTS.md": "Run `make deploy-check` before a release.\n",
+    ".mcp.json": '{"mcpServers": {"deploy": {"command": "./deploy/server.sh"}}}\n',
+    ".agents/skills/deploy/SKILL.md": "---\nname: deploy\n---\nDeploy the widgets.\n",
+}
 
 
 def _note(root: Path, line: str, subject: str, *, when: str | None = None) -> None:
@@ -388,6 +396,15 @@ def _go_on_for_days(root: Path) -> None:
     for number in range(24):
         _note(root, f"- step {number}\n", f"Take step {number} of the rework",
               when=f"2026-09-{8 + number // 8:02d}T{9 + number % 8:02d}:00:00")
+
+
+def _change_agent_files(root: Path) -> None:
+    for path, text in AGENT_FILES.items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+    _git(root, "add", "-f", *AGENT_FILES)
+    _git(root, "commit", "-qm", "Add a deploy checklist for agents")
 
 
 def _stack_on_a_base(root: Path) -> None:
@@ -438,9 +455,14 @@ def build_repo(root: Path, reviewer: bool = False, shape: str | None = None) -> 
         _fall_behind(root)
     if shape == "long":
         _go_on_for_days(root)
+    if shape == "agent-settings":
+        _change_agent_files(root)
     _git(root.parent, "init", "-q", "--bare", str(_origin(root)))
     _git(root, "remote", "add", "origin", str(_origin(root)))
     _git(root, "push", "-q", "-u", "origin", PR_BRANCH)
+    if shape == "agent-settings":
+        _git(root, "push", "-q", "origin", BASE_BRANCH)
+        _git(root, "remote", "set-head", "origin", BASE_BRANCH)
     if shape == "stacked":
         _git(root, "push", "-q", "origin", STACK_BRANCH)
     if shape == "local":
@@ -466,9 +488,17 @@ class PreviewPanel(FakeManagerPanel):
     drawn: Callable[[], Dashboard]
     sessions: TerminalSessions | None = None
     worktree: str = ""
+    working_copies: WorkingCopies | None = None
 
     def dashboard(self) -> Dashboard:
         return self.drawn()
+
+    def answer_agent_settings(self, digest: str, *, allowed: bool) -> bool:
+        held = self.drawn().agent_settings
+        if self.working_copies is None or held is None or held.digest != digest:
+            return False
+        self.working_copies.answer_agent_config(PR, digest, allowed=allowed)
+        return True
 
     def open_terminal(self, keys: str) -> str | None:
         if self.sessions is None:
@@ -949,13 +979,14 @@ def page_of(port: int) -> str:
 def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False, *,
           conversation_managers: ConversationManagerFactory, dashboards: Dashboards,
           panels: PreviewPanels, sessions: TerminalSessions, reviews: KeptReviews,
+          working_copies: WorkingCopies,
           shape: str | None = None) -> tuple[list[str], ConversationManager]:
     repo = build_repo(worktree_in(directory), reviewer, shape)
     rebased = shape == "rebased"
     conversations = seed(conversation_managers, outside, viewer, repo, reviewer,
                          repo.head if rebased or shape == "diverged" else None)
     panels.panel = manager_panel(lambda: running(dashboards.dashboard(PR)), sessions=sessions,
-                                 worktree=repo.worktree)
+                                 worktree=repo.worktree, working_copies=working_copies)
     if not rebased:
         return [], conversations
     seen = _git(repo.worktree, "rev-list", "--reverse",
@@ -981,9 +1012,9 @@ def running(dashboard: Dashboard) -> Dashboard:
 
 
 def manager_panel(drawn: Callable[[], Dashboard], *, sessions: TerminalSessions | None = None,
-                  worktree: str = "") -> PreviewPanel:
+                  worktree: str = "", working_copies: WorkingCopies | None = None) -> PreviewPanel:
     return PreviewPanel(
-        sessions=sessions, worktree=worktree, drawn=drawn,
+        sessions=sessions, worktree=worktree, drawn=drawn, working_copies=working_copies,
         changes_text=("# What changed\n\n- Renamed `write_invoice` to `write_invoice_file`.\n"
                       "- Split the header writer out of the body writer.\n"),
         output=[("Reading src/writer.py", False), ("Running the tests", False),
@@ -997,7 +1028,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--agents-disabled", action="store_true")
     parser.add_argument("--reviewer", action="store_true")
     parser.add_argument("--shape", choices=SHAPES,
-                        help="give the author preview's branch this shape on the diff tab's timeline")
+                        help="give the preview's branch this shape on the diff tab's timeline; "
+                             "agent-settings, with --reviewer, holds the pull request for the "
+                             "agent files it changes")
     args = parser.parse_args(argv)
     directory = Path(tempfile.mkdtemp(prefix="review-board-preview-"))
     try:
@@ -1034,7 +1067,8 @@ def _serve_from(directory: Path, args: argparse.Namespace) -> None:
                                 conversation_managers=seeding.get(ConversationManagerFactory),
                                 dashboards=seeding.get(Dashboards), panels=panels,
                                 sessions=serving.get(Terminals).of(PR),
-                                reviews=seeding.get(KeptReviews), shape=args.shape)
+                                reviews=seeding.get(KeptReviews),
+                                working_copies=seeding.get(WorkingCopies), shape=args.shape)
     listening = socket.socket()
     listening.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listening.bind(("127.0.0.1", args.port))

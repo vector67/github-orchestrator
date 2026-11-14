@@ -13,6 +13,7 @@ import {
   type Dismissal,
 } from 'frontend/data/dashboard';
 import {
+  AGENTS_STOPPED,
   asksFirst,
   capOf,
   leavesThePage,
@@ -54,6 +55,7 @@ export interface Controlled {
   number: number;
   shown: ShownPr;
   move: Move | null;
+  underneath: Move | null;
   yours: boolean;
   held: boolean;
   live: boolean;
@@ -134,6 +136,7 @@ const REVIEW_MOVES: ReadonlySet<Move | null> = new Set(['review', 'rereview']);
 function agentHeldBack(shown: ShownPr): string | null {
   const agent = shown.drawn.system.agent;
   if (!agent.enabled) return 'Agents are disabled for this pull request.';
+  if (shown.flags?.agent_settings) return AGENTS_STOPPED;
   if (agent.state === 'working') return 'The agent is already working.';
   return null;
 }
@@ -168,9 +171,15 @@ function releaseOffer(shown: ShownPr): Offer {
   return { state: 'ready', title: null };
 }
 
+function reviewOf(on: Controlled): Move | null {
+  return on.move === 'agent-settings' ? on.underneath : on.move;
+}
+
 function heldBackOf(control: Control, shown: ShownPr): string | null {
   if (control === 'carry-on') return carryOnHeldBack(shown);
   if (control === 'start-review') return agentHeldBack(shown);
+  if (control === 'check-for-fixes' && shown.flags?.agent_settings)
+    return AGENTS_STOPPED;
   return null;
 }
 
@@ -188,7 +197,8 @@ function offerOf(on: Controlled, control: Control): Offer {
     return ABSENT;
   if (control === 'mark-ready' && !(on.yours && shown.facts?.draft))
     return ABSENT;
-  if (control === 'start-review' && !REVIEW_MOVES.has(on.move)) return ABSENT;
+  if (control === 'start-review' && !REVIEW_MOVES.has(reviewOf(on)))
+    return ABSENT;
   if (control === 'take-over' && shown.facts?.is_author !== false)
     return ABSENT;
   if (control === 'take-over' && on.fork) return held(FORK_TAKE_OVER);
@@ -253,6 +263,7 @@ export default class PrControlsService extends Service {
       number,
       shown,
       move: summary?.move.code ?? null,
+      underneath: summary?.move.state ?? null,
       yours: this.yours(shown.repo, number),
       held: this.dashboard.onTheWall,
       live,
@@ -268,6 +279,7 @@ export default class PrControlsService extends Service {
       number: row.number,
       shown: row,
       move: row.summaries.move.code,
+      underneath: row.summaries.move.state,
       yours: this.yours(row.repo, row.number),
       held: true,
       live: row.drawn.standing === 'answering',

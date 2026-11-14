@@ -41,6 +41,13 @@ Before you install, know what it does on your machine and your branches:
   rebases in the worktree and stops short of the force-push the
   `rebase-on-main` skill wants you to approve. Review-thread fixes are the ones
   that wait: nothing reaches the branch until you press Accept.
+- On someone else's pull request that changes what agents load (`CLAUDE.md`,
+  `AGENTS.md`, `.claude/`, `.mcp.json` and the like), no agent runs until you
+  allow the changes or say to run agents without them; see
+  [A PR that changes what agents load](docs/how-to-use.md#a-pr-that-changes-what-agents-load).
+  An allowed hook that runs a script from the repository runs the pull
+  request's copy of it, and a clone with no `origin/HEAD` runs agents on your
+  user settings only.
 
 For a first look with nothing at stake, `make preview` in a checkout serves the
 board at `http://127.0.0.1:8791/pr/acme/widgets/7/` from made-up pull requests:

@@ -9,6 +9,7 @@ import {
   visit,
 } from '@ember/test-helpers';
 import {
+  dashboard,
   factsFor,
   heldPr,
   runLedger,
@@ -645,5 +646,152 @@ module('Acceptance | pr view', function (hooks) {
 
     assert.dom('[data-test-review]').doesNotExist();
     assert.strictEqual(currentURL(), '/pr/o/r/7/conversations');
+  });
+});
+
+module('Acceptance | agent settings band', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  const HELD = {
+    facts: { is_author: false },
+    manager: {
+      agent_settings: {
+        changed: ['.claude/settings.json', 'CLAUDE.md'],
+        digest: 'd1g35t',
+      },
+    },
+  };
+
+  hooks.beforeEach(function () {
+    board().held = [heldPr({ dashboard: HELD })];
+    board().manager = dashboard(HELD);
+  });
+
+  function answers(): unknown[] {
+    return board()
+      .posted.filter((one) => one.verb === 'answer-agent-settings')
+      .map((one) => one.body);
+  }
+
+  for (const tab of [
+    'summary',
+    'conversations',
+    'dashboard',
+    'terminal',
+    'diff',
+  ]) {
+    test(`the band names every changed agent file under the tabs: ${tab}`, async function (assert) {
+      await visit(`/pr/o/r/7/${tab}`);
+
+      assert
+        .dom('[data-test-agent-settings] [data-test-agent-settings-heading]')
+        .hasText('Agents are stopped on this pull request');
+      assert
+        .dom('[data-test-agent-settings]')
+        .includesText(
+          'It changes 2 files that agents load when they work in its checkout. Read the changes before any agent runs here.',
+        );
+      assert.deepEqual(
+        findAll('[data-test-agent-settings-file]').map((one) =>
+          one.textContent?.trim(),
+        ),
+        ['.claude/settings.json', 'CLAUDE.md'],
+      );
+      assert.deepEqual(
+        findAll('[data-test-agent-settings] button').map((one) =>
+          one.textContent?.trim(),
+        ),
+        ['See the changes', 'Allow these changes', 'Run agents without them'],
+      );
+    });
+  }
+
+  test('one changed agent file is named as one', async function (assert) {
+    const one = {
+      ...HELD,
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+    };
+    board().held = [heldPr({ dashboard: one })];
+    board().manager = dashboard(one);
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-agent-settings]')
+      .includesText('It changes 1 file that agents load');
+  });
+
+  test('no band shows on a pull request nothing holds', async function (assert) {
+    board().held = [heldPr()];
+    board().manager = dashboard();
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-agent-settings]').doesNotExist();
+  });
+
+  test('See the changes opens the Diff tab on the first changed file', async function (assert) {
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-agent-settings-see]');
+
+    assert.strictEqual(
+      currentURL(),
+      '/pr/o/r/7/diff?file=.claude%2Fsettings.json',
+    );
+  });
+
+  for (const [button, allowed, consequence] of [
+    [
+      'allow',
+      true,
+      'Agents on this pull request load its project settings, these 2 changed files with them, until a push changes them again.',
+    ],
+    [
+      'without',
+      false,
+      'Agents on this pull request run on your user settings only and load none of its project settings, until a push changes these 2 files again.',
+    ],
+  ] as const) {
+    test(`the ${button} answer asks before it acts, then sends the digest the band showed`, async function (assert) {
+      await visit('/pr/o/r/7/dashboard');
+      const label =
+        find(`[data-test-agent-settings-${button}]`)?.textContent?.trim() ?? '';
+
+      await click(`[data-test-agent-settings-${button}]`);
+
+      assert.deepEqual(answers(), []);
+      assert.dom('[data-test-are-you-sure-submit]').includesText(label);
+      assert.dom('[data-test-are-you-sure-consequence]').hasText(consequence);
+
+      await click('[data-test-are-you-sure-submit]');
+
+      assert.deepEqual(answers(), [{ digest: 'd1g35t', allowed }]);
+    });
+  }
+
+  test('cancelling the answer sends nothing', async function (assert) {
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-agent-settings-allow]');
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.deepEqual(answers(), []);
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+  });
+
+  test('an answer refused because a push changed the files says so in the band', async function (assert) {
+    board().refusal = {
+      status: 409,
+      code: 'agent-settings-moved',
+      detail: 'the agent files changed',
+    };
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-agent-settings-allow]');
+    await click('[data-test-are-you-sure-submit]');
+
+    assert
+      .dom('[data-test-agent-settings] [data-test-refusal]')
+      .includesText('A push changed the files agents load since you saw them');
   });
 });

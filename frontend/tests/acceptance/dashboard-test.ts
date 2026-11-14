@@ -893,6 +893,30 @@ module('Acceptance | dashboard', function (hooks) {
       .hasAttribute('title', 'Agents are disabled for this pull request.');
   });
 
+  test('the agent controls are held back with the reason while its agent files wait for an answer', async function (assert) {
+    onTheHub({
+      facts: factsFor('review'),
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+      system: { last_run: EARLIER_RUN },
+    });
+    await visit('/pr/o/r/7/dashboard');
+
+    for (const control of ['carry-on', 'start-review']) {
+      assert
+        .dom(`[data-test-control="${control}"]`)
+        .isDisabled()
+        .hasAttribute(
+          'title',
+          'Agents are stopped on this pull request: it changes files they load. Allow the changes or run agents without them first.',
+        );
+    }
+
+    await press('c');
+    await press('a');
+
+    assert.deepEqual(verbs(), []);
+  });
+
   test('each band button names what it acts on and says what it does', async function (assert) {
     onTheHub({ system: { last_run: EARLIER_RUN } });
     await visit('/pr/o/r/7/dashboard');
@@ -1968,6 +1992,29 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert.dom('[data-test-are-you-sure]').doesNotExist();
     assert.deepEqual(verbs(), []);
+  });
+
+  test('Check all threads for fixes is held back with the reason while the agent files wait for an answer', async function (assert) {
+    onTheHub({
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+    });
+    board().actAs('reviewer');
+    board().conversations = [
+      thread({
+        key: 'k1',
+        state: 'waiting',
+        record_state: 'waiting_on_reviewer',
+      }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="check-for-fixes"]')
+      .isDisabled()
+      .hasAttribute(
+        'title',
+        'Agents are stopped on this pull request: it changes files they load. Allow the changes or run agents without them first.',
+      );
   });
 
   test('a pull request you review with threads waiting on the author offers Check all threads for fixes', async function (assert) {

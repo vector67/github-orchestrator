@@ -174,7 +174,7 @@ def test_the_previews_pr_board_draws_its_dashboard_as_the_wall_does_after_a_queu
                   conversation_managers=container.get(ConversationManagerFactory),
                   dashboards=container.get(Dashboards), panels=panels,
                   sessions=FakeTerminalSessions(), reviews=container.get(KeptReviews),
-                  shape="diverged")
+                  working_copies=container.get(WorkingCopies), shape="diverged")
     web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
     board = f"/pr/{preview.PR.repo}/{preview.PR.number}/api"
 
@@ -187,7 +187,19 @@ def test_the_previews_pr_board_draws_its_dashboard_as_the_wall_does_after_a_queu
     assert drawn["listed_at"] >= row["dashboard"]["listed_at"]
 
 
-def served_preview(tmp_path, reviewer=False):
+def test_the_agent_settings_preview_holds_the_reviewers_pull_request_until_answered(tmp_path):
+    _, web, board = served_preview(tmp_path, reviewer=True, shape="agent-settings")
+
+    held = web.get(f"{board}/dashboard").json()["manager"]["agent_settings"]
+    answered = web.post(f"{board}/pull-request/operations:answer-agent-settings",
+                        json={"digest": held["digest"], "allowed": False})
+
+    assert held["changed"] == [".agents/skills/deploy/SKILL.md", ".mcp.json", "AGENTS.md"]
+    assert (answered.status_code,
+            web.get(f"{board}/dashboard").json()["manager"]["agent_settings"]) == (204, None)
+
+
+def served_preview(tmp_path, reviewer=False, shape=None):
     pr_processes = FakePrProcesses()
     github = preview.preview_github()
     agent_runs = HeldVerdicts(pr_processes)
@@ -204,7 +216,8 @@ def served_preview(tmp_path, reviewer=False):
         tmp_path, viewer, outside, reviewer,
         conversation_managers=container.get(ConversationManagerFactory),
         dashboards=container.get(Dashboards), panels=panels, sessions=FakeTerminalSessions(),
-        reviews=container.get(KeptReviews))
+        reviews=container.get(KeptReviews), working_copies=container.get(WorkingCopies),
+        shape=shape)
     web = OneLoopClient(container.get(ServerApp).app(8720, 1), base_url="http://127.0.0.1:8720")
     return conversations, web, f"/pr/{preview.PR.repo}/{preview.PR.number}/api"
 

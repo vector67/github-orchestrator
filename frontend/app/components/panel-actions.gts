@@ -12,6 +12,7 @@ import PendingRing from 'frontend/components/pending-ring';
 import RequestSessionAsk from 'frontend/components/request-session-ask';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
+  AGENTS_STOPPED,
   POSTING_TO_GITHUB,
   redAsksOf,
   REPLY_KEY,
@@ -121,7 +122,18 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     (offered.asks === 'session' && this.requestSession.asks) ||
     (CLOSES_A_MENTION.includes(offered.decision) && this.lastMentionOnAHeldPr);
 
+  get agentsStopped(): boolean {
+    const pr = this.here.pr;
+    return Boolean(
+      pr && this.store.pr(pr.repo, pr.number)?.flags?.agent_settings,
+    );
+  }
+
+  stopped = (offered: Offer): boolean =>
+    offered.runsAgent && this.agentsStopped;
+
   held = (offered: Offer): boolean => {
+    if (this.stopped(offered)) return true;
     const draft = this.args.draft;
     if (!draft || !offered.savedFirst) return false;
     return this.drafts.unsaved(this.args.conversationId, draft);
@@ -142,8 +154,10 @@ export default class PanelActions extends Component<PanelActionsSignature> {
 
   unavailable = (offered: Offer): boolean => this.pending || this.held(offered);
 
-  titleOf = (offered: Offer): string =>
-    this.held(offered) ? SAVE_FIRST : offered.title;
+  titleOf = (offered: Offer): string => {
+    if (this.stopped(offered)) return AGENTS_STOPPED;
+    return this.held(offered) ? SAVE_FIRST : offered.title;
+  };
 
   ringed = (offered: Offer): boolean =>
     this.pressed(offered) && this.args.footer.ring;

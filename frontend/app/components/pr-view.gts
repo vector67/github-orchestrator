@@ -7,6 +7,7 @@ import { pulses } from 'frontend/motion';
 import { LinkTo } from '@ember/routing';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
+import AgentSettingsBand from 'frontend/components/agent-settings-band';
 import RebaseButton from 'frontend/components/rebase-button';
 import HarvestButton from 'frontend/components/harvest-button';
 import MentionsCounter from 'frontend/components/mentions-counter';
@@ -420,6 +421,7 @@ export default class PrView extends Component<PrViewSignature> {
           >Diff
             <kbd>5</kbd></LinkTo>
         </nav>
+        <AgentSettingsBand @pr={{@pr}} />
         <div class="pane">
           {{yield}}
         </div>

@@ -60,6 +60,7 @@ import type {
 
 export type Move =
   | 'release-worktree'
+  | 'agent-settings'
   | 'on-hold'
   | 'first-poll'
   | 'closed'
@@ -273,6 +274,7 @@ const WAITING: Move[] = [
 
 const BEFORE_ANYTHING: Move[] = [
   'release-worktree',
+  'agent-settings',
   'on-hold',
   'first-poll',
   'closed',
@@ -440,6 +442,7 @@ function nudged(code: Move, board: Board): Move {
 
 function onTop(state: Move | null, board: Board): Move {
   if ((board.flags?.frozen_on ?? null) !== null) return 'release-worktree';
+  if (board.flags?.agent_settings) return 'agent-settings';
   if (board.flags?.on_hold) return board.openMentions ? 'mention' : 'on-hold';
   if (state === null) return 'first-poll';
   if (state === 'closed') return state;

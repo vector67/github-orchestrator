@@ -471,6 +471,24 @@ module('Acceptance | terminal', function (hooks) {
     assert.dom('[data-test-launch="r"] [data-glyph="agent"]').exists();
   });
 
+  test('the agent launcher is held back with the reason while the agent files wait for an answer, and a shell is not', async function (assert) {
+    const held = {
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+    };
+    board().manager = dashboard(held);
+    board().held = [heldPr({ dashboard: held })];
+    await visit('/pr/o/r/7/terminal');
+
+    assert
+      .dom('[data-test-launch="r"]')
+      .isDisabled()
+      .hasAttribute(
+        'title',
+        'Agents are stopped on this pull request: it changes files they load. Allow the changes or run agents without them first.',
+      );
+    assert.dom('[data-test-launch="new"]').isNotDisabled();
+  });
+
   test('a launcher shows its session opening, with the ring, from the click until the board lists it', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');

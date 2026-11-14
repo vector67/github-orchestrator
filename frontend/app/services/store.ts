@@ -1240,6 +1240,30 @@ export default class StoreService extends Service {
     return { done: true, body: () => this.drop(pr, local) };
   }
 
+  async answerAgentSettings(
+    pr: Numbered,
+    digest: string,
+    allowed: boolean,
+  ): Promise<Tried<void>> {
+    const { taken, local } = await this.sendOn(
+      pr,
+      'answer-agent-settings',
+      () =>
+        handed(
+          `${this.here.prefixOf(pr)}/api/pull-request/operations:answer-agent-settings`,
+          { digest, allowed },
+        ),
+      'answer its agent settings',
+    );
+    const drawn = await this.ask({ kind: 'dashboard', pr }, null).catch(
+      () => null,
+    );
+    if (drawn?.changed) drawn.take();
+    if (!taken.done) return taken;
+    this.drop(pr, local);
+    return { done: true, body: undefined };
+  }
+
   async setImportance(
     pr: Numbered,
     importance: Importance,

@@ -537,6 +537,42 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
+  const AGENT_FILES = {
+    changed: ['.claude/settings.json', 'CLAUDE.md'],
+    digest: 'd1g35t',
+  };
+
+  test('a pull request held for its agent files asks you to check them before anything else', async function (assert) {
+    const shown = await seen({
+      facts: reviewing({ viewer_requested: true }),
+      manager: { agent_settings: AGENT_FILES, on_hold: true },
+      system: { on_hold: true },
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, shown.verb, shown.reason, shown.chips],
+      [
+        'agent-settings',
+        'needs-you',
+        'Check its agent settings',
+        'agents stopped, 2 files they load changed',
+        ['agents stopped'],
+      ],
+    );
+  });
+
+  test('one changed agent file is named as one', async function (assert) {
+    const shown = await onTheWall({
+      facts: reviewing({ viewer_requested: true }),
+      manager: { agent_settings: { changed: ['CLAUDE.md'], digest: 'd' } },
+    });
+
+    assert.strictEqual(
+      shown.reason,
+      'agents stopped, 1 file they load changed',
+    );
+  });
+
   test('a run fixing CI says the agent has the ball', async function (assert) {
     assert.deepEqual(
       await moveAndGroup({

@@ -721,7 +721,8 @@ export type Slot =
   | 'ask'
   | 'summary'
   | 'reviewers'
-  | 'importance';
+  | 'importance'
+  | 'agent-settings';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -855,6 +856,12 @@ const PR_WRITES = {
     slot: 'ask',
     ring: true,
   },
+  'answer-agent-settings': {
+    doing: 'answering',
+    square: null,
+    slot: 'agent-settings',
+    unsent: 'Not answered',
+  },
   summarise: { doing: 'summarising', square: null, slot: 'summary' },
   'summarise-with-github-api': {
     doing: 'summarising over the GitHub API',
@@ -864,6 +871,28 @@ const PR_WRITES = {
 } satisfies Record<string, PrWrite>;
 
 export type PrVerb = keyof typeof PR_WRITES;
+
+function these(count: number, noun: string): string {
+  return count === 1 ? `this ${noun}` : `these ${count} ${noun}s`;
+}
+
+export function agentSettingsAsks(allowed: boolean, files: number): AreYouSure {
+  return allowed
+    ? {
+        label: 'Allow these changes',
+        question: 'Allow these changes?',
+        consequence: `Agents on this pull request load its project settings, ${these(files, 'changed file')} with them, until a push changes them again.`,
+      }
+    : {
+        label: 'Run agents without them',
+        question: 'Run agents without these changes?',
+        consequence: `Agents on this pull request run on your user settings only and load none of its project settings, until a push changes ${these(files, 'file')} again.`,
+        danger: false,
+      };
+}
+
+export const AGENTS_STOPPED =
+  'Agents are stopped on this pull request: it changes files they load. Allow the changes or run agents without them first.';
 
 export interface AreYouSure {
   label: string;
@@ -956,6 +985,7 @@ const SLOTS: Slot[] = [
   'summary',
   'reviewers',
   'importance',
+  'agent-settings',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {

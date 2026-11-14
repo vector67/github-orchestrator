@@ -909,6 +909,55 @@ all**), are refused with the palette's words above. Take over, Carry on and
 New PR asked for through the API answer `409` with the code
 `fork-pull-request`, the code the Dashboard's CI fix notice carries too.
 
+### A PR that changes what agents load
+
+Agents load settings from the checkout they work in: `.claude/`, `.codex/` and
+`.agents/` folders, `.mcp.json`, and `CLAUDE.md`, `CLAUDE.local.md` and
+`AGENTS.md`, wherever they sit. On your own pull requests, and ones you took
+over, they load them as they are. On someone else's, the orchestrator compares
+those files at the pull request's head with where it left origin's default
+branch (`origin/HEAD`). When none changed, agents load the project's settings.
+When some did, no agent runs on it until you answer:
+
+- the wall puts it in Needs you with the move **Check its agent settings**, the
+  why **agents stopped, N files they load changed** and an **agents stopped**
+  chip;
+- every tab of its page (Summary, Board, Dashboard, Terminal, Diff) shows a band
+  under the tabs, **Agents are stopped on this pull request**, naming each
+  changed file, with **See the changes** (the Diff tab, opened on the first of
+  them), **Allow these changes** and **Run agents without them**. Each answer
+  asks before it acts. **Allow these changes** loads the pull request's project
+  settings, changed files and all; **Run agents without them** runs agents on
+  your user settings only, as if the project had none;
+- every button that starts an agent (Carry on, Start a review agent, Check all
+  threads for fixes, the Terminal's rebase-on-main session, a card's agent
+  verbs) is held back, its tooltip saying why.
+
+While it waits, events that would start an agent (a review request, a
+re-review, a run the last manager was interrupted in) stay queued, thread runs
+and commit checks wait, and each starts once you answer. Polling, your own
+review, comments and drafts carry on. An agent asked for through the API is
+refused with the code `agent-settings-held`. If the worktree comes to hold
+unanswered files while an agent runs in it, its manager stops that run on its
+next tick.
+
+One answer covers every changed file, and lasts while they stay exactly the
+same: a push that changes any of them holds the pull request again, and a push
+that leaves them alone keeps your answer. The answer is sent with the digest of
+the files the band showed (`POST pull-request/operations:answer-agent-settings`
+with `digest` and `allowed`), and is refused `agent-settings-moved` when a push
+has changed them since; the band then shows them as they are now.
+
+What this does not cover:
+
+- an allowed hook that runs a script from the repository runs the pull
+  request's copy of that script, which this check does not compare;
+- a clone with no `origin/HEAD` cannot say what the default branch is, so its
+  agents load your user settings only and nothing is held
+  (`git remote set-head origin --auto` sets it);
+- a terminal session you opened yourself in the worktree is not stopped when
+  the worktree moves.
+
 ## Review board
 
 The board is always up, and it is the Board tab of each PR's page on the hub. It is
