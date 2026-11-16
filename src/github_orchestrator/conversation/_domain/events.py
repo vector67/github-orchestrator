@@ -59,6 +59,11 @@ class RunStarted:
 
 
 @dataclass(frozen=True)
+class RunWaits:
+    reason: str
+
+
+@dataclass(frozen=True)
 class RunExited:
     at: str
     head: Sha | None = None
@@ -287,6 +292,7 @@ Event = (
     | RunRefused
     | ShellRefused
     | RunStarted
+    | RunWaits
     | RunExited
     | RunTimedOut
     | RunLost

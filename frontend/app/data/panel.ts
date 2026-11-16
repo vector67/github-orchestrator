@@ -43,6 +43,7 @@ import {
   runDropped,
   sent,
   unsettled,
+  worktreeAwaited,
   type Phase,
 } from 'frontend/data/thread';
 import {
@@ -886,6 +887,14 @@ function bannerOf(
         : 'Running',
       body: 'The proposal appears here when the agent finishes.',
       tone: 'working',
+    };
+  }
+  const awaited = phase === 'queued' && worktreeAwaited(conversation);
+  if (awaited) {
+    return {
+      title: "Waiting for the pull request's worktree",
+      body: awaited.reason ?? '',
+      tone: 'queued',
     };
   }
   if (phase === 'queued') {

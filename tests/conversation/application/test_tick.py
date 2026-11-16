@@ -12,6 +12,7 @@ from github_orchestrator.agent_runs.fake import (
 from github_orchestrator.conversation import (
     ConversationState,
     OperationState,
+    ReasonCode,
 )
 from github_orchestrator.domain import Sha
 from github_orchestrator.github.fake import Check, FakeGitHub
@@ -822,6 +823,33 @@ def test_an_on_hold_tick_leaves_the_decisions_waiting_and_starts_no_run(settings
     assert _read(threads).operations[-1].state is OperationState.PENDING
     assert here.github.thread(KEY).comments[1:] == ()
     assert here.agent_runs.started == []
+
+
+def test_a_run_whose_pr_worktree_is_gone_waits_and_says_why(settings):
+    here, threads = _ready_world(settings, agent_runs=_agent_runs())
+    here.working_copies.placed.clear()
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    waiting = _read(threads).operations[-1]
+    assert (waiting.state, waiting.reason_code) == (OperationState.PENDING,
+                                                    ReasonCode.WORKTREE_MISSING)
+    assert "head branch of" in waiting.reason
+    assert here.agent_runs.started == []
+
+
+def test_a_run_that_waited_on_its_pr_worktree_starts_once_it_is_back(settings):
+    here, threads = _ready_world(settings, agent_runs=_agent_runs())
+    placed = dict(here.working_copies.placed)
+    here.working_copies.placed.clear()
+    threads.tick(FakeNotifications(), on_hold=False)
+    here.working_copies.placed.update(placed)
+
+    threads.tick(FakeNotifications(), on_hold=False)
+
+    running = _read(threads).operations[-1]
+    assert (running.state, running.reason, running.reason_code) == (
+        OperationState.RUNNING, None, None)
 
 
 def test_a_tick_that_may_not_schedule_still_settles_the_decisions_and_starts_no_run(settings):

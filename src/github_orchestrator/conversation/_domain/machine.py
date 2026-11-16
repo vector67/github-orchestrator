@@ -97,6 +97,7 @@ from github_orchestrator.conversation._domain.events import (
     RunRefused,
     RunStarted,
     RunTimedOut,
+    RunWaits,
     SessionRefused,
     Wake,
 )
@@ -331,7 +332,8 @@ def _the_gist_of_this_body(conversation: Conversation,
     return None
 
 
-def _queued_for_a_run(conversation: Conversation, event: RunStarted) -> Refused | None:
+def _queued_for_a_run(conversation: Conversation,
+                      event: RunStarted | RunWaits) -> Refused | None:
     fix = conversation.fix
     if conversation.state != OPEN:
         return Refused(conversation, _state_code(conversation),
@@ -1096,6 +1098,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     SessionRefused: (_a_session_opening,),
     SessionGone: (_a_session_open,),
     RunStarted: (_queued_for_a_run,),
+    RunWaits: (_queued_for_a_run,),
     RunExited: (_running_only,),
     RunTimedOut: (_running_only,),
     RunRefused: (_running_only,),

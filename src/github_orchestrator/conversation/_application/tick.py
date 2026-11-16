@@ -24,6 +24,7 @@ from github_orchestrator.conversation._domain.events import (
     RunLost,
     RunStarted,
     RunTimedOut,
+    RunWaits,
     Wake,
     WorkspaceCut,
 )
@@ -194,6 +195,9 @@ class Runs:
             if cut.workspace is None:
                 log.warning("thread runs %s: could not cut a worktree for %s, "
                             "so its run waits: %s", pr, key, cut.failure)
+                if conversation.fix.waits_on != cut.failure:
+                    update.conversation = run(ports, conversation,
+                                              RunWaits(reason=cut.failure)).conversation
                 return False
             outcome = run(ports, conversation,
                           WorkspaceCut(base_sha=cut.workspace.base_sha))

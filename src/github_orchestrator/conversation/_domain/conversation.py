@@ -376,6 +376,7 @@ class Fix:
     run: Run = field(default_factory=Run)
     attempts: int = 0
     started_at: str | None = None
+    waits_on: str | None = None
     base_sha: Sha | None = None
     thread_sha: Sha | None = None
     tests: str | None = None

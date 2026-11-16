@@ -24,6 +24,7 @@ import {
   standingOf,
   type Phase,
   type Standing,
+  worktreeAwaited,
 } from 'frontend/data/thread';
 import { inFlight, writtenOn } from 'frontend/data/decisions';
 
@@ -166,7 +167,12 @@ function authorMeta(
         conversation.reopened ? 'revised' : '',
       );
     case 'queued':
-      return sentence(who, 'waiting for a free agent');
+      return sentence(
+        who,
+        worktreeAwaited(conversation)
+          ? "waiting for the pull request's worktree"
+          : 'waiting for a free agent',
+      );
     case 'working':
       return sentence(who, 'running', total ? `${done}/${total}` : '');
     case 'answered':

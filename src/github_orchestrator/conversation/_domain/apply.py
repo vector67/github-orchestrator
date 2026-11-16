@@ -163,6 +163,7 @@ from github_orchestrator.conversation._domain.events import (
     RunRefused,
     RunStarted,
     RunTimedOut,
+    RunWaits,
     SessionRefused,
     ShellRefused,
     TakenOver,
@@ -673,8 +674,12 @@ def _report_declined(conversation: Conversation, command: ReportDeclined,
 def _run_started(conversation: Conversation, command: RunStarted) -> Accepted:
     fix = conversation.fix
     started = with_fix(conversation, state=RUNNING, started_at=command.at,
-                        attempts=fix.attempts + 1, last_words=None)
+                        attempts=fix.attempts + 1, last_words=None, waits_on=None)
     return Accepted(started, (StartRun(kind=fix.run.kind, onto=fix.run.onto),))
+
+
+def _run_waits(conversation: Conversation, command: RunWaits) -> Accepted:
+    return Accepted(with_fix(conversation, waits_on=command.reason))
 
 
 def _session_refused(conversation: Conversation,
@@ -1538,6 +1543,8 @@ def _dispatch(conversation: Conversation, command: Change,
             return _session_gone(conversation)
         case RunStarted():
             return _run_started(conversation, command)
+        case RunWaits():
+            return _run_waits(conversation, command)
         case RunExited():
             return _run_exited(conversation, command)
         case RunTimedOut():

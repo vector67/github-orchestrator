@@ -196,6 +196,8 @@ def _fix_outcome(operation: Operation, conversation: Conversation) -> tuple[
     if fix.state == QUEUED:
         if operation.state in (OperationState.RUNNING, OperationState.REQUEUED):
             return OperationState.REQUEUED, fix.reason, None
+        if fix.waits_on:
+            return OperationState.PENDING, fix.waits_on, ReasonCode.WORKTREE_MISSING
         return OperationState.PENDING, None, None
     if fix.state in (RUNNING, IN_SESSION):
         return OperationState.RUNNING, None, None

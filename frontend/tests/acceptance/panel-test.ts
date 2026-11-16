@@ -541,6 +541,39 @@ module('Acceptance | panel', function (hooks) {
       .includesText('The proposal appears here when the agent finishes.');
   });
 
+  test('a run waiting on a missing worktree says why in place of a free agent', async function (assert) {
+    const waiting = {
+      reason: 'no worktree holds PROJ-30, the head branch of #7',
+      reason_code: 'worktree-missing' as const,
+    };
+    const queued = board().threadIn('queued', { key: KEY });
+    board().conversations = [
+      {
+        ...queued,
+        operations: queued.operations.map((one) =>
+          one.state === 'pending' ? { ...one, ...waiting } : one,
+        ),
+      },
+    ];
+    board().operations[KEY] = [
+      operation({
+        id: `${KEY}.1`,
+        conversation: KEY,
+        kind: 'first',
+        state: 'pending',
+        ...waiting,
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-banner-fix]')
+      .includesText("Waiting for the pull request's worktree")
+      .includesText('no worktree holds PROJ-30, the head branch of #7')
+      .doesNotIncludeText('free agent');
+  });
+
   test('the verdict and the file count are the meta line, each with its detail', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 

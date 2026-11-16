@@ -510,6 +510,7 @@ def _migrated(version: int, document: Document) -> Document:
         "base_sha": _adopted_base(document),
         "attempts": int(document.get("attempts") or 0),
         "started_at": document.get("started_at"),
+        "waits_on": document.get("waits_on"),
         "thread_sha": _sha(document, "thread_sha"),
         "tests": document.get("tests"),
         "tests_note": document.get("tests_note"),

@@ -203,6 +203,14 @@ export function newestRun(
     : newestOf(conversation, RUN_KINDS);
 }
 
+export function worktreeAwaited(
+  conversation: Conversation,
+): OperationSummary | undefined {
+  return conversation.operations.find(
+    (one) => one.state === 'pending' && one.reason_code === 'worktree-missing',
+  );
+}
+
 export function agentHasRun(conversation: Conversation): boolean {
   return newestRun(conversation) !== undefined;
 }
