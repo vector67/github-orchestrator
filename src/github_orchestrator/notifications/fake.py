@@ -1,4 +1,6 @@
-from github_orchestrator.domain import Pr
+from datetime import datetime, timezone
+
+from github_orchestrator.domain import LocalClock, Pr
 from github_orchestrator.notifications._facts import (
     AgentSkipped,
     Arrival,
@@ -30,10 +32,22 @@ class _Kept:
         self.gathered.append(item)
 
 
+class _Remembered:
+    def __init__(self) -> None:
+        self.sent: set[str] = set()
+
+    def first(self, key: str) -> bool:
+        if key in self.sent:
+            return False
+        self.sent.add(key)
+        return True
+
+
 class FakeNotifications(News):
     def __init__(self) -> None:
         self._kept = _Kept()
-        super().__init__(self._kept)
+        super().__init__(self._kept, _Remembered(),
+                         LocalClock(lambda: datetime(2026, 9, 24, 17, 46, tzinfo=timezone.utc)))
 
     @property
     def posted(self) -> list[Posted]:

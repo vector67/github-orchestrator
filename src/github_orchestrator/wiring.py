@@ -130,6 +130,7 @@ from github_orchestrator.notifications._disk import (
     DiskOutbox,
 )
 from github_orchestrator.notifications._news import News
+from github_orchestrator.notifications._sent import SentFile
 from github_orchestrator.pr_event_queue import Intake, Queues, Worklist
 from github_orchestrator.pr_event_queue._disk import DiskPrEventQueue
 from github_orchestrator.pr_event_queue._would import WouldIntake
@@ -527,7 +528,8 @@ class NotificationsProvider(Provider):
 
     @provide
     def news(self, wiring: NotificationsWiring, clock: LocalClock) -> News:
-        return News(DiskOutbox(wiring.notifications_dir, clock))
+        return News(DiskOutbox(wiring.notifications_dir, clock),
+                    SentFile(wiring.notifications_dir, clock), clock)
 
     @provide
     def thread_news(self, news: News) -> ThreadNews:

@@ -27,7 +27,7 @@ class TestAgentTextFlowsIntoNotify:
         mac = RecordingMac()
         notifications, courier = opened(tmp_path, real_desktop(mac=mac), Clock())
 
-        notifications.thread_news.agent_asked(a_pr(1, "o/n"), question=evil_question)
+        notifications.thread_news.agent_asked(a_pr(1, "o/n"), "thread-a", question=evil_question)
         courier.deliver(LONG_AWAKE, None)
 
         [argv] = mac.argvs

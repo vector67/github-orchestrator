@@ -34,6 +34,7 @@ from github_orchestrator.notifications._facts import (
     Gathered,
     Posted,
 )
+from github_orchestrator.notifications._sent import SENT
 from github_orchestrator.notifications.interface import (
     BoardPages,
     FixProgress,
@@ -105,6 +106,8 @@ class DiskCourier:
             return
         now = self._clock()
         for path in sorted(self._root.glob("*.json")):
+            if path.name == SENT:
+                continue
             document = json.loads(path.read_text())
             posted = datetime.fromisoformat(document["posted_at"])
             if self._shown(named(document), Badge(document["badge"]),

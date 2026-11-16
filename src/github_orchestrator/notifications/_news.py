@@ -1,9 +1,10 @@
+import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
 from github_orchestrator.desktop import Badge
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import LocalClock, Pr
 from github_orchestrator.notifications._facts import (
     AgentSkipped,
     Arrival,
@@ -20,14 +21,20 @@ class Outbox(Protocol):
     def gather(self, item: Gathered) -> None: ...
 
 
+class Sent(Protocol):
+    def first(self, key: str) -> bool: ...
+
+
 def _streak(fix: str | None, failed: str, error: str, log_file: Path) -> str:
     told = f"{fix} " if fix else ""
     return f"{told}{failed}: {error}. Details in {log_file}"
 
 
 class News:
-    def __init__(self, outbox: Outbox) -> None:
+    def __init__(self, outbox: Outbox, sent: Sent, clock: LocalClock) -> None:
         self._outbox = outbox
+        self._sent = sent
+        self._clock = clock
 
     def _post(self, pr: Pr | None, badge: Badge, title: str, body: str) -> None:
         self._outbox.post(Posted(pr, badge, title, body))
@@ -54,13 +61,23 @@ class News:
                    f"{author}\n{classification}: {reason}")
 
     def fix_failed(self, pr: Pr, *, gist: str, author: str, reason: str | None) -> None:
+        if not self._first_today(pr, "fix failed"):
+            return
         self._post(pr, Badge.FAILED, f"Fix failed on {pr.short}", f"{gist or author}: {reason}")
 
-    def agent_asked(self, pr: Pr, *, question: str) -> None:
+    def agent_asked(self, pr: Pr, key: str, *, question: str) -> None:
+        asked = hashlib.sha1(question.encode()).hexdigest()
+        if not self._sent.first(f"agent asked {pr} {key} {asked}"):
+            return
         self._post(pr, Badge.NEEDS_YOU, f"Agent question on #{pr.number}", question)
 
     def run_failed(self, pr: Pr, kind: str, exit_code: int | None) -> None:
+        if not self._first_today(pr, "run failed"):
+            return
         self._post(pr, Badge.FAILED, f"Run failed on {pr.short}", f"{kind} exited {exit_code}")
+
+    def _first_today(self, pr: Pr, kind: str) -> bool:
+        return self._sent.first(f"{kind} {pr} {self._clock():%Y-%m-%d}")
 
     def agent_skipped(self, pr: Pr, kind: str) -> None:
         self._outbox.gather(AgentSkipped(pr, kind))

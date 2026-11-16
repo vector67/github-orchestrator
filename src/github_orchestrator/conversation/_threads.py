@@ -824,7 +824,7 @@ def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation,
                       account: str) -> None:
     fix = conversation.fix
     if fix.is_asking and fix.question is not None:
-        news.agent_asked(pr, question=fix.question.text)
+        news.agent_asked(pr, conversation.key, question=fix.question.text)
     elif fix.is_proposed:
         news.fix_ready(pr, conversation.key, gist=fix.last_words or conversation.gist,
                        comments=[(comment.author, comment.body)
