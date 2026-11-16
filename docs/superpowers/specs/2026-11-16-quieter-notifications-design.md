@@ -51,6 +51,12 @@ stays on the board, which already shows it.
   `CycleSaving._fix()` as the signal: that runs `gh repo view`, which fails
   during a DNS outage too.
 - "Mentions search failed" follows the same rules.
+- The board says which kind of failure it is. The watcher's health carries
+  the cause beside `last_error` (and beside `mentions_error`), computed once by
+  the same classifier on the server. The hub bar's poll line, the wall's
+  "polls are failing" state and the runs page's "Last error" all tell a
+  network fault that will clear on its own from one the operator must fix, and
+  only the second carries the fix. The board never classifies an error itself.
 
 ### 2. Delete the status notifications
 

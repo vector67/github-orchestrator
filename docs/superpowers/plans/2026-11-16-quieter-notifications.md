@@ -13,7 +13,10 @@ the spec's. Issue #412.
   is merged and restarted before the next step starts. The user approved
   running the steps straight through, without stopping between them.
 - Run `make lint-python` and `make test-python` before each commit, under
-  `timeout`, and report the pass counts. No step touches `frontend/`.
+  `timeout`, and report the pass counts. Only step 2 touches `frontend/`: it
+  loads `frontend-work`, runs the full `make lint` and `make test`, runs
+  `make contract` after the API change, and checks the board in a real browser
+  in both themes with the console open.
 - **Removing a notification needs no new test.** Delete the code and the tests
   that covered it, and stay green. Never add a test that asserts something is
   absent. A commit whose pass count falls names each deleted test.
@@ -64,7 +67,11 @@ tests. Change detection, the board and the agent queue are untouched.
 ### 2. Watcher outages (rule 1)
 
 The classifier, the once-at-three rule and the new wording, for "Watcher not
-polling" and "Mentions search failed".
+polling" and "Mentions search failed". Then the board: the watcher's health
+gains the cause for `last_error` and for `mentions_error`, the store reads it
+once, and the hub bar's poll line, the wall's failing state and the runs page
+word a network fault and an operator fault differently. Tests assert which
+words and which fix appear, never colours.
 
 ### 3. Bots and the operator's own comments (rule 3)
 
