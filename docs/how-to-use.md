@@ -829,6 +829,15 @@ Clicking a desktop notification about one PR opens that PR at
 its Board when it is yours. One about no PR, or about Claude skipping events on
 several PRs, opens nothing.
 
+A watcher cycle that fails on the network (no such host, a TLS or connection
+error, an HTTP 5xx, a timeout or GitHub's rate limit) posts nothing: it clears
+on its own, and the bar at the top shows it meanwhile. Any other failure posts
+**Watcher not polling** once, when the third cycle in a row fails, and not again
+until a cycle succeeds. It says what to do where the watcher knows: log in
+again for an HTTP 401, check `[[repos]]` and `gh_account` for a 403 or 404, and
+free some space for a full disk. **Mentions search failed** follows the same
+rule.
+
 A notification from before PR pages named their repo opens `/pr/<number>`. That
 opens the one PR the hub holds with that number. When several repos hold one,
 it lists them to pick from; when none does, it says so.

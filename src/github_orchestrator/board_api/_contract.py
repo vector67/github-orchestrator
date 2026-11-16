@@ -30,7 +30,7 @@ from github_orchestrator.conversation import (
     OperationState,
     ReasonCode,
 )
-from github_orchestrator.domain import AuthorKind, DismissUntil, HubState, Side
+from github_orchestrator.domain import AuthorKind, Cause, DismissUntil, HubState, Side
 
 
 class ErrorCode(StrEnum):
@@ -339,12 +339,20 @@ class WatcherHealth(BaseModel):
                     "while they succeed.")
     fix: str | None = Field(
         description="What to do about `last_error`, in plain words, where the watcher "
-                    "recognises it: gh holding no token for the account, or the "
-                    "account unable to see a watched repo. Null otherwise.")
+                    "recognises a fault the operator must fix: GitHub turning down "
+                    "the account's login, the account unable to see a watched repo, "
+                    "or a full disk. Null otherwise, and always null for a network fault.")
     mentions_error: str | None = Field(
         description="Why the last search for mentions did not run, while polls go on: "
                     "a `mentions_start` in the config that will not read. Null once "
                     "a search runs.")
+    last_error_cause: Cause | None = Field(
+        description="Who clears `last_error`: `network` for a fault that clears on its "
+                    "own (DNS, TLS, a dropped connection, an HTTP 5xx, a timeout or "
+                    "GitHub's rate limit), `operator` for anything else. Null while "
+                    "cycles succeed.")
+    mentions_error_cause: Cause | None = Field(
+        description="Who clears `mentions_error`, in the same terms as `last_error_cause`.")
 
 
 class NewestRelease(BaseModel):

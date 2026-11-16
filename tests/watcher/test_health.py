@@ -46,15 +46,20 @@ def _searches(settings, error=None):
     return Searches(settings.config.gh_account, "octocat/hello-world", error)
 
 
-def _fail_once(settings, error):
+def _fail_once(settings, error, desktop=None):
     with pytest.raises(RuntimeError):
-        watcher_over(settings, github=_searches(settings, RuntimeError(error))).run_cycle()
+        watcher_over(settings, github=_searches(settings, RuntimeError(error)),
+                     desktop=desktop).run_cycle()
 
 
 def _cannot_search(settings):
-    return (f"watcher cannot search octocat/hello-world as "
-            f"{settings.config.gh_account} — check [[repos]] and gh_account in "
-            f"{settings.config_path}")
+    return f"watcher cannot search octocat/hello-world as {settings.config.gh_account}"
+
+
+NO_SUCH_HOST = 'Post "https://api.github.com/graphql": dial tcp: lookup api.github.com: no such host'
+NO_TOKEN = ("gh auth token --user octocat failed (exit 1): no oauth token found for "
+            "github.com account octocat")
+DISK_FULL = "[Errno 28] No space left on device: '/data/github-orchestrator/state.json'"
 
 
 def _run_failed(container):
@@ -94,8 +99,8 @@ def test_a_failed_search_repeats_why_gh_refused(settings):
         watcher_over(settings, github=FakeGitHub()).run_cycle()
 
     message = str(excinfo.value)
+    assert message.startswith(f"{_cannot_search(settings)}: ")
     assert "cannot be searched" in message
-    assert message.index("[[repos]]") < message.index("cannot be searched")
 
 
 def test_the_daemon_rests_the_poll_interval_between_cycles_two_seconds_at_a_time(settings):
@@ -171,25 +176,55 @@ def test_the_daemon_leaves_its_cycle_summaries_to_the_log_not_stdout(settings, c
 def test_a_cycle_that_cannot_search_notifies_the_user_with_the_fix(settings):
     github = Searches(settings.config.gh_account, "someone/else")
 
-    desktop, _ = _forever(settings, github, 1)
+    desktop, _ = _forever(settings, github, 3)
 
     [notification] = desktop.announcements
     assert "octocat/hello-world" in notification.body
     assert settings.config.gh_account in notification.body
     assert "[[repos]]" in notification.body
-    assert "gh_account" in notification.body
     assert str(settings.config_path) in notification.body
     assert "cannot be searched" in notification.body
     assert "cannot be searched" in health(settings).last_error
 
 
-def test_every_failed_cycle_notifies_not_only_the_first(settings):
-    desktop, _ = _forever(settings, _searches(settings, RuntimeError("poll blew up")), 3)
+def test_a_fault_to_fix_notifies_once_when_the_third_cycle_in_a_row_fails(settings):
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError("poll blew up")), 5)
 
-    assert len(desktop.announcements) == 3
+    [notification] = desktop.announcements
     assert health(settings).last_error.endswith("poll blew up")
-    assert "3 consecutive failed cycles" in desktop.announcements[-1].body
-    assert "poll blew up" in desktop.announcements[-1].body
+    assert "3 cycles in a row failed" in notification.body
+    assert "poll blew up" in notification.body
+
+
+def test_a_fault_to_fix_notifies_again_after_a_good_cycle_ends_the_streak(settings):
+    desktop = FakeDesktop()
+    for _ in range(3):
+        _fail_once(settings, "poll blew up", desktop)
+    watcher_over(settings).run_cycle()
+    for _ in range(3):
+        _fail_once(settings, "poll blew up", desktop)
+
+    assert len(desktop.announcements) == 2
+
+
+def test_a_network_fault_never_notifies(settings):
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError(NO_SUCH_HOST)), 4)
+
+    assert desktop.announcements == []
+    assert health(settings).last_error.endswith(NO_SUCH_HOST)
+
+
+@pytest.mark.parametrize(("error", "fix"), [
+    (NO_TOKEN, "GitHub turned down the login for {account}. "
+               "Run `gh auth login` as {account}."),
+    (DISK_FULL, "The disk is full. Free some space and the watcher carries on."),
+])
+def test_a_fault_to_fix_notifies_what_to_do_about_it(settings, error, fix):
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError(error)), 3)
+
+    [notification] = desktop.announcements
+    assert notification.body.startswith(fix.format(account=settings.config.gh_account))
+    assert "[[repos]]" not in notification.body
 
 
 def test_a_successful_cycle_clears_the_failure_count(settings):
@@ -200,7 +235,7 @@ def test_a_successful_cycle_clears_the_failure_count(settings):
 
     assert health(settings).last_error is None
     _fail_once(settings, "again")
-    assert health(settings).last_error.endswith("; again")
+    assert health(settings).last_error.endswith(": again")
 
 
 def test_a_recovery_leaves_the_run_of_failures_it_ended_in_the_log(settings, caplog):
@@ -211,7 +246,7 @@ def test_a_recovery_leaves_the_run_of_failures_it_ended_in_the_log(settings, cap
         watcher_over(settings).run_cycle()
 
     assert "recovered; failed cycles in a row: 2; last error: watcher cannot search" in caplog.text
-    assert "; gh: Bad credentials" in caplog.text
+    assert ": gh: Bad credentials" in caplog.text
 
 
 def test_a_cycle_after_a_success_reports_no_recovery(settings, caplog):
@@ -243,11 +278,11 @@ def test_a_dry_run_neither_counts_the_failure_nor_notifies(settings):
 def test_a_counter_that_cannot_be_written_does_not_silence_the_notification(settings):
     settings.watcher_failures.mkdir()
 
-    desktop, _ = _forever(settings, _searches(settings, RuntimeError("poll blew up")), 1)
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError("poll blew up")), 4)
 
     assert [(a.badge, a.title, a.body) for a in desktop.announcements] == [
         (Badge.FAILED, "Watcher not polling",
-         f"watcher cycle failed: {_cannot_search(settings)}; poll blew up. "
+         f"3 cycles in a row failed: {_cannot_search(settings)}: poll blew up. "
          f"Details in {settings.logs_dir / 'watcher.log'}")]
 
 
@@ -262,26 +297,27 @@ def test_nothing_the_reporter_hits_can_take_the_daemon_down(settings):
 def test_a_multi_line_error_reaches_the_notifier_on_one_line(settings):
     github = _searches(settings, RuntimeError("gh: Not Found\nrun gh auth login"))
 
-    desktop, _ = _forever(settings, github, 1)
+    desktop, _ = _forever(settings, github, 3)
 
     assert "\n" not in desktop.announcements[0].body
     assert "run gh auth login" in desktop.announcements[0].body
-    assert health(settings).last_error.endswith("; gh: Not Found run gh auth login")
+    assert health(settings).last_error.endswith(": gh: Not Found run gh auth login")
 
 
-def test_a_one_shot_cycle_that_fails_is_counted_notified_and_raised(settings):
+def test_one_shot_cycles_that_fail_are_counted_notified_and_raised(settings):
     desktop = FakeDesktop()
     watcher = watcher_over(settings, desktop=desktop,
                            github=_searches(settings, RuntimeError("poll blew up")))
 
-    with pytest.raises(RuntimeError, match="poll blew up"):
-        watcher.run_cycle()
+    for _ in range(3):
+        with pytest.raises(RuntimeError, match="poll blew up"):
+            watcher.run_cycle()
 
     assert [(a.badge, a.title, a.body) for a in desktop.announcements] == [
         (Badge.FAILED, "Watcher not polling",
-         f"1 consecutive failed cycle: {_cannot_search(settings)}; poll blew up. "
+         f"3 cycles in a row failed: {_cannot_search(settings)}: poll blew up. "
          f"Details in {settings.logs_dir / 'watcher.log'}")]
-    assert health(settings).last_error.endswith("; poll blew up")
+    assert health(settings).last_error.endswith(": poll blew up")
 
 
 def test_a_cycle_under_the_lock_reads_as_alive(settings):
@@ -345,17 +381,16 @@ def test_an_interrupted_count_keeps_the_old_record_and_leaves_no_partial_file(
     monkeypatch.setattr(os, "fsync", no_fsync)
     _fail_once(settings, "second")
 
-    assert health(settings).last_error.endswith("; first")
+    assert health(settings).last_error.endswith(": first")
     assert list(settings.watcher_failures.parent.glob("*.writing")) == []
 
 
 def test_a_cycle_failing_while_gh_has_no_token_for_the_account_says_to_log_in(settings):
-    github = _searches(settings, RuntimeError("gh auth token failed"))
-    github.tokens.clear()
+    _forever(settings, _searches(settings, RuntimeError(NO_TOKEN)), 1)
 
-    _forever(settings, github, 1)
-
-    assert health(settings).fix == "Log in with `gh auth login`, then this page retries."
+    account = settings.config.gh_account
+    assert health(settings).fix == (
+        f"GitHub turned down the login for {account}. Run `gh auth login` as {account}.")
 
 
 def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo_and_the_account(
@@ -364,8 +399,17 @@ def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo_and_the
     _forever(settings, Searches(settings.config.gh_account, "someone/else"), 1)
 
     assert health(settings).fix == (
-        f"You can't see octocat/hello-world as {settings.config.gh_account}. "
-        "Remove it from your repos, or ask for access.")
+        f"You can't see octocat/hello-world as {settings.config.gh_account}. Remove it "
+        f"from [[repos]] in {settings.config_path}, or ask for access.")
+
+
+def test_a_refusal_naming_no_repo_the_account_cannot_see_points_at_the_config(settings):
+    _forever(settings, _searches(settings, RuntimeError("gh: Not Found (HTTP 404)")), 1)
+
+    account = settings.config.gh_account
+    assert health(settings).fix == (
+        f"GitHub refused a request as {account}. Check [[repos]] and gh_account "
+        f"in {settings.config_path}.")
 
 
 def test_a_cycle_failing_for_a_reason_gh_and_github_do_not_explain_has_no_fix(settings):

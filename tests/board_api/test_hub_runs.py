@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
+from github_orchestrator.domain import Cause
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.watcher import Health
 from tests.board_api.support import Pulse, holding, served_hub
@@ -94,7 +95,8 @@ def test_the_watcher_says_when_it_last_polled_and_when_it_polls_next():
     assert runs_read().json()["watcher"] == {
         "polled_at": "2026-09-28T09:59:41+00:00",
         "next_poll_at": "2026-09-28T10:00:41+00:00", "overdue": False, "last_error": None,
-        "fix": None, "mentions_error": None}
+        "fix": None, "mentions_error": None, "last_error_cause": None,
+        "mentions_error_cause": None}
 
 
 def test_the_poll_time_is_the_heartbeat_stamp_whenever_the_health_was_read():
@@ -127,22 +129,31 @@ def test_the_runs_are_not_modified_while_nothing_changes():
 
 
 def test_a_failing_watcher_says_why_and_what_to_do_about_it():
-    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="gh auth token failed",
-                     fix="Log in with `gh auth login`, then this page retries.",
-                     polls_every=MINUTE)
+    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="HTTP 401",
+                     fix="Run `gh auth login` as octocat.", polls_every=MINUTE,
+                     last_error_cause=Cause.OPERATOR)
 
     watcher = runs_read(health=failing).json()["watcher"]
 
-    assert (watcher["last_error"], watcher["fix"]) == (
-        "gh auth token failed", "Log in with `gh auth login`, then this page retries.")
+    assert (watcher["last_error"], watcher["last_error_cause"], watcher["fix"]) == (
+        "HTTP 401", "operator", "Run `gh auth login` as octocat.")
+
+
+def test_a_watcher_that_cannot_reach_github_says_the_network_is_the_cause():
+    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="unexpected EOF",
+                     fix=None, polls_every=MINUTE, last_error_cause=Cause.NETWORK)
+
+    assert runs_read(health=failing).json()["watcher"]["last_error_cause"] == "network"
 
 
 def test_a_failing_mentions_search_says_why_without_a_failing_poll():
     unread = Health(alive=True, polled_at=NOW - timedelta(seconds=19), read_at=NOW,
                     last_error=None, fix=None, polls_every=MINUTE,
-                    mentions_error="config.toml: mentions_start must be in quotes")
+                    mentions_error="config.toml: mentions_start must be in quotes",
+                    mentions_error_cause=Cause.OPERATOR)
 
     watcher = runs_read(health=unread).json()["watcher"]
 
-    assert (watcher["last_error"], watcher["mentions_error"]) == (
-        None, "config.toml: mentions_start must be in quotes")
+    assert (watcher["last_error"], watcher["mentions_error"],
+            watcher["mentions_error_cause"]) == (
+        None, "config.toml: mentions_start must be in quotes", "operator")

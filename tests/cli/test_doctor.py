@@ -428,7 +428,8 @@ def test_a_failing_watcher_names_its_last_error(machine, run_cli):
 
 def test_a_failing_mentions_search_names_its_reason_and_leaves_the_watcher_ok(machine, run_cli):
     _beat(machine, 34)
-    machine.settings().mentions_failure.write_text("config.toml: mentions_start must be in quotes")
+    machine.settings().mentions_failure.write_text(json.dumps(
+        {"consecutive": 1, "last_error": "config.toml: mentions_start must be in quotes"}))
     with _watcher_lock(machine):
         ran = run_cli("doctor")
 

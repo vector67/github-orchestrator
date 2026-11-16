@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from github_orchestrator.atomic_write import write_atomically
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -45,3 +48,25 @@ def record_failure(path: Path, error: str, fix: str | None) -> WatcherFailures:
 def clear_failures(path: Path) -> None:
     path.unlink(missing_ok=True)
 
+
+class Streak:
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        self._unwritten = 0
+
+    def failed(self, error: str, fix: str | None) -> int:
+        try:
+            return record_failure(self._path, error, fix).consecutive
+        except OSError:
+            log.exception("Could not count the failure in %s", self._path)
+            self._unwritten += 1
+            return read_failures(self._path).consecutive + self._unwritten
+
+    def ended(self) -> WatcherFailures:
+        self._unwritten = 0
+        ended = read_failures(self._path)
+        try:
+            clear_failures(self._path)
+        except OSError as exc:
+            log.warning("Could not clear %s: %s", self._path, exc)
+        return ended

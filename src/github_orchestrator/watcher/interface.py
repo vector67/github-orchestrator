@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.domain import HubState, Pr
+from github_orchestrator.domain import Cause, HubState, Pr
 
 OVERDUE_GRACE = timedelta(minutes=2)
 
@@ -35,6 +35,8 @@ class Health:
     fix: str | None
     polls_every: timedelta
     mentions_error: str | None = None
+    last_error_cause: Cause | None = None
+    mentions_error_cause: Cause | None = None
 
     @property
     def since_last_poll(self) -> timedelta | None:

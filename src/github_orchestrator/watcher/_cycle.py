@@ -250,8 +250,7 @@ class PollingWatcher:
                 return found
             except Exception as exc:
                 raise PrSearchError(
-                    f"watcher cannot search {self._watched()} as {config.gh_account} — check "
-                    f"[[repos]] and gh_account in {config.config_location}; {exc}"
+                    f"watcher cannot search {self._watched()} as {config.gh_account}: {exc}"
                 ) from exc
 
     def _cards_to_build(self) -> list[Pr]:

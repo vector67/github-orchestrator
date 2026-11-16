@@ -2,9 +2,10 @@ import datetime
 import fcntl
 from pathlib import Path
 
-from github_orchestrator.domain import UtcClock
+from github_orchestrator.domain import Cause, UtcClock
 from github_orchestrator.watcher._config import WatcherConfig
-from github_orchestrator.watcher._failures import read_failures
+from github_orchestrator.watcher._diagnosis import diagnose
+from github_orchestrator.watcher._failures import WatcherFailures, read_failures
 from github_orchestrator.watcher.interface import Health
 
 
@@ -19,15 +20,23 @@ class HealthFiles:
 
     def health(self) -> Health:
         failures = read_failures(self._failures)
+        cause = _cause(failures)
+        mentions = read_failures(self._mentions_failure)
         return Health(
             alive=_watcher_lock_held(self._lock) is True,
             polled_at=_polled_at(self._heartbeat),
             read_at=self._clock(),
-            last_error=failures.last_error if failures.consecutive else None,
-            fix=failures.fix if failures.consecutive else None,
+            last_error=failures.last_error if cause else None,
+            fix=failures.fix if cause is Cause.OPERATOR else None,
             polls_every=datetime.timedelta(seconds=self._poll_interval),
-            mentions_error=_mentions_error(self._mentions_failure),
+            mentions_error=mentions.last_error if _cause(mentions) else None,
+            last_error_cause=cause,
+            mentions_error_cause=_cause(mentions),
         )
+
+
+def _cause(failures: WatcherFailures) -> Cause | None:
+    return diagnose(failures.last_error).cause if failures.consecutive else None
 
 
 def _watcher_lock_held(path: Path) -> bool | None:
@@ -41,13 +50,6 @@ def _watcher_lock_held(path: Path) -> bool | None:
                 return True
             fcntl.flock(handle, fcntl.LOCK_UN)
             return False
-    except OSError:
-        return None
-
-
-def _mentions_error(path: Path) -> str | None:
-    try:
-        return path.read_text() or None
     except OSError:
         return None
 

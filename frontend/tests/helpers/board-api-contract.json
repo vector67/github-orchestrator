@@ -2820,6 +2820,13 @@
    ],
    "type": "string"
   },
+  "Cause": {
+   "enum": [
+    "network",
+    "operator"
+   ],
+   "type": "string"
+  },
   "CiCheck": {
    "properties": {
     "done": {
@@ -9499,10 +9506,30 @@
       }
      ]
     },
+    "last_error_cause": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Cause"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "mentions_error": {
      "anyOf": [
       {
        "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "mentions_error_cause": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Cause"
       },
       {
        "type": "null"
@@ -9539,7 +9566,9 @@
     "overdue",
     "last_error",
     "fix",
-    "mentions_error"
+    "mentions_error",
+    "last_error_cause",
+    "mentions_error_cause"
    ],
    "type": "object"
   },

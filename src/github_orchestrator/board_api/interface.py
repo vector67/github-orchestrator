@@ -10,6 +10,7 @@ from typing import Protocol
 from starlette.types import ASGIApp
 
 from github_orchestrator.domain import (
+    Cause,
     CiCheck,
     DismissUntil,
     HubState,
@@ -474,6 +475,12 @@ class Pulse(Protocol):
 
     @property
     def mentions_error(self) -> str | None: ...
+
+    @property
+    def last_error_cause(self) -> Cause | None: ...
+
+    @property
+    def mentions_error_cause(self) -> Cause | None: ...
 
     @property
     def overdue(self) -> bool: ...

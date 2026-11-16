@@ -160,7 +160,7 @@ def test_a_notification_about_a_pr_opens_that_pr_on_its_board(store, desktop):
 def test_a_notification_about_no_pr_opens_nothing(store, desktop):
     notifications, courier = store
 
-    notifications.polling.failed(3, "gh timed out", Path("/logs/watcher.log"))
+    notifications.polling.failed(3, "gh: Not Found (HTTP 404)", None, Path("/logs/watcher.log"))
     courier.deliver(LONG_AWAKE, None)
 
     assert [a.link for a in desktop.announcements] == [None]

@@ -124,7 +124,8 @@ def test_a_stopped_watcher_with_a_streak_still_says_it_is_not_running(machine, r
 
 def test_a_failing_mentions_search_is_named_on_its_own_line_with_its_reason(machine, run_cli):
     _beat(machine, 42)
-    machine.settings().mentions_failure.write_text("config.toml: mentions_start must be in quotes")
+    machine.settings().mentions_failure.write_text(json.dumps(
+        {"consecutive": 1, "last_error": "config.toml: mentions_start must be in quotes"}))
     with _lock(machine):
         assert (_health(run_cli), _line(run_cli, "Mentions search:")) == (
             "Watcher: alive, last polled 42s ago",

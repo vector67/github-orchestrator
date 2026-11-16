@@ -25,7 +25,7 @@ def _logged(caplog, word):
 
 
 def _watcher_failed(notifications):
-    notifications.polling.failed(1, "HTTP 403: secondary rate limit", Path("watcher.log"))
+    notifications.polling.failed(3, "HTTP 401: Bad credentials", None, Path("watcher.log"))
 
 
 def test_a_posted_notification_is_logged_with_what_it_says_and_the_code_that_posted_it(
@@ -37,7 +37,7 @@ def test_a_posted_notification_is_logged_with_what_it_says_and_the_code_that_pos
 
     [posted] = _logged(caplog, "posted")
     assert "Watcher not polling" in posted.getMessage()
-    assert "HTTP 403: secondary rate limit" in posted.getMessage()
+    assert "HTTP 401: Bad credentials" in posted.getMessage()
     assert "_watcher_failed" in (posted.stack_info or "")
 
 

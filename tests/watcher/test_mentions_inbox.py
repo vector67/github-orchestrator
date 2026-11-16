@@ -80,12 +80,25 @@ def test_a_mentions_search_that_fails_is_notified_as_the_mentions_search(setting
     desktop = FakeDesktop()
     inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
 
-    watcher_over(settings, desktop=desktop, mentions_inbox=inbox).run_cycle()
+    watcher = watcher_over(settings, desktop=desktop, mentions_inbox=inbox)
+    for _ in range(4):
+        watcher.run_cycle()
 
     assert [(a.badge, a.title, a.body) for a in desktop.announcements] == [
         (Badge.FAILED, "Mentions search failed",
-         "config.toml: mentions_start must be in quotes. "
+         "3 searches in a row failed: config.toml: mentions_start must be in quotes. "
          f"Details in {settings.logs_dir / 'watcher.log'}")]
+
+
+def test_a_mentions_search_that_cannot_reach_github_never_notifies(settings):
+    desktop = FakeDesktop()
+    inbox = CountedSearches(StartUnread("Get \"https://api.github.com/search\": unexpected EOF"))
+
+    watcher = watcher_over(settings, desktop=desktop, mentions_inbox=inbox)
+    for _ in range(3):
+        watcher.run_cycle()
+
+    assert desktop.announcements == []
 
 
 def test_a_mentions_search_that_works_again_clears_its_failure(settings):

@@ -253,5 +253,10 @@ class HubState(StrEnum):
     BROKEN = "broken"
 
 
-__all__ = ["DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+class Cause(StrEnum):
+    NETWORK = "network"
+    OPERATOR = "operator"
+
+
+__all__ = ["Cause", "DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]

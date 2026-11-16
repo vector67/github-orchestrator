@@ -155,7 +155,8 @@ def test_health_says_this_is_the_hub_and_where_it_is():
         "version": "0.1.0",
         "watcher": {"polled_at": "2026-08-28T09:59:40+00:00",
                     "next_poll_at": "2026-08-28T10:00:40+00:00", "overdue": False,
-                    "last_error": None, "fix": None, "mentions_error": None},
+                    "last_error": None, "fix": None, "mentions_error": None,
+                    "last_error_cause": None, "mentions_error_cause": None},
         "newest_release": None}
 
 

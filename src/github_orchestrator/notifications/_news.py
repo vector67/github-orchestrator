@@ -20,10 +20,9 @@ class Outbox(Protocol):
     def gather(self, item: Gathered) -> None: ...
 
 
-def _cycles(consecutive: int | None) -> str:
-    if consecutive is None:
-        return "watcher cycle failed"
-    return f"{consecutive} consecutive failed {'cycle' if consecutive == 1 else 'cycles'}"
+def _streak(fix: str | None, failed: str, error: str, log_file: Path) -> str:
+    told = f"{fix} " if fix else ""
+    return f"{told}{failed}: {error}. Details in {log_file}"
 
 
 class News:
@@ -99,10 +98,10 @@ class News:
                    f"{worktree.name} is still PR {other.in_repo}'s after {minutes} min — "
                    "opening it anyway")
 
-    def failed(self, consecutive: int | None, error: str, log_file: Path) -> None:
+    def failed(self, consecutive: int, error: str, fix: str | None, log_file: Path) -> None:
         self._post(None, Badge.FAILED, "Watcher not polling",
-                   f"{_cycles(consecutive)}: {error}. Details in {log_file}")
+                   _streak(fix, f"{consecutive} cycles in a row failed", error, log_file))
 
-    def mentions_failed(self, error: str, log_file: Path) -> None:
+    def mentions_failed(self, consecutive: int, error: str, log_file: Path) -> None:
         self._post(None, Badge.FAILED, "Mentions search failed",
-                   f"{error}. Details in {log_file}")
+                   _streak(None, f"{consecutive} searches in a row failed", error, log_file))

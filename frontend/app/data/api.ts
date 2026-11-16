@@ -143,6 +143,8 @@ export interface BriefRequest {
 
 export type CapturedGit = 'f' | 'p' | 'pra' | 's' | 'l' | 'd';
 
+export type Cause = 'network' | 'operator';
+
 export interface CiCheck {
   name: string;
   passed: boolean;
@@ -1323,6 +1325,8 @@ export interface WatcherHealth {
   last_error: string | null;
   fix: string | null;
   mentions_error: string | null;
+  last_error_cause: Cause | null;
+  mentions_error_cause: Cause | null;
 }
 
 export interface WitnessProgress {

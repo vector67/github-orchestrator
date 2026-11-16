@@ -609,6 +609,8 @@ export function runLedger(
       last_error: null,
       fix: null,
       mentions_error: null,
+      last_error_cause: null,
+      mentions_error_cause: null,
       ...over.watcher,
     },
     today: { runs: 0, cost_usd: null, unpriced: 0, ...over.today },
