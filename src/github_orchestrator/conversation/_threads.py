@@ -701,16 +701,14 @@ class _ConversationManager:
                 and not _is_review_verdict(active.thread)),
             unresolved_count=found.unresolved_count,
             mentions=found_mentions,
-            activity=_activity(found, polled_at,
-                               self._unrecorded(found, mentioned, first=cursor is None),
-                               first=cursor is None),
+            activity=_activity(found, polled_at, self._unrecorded(found, mentioned)),
             _announce=_announcing(pr, () if cursor is None
                                   else self._arrivals(found, polled_at, state.author)),
             _keep=lambda: records.save_cursor(moved),
         )
 
-    def _unrecorded(self, found: ThreadPoll, mentioned: Sequence[FetchedThread], *,
-                    first: bool) -> list[FetchedThread]:
+    def _unrecorded(self, found: ThreadPoll,
+                    mentioned: Sequence[FetchedThread]) -> list[FetchedThread]:
         ports = self._pr.ports
         opening = found.open_review_threads
         return without_records(
@@ -852,9 +850,9 @@ def _is_review_verdict(thread: FetchedThread) -> bool:
             and thread.state.is_verdict)
 
 
-def _activity(found: ThreadPoll, cutoff: str, unrecorded: Sequence[FetchedThread], *,
-              first: bool) -> ThreadActivity | None:
-    heard = [] if first else [active.thread for active in found.active]
+def _activity(found: ThreadPoll, cutoff: str,
+              unrecorded: Sequence[FetchedThread]) -> ThreadActivity | None:
+    heard = [active.thread for active in found.active]
     threads = heard + [thread for thread in unrecorded if thread not in heard]
     if not threads and not found.stale:
         return None

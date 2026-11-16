@@ -130,24 +130,35 @@ def test_an_open_thread_already_in_the_cursor_without_a_record_is_a_conversation
     assert _standing(threads) is ConversationState.QUEUED
 
 
-def test_a_thread_already_resolved_on_github_is_no_conversation(stage):
+def test_a_thread_already_resolved_on_github_is_a_done_conversation(stage):
     threads = _pr(stage)
     on_github(stage.github, KEY, said(101, BODY), is_resolved=True)
 
     hear(threads)
     hear(threads)
 
-    assert threads.all() == []
+    assert [one.key for one in threads.all()] == [KEY]
+    assert _standing(threads) is ConversationState.DONE
 
 
-def test_a_pr_comment_already_there_when_the_pr_is_first_polled_is_no_conversation(stage):
+def test_a_pr_comment_already_there_when_the_pr_is_first_polled_is_a_conversation(stage):
     threads = _pr(stage)
     on_github(stage.github, "IC_101", said(101, BODY), kind=CommentKind.ISSUE, path=None,
               line=None)
 
-    hear(threads)
+    absorbed = hear(threads)
 
-    assert threads.all() == []
+    assert [conversation.key for conversation in absorbed.created] == ["IC_101"]
+
+
+def test_a_review_summary_already_there_when_the_pr_is_first_polled_is_a_conversation(stage):
+    threads = _pr(stage)
+    on_github(stage.github, "PRR_101", said(101, BODY), kind=CommentKind.REVIEW_SUMMARY,
+              path=None, line=None)
+
+    absorbed = hear(threads)
+
+    assert [conversation.key for conversation in absorbed.created] == ["PRR_101"]
 
 
 def test_a_recorded_thread_is_not_heard_again(stage):

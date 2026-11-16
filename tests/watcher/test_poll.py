@@ -271,12 +271,12 @@ def test_a_poll_reports_every_thread_with_a_comment_the_cursor_has_not_seen(sett
     assert poll.active_threads[0].path == "src/main.py"
 
 
-def test_a_pr_seen_for_the_first_time_queues_its_open_review_threads(settings):
+def test_a_pr_seen_for_the_first_time_queues_every_thread_already_on_it(settings):
     github = _holding(_state(), [*_threads(), _thread(key="PRRT_done", resolved=True)], 23)
 
     poll = _cycled(settings, github, FakeThreadRecords())
 
-    assert [t.key for t in poll.active_threads] == ["PRRT_one"]
+    assert sorted(t.key for t in poll.active_threads) == ["IC_one", "PRRT_done", "PRRT_one"]
 
 
 def test_a_poll_keeps_the_old_cursor_when_the_thread_fetch_fails(settings):

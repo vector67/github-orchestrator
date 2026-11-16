@@ -154,7 +154,7 @@ def _heard(here, state):
     return manager
 
 
-def test_the_first_poll_of_someone_elses_pr_opens_a_conversation_for_each_unanswered_mention(settings):
+def test_the_first_poll_of_someone_elses_pr_opens_a_conversation_for_each_comment_and_mention(settings):
     here, state = _watching(
         settings,
         _issue("IC_1", _said(1, "anna", "@octocat ping", "2026-09-01T10:00:00Z")),
@@ -165,7 +165,7 @@ def test_the_first_poll_of_someone_elses_pr_opens_a_conversation_for_each_unansw
     manager = _heard(here, state)
 
     assert sorted(conversation.key for conversation in manager.all()) == [
-        "IC_1", "PRR_1", "pr-body"]
+        "IC_1", "IC_2", "PRR_1", "pr-body"]
     opening = manager.get("pr-body")
     assert (opening.comment_type, opening.author, opening.body) == ("pr-body", "anna",
                                                                     "cc @octocat")
