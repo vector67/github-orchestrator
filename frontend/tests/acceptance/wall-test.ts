@@ -2683,7 +2683,8 @@ module('Acceptance | wall', function (hooks) {
     board().ledger = runLedger({
       watcher: {
         last_error: 'gh auth token --user octocat failed (exit 1)',
-        fix: 'Log in with `gh auth login`, then this page retries.',
+        last_error_cause: 'operator',
+        fix: 'Run `gh auth login` as octocat.',
       },
     });
 
@@ -2692,14 +2693,37 @@ module('Acceptance | wall', function (hooks) {
     await clock().tick(LIST);
 
     assert
+      .dom('[data-test-wall-unheld="watcher-failing"]')
+      .includesText('The watcher’s polls are failing.');
+    assert
       .dom('[data-test-wall-fix]')
-      .hasText('Log in with `gh auth login`, then this page retries.');
+      .hasText('Run `gh auth login` as octocat.');
     assert
       .dom('[data-test-wall-error]')
       .hasText('gh auth token --user octocat failed (exit 1)');
     assert.dom('[data-test-wall-unheld="watcher-starting"]').doesNotExist();
     assert.dom('[data-test-banner]').doesNotExist();
     assert.dom('[data-test-wall-stale]').doesNotExist();
+  });
+
+  test('a wall whose polls cannot reach GitHub says it retries, with no fix', async function (assert) {
+    onTheHub();
+    board().unheld = { code: 'watcher-failing', detail: 'unexpected EOF' };
+    board().ledger = runLedger({
+      watcher: { last_error: 'unexpected EOF', last_error_cause: 'network' },
+    });
+
+    await visit('/');
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-unheld="watcher-failing"]')
+      .includesText(
+        "The watcher can't reach GitHub, retrying each poll. The wall fills in once a poll gets through.",
+      );
+    assert.dom('[data-test-wall-error]').hasText('unexpected EOF');
+    assert.dom('[data-test-wall-fix]').doesNotExist();
   });
 
   test('a wall whose hub went back to setup shows what its config lacks', async function (assert) {

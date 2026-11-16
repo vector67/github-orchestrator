@@ -116,7 +116,9 @@ module('Acceptance | pr view', function (hooks) {
 
   test('a watcher whose cycles fail is an alarm in the settings menu', async function (assert) {
     onTheHub(heldPr());
-    board().ledger = runLedger({ watcher: { last_error: 'gh: HTTP 502' } });
+    board().ledger = runLedger({
+      watcher: { last_error: 'gh: HTTP 502', last_error_cause: 'network' },
+    });
 
     await visit('/pr/o/r/7/dashboard');
     await click('[data-test-settings-open]');
@@ -125,7 +127,7 @@ module('Acceptance | pr view', function (hooks) {
       .dom(
         '[data-test-settings-menu] [data-test-pr-health][data-test-health-alarm]',
       )
-      .hasAttribute('title', 'polls failing: gh: HTTP 502');
+      .hasAttribute('title', "can't reach GitHub, retrying each poll");
   });
 
   test('a hub that stops answering is an alarm in the settings menu', async function (assert) {

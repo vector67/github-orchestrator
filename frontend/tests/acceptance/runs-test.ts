@@ -27,6 +27,12 @@ module('Acceptance | runs', function (hooks) {
     return (find(selector)?.textContent ?? '').trim().replace(/\s+/g, ' ');
   }
 
+  function facts(labels: string[]): string[] {
+    return findAll('[data-test-watcher-fact]')
+      .map((one) => one.textContent.trim().replace(/\s+/g, ' '))
+      .filter((said) => labels.some((label) => said.startsWith(`${label} `)));
+  }
+
   function polledAt(): { watcher: Partial<WatcherHealth> } {
     return {
       watcher: {
@@ -134,10 +140,15 @@ module('Acceptance | runs', function (hooks) {
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
 
-  test('a watcher whose cycles fail says why, as an alarm', async function (assert) {
+  test('a watcher whose cycles fail for a reason to fix says what to do, as an alarm', async function (assert) {
     onTheHub();
     board().ledger = runLedger({
-      watcher: { ...polledAt().watcher, last_error: 'gh: HTTP 502' },
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'HTTP 401: Bad credentials',
+        last_error_cause: 'operator',
+        fix: 'Run `gh auth login` as octocat.',
+      },
     });
     clock().now = POLLED + 19_000;
 
@@ -145,9 +156,47 @@ module('Acceptance | runs', function (hooks) {
 
     assert.strictEqual(
       text('[data-test-health="poll"]'),
-      'polls failing: gh: HTTP 502',
+      'polls failing: Run `gh auth login` as octocat.',
     );
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
+  });
+
+  test('a watcher whose cycles fail to fix with no known fix says the error', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'poll blew up',
+        last_error_cause: 'operator',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/');
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      'polls failing: poll blew up',
+    );
+  });
+
+  test('a watcher that cannot reach GitHub says it retries, with no fix', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'gh: HTTP 502',
+        last_error_cause: 'network',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/');
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      "can't reach GitHub, retrying each poll",
+    );
   });
 
   test('a mentions search that fails while polls go on says only the search fails, and why', async function (assert) {
@@ -156,6 +205,7 @@ module('Acceptance | runs', function (hooks) {
       watcher: {
         ...polledAt().watcher,
         mentions_error: 'config.toml: mentions_start must be in quotes',
+        mentions_error_cause: 'operator',
       },
     });
     clock().now = POLLED + 19_000;
@@ -169,12 +219,35 @@ module('Acceptance | runs', function (hooks) {
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
 
+  test('a mentions search that cannot reach GitHub says it retries', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        mentions_error: 'unexpected EOF',
+        mentions_error_cause: 'network',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/');
+
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      "mentions search can't reach GitHub, retrying each poll",
+    );
+  });
+
   test('a long failure stays on the bar’s one row and gives its whole text on hover', async function (assert) {
     const failure = `watcher cannot search acme/gadgets-api as vector67 — ${'check [[repos]] and gh_account '.repeat(12)}`;
     onTheHub();
     board().watching = ['acme/gadgets-api'];
     board().ledger = runLedger({
-      watcher: { ...polledAt().watcher, last_error: failure },
+      watcher: {
+        ...polledAt().watcher,
+        last_error: failure,
+        last_error_cause: 'operator',
+      },
     });
     clock().now = POLLED + 19_000;
 
@@ -424,6 +497,7 @@ module('Acceptance | runs', function (hooks) {
       watcher: {
         ...polledAt().watcher,
         mentions_error: 'config.toml: mentions_start must be in quotes',
+        mentions_error_cause: 'operator',
       },
     });
 
@@ -437,6 +511,45 @@ module('Acceptance | runs', function (hooks) {
       'Mentions search failing: config.toml: mentions_start must be in quotes',
     );
     assert.dom(failing).hasClass('failing');
+  });
+
+  test('the facts give a fault to fix its error and its fix', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'HTTP 401: Bad credentials',
+        last_error_cause: 'operator',
+        fix: 'Run `gh auth login` as octocat.',
+      },
+    });
+
+    await visit('/runs');
+
+    assert.deepEqual(facts(['Last error', 'Fix']), [
+      'Last error HTTP 401: Bad credentials',
+      'Fix Run `gh auth login` as octocat.',
+    ]);
+  });
+
+  test('the facts say a network fault clears on its own', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'unexpected EOF',
+        last_error_cause: 'network',
+        mentions_error: 'unexpected EOF',
+        mentions_error_cause: 'network',
+      },
+    });
+
+    await visit('/runs');
+
+    assert.deepEqual(facts(['Last error', 'Mentions search', 'Fix']), [
+      "Last error can't reach GitHub, retrying each poll: unexpected EOF",
+      "Mentions search can't reach GitHub, retrying each poll: unexpected EOF",
+    ]);
   });
 
   test('a run claude reported as an error though it exited cleanly says it errored', async function (assert) {

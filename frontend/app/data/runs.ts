@@ -49,6 +49,8 @@ function secondsUntil(iso: string, now: number): number {
   return (Date.parse(iso) - now) / 1000;
 }
 
+export const RETRYING = "can't reach GitHub, retrying each poll";
+
 export function pollOf(
   watcher: WatcherHealth,
   state: HubState | null,
@@ -57,9 +59,18 @@ export function pollOf(
   if (state && state !== 'watching') return STATE_WORDS[state];
   const polled = watcher.polled_at;
   if (watcher.last_error) {
-    return { text: `polls failing: ${watcher.last_error}`, alarm: true };
+    if (watcher.last_error_cause === 'network') {
+      return { text: RETRYING, alarm: true };
+    }
+    return {
+      text: `polls failing: ${watcher.fix ?? watcher.last_error}`,
+      alarm: true,
+    };
   }
   if (watcher.mentions_error) {
+    if (watcher.mentions_error_cause === 'network') {
+      return { text: `mentions search ${RETRYING}`, alarm: true };
+    }
     return {
       text: `mentions search failing: ${watcher.mentions_error}`,
       alarm: true,
@@ -149,12 +160,25 @@ export function factsOf(
     });
   }
   if (watcher.last_error) {
-    facts.push({ label: 'Last error', text: watcher.last_error, alarm: true });
+    facts.push({
+      label: 'Last error',
+      text:
+        watcher.last_error_cause === 'network'
+          ? `${RETRYING}: ${watcher.last_error}`
+          : watcher.last_error,
+      alarm: true,
+    });
+  }
+  if (watcher.fix) {
+    facts.push({ label: 'Fix', text: watcher.fix, alarm: true });
   }
   if (watcher.mentions_error) {
     facts.push({
       label: 'Mentions search',
-      text: `failing: ${watcher.mentions_error}`,
+      text:
+        watcher.mentions_error_cause === 'network'
+          ? `${RETRYING}: ${watcher.mentions_error}`
+          : `failing: ${watcher.mentions_error}`,
       alarm: true,
     });
   }

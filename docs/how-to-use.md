@@ -470,7 +470,9 @@ hides them again.
 The bar at the top has **Wall**, **Runs** and **Setup**, the repo filter, and
 the watcher's health. That reads `polled 14:02:11, 40s ago` while polls keep
 time and `no poll yet` before the first. In red it reads
-`no poll since <time>, <age> ago`, `polls failing: <error>`,
+`no poll since <time>, <age> ago`, `can't reach GitHub, retrying each poll`
+for a network fault that clears on its own, `polls failing: <fix>` for one you
+must fix (the error itself when the watcher knows no fix),
 `in setup, polling nothing` or `config broken, polling nothing`. When the hub
 stops answering it reads `the board server is not answering`, or
 `the system is under heavy load` while the health check still answers. Beside
