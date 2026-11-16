@@ -95,6 +95,14 @@ def yours(settings, machine, tmp_path):
     machine.github.add_pr(THE_PR, PullRequestState(branch="main"))
 
 
+TRACKED = 'tracker = "jira"\ntracker_project = "PROJ"\n'
+
+
+@pytest.fixture
+def tracked(machine, tmp_path):
+    machine.config_path.write_text(_watching_the_pr(tmp_path, TRACKED))
+
+
 @pytest.fixture
 def store(settings):
     return SimpleNamespace(
@@ -489,7 +497,8 @@ def _ticket_argv(**fields):
         "reply": "That belongs outside this PR, so I've proposed a ticket.", **fields})
 
 
-def test_ticket_proposes_the_agents_ticket_and_reply(pr_worktree, running, threads, run_cli):
+def test_ticket_proposes_the_agents_ticket_and_reply(pr_worktree, running, tracked, threads,
+                                                     run_cli):
     ran = run_cli(*_ticket_argv())
 
     assert ran.code == 0, ran.err
@@ -501,6 +510,20 @@ def test_ticket_proposes_the_agents_ticket_and_reply(pr_worktree, running, threa
         "ticket", "That belongs outside this PR, so I've proposed a ticket.")
     assert (proposal.ticket.project, proposal.ticket.title, proposal.ticket.body) == (
         "PROJ", "Cache tax rates across exports", "Each export reads its model again.")
+
+
+def test_ticket_is_refused_where_the_config_sets_up_no_tracker(running, threads, run_cli):
+    ran = run_cli(*_ticket_argv())
+
+    assert ran.code != 0
+    assert "tracker and tracker_project" in ran.err
+    assert not _stored(threads).fix.is_proposed
+
+
+def test_ticket_help_says_it_is_refused_where_the_config_sets_up_no_tracker(run_cli):
+    said = " ".join(run_cli("thread", "ticket", "--help").out.split())
+
+    assert "tracker and tracker_project" in said
 
 
 SPLIT_BRANCH = "split/cache-tax-rates"
@@ -533,7 +556,8 @@ def test_split_proposes_the_agents_split_under_this_prs_ticket(fixed, store, thr
         SPLIT_BRANCH, "main", "the cache stands alone", None)
 
 
-def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, threads, run_cli):
+def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, tracked, threads,
+                                                        run_cli):
     _branched(store, fixed)
 
     ran = run_cli(*_split_argv(fixed, project="PROJ", title="Cache tax rates",
@@ -545,8 +569,8 @@ def test_split_proposes_the_ticket_the_new_pr_goes_under(fixed, store, threads, 
         "PROJ", "Cache tax rates", "Each export reads its model again.")
 
 
-def test_split_proposes_the_existing_ticket_the_new_pr_goes_under(fixed, store, threads,
-                                                                   run_cli):
+def test_split_proposes_the_existing_ticket_the_new_pr_goes_under(fixed, store, tracked,
+                                                                   threads, run_cli):
     _branched(store, fixed)
 
     ran = run_cli(*_split_argv(fixed, ticket_key="PROJ-34",
@@ -556,6 +580,21 @@ def test_split_proposes_the_existing_ticket_the_new_pr_goes_under(fixed, store, 
     split = _stored(threads).fix.split
     assert (split.existing_ticket.key, split.existing_ticket.url, split.ticket) == (
         "PROJ-34", "https://example.atlassian.net/browse/PROJ-34", None)
+
+
+@pytest.mark.parametrize("ticket", [
+    {"project": "PROJ", "title": "Cache", "body": "Share it."},
+    {"ticket_key": "PROJ-34", "ticket_url": "https://example.com/34"},
+], ids=["new", "existing"])
+def test_split_under_another_ticket_is_refused_where_the_config_sets_up_no_tracker(
+        fixed, store, threads, run_cli, ticket):
+    _branched(store, fixed)
+
+    ran = run_cli(*_split_argv(fixed, **ticket))
+
+    assert ran.code != 0
+    assert "tracker and tracker_project" in ran.err
+    assert not _stored(threads).fix.is_proposed
 
 
 def test_approve_accepts_the_part_of_a_split_it_names(fixed, store, threads, run_cli):
@@ -579,8 +618,8 @@ def test_rework_sends_back_the_part_of_a_split_it_names(fixed, store, threads, r
     assert (rework.brief.note, rework.brief.part) == ("call it TaxRateCache", "new-pr")
 
 
-def test_edit_part_saves_a_splits_reply_and_ticket_without_accepting_them(fixed, store, threads,
-                                                                         run_cli):
+def test_edit_part_saves_a_splits_reply_and_ticket_without_accepting_them(fixed, store, tracked,
+                                                                         threads, run_cli):
     _branched(store, fixed)
     assert run_cli(*_split_argv(fixed, project="PROJ", title="Cache tax rates",
                                 body="Each export reads its model again.")).code == 0
@@ -655,7 +694,8 @@ def _filed_argv(**fields):
         "key": "PROJ-12", "url": "https://example.atlassian.net/browse/PROJ-12", **fields})
 
 
-def test_filed_records_the_ticket_the_filing_run_filed(pr_worktree, running, threads, run_cli):
+def test_filed_records_the_ticket_the_filing_run_filed(pr_worktree, running, tracked, threads,
+                                                       run_cli):
     run_cli(*_ticket_argv())
     with threads.editing(THREAD_KEY) as editable:
         editable.approve(reply="Filed it.")

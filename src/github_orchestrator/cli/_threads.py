@@ -720,7 +720,9 @@ def add_thread_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser])
         "ticket for it: propose a ticket, and the reply that says so, for the author "
         "to accept.",
         "Nothing is filed or posted until the author accepts; once the ticket is filed, "
-        "thread filed reports its key and link.")
+        "thread filed reports its key and link. Refused unless the config sets up tracker "
+        "and tracker_project: without them it is not certain which tracker a ticket goes "
+        "in or how to reach it, so do nothing with tickets.")
     _common(ticket_parser)
     _thread_id(ticket_parser)
     ticket_parser.add_argument("--project", required=True,

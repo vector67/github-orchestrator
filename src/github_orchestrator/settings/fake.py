@@ -16,6 +16,8 @@ FAKE_CONFIG = {
     "gh_account": "octocat",
     "repos": (RepoEntry(Repo("octocat", "hello-world"),
                         "/tmp/github-orchestrator-tests/hello-world"),),
+    "tracker": Tracker.JIRA,
+    "tracker_project": "PROJ",
 }
 
 

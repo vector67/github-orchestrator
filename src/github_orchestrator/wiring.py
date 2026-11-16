@@ -1820,7 +1820,8 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
     loaded = load_settings(env, home)
     settings = replace(loaded, data_dir=data_dir,
                        config=replace(loaded.config, agents_enabled=agents_enabled,
-                                      repos=(RepoEntry(repo, str(local_path)),)))
+                                      repos=(RepoEntry(repo, str(local_path)),),
+                                      tracker=Tracker.JIRA, tracker_project="PROJ"))
     return wire(
         SYSTEM_CLOCKS,
         SettingsWiring(settings),

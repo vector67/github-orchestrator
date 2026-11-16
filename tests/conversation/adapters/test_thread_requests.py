@@ -239,7 +239,7 @@ def test_a_thread_asks_for_its_fix_naming_the_pr_s_branch_and_the_branch_it_merg
 
 
 def test_a_thread_on_github_issues_names_no_project(settings):
-    here, threads = _heard(_tracking(settings, tracker=Tracker.GITHUB))
+    here, threads = _heard(_tracking(settings, tracker=Tracker.GITHUB, tracker_project=""))
 
     fix = _started(here, threads).fix
 
@@ -247,7 +247,7 @@ def test_a_thread_on_github_issues_names_no_project(settings):
 
 
 def test_a_thread_with_no_tracker_and_no_ticket_in_its_branch_is_told_of_neither(settings):
-    here, threads = _heard(settings)
+    here, threads = _heard(_tracking(settings, tracker=Tracker.NONE, tracker_project=""))
     here.polled(branch="tidy-the-reader")
 
     fix = _started(here, threads).fix
