@@ -222,7 +222,7 @@ def test_a_handed_off_worktree_is_forgotten_and_said_once(world, pr_worktree):
     assert world.copies.verdict(OTHER, None, expected="expected", window_open=True, now=2.0,
                                        manager_running=True) is not None
     assert [(n.badge, n.title, n.body) for n in world.notifications.posted] == [
-        (Badge.FAILED, f"PR #{PR} left on the wrong branch",
+        (Badge.FAILED, f"{THE_PR.short} left on the wrong branch",
          "Stopped its agent manager and left its worktree as it was; building a fresh worktree")]
 
 
@@ -250,9 +250,9 @@ def test_a_shared_worktree_holds_and_says_so_on_the_first_and_every_fifth_check(
 
     assert [v.hands_off for v in verdicts] == [False] * 5
     assert [v.seconds_left for v in verdicts] == [1200.0, 1140.0, 1080.0, 1020.0, 960.0]
-    assert _said(world) == [f"PR #{PR} shares a worktree"] * 2
+    assert _said(world) == [f"{THE_PR.short} shares a worktree"] * 2
     assert world.notifications.posted[0].body == (
-        f"{tmp_path.name} is already PR #{PR + 1}'s — not starting an agent manager in it")
+        f"{tmp_path.name} already belongs to {OTHER.short}, so no agent manager starts in it")
 
 
 @pytest.mark.parametrize("world", ["fake"], indirect=True)
@@ -274,7 +274,7 @@ def test_a_worktree_still_shared_after_twenty_minutes_is_handed_off_and_forgotte
 
     assert verdict.hands_off is True
     assert world.notifications.posted[1].body == (
-        f"{tmp_path.name} is still PR #{PR + 1}'s after 20 min — opening it anyway")
+        f"{tmp_path.name} still belongs to {OTHER.short} after 20 min. Opening it anyway")
     assert (again.hands_off, again.seconds_left) == (False, 1200.0)
 
 
@@ -328,7 +328,7 @@ def test_a_reused_worktree_whose_branch_will_not_fetch_says_so(world, tmp_path):
 
     assert reused == tmp_path / "local"
     assert [(n.badge, n.title) for n in world.notifications.posted] == [
-        (Badge.FAILED, f"PR #{PR} fetch failed")]
+        (Badge.FAILED, f"{THE_PR.short} fetch failed")]
 
 
 def test_a_branch_that_will_not_fetch_says_so(world, tmp_path):
@@ -337,7 +337,7 @@ def test_a_branch_that_will_not_fetch_says_so(world, tmp_path):
     world.copies.fetch_pr_branch(world.repo_dir, THE_PR, "local-only", None)
 
     assert [(n.badge, n.title, n.body) for n in world.notifications.posted] == [
-        (Badge.FAILED, f"PR #{PR} fetch failed",
+        (Badge.FAILED, f"{THE_PR.short} fetch failed",
          "Could not fetch local-only; the previous head's objects may be gone")]
 
 

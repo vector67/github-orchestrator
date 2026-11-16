@@ -117,11 +117,11 @@ def rendered(items: list[Gathered], summary: str | None, gists: tuple[str, ...],
     for item in items:
         if isinstance(item, AgentSkipped):
             skipped.setdefault(item.pr, []).append(item.event_type)
-    prs = ", ".join(pr.in_repo for pr in skipped)
+    prs = ", ".join(pr.short for pr in skipped)
     body = "; ".join(f"{pr.short}: {', '.join(types)}"
                      for pr, types in skipped.items())
     only = next(iter(skipped)) if len(skipped) == 1 else None
-    return only, Badge.INFO, f"Agents disabled — skipped events on {prs}", body
+    return only, Badge.INFO, f"Agents disabled, skipped events on {prs}", body
 
 
 def _comment_banner(comments: list[CommentArrived], gists: tuple[str, ...],

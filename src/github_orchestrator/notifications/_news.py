@@ -69,7 +69,7 @@ class News:
         asked = hashlib.sha1(question.encode()).hexdigest()
         if not self._sent.first(f"agent asked {pr} {key} {asked}"):
             return
-        self._post(pr, Badge.NEEDS_YOU, f"Agent question on #{pr.number}", question)
+        self._post(pr, Badge.NEEDS_YOU, f"Agent question on {pr.short}", question)
 
     def run_failed(self, pr: Pr, kind: str, exit_code: int | None) -> None:
         if not self._first_today(pr, "run failed"):
@@ -83,11 +83,11 @@ class News:
         self._outbox.gather(AgentSkipped(pr, kind))
 
     def blocked(self, pr: Pr) -> None:
-        self._post(pr, Badge.FAILED, f"PR {pr.in_repo} blocked",
+        self._post(pr, Badge.FAILED, f"{pr.short} blocked",
                    "Cannot create worktree because branch already checked out!")
 
     def fetch_failed(self, pr: Pr, branch: str) -> None:
-        self._post(pr, Badge.FAILED, f"PR {pr.in_repo} fetch failed",
+        self._post(pr, Badge.FAILED, f"{pr.short} fetch failed",
                    f"Could not fetch {branch}; the previous head's objects may be gone")
 
     def init_timed_out(self, worktree: Path, seconds: int) -> None:
@@ -101,19 +101,19 @@ class News:
                    "the worktree is usable but uninitialised")
 
     def wrong_branch(self, pr: Pr, kept_as: str) -> None:
-        self._post(pr, Badge.FAILED, f"PR {pr.in_repo} left on the wrong branch",
+        self._post(pr, Badge.FAILED, f"{pr.short} left on the wrong branch",
                    "Stopped its agent manager and left its worktree as it was; "
                    "building a fresh worktree")
 
     def shared(self, pr: Pr, worktree: Path, other: Pr) -> None:
-        self._post(pr, Badge.FAILED, f"PR {pr.in_repo} shares a worktree",
-                   f"{worktree.name} is already PR {other.in_repo}'s — not starting "
-                   "an agent manager in it")
+        self._post(pr, Badge.FAILED, f"{pr.short} shares a worktree",
+                   f"{worktree.name} already belongs to {other.short}, so no agent "
+                   "manager starts in it")
 
     def still_shared(self, pr: Pr, worktree: Path, other: Pr, minutes: int) -> None:
-        self._post(pr, Badge.FAILED, f"PR {pr.in_repo} worktree still shared",
-                   f"{worktree.name} is still PR {other.in_repo}'s after {minutes} min — "
-                   "opening it anyway")
+        self._post(pr, Badge.FAILED, f"{pr.short} worktree still shared",
+                   f"{worktree.name} still belongs to {other.short} after {minutes} min. "
+                   "Opening it anyway")
 
     def failed(self, consecutive: int, error: str, fix: str | None, log_file: Path) -> None:
         self._post(None, Badge.FAILED, "Watcher not polling",

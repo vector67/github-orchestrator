@@ -99,7 +99,7 @@ def _fetched_by_cycle(settings, tmp_path, head_sha):
 
 def test_a_moved_head_makes_the_cycle_fetch_that_prs_worktree(tmp_path, settings):
     assert _fetched_by_cycle(settings, tmp_path, "sha2") == [
-        (Badge.FAILED, "PR #61 fetch failed")]
+        (Badge.FAILED, "hello-world#61 fetch failed")]
 
 
 def test_an_unmoved_head_leaves_the_cycles_worktree_unfetched(tmp_path, settings):
@@ -119,7 +119,7 @@ def test_a_moved_head_fetches_the_worktree_a_new_window_reuses(tmp_path, setting
                  pr_processes=world).run_cycle()
 
     assert [(n.badge, n.title) for n in notifications.posted] == [
-        (Badge.FAILED, "PR #61 fetch failed")]
+        (Badge.FAILED, "hello-world#61 fetch failed")]
     assert world.manager(a_pr(61, REPO)) is ManagerPane.RUNNING
 
 

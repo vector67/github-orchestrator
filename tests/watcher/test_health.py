@@ -164,7 +164,7 @@ def test_a_batch_that_fell_due_while_the_mac_slept_waits_for_the_first_poll_afte
 
     assert set(shown_before_the_second_poll) == {0}
     assert [a.title for a in container.get(Desktop).announcements] == [
-        "Agents disabled — skipped events on #1 (from 12:00)"]
+        "Agents disabled, skipped events on n#1 (from 12:00)"]
 
 
 def test_the_daemon_leaves_its_cycle_summaries_to_the_log_not_stdout(settings, capsys):

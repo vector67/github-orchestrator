@@ -228,7 +228,7 @@ def test_claude_being_disabled_is_one_batch_across_every_pr(store, desktop, cloc
     courier.deliver(LONG_AWAKE, None)
 
     assert _shown(desktop) == [(
-        Badge.INFO, "Agents disabled — skipped events on #101, #84",
+        Badge.INFO, "Agents disabled, skipped events on widgets#101, widgets#84",
         "widgets#101: thread-activity, became-unmergeable; widgets#84: ci-failed",
     )]
 

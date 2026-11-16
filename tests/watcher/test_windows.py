@@ -314,7 +314,7 @@ def test_a_detached_window_loses_its_manager_and_says_so(settings, world, copies
 
     assert _detached(world)
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
-        (Badge.FAILED, "PR #83 left on the wrong branch",
+        (Badge.FAILED, "hello-world#83 left on the wrong branch",
          "Stopped its agent manager and left its worktree as it was; building a fresh worktree")]
 
 
@@ -408,8 +408,8 @@ def test_the_conflict_is_recorded_and_said_once(settings, world, copies, notific
     flag = copies.flags.conflicts.get(THE_PR)
     assert (flag.since, flag.checks, flag.other_pr) == (NOW, 1, OTHER_PR)
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
-        (Badge.FAILED, "PR #83 shares a worktree",
-         "wt is already PR #87's — not starting an agent manager in it")]
+        (Badge.FAILED, "hello-world#83 shares a worktree",
+         "wt already belongs to hello-world#87, so no agent manager starts in it")]
 
 
 def test_after_the_retry_budget_the_window_opens_there_anyway(settings, world, copies, notifications, shared):
@@ -419,6 +419,6 @@ def test_after_the_retry_budget_the_window_opens_there_anyway(settings, world, c
 
     assert world.manager_path(THE_PR) == str(shared)
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
-        (Badge.FAILED, "PR #83 worktree still shared",
-         "wt is still PR #87's after 20 min — opening it anyway")]
+        (Badge.FAILED, "hello-world#83 worktree still shared",
+         "wt still belongs to hello-world#87 after 20 min. Opening it anyway")]
     assert copies.flags.conflicts.get(THE_PR) is None

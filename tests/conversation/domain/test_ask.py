@@ -406,7 +406,7 @@ def test_a_run_that_asked_tells_you_its_question(bench):
     bench.threads.tick(news, on_hold=False)
 
     assert [(posted.title, posted.body) for posted in news.posted] == [
-        (f"Agent question on #{THE_PR.number}", QUESTION)]
+        (f"Agent question on {THE_PR.short}", QUESTION)]
 
 
 def test_a_run_that_stopped_without_reporting_announces_its_commit_with_its_last_words(bench):

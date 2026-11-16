@@ -273,6 +273,6 @@ def test_a_main_checkout_that_will_not_leave_the_prs_branch_blocks_the_worktree(
     assert copies.pr_worktree(repo, THE_PR, "feature-x", None) is None
 
     assert [(n.badge, n.title, n.body) for n in notifications.posted] == [
-        (Badge.FAILED, "PR #83 blocked",
+        (Badge.FAILED, f"{THE_PR.short} blocked",
          "Cannot create worktree because branch already checked out!")]
     assert branch_at(repo) == "feature-x"
