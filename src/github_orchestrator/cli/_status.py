@@ -8,6 +8,7 @@ from github_orchestrator.cli._config import (
     print_agents_disabled_notice,
 )
 from github_orchestrator.cli._hub import HealthBody, HubHealth
+from github_orchestrator.cli._poll_failures import mentions_failure, poll_failure
 from github_orchestrator.cli._update import UPDATE, newer_release
 from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Queues
@@ -49,7 +50,7 @@ def _health_line(health: Health, alive: bool) -> str:
                      else f"last good poll {ago(since)} ago")
         state = "failing" if alive else "not running"
         return (f"Watcher: {state} — {succeeded}; "
-                f"last error: {' '.join(health.last_error.split())}")
+                f"{poll_failure(health.last_error, health.last_error_cause, health.fix)}")
     every = ago(health.polls_every)
     if since is None:
         return ("Watcher: running but no cycle has ever succeeded — no poll recorded yet"
@@ -107,7 +108,7 @@ def status(config: CliConfig, config_file: ConfigFile, *, queues: Queues, change
     else:
         print(_health_line(health, alive=answer is not None or health.alive))
         if health.mentions_error is not None:
-            print(f"Mentions search: failing — {' '.join(health.mentions_error.split())}")
+            print(f"Mentions search: {mentions_failure(health.mentions_error, health.mentions_error_cause)}")
     print_agents_disabled_notice(config, config_file)
     if config.font_problem is not None:
         print(f"Font: {config.font_problem}")
