@@ -16,11 +16,9 @@ from github_orchestrator.agent_runs.fake import (
 from github_orchestrator.board_api.interface import NoticeCode
 from github_orchestrator.change_detection.fake import (
     MergeableReason,
-    ReviewDecision,
     UnmergeableReason,
 )
 from github_orchestrator.conversation import ConversationState
-from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import fork_pr_branch
 from github_orchestrator.github import (
     CommentKind,
@@ -468,66 +466,28 @@ def test_with_claude_disabled_a_launch_is_drained_with_a_note(tmp_path, event, i
     assert "Agents are disabled" in _changes(manager, worktree)
 
 
-def test_pr_closed_stops_the_run_then_notifies_and_ends(settings, tmp_path, notifications,
-                                                        agent_runs):
+def test_pr_closed_stops_the_run_and_ends(settings, tmp_path, agent_runs):
     agent_runs.script(Outcome(finishes=False))
-    run_ended_before_notice = []
-    announce = notifications.changed
-
-    def watching(pr, change):
-        run_ended_before_notice.append(bool(agent_runs.ledger))
-        announce(pr, change)
-
-    notifications.changed = watching
     worktree = _worktree(tmp_path)
     reached = []
     manager = manager_over(
         settings,
         lambda: manager.event_queue.add(THE_PR, closed(merged=True)),
         lambda: reached.append(True), lambda: reached.append(True),
-        is_author=True, worktree=worktree, notifications=notifications, agent_runs=agent_runs)
+        is_author=True, worktree=worktree, agent_runs=agent_runs)
     manager.event_queue.add(THE_PR, ci_failed('tests'))
     manager.run()
-    assert run_ended_before_notice == [True]
     assert agent_runs.last_run(THE_PR).exit_code == -15
-    assert notifications.posted[-1].title == "PR #1 closed"
     assert reached == []
 
 
-@pytest.mark.parametrize(("merged", "said"), [
-    (True, "PR was merged."), (False, "PR was closed without merging."),
-])
-def test_pr_closed_tears_down_the_queue_and_leaves_the_worktree(settings, tmp_path, merged,
-                                                                said):
+@pytest.mark.parametrize("merged", [True, False])
+def test_pr_closed_tears_down_the_queue_and_leaves_the_worktree(settings, tmp_path, merged):
     worktree = _worktree(tmp_path)
     manager = _carried_out(settings, worktree, closed(merged=merged))
     assert manager.event_queue.is_torn_down(THE_PR)
-    assert manager.notifications.posted[-1].body == said
     assert worktree.exists()
     assert manager.pr_processes.managers == {}
-
-
-@pytest.mark.parametrize(("event", "is_author", "posted"), [
-    (ci_succeeded("lint", "unit"), True,
-     (Badge.INFO, "CI passed — PR #1", "Checks passed: lint, unit (success)")),
-    (unmergeable(UnmergeableReason.BLOCKED), True,
-     (Badge.FAILED, "PR #1 unmergeable", "Reason: blocked")),
-    (mergeable(MergeableReason.CI_PASSED), True,
-     (Badge.INFO, "PR #1 is now mergeable", "Reason: ci-passed")),
-    (decision_changed(ReviewDecision.REVIEW_REQUIRED, ReviewDecision.APPROVED, "alice"), True,
-     (Badge.INFO, "Review decision changed — PR #1",
-      "alice changed review from review-required to approved")),
-    (pushed(1, False), False, (Badge.INFO, "PR #1 updated", "Author pushed 1 commit since your review")),
-    (pushed(3, False), False, (Badge.INFO, "PR #1 updated", "Author pushed 3 commits since your review")),
-    (pushed(2, True), False, (Badge.INFO, "PR #1 updated", "Author force-pushed since your review")),
-    (closed(merged=False, no_longer_relevant=True), False,
-     (Badge.INFO, "PR #1 no longer relevant",
-      "Removed from your watch list (not authored, not reviewed, not requested).")),
-])
-def test_each_change_of_a_prs_status_is_announced_in_its_words(settings, tmp_path, event,
-                                                                is_author, posted):
-    manager = _carried_out(settings, _worktree(tmp_path), event, is_author=is_author)
-    assert [(p.badge, p.title, p.body) for p in manager.notifications.posted] == [posted]
 
 
 @pytest.mark.parametrize(("event", "is_author", "agents_enabled", "notes"), [

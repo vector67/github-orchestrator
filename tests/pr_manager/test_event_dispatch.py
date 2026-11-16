@@ -12,9 +12,7 @@ from github_orchestrator.agent_runs.fake import (
     Outcome,
 )
 from github_orchestrator.board_api.interface import Dashboards
-from github_orchestrator.desktop import Badge
 from github_orchestrator.github import PullRequestState
-from github_orchestrator.notifications.fake import FakeNotifications, Posted
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_event_queue.fake import Queue
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -202,16 +200,12 @@ def test_a_run_started_is_kept_even_when_finishing_its_event_fails(settings, tmp
 
 def test_a_notice_is_carried_out_and_the_manager_keeps_going(settings, tmp_path):
     seed_state(settings, title="t", url="u")
-    notifications = FakeNotifications()
     runs = _runs()
     reached = []
     manager = _over(settings, None, lambda: reached.append(True), is_author=True,
-                    worktree=tmp_path, notifications=notifications, agent_runs=runs)
+                    worktree=tmp_path, agent_runs=runs)
     manager.event_queue.add(a_pr(1, "o/n"), ci_succeeded('tests'))
     manager.run()
-    assert notifications.posted == [
-        Posted(a_pr(1, "o/n"), Badge.INFO, "CI passed — PR #1", "Checks passed: tests (success)"),
-    ]
     assert runs.started == []
     assert _shown(manager).working_on is None
     assert reached == [True]

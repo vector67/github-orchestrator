@@ -19,7 +19,7 @@ from github_orchestrator.change_detection import (
 )
 from github_orchestrator.conversation import ConversationManager, ThreadActivity
 from github_orchestrator.domain import LocalClock, Pr, fork_pr_number
-from github_orchestrator.notifications import PrStatus, Runs
+from github_orchestrator.notifications import Runs
 from github_orchestrator.pr_event_queue import Intake, Response
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._next_move import reviewed_before
@@ -110,8 +110,7 @@ def _disabled_note(kind: str) -> str:
 
 
 class EventCarryOut:
-    def __init__(self, config: ManagerConfig, clock: LocalClock, pr_status: PrStatus,
-                 runs: Runs, pr_work: PrWork, change_detection: ChangeDetection,
+    def __init__(self, config: ManagerConfig, clock: LocalClock, runs: Runs, pr_work: PrWork, change_detection: ChangeDetection,
                  agent_changes: AgentChanges, intake: Intake,
                  working_copies: WorkingCopies, summaries: PrSummaries) -> None:
         self._pr = config.pr
@@ -119,7 +118,6 @@ class EventCarryOut:
         self._account = config.account
         self._working_copies = working_copies
         self._clock = clock
-        self._pr_status = pr_status
         self._runs = runs
         self._pr_work = pr_work
         self._change_detection = change_detection
@@ -152,7 +150,6 @@ class EventCarryOut:
             case PrClosed():
                 if active_run is not None:
                     active_run.terminate()
-                self._pr_status.changed(pr, event)
             case ThreadActivity():
                 self._absorb(event, is_author, conversations)
             case HeadChanged():
@@ -161,7 +158,6 @@ class EventCarryOut:
                           event.away_seconds)
             case (CiSucceeded() | CiFailed() | BecameUnmergeable() | BecameMergeable()
                   | ReviewDecisionChanged() | PushedSinceReview()):
-                self._pr_status.changed(pr, event)
                 noted = _status_note(event)
                 if noted is not None:
                     self._note(noted)
