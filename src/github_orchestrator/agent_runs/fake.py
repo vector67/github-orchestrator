@@ -364,8 +364,9 @@ class FakeAgentRuns:
     def rebase(self, worktree: str, pr: Pr, event_type: str, *, reason: str) -> FakeRun | str:
         return self._pr_run(worktree, pr, event_type, Rebasing(reason))
 
-    def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> FakeRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CarryingOn(yours))
+    def carry_on(self, worktree: str, pr: Pr, *, yours: bool,
+                 as_event: str | None = None) -> FakeRun | str:
+        return self._pr_run(worktree, pr, as_event or CARRY_ON, CarryingOn(yours))
 
     def ran(self, pr: Pr | None, event: str, elapsed_seconds: float, ended_at: datetime,
             cost_usd: float | None = None, exit_code: int = 0) -> "FakeAgentRuns":

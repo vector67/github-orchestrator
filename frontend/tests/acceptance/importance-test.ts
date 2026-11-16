@@ -208,6 +208,24 @@ module('Acceptance | importance', function (hooks) {
       },
       '1',
     ],
+    [
+      'importance set, a conflict the agent is rebasing away',
+      {
+        facts: { ...WAITING_ON_REVIEW, merge_state: 'conflicts' },
+        manager: { importance: 'normal' },
+        system: {
+          agent: {
+            name: 'Claude',
+            enabled: true,
+            state: 'working',
+            event: 'became-unmergeable',
+            elapsed_seconds: 43,
+            silent_seconds: 9,
+          },
+        },
+      },
+      null,
+    ],
   ];
 
   for (const [name, over, badge] of BADGES) {

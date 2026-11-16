@@ -95,6 +95,13 @@ def test_a_manager_carries_on_the_run_its_last_manager_was_interrupted_in(settin
     assert started.worktree == str(tmp_path)
 
 
+def test_a_carried_on_run_keeps_the_event_of_the_run_it_carries_on(settings, tmp_path):
+    seed_state(settings, title="t", url="u")
+    runs = _after_an_interruption(_runs(Outcome(finishes=False), Outcome(finishes=False)))
+    run_manager(settings, worktree=tmp_path, agent_runs=runs)
+    assert runs.pr_runs[a_pr(1, "o/n")].event_type == "became-unmergeable"
+
+
 def test_a_manager_carries_an_interrupted_run_on_only_once(settings, tmp_path):
     seed_state(settings, title="t", url="u")
     runs = _after_an_interruption(_runs(Outcome(finishes=False), Outcome()))

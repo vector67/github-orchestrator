@@ -512,7 +512,12 @@ function summarised(
     .map((one) => one.key);
   const unranked =
     Boolean(pr?.flags) && (pr?.flags?.importance ?? null) === null;
-  const wrong = flagsOf(facts).filter((flag) => PROBLEMS.includes(flag));
+  const agent = pr?.drawn?.system.agent;
+  const agentRebasing =
+    agent?.state === 'working' && agent.event === 'became-unmergeable';
+  const wrong = flagsOf(facts).filter(
+    (flag) => PROBLEMS.includes(flag) && !(flag === 'rebase' && agentRebasing),
+  );
   return {
     role,
     groups: role ? groupsOf(readOf(threads, operations), role) : {},

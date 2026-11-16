@@ -55,7 +55,7 @@ class ManagerLoop:
         self._change_detection = change_detection
         self._dashboards = dashboards
         self._status_files = status_files
-        self._interrupted = False
+        self._interrupted: str | None = None
         self._should_exit = False
         self._frozen_on: str | None = None
         self._conversation_manager: ConversationManager | None = None
@@ -75,7 +75,7 @@ class ManagerLoop:
         self._status_files.begin(pr)
         self._worklist.recover(pr)
         interrupted = self._history.interrupted(pr)
-        self._interrupted = interrupted is not None and interrupted != CiFailed.kind
+        self._interrupted = None if interrupted == CiFailed.kind else interrupted
         with self._front.session():
             try:
                 while True:
@@ -267,10 +267,11 @@ class ManagerLoop:
         if agents_held:
             self._stop_the_run_in_a_held_checkout()
 
-        if self._interrupted and not agents_held:
-            self._interrupted = False
+        if self._interrupted is not None and not agents_held:
+            resumed, self._interrupted = self._interrupted, None
             log.info("loop %s: the agent was interrupted by the last manager's end", pr)
-            self._commands.carry_out(Command.CARRY_ON, frozen=False, agents_held=False)
+            self._commands.carry_out(Command.CARRY_ON, frozen=False, agents_held=False,
+                                     fields={"event": resumed or None})
 
         conversations = self._conversations()
         on_hold = dashboard.on_hold

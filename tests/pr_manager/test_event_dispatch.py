@@ -46,8 +46,8 @@ class HeldRuns(FakeAgentRuns):
         return self._held(super().fix_check(worktree, pr, event_type, check=check,
                                             summary=summary, push=push))
 
-    def carry_on(self, worktree, pr, *, yours):
-        return self._held(super().carry_on(worktree, pr, yours=yours))
+    def carry_on(self, worktree, pr, *, yours, as_event=None):
+        return self._held(super().carry_on(worktree, pr, yours=yours, as_event=as_event))
 
     def rebase(self, worktree, pr, event_type, *, reason):
         return self._held(super().rebase(worktree, pr, event_type, reason=reason))

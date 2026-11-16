@@ -443,8 +443,9 @@ class AgentRuns:
     def rebase(self, worktree: str, pr: Pr, event_type: str, *, reason: str) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, rebase_prompt(pr, reason), yours=True)
 
-    def carry_on(self, worktree: str, pr: Pr, *, yours: bool) -> AgentRun | str:
-        return self._pr_run(worktree, pr, CARRY_ON, CARRY_ON_PROMPT, yours=yours,
+    def carry_on(self, worktree: str, pr: Pr, *, yours: bool,
+                 as_event: str | None = None) -> AgentRun | str:
+        return self._pr_run(worktree, pr, as_event or CARRY_ON, CARRY_ON_PROMPT, yours=yours,
                             continuing=True)
 
     def _session_command(self, pr: Pr, worktree: str, *, yours: bool) -> list[str]:

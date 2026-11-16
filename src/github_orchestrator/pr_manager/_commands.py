@@ -91,7 +91,7 @@ class ManagerCommands:
             case Command.RESUME:
                 self._set_on_hold(False)
             case Command.CARRY_ON:
-                self._carry_on()
+                self._carry_on(fields.get("event"))
             case Command.START_REVIEW:
                 self._start_review()
             case Command.DISMISS_UNTIL_NEXT_EVENT:
@@ -135,13 +135,14 @@ class ManagerCommands:
         self._intake.add(pr, ReviewRequested(title=facts.title if facts else None,
                                              url=facts.url if facts else None))
 
-    def _carry_on(self) -> None:
+    def _carry_on(self, as_event: str | None) -> None:
         config = self._config
         pr = config.pr
         log.info("carry on %s: carrying on the last agent run", pr)
         facts = self._change_detection.facts(pr)
         started = self._pr_work.carry_on(config.worktree, pr,
-                                         yours=facts is not None and facts.is_author is True)
+                                         yours=facts is not None and facts.is_author is True,
+                                         as_event=as_event)
         if isinstance(started, str):
             self.notify(Notice(NoticeCode.AGENT_WONT_START, started))
             return
