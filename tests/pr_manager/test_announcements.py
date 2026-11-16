@@ -118,7 +118,7 @@ def test_a_proposed_fix_is_gathered_into_the_prs_fixes_ready(settings, tmp_path,
     assert notifications.gathered == [
         FixReady(pr=THE_PR, key=KEY, gist=_gist(threads),
                  comments=(("alice", "rename this helper"),),
-                 fix_summary="Renamed collapse to collapse_submission"),
+                 fix_summary="Renamed collapse to collapse_submission", pr_title=""),
     ]
     assert notifications.posted == []
 

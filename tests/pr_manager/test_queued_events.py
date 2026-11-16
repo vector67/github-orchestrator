@@ -353,7 +353,7 @@ def test_with_claude_disabled_an_authored_prs_threads_become_records_and_start_n
 
     assert set(_conversations(manager)) == {"t1"}
     assert manager.agent_runs.started == []
-    assert AgentSkipped(THE_PR, "thread-activity") not in manager.notifications.gathered
+    assert AgentSkipped(THE_PR, "thread-activity", "") not in manager.notifications.gathered
     assert manager.notifications.posted == []
 
 
@@ -461,7 +461,7 @@ def test_with_claude_disabled_a_launch_is_drained_with_a_note(tmp_path, event, i
     worktree = _worktree(tmp_path)
     manager = _carried_out(settings, worktree, event, is_author=is_author)
     assert manager.agent_runs.started == []
-    assert manager.notifications.gathered == [AgentSkipped(THE_PR, event.kind)]
+    assert manager.notifications.gathered == [AgentSkipped(THE_PR, event.kind, "")]
     assert manager.notifications.posted == []
     assert "Agents are disabled" in _changes(manager, worktree)
 

@@ -251,7 +251,7 @@ def test_a_fix_proposed_when_its_run_ends_is_announced_as_ready(stage):
 
     assert news.gathered == [FixReady(pr=THE_PR, key=KEY, gist=threads.get(KEY).gist,
                                       comments=(("reviewer", BODY),),
-                                      fix_summary="renamed it")]
+                                      fix_summary="renamed it", pr_title="")]
 
 
 def test_a_fix_declined_when_its_run_ends_asks_for_your_call(stage):

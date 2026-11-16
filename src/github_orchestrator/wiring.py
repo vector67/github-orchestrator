@@ -119,6 +119,7 @@ from github_orchestrator.notifications import (
     BoardPages,
     Courier,
     Polling,
+    PrTitles,
     Runs,
     Settling,
     Standing,
@@ -527,9 +528,9 @@ class NotificationsProvider(Provider):
     wiring = from_context(provides=NotificationsWiring, scope=Scope.APP)
 
     @provide
-    def news(self, wiring: NotificationsWiring, clock: LocalClock) -> News:
+    def news(self, wiring: NotificationsWiring, clock: LocalClock, titles: PrTitles) -> News:
         return News(DiskOutbox(wiring.notifications_dir, clock),
-                    SentFile(wiring.notifications_dir, clock), clock)
+                    SentFile(wiring.notifications_dir, clock), clock, titles)
 
     @provide
     def thread_news(self, news: News) -> ThreadNews:
@@ -755,6 +756,15 @@ class ChangeDetectionWiring(Wiring):
     poll_interval: int
 
 
+class SnapshotTitles:
+    def __init__(self, change_detection: ChangeDetection) -> None:
+        self._change_detection = change_detection
+
+    def title_of(self, pr: Pr) -> str | None:
+        facts = self._change_detection.facts(pr)
+        return None if facts is None else facts.title
+
+
 @wires(ChangeDetectionWiring)
 class ChangeDetectionProvider(Provider):
     scope = Scope.APP
@@ -765,6 +775,10 @@ class ChangeDetectionProvider(Provider):
                          clock: UtcClock) -> ChangeDetection:
         return DiskChangeDetection(wiring.state_dir, wiring.account, wiring.poll_interval,
                                    clock)
+
+    @provide
+    def pr_titles(self, change_detection: ChangeDetection) -> PrTitles:
+        return SnapshotTitles(change_detection)
 
 
 @dataclass(frozen=True)

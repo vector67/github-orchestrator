@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +9,7 @@ from github_orchestrator.change_detection import (
     ReviewerStatus,
 )
 from github_orchestrator.change_detection.fake import ReviewDecision
+from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import Repo, Side
 from github_orchestrator.github import (
     CommentKind,
@@ -23,6 +25,7 @@ from github_orchestrator.github.fake import (
     Review,
     ThreadAnchor,
 )
+from github_orchestrator.notifications import Courier, Runs
 from github_orchestrator.notifications.fake import (
     Arrival,
     CommentArrived,
@@ -30,13 +33,14 @@ from github_orchestrator.notifications.fake import (
 )
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from github_orchestrator.thread_records.fake import FakeThreadRecords
+from github_orchestrator.watcher import Watcher
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, seen
 from tests.conversation.support import conversation_managers_over, drain, hear
 from tests.disk_layout import thread_file
 from tests.pr_event_queue.support import disk_event_queue, pending_of
 from tests.thread_records.support import disk_thread_records
-from tests.watcher.support import watcher_over
+from tests.watcher.support import watcher_container, watcher_over
 
 GH_ACCOUNT = "octocat"
 REPO = "acme/widgets"
@@ -349,7 +353,21 @@ def test_a_comment_on_a_thread_nobody_has_recorded_arrives_as_a_new_thread(setti
     assert _arrived(notifications) == [CommentArrived(
         pr=a_pr(23, REPO), key="PRRT_one", comment_id=10, author="reviewer1",
         body="Looks good", created_at="2026-04-20T15:00:00Z", arrival=Arrival.NEW_THREAD,
-        review_comment=False)]
+        review_comment=False, pr_title="")]
+
+
+def test_a_notification_about_a_polled_pr_opens_with_the_title_the_poll_saw(settings):
+    desktop = FakeDesktop()
+    container = watcher_container(settings, desktop=desktop,
+                                  github=_holding(_state(title="Add retry to the widget importer"),
+                                                  [], 23))
+    container.get(Watcher).run_cycle()
+
+    container.get(Runs).run_failed(a_pr(23, REPO), "ci-failed", 1)
+    container.get(Courier).deliver(datetime(2026, 1, 1, tzinfo=timezone.utc), None)
+
+    assert [a.body for a in desktop.announcements] == [
+        "Add retry to the widget importer\nci-failed exited 1"]
 
 
 def test_a_reviews_own_message_arrives_flagged_as_a_review_comment(settings):

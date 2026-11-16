@@ -25,6 +25,10 @@ class Settling(Protocol):
     def settling(self, pr: Pr) -> bool: ...
 
 
+class PrTitles(Protocol):
+    def title_of(self, pr: Pr) -> str | None: ...
+
+
 class BoardPages(Protocol):
     def board_of(self, pr: Pr) -> str: ...
 

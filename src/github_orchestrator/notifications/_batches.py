@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from datetime import timedelta
 from typing import Any
@@ -19,6 +19,7 @@ SUMMARY_WAIT = timedelta(seconds=60)
 SUMMARY_CHARS = 110
 SUMMARY_ASKED_CHARS = 100
 GIST_CHARS = 60
+PR_TITLE_CHARS = 50
 
 _FIX_READY = "fix-ready"
 _AGENT_SKIPPED = "agent-skipped"
@@ -35,6 +36,14 @@ def _plural(count: int, one: str, many: str) -> str:
 def clipped(text: str, limit: int) -> str:
     text = " ".join(text.split())
     return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
+
+
+def headed(pr_title: str, body: str) -> str:
+    return f"{clipped(pr_title, PR_TITLE_CHARS)}\n{body}" if pr_title else body
+
+
+def _pr_title(items: Sequence[Gathered]) -> str:
+    return next((item.pr_title for item in items if item.pr_title), "")
 
 
 def group_of(item: Gathered) -> str:
@@ -74,18 +83,19 @@ def named(document: dict[str, Any]) -> Pr | None:
 
 def decoded(document: dict[str, Any]) -> Gathered:
     where = _pr_of(document)
+    pr_title = document.get("pr_title", "")
     if document["kind"] == _FIX_READY:
         return FixReady(pr=where, key=document["key"],
                         gist=document["gist"],
                         comments=tuple((author, body) for author, body in document["comments"]),
-                        fix_summary=document["fix_summary"])
+                        fix_summary=document["fix_summary"], pr_title=pr_title)
     if document["kind"] == _COMMENT:
         return CommentArrived(pr=where, key=document["key"],
                               comment_id=document["comment_id"], author=document["author"],
                               body=document["body"], created_at=document["created_at"],
                               arrival=Arrival(document["action"]),
-                              review_comment=document["review_comment"])
-    return AgentSkipped(pr=where, event_type=document["event_type"])
+                              review_comment=document["review_comment"], pr_title=pr_title)
+    return AgentSkipped(pr=where, event_type=document["event_type"], pr_title=pr_title)
 
 
 def fixes(items: list[Gathered]) -> list[FixReady]:
@@ -109,10 +119,11 @@ def rendered(items: list[Gathered], summary: str | None, gists: tuple[str, ...],
         first = ready[0]
         return (first.pr, Badge.READY,
                 f"{_plural(len(ready), 'fix', 'fixes')} ready on {first.pr.short}",
-                clipped(summary or _fallback_summary(ready), SUMMARY_CHARS))
+                headed(_pr_title(ready), clipped(summary or _fallback_summary(ready), SUMMARY_CHARS)))
     arrived = comments(items)
     if arrived:
-        return (arrived[0].pr, *_comment_banner(arrived, gists, fix_of))
+        badge, title, body = _comment_banner(arrived, gists, fix_of)
+        return arrived[0].pr, badge, title, headed(_pr_title(arrived), body)
     skipped: dict[Pr, list[str]] = {}
     for item in items:
         if isinstance(item, AgentSkipped):
@@ -121,6 +132,8 @@ def rendered(items: list[Gathered], summary: str | None, gists: tuple[str, ...],
     body = "; ".join(f"{pr.short}: {', '.join(types)}"
                      for pr, types in skipped.items())
     only = next(iter(skipped)) if len(skipped) == 1 else None
+    if only is not None:
+        body = headed(_pr_title(items), body)
     return only, Badge.INFO, f"Agents disabled, skipped events on {prs}", body
 
 

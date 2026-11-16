@@ -11,6 +11,7 @@ from github_orchestrator.notifications import (
     Courier,
     FixProgress,
     Polling,
+    PrTitles,
     Runs,
     Settling,
     Standing,
@@ -43,13 +44,14 @@ class Clock:
 
 class Board:
     """How the courier finds each item standing: every fix unseen, every comment
-    unanswered, no fix under way and nothing waiting to be materialised,
-    unless a test says otherwise."""
+    unanswered, no fix under way, nothing waiting to be materialised and no
+    PR's title known, unless a test says otherwise."""
 
     def __init__(self) -> None:
         self.handled: set[str] = set()
         self.fixes: dict[str, FixProgress] = {}
         self.busy: set[Pr] = set()
+        self.titles: dict[Pr, str] = {}
 
     def fix_still_news(self, pr: Pr, key: str) -> bool:
         return key not in self.handled
@@ -62,6 +64,9 @@ class Board:
 
     def settling(self, pr: Pr) -> bool:
         return pr in self.busy
+
+    def title_of(self, pr: Pr) -> str | None:
+        return self.titles.get(pr)
 
 
 @dataclass(frozen=True)
@@ -86,6 +91,7 @@ def opened(root: Path, desktop: Desktop, clock: Callable[[], datetime],
                      fake_agent_runs_roles(agent_runs or fake_agent_runs()),
                      fake_provider(Standing, board),
                      fake_provider(Settling, board),
+                     fake_provider(PrTitles, board),
                      fake_provider(BoardPages, FakeBoardPages()))
     return Opened(container.get(ThreadNews), container.get(Runs), container.get(Worktrees),
                   container.get(Polling), container.get(Courier))

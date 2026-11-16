@@ -5,6 +5,7 @@ from typing import Protocol
 
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import LocalClock, Pr
+from github_orchestrator.notifications._batches import headed
 from github_orchestrator.notifications._facts import (
     AgentSkipped,
     Arrival,
@@ -13,6 +14,7 @@ from github_orchestrator.notifications._facts import (
     Gathered,
     Posted,
 )
+from github_orchestrator.notifications.interface import PrTitles
 
 
 class Outbox(Protocol):
@@ -31,12 +33,18 @@ def _streak(fix: str | None, failed: str, error: str, log_file: Path) -> str:
 
 
 class News:
-    def __init__(self, outbox: Outbox, sent: Sent, clock: LocalClock) -> None:
+    def __init__(self, outbox: Outbox, sent: Sent, clock: LocalClock, titles: PrTitles) -> None:
         self._outbox = outbox
         self._sent = sent
         self._clock = clock
+        self._titles = titles
+
+    def _title_of(self, pr: Pr) -> str:
+        return self._titles.title_of(pr) or ""
 
     def _post(self, pr: Pr | None, badge: Badge, title: str, body: str) -> None:
+        if pr is not None:
+            body = headed(self._title_of(pr), body)
         self._outbox.post(Posted(pr, badge, title, body))
 
     def fix_ready(self, pr: Pr, key: str, *, gist: str,
@@ -44,7 +52,7 @@ class News:
         self._outbox.gather(FixReady(
             pr=pr, key=key, gist=gist,
             comments=tuple((author or "ghost", body) for author, body in comments),
-            fix_summary=fix_summary or ""))
+            fix_summary=fix_summary or "", pr_title=self._title_of(pr)))
 
     def comment_arrived(self, pr: Pr, key: str, *, comment_id: int | None, author: str,
                         body: str, created_at: str, opens_thread: bool, reopens: bool,
@@ -53,7 +61,8 @@ class News:
                    else Arrival.NEW_THREAD if opens_thread else Arrival.REPLY)
         self._outbox.gather(CommentArrived(
             pr=pr, key=key, comment_id=comment_id, author=author, body=body,
-            created_at=created_at, arrival=arrival, review_comment=review_comment))
+            created_at=created_at, arrival=arrival, review_comment=review_comment,
+            pr_title=self._title_of(pr)))
 
     def needs_your_call(self, pr: Pr, *, author: str, classification: str | None,
                         reason: str | None) -> None:
@@ -80,7 +89,7 @@ class News:
         return self._sent.first(f"{kind} {pr} {self._clock():%Y-%m-%d}")
 
     def agent_skipped(self, pr: Pr, kind: str) -> None:
-        self._outbox.gather(AgentSkipped(pr, kind))
+        self._outbox.gather(AgentSkipped(pr, kind, self._title_of(pr)))
 
     def blocked(self, pr: Pr) -> None:
         self._post(pr, Badge.FAILED, f"{pr.short} blocked",

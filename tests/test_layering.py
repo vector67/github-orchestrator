@@ -315,7 +315,7 @@ PACKAGES = {
     ),
     "notifications": Package(
         pinned=frozenset({
-            "BoardPages", "Courier", "FixProgress", "Polling", "Runs", "Settling",
+            "BoardPages", "Courier", "FixProgress", "Polling", "PrTitles", "Runs", "Settling",
             "Standing", "ThreadNews", "Worktrees",
         }),
         may_import=("desktop", "agent_runs"),

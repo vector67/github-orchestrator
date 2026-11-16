@@ -20,12 +20,14 @@ class FixReady:
     gist: str
     comments: tuple[tuple[str, str], ...]
     fix_summary: str
+    pr_title: str
 
 
 @dataclass(frozen=True)
 class AgentSkipped:
     pr: Pr
     event_type: str
+    pr_title: str
 
 
 class Arrival(Enum):
@@ -44,6 +46,7 @@ class CommentArrived:
     created_at: str
     arrival: Arrival
     review_comment: bool
+    pr_title: str
 
 
 Gathered = FixReady | AgentSkipped | CommentArrived

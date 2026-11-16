@@ -43,11 +43,17 @@ class _Remembered:
         return True
 
 
+class _Untitled:
+    def title_of(self, pr: Pr) -> str | None:
+        return None
+
+
 class FakeNotifications(News):
     def __init__(self) -> None:
         self._kept = _Kept()
         super().__init__(self._kept, _Remembered(),
-                         LocalClock(lambda: datetime(2026, 9, 24, 17, 46, tzinfo=timezone.utc)))
+                         LocalClock(lambda: datetime(2026, 9, 24, 17, 46, tzinfo=timezone.utc)),
+                         _Untitled())
 
     @property
     def posted(self) -> list[Posted]:
