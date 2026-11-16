@@ -426,7 +426,9 @@ def _pr_base(fix: ThreadFix) -> str:
 
 def _split_ticket_choice(fix: ThreadFix) -> list[str]:
     if fix.tracker is None:
-        return ["5. Pass `--same-ticket`: no tracker is set up for this repository, so the new "
+        return ["5. Pass `--same-ticket`: no tracker is set up for this repository (if the "
+                "author asks for a ticket, tell them `tracker` and `tracker_project` are not "
+                "set up in the config, and refuse to create a proposal), so the new "
                 "PR goes under this PR's own ticket, or under none when this PR names none."]
     return [
         "5. Choose the new PR's ticket. First search the tracker for a ticket, other than "
