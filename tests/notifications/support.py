@@ -11,7 +11,6 @@ from github_orchestrator.notifications import (
     Courier,
     FixProgress,
     Polling,
-    PrStatus,
     Runs,
     Settling,
     Standing,
@@ -70,7 +69,6 @@ class Opened:
     thread_news: ThreadNews
     runs: Runs
     worktrees: Worktrees
-    pr_status: PrStatus
     polling: Polling
     courier: Courier
 
@@ -90,4 +88,4 @@ def opened(root: Path, desktop: Desktop, clock: Callable[[], datetime],
                      fake_provider(Settling, board),
                      fake_provider(BoardPages, FakeBoardPages()))
     return Opened(container.get(ThreadNews), container.get(Runs), container.get(Worktrees),
-                  container.get(PrStatus), container.get(Polling), container.get(Courier))
+                  container.get(Polling), container.get(Courier))

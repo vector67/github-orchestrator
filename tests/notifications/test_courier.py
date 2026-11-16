@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from github_orchestrator.change_detection import CiFailed, CiSucceeded, PrClosed
 from github_orchestrator.desktop import Badge
 from github_orchestrator.desktop.fake import Announcement, FakeDesktop
 from tests.builders import a_pr
@@ -32,15 +31,14 @@ def _shown(desktop):
     return [(a.badge, a.title, a.body) for a in desktop.announcements]
 
 
-def _ci_passed(notifications, number=84, *checks):
-    notifications.pr_status.changed(a_pr(number, "acme/widgets"),
-                                      CiSucceeded(checks or ("unit-tests",)))
+def _run_failed(notifications, number=84):
+    notifications.runs.run_failed(a_pr(number, "acme/widgets"), "ci-failed", 1)
 
 
 def test_nothing_is_shown_until_the_courier_delivers(store, desktop):
     notifications, _ = store
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
 
     assert desktop.announcements == []
 
@@ -48,17 +46,17 @@ def test_nothing_is_shown_until_the_courier_delivers(store, desktop):
 def test_a_posted_notification_is_shown_under_its_badge_on_delivery(store, desktop):
     notifications, courier = store
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
     courier.deliver(LONG_AWAKE, None)
 
     assert _shown(desktop) == [
-        (Badge.INFO, "CI passed — PR #84", "Checks passed: unit-tests (success)")]
+        (Badge.FAILED, "Run failed on widgets#84", "ci-failed exited 1")]
 
 
 def test_a_delivered_notification_is_not_shown_again(store, desktop):
     notifications, courier = store
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
     courier.deliver(LONG_AWAKE, None)
     courier.deliver(LONG_AWAKE, None)
 
@@ -68,22 +66,22 @@ def test_a_delivered_notification_is_not_shown_again(store, desktop):
 def test_notifications_are_shown_oldest_first(store, desktop, clock):
     notifications, courier = store
 
-    _ci_passed(notifications, 1)
+    _run_failed(notifications, 1)
     clock.advance(seconds=1)
-    _ci_passed(notifications, 2)
+    _run_failed(notifications, 2)
     clock.advance(seconds=1)
-    _ci_passed(notifications, 3)
+    _run_failed(notifications, 3)
     courier.deliver(LONG_AWAKE, None)
 
     assert [a.title for a in desktop.announcements] == [
-        "CI passed — PR #1", "CI passed — PR #2", "CI passed — PR #3"]
+        "Run failed on widgets#1", "Run failed on widgets#2", "Run failed on widgets#3"]
 
 
 def test_each_notification_is_shown_under_a_key_of_its_own(store, desktop):
     notifications, courier = store
 
-    _ci_passed(notifications, 1)
-    _ci_passed(notifications, 2)
+    _run_failed(notifications, 1)
+    _run_failed(notifications, 2)
     courier.deliver(LONG_AWAKE, None)
 
     first, second = desktop.announcements
@@ -105,21 +103,21 @@ def test_a_notification_posted_before_a_restart_is_shown_after_it(tmp_path, desk
 def test_a_notification_shown_more_than_half_an_hour_late_says_when_it_was_posted(store, desktop, clock):
     notifications, courier = store
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
     clock.advance(minutes=31)
     courier.deliver(LONG_AWAKE, None)
 
-    assert [a.title for a in desktop.announcements] == ["CI passed — PR #84 (from 17:46)"]
+    assert [a.title for a in desktop.announcements] == ["Run failed on widgets#84 (from 17:46)"]
 
 
 def test_a_notification_shown_within_half_an_hour_reads_as_posted(store, desktop, clock):
     notifications, courier = store
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
     clock.advance(minutes=29)
     courier.deliver(LONG_AWAKE, None)
 
-    assert [a.title for a in desktop.announcements] == ["CI passed — PR #84"]
+    assert [a.title for a in desktop.announcements] == ["Run failed on widgets#84"]
 
 
 def test_a_notification_posted_from_another_timezone_says_the_local_time(tmp_path, desktop, clock):
@@ -127,25 +125,25 @@ def test_a_notification_posted_from_another_timezone_says_the_local_time(tmp_pat
         return clock().astimezone(timezone.utc)
 
     posting, _ = opened(tmp_path, FakeDesktop(), utc)
-    _ci_passed(posting)
+    _run_failed(posting)
     clock.advance(hours=2)
 
     _, courier = opened(tmp_path, desktop, clock)
     courier.deliver(LONG_AWAKE, None)
 
-    assert [a.title for a in desktop.announcements] == ["CI passed — PR #84 (from 17:46)"]
+    assert [a.title for a in desktop.announcements] == ["Run failed on widgets#84 (from 17:46)"]
 
 
 def test_a_notification_the_badge_app_could_not_show_is_tried_again(tmp_path, clock):
     mac = ScriptedMac().answer("open", Failure(1, "LSOpenURLsWithRole() failed"))
     notifications, courier = opened(tmp_path, real_desktop(mac=mac), clock)
 
-    _ci_passed(notifications)
+    _run_failed(notifications)
     courier.deliver(LONG_AWAKE, None)
     courier.deliver(LONG_AWAKE, None)
 
     assert mac.world.announcements == [
-        Announcement(Badge.INFO, "CI passed — PR #84", "Checks passed: unit-tests (success)",
+        Announcement(Badge.FAILED, "Run failed on widgets#84", "ci-failed exited 1",
                      mac.world.announcements[0].key, "http://127.0.0.1:8721/pr/acme/widgets/84"),
     ]
 
@@ -153,7 +151,7 @@ def test_a_notification_the_badge_app_could_not_show_is_tried_again(tmp_path, cl
 def test_a_notification_about_a_pr_opens_that_pr_on_its_board(store, desktop):
     notifications, courier = store
 
-    _ci_passed(notifications, 84)
+    _run_failed(notifications, 84)
     courier.deliver(LONG_AWAKE, None)
 
     assert [a.link for a in desktop.announcements] == ["http://127.0.0.1:8721/pr/acme/widgets/84"]
@@ -166,18 +164,6 @@ def test_a_notification_about_no_pr_opens_nothing(store, desktop):
     courier.deliver(LONG_AWAKE, None)
 
     assert [a.link for a in desktop.announcements] == [None]
-
-
-def test_a_closed_pr_has_no_board_left_to_open(store, desktop):
-    notifications, courier = store
-
-    notifications.pr_status.changed(a_pr(84, "acme/widgets"),
-                                   PrClosed(merged=True, no_longer_relevant=False))
-    notifications.pr_status.changed(a_pr(85, "acme/widgets"),
-                                   PrClosed(merged=False, no_longer_relevant=True))
-    courier.deliver(LONG_AWAKE, None)
-
-    assert [a.link for a in desktop.announcements] == [None, None]
 
 
 def test_a_pr_in_every_watched_repo_calls_for_you_whatever_repos_the_board_shows(store, desktop):
@@ -203,13 +189,3 @@ def test_a_notification_queued_before_it_named_its_pr_is_shown_opening_nothing(t
     courier.deliver(LONG_AWAKE, None)
 
     assert [(a.title, a.link) for a in desktop.announcements] == [("CI passed — PR #84", None)]
-
-
-def test_a_failing_check_on_a_pr_is_not_shown(store, desktop):
-    notifications, courier = store
-
-    notifications.pr_status.changed(a_pr(84, "acme/widgets"),
-                                      CiFailed("lint", "E501"))
-    courier.deliver(LONG_AWAKE, None)
-
-    assert desktop.announcements == []

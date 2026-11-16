@@ -119,7 +119,6 @@ from github_orchestrator.notifications import (
     BoardPages,
     Courier,
     Polling,
-    PrStatus,
     Runs,
     Settling,
     Standing,
@@ -540,10 +539,6 @@ class NotificationsProvider(Provider):
 
     @provide
     def worktrees(self, news: News) -> Worktrees:
-        return news
-
-    @provide
-    def pr_status(self, news: News) -> PrStatus:
         return news
 
     @provide

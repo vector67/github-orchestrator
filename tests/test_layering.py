@@ -315,11 +315,11 @@ PACKAGES = {
     ),
     "notifications": Package(
         pinned=frozenset({
-            "BoardPages", "Courier", "FixProgress", "Polling", "PrStatus", "Runs", "Settling",
+            "BoardPages", "Courier", "FixProgress", "Polling", "Runs", "Settling",
             "Standing", "ThreadNews", "Worktrees",
         }),
-        may_import=("desktop", "agent_runs", "change_detection"),
-        role="every module states its facts to the notifications, which reach only the desktop they deliver to, agent runs' summaries and the change detection events they are told of",
+        may_import=("desktop", "agent_runs"),
+        role="every module states its facts to the notifications, which reach only the desktop they deliver to and agent runs' summaries",
     ),
     "pr_event_queue": Package(
         pinned=frozenset({

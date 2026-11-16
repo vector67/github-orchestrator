@@ -44,7 +44,6 @@ from github_orchestrator.github import Access, PullRequests, Reviews, Threads
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import (
     Polling,
-    PrStatus,
     Runs,
     ThreadNews,
     Worktrees,
@@ -385,7 +384,7 @@ def fake_provider(interface: type, instance: object) -> Fake:
 
 
 def fake_notifications(instance: FakeNotifications) -> Fake:
-    return Fake(instance, ThreadNews, Runs, Worktrees, PrStatus, Polling)
+    return Fake(instance, ThreadNews, Runs, Worktrees, Polling)
 
 
 def fake_agent_runs_roles(instance: FakeAgentRuns) -> Fake:

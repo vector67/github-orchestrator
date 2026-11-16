@@ -6,12 +6,11 @@ from datetime import timedelta
 
 import pytest
 
-from github_orchestrator.change_detection import CiSucceeded
 from github_orchestrator.desktop import Badge, Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import Repo
 from github_orchestrator.github.fake import FakeGitHub
-from github_orchestrator.notifications import PrStatus, Runs
+from github_orchestrator.notifications import Runs
 from github_orchestrator.watcher import Health, Watcher
 from tests.builders import a_pr
 from tests.watcher.support import (
@@ -58,8 +57,8 @@ def _cannot_search(settings):
             f"{settings.config_path}")
 
 
-def _ci_passed(container):
-    container.get(PrStatus).changed(a_pr(84, "o/n"), CiSucceeded(("unit",)))
+def _run_failed(container):
+    container.get(Runs).run_failed(a_pr(84, "o/n"), "ci-failed", 1)
 
 
 def _held(settings):
@@ -112,7 +111,7 @@ def test_the_daemon_shows_what_was_posted_while_it_rested(settings):
     def sleep(seconds):
         if posted:
             raise KeyboardInterrupt
-        _ci_passed(container)
+        _run_failed(container)
         posted.append(seconds)
 
     container = watcher_container(settings, github=_searches(settings), sleep=sleep)
@@ -120,21 +119,21 @@ def test_the_daemon_shows_what_was_posted_while_it_rested(settings):
     with pytest.raises(KeyboardInterrupt):
         container.get(Watcher).run_forever()
 
-    assert [a.title for a in container.get(Desktop).announcements] == ["CI passed — PR #84"]
+    assert [a.title for a in container.get(Desktop).announcements] == ["Run failed on n#84"]
 
 
 def test_a_one_shot_cycle_shows_what_was_posted_before_it(settings):
     container = watcher_container(settings)
-    _ci_passed(container)
+    _run_failed(container)
 
     container.get(Watcher).run_cycle()
 
-    assert [a.title for a in container.get(Desktop).announcements] == ["CI passed — PR #84"]
+    assert [a.title for a in container.get(Desktop).announcements] == ["Run failed on n#84"]
 
 
 def test_a_dry_run_shows_nothing_that_was_posted(settings):
     container = watcher_container(settings, dry_run=True)
-    _ci_passed(container)
+    _run_failed(container)
 
     container.get(Watcher).run_cycle()
 

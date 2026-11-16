@@ -2,14 +2,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.change_detection import (
-    BecameMergeable,
-    BecameUnmergeable,
-    CiSucceeded,
-    PrClosed,
-    PushedSinceReview,
-    ReviewDecisionChanged,
-)
 from github_orchestrator.desktop import Badge
 from github_orchestrator.domain import Pr
 from github_orchestrator.notifications._facts import (
@@ -20,17 +12,12 @@ from github_orchestrator.notifications._facts import (
     Gathered,
     Posted,
 )
-from github_orchestrator.notifications.interface import StatusChange
 
 
 class Outbox(Protocol):
     def post(self, posted: Posted) -> None: ...
 
     def gather(self, item: Gathered) -> None: ...
-
-
-def _word(value: object) -> object:
-    return getattr(value, "value", value)
 
 
 def _cycles(consecutive: int | None) -> str:
@@ -111,35 +98,6 @@ class News:
         self._post(pr, Badge.FAILED, f"PR {pr.in_repo} worktree still shared",
                    f"{worktree.name} is still PR {other.in_repo}'s after {minutes} min — "
                    "opening it anyway")
-
-    def changed(self, pr: Pr, change: StatusChange) -> None:
-        match change:
-            case CiSucceeded():
-                self._post(pr, Badge.INFO, f"CI passed — PR {pr.in_repo}",
-                           f"Checks passed: {', '.join(change.checks)} (success)")
-            case BecameUnmergeable():
-                self._post(pr, Badge.FAILED, f"PR {pr.in_repo} unmergeable",
-                           f"Reason: {change.reason.value}")
-            case BecameMergeable():
-                self._post(pr, Badge.INFO, f"PR {pr.in_repo} is now mergeable",
-                           f"Reason: {change.reason.value}")
-            case ReviewDecisionChanged():
-                self._post(pr, Badge.INFO, f"Review decision changed — PR {pr.in_repo}",
-                           f"{change.reviewer} changed review from {_word(change.before)} "
-                           f"to {_word(change.after)}")
-            case PushedSinceReview():
-                self._post(pr, Badge.INFO, f"PR {pr.in_repo} updated", change.pushes)
-            case PrClosed():
-                self._closed(pr, change)
-
-    def _closed(self, pr: Pr, event: PrClosed) -> None:
-        if event.no_longer_relevant:
-            self._post(None, Badge.INFO, f"PR {pr.in_repo} no longer relevant",
-                       "Removed from your watch list (not authored, not reviewed, "
-                       "not requested).")
-            return
-        status = "merged" if event.merged else "closed without merging"
-        self._post(None, Badge.INFO, f"PR {pr.in_repo} closed", f"PR was {status}.")
 
     def failed(self, consecutive: int | None, error: str, log_file: Path) -> None:
         self._post(None, Badge.FAILED, "Watcher not polling",

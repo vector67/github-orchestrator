@@ -2,7 +2,6 @@ import subprocess
 import time
 from typing import Any
 
-from github_orchestrator.change_detection import CiSucceeded
 from tests.builders import a_pr
 from tests.desktop.scripted_mac import ScriptedMac
 from tests.desktop.support import real_desktop
@@ -21,21 +20,21 @@ class RecordingMac(ScriptedMac):
         return super().__call__(argv, **kwargs)
 
 
-class TestCheckNameFlowsIntoNotify:
-    def test_a_check_name_reaches_the_notification_as_one_argument_shown_as_written(self, tmp_path):
-        evil_check_name = ('\\" & (do shell script "echo PWNED > /tmp/x") & "\n'
+class TestAgentTextFlowsIntoNotify:
+    def test_an_agents_question_reaches_the_notification_as_one_argument_shown_as_written(self, tmp_path):
+        evil_question = ('\\" & (do shell script "echo PWNED > /tmp/x") & "\n'
                            "end tell\ndo shell script \"id\" -- '$(id)' `id` \\\\")
         mac = RecordingMac()
         notifications, courier = opened(tmp_path, real_desktop(mac=mac), Clock())
 
-        notifications.pr_status.changed(a_pr(1, "o/n"), CiSucceeded((evil_check_name,)))
+        notifications.thread_news.agent_asked(a_pr(1, "o/n"), question=evil_question)
         courier.deliver(LONG_AWAKE, None)
 
         [argv] = mac.argvs
         assert argv[0] == "open"
         assert argv.index("--args") < argv.index("--body")
-        assert argv[argv.index("--body") + 1] == f"Checks passed: {evil_check_name} (success)"
-        assert mac.world.announcements[0].body == f"Checks passed: {evil_check_name} (success)"
+        assert argv[argv.index("--body") + 1] == evil_question
+        assert mac.world.announcements[0].body == evil_question
 
 
 class TestAnsiEscapesInChangesFile:

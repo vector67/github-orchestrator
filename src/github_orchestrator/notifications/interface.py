@@ -4,15 +4,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Protocol
 
-from github_orchestrator.change_detection import (
-    BecameMergeable,
-    BecameUnmergeable,
-    CiFailed,
-    CiSucceeded,
-    PrClosed,
-    PushedSinceReview,
-    ReviewDecisionChanged,
-)
 from github_orchestrator.domain import Pr
 
 
@@ -74,14 +65,6 @@ class Worktrees(Protocol):
     def shared(self, pr: Pr, worktree: Path, other: Pr) -> None: ...
 
     def still_shared(self, pr: Pr, worktree: Path, other: Pr, minutes: int) -> None: ...
-
-
-StatusChange = (CiSucceeded | CiFailed | BecameUnmergeable | BecameMergeable
-                | ReviewDecisionChanged | PushedSinceReview | PrClosed)
-
-
-class PrStatus(Protocol):
-    def changed(self, pr: Pr, change: StatusChange) -> None: ...
 
 
 class Polling(Protocol):

@@ -825,8 +825,8 @@ A run on a PR the watcher no longer holds has no link.
 
 Clicking a desktop notification about one PR opens that PR at
 `/pr/<owner>/<name>/<number>` on the hub: on its Summary when you review it, on
-its Board when it is yours. One about no PR, about a closed PR, or about Claude
-skipping events on several PRs opens nothing.
+its Board when it is yours. One about no PR, or about Claude skipping events on
+several PRs, opens nothing.
 
 A notification from before PR pages named their repo opens `/pr/<number>`. That
 opens the one PR the hub holds with that number. When several repos hold one,
@@ -1334,7 +1334,8 @@ At PR close, the thread worktrees and branches go with everything else.
 - `thread-activity`, materialises review-board threads
 - `ci-failed`, one Claude run per failing check
 - `became-unmergeable`, triggers `/rebase-on-main`
-- `ci-succeeded` / `became-mergeable` / `review-decision-changed`, macOS notification
+- `ci-succeeded` / `became-mergeable`, status update
+- `review-decision-changed`, shown on the board
 
 ## Removing it
 
