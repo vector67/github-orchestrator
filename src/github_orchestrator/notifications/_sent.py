@@ -1,14 +1,10 @@
-import fcntl
 import json
 import logging
-import os
 import threading
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from github_orchestrator.atomic_write import write_atomically
+from github_orchestrator.atomic_write import locked, write_atomically
 from github_orchestrator.domain import LocalClock
 
 log = logging.getLogger(__name__)
@@ -24,7 +20,7 @@ class SentFile:
         self._lock = threading.Lock()
 
     def first(self, key: str) -> bool:
-        with self._lock, self._locked():
+        with self._lock, locked(self._path.with_suffix(".lock")):
             now = self._clock()
             sent = {old: at for old, at in self._read().items() if _within(at, now)}
             if key in sent:
@@ -34,16 +30,6 @@ class SentFile:
             except OSError:
                 log.exception("could not record %r as sent in %s", key, self._path)
             return True
-
-    @contextmanager
-    def _locked(self) -> Iterator[None]:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        descriptor = os.open(self._path.with_suffix(".lock"), os.O_RDWR | os.O_CREAT, 0o644)
-        try:
-            fcntl.flock(descriptor, fcntl.LOCK_EX)
-            yield
-        finally:
-            os.close(descriptor)
 
     def _read(self) -> dict[str, object]:
         try:

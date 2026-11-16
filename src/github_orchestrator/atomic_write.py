@@ -1,6 +1,9 @@
+import fcntl
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -19,3 +22,14 @@ def write_atomically(path: Path, content: bytes) -> None:
     except BaseException:
         Path(writing).unlink(missing_ok=True)
         raise
+
+
+@contextmanager
+def locked(path: Path) -> Iterator[None]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(fd)

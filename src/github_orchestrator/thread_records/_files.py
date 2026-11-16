@@ -7,9 +7,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from github_orchestrator.atomic_write import write_atomically
+from github_orchestrator.atomic_write import locked, write_atomically
 from github_orchestrator.domain import Pr, Repo, ThreadName
-from github_orchestrator.thread_records._lock import locked
 from github_orchestrator.thread_records.interface import PrRecords, UnreadableThread
 
 log = logging.getLogger(__name__)
