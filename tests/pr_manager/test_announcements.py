@@ -125,15 +125,15 @@ def test_a_proposed_fix_is_gathered_into_the_prs_fixes_ready(settings, tmp_path,
 
 def test_a_declined_comment_asks_for_your_call_at_once(settings, tmp_path, clock,
                                                         notifications, threads):
-    _commented(threads, "carol", "looks great!")
+    _commented(threads, "carol", "should this ship before the migration?")
 
     _run(settings, threads, tmp_path, clock, notifications, None,
          _reported(threads, lambda conversation: conversation.not_a_fix(
-             Classification.ACKNOWLEDGEMENT, "praise, nothing to change")), None)
+             Classification.NEEDS_HUMAN, "a release decision")), None)
 
     assert notifications.posted == [
         Posted(THE_PR, Badge.NEEDS_YOU, "Comment needs your call on n#1",
-               "carol\nacknowledgement: praise, nothing to change"),
+               "carol\nneeds-human: a release decision"),
     ]
 
 

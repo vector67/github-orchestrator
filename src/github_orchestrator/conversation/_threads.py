@@ -138,6 +138,7 @@ from github_orchestrator.conversation._domain.mentions import (
     unanswered_threads,
 )
 from github_orchestrator.conversation._domain.news import (
+    asks_for_your_call,
     fix_queued,
     fix_started,
     handled_since_ready,
@@ -771,7 +772,7 @@ class _ConversationManager:
             log.exception("loop %s: the commits named in threads could not be checked", pr)
         for settled in self._pr.runs.pump_and_schedule(pr, ports,
                                                        schedule=start_agents and not on_hold):
-            _announce_settled(news, pr, settled)
+            _announce_settled(news, pr, settled, ports.config.gh_account)
 
     def counts(self) -> Counts:
         ports = self._pr.ports
@@ -815,7 +816,8 @@ class _ConversationManager:
         return FixChecks(asked=tuple(asked), skipped=tuple(skipped))
 
 
-def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> None:
+def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation,
+                      account: str) -> None:
     fix = conversation.fix
     if fix.is_asking and fix.question is not None:
         news.agent_asked(pr, question=fix.question.text)
@@ -825,8 +827,9 @@ def _announce_settled(news: ThreadNews, pr: Pr, conversation: Conversation) -> N
                                  for comment in conversation.comments],
                        fix_summary=fix.summary)
     elif fix.is_declined:
-        news.needs_your_call(pr, author=conversation.author,
-                             classification=fix.classification, reason=fix.reason)
+        if asks_for_your_call(conversation, account):
+            news.needs_your_call(pr, author=conversation.author,
+                                 classification=fix.classification, reason=fix.reason)
     elif fix.has_failed:
         news.fix_failed(pr, gist=conversation.gist, author=conversation.author,
                         reason=fix.reason)

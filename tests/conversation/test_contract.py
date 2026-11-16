@@ -268,6 +268,32 @@ def test_a_fix_declined_when_its_run_ends_asks_for_your_call(stage):
                                   "reviewer\nrisky: it wants a schema change")]
 
 
+def test_a_comment_declined_as_an_acknowledgement_is_left_to_the_board(stage):
+    threads = _commented(stage)
+    start_run(stage, threads)
+    with threads.editing(KEY) as editable:
+        editable.not_a_fix(Classification.ACKNOWLEDGEMENT, "thanks the author, asks for nothing")
+    news = FakeNotifications()
+
+    threads.tick(news, on_hold=False)
+
+    assert news.posted == []
+
+
+def test_your_own_comment_declined_by_its_run_is_left_to_the_board(stage):
+    threads = _pr(stage)
+    on_github(stage.github, KEY, said(101, BODY, author=stage.github.account))
+    hear(threads)
+    start_run(stage, threads)
+    with threads.editing(KEY) as editable:
+        editable.not_a_fix(Classification.RISKY, "it wants a schema change")
+    news = FakeNotifications()
+
+    threads.tick(news, on_hold=False)
+
+    assert news.posted == []
+
+
 def test_a_fix_that_fails_its_last_attempt_is_announced_as_failed(stage):
     threads = _commented(stage)
     for _ in range(threads.get(KEY).run_holder.attempts_allowed):

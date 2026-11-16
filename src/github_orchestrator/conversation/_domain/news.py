@@ -8,6 +8,7 @@ from github_orchestrator.conversation._domain.conversation import (
     PROPOSED,
     QUEUED,
     RUNNING,
+    Classification,
     Conversation,
 )
 from github_orchestrator.conversation._domain.operations import VERB_KINDS
@@ -37,6 +38,11 @@ def opens_thread(record: Conversation | None, *, is_root: bool) -> bool:
 
 def reopens(record: Conversation | None, *, first: bool) -> bool:
     return record is not None and first and record.state in REOPENED_BY_A_REPLY
+
+
+def asks_for_your_call(conversation: Conversation, account: str) -> bool:
+    return (conversation.fix.classification is not Classification.ACKNOWLEDGEMENT
+            and conversation.author != account)
 
 
 def fix_queued(conversation: Conversation | None) -> bool:

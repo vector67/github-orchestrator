@@ -1102,7 +1102,9 @@ On a PR you wrote, a run the agent declines lands by what it says the comment
 was. The branch already does what was asked (`already-done`), or the comment
 only thanks you, approves or says LGTM (`acknowledgement`): Assumed done. A
 question for you (`question`), or anything unclear, risky, out of scope or only
-yours to decide: Needs a look, as does a run that failed. A reviewer's new
+yours to decide: Needs a look, as does a run that failed. A decline also posts
+"Comment needs your call", unless it is an acknowledgement or the comment is
+your own. A reviewer's new
 comment on an Assumed done or confirmed thread brings it back and the agent runs
 again, as a new comment on a resolved thread does.
 
