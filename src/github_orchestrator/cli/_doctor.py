@@ -15,6 +15,7 @@ from github_orchestrator.cli._install_checks import (
     agent_findings,
     requirements_for,
 )
+from github_orchestrator.cli._poll_failures import mentions_finding, watcher_finding
 from github_orchestrator.cli._service import RESTART, Service
 from github_orchestrator.cli._skill import skill_findings
 from github_orchestrator.cli._status import ago
@@ -102,12 +103,11 @@ class InstanceChecks:
         ]
 
     def _mentions(self) -> list[Finding]:
-        failing = self._watcher_health.health().mentions_error
-        if failing is None:
+        health = self._watcher_health.health()
+        if health.mentions_error is None:
             return []
-        return [fail(f"the mentions search is failing: {' '.join(failing.split())}",
-                     f"correct mentions_start in {self._config_file.location()}; "
-                     "the next poll searches again")]
+        return [mentions_finding(health.mentions_error, health.mentions_error_cause,
+                                 self._config_file.location())]
 
     def _github(self) -> list[Finding]:
         if self._config_file.check() is not None or self._which("gh") is None:
@@ -169,8 +169,7 @@ class InstanceChecks:
         if health.last_error is not None:
             good = ("no poll has ever succeeded" if since is None
                     else f"last good poll {ago(since)} ago")
-            return fail(f"the watcher is failing ({good}): {' '.join(health.last_error.split())}",
-                        "github-orchestrator logs shows the whole error")
+            return watcher_finding(health.last_error, health.last_error_cause, health.fix, good)
         if not (answer is not None or health.alive):
             return fail("the watcher is not running", RESTART)
         if since is None:

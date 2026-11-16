@@ -426,6 +426,32 @@ def test_a_failing_watcher_names_its_last_error(machine, run_cli):
     assert failing.fix == "github-orchestrator logs shows the whole error"
 
 
+def test_a_watcher_fault_to_fix_gives_the_fix_the_watcher_recorded(machine, run_cli):
+    _beat(machine, 600)
+    machine.settings().watcher_failures.write_text(json.dumps(
+        {"consecutive": 3, "last_error": "HTTP 401: Bad credentials",
+         "fix": "run gh auth login as octocat"}))
+    with _watcher_lock(machine):
+        ran = run_cli("doctor")
+
+    failing = _finding(ran.out, "HTTP 401: Bad credentials")
+    assert (failing.level, failing.fix) == ("FAIL", "run gh auth login as octocat")
+
+
+def test_a_watcher_that_cannot_reach_github_is_a_warning_that_clears_itself(machine, run_cli):
+    _beat(machine, 600)
+    machine.settings().watcher_failures.write_text(
+        json.dumps({"consecutive": 3, "last_error": "HTTP 502: Bad Gateway"}))
+    with _watcher_lock(machine):
+        ran = run_cli("doctor")
+
+    retrying = _finding(ran.out, "HTTP 502: Bad Gateway")
+    assert retrying == Finding(
+        "warn", "the watcher can't reach GitHub, retrying each poll "
+                "(last good poll 10m ago): HTTP 502: Bad Gateway",
+        "none needed; the next poll that reaches GitHub clears it")
+
+
 def test_a_failing_mentions_search_names_its_reason_and_leaves_the_watcher_ok(machine, run_cli):
     _beat(machine, 34)
     machine.settings().mentions_failure.write_text(json.dumps(
@@ -437,6 +463,19 @@ def test_a_failing_mentions_search_names_its_reason_and_leaves_the_watcher_ok(ma
     assert failing.level == "FAIL"
     assert failing.reason.endswith("config.toml: mentions_start must be in quotes")
     assert _finding(ran.out, "the watcher last polled 34s ago").level == "ok"
+
+
+def test_a_mentions_search_that_cannot_reach_github_is_a_warning_that_clears_itself(machine, run_cli):
+    _beat(machine, 34)
+    machine.settings().mentions_failure.write_text(json.dumps(
+        {"consecutive": 2, "last_error": "dial tcp: lookup api.github.com: no such host"}))
+    with _watcher_lock(machine):
+        ran = run_cli("doctor")
+
+    assert _finding(ran.out, "mentions search") == Finding(
+        "warn", "the mentions search can't reach GitHub, retrying each poll: "
+                "dial tcp: lookup api.github.com: no such host",
+        "none needed; the next poll that reaches GitHub clears it")
 
 
 def test_a_watcher_that_stopped_polling_says_to_restart(machine, run_cli):
