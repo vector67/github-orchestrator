@@ -55,7 +55,7 @@ class WindowPlacement:
         log.debug("ensure_pr_window %s (is_author=%s)", pr, is_author)
         branch = facts.branch or None
         manager = self._pr_processes.manager(pr)
-        if manager is ManagerPane.EXITED and self._worktree_deleted(pr):
+        if manager in (ManagerPane.EXITED, ManagerPane.RUNNING) and self._worktree_deleted(pr):
             log.warning("ensure_pr_window %s: its worktree %s is gone; closing the stale "
                         "record so a fresh worktree is cut", pr, self._pr_processes.manager_path(pr))
             self._pr_processes.close(pr)

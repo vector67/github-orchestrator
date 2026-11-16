@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
 
@@ -136,9 +135,9 @@ def _told(settings):
 
 
 def test_after_a_cycle_the_watcher_tells_the_hub_each_pr_it_holds_and_its_managers_state(
-        settings):
+        settings, tmp_path):
     windows = FakePrProcesses()
-    windows.open(MINE, Path("/wt/archiving"))
+    windows.open(MINE, tmp_path)
 
     _resident(settings, pr_processes=windows)
 

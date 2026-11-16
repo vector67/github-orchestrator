@@ -77,7 +77,7 @@ def _cycle(settings, world, copies, notifications, github=None):
                  pr_processes=world, working_copies=copies, clock=_at_now).run_cycle()
 
 
-def _window(world, copies, *, running=True, path="/wt/archiving", branch=EXPECTED, pr=PR):
+def _window(world, copies, *, path, running=True, branch=EXPECTED, pr=PR):
     if branch is not None:
         copies.add_worktree(path, branch)
     world.open(a_pr(pr, REPO), Path(path))
@@ -86,7 +86,7 @@ def _window(world, copies, *, running=True, path="/wt/archiving", branch=EXPECTE
     return manager
 
 
-def _flag(copies, *, since, run_output_at=None, path="/wt/archiving"):
+def _flag(copies, *, since, path, run_output_at=None):
     copies.add_worktree(path, WANDERED)
     copies.report_branch(THE_PR, path, EXPECTED, now=since,
                          run_output_at=run_output_at)
@@ -175,6 +175,17 @@ def test_a_dead_manager_is_started_again_in_its_window(settings, world, copies, 
     assert manager.running
 
 
+def test_a_live_manager_whose_worktree_was_deleted_starts_again_in_a_fresh_one(
+        settings, world, copies, notifications, tmp_path):
+    world.open(THE_PR, tmp_path / "deleted")
+    fresh = checked_out(copies, tmp_path / EXPECTED, EXPECTED)
+
+    _cycle(settings, world, copies, notifications)
+
+    assert world.manager_path(THE_PR) == str(fresh)
+    assert world.manager(THE_PR) is ManagerPane.RUNNING
+
+
 def test_a_dead_manager_with_events_waiting_is_revived_once_its_role_is_known(
         settings, world, copies, notifications, archiving):
     manager = _window(world, copies, running=False, path=archiving)
@@ -186,8 +197,8 @@ def test_a_dead_manager_with_events_waiting_is_revived_once_its_role_is_known(
     assert manager.running
 
 
-def test_a_dead_manager_with_nothing_waiting_stays_down(settings, world, copies, notifications):
-    manager = _window(world, copies, running=False)
+def test_a_dead_manager_with_nothing_waiting_stays_down(settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, path=archiving, running=False)
 
     _cycle(settings, world, copies, notifications, _github(settings, 99))
 
@@ -207,8 +218,8 @@ def test_an_event_a_dead_manager_had_in_hand_is_put_back_in_line(settings, world
     assert manager.running
 
 
-def test_an_event_a_live_manager_has_in_hand_stays_with_it(settings, world, copies, notifications):
-    manager = _window(world, copies)
+def test_an_event_a_live_manager_has_in_hand_stays_with_it(settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, path=archiving)
     disk_event_queue(settings.queues_dir).add(THE_PR, ci_failed())
     disk_event_queue(settings.queues_dir).next(THE_PR, is_author=True, agents_enabled=True)
 
@@ -218,8 +229,8 @@ def test_an_event_a_live_manager_has_in_hand_stays_with_it(settings, world, copi
     assert manager.starts == 1
 
 
-def test_a_live_manager_with_events_waiting_is_not_revived(settings, world, copies, notifications):
-    manager = _window(world, copies)
+def test_a_live_manager_with_events_waiting_is_not_revived(settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, path=archiving)
     disk_event_queue(settings.queues_dir).add(THE_PR, ci_failed())
 
     _cycle(settings, world, copies, notifications, _github(settings, 99))
@@ -235,8 +246,8 @@ def test_pending_events_without_a_window_open_nothing(settings, world, copies, n
     assert world.manager(THE_PR) is ManagerPane.NO_WINDOW
 
 
-def test_a_window_on_its_own_branch_is_left_alone(settings, world, copies, notifications):
-    manager = _window(world, copies)
+def test_a_window_on_its_own_branch_is_left_alone(settings, world, copies, notifications, archiving):
+    manager = _window(world, copies, path=archiving)
 
     _cycle(settings, world, copies, notifications)
 
@@ -245,8 +256,8 @@ def test_a_window_on_its_own_branch_is_left_alone(settings, world, copies, notif
     assert _trouble(copies) is None
 
 
-def test_the_watchers_own_evidence_starts_the_clock_without_detaching(settings, world, copies, notifications):
-    _window(world, copies, branch=WANDERED)
+def test_the_watchers_own_evidence_starts_the_clock_without_detaching(settings, world, copies, notifications, archiving):
+    _window(world, copies, path=archiving, branch=WANDERED)
 
     _cycle(settings, world, copies, notifications)
 
@@ -255,12 +266,14 @@ def test_the_watchers_own_evidence_starts_the_clock_without_detaching(settings, 
     assert not _detached(world)
 
 
-def test_a_pane_directory_with_a_colon_is_read_whole(settings, world, copies, notifications):
-    _window(world, copies, path="/wt/weird:name", branch=WANDERED)
+def test_a_pane_directory_with_a_colon_is_read_whole(settings, world, copies, notifications, tmp_path):
+    weird = tmp_path / "weird:name"
+    weird.mkdir()
+    _window(world, copies, path=str(weird), branch=WANDERED)
 
     _cycle(settings, world, copies, notifications)
 
-    assert _trouble(copies).worktree == "/wt/weird:name"
+    assert _trouble(copies).worktree == str(weird)
 
 
 @pytest.mark.parametrize("since, grace, running, run_output_at, detached", [
@@ -283,9 +296,9 @@ def test_the_grace_period_decides_when_a_wandered_window_is_detached(
     assert (_trouble(copies) is None) is detached
 
 
-def test_a_requested_release_detaches_at_once(settings, world, copies, notifications):
-    _window(world, copies)
-    _flag(copies, since=NOW)
+def test_a_requested_release_detaches_at_once(settings, world, copies, notifications, archiving):
+    _window(world, copies, path=archiving)
+    _flag(copies, since=NOW, path=archiving)
     copies.request_release(THE_PR)
 
     _cycle(settings, world, copies, notifications)
@@ -293,9 +306,9 @@ def test_a_requested_release_detaches_at_once(settings, world, copies, notificat
     assert _detached(world)
 
 
-def test_a_detached_window_loses_its_manager_and_says_so(settings, world, copies, notifications):
-    _window(world, copies)
-    _flag(copies, since=NOW - GRACE)
+def test_a_detached_window_loses_its_manager_and_says_so(settings, world, copies, notifications, archiving):
+    _window(world, copies, path=archiving)
+    _flag(copies, since=NOW - GRACE, path=archiving)
 
     _cycle(settings, world, copies, notifications)
 
@@ -316,8 +329,8 @@ def test_a_dead_manager_in_a_foreign_directory_is_revived_not_detached(settings,
     assert _trouble(copies) is None
 
 
-def test_a_pane_whose_branch_is_unknown_is_not_a_mismatch(settings, world, copies, notifications):
-    _window(world, copies, branch=None)
+def test_a_pane_whose_branch_is_unknown_is_not_a_mismatch(settings, world, copies, notifications, archiving):
+    _window(world, copies, path=archiving, branch=None)
 
     _cycle(settings, world, copies, notifications)
 
@@ -325,8 +338,8 @@ def test_a_pane_whose_branch_is_unknown_is_not_a_mismatch(settings, world, copie
     assert _trouble(copies) is None
 
 
-def test_a_pr_whose_branch_is_unknown_is_not_a_mismatch(settings, world, copies, notifications):
-    _window(world, copies, branch="anything")
+def test_a_pr_whose_branch_is_unknown_is_not_a_mismatch(settings, world, copies, notifications, archiving):
+    _window(world, copies, path=archiving, branch="anything")
 
     _cycle(settings, world, copies, notifications, _github(settings, branch=""))
 
