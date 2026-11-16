@@ -12,6 +12,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Conversation,
 )
 from github_orchestrator.conversation._domain.operations import VERB_KINDS
+from github_orchestrator.domain import AuthorKind, author_kind_of
 
 _VERBS = frozenset(VERB_KINDS.values())
 _STARTED = (RUNNING, IN_SESSION, PROPOSED, LANDING, LANDED)
@@ -43,6 +44,16 @@ def reopens(record: Conversation | None, *, first: bool) -> bool:
 def asks_for_your_call(conversation: Conversation, account: str) -> bool:
     return (conversation.fix.classification is not Classification.ACKNOWLEDGEMENT
             and conversation.author != account)
+
+
+def tells_you_of(author: str, *, pr_author: str | None, thread_starter: str | None,
+                 account: str) -> bool:
+    kind = author_kind_of(author, account)
+    if kind is AuthorKind.MINE:
+        return False
+    if pr_author == account:
+        return True
+    return thread_starter == account and kind is AuthorKind.HUMAN
 
 
 def fix_queued(conversation: Conversation | None) -> bool:

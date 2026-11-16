@@ -70,7 +70,7 @@ class Diffing:
         return self.seen()
 
     def seen(self) -> Seen:
-        polled = self.threads.poll(PullRequestState())
+        polled = self.threads.poll(PullRequestState(author=self.here.github.account))
         polled.commit()
         news = FakeNotifications()
         polled.announce(news)

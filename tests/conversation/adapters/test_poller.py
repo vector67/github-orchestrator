@@ -83,7 +83,7 @@ class _Heard:
 
 def _heard(built, *, save=True):
     threads = built.threads()
-    polled = threads.poll(PullRequestState())
+    polled = threads.poll(PullRequestState(author=ME))
     if save:
         polled.commit()
     news = FakeNotifications()

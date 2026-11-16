@@ -145,6 +145,7 @@ from github_orchestrator.conversation._domain.news import (
     opens_thread,
     reopens,
     replied_since,
+    tells_you_of,
 )
 from github_orchestrator.conversation._domain.parts import (
     Split,
@@ -704,7 +705,7 @@ class _ConversationManager:
                                self._unrecorded(found, mentioned, first=cursor is None),
                                first=cursor is None),
             _announce=_announcing(pr, () if cursor is None
-                                  else self._arrivals(found, polled_at)),
+                                  else self._arrivals(found, polled_at, state.author)),
             _keep=lambda: records.save_cursor(moved),
         )
 
@@ -715,15 +716,18 @@ class _ConversationManager:
         return without_records(
             opening + [thread for thread in mentioned if thread not in opening], ports)
 
-    def _arrivals(self, found: ThreadPoll, polled_at: str) -> tuple[_Arrival, ...]:
+    def _arrivals(self, found: ThreadPoll, polled_at: str,
+                  pr_author: str | None) -> tuple[_Arrival, ...]:
         account = self._pr.modules.config.gh_account
         arrivals: list[_Arrival] = []
         for active in found.active:
             thread = active.thread
             record = self.get(thread.key)
             root = thread.comments[0].id if thread.comments else None
+            starter = thread.comments[0].author if thread.comments else None
             for comment in active.new_comments:
-                if comment.author == account:
+                if not tells_you_of(comment.author, pr_author=pr_author,
+                                    thread_starter=starter, account=account):
                     continue
                 arrivals.append(_Arrival(
                     key=thread.key, comment_id=comment.id,

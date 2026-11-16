@@ -840,6 +840,10 @@ again for an HTTP 401, check `[[repos]]` and `gh_account` for a 403 or 404, and
 free some space for a full disk. **Mentions search failed** follows the same
 rule.
 
+New comments are posted for the PRs your account wrote. On someone else's PR,
+the only comment posted is a person's reply in a thread you started; the rest
+stay on the board.
+
 A notification from before PR pages named their repo opens `/pr/<number>`. That
 opens the one PR the hub holds with that number. When several repos hold one,
 it lists them to pick from; when none does, it says so.

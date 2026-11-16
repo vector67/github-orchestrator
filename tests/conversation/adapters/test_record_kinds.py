@@ -139,9 +139,9 @@ def test_an_action_whose_bytes_will_not_decode_is_no_last_action(tmp_path, threa
     assert threads.activity(threads.get(KEY)).last_action is None
 
 
-def _arrived(threads) -> list[int | None]:
+def _arrived(here) -> list[int | None]:
     news = FakeNotifications()
-    threads.poll(PullRequestState()).announce(news)
+    here.threads().poll(PullRequestState(author=here.github.account)).announce(news)
     return [item.comment_id for item in news.gathered if isinstance(item, CommentArrived)]
 
 
@@ -150,14 +150,14 @@ def test_a_cursor_that_holds_no_object_is_a_pr_never_polled(tmp_path, here, text
     on_github(here.github, KEY, said(101, "rename it"))
     _left(thread_dir(tmp_path, THE_PR) / f"{disk_name('poll')}.cursor", text)
 
-    assert _arrived(here.threads()) == []
+    assert _arrived(here) == []
 
 
 def test_a_cursor_that_reads_announces_what_arrived_since(tmp_path, here):
     on_github(here.github, KEY, said(101, "rename it"))
     _left(thread_dir(tmp_path, THE_PR) / f"{disk_name('poll')}.cursor", "{}")
 
-    assert _arrived(here.threads()) == [101]
+    assert _arrived(here) == [101]
 
 
 @pytest.mark.parametrize("text", ["{not json", "[1, 2]"])
