@@ -841,8 +841,9 @@ free some space for a full disk. **Mentions search failed** follows the same
 rule.
 
 New comments are posted for the PRs your account wrote. On someone else's PR,
-the only comment posted is a person's reply in a thread you started; the rest
-stay on the board.
+the only comments posted are a person's reply in a thread you started and a
+person's comment that @mentions your account; the rest, a bot's mention
+included, stay on the board.
 
 A notification from before PR pages named their repo opens `/pr/<number>`. That
 opens the one PR the hub holds with that number. When several repos hold one,

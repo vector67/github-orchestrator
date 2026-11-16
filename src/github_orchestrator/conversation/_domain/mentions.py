@@ -25,8 +25,12 @@ def _mine(comment: Comment, account: str) -> bool:
     return comment.author.lower() == account.lower()
 
 
+def names_the_account(body: str, account: str) -> bool:
+    return _names_me(_names(account), body)
+
+
 def names_the_viewer(comment: Comment, account: str) -> bool:
-    return not _mine(comment, account) and _names_me(_names(account), comment.body)
+    return not _mine(comment, account) and names_the_account(comment.body, account)
 
 
 def _someone_else(pr_author: str | None, account: str) -> str | None:

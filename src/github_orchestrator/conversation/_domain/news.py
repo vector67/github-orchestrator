@@ -11,6 +11,7 @@ from github_orchestrator.conversation._domain.conversation import (
     Classification,
     Conversation,
 )
+from github_orchestrator.conversation._domain.mentions import names_the_account
 from github_orchestrator.conversation._domain.operations import VERB_KINDS
 from github_orchestrator.domain import AuthorKind, author_kind_of
 
@@ -46,14 +47,15 @@ def asks_for_your_call(conversation: Conversation, account: str) -> bool:
             and conversation.author != account)
 
 
-def tells_you_of(author: str, *, pr_author: str | None, thread_starter: str | None,
-                 account: str) -> bool:
+def tells_you_of(author: str, body: str, *, pr_author: str | None,
+                 thread_starter: str | None, account: str) -> bool:
     kind = author_kind_of(author, account)
     if kind is AuthorKind.MINE:
         return False
     if pr_author == account:
         return True
-    return thread_starter == account and kind is AuthorKind.HUMAN
+    return kind is AuthorKind.HUMAN and (thread_starter == account
+                                         or names_the_account(body, account))
 
 
 def fix_queued(conversation: Conversation | None) -> bool:

@@ -404,6 +404,36 @@ def test_a_bots_reply_to_the_accounts_thread_on_someone_elses_pr_does_not_arrive
     assert _arrived(notifications) == []
 
 
+def test_a_person_mentioning_the_account_on_someone_elses_pr_arrives(settings):
+    notifications = FakeNotifications()
+    thread = _thread(comments=[_comment(10, body="@OctoCat can you check this?")])
+
+    _poll(settings, state=_state(author="hubot"), threads=[thread], cursor=SEEN_BEFORE,
+          notifications=notifications)
+
+    assert [item.comment_id for item in _arrived(notifications)] == [10]
+
+
+def test_a_bot_mentioning_the_account_on_someone_elses_pr_does_not_arrive(settings):
+    notifications = FakeNotifications()
+    thread = _thread(comments=[_comment(10, author="vercel", body="@octocat deployed")])
+
+    _poll(settings, state=_state(author="hubot"), threads=[thread], cursor=SEEN_BEFORE,
+          notifications=notifications)
+
+    assert _arrived(notifications) == []
+
+
+def test_a_longer_login_starting_with_the_account_is_no_mention(settings):
+    notifications = FakeNotifications()
+    thread = _thread(comments=[_comment(10, body="@octocat-bot can you check this?")])
+
+    _poll(settings, state=_state(author="hubot"), threads=[thread], cursor=SEEN_BEFORE,
+          notifications=notifications)
+
+    assert _arrived(notifications) == []
+
+
 def test_nothing_arrives_on_the_first_poll_of_a_pr(settings):
     notifications = FakeNotifications()
 

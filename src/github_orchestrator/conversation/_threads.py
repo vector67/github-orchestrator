@@ -726,7 +726,7 @@ class _ConversationManager:
             root = thread.comments[0].id if thread.comments else None
             starter = thread.comments[0].author if thread.comments else None
             for comment in active.new_comments:
-                if not tells_you_of(comment.author, pr_author=pr_author,
+                if not tells_you_of(comment.author, comment.body, pr_author=pr_author,
                                     thread_starter=starter, account=account):
                     continue
                 arrivals.append(_Arrival(
