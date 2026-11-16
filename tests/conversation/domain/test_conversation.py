@@ -979,7 +979,8 @@ def test_a_proposed_fix_is_not_counted_as_answered(settings):
     assert threads.counts().answered == ()
 
 
-@pytest.mark.parametrize("bot", ["claude", "Codex", "copilot[bot]"])
+@pytest.mark.parametrize("bot", ["claude", "Codex", "copilot[bot]", "vercel[bot]",
+                                 "copilot-pull-request-reviewer[bot]"])
 def test_a_thread_a_bot_opened_is_listed_as_a_bot_thread(settings, bot):
     here = _here(settings)
     threads = _open(here, _comment(author=bot))

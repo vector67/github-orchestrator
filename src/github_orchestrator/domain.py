@@ -89,7 +89,7 @@ class AuthorKind(StrEnum):
     BOT = "bot"
 
 
-_BOTS = frozenset({"claude", "codex", "copilot"})
+_BOTS = frozenset({"claude", "codex", "copilot", "copilot-pull-request-reviewer", "vercel"})
 
 
 def author_kind_of(login: str, account: str) -> AuthorKind:

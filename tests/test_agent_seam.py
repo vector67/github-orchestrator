@@ -13,7 +13,8 @@ KNOWS_THE_AGENT = (
     "cli/_install_checks.py",
     "settings/_renamed_keys.py",
 )
-GITHUB_BOT_LOGINS = ('_BOTS = frozenset({"claude", "codex", "copilot"})',)
+GITHUB_BOT_LOGINS = (
+    '_BOTS = frozenset({"claude", "codex", "copilot", "copilot-pull-request-reviewer", "vercel"})',)
 
 
 def _naming_lines(root, paths, allowed):

@@ -397,7 +397,8 @@ watcher looks for PRs that mention you at most once a minute and keeps one until
 it is merged or closed. The list behind the top bar's mention count is a
 separate search, run at most every 30 minutes. On your own PR, changes a reviewer asked for and was
 not asked to review again come first, then human comments waiting on you or an
-agent, then bot comments (from `claude`, `codex` or `copilot`), then CI, a
+agent, then bot comments (from `claude`, `codex`, `copilot`,
+`copilot-pull-request-reviewer` or `vercel`), then CI, a
 rebase and the merge; a draft with nothing else in its way is marked ready for
 review. A PR you dismissed until its next event is off the wall, and out of the
 PR switcher, until that event comes, unless its worktree holds the wrong
