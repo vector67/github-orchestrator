@@ -26,6 +26,7 @@ from tests.disk_layout import (
     command_file,
     dismissed_file,
     on_hold_file,
+    rerequest_file,
     reviewer_pick_file,
     status_file,
     thread_dir,
@@ -146,6 +147,7 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
                  dismissed_file(settings.dismissed_dir, THE_PR),
                  status_file(settings.data_dir, THE_PR),
                  reviewer_pick_file(settings.data_dir, THE_PR),
+                 rerequest_file(settings.data_dir, THE_PR),
                  command_file(settings.data_dir, THE_PR, "00000000000000000001-1"))
     for flag in left_over:
         flag.parent.mkdir(parents=True, exist_ok=True)

@@ -213,7 +213,8 @@ What the board knows today, and what it lacks.
    PR and fires on "no longer a draft". A new per-PR store, `Rerequests`,
    holds the logins queued for a re-request, on disk under
    `rerequest_review/<owner>/<repo>/<n>.json`, with the same disk and fake
-   implementations and contract tests as `ReviewerPicks`.
+   implementations and contract tests as `ReviewerPicks`. **Done**
+   (`b331a05a`).
 6. **Whether the pull request has ever had checks.** The snapshot holds only
    the checks on the current head, and the board fetches nothing about a
    repository's CI configuration or the checks of earlier heads. The
@@ -245,7 +246,8 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
 
 - **Settings.** `Rerequests` with `queued(pr)`, `queue(pr, login)`,
   `drop(pr, login)` and `forget(pr)`. The watcher's teardown forgets a PR's
-  queue with its reviewer pick.
+  queue with its reviewer pick. **Done** (`b331a05a` and the commit that
+  records this).
 
 - **Manager command.** `Command.REREQUEST_REVIEW` with a `reviewer` field,
   `ManagerPanel.rerequest_review(reviewer)` and the board route
