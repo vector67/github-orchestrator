@@ -587,7 +587,7 @@ module('Acceptance | wall', function (hooks) {
       'On hold',
       'On hold',
       '3 comments · agents in progress',
-      'Send your review',
+      'Send your re-review',
       'Re-review',
       'Agent is carrying on',
       'Agent is working on 2 threads',
