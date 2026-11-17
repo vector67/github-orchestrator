@@ -95,6 +95,7 @@ export default class DiffFold extends Component<DiffFoldSignature> {
       <DiffSlot
         @conversationId={{@conversationId}}
         @commits={{@fold.commits}}
+        @folded={{@fold.files_folded}}
       />
     </div>
   </template>
