@@ -14,6 +14,7 @@ import type {
   Person,
   PrEnded,
   PrFacts,
+  ProposalKind,
   PullRequestCommit,
   PullRequestCommits,
   ReadMark,
@@ -185,13 +186,17 @@ function read(one: Thread): boolean {
 
 const NO_OPERATIONS: Operations = {};
 
-function operationsOf(thread: Thread, operations: Operations): Operation[] {
+function storedOf(thread: Thread, operations: Operations): StoredOperation[] {
   return [...(thread.operations ?? []), ...(thread.sent ?? [])].flatMap(
     (id) => {
       const one = operations[operationKey({ id, conversation: thread.key })];
       return one ? [one] : [];
     },
-  ) as unknown as Operation[];
+  );
+}
+
+function operationsOf(thread: Thread, operations: Operations): Operation[] {
+  return storedOf(thread, operations) as unknown as Operation[];
 }
 
 function pressedOn(
@@ -438,17 +443,154 @@ function closes(action: Closing, gathered: Gathered, one: Thread): boolean {
   return action === 'reply' && awaitsYou(one);
 }
 
+type Outcome =
+  'rejected' | 'deferred' | 'pushed' | 'replied' | 'resolved' | 'marked done';
+
+const FIRST_THAT_APPLIES: Outcome[] = [
+  'rejected',
+  'deferred',
+  'pushed',
+  'replied',
+  'resolved',
+  'marked done',
+];
+
+const COUNTED_IN_ORDER: Outcome[] = [
+  'pushed',
+  'replied',
+  'resolved',
+  'marked done',
+  'rejected',
+  'deferred',
+];
+
+const KEPT_WHEN_CLOSING: Outcome[] = ['pushed', 'replied', 'resolved'];
+
+export interface Badge {
+  text: string;
+  alarm: boolean;
+}
+
 export interface RerequestPrompt {
   reviewer: string;
   number: number;
+  badge: Badge;
+  summary: string;
+  flag: string | null;
+}
+
+function pushedOn(one: Thread, operations: Operations): boolean {
+  return storedOf(one, operations).some(
+    (operation) =>
+      operation.kind === 'approve' &&
+      operation.lands === 'commit' &&
+      operation.state !== 'refused',
+  );
+}
+
+function repliedOn(one: Thread, author: string | null): boolean {
+  if (!author || author === one.opened_by) return false;
+  const comments = one.comments ?? [];
+  const asked =
+    comments.find((said) => said.author === one.opened_by)?.created_at ??
+    one.opened_at ??
+    '';
+  return comments.some(
+    (said) => said.author === author && (said.created_at ?? '') > asked,
+  );
+}
+
+function outcomesOf(
+  one: Thread,
+  operations: Operations,
+  author: string | null,
+): Outcome[] {
+  const holds: [Outcome, boolean][] = [
+    ['rejected', one.record_state === 'rejected'],
+    ['deferred', one.state === 'deferred'],
+    ['pushed', pushedOn(one, operations)],
+    ['replied', repliedOn(one, author)],
+    ['resolved', one.github_resolved === true],
+  ];
+  return holds.filter(([, held]) => held).map(([outcome]) => outcome);
+}
+
+function resolvesOnGitHub(action: Closing, gathered: Gathered): boolean {
+  return (
+    (action === 'resolve' || action === 'confirm-resolve') &&
+    gathered.resolve !== false &&
+    !gathered.delete
+  );
+}
+
+function closedAs(
+  action: Closing,
+  gathered: Gathered,
+  lands: ProposalKind | null,
+): Outcome[] {
+  const holds: [Outcome, boolean][] = [
+    ['rejected', action === 'reject'],
+    ['deferred', action === 'defer'],
+    ['pushed', action === 'approve' && lands === 'commit'],
+    [
+      'replied',
+      action === 'reply' ||
+        Boolean(gathered.body) ||
+        (action === 'approve' && lands !== 'commit'),
+    ],
+    ['resolved', resolvesOnGitHub(action, gathered)],
+  ];
+  return holds.filter(([, held]) => held).map(([outcome]) => outcome);
+}
+
+function firstOf(outcomes: Outcome[]): Outcome {
+  return (
+    FIRST_THAT_APPLIES.find((outcome) => outcomes.includes(outcome)) ??
+    'marked done'
+  );
+}
+
+function comments(count: number): string {
+  return count === 1 ? '1 comment' : `${count} comments`;
+}
+
+function summaryLineOf(counted: Outcome[]): string {
+  const counts = COUNTED_IN_ORDER.map(
+    (outcome) =>
+      [outcome, counted.filter((one) => one === outcome).length] as const,
+  )
+    .filter(([, count]) => count > 0)
+    .map(([outcome, count]) => `${count} ${outcome}`);
+  return `This is the last one open: ${counts.join(', ')}`;
+}
+
+function flagLineOf(
+  rejected: number,
+  bare: number,
+  reviewer: string,
+): string | null {
+  const unanswered = `${bare === 1 ? 'has' : 'have'} no reply and no push`;
+  const said =
+    rejected && bare
+      ? `You rejected ${comments(rejected)}, and ${bare} ${unanswered}.`
+      : rejected
+        ? `You rejected ${comments(rejected)}.`
+        : bare
+          ? `${comments(bare)} ${unanswered}.`
+          : null;
+  return said
+    ? `${said} Open the list to see them before ${reviewer} does.`
+    : null;
 }
 
 export function rerequestPromptOf(
   pr: PrEntity | undefined,
   threads: Threads | undefined,
+  operations: Operations,
   key: string,
   action: Closing,
   gathered: Gathered,
+  lands: ProposalKind | null,
 ): RerequestPrompt | null {
   const facts = pr?.facts ?? null;
   const closing = threads?.[key];
@@ -463,11 +605,39 @@ export function rerequestPromptOf(
     all,
     pr.drawn?.system.rerequest_queued ?? [],
   ).owed;
-  const inTheRound = roundOf(all, reviewer, facts).some(
-    (one) => one.key === key,
+  const round = roundOf(all, reviewer, facts);
+  if (!owed.includes(reviewer) || !round.some((one) => one.key === key)) {
+    return null;
+  }
+  const outcomes = round.map((one) =>
+    one.key === key
+      ? [
+          ...outcomesOf(closing, operations, pr.author).filter((outcome) =>
+            KEPT_WHEN_CLOSING.includes(outcome),
+          ),
+          ...closedAs(action, gathered, lands),
+        ]
+      : outcomesOf(one, operations, pr.author),
   );
-  if (!owed.includes(reviewer) || !inTheRound) return null;
-  return { reviewer, number: pr.number };
+  const counted = outcomes.map(firstOf);
+  const rejected = counted.filter((one) => one === 'rejected').length;
+  const bare = outcomes.filter(
+    (held) =>
+      firstOf(held) !== 'rejected' &&
+      !held.includes('pushed') &&
+      !held.includes('replied'),
+  ).length;
+  const requested = facts.changes_requested_by.includes(reviewer);
+  return {
+    reviewer,
+    number: pr.number,
+    badge: {
+      text: requested ? 'Changes requested' : 'Commented',
+      alarm: requested,
+    },
+    summary: summaryLineOf(counted),
+    flag: flagLineOf(rejected, bare, reviewer),
+  };
 }
 
 function ofAuthor(facts: PrFacts, rounds: Rounds): Pick {

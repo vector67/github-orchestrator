@@ -541,9 +541,11 @@ export default class StoreService extends Service {
     return rerequestPromptOf(
       this.prs[key],
       this.threads[key],
+      this.operations[key] ?? {},
       thread,
       action,
       gathered,
+      this.proposal(repo, number, thread)?.kind ?? null,
     );
   }
 

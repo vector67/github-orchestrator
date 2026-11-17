@@ -496,7 +496,7 @@ class PreviewPanel(FakeManagerPanel):
     working_copies: WorkingCopies | None = None
 
     def dashboard(self) -> Dashboard:
-        return self.drawn()
+        return dataclasses.replace(self.drawn(), rerequest_queued=self.now.rerequest_queued)
 
     def answer_agent_settings(self, digest: str, *, allowed: bool) -> bool:
         held = self.drawn().agent_settings
@@ -910,7 +910,9 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
                              pending_reviewers=(viewer,) if reviewer else (),
                              reviews=(Review(viewer, ReviewState.COMMENTED,
                                              "2026-09-11T10:00:00Z", reviewed_on or first),)
-                             if reviewer or reviewed_on else (),
+                             if reviewer or reviewed_on
+                             else (Review(FAILED.author, ReviewState.COMMENTED,
+                                          "2026-09-11T12:00:00Z", first),),
                              push_events=(PushEvent("head_ref_force_pushed", "2026-09-12T09:00:00Z"),)
                              if reviewed_on else ())
     outside.github.prs[PR].state = state

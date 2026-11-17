@@ -315,7 +315,7 @@ in `frontend/app/data/summaries.ts`.
   taken from the action (Accept of a commit is pushed, of a reply or ticket
   replied; a written reply, a plain Reply included, is replied; Resolve
   resolved; Mark done, Confirm and Move marked done; Reject rejected; Defer
-  deferred).
+  deferred). **Done** for all but the list (the commit that records this).
 
 - **Next move.** `ofAuthor` gains two moves and narrows one:
 
@@ -335,14 +335,16 @@ in `frontend/app/data/summaries.ts`.
   `panel-actions.gts` beside the hold warning, from `reply-box.gts` for a
   plain Reply, and from `dashboard-tab.gts` for the `rerequest-review` move. The History row reads each thread's full
   operations through `store.readThread` when it is opened, and shows what the
-  summaries give until they arrive.
+  summaries give until they arrive. **Done** from `panel-actions.gts` and
+  `reply-box.gts` (the commit that records this).
 
 - **The write.** `rerequest-review` joins `PR_WRITES` in the `reviewers` slot,
   settled once the login is in `rerequest_queued` or `pending_reviewers`;
   `cancel-rerequest` and `send-rerequest` join it in the same slot, settled
   once the login has left `rerequest_queued`. `pr-controls` gains
   `rerequestReview`, `cancelRerequest` and `sendRerequestNow`, each taking
-  the PR and the reviewer.
+  the PR and the reviewer. **Done** for `rerequest-review` and
+  `rerequestReview` (the commit that records this).
 
 ## Edge cases
 

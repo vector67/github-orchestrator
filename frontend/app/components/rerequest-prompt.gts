@@ -29,6 +29,7 @@ const RerequestPrompt: TOC<RerequestPromptSignature> = <template>
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="rerequest-prompt-question"
+      aria-describedby="rerequest-prompt-note"
       tabindex="-1"
       data-test-rerequest-prompt
       {{modal @cancel (answering @rerequest @only)}}
@@ -49,6 +50,20 @@ const RerequestPrompt: TOC<RerequestPromptSignature> = <template>
         id="rerequest-prompt-question"
         data-test-rerequest-question
       >Re-request {{@prompt.reviewer}}'s review of #{{@prompt.number}}?</p>
+      <p class="rerequest-standing"><span
+          class="state-chip
+            {{if @prompt.badge.alarm 'tone-alarm' 'tone-plain'}}"
+          data-test-rerequest-badge
+        >{{@prompt.badge.text}}</span></p>
+      <p
+        class="note"
+        id="rerequest-prompt-note"
+        data-test-rerequest-summary
+      >{{@prompt.summary}}</p>
+      {{#if @prompt.flag}}
+        <p class="note" data-test-rerequest-flag><strong
+          >{{@prompt.flag}}</strong></p>
+      {{/if}}
       <div class="dialog-actions">
         <button
           type="button"
