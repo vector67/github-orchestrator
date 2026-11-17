@@ -99,6 +99,9 @@ const SAID: Record<Code, Said> = {
   'not-frozen':
     "That pull request's manager is not held on the wrong branch, so there " +
     'is nothing to let go of.',
+  'no-clean-up-asked':
+    'Nothing is asking about that worktree any more: it is gone, or it was ' +
+    'already allowed.',
   'terminal-refused': beside('the system would not start it'),
   'manager-down': "The manager is down, so your action can't be recorded.",
   'no-worktree':

@@ -118,6 +118,37 @@ def test_release_of_a_pr_that_is_not_frozen_is_refused():
     assert answer.json()["errors"][0]["code"] == "not-frozen"
 
 
+def test_delete_worktree_lets_teardown_remove_a_worktree_it_asked_about():
+    holdings = FakeHoldings(asking={MINE})
+
+    answer = client(holdings, MINE).post(f"/api/pull-requests/{REPO}/54:delete-worktree")
+
+    assert answer.status_code == 202
+    assert holdings.deleting == {MINE}
+
+
+def test_dismissing_a_clean_up_keeps_it_off_the_wall_until_the_time_given():
+    holdings = FakeHoldings(asking={MINE})
+
+    answer = client(holdings, MINE).post(f"/api/pull-requests/{REPO}/54:dismiss-clean-up",
+                                         json={"until_at": "2026-11-18T09:00:00+01:00"})
+
+    assert answer.status_code == 202
+    assert holdings.dismissed == {MINE: datetime(2026, 11, 18, 8, 0, tzinfo=timezone.utc)}
+
+
+@pytest.mark.parametrize(("verb", "body"), [
+    ("delete-worktree", None), ("dismiss-clean-up", {"until_at": "2026-11-18T09:00:00Z"})])
+def test_a_clean_up_answer_nothing_asked_about_is_refused(verb, body):
+    holdings = FakeHoldings()
+
+    answer = client(holdings, MINE).post(f"/api/pull-requests/{REPO}/54:{verb}", json=body)
+
+    assert answer.status_code == 409
+    assert answer.json()["errors"][0]["code"] == "no-clean-up-asked"
+    assert (holdings.deleting, holdings.dismissed) == (set(), {})
+
+
 def test_a_command_for_a_pr_the_watcher_does_not_hold_is_refused_and_changes_nothing():
     holdings = FakeHoldings()
 
@@ -200,7 +231,9 @@ def test_every_hub_command_declares_the_hand_over_and_where_to_poll():
     assert set(commands) == {
         "/api/pull-requests/{owner}/{name}/{number}:hold",
         "/api/pull-requests/{owner}/{name}/{number}:resume",
-        "/api/pull-requests/{owner}/{name}/{number}:release"}
+        "/api/pull-requests/{owner}/{name}/{number}:release",
+        "/api/pull-requests/{owner}/{name}/{number}:delete-worktree",
+        "/api/pull-requests/{owner}/{name}/{number}:dismiss-clean-up"}
     assert all(command["responses"]["202"]["headers"]["Location"]
                for command in commands.values())
 

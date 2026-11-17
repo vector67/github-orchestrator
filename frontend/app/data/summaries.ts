@@ -59,6 +59,7 @@ import type {
 } from 'frontend/services/store';
 
 export type Move =
+  | 'clean-up-worktree'
   | 'release-worktree'
   | 'agent-settings'
   | 'on-hold'
@@ -273,12 +274,15 @@ const WAITING: Move[] = [
 ];
 
 const BEFORE_ANYTHING: Move[] = [
+  'clean-up-worktree',
   'release-worktree',
   'agent-settings',
   'on-hold',
   'first-poll',
   'closed',
 ];
+
+const SHOWN_WHEN_DISMISSED: Move[] = ['clean-up-worktree', 'release-worktree'];
 
 const GROUPS: Partial<Record<Move, WallGroup | null>> = {
   'on-hold': 'parked',
@@ -441,6 +445,7 @@ function nudged(code: Move, board: Board): Move {
 }
 
 function onTop(state: Move | null, board: Board): Move {
+  if (board.flags?.clean_up) return 'clean-up-worktree';
   if ((board.flags?.frozen_on ?? null) !== null) return 'release-worktree';
   if (board.flags?.agent_settings) return 'agent-settings';
   if (board.flags?.on_hold) return board.openMentions ? 'mention' : 'on-hold';
@@ -460,7 +465,8 @@ function nextMoveOf(facts: PrFacts | null, board: Board): NextMove {
   const pick = facts ? ofPr(facts) : null;
   const state = pick?.move ?? null;
   const code = nudged(onTop(state, board), board);
-  const dismissed = Boolean(board.flags?.hidden) && code !== 'release-worktree';
+  const dismissed =
+    Boolean(board.flags?.hidden) && !SHOWN_WHEN_DISMISSED.includes(code);
   const muted =
     facts !== null &&
     facts.draft &&
@@ -545,7 +551,7 @@ function summarised(
     opening: openingOf(all.flatMap((one) => operationsOf(one, operations))),
     answering: answeringOf(all, operations, pr?.author ?? null),
     unranked,
-    problems: wrong.length + (unranked ? 1 : 0),
+    problems: wrong.length + (unranked ? 1 : 0) + (pr?.flags?.clean_up ? 1 : 0),
     fork: /^orchestrator\/pr\/\d+$/.test(pr?.branch ?? ''),
   };
 }
@@ -922,7 +928,10 @@ const RANKS: Record<Importance, number> = {
 
 const UNRANKED = 1;
 
+const FIRST = -1;
+
 function rankOf(row: Placed): number {
+  if (row.summaries.move.code === 'clean-up-worktree') return FIRST;
   const importance = row.flags?.importance ?? null;
   return importance === null ? UNRANKED : RANKS[importance];
 }

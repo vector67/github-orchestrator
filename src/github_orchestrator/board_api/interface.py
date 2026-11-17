@@ -197,6 +197,12 @@ class HeldAgentSettings:
 
 
 @dataclass(frozen=True)
+class WorktreeCleanUp:
+    worktree: str
+    files: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Dashboard:
     pr: Pr
     worktree: str
@@ -268,6 +274,7 @@ class Dashboard:
     undismiss_command: str
     notice: Notice | None
     standing: ManagerStanding
+    clean_up: WorktreeCleanUp | None = None
 
 
 class ManagerPanel(Protocol):
@@ -421,6 +428,10 @@ class Holdings(Protocol):
     def resume(self, pr: Pr) -> None: ...
 
     def release(self, pr: Pr) -> bool: ...
+
+    def delete_worktree(self, pr: Pr) -> bool: ...
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool: ...
 
 
 class FinishedRun(Protocol):

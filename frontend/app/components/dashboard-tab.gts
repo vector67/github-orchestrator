@@ -8,6 +8,7 @@ import { concat, fn } from '@ember/helper';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
 import AreYouSure from 'frontend/components/are-you-sure';
+import CleanUpBand from 'frontend/components/clean-up-band';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
 import ImportanceConfirm from 'frontend/components/importance-confirm';
 import type { DismissUntil, Importance } from 'frontend/data/api';
@@ -367,6 +368,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
           {{this.standing}}
         </p>
       {{else if this.reading}}
+        <CleanUpBand />
         <section
           class="actionband {{this.reading.band.state}}"
           data-pending={{if this.pending "true"}}

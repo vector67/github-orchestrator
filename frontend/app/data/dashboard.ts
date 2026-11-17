@@ -321,6 +321,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
   const { move, human, bot } = summaries;
   const code = move.code;
   switch (code) {
+    case 'clean-up-worktree':
+      return 'Delete the worktree?';
     case 'release-worktree':
       return 'Release the worktree';
     case 'agent-settings':
@@ -385,6 +387,14 @@ function frozenReasonOf(frozen: FrozenWorktree): string {
     return 'release asked for; the watcher cuts a fresh worktree on its next cycle';
   }
   return `wrong branch checked out (${withoutBidiControls(frozen.here)}) · detaches in ${lengthOf(frozen.seconds_left)}`;
+}
+
+function cleanUpReasonOf(shown: ShownPr): string {
+  const ended = shown.facts?.ended ? 'closed' : 'dismissed';
+  const files = shown.flags?.clean_up?.files.length ?? 0;
+  return files
+    ? `${ended}, its worktree holds ${plural(files, 'file')} no agent wrote`
+    : `${ended}, git could not list what its worktree holds`;
 }
 
 function heldOf(queued: number): string {
@@ -481,6 +491,8 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
   const { move, human, bot } = summaries;
   const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
   switch (move.code) {
+    case 'clean-up-worktree':
+      return cleanUpReasonOf(shown);
     case 'agent-settings':
       return `agents stopped, ${plural(shown.flags?.agent_settings?.changed.length ?? 0, 'file')} they load changed`;
     case 'on-hold':
