@@ -120,6 +120,20 @@ const PanelView: TOC<PanelSignature> = <template>
     </div>
     <div id="panel-work">
       <div id="panel-fix">
+        {{#if @panel.agent_line}}
+          <section class="agent-line" data-test-agent-line>
+            <p class="kicker" data-test-agent-kicker>Agent proposal</p>
+            <p
+              class="agent-proposal"
+              data-test-agent-proposal
+            >{{@panel.agent_line.proposal}}</p>
+            {{#if @panel.agent_line.reason}}
+              <div class="agent-reason" data-test-agent-reason>
+                <CommentBody @body={{@panel.agent_line.reason}} />
+              </div>
+            {{/if}}
+          </section>
+        {{/if}}
         {{#if @panel.draft}}{{else if (reviewing @panel)}}
           {{#if @panel.commit_check}}
             <div class="commit-check" data-test-commit-check>
@@ -379,18 +393,6 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
     </div>
-    {{#if @panel.agent_line}}
-      <section class="agent-line" data-test-agent-line>
-        {{#if @panel.agent_line.reason}}
-          <p class="agent-reason" data-test-agent-reason>
-            {{@panel.agent_line.reason}}
-          </p>
-        {{/if}}
-        <p class="agent-proposal" data-test-agent-proposal>
-          {{@panel.agent_line.proposal}}
-        </p>
-      </section>
-    {{/if}}
     {{#if (offersAnything @panel)}}
       <PanelActions
         @conversationId={{@panel.id}}

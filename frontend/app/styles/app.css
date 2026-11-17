@@ -930,17 +930,29 @@ button.copy-directory {
 .agent-line {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: var(--fs-m);
-  line-height: 1.5;
+  gap: 6px;
 }
 
 .agent-line p {
   margin: 0;
 }
 
-.agent-proposal {
+.agent-line .kicker {
+  font-size: var(--fs-xs);
   font-weight: var(--fw-strong);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agent-proposal {
+  font-size: var(--fs-l);
+  font-weight: var(--fw-strong);
+  line-height: 1.4;
+}
+
+.agent-reason {
+  font-size: var(--fs-l);
+  line-height: 1.5;
 }
 
 #panel-fix .proposed-reply {
@@ -2274,6 +2286,38 @@ button.expander:focus-visible {
 
 .diff-file + .diff-file > .diff-row.file {
   border-top: 1px solid var(--hairline);
+}
+
+details.diff-file + details.diff-file {
+  margin-top: 0;
+}
+
+details.diff-file > summary.diff-row.file {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  cursor: pointer;
+  list-style: none;
+}
+
+details.diff-file > summary.diff-row.file::-webkit-details-marker {
+  display: none;
+}
+
+details.diff-file > summary.diff-row.file::before {
+  content: "▸";
+}
+
+details.diff-file[open] > summary.diff-row.file::before {
+  content: "▾";
+}
+
+details.diff-file > summary .diff-file-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .diff-frame:not([data-expanded]) > .diff-frame-head {
