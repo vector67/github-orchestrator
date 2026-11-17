@@ -69,7 +69,8 @@ for Codex (`<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
 code into, and `github-orchestrator`, which tells an agent working beside the
 orchestrator where its worktrees, logs, state and commands are. It runs `github-orchestrator skill`, which copies this version's
 skills there, and `doctor` names the same command for each skill that is
-missing. `-y` installs them, `--no-skill` (or `GITHUB_ORCHESTRATOR_SKILL=no`)
+missing, and warns with `github-orchestrator skill --replace` for one that
+differs. `-y` installs them, `--no-skill` (or `GITHUB_ORCHESTRATOR_SKILL=no`)
 leaves them out, and `--skill` installs them without asking. Leaving them out,
 by `--no-skill` or a no, runs `github-orchestrator skill --leave-out`, which
 writes `pr_skill = ""` at the top of the config while `create-pr` is missing:
@@ -259,7 +260,14 @@ comment asks for work that belongs outside the pull request: `"github"` for
 issues on the pull request's repo, `"jira"` for a Jira project, or `"none"`, the default,
 which proposes a reply saying the work belongs elsewhere and never a ticket.
 `tracker_project` is the Jira project key tickets go to by default; it is
-required with `"jira"` and refused with any other tracker.
+required with `"jira"` and refused with any other tracker. Only with `"jira"`
+does a review run look for a ticket key in the branch and read the ticket
+through the Atlassian MCP server, and only then does `doctor` check that server.
+
+`jev_verdicts` (default `false`) is an unfinished experiment, not ready to use:
+it gives the verdict on a thread in someone else's PR with Jev, TypeSafe's
+decision model, instead of Sonnet. Each verdict sends the thread to TypeSafe's
+API, with usernames swapped for stand-ins and URLs removed.
 
 Two environment variables move the files themselves:
 
@@ -400,7 +408,7 @@ watcher looks for PRs that mention you at most once a minute and keeps one until
 it is merged or closed. The list behind the top bar's mention count is a
 separate search, run at most every 30 minutes. On your own PR, changes a reviewer asked for and was
 not asked to review again come first, then human comments waiting on you or an
-agent, then bot comments (from `claude`, `codex`, `copilot`,
+agent, threads you started yourself included, then bot comments (from `claude`, `codex`, `copilot`,
 `copilot-pull-request-reviewer` or `vercel`), then CI, a
 rebase and the merge; a draft with nothing else in its way is marked ready for
 review. A PR you dismissed until its next event is off the wall, and out of the
@@ -414,9 +422,11 @@ Grouping wins over rows staying put, so a row moves when its PR changes group,
 and it carries a **moved here** chip until you open that PR. The tab title
 counts the PRs that need you.
 
-Each row leads with its move line: your move, a red dot when the PR's
-importance is not set, the reason for that move, and chips for the facts that
-matter. Below it are the title, the number, whose PR it is and the branch.
+Each row leads with its id line: the ticket badge when the PR has a ticket, the
+number, whose PR it is and the branch. Below it is the move line:
+your move, a red dot when the PR's importance is not set, and the reason for
+that move. Then come the title, without the ticket it starts with, and chips for
+the facts that matter.
 Clicking a row only opens the PR, whatever its move says; hovering it adds
 **Open →** to its last line. Hovering, focusing or selecting a row also shows
 its buttons, and only then: **Hold** (or **Resume**) and **Dismiss**, which do
@@ -437,8 +447,8 @@ not the move, **N fixes to decide**, **N unsent** review comments, **N
 unresolved** GitHub threads, **N answered** of your threads, **N unpushed**
 commits (**diverged from origin** instead, with no count, when origin also holds
 commits the worktree lacks), **N queued** events, **approved**, **mentioned**, **detailed
-reviewer** (the PR description's `Detailed reviewer: @<login>` line names you),
-**N mismatches** and **draft**. Hovering a chip says what it means. A run is
+reviewer** (the PR description's `Detailed reviewer: @<login>` line names you)
+and **draft**. Hovering a chip says what it means. A run is
 named for what started it: CI fix, rebase on main, review, re-review, thread
 fix, clean-up, or **carry on**, which is Claude started again with `--continue`
 to pick up its last conversation in the worktree, with no new instructions. A
@@ -474,8 +484,9 @@ The bar at the top has **Wall**, **Runs** and **Setup**, the repo filter, and
 the watcher's health. That reads `polled 14:02:11, 40s ago` while polls keep
 time and `no poll yet` before the first. In red it reads
 `no poll since <time>, <age> ago`, `can't reach GitHub, retrying each poll`
-for a network fault that clears on its own, `polls failing: <fix>` for one you
+for a network fault that clears on its own, `rate limited by GitHub, retrying each poll` while GitHub's rate limit lasts, `polls failing: <fix>` for one you
 must fix (the error itself when the watcher knows no fix),
+`mentions search failing: <error>`,
 `in setup, polling nothing` or `config broken, polling nothing`. When the hub
 stops answering it reads `the board server is not answering`, or
 `the system is under heavy load` while the health check still answers. Beside
@@ -504,7 +515,8 @@ Clicking a row, or `Enter`, opens `/pr/<owner>/<name>/<number>`: on its Summary
 when you review it, on its Board when it is yours. The wall goes
 and the PR takes the whole screen. Its title bar has the three-line PRs
 button, the title, whose PR it is, the branch, the PR's number linking to it on
-GitHub, your move, the chips its wall row shows and the settings gear. The PRs
+GitHub, your move, the chips its wall row shows, **N mismatches** and the
+settings gear. The PRs
 button opens the switcher, whose first entry is **Wall**. The gear, on the
 wall's bar too, holds the theme, the [Harvest timer](#harvest-timer) switch,
 **Commit box sizing** for the Diff tab (Full, Minimal or Hidden),
@@ -565,8 +577,9 @@ cannot be judged without, each a folded section with the concepts it leans on
 folded inside it. Click a concept's name to open it. The tab draws the
 summary's Mermaid diagrams in place, in the page's theme.
 
-The switcher slides in from the left with every PR's verb, grouped as on the
-wall, and slides away once you pick one.
+The switcher slides in from the left with every PR, grouped as on the wall,
+each with its ticket badge, number, move, title and chips, and slides away once
+you pick one.
 
 **Board** is the [review board](#review-board) at full width. A thin strip at
 the top holds its counts, **New draft** and **Send review**.
@@ -819,7 +832,10 @@ chosen login goes in with a space after it.
 
 `/runs` on the hub, the **Runs** link in the top bar, shows the watcher's
 health in full: whether it runs, the last and next poll, the last error while
-cycles fail, and today's count, cost and how many runs reported no cost. Under
+cycles fail (led by `can't reach GitHub` or `rate limited by GitHub` when it
+clears on its own), in red under it the **Fix** when it is yours to fix and the
+watcher knows how, a failing mentions search, and today's count, cost and how
+many runs reported no cost. Under
 that is every Claude run that ended in the last seven days, newest first, with
 when it ended, its PR, the event it was for, how long it took, its exit and
 what it cost. A failed run, one that exited non-zero or that Claude reported as
@@ -835,13 +851,18 @@ its Board when it is yours. One about no PR, or about Claude skipping events on
 several PRs, opens nothing.
 
 A watcher cycle that fails on the network (no such host, a TLS or connection
-error, an HTTP 5xx, a timeout or GitHub's rate limit) posts nothing: it clears
-on its own, and the bar at the top shows it meanwhile. Any other failure posts
-**Watcher not polling** once, when the third cycle in a row fails, and not again
-until a cycle succeeds. It says what to do where the watcher knows: log in
-again for an HTTP 401, check `[[repos]]` and `gh_account` for a 403 or 404, and
-free some space for a full disk. **Mentions search failed** follows the same
-rule.
+error, an HTTP 5xx or a timeout) or on GitHub's rate limit posts nothing: it
+clears on its own, and the bar at the top shows it meanwhile. Any other failure
+is yours to fix, and posts **Watcher not polling** the first time one comes
+with three or more cycles in a row failed, then not again until a cycle
+succeeds. It says what to do where the watcher knows: run `gh auth login` as
+the account for an HTTP 401, remove a repo the account cannot see from
+`[[repos]]` or ask for access (check `[[repos]]` and `gh_account` when it cannot
+tell which repo), install gh or put it on the watcher's `PATH` when it cannot
+run gh, and free some space for a full disk. The watcher reads the cause from
+what gh and GitHub said, never from the repo names and account the error
+quotes. **Mentions search failed** follows the same rule; it fails only when the
+config will not read, and says to correct it where the error points.
 
 New comments are posted for the PRs your account wrote. On someone else's PR,
 the only comments posted are a person's reply in a thread you started and a
@@ -908,6 +929,23 @@ which nothing on disk can tell.
 When the watcher does release it, it stops that PR's agent manager and closes
 its terminal sessions, and leaves the old worktree where it is. That worktree
 is yours to clean up.
+
+### A worktree that holds your files
+
+When a PR is merged, closed or dismissed forever, the watcher tears it down and
+removes its worktree. First it asks git what the worktree holds. Any file git
+lists as modified, staged, deleted or untracked counts as yours, except
+`agent-changes.md`, the agents' notes: no agent run records the files it
+touched, so an edit an agent left uncommitted counts as yours too. Files git
+ignores, such as build output or a `.env`, do not count, and go with the
+worktree.
+
+When the worktree holds files of yours, nothing is torn down. The wall keeps
+the PR at the top of Needs you, even when dismissed, with the move **Delete the
+worktree?**, and its Dashboard shows **Your permission is needed to clean up
+this worktree**, listing each file. **Delete this worktree** asks once more,
+then lets the watcher's next poll remove it. **Dismiss for a while** takes the
+PR off the wall until the time you pick, when it asks again.
 
 ### A PR from a fork
 
@@ -1373,9 +1411,9 @@ whether to remove the config folder, the data dir and the notification apps too;
 command once uv is back.
 
 It never touches your clones, and leaves uv, gh and claude installed, since other
-tools use them too. It also leaves each skill it shipped, `rebase-on-main` and
-`create-pr`, in the agent's skills folder, since the agent can use them without
-the orchestrator: `~/.claude/skills` for Claude Code, `~/.agents/skills` for
+tools use them too. It also leaves each skill it shipped, `rebase-on-main`,
+`create-pr` and `github-orchestrator`, in the agent's skills folder, since they
+are yours to remove: `~/.claude/skills` for Claude Code, `~/.agents/skills` for
 Codex, or `<CLAUDE_CONFIG_DIR>/skills` when `agent_command` sets
 `CLAUDE_CONFIG_DIR`. It names each one it finds with the `rm -rf` that removes
 it. The worktrees the watcher cut are yours to remove: each repo's are in the
