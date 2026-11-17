@@ -64,7 +64,7 @@ turn to review.
       drafts in your pending review → "Send your review · N drafts".
       Otherwise "Review this PR".
     - Yes, re-review: V8 review agent running → Agent working. V9 drafts →
-      "Send your review · N drafts". Otherwise "Re-review · M/N of your
+      "Send your re-review · N drafts". Otherwise "Re-review · M/N of your
       threads answered". The count always shows and counts only threads you
       opened.
   - **V5** (not requested) What was the last review you submitted?

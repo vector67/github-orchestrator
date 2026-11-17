@@ -758,13 +758,25 @@ module('Acceptance | next move', function (hooks) {
 
   test('unsent drafts ask you to send your review', async function (assert) {
     const shown = await seen({
-      facts: ASKED_AGAIN,
+      facts: reviewing({ viewer_requested: true }),
       threads: [row('draft_1', 'draft', 'draft', 'mine')],
     });
 
     assert.deepEqual(
       [shown.move, shown.group, shown.verb, shown.reason],
       ['send-review', 'needs-you', 'Send your review', '1 unsent comment'],
+    );
+  });
+
+  test('unsent drafts on a re-review ask you to send your re-review', async function (assert) {
+    const shown = await seen({
+      facts: ASKED_AGAIN,
+      threads: [row('draft_1', 'draft', 'draft', 'mine')],
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, shown.verb, shown.reason],
+      ['send-review', 'needs-you', 'Send your re-review', '1 unsent comment'],
     );
   });
 
