@@ -2,6 +2,7 @@ import fcntl
 import json
 import os
 import re
+import shutil
 import socket
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -633,9 +634,16 @@ CONNECTED = "atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - ✔ Connected\
 SKILLS = ("create-pr", "github-orchestrator", "rebase-on-main")
 
 
+SHIPPED = Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
+
+
+def _installed(machine, name):
+    return machine.home / ".claude" / "skills" / name
+
+
 def _skills_in_place(machine, *names):
     for name in names:
-        (machine.home / ".claude" / "skills" / name).mkdir(parents=True)
+        shutil.copytree(SHIPPED / name, _installed(machine, name))
 
 
 @pytest.mark.parametrize("name", SKILLS)
@@ -661,6 +669,29 @@ def test_create_pr_left_out_on_purpose_is_ok_and_says_the_agents_open_prs_themse
 
 
 @pytest.mark.parametrize("name", SKILLS)
+def test_a_skill_of_your_own_under_a_shipped_name_is_a_warning_fixed_by_replace(
+        machine, run_cli, name):
+    _skills_in_place(machine, name)
+    (_installed(machine, name) / "SKILL.md").write_text("my own rules\n")
+
+    ran = run_cli("doctor")
+
+    differs = _finding(ran.out, f"{name} skill in")
+    assert differs.level == "warn"
+    assert "differs from this version's" in differs.reason
+    assert differs.fix == "github-orchestrator skill --replace"
+
+
+def test_a_junk_file_the_os_left_in_a_shipped_skill_is_still_ok(machine, run_cli):
+    _skills_in_place(machine, "rebase-on-main")
+    (_installed(machine, "rebase-on-main") / ".DS_Store").write_bytes(b"Bud1")
+
+    ran = run_cli("doctor")
+
+    assert _finding(ran.out, "rebase-on-main skill is in").level == "ok"
+
+
+@pytest.mark.parametrize("name", SKILLS)
 def test_each_missing_shipped_skill_is_a_warning_fixed_by_the_skill_command(
         machine, run_cli, name):
     _skills_in_place(machine, *(other for other in SKILLS if other != name))
@@ -672,15 +703,31 @@ def test_each_missing_shipped_skill_is_a_warning_fixed_by_the_skill_command(
     assert missing.fix == "github-orchestrator skill"
 
 
-def test_a_connected_atlassian_server_is_ok(machine, run_cli):
-    machine.system.mcp_list = CONNECTED
+JIRA = 'tracker = "jira"\ntracker_project = "PROJ"\n'
+
+
+@pytest.fixture
+def jira(machine):
+    machine.configure(JIRA)
+    return machine
+
+
+def test_without_a_jira_tracker_the_atlassian_server_is_not_asked_about(machine, run_cli):
+    ran = run_cli("doctor")
+
+    assert "Atlassian" not in ran.out
+    assert not [call for call in machine.system.calls if call.cmd[-2:] == ["mcp", "list"]]
+
+
+def test_a_connected_atlassian_server_is_ok(jira, run_cli):
+    jira.system.mcp_list = CONNECTED
 
     ran = run_cli("doctor")
 
     assert _finding(ran.out, "Atlassian MCP server is connected").level == "ok"
 
 
-def test_a_missing_atlassian_server_is_a_warning(machine, run_cli):
+def test_a_missing_atlassian_server_is_a_warning(jira, run_cli):
     ran = run_cli("doctor")
 
     missing = _finding(ran.out, "Atlassian MCP server")
@@ -688,16 +735,16 @@ def test_a_missing_atlassian_server_is_a_warning(machine, run_cli):
     assert "claude mcp add" in missing.fix
 
 
-def test_an_atlassian_server_that_needs_authentication_is_a_warning(machine, run_cli):
-    machine.system.mcp_list = "claude.ai Atlassian MCP: https://mcp.atlassian.com/v2/mcp - ! Needs authentication\n"
+def test_an_atlassian_server_that_needs_authentication_is_a_warning(jira, run_cli):
+    jira.system.mcp_list = "claude.ai Atlassian MCP: https://mcp.atlassian.com/v2/mcp - ! Needs authentication\n"
 
     ran = run_cli("doctor")
 
     assert _finding(ran.out, "Atlassian MCP server is not connected").level == "warn"
 
 
-def test_a_failing_mcp_list_says_the_atlassian_server_could_not_be_checked(machine, run_cli):
-    machine.system.mcp_list_exit = 1
+def test_a_failing_mcp_list_says_the_atlassian_server_could_not_be_checked(jira, run_cli):
+    jira.system.mcp_list_exit = 1
 
     ran = run_cli("doctor")
 
@@ -935,7 +982,7 @@ def test_a_healthy_install_is_all_ok_and_exits_0(machine, run_cli, tmp_path, clo
 
 
 def test_a_claude_command_with_settings_in_front_is_looked_for_by_its_program(machine, run_cli):
-    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n')
+    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n' + JIRA)
     machine.system.mcp_list = CONNECTED
 
     ran = run_cli("doctor")

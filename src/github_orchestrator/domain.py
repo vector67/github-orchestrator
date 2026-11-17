@@ -95,7 +95,7 @@ _BOTS = frozenset({"claude", "codex", "copilot", "copilot-pull-request-reviewer"
 def author_kind_of(login: str, account: str) -> AuthorKind:
     if login == account:
         return AuthorKind.MINE
-    if login.lower().removesuffix("[bot]") in _BOTS:
+    if login.endswith("[bot]") or login.lower() in _BOTS:
         return AuthorKind.BOT
     return AuthorKind.HUMAN
 

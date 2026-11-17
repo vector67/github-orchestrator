@@ -1,6 +1,8 @@
 import shutil
 from pathlib import Path
 
+import pytest
+
 SHIPPED = Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
 PACKAGED = SHIPPED / "rebase-on-main"
 CREATE_PR = SHIPPED / "create-pr"
@@ -52,6 +54,16 @@ def test_status_says_different_for_the_skill_there_that_was_edited(machine, run_
     assert (ran.code, ran.out) == (0, "create-pr current\ngithub-orchestrator current\nrebase-on-main different\n")
 
 
+@pytest.mark.parametrize("junk", [".DS_Store", "Thumbs.db"])
+def test_status_says_current_for_a_skill_the_os_left_a_junk_file_in(machine, run_cli, junk):
+    run_cli("skill")
+    (_skill(machine) / junk).write_bytes(b"\x00\x00\x00\x01Bud1")
+
+    ran = run_cli("skill", "--status")
+
+    assert "rebase-on-main current" in ran.out
+
+
 def test_skill_leaves_an_edited_skill_alone_installs_a_missing_one_and_names_the_replace_option(
         machine, run_cli):
     run_cli("skill")
@@ -60,7 +72,7 @@ def test_skill_leaves_an_edited_skill_alone_installs_a_missing_one_and_names_the
 
     ran = run_cli("skill")
 
-    assert ran.code == 1
+    assert ran.code == 0, ran.out
     assert (_skill(machine) / "SKILL.md").read_text() == "my own rebase rules\n"
     assert _contents(_create_pr(machine)) == _contents(CREATE_PR)
     assert "github-orchestrator skill --replace" in ran.out
@@ -306,7 +318,7 @@ def test_a_no_on_the_terminal_after_an_earlier_no_is_asked_again_and_stays_left_
     assert _recorded_pr_skill(machine) == ""
 
 
-def test_an_empty_pr_skill_already_recorded_stands_where_there_is_no_terminal_to_ask_on(
+def test_an_empty_pr_skill_already_recorded_leaves_out_only_create_pr_where_there_is_no_terminal(
         machine, run_cli):
     machine.configure('pr_skill = ""\n')
     machine.answering_hubs.add("http://127.0.0.1:8720")
@@ -315,9 +327,12 @@ def test_an_empty_pr_skill_already_recorded_stands_where_there_is_no_terminal_to
 
     assert ran.code == 0, ran.out
     assert machine.prompts == []
-    assert not _skill(machine).exists() and not _create_pr(machine).exists()
-    assert "Skills left out: create-pr, github-orchestrator, rebase-on-main" in ran.out
-    assert "github-orchestrator skill" in ran.out
+    assert not _create_pr(machine).exists()
+    assert _contents(_skill(machine)) == _contents(PACKAGED)
+    installed = _skill(machine).parent / "github-orchestrator"
+    assert _contents(installed) == _contents(SHIPPED / "github-orchestrator")
+    assert "Skills left out: create-pr." in ran.out
+    assert _recorded_pr_skill(machine) == ""
 
 
 def test_the_installer_s_start_asks_nothing_when_every_skill_is_there(machine, run_cli):

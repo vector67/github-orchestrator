@@ -315,8 +315,10 @@ class AgentRuns:
                  pr_processes: PrProcesses, report_commands: ReportCommands, changes_file: str,
                  agent: Agent, command: str, model: str,
                  summary_model: str, pytest_workers: int, transcripts_dir: Path,
-                 runs_log: Path, clamp: Sequence[str], trust: AgentConfigTrust) -> None:
+                 runs_log: Path, clamp: Sequence[str], trust: AgentConfigTrust,
+                 jira_tickets: bool) -> None:
         self._popen = popen
+        self._jira_tickets = jira_tickets
         self._trust = trust
         self._clamp = tuple(clamp)
         self._command = command_argv(command)
@@ -422,7 +424,8 @@ class AgentRuns:
     def review(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,
                branch: str, additions: int, deletions: int) -> AgentRun | str:
         return self._pr_run(worktree, pr, event_type, review_prompt(
-            self._commands, self._changes_file, pr, title, url, branch, additions, deletions),
+            self._commands, self._changes_file, pr, title, url, branch, additions, deletions,
+            jira_tickets=self._jira_tickets),
             yours=False)
 
     def rereview(self, worktree: str, pr: Pr, event_type: str, *, title: str, url: str,

@@ -57,6 +57,7 @@ class CliConfig:
     graphical: bool
     check_for_updates: bool
     installer_offers_skills: bool
+    jira_tracker: bool
     interactive: bool
 
 

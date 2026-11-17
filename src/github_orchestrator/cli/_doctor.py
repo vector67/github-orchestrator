@@ -239,7 +239,8 @@ class MachineChecks:
             self._command(install),
             *skill_findings(self._config.agent.skill_folder(self._config.home, self._config.agent_command),
                             self._config_file),
-            *agent_findings(self._config.agent, self._config.agent_argv, self._run),
+            *agent_findings(self._config.agent, self._config.agent_argv, self._run,
+                            jira_tracker=self._config.jira_tracker),
             self._notifications(),
         ]
 

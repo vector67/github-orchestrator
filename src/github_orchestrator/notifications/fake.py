@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 from github_orchestrator.domain import LocalClock, Pr
@@ -36,11 +37,11 @@ class _Remembered:
     def __init__(self) -> None:
         self.sent: set[str] = set()
 
-    def first(self, key: str) -> bool:
+    def once(self, key: str, send: Callable[[], None]) -> None:
         if key in self.sent:
-            return False
+            return
+        send()
         self.sent.add(key)
-        return True
 
 
 class _Untitled:
