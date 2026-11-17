@@ -365,7 +365,7 @@ module('Acceptance | git palette', function (hooks) {
 
   test('with the board down git waits for it and the palette does not open', async function (assert) {
     onTheHub();
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
     await visit('/pr/o/r/7/dashboard');
 
     await press('g');

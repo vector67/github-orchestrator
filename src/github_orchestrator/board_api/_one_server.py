@@ -159,4 +159,7 @@ class OneServer:
                 shelf=self._shelves.of(pr), mentionable=self._mentionable,
                 prefix=pr_page(pr)))
 
-        return _Routed(hub_app(desk, port), _Boards(self._told, self._migration, board))
+        hub = hub_app(desk, port)
+        served = _Routed(hub, _Boards(self._told, self._migration, board))
+        hub.state.served = served
+        return served

@@ -115,7 +115,7 @@ import {
   tried,
   type Tried,
 } from 'frontend/data/tried';
-import { EventStream, type StreamState } from 'frontend/data/stream';
+import { SharedStreams, type StreamState } from 'frontend/data/stream';
 import {
   detailsOf,
   filesOf,
@@ -331,6 +331,8 @@ const FEED_PATHS: Record<Feed['kind'], string> = {
   summary: '/api/summary',
 };
 
+const FOLLOWED_STREAMS = '/api/streams';
+
 const TOLD_PATHS: Record<Told, string> = {
   dashboard: '/api/dashboard/stream',
   notes: '/api/manager/changes/stream',
@@ -489,6 +491,7 @@ export default class StoreService extends Service {
   private mentionableAsked = new Set<string>();
   private ending = new Set<string>();
   private restarting: Restarting | null = null;
+  private streams: SharedStreams | null = null;
 
   private joins = 0;
   private sends = 0;
@@ -855,10 +858,16 @@ export default class StoreService extends Service {
 
   follow(told: Told, pr: Numbered, heard = () => {}): Following {
     const path = `${this.here.prefixOf(pr)}${TOLD_PATHS[told]}`;
-    return new EventStream(path, (data) => {
+    this.streams ??= new SharedStreams(FOLLOWED_STREAMS);
+    return this.streams.follow(path, (data) => {
       this.told(told, pr, data);
       heard();
     });
+  }
+
+  willDestroy(): void {
+    super.willDestroy();
+    this.streams?.close();
   }
 
   async readHealth(path: string): Promise<boolean> {

@@ -708,6 +708,7 @@ export interface OpenStream {
 interface Streaming extends OpenStream {
   read: URL;
   controller: ReadableStreamDefaultController<Uint8Array>;
+  followed: boolean;
 }
 
 const STREAM = /^(\/api\/.+)\/stream$/;
@@ -1018,14 +1019,72 @@ export class FakeBoard {
     }));
   }
 
+  connections: string[] = [];
+
   streamed(): void {
     this.streams.forEach((one) => this.sendTo(one));
   }
 
   dropStreams(): void {
-    const dropped = this.streams;
+    const dropped = new Set(this.streams.map((one) => one.controller));
     this.streams = [];
-    dropped.forEach((one) => one.controller.error(new TypeError('network')));
+    this.connections = [];
+    dropped.forEach((one) => one.error(new TypeError('network')));
+  }
+
+  private followStreams(url: string, where: URL): Response {
+    const followed: Streaming[] = [];
+    const body = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        this.connections.push(url);
+        controller.enqueue(ENCODER.encode('retry: 1000\n\n'));
+        where.searchParams.getAll('follow').forEach((follow) => {
+          const refused = this.refusedFollow(follow);
+          if (refused !== null) {
+            const data = JSON.stringify({ path: follow, status: refused });
+            controller.enqueue(
+              ENCODER.encode(`event: refused\ndata: ${data}\n\n`),
+            );
+            return;
+          }
+          const asked = new URL(follow, where);
+          const onTheBoard = THROUGH_THE_HUB.exec(asked.pathname)![3]!;
+          const read = STREAM.exec(onTheBoard)![1]!;
+          const one: Streaming = {
+            url: follow,
+            read: new URL(`${read}${asked.search}`, where),
+            lastEventId: null,
+            sent: null,
+            controller,
+            followed: true,
+          };
+          followed.push(one);
+          this.streams.push(one);
+          this.sendTo(one);
+        });
+      },
+      cancel: () => {
+        this.streams = this.streams.filter((one) => !followed.includes(one));
+        this.connections = this.connections.filter((one) => one !== url);
+      },
+    });
+    return new Response(body, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
+  }
+
+  private refusedFollow(follow: string): number | null {
+    if (this.unheld) return 503;
+    const through = THROUGH_THE_HUB.exec(
+      new URL(follow, 'http://127.0.0.1').pathname,
+    );
+    const held =
+      through &&
+      this.held.some(
+        (one) => one.repo === through[1] && one.number === Number(through[2]),
+      );
+    return held ? null : 404;
   }
 
   private stream(url: string, read: URL, headers: Headers): Response {
@@ -1033,7 +1092,14 @@ export class FakeBoard {
     let opened: Streaming | null = null;
     const body = new ReadableStream<Uint8Array>({
       start: (controller) => {
-        opened = { url, read, lastEventId, sent: lastEventId, controller };
+        opened = {
+          url,
+          read,
+          lastEventId,
+          sent: lastEventId,
+          controller,
+          followed: false,
+        };
         this.streams.push(opened);
         controller.enqueue(ENCODER.encode('retry: 1000\n\n'));
         this.sendTo(opened);
@@ -1059,7 +1125,11 @@ export class FakeBoard {
     this.drift.push(...driftOf('GET', `${path}/stream`, 200, body));
     const event = path.split('/').at(-1);
     stream.controller.enqueue(
-      ENCODER.encode(`event: ${event}\nid: ${id}\ndata: ${data}\n\n`),
+      ENCODER.encode(
+        stream.followed
+          ? `event: ${event}\ndata: {"path":${JSON.stringify(stream.url)},"data":${data}}\n\n`
+          : `event: ${event}\nid: ${id}\ndata: ${data}\n\n`,
+      ),
     );
   }
 
@@ -1192,6 +1262,9 @@ export class FakeBoard {
   ): Response {
     if (init?.method === 'POST') return this.write(url, init, headers, side);
     this.asked.push({ url, ifNoneMatch: headers.get('If-None-Match') });
+    if (side === 'hub' && where.pathname === '/api/streams') {
+      return this.followStreams(url, where);
+    }
     const streaming = side === 'board' ? STREAM.exec(where.pathname) : null;
     if (streaming) {
       const read = new URL(`${streaming[1]}${where.search}`, where);
