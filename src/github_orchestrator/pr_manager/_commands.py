@@ -45,6 +45,7 @@ class ManagerCommands:
         self._notice: Notice | None = None
         self._notice_at = 0.0
         self._closed_at: float | None = None
+        self._asked: dict[str, str | None] = {}
 
     def obey(self, *, frozen: bool, agents_held: Callable[[], bool]) -> None:
         for pending in self._command_files.pending(self._config.pr):
@@ -235,11 +236,12 @@ class ManagerCommands:
         queued = self._rerequests.queued(pr)
         if not queued or facts is None or not facts.is_author:
             return
-        answer = due(facts, conversations, queued)
+        answer = due(facts, conversations, queued, self._asked)
         for login in answer.drop:
             log.info("%s: %s is already asked to review on GitHub — off the re-request queue",
                      pr, login)
             self._rerequests.drop(pr, login)
+            self._asked.pop(login, None)
         for login in answer.ask:
             log.info("%s: pushed and green — re-requesting %s's review", pr, login)
             self._ask_again(login)
@@ -255,6 +257,7 @@ class ManagerCommands:
         if not self._yours_to_assign():
             return
         self._rerequests.drop(self._config.pr, login)
+        self._asked.pop(login, None)
         log.info("%s: re-request of %s cancelled", self._config.pr, login)
 
     def _send_rerequest_now(self, login: str) -> None:
@@ -264,8 +267,14 @@ class ManagerCommands:
         self._ask_again(login)
 
     def _ask_again(self, login: str) -> None:
-        self._assign_reviewers([login], None)
-        self._rerequests.drop(self._config.pr, login)
+        pr = self._config.pr
+        if not self._assign_reviewers([login], None):
+            self._rerequests.drop(pr, login)
+            self._asked.pop(login, None)
+            return
+        facts = self._change_detection.facts(pr)
+        self._rerequests.queue(pr, login)
+        self._asked[login] = facts.polled_at if facts is not None else None
 
     def _assign_when_ready(self, pick: ReviewerPick) -> None:
         pr = self._config.pr
@@ -283,13 +292,14 @@ class ManagerCommands:
             return False
         return True
 
-    def _assign_reviewers(self, reviewers: list[str], detailed: str | None) -> None:
+    def _assign_reviewers(self, reviewers: list[str], detailed: str | None) -> bool:
         pr = self._config.pr
         if not self._yours_to_assign():
-            return
+            return False
         refused = self._pull_requests.assign_reviewers(pr, reviewers, detailed)
         if refused is not None:
             log.warning("assign reviewers %s: GitHub refused — %s", pr, refused)
             self.notify(Notice(NoticeCode.ASSIGN_REVIEWERS_REFUSED, refused))
-            return
+            return False
         log.info("Asked %s to review %s on GitHub", ", ".join(reviewers), pr)
+        return True

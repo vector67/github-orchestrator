@@ -969,9 +969,10 @@ def cancel_rerequest(board: Serving, asked: RerequestReviewRequest) -> Response:
              operation_id="sendRerequestNow", responses=HANDED_TO_THE_MANAGER,
              summary="Ask a queued reviewer again now, without waiting for pushes or CI.")
 def send_rerequest_now(board: Serving, asked: RerequestReviewRequest) -> Response:
-    """The manager asks the reviewer on GitHub at once and drops them from
-    `system.rerequest_queued`, or puts GitHub's refusal in the status's
-    notice and drops them all the same.
+    """The manager asks the reviewer on GitHub at once and keeps them in
+    `system.rerequest_queued` until a poll lists them in `pending_reviewers`
+    (or a later poll does not), or puts GitHub's refusal in the status's
+    notice and drops them at once.
     """
     return _handed_over(board, board.manager.send_rerequest_now(asked.reviewer))
 

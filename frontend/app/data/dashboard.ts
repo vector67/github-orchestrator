@@ -1315,7 +1315,7 @@ const NOTICES: Record<NoticeCode, (detail: string | null) => string> = {
     'No agent was started: agents are stopped on this pull request until you answer the changes it makes to the files they load.',
 };
 
-function noticeOf(notice: Notice): string {
+export function noticeOf(notice: Notice): string {
   return NOTICES[notice.code](notice.detail);
 }
 

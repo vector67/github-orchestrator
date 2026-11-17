@@ -18,6 +18,7 @@ from github_orchestrator.github.fake import Check, FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
+from tests.change_detection.support import seen as poll_of
 from tests.pr_manager.scripted_terminal import ScriptEnded
 from tests.pr_manager.support import (
     PR,
@@ -26,6 +27,7 @@ from tests.pr_manager.support import (
     change_detection_of,
     managed_in,
     manager_over,
+    polled,
     run_manager,
     seed_state,
 )
@@ -713,11 +715,34 @@ RUNNING_CHECKS = (Check("tests", "in_progress", None, "https://ci/tests", "tests
 PASSING_CHECKS = (Check("tests", "completed", "success", "https://ci/tests", "tests passed"),)
 
 
+LATER_POLL = "2026-06-10T11:05:00Z"
+
+
+class CountingGitHub(FakeGitHub):
+    def __init__(self):
+        super().__init__()
+        self.asked: list[tuple[str, ...]] = []
+
+    def assign_reviewers(self, pr, reviewers, detailed):
+        self.asked.append(tuple(reviewers))
+        return super().assign_reviewers(pr, reviewers, detailed)
+
+
+def _counting_github():
+    github = CountingGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    return github
+
+
+def _polled_later(settings, *pending):
+    polled(settings, poll_of(settings.config.gh_account, polled_at=LATER_POLL,
+                             checks=PASSING_CHECKS, pending_reviewers=pending))
+
+
 def test_a_re_request_from_the_board_waits_in_the_queue_then_is_asked_once_it_is_due(
         settings, tmp_path):
     seed_state(settings, checks=RUNNING_CHECKS)
-    github = FakeGitHub()
-    github.add_pr(THE_PR, PullRequestState())
+    github = _counting_github()
     board = ServerPanel()
     seen = []
 
@@ -729,10 +754,46 @@ def test_a_re_request_from_the_board_waits_in_the_queue_then_is_asked_once_it_is
         look()
         seed_state(settings, checks=PASSING_CHECKS)
 
+    def look_then_github_lists_carol():
+        look()
+        _polled_later(settings, "carol")
+
     _on_the_browser_front(settings, tmp_path, lambda: board.panel.rerequest_review("carol"),
-                          look_then_ci_passes, look, board=board, github=github)
-    assert seen == [(("carol",), ()), ((), ("carol",))]
+                          look_then_ci_passes, look_then_github_lists_carol, look,
+                          board=board, github=github)
+    assert seen == [(("carol",), ()), (("carol",), ("carol",)), ((), ("carol",))]
+    assert github.asked == [("carol",)]
     assert disk_rerequests(settings.data_dir).queued(THE_PR) == ()
+
+
+def test_an_asked_re_request_stays_queued_and_is_not_asked_again_until_a_poll(
+        settings, tmp_path):
+    seed_state(settings, checks=PASSING_CHECKS)
+    disk_rerequests(settings.data_dir).queue(THE_PR, "carol")
+    github = _counting_github()
+    board = ServerPanel()
+    seen = []
+
+    def look():
+        seen.append(board.panel.dashboard().rerequest_queued)
+
+    _on_the_browser_front(settings, tmp_path, look, look, look, board=board, github=github)
+    assert seen == [("carol",), ("carol",), ("carol",)]
+    assert github.asked == [("carol",)]
+
+
+def test_an_asked_re_request_leaves_the_queue_when_a_later_poll_does_not_list_them(
+        settings, tmp_path):
+    seed_state(settings, checks=PASSING_CHECKS)
+    disk_rerequests(settings.data_dir).queue(THE_PR, "carol")
+    github = _counting_github()
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: _polled_later(settings),
+                          lambda: seen.append(board.panel.dashboard().rerequest_queued),
+                          board=board, github=github)
+    assert seen == [()]
+    assert github.asked == [("carol",)]
 
 
 @pytest.mark.parametrize("command", ["rerequest_review", "cancel_rerequest",
@@ -797,10 +858,14 @@ def test_send_now_asks_at_once_while_an_accept_is_still_landing(settings, tmp_pa
         seen.append((board.panel.dashboard().rerequest_queued,
                      github.pr_state(THE_PR).pending_reviewers))
 
+    def look_then_github_lists_carol():
+        look()
+        _polled_later(settings, "carol")
+
     _on_the_browser_front(settings, tmp_path, look,
-                          lambda: board.panel.send_rerequest_now("carol"), look,
-                          board=board, github=github)
-    assert seen == [(("carol",), ()), ((), ("carol",))]
+                          lambda: board.panel.send_rerequest_now("carol"),
+                          look_then_github_lists_carol, look, board=board, github=github)
+    assert seen == [(("carol",), ()), (("carol",), ("carol",)), ((), ("carol",))]
 
 
 def test_a_send_now_github_refuses_says_why_and_leaves_the_queue(settings, tmp_path):

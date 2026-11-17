@@ -387,6 +387,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     }
   };
 
+  get reviewersPressing(): Pressing | null {
+    return this.summaries?.pressing.reviewers ?? null;
+  }
+
+  get rerequestHeld(): boolean {
+    return this.pending || Boolean(this.reviewersPressing?.pressed);
+  }
+
   get queued(): QueuedControl[] {
     const move = this.summaries?.move;
     return move ? queuedControlsOf(move) : [];
@@ -403,7 +411,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   };
 
   private takesRerequest(key: string): boolean {
-    if (this.pending) return false;
+    if (this.rerequestHeld) return false;
     const owed = this.rerequests.find((one) => one.first);
     const queued = this.queued.find((one) => one.first);
     if (key === 'e' && owed) this.askRerequest(owed.reviewer)();
@@ -482,6 +490,12 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             {{#if this.pressing.refused}}
               <p class="refusal" data-test-refusal>{{this.pressing.refused}}</p>
             {{/if}}
+            {{#if this.reviewersPressing.refused}}
+              <p
+                class="refusal"
+                data-test-refusal
+              >{{this.reviewersPressing.refused}}</p>
+            {{/if}}
             {{#if this.importanceRefused}}
               <p
                 class="refusal"
@@ -530,7 +544,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 <button
                   type="button"
                   class="btn fill"
-                  disabled={{this.pending}}
+                  disabled={{this.rerequestHeld}}
                   data-opens-dialog="true"
                   data-test-control="rerequest-review"
                   data-test-reviewer={{rerequest.reviewer}}
@@ -542,7 +556,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 <button
                   type="button"
                   class="btn"
-                  disabled={{this.pending}}
+                  disabled={{this.rerequestHeld}}
                   data-test-control="cancel-rerequest"
                   data-test-reviewer={{queued.reviewer}}
                   {{on "click" (this.cancelRerequest queued.reviewer)}}
@@ -551,7 +565,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                 <button
                   type="button"
                   class="btn"
-                  disabled={{this.pending}}
+                  disabled={{this.rerequestHeld}}
                   data-test-control="send-rerequest"
                   data-test-reviewer={{queued.reviewer}}
                   {{on "click" (this.sendRerequestNow queued.reviewer)}}

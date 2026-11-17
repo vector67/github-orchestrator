@@ -1,7 +1,14 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, fillIn, find, triggerEvent, visit } from '@ember/test-helpers';
-import type { Conversation, PrFacts } from 'frontend/data/api';
+import {
+  click,
+  fillIn,
+  find,
+  settled,
+  triggerEvent,
+  visit,
+} from '@ember/test-helpers';
+import type { Conversation, Notice, PrFacts } from 'frontend/data/api';
 import {
   comment,
   dashboard,
@@ -991,6 +998,64 @@ module('Acceptance | re-request review', function (hooks) {
       '/pr/o/r/7/api/manager:send-rerequest',
     );
     assert.deepEqual(board().posted[0]!.body, { reviewer: 'carol' });
+  });
+
+  async function managerSays(
+    facts: Partial<PrFacts>,
+    queued: string[],
+    notice: Notice | null = null,
+  ): Promise<void> {
+    const manager = board().manager;
+    board().manager = {
+      ...manager,
+      facts: { ...manager.facts!, ...facts },
+      system: { ...manager.system, rerequest_queued: queued },
+      notice,
+    };
+    board().streamed();
+    await settled();
+  }
+
+  test('after "Send now", nothing offers to re-request carol again before GitHub lists carol', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    await click('[data-test-control="send-rerequest"]');
+
+    assert.dom('[data-test-band-move]').hasText('Re-request queued for carol');
+    assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
+    assert.dom('[data-test-control="send-rerequest"]').isDisabled();
+    assert.dom('[data-test-control="cancel-rerequest"]').isDisabled();
+  });
+
+  test('"Send now" settles once GitHub lists carol as pending', async function (assert) {
+    await onTheDashboard(QUEUED);
+    await click('[data-test-control="send-rerequest"]');
+
+    await managerSays({ pending_reviewers: ['carol'] }, ['carol']);
+
+    assert.dom('[data-test-control="send-rerequest"]').isEnabled();
+
+    await managerSays({ pending_reviewers: ['carol'] }, []);
+
+    assert.dom('[data-test-refusal]').doesNotExist();
+    assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
+  });
+
+  test('"Send now" GitHub refuses ends as failed and says why', async function (assert) {
+    await onTheDashboard(QUEUED);
+    await click('[data-test-control="send-rerequest"]');
+
+    await managerSays({}, [], {
+      code: 'assign-reviewers-refused',
+      detail: 'gh: Not Found (HTTP 404)',
+    });
+
+    assert
+      .dom('[data-test-refusal]')
+      .hasText(
+        'GitHub would not ask those reviewers: gh: Not Found (HTTP 404)',
+      );
+    assert.dom('[data-test-band-move]').hasText('Re-request review from carol');
   });
 
   test('s sends the first queued re-request now', async function (assert) {

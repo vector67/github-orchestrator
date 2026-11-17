@@ -263,7 +263,8 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   and the routes `POST /manager:cancel-rerequest` and
   `POST /manager:send-rerequest` with the same body. Cancel drops the login
   from `Rerequests`; send now asks through `_assign_reviewers` at once and
-  drops it, with the same refusal handling as the send below. Both are
+  keeps it queued until a poll settles it, with the same handling as the
+  send below. Both are
   refused on a PR that is not yours, and cancelling a login that is not
   queued does nothing. **Done** (`71d07303` and the commit that records
   this).
@@ -280,10 +281,18 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   - `ci_status` is `passing`, or, when `had_checks` is false, anything but
     `failing` or `pending`.
 
-  Each due login is asked through `_assign_reviewers` and dropped from the
-  queue. A refusal from GitHub drops it too and shows the existing
-  `assign-reviewers-refused` notice, so the next move goes back to
+  Each due login is asked through `_assign_reviewers` once and stays queued,
+  so the next move keeps reading "Re-request queued for <reviewer>" until
+  the poll that lists them in `pending_reviewers` drops them, rather than
+  offering "Re-request review" again between the ask and that poll. A poll
+  after the ask that does not list them (they reviewed already) drops them
+  too. The manager holds which logins it asked, and the facts' `polled_at`
+  when it did, in memory: after a restart before the next poll, a queued
+  login still due is asked once more, which GitHub takes as the same
+  request. A refusal from GitHub drops the login at once and shows the
+  existing `assign-reviewers-refused` notice, so the next move goes back to
   "Re-request review from <reviewer>" rather than retrying every tick.
+  **Done** (the commit that records this).
 
   The function is `due` in `pr_manager/_rerequest.py`, and the manager calls
   it only on a PR that is yours: on one that is not, the queue waits
@@ -344,11 +353,16 @@ in `frontend/app/data/summaries.ts`.
 
 - **The write.** `rerequest-review` joins `PR_WRITES` in the `reviewers` slot,
   settled once the login is in `rerequest_queued` or `pending_reviewers`;
-  `cancel-rerequest` and `send-rerequest` join it in the same slot, settled
-  once the login has left `rerequest_queued`. `pr-controls` gains
-  `rerequestReview`, `cancelRerequest` and `sendRerequestNow`, each taking
-  the PR and the reviewer. **Done** (`010575ac` for `rerequest-review` and
-  `rerequestReview`, the commit that records this for the rest).
+  `cancel-rerequest` joins it in the same slot, settled once the login has
+  left `rerequest_queued`; `send-rerequest` too, settled once the login is
+  in `pending_reviewers` or has left `rerequest_queued`, and refused, with
+  the notice's words on the Dashboard, when an `assign-reviewers-refused` or
+  `not-yours-to-assign` notice arrives while it is unsettled. The
+  Dashboard's re-request controls stay disabled while a write in that slot
+  is unsettled. `pr-controls` gains `rerequestReview`, `cancelRerequest` and
+  `sendRerequestNow`, each taking the PR and the reviewer. **Done**
+  (`010575ac` for `rerequest-review` and `rerequestReview`, `12ef4b5f` for
+  the rest, and the commit that records the send's settling).
 
 ## Edge cases
 

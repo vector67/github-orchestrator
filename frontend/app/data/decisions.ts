@@ -1,6 +1,7 @@
 import type {
   Conversation,
   DashboardSystem,
+  NoticeCode,
   PrFacts,
   Proposal,
   ProposalKind,
@@ -735,6 +736,7 @@ interface PrWrite extends Carrying {
   leaves?: boolean;
   unsent?: string;
   ringsOn?: string[];
+  refusedBy?: NoticeCode[];
 }
 
 function leftTheQueue(
@@ -798,7 +800,10 @@ const PR_WRITES = {
     doing: 'sending the re-request',
     square: null,
     slot: 'reviewers',
-    until: (_facts, system, reviewer) => leftTheQueue(system, reviewer),
+    until: (facts, system, reviewer) =>
+      (reviewer !== null && facts.pending_reviewers.includes(reviewer)) ||
+      leftTheQueue(system, reviewer),
+    refusedBy: ['assign-reviewers-refused', 'not-yours-to-assign'],
   },
   'check-for-fixes': {
     doing: 'asking for the checks',
@@ -1067,6 +1072,10 @@ export function settledBy(
   const until = prWriteOf(kind)?.until;
   if (!until) return answered;
   return facts !== null && until(facts, system, naming);
+}
+
+export function refusedByNotice(kind: string, code: NoticeCode): boolean {
+  return Boolean(prWriteOf(kind)?.refusedBy?.includes(code));
 }
 
 export interface Pressed {

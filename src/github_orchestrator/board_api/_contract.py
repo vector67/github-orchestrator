@@ -1926,7 +1926,8 @@ class DashboardSystem(BaseModel):
                     "a draft. Null when none are waiting.")
     rerequest_queued: list[str] = Field(
         description="The reviewers queued to be asked again once the accepted fixes "
-                    "have pushed and CI is green, oldest first. Empty when none wait.")
+                    "have pushed and CI is green, oldest first, and those already asked "
+                    "until the next poll lists them as pending. Empty when none wait.")
     unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")

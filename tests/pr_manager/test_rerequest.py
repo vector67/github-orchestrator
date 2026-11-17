@@ -70,7 +70,7 @@ def _after_a_tick(settings, tmp_path, case):
     return github.pr_state(THE_PR).pending_reviewers, rerequests.queued(THE_PR)
 
 
-ASKED = (("carol",), ())
+ASKED = (("carol",), ("carol",))
 WAITING = ((), ("carol",))
 
 
@@ -116,7 +116,7 @@ WAITING = ((), ("carol",))
     pytest.param(Case(polls=(Poll(pending=("@acme/reviewers",)),), threads=(SETTLED,)), ASKED,
                  id="a pending team does not hold the person"),
     pytest.param(Case(threads=(SETTLED, _thread("t2", by="dave", state="open")),
-                      queued=("carol", "dave")), (("carol",), ("dave",)),
+                      queued=("carol", "dave")), (("carol",), ("carol", "dave")),
                  id="each queued login is judged on its own threads"),
 ])
 def test_a_queued_reviewer_is_asked_once_the_fixes_are_pushed_and_ci_is_green(

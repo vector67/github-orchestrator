@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -24,13 +24,23 @@ class Due:
     drop: tuple[str, ...]
 
 
-def due(facts: Facts, conversations: Sequence[Conversation], queued: Sequence[str]) -> Due:
-    drop = tuple(login for login in queued if login in facts.pending_reviewers)
+def due(facts: Facts, conversations: Sequence[Conversation], queued: Sequence[str],
+        asked: Mapping[str, str | None]) -> Due:
+    drop = tuple(login for login in queued
+                 if login in facts.pending_reviewers
+                 or (login in asked and _polled_since(facts.polled_at, asked[login])))
     if not _pushed_and_green(facts, conversations):
         return Due(ask=(), drop=drop)
     ask = tuple(login for login in queued
-                if login not in drop and not _holds_an_open_thread(login, facts, conversations))
+                if login not in drop and login not in asked
+                and not _holds_an_open_thread(login, facts, conversations))
     return Due(ask=ask, drop=drop)
+
+
+def _polled_since(polled_at: str | None, asked_on: str | None) -> bool:
+    if polled_at is None:
+        return False
+    return asked_on is None or _instant(polled_at) > _instant(asked_on)
 
 
 def _pushed_and_green(facts: Facts, conversations: Sequence[Conversation]) -> bool:

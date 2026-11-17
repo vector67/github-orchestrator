@@ -2281,10 +2281,7 @@ export class FakeBoard {
       };
       this.streamed();
     }
-    if (
-      this.manager &&
-      (verb === 'cancel-rerequest' || verb === 'send-rerequest')
-    ) {
+    if (this.manager && verb === 'cancel-rerequest') {
       const { reviewer } = body as RerequestReviewRequest;
       const system = this.manager.system;
       this.manager = {

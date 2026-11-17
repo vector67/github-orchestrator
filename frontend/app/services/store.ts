@@ -83,6 +83,7 @@ import {
 } from 'frontend/data/entities';
 import {
   opensTerminal,
+  refusedByNotice,
   settledBy,
   slotOf,
   type Gathered,
@@ -178,7 +179,7 @@ import {
 } from 'frontend/data/summaries';
 import type { Picked, Timeline } from 'frontend/data/timeline';
 import { failingOf, type Numbered } from 'frontend/data/wall';
-import { dashboardOf, type Reading } from 'frontend/data/dashboard';
+import { dashboardOf, noticeOf, type Reading } from 'frontend/data/dashboard';
 import type HereService from 'frontend/services/here';
 import { DOWN } from 'frontend/services/reachability';
 
@@ -2316,8 +2317,12 @@ export default class StoreService extends Service {
             : merged(held.flags, manager, (flags) => flags.changed_at),
       };
     });
+    const notice = dashboard.notice;
     for (const one of this.pressedOn({ repo, number })) {
-      if (one.state === 'sent') this.settle({ repo, number }, one, false);
+      if (one.state !== 'sent') continue;
+      if (notice && refusedByNotice(one.kind ?? '', notice.code)) {
+        this.refuse({ repo, number }, one, noticeOf(notice), null);
+      } else this.settle({ repo, number }, one, false);
     }
   }
 
