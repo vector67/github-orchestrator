@@ -43,6 +43,13 @@ class AgentConfig:
         return not self.changed or self.allowed is True
 
 
+@dataclass(frozen=True)
+class CleanUp:
+    worktree: str
+    files: tuple[str, ...]
+    dismissed_until: datetime | None
+
+
 class ResetRefusedCode(StrEnum):
     WORKTREE_MISSING = "worktree-missing"
     NO_ORIGIN_BRANCH = "no-origin-branch"
@@ -250,6 +257,16 @@ class PrCheckout(Protocol):
 
 class WorkingCopies(Protocol):
     def forget_pr(self, repo_dir: Path, pr: Pr, branch: str | None) -> bool: ...
+
+    def asks_before_removing(self, repo_dir: Path, pr: Pr, branch: str | None) -> bool: ...
+
+    def clean_up(self, pr: Pr) -> CleanUp | None: ...
+
+    def asked_to_clean_up(self) -> tuple[Pr, ...]: ...
+
+    def allow_clean_up(self, pr: Pr) -> bool: ...
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool: ...
 
     def pr_worktree(self, repo_dir: Path, pr: Pr, branch: str | None,
                     base_branch: str | None, *, fetch: bool = False) -> Path | None: ...

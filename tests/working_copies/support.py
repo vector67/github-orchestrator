@@ -41,6 +41,7 @@ def real_working_copies(settings: Settings, github: FakeGitHub | None = None,
             run_idle_seconds=settings.config.mismatch_run_idle_seconds,
             agent_config_dir=settings.agent_config_dir,
             agent_config_paths=agent_config_paths(),
+            clean_up_dir=settings.clean_up_dir,
         ),
     ).get(WorkingCopies)
     return working_copies
@@ -126,6 +127,9 @@ class GitWorld:
 
     def edit(self, worktree: Path | str, name: str, text: str) -> None:
         (Path(worktree) / name).write_text(text)
+
+    def discard(self, worktree: Path | str, name: str) -> None:
+        (Path(worktree) / name).unlink()
 
     def check_out(self, worktree: Path, branch: str) -> None:
         git(worktree, "checkout", "-q", branch)
@@ -218,6 +222,9 @@ class FakeWorld:
 
     def edit(self, worktree: Path | str, name: str, text: str) -> None:
         self.fake.edit(worktree, name, text)
+
+    def discard(self, worktree: Path | str, name: str) -> None:
+        self.fake.discard(worktree, name)
 
     def check_out(self, worktree: Path, branch: str) -> None:
         self.fake.check_out(worktree, branch)

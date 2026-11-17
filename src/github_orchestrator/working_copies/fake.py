@@ -14,6 +14,11 @@ from github_orchestrator.github import PullRequests
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import Worktrees
 from github_orchestrator.notifications.fake import FakeNotifications
+from github_orchestrator.working_copies._clean_ups import (
+    CleanUps,
+    MemoryShelf,
+    not_the_agents,
+)
 from github_orchestrator.working_copies._diff import (
     FALLBACK_BASE_REFS,
     PrBase,
@@ -43,6 +48,7 @@ from github_orchestrator.working_copies._trouble import (
 from github_orchestrator.working_copies.interface import (
     AgentConfig,
     BaseStanding,
+    CleanUp,
     FileDiff,
     Picked,
     PrCommit,
@@ -144,6 +150,7 @@ class FakeWorkingCopies:
         self._serializing: dict[Pr, threading.Lock] = {}
         self._agent_configs: dict[str, dict[str, str]] = {}
         self.agent_config_answers: dict[Pr, dict[str, bool]] = {}
+        self._clean_ups = CleanUps(MemoryShelf())
 
     def refuse_pushes(self, reason: str | None, *, times: int | None = None) -> None:
         self._push_refusal = reason
@@ -233,6 +240,29 @@ class FakeWorkingCopies:
     def edits_at(self, worktree: Path | str) -> dict[str, str]:
         return dict(self.checkouts[_key(worktree)].edits)
 
+    def discard(self, worktree: Path | str, name: str) -> None:
+        del self.checkouts[_key(worktree)].edits[name]
+
+    def asks_before_removing(self, repo_dir: Path, pr: Pr, branch: str | None) -> bool:
+        holder = None if branch is None else self._holder(branch)
+        if holder is not None and self.checkouts[holder].main:
+            holder = None
+        return self._clean_ups.asks(
+            pr, holder,
+            None if holder is None else not_the_agents(list(self.checkouts[holder].edits)))
+
+    def clean_up(self, pr: Pr) -> CleanUp | None:
+        return self._clean_ups.clean_up(pr)
+
+    def asked_to_clean_up(self) -> tuple[Pr, ...]:
+        return self._clean_ups.asked()
+
+    def allow_clean_up(self, pr: Pr) -> bool:
+        return self._clean_ups.allow(pr)
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool:
+        return self._clean_ups.dismiss(pr, until)
+
     def _create_pr_worktree(self, repo_dir: Path, pr: Pr, base_branch: str | None) -> Path:
         branch = self.github.head_branch(pr)
         if branch is None:
@@ -305,6 +335,7 @@ class FakeWorkingCopies:
                 if name.startswith(prefix) and not self._delete_branch(name)]
         if not kept:
             self._trouble.forget(pr)
+            self._clean_ups.forget(pr)
         return not kept
 
     def pr_worktree(self, repo_dir: Path, pr: Pr, branch: str | None,
