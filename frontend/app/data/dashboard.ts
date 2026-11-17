@@ -118,7 +118,7 @@ function listed(people: string[]): string {
 const WAITING_FOR_AUTHOR = 'Waiting for author';
 
 const STATE_LABELS: Partial<Record<Move, string>> = {
-  closed: 'Merged or closed',
+  closed: 'Tear down PR',
   'fix-ci': 'Fix CI',
   'address-feedback': 'Address review feedback',
   'rerequest-review': 'Re-request review',
@@ -783,7 +783,7 @@ function systemRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
   return rows;
 }
 
-export type BandState = 'normal' | 'on-hold' | 'frozen';
+export type BandState = 'normal' | 'on-hold' | 'frozen' | 'ending';
 
 export interface Band {
   state: BandState;
@@ -843,7 +843,7 @@ function bandOf(
   }
   const differs = action.label !== move;
   return {
-    state: 'normal',
+    state: next.code === 'closed' ? 'ending' : 'normal',
     label: 'Next',
     detail: since ? `Since you acted: ${since.join(', ')}` : null,
     computed: differs
@@ -1266,6 +1266,9 @@ function noticeOf(notice: Notice): string {
   return NOTICES[notice.code](notice.detail);
 }
 
+const ENDING =
+  'PR merged or closed. It is being torn down, and will soon be gone from the orchestrator.';
+
 export interface Reading {
   number: number;
   code: Move;
@@ -1284,6 +1287,7 @@ export interface Reading {
   chips: Chip[];
   rowChips: Chip[];
   band: Band;
+  ending: string | null;
   frozen: Frozen | null;
   onHold: boolean;
   unpolled: string | null;
@@ -1337,6 +1341,7 @@ export function dashboardOf(
     chips,
     rowChips: chips.filter((one) => one.key !== 'mismatches'),
     band: bandOf(shown, action, move, since, next),
+    ending: next.code === 'closed' ? ENDING : null,
     frozen: frozen
       ? {
           worktree: withoutBidiControls(tildeOf(frozen.worktree)),

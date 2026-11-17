@@ -118,6 +118,30 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-band-computed]').hasText('No reviewers assigned');
   });
 
+  test('a merged or closed pull request says it is being torn down, in a band of its own and a banner', async function (assert) {
+    onTheHub({ facts: factsFor('closed') });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-band-move]').hasText('Tear down PR');
+    assert
+      .dom('[data-test-action-band]')
+      .hasAttribute('data-test-band', 'ending');
+    assert
+      .dom('[data-test-ending]')
+      .hasText(
+        'PR merged or closed. It is being torn down, and will soon be gone from the orchestrator.',
+      );
+  });
+
+  test('an open pull request has no teardown banner', async function (assert) {
+    onTheHub({ facts: factsFor('request-reviewers') });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-ending]').doesNotExist();
+  });
+
   test('the tab leads with the action band, then status and since you last acted, then system', async function (assert) {
     onTheHub({
       pr: { author: 'anna' },
