@@ -22,6 +22,12 @@ export default class DiffFold extends Component<DiffFoldSignature> {
 
   @tracked expanded = false;
 
+  @tracked opened = false;
+
+  openAll = () => {
+    this.opened = !this.opened;
+  };
+
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
 
   private frame: Element | null = null;
@@ -86,6 +92,12 @@ export default class DiffFold extends Component<DiffFoldSignature> {
           <button
             type="button"
             class="expand-diff"
+            data-test-fold-all
+            {{on "click" this.openAll}}
+          >{{if this.opened "Collapse all" "Expand all"}}</button>
+          <button
+            type="button"
+            class="expand-diff"
             data-test-expand
             data-test-full-screen
             {{on "click" this.toggle}}
@@ -95,7 +107,8 @@ export default class DiffFold extends Component<DiffFoldSignature> {
       <DiffSlot
         @conversationId={{@conversationId}}
         @commits={{@fold.commits}}
-        @folded={{@fold.files_folded}}
+        @folded={{true}}
+        @open={{this.opened}}
       />
     </div>
   </template>
