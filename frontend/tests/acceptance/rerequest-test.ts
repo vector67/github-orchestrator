@@ -6,6 +6,7 @@ import {
   comment,
   dashboard,
   heldPr,
+  operation,
   proposal,
   setupFakeBoard,
   summary,
@@ -586,9 +587,15 @@ module('Acceptance | re-request review', function (hooks) {
     await markedDone([PUSHED, REPLIED]);
 
     assert
-      .dom('[data-test-rerequest-comments] > summary')
-      .hasText('3 comments from carol');
-    assert.dom('[data-test-rerequest-comments]').doesNotHaveAttribute('open');
+      .dom('[data-test-rerequest-comments]')
+      .includesText('3 comments from carol');
+    assert
+      .dom('[data-test-rerequest-comments]')
+      .hasAttribute('aria-expanded', 'false');
+    assert.dom('[data-test-rerequest-comment]').doesNotExist();
+
+    await click('[data-test-rerequest-comments]');
+
     assert.dom('[data-test-rerequest-comment]').exists({ count: 3 });
   });
 
@@ -601,7 +608,7 @@ module('Acceptance | re-request review', function (hooks) {
       closed('PRRT_c8', { kind: 'review-summary' }),
       closed('PRRT_c9', { kind: 'issue' }),
     ]);
-    await click('[data-test-rerequest-comments] > summary');
+    await click('[data-test-rerequest-comments]');
 
     assert
       .dom(`${said('PRRT_c8')} [data-test-rerequest-where]`)
@@ -629,7 +636,7 @@ module('Acceptance | re-request review', function (hooks) {
     ];
     await visit('/pr/o/r/7/conversations/PRRT_c1');
     await click('[data-test-decision="mark-done"]');
-    await click('[data-test-rerequest-comments] > summary');
+    await click('[data-test-rerequest-comments]');
 
     assert
       .dom(`${said('PRRT_c1')} [data-test-rerequest-what]`)
@@ -659,7 +666,7 @@ module('Acceptance | re-request review', function (hooks) {
       ],
     });
     await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, DEFERRED, filed]);
-    await click('[data-test-rerequest-comments] > summary');
+    await click('[data-test-rerequest-comments]');
 
     assert.deepEqual(chipsOf('PRRT_c1'), ['marked done']);
     assert.deepEqual(chipsOf('PRRT_c2'), ['pushed']);
@@ -668,5 +675,154 @@ module('Acceptance | re-request review', function (hooks) {
     assert.deepEqual(chipsOf('PRRT_c5'), ['rejected']);
     assert.deepEqual(chipsOf('PRRT_c6'), ['deferred']);
     assert.deepEqual(chipsOf('PRRT_c7'), ['ticket filed']);
+  });
+
+  const AT = (hour: number): string =>
+    `2026-09-12T${String(hour).padStart(2, '0')}:00:00Z`;
+
+  function historyOf(key: string): { at: string; what: string }[] {
+    return [
+      ...document.querySelectorAll(`${said(key)} [data-test-history-entry]`),
+    ].map((one) => ({
+      at: one.querySelector('time')?.getAttribute('datetime') ?? '',
+      what:
+        one.querySelector('[data-test-history-what]')?.textContent?.trim() ??
+        '',
+    }));
+  }
+
+  async function historyOpened(key: string): Promise<void> {
+    await click('[data-test-rerequest-comments]');
+    await click(`${said(key)} [data-test-history]`);
+  }
+
+  test('History stays closed until opened', async function (assert) {
+    await markedDone([PUSHED]);
+    await click('[data-test-rerequest-comments]');
+
+    assert
+      .dom(`${said('PRRT_c2')} [data-test-history]`)
+      .hasAttribute('aria-expanded', 'false');
+    assert.dom(`${said('PRRT_c2')} [data-test-history-entry]`).doesNotExist();
+  });
+
+  test('History reads the thread and tells its story oldest first, each step with its time', async function (assert) {
+    const told = closed('PRRT_c2', {
+      comments: [
+        { id: 1, author: 'carol', created_at: AT(10), review_state: null },
+        { id: 2, author: 'dave', created_at: AT(15), review_state: null },
+      ],
+      operations: [
+        summary({ id: 'PRRT_c2.1', kind: 'first', settled_at: AT(11) }),
+        summary({
+          id: 'PRRT_c2.2',
+          kind: 'rework',
+          requested_at: AT(12),
+          settled_at: AT(13),
+        }),
+        summary({
+          id: 'PRRT_c2.3',
+          kind: 'approve',
+          lands: 'commit',
+          settled_at: AT(14),
+        }),
+        summary({ id: 'PRRT_c2.4', kind: 'resolve', settled_at: AT(16) }),
+      ],
+    });
+    board().operations['PRRT_c2'] = [
+      operation({
+        id: 'PRRT_c2.1',
+        conversation: 'PRRT_c2',
+        kind: 'first',
+        settled_at: AT(11),
+        proposal: 'PRRT_c2.1.proposal',
+      }),
+      operation({
+        id: 'PRRT_c2.2',
+        conversation: 'PRRT_c2',
+        kind: 'rework',
+        requested_at: AT(12),
+        settled_at: AT(13),
+        proposal: 'PRRT_c2.2.proposal',
+        brief: {
+          note: 'Keep the old name as an alias.',
+          pointed: [],
+          include: [],
+          part: null,
+        },
+      }),
+      operation({
+        id: 'PRRT_c2.3',
+        conversation: 'PRRT_c2',
+        kind: 'approve',
+        settled_at: AT(14),
+        landed_sha: 'abcdef1234567890',
+      }),
+    ];
+    await markedDone([told]);
+
+    await historyOpened('PRRT_c2');
+
+    assert.deepEqual(historyOf('PRRT_c2'), [
+      { at: AT(10), what: 'carol commented' },
+      { at: AT(11), what: 'Agent proposed a fix' },
+      {
+        at: AT(12),
+        what: 'Sent back for rework: “Keep the old name as an alias.”',
+      },
+      { at: AT(13), what: 'Agent proposed a fix' },
+      { at: AT(14), what: 'Accepted and pushed abcdef1' },
+      { at: AT(15), what: 'dave replied' },
+      { at: AT(16), what: 'Marked done' },
+    ]);
+  });
+
+  test('History says a comment was rejected, resolved, or deferred and what wakes it', async function (assert) {
+    const deferred = closed('PRRT_c6', {
+      state: 'deferred',
+      record_state: 'deferred',
+      operations: [
+        summary({ id: 'PRRT_c6.1', kind: 'defer', settled_at: AT(11) }),
+      ],
+    });
+    board().operations['PRRT_c6'] = [
+      operation({
+        id: 'PRRT_c6.1',
+        conversation: 'PRRT_c6',
+        kind: 'defer',
+        settled_at: AT(11),
+        until: 'push',
+      }),
+    ];
+    const rejected = closed('PRRT_c5', {
+      record_state: 'rejected',
+      operations: [
+        summary({ id: 'PRRT_c5.1', kind: 'reject', settled_at: AT(11) }),
+      ],
+    });
+    const resolved = closed('PRRT_c4', {
+      github_resolved: true,
+      operations: [
+        summary({ id: 'PRRT_c4.1', kind: 'resolve', settled_at: AT(11) }),
+      ],
+    });
+    await markedDone([deferred, rejected, resolved]);
+
+    await historyOpened('PRRT_c6');
+    await click(`${said('PRRT_c5')} [data-test-history]`);
+    await click(`${said('PRRT_c4')} [data-test-history]`);
+
+    assert.deepEqual(
+      historyOf('PRRT_c6').map((one) => one.what),
+      ['carol commented', 'Deferred, waiting until the next push'],
+    );
+    assert.deepEqual(
+      historyOf('PRRT_c5').map((one) => one.what),
+      ['carol commented', 'Rejected'],
+    );
+    assert.deepEqual(
+      historyOf('PRRT_c4').map((one) => one.what),
+      ['carol commented', 'Resolved'],
+    );
   });
 });

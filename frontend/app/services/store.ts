@@ -556,7 +556,12 @@ export default class StoreService extends Service {
   }
 
   commentStory(repo: string, number: number, thread: string): CommentStory {
-    return commentStoryOf(this.threads[keyOf(repo, number)]?.[thread]);
+    const key = keyOf(repo, number);
+    return commentStoryOf(
+      this.threads[key]?.[thread],
+      this.operations[key] ?? {},
+      this.prs[key]?.author ?? null,
+    );
   }
 
   reading(shown: ShownPr, now: number): Reading | null {

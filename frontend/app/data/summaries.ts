@@ -4,6 +4,7 @@ import type {
   Conversation,
   ConversationState,
   Diff,
+  FixOperation,
   Importance,
   ManagerFlags,
   MentionableList,
@@ -36,7 +37,12 @@ import {
   type Pressings,
 } from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
-import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
+import {
+  wakeText,
+  type Details,
+  type FileStat,
+  type WorktreeOf,
+} from 'frontend/data/panel';
 import { referenceOf } from 'frontend/data/rows';
 import { atWork, awaitsYou } from 'frontend/data/thread';
 import { saidOf, type ThreadNamed } from 'frontend/data/tried';
@@ -505,8 +511,15 @@ export interface PromptComment {
   outcomes: Outcome[];
 }
 
+export interface HistoryEntry {
+  at: string;
+  when: string;
+  what: string;
+}
+
 export interface CommentStory {
   what: string | null;
+  history: HistoryEntry[];
 }
 
 function firstSaid(one: Thread): string | null {
@@ -516,9 +529,85 @@ function firstSaid(one: Thread): string | null {
   return linesOf(first?.body ?? null)[0] ?? null;
 }
 
-export function commentStoryOf(thread: Thread | undefined): CommentStory {
-  if (!thread) return { what: null };
-  return { what: thread.gist ?? firstSaid(thread) };
+function told(at: string | null | undefined, what: string): HistoryEntry[] {
+  return at ? [{ at, when: whenOf(new Date(at)), what }] : [];
+}
+
+function commentsTold(one: Thread, author: string | null): HistoryEntry[] {
+  return (one.comments ?? []).flatMap((said) =>
+    told(
+      said.created_at,
+      said.author === author && author !== one.opened_by
+        ? `${said.author} replied`
+        : `${said.author} commented`,
+    ),
+  );
+}
+
+function proposedTold(one: Operation): HistoryEntry[] {
+  const proposed =
+    one.state === 'applied' && 'proposal' in one && one.proposal !== null;
+  return proposed ? told(one.settled_at, 'Agent proposed a fix') : [];
+}
+
+function reworkTold(one: FixOperation): HistoryEntry[] {
+  const note = one.brief?.note.trim();
+  return [
+    ...told(
+      one.requested_at,
+      note ? `Sent back for rework: “${note}”` : 'Sent back for rework',
+    ),
+    ...proposedTold(one),
+  ];
+}
+
+function acceptedSaid(one: Operation & { kind: 'approve' }): string {
+  const { lands } = one as unknown as StoredOperation;
+  if (lands === 'commit') {
+    const sha = shortOf(one.landed_sha ?? null);
+    return sha ? `Accepted and pushed ${sha}` : 'Accepted and pushed';
+  }
+  if (lands === 'ticket' && one.ticket_key) {
+    return `Accepted and filed ${one.ticket_key}`;
+  }
+  return 'Accepted';
+}
+
+function settledSaid(one: Operation, thread: Thread): string | null {
+  if (one.kind === 'approve') return acceptedSaid(one);
+  if (one.kind === 'resolve') {
+    return thread.github_resolved === true ? 'Resolved' : 'Marked done';
+  }
+  if (one.kind === 'confirm') return 'Marked done';
+  if (one.kind === 'place') return 'Moved';
+  if (one.kind === 'reject') return 'Rejected';
+  if (one.kind === 'defer') {
+    return one.until ? `Deferred, ${wakeText(one.until)}` : 'Deferred';
+  }
+  return null;
+}
+
+function operationTold(one: Operation, thread: Thread): HistoryEntry[] {
+  if (one.kind === 'rework') return reworkTold(one);
+  if (one.kind === 'first' || one.kind === 'retry') return proposedTold(one);
+  if (one.state !== 'applied') return [];
+  const said = settledSaid(one, thread);
+  return said ? told(one.settled_at, said) : [];
+}
+
+export function commentStoryOf(
+  thread: Thread | undefined,
+  operations: Operations,
+  author: string | null,
+): CommentStory {
+  if (!thread) return { what: null, history: [] };
+  const history = [
+    ...commentsTold(thread, author),
+    ...operationsOf(thread, operations).flatMap((one) =>
+      operationTold(one, thread),
+    ),
+  ].sort((one, other) => one.at.localeCompare(other.at));
+  return { what: thread.gist ?? firstSaid(thread), history };
 }
 
 function leftAt(one: Thread): string {

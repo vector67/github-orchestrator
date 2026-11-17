@@ -304,8 +304,9 @@ in `frontend/app/data/summaries.ts`.
   are open, and each thread's outcomes. A reviewer is **owed** a re-request
   when no thread in their round is open, they are not queued, and either
   their review requested changes or their round has at least one thread.
-  **Done** for the round and who is owed (the commit that records this);
-  each thread's outcomes come with the prompt.
+  **Done** for the round and who is owed (`fcd63abb`), and for each
+  thread's outcomes (`d00168ee`, and the commit that records this for the
+  outcome chips).
 
 - **The prompt's question.** One function answers, for a thread and an
   action with what it gathered, whether the action closes the thread
@@ -315,7 +316,8 @@ in `frontend/app/data/summaries.ts`.
   taken from the action (Accept of a commit is pushed, of a reply or ticket
   replied; a written reply, a plain Reply included, is replied; Resolve
   resolved; Mark done, Confirm and Move marked done; Reject rejected; Defer
-  deferred). **Done** for all but the list (the commit that records this).
+  deferred). **Done** (`d00168ee`, and the commit that records this for
+  the list).
 
 - **Next move.** `ofAuthor` gains two moves and narrows one:
 
@@ -336,7 +338,8 @@ in `frontend/app/data/summaries.ts`.
   plain Reply, and from `dashboard-tab.gts` for the `rerequest-review` move. The History row reads each thread's full
   operations through `store.readThread` when it is opened, and shows what the
   summaries give until they arrive. **Done** from `panel-actions.gts` and
-  `reply-box.gts` (the commit that records this).
+  `reply-box.gts` (`010575ac`, `8d069397`), with the list and the History
+  row (the commit that records this); `dashboard-tab.gts` is step 9.
 
 - **The write.** `rerequest-review` joins `PR_WRITES` in the `reviewers` slot,
   settled once the login is in `rerequest_queued` or `pending_reviewers`;

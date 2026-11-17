@@ -1607,6 +1607,57 @@ button.copy-directory {
   margin: 0;
 }
 
+.decide-dialog .rerequest-listing {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-m);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.decide-dialog .rerequest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  justify-self: start;
+}
+
+.decide-dialog .rerequest-history {
+  justify-self: start;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fs-s);
+  color: var(--muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.decide-dialog .rerequest-history-entries {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: var(--fs-s);
+  list-style: none;
+}
+
+.decide-dialog .rerequest-history-entry {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.decide-dialog .rerequest-history-entries time {
+  flex: none;
+}
+
 .decide-dialog textarea {
   box-sizing: border-box;
   width: 100%;
