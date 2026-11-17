@@ -643,6 +643,10 @@ class Conversation:
         return self.state == UNREADABLE
 
     @property
+    def opened_at(self) -> str | None:
+        return self.comment_created_at or self.created_at
+
+    @property
     def run_holder(self) -> Operation | None:
         return next((operation for operation in reversed(self.operations)
                      if operation.holds_a_run), None)

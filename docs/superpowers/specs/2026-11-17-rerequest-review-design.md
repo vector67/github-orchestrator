@@ -202,7 +202,7 @@ What the board knows today, and what it lacks.
    whose conversations are not loaded cannot group threads by reviewer.
    `ThreadRow`, and `Conversation` with it (a row is a subset of a
    conversation), gain `opened_by` (the opener's login) and `opened_at` (the
-   first comment's time).
+   first comment's time). **Done** (the commit that records this).
 4. **Resolved or marked done.** Both close as a `resolve` operation; the
    request's `resolve` flag is not kept on it. The outcome is read from the
    conversation's `github_resolved` instead: true reads "resolved", anything
@@ -239,6 +239,7 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   (`7b06a50b`, `8435d797` and the commit that records this).
 
 - **Conversation.** `counts()` fills `opened_by` and `opened_at` on each row.
+  **Done** (the commit that records this).
 
 - **Settings.** `Rerequests` with `queued(pr)`, `queue(pr, login)`,
   `drop(pr, login)` and `forget(pr)`. The watcher's teardown forgets a PR's

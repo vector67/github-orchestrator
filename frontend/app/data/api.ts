@@ -242,6 +242,8 @@ export interface Conversation {
   mention: boolean;
   updated_at: string | null;
   author_kind: AuthorKind;
+  opened_by: string;
+  opened_at: string | null;
   unread: boolean;
   record_state: RecordState;
   commit_check: CommitCheck | null;
@@ -1288,6 +1290,8 @@ export interface ThreadRow {
   state: ConversationState;
   record_state: RecordState;
   author_kind: AuthorKind;
+  opened_by: string;
+  opened_at: string | null;
   updated_at: string | null;
   mention: boolean;
 }

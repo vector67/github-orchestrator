@@ -74,6 +74,14 @@ def test_a_new_draft_is_a_draft_with_nothing_on_github(settings):
     assert reviewing.on_github() == []
 
 
+def test_a_drafts_row_names_you_as_its_opener_from_when_you_drafted_it(settings):
+    reviewing = Reviewing(settings)
+    reviewing.draft()
+
+    assert [(row.opened_by, row.opened_at) for row in reviewing.threads.counts().rows] == [
+        ("octocat", NOW)]
+
+
 def test_an_edit_replaces_the_body_and_the_anchor_together(settings):
     reviewing = Reviewing(settings)
     key = reviewing.draft().key

@@ -791,6 +791,7 @@ class _ConversationManager:
                           key=conversation.key, standing=conversation.standing.value,
                           state=conversation.state,
                           author_kind=author_kind_of(conversation.author, account),
+                          opened_by=conversation.author, opened_at=conversation.opened_at,
                           updated_at=conversation.updated_at,
                           mention=conversation.mention)
                           for conversation in readable),
