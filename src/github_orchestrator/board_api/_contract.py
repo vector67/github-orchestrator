@@ -1904,6 +1904,13 @@ class AssignReviewersRequest(BaseModel):
                     "Null leaves the description alone.")
 
 
+class RerequestReviewRequest(BaseModel):
+    reviewer: str = Field(
+        min_length=1,
+        description="The login of the reviewer to ask again, by login even when the "
+                    "first request went to a team.")
+
+
 class DashboardSystem(BaseModel):
     agent: AgentActivity
     last_run: LastRun | None = Field(
@@ -1917,6 +1924,9 @@ class DashboardSystem(BaseModel):
     assign_when_ready: AssignReviewersRequest | None = Field(
         description="The reviewers the manager asks once the pull request is no longer "
                     "a draft. Null when none are waiting.")
+    rerequest_queued: list[str] = Field(
+        description="The reviewers queued to be asked again once the accepted fixes "
+                    "have pushed and CI is green, oldest first. Empty when none wait.")
     unpushed_commits: list[UnpushedCommit] | None = Field(
         description="Commits on the worktree's branch that are not on the "
                     "pull request yet, newest first. Null where git could not say.")

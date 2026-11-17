@@ -533,6 +533,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       queue: [],
       on_hold: false,
       assign_when_ready: null,
+      rerequest_queued: [],
       unpushed_commits: [],
       diverged: false,
       reset_to_origin: null,

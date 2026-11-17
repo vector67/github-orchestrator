@@ -80,6 +80,7 @@ from github_orchestrator.board_api._contract import (
     ReadMarks,
     ReplyRequest,
     RequestChangeBody,
+    RerequestReviewRequest,
     ResetRequest,
     ResolveRequest,
     ReviewedCommits,
@@ -939,6 +940,40 @@ def assign_reviewers_when_ready(board: Serving, asked: AssignReviewersRequest) -
     `system.assign_when_ready` shows the pick while it waits.
     """
     return _handed_over(board, board.manager.assign_when_ready(asked.reviewers, asked.detailed))
+
+
+@writes.post("/manager:rerequest-review", status_code=202, tags=["manager"],
+             operation_id="rerequestReview", responses=HANDED_TO_THE_MANAGER,
+             summary="Queue a reviewer to be asked again once the fixes are pushed and CI is green.")
+def rerequest_review(board: Serving, asked: RerequestReviewRequest) -> Response:
+    """The manager keeps the reviewer queued on disk and asks them as
+    `manager:assign-reviewers` does once no Accept is landing, the pushes have
+    been polled and CI is passing (or, on a pull request that never had checks,
+    neither failing nor pending). A reviewer GitHub already lists leaves the
+    queue unasked. The dashboard's `system.rerequest_queued` shows the queue.
+    """
+    return _handed_over(board, board.manager.rerequest_review(asked.reviewer))
+
+
+@writes.post("/manager:cancel-rerequest", status_code=202, tags=["manager"],
+             operation_id="cancelRerequest", responses=HANDED_TO_THE_MANAGER,
+             summary="Take a reviewer off the re-request queue without asking them.")
+def cancel_rerequest(board: Serving, asked: RerequestReviewRequest) -> Response:
+    """The manager drops the reviewer from `system.rerequest_queued` and asks
+    nothing. A reviewer not queued changes nothing.
+    """
+    return _handed_over(board, board.manager.cancel_rerequest(asked.reviewer))
+
+
+@writes.post("/manager:send-rerequest", status_code=202, tags=["manager"],
+             operation_id="sendRerequestNow", responses=HANDED_TO_THE_MANAGER,
+             summary="Ask a queued reviewer again now, without waiting for pushes or CI.")
+def send_rerequest_now(board: Serving, asked: RerequestReviewRequest) -> Response:
+    """The manager asks the reviewer on GitHub at once and drops them from
+    `system.rerequest_queued`, or puts GitHub's refusal in the status's
+    notice and drops them all the same.
+    """
+    return _handed_over(board, board.manager.send_rerequest_now(asked.reviewer))
 
 
 @writes.post("/manager:take-over", status_code=202, tags=["manager"],

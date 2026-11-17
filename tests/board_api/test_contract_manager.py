@@ -65,6 +65,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                       {"event": None, "queued_at": "2026-09-26T21:42:00+00:00"}],
             "on_hold": True,
             "assign_when_ready": None,
+            "rerequest_queued": [],
             "unpushed_commits": [{"sha": "c0ffee1", "subject": "handle empty input"},
                                  {"sha": "badf00d", "subject": "add parser tests"}],
             "diverged": True,
@@ -399,6 +400,52 @@ def test_assign_when_ready_is_handed_to_the_manager_and_the_dashboard_shows_the_
     assert after == {"reviewers": ["anna", "bob"], "detailed": "bob"}
 
 
+def test_a_re_request_is_handed_to_the_manager_and_the_dashboard_shows_it_queued():
+    panel = FakeManagerPanel()
+    client = client_for(manager=panel)
+
+    answer = client.post("/api/manager:rerequest-review", json={"reviewer": "carol"})
+
+    assert answer.status_code == 202
+    assert client.get("/api/dashboard").json()["system"]["rerequest_queued"] == ["carol"]
+
+
+def test_cancelling_a_re_request_is_handed_to_the_manager_and_leaves_the_queue():
+    panel = FakeManagerPanel(now=replace(IDLE, rerequest_queued=("carol", "dave")))
+    client = client_for(manager=panel)
+
+    answer = client.post("/api/manager:cancel-rerequest", json={"reviewer": "carol"})
+
+    assert answer.status_code == 202
+    assert client.get("/api/dashboard").json()["system"]["rerequest_queued"] == ["dave"]
+    assert panel.assigned == []
+
+
+def test_sending_a_re_request_now_hands_the_reviewer_to_the_manager():
+    panel = FakeManagerPanel(now=replace(IDLE, rerequest_queued=("carol",)))
+    client = client_for(manager=panel)
+
+    answer = client.post("/api/manager:send-rerequest", json={"reviewer": "carol"})
+
+    assert answer.status_code == 202
+    assert panel.assigned == [(("carol",), None)]
+    assert client.get("/api/dashboard").json()["system"]["rerequest_queued"] == []
+
+
+@pytest.mark.parametrize("path", ["/api/manager:rerequest-review",
+                                  "/api/manager:cancel-rerequest",
+                                  "/api/manager:send-rerequest"])
+@pytest.mark.parametrize("body", [{"reviewer": ""}, {}])
+def test_a_re_request_command_without_a_reviewer_is_malformed(path, body):
+    panel = FakeManagerPanel(now=replace(IDLE, rerequest_queued=("carol",)))
+
+    answer = client_for(manager=panel).post(path, json=body)
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
+    assert (panel.assigned, panel.dashboard().rerequest_queued) == ([], ("carol",))
+
+
 @pytest.mark.parametrize(("path", "body"), [
     ("/api/manager:hold", None), ("/api/manager:resume", None),
     ("/api/manager:carry-on", None), ("/api/manager:start-review", None),
@@ -408,6 +455,9 @@ def test_assign_when_ready_is_handed_to_the_manager_and_the_dashboard_shows_the_
     ("/api/manager:hand-back", None),
     ("/api/manager:assign-reviewers", {"reviewers": ["anna"], "detailed": None}),
     ("/api/manager:assign-when-ready", {"reviewers": ["anna"], "detailed": None}),
+    ("/api/manager:rerequest-review", {"reviewer": "carol"}),
+    ("/api/manager:cancel-rerequest", {"reviewer": "carol"}),
+    ("/api/manager:send-rerequest", {"reviewer": "carol"}),
 ])
 def test_a_command_the_manager_rules_out_is_refused_with_the_code_for_why(path, body):
     panel = FakeManagerPanel(refusal=ManagerRefusal.AGENT_RUNNING)
@@ -422,6 +472,7 @@ def test_a_command_the_manager_rules_out_is_refused_with_the_code_for_why(path, 
     assert (panel.reopened, panel.converted_to_draft, panel.handed_back) == (0, 0, 0)
     assert panel.dashboard().on_hold is False
     assert panel.dashboard().assign_when_ready is None
+    assert panel.dashboard().rerequest_queued == ()
 
 
 def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
@@ -437,7 +488,10 @@ def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
                              "/api/manager:reopen", "/api/manager:convert-to-draft",
                              "/api/manager:hand-back",
                              "/api/manager:assign-reviewers",
-                             "/api/manager:assign-when-ready"}
+                             "/api/manager:assign-when-ready",
+                             "/api/manager:rerequest-review",
+                             "/api/manager:cancel-rerequest",
+                             "/api/manager:send-rerequest"}
     assert all(command["responses"]["202"]["headers"]["Location"]
                for command in commands.values())
 

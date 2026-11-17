@@ -301,6 +301,7 @@ export interface DashboardSystem {
   queue: QueuedEvent[];
   on_hold: boolean;
   assign_when_ready: AssignReviewersRequest | null;
+  rerequest_queued: string[];
   unpushed_commits: UnpushedCommit[] | null;
   reset_to_origin: ResetToOrigin | null;
   diverged: boolean;
@@ -1013,6 +1014,10 @@ export interface RequestChangeBody {
   start_side?: DiffSide | null;
   side?: DiffSide;
   visible: boolean;
+}
+
+export interface RerequestReviewRequest {
+  reviewer: string;
 }
 
 export interface ResetRefusal {

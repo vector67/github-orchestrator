@@ -253,7 +253,9 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   `ManagerPanel.rerequest_review(reviewer)` and the board route
   `POST /manager:rerequest-review` with `{"reviewer": "<login>"}`, beside
   `manager:assign-reviewers`. It is refused, as assigning is, on a PR that is
-  not yours (`not-yours-to-assign`).
+  not yours (`not-yours-to-assign`). **Done** (`71d07303` and the commit that
+  records this). A body without a reviewer, or with an empty one, is the
+  board's `malformed-request` 400, as every other malformed body is.
 
 - **Cancel and send now.** `Command.CANCEL_REREQUEST` and
   `Command.SEND_REREQUEST_NOW`, each with a `reviewer` field, the panel
@@ -263,7 +265,8 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   from `Rerequests`; send now asks through `_assign_reviewers` at once and
   drops it, with the same refusal handling as the send below. Both are
   refused on a PR that is not yours, and cancelling a login that is not
-  queued does nothing.
+  queued does nothing. **Done** (`71d07303` and the commit that records
+  this).
 
 - **The send.** Each tick, beside `assign_once_ready`, the manager asks one
   pure function which queued logins are due, given the facts and the PR's
@@ -282,8 +285,14 @@ Pushed is an Accept whose `lands` is `commit` and that was not refused.
   `assign-reviewers-refused` notice, so the next move goes back to
   "Re-request review from <reviewer>" rather than retrying every tick.
 
+  The function is `due` in `pr_manager/_rerequest.py`, and the manager calls
+  it only on a PR that is yours: on one that is not, the queue waits
+  untouched. A thread is in the login's round as section 1 says. **Done**
+  (`0a216a19`).
+
 - **Dashboard.** `DashboardSystem.rerequest_queued: list[str]`, beside
-  `assign_when_ready`.
+  `assign_when_ready`. **Done** (`71d07303` and the commit that records
+  this).
 
 ## Front end
 

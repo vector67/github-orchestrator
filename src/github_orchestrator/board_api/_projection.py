@@ -567,6 +567,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             else contract.AssignReviewersRequest(
                 reviewers=list(dashboard.assign_when_ready.reviewers),
                 detailed=dashboard.assign_when_ready.detailed),
+            rerequest_queued=list(dashboard.rerequest_queued),
             unpushed_commits=None if dashboard.unpushed_commits is None
             else [contract.UnpushedCommit(sha=commit.sha, subject=commit.subject)
                   for commit in dashboard.unpushed_commits],

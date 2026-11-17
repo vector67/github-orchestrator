@@ -1014,6 +1014,17 @@
     }
    }
   },
+  "/api/manager:cancel-rerequest": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:carry-on": {
    "post": {
     "202": {},
@@ -1081,9 +1092,31 @@
     }
    }
   },
+  "/api/manager:rerequest-review": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:resume": {
    "post": {
     "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:send-rerequest": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
     "409": {
      "$ref": "#/components/schemas/Errors"
     }
@@ -3797,6 +3830,12 @@
      },
      "type": "array"
     },
+    "rerequest_queued": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
     "reset_to_origin": {
      "anyOf": [
       {
@@ -3827,6 +3866,7 @@
     "queue",
     "on_hold",
     "assign_when_ready",
+    "rerequest_queued",
     "unpushed_commits",
     "reset_to_origin",
     "diverged",
@@ -8056,6 +8096,18 @@
     "path",
     "line",
     "visible"
+   ],
+   "type": "object"
+  },
+  "RerequestReviewRequest": {
+   "properties": {
+    "reviewer": {
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "reviewer"
    ],
    "type": "object"
   },
