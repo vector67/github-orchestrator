@@ -168,13 +168,21 @@ module('Acceptance | verbs | the author board', function (hooks) {
   test('a declined run is argued with in its own words', async function (assert) {
     await open(board(), 'declined');
 
-    assert.deepEqual(offered(), ['Send back for rework', 'Resolve', 'Defer']);
+    assert.deepEqual(offered(), [
+      'Send back for rework',
+      'Resolve',
+      'Mark done',
+      'Defer',
+    ]);
     assert
       .dom('[data-test-decision="rework"]')
       .hasAttribute('data-weight', 'secondary');
     assert
       .dom('[data-test-decision="resolve"]')
       .hasAttribute('data-weight', 'secondary');
+    assert
+      .dom('[data-test-decision="mark-done"]')
+      .hasAttribute('data-weight', 'ghost');
   });
 
   test('a waiting thread stops waiting and a deferred one is brought back', async function (assert) {
