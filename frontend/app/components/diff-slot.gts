@@ -29,6 +29,7 @@ export interface DiffSlotSignature {
     commits: FoldRange;
     pointable?: boolean;
     folded?: boolean;
+    open?: boolean;
   };
 }
 
@@ -169,9 +170,12 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
       {{#if this.files.length}}
         {{#each this.files key="@index" as |file|}}
           {{#if @folded}}
-            <details class="diff-file" data-test-diff-file-fold>
-              <summary class="diff-row file" data-test-diff-file>
-                <span class="diff-file-path">{{file.path}}</span>
+            <details class="diff-file" open={{@open}} data-test-diff-file-fold>
+              <summary class="diff-row file">
+                <span
+                  class="diff-file-path"
+                  data-test-diff-file
+                >{{file.path}}</span>
                 <span class="diffstat">
                   <span class="diffstat-added">+{{file.added}}</span>
                   <span class="diffstat-deleted">−{{file.removed}}</span>

@@ -112,8 +112,9 @@ gh_account = "your-github-username"
 # list` so its login carries over.
 # summary_mcp_config = "~/.config/github-orchestrator/pr-summary-mcp.json"
 
-# Set true to ask Jev, TypeSafe's decision model, for the verdict on a thread
-# in someone else's PR, instead of the summary model. Each verdict sends the
+# An unfinished experiment, not ready to use. Set true to ask Jev, TypeSafe's
+# decision model, for the verdict on a thread in someone else's PR, instead of
+# Sonnet (the verdict model). Each verdict sends the
 # thread to TypeSafe's API, with usernames swapped for stand-ins and URLs
 # removed; the API key is read from the macOS keychain item `typesafe-api`.
 # jev_verdicts = false

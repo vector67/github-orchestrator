@@ -98,7 +98,6 @@ export interface Fold {
   commits: FoldRange;
   title: string;
   pointing_title: string;
-  files_folded: boolean;
 }
 
 export interface CommitCheckView {
@@ -1058,7 +1057,6 @@ function foldOf(
     commits,
     title,
     pointing_title: POINTING_TITLE,
-    files_folded: false,
   };
 }
 
@@ -1121,14 +1119,12 @@ function questionFoldsOf(
       },
       title: last ? 'Since the last proposal' : 'Changes so far',
       pointing_title: '',
-      files_folded: false,
     },
     last_fold: last
       ? {
           commits: last,
           title: `Last proposal · ${short(last.head)}`,
           pointing_title: '',
-          files_folded: false,
         }
       : null,
   };
@@ -1351,7 +1347,6 @@ function changesFoldOf(
       ? `Pushed as ${short(sha)}`
       : `Proposed diff${files.length ? ` · ${counted(files.length, 'file')}` : ''}`,
     pointing_title: '',
-    files_folded: false,
   };
 }
 
@@ -1375,7 +1370,6 @@ function newPrFoldOf(
     },
     title: `${split.branch} into ${split.base}`,
     pointing_title: '',
-    files_folded: false,
   };
 }
 
@@ -1496,7 +1490,6 @@ function commitCheckOf(conversation: Conversation): {
       commits: { base: check.parent, head: check.sha },
       title: `Commit ${check.sha.slice(0, NAMED_SHA)}`,
       pointing_title: '',
-      files_folded: true,
     },
   };
 }

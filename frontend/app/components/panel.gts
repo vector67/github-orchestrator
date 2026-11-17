@@ -377,6 +377,7 @@ const PanelView: TOC<PanelSignature> = <template>
             <DiffSlot
               @conversationId={{@panel.id}}
               @commits={{@panel.last_fold.commits}}
+              @folded={{true}}
             />
           </details>
         {{/if}}
