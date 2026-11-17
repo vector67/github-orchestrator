@@ -208,6 +208,29 @@ def test_a_fault_to_fix_notifies_again_after_a_good_cycle_ends_the_streak(settin
     assert len(desktop.announcements) == 2
 
 
+def test_a_streak_that_turns_into_a_fault_to_fix_past_the_third_cycle_notifies_once(settings):
+    desktop = FakeDesktop()
+    for _ in range(3):
+        _fail_once(settings, NO_SUCH_HOST, desktop)
+    for _ in range(2):
+        _fail_once(settings, NO_TOKEN, desktop)
+
+    [notification] = desktop.announcements
+    assert "4 cycles in a row failed" in notification.body
+
+
+def test_a_streak_carried_over_past_three_notifies_once_at_its_next_fault_to_fix(settings):
+    settings.watcher_failures.write_text(
+        json.dumps({"consecutive": 5, "last_error": "poll blew up", "fix": None}))
+    desktop = FakeDesktop()
+
+    for _ in range(2):
+        _fail_once(settings, "poll blew up", desktop)
+
+    [notification] = desktop.announcements
+    assert "6 cycles in a row failed" in notification.body
+
+
 def test_a_network_fault_never_notifies(settings):
     desktop, _ = _forever(settings, _searches(settings, RuntimeError(NO_SUCH_HOST)), 4)
 

@@ -71,17 +71,20 @@ class CycleSaving:
             error = _one_line(exc)
             diagnosis = diagnose(error, names_in(self._config))
             fix = self._fix(diagnosis)
-            if (self._cycles.failed(error, fix) == NOTIFY_AT
-                    and diagnosis.cause is Cause.OPERATOR):
-                self._polling.failed(NOTIFY_AT, error, fix, self._config.log_file)
+            consecutive = self._cycles.failed(error, fix)
+            if (consecutive >= NOTIFY_AT and diagnosis.cause is Cause.OPERATOR
+                    and self._cycles.first_telling()):
+                self._polling.failed(consecutive, error, fix, self._config.log_file)
         except Exception:
             log.exception("Could not report the failed cycle")
 
     def mentions_unread(self, exc: BaseException) -> None:
         error = _one_line(exc)
-        if (self._searches.failed(error, None) == NOTIFY_AT
-                and diagnose(error, names_in(self._config)).cause is Cause.OPERATOR):
-            self._polling.mentions_failed(NOTIFY_AT, error, self._config.log_file)
+        consecutive = self._searches.failed(error, None)
+        if (consecutive >= NOTIFY_AT
+                and diagnose(error, names_in(self._config)).cause is Cause.OPERATOR
+                and self._searches.first_telling()):
+            self._polling.mentions_failed(consecutive, error, self._config.log_file)
 
     def mentions_read(self) -> None:
         self._searches.ended()
