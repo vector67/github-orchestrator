@@ -92,9 +92,9 @@ the range is `LAST..REL`.
     path or the docs, or leaks private information. Rank findings by how much they
     hurt in the release as it ships, never by which commit introduced them: an old
     bug weighs the same as a new one. Put the confirmed findings in front of the
-    user on a decision page whose picks reach Claude (fix before the release, fix in
-    the next patch, fix later, dismiss, or fixed already), and fix nothing until they
-    have picked. Fix each one picked for the release through `normal-workflow`
+    user with the `triage-as-stories` skill, whose picks reach Claude (fix before
+    the release, fix in the next patch, fix later, dismiss), and fix nothing until
+    they have picked. Fix each one picked for the release through `normal-workflow`
     targeting `REL`, and push `REL` and then `main` with `push-properly`. File every other
     finding as a GitHub issue whose body starts with 🤖, and keep the links for
     step 9.

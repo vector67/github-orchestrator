@@ -1289,7 +1289,7 @@ const AUTHOR_OFFERS: Record<Phase, Decision[]> = {
   'landing failed': LANDING_AGAIN,
   'reply failed': LANDING_AGAIN,
   'filing failed': LANDING_AGAIN,
-  declined: ['rework', 'resolve', 'defer'],
+  declined: ['rework', 'resolve', 'mark-done', 'defer'],
   failed: GAVE_UP,
   stopped: GAVE_UP,
   answered: TRY_AGAIN,

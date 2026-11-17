@@ -26,7 +26,7 @@ from github_orchestrator.github import (
     ReviewState,
     ThreadComment,
 )
-from github_orchestrator.github.fake import Review
+from github_orchestrator.github.fake import Review, ThreadAnchor
 from github_orchestrator.notifications.fake import AgentSkipped, FakeNotifications
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -294,6 +294,26 @@ def test_a_review_request_after_your_review_starts_a_re_review_of_what_changed_s
     assert work.replied == (("src/upload.py", 42, (
         FixComment(settings.config.gh_account, "This retries forever.", REVIEWED_AT),
         FixComment("alice", "Now it retries once.", REPLIED_AT))),)
+
+
+def test_a_review_request_after_your_review_checks_every_thread_waiting_on_the_author_for_fixes(
+        settings, tmp_path, working_copies):
+    manager, _ = _reviewed_before(settings, tmp_path, working_copies,
+                                  ReviewState.CHANGES_REQUESTED)
+    reviewed, pushed = working_copies.origin["main"], working_copies.branches["PROJ-123-fix"]
+    working_copies.origin["PROJ-123-fix"] = pushed
+    _on_github(manager.github, "PRRT_waiting",
+               said(306, "Log the retry.", author=settings.config.gh_account,
+                    created_at=REVIEWED_AT),
+               path="README", line=1, anchor=ThreadAnchor(original_commit=reviewed))
+    hear(manager.conversation_managers.of(THE_PR))
+    manager.agent_runs.give("their-move", key="PRRT_waiting")
+    manager.event_queue.add(THE_PR, review_requested("Fix bug", "https://example.com"))
+
+    manager.run()
+
+    [asked] = manager.agent_runs.fix_checks_asked()
+    assert (asked.key, asked.base, asked.head) == ("PRRT_waiting", reviewed, pushed)
 
 
 def test_a_review_request_after_only_a_pending_review_starts_a_first_review(

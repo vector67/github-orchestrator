@@ -109,6 +109,7 @@ module('Acceptance | Resolve and Mark done', function (hooks) {
     assert.deepEqual(await authorIn(board(), 'declined'), [
       'rework✦⧉',
       'resolve⧉',
+      'mark-done',
       'defer⧉',
     ]);
     assert.strictEqual(labelOf('resolve'), 'Resolve');
