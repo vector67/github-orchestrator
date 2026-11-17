@@ -342,7 +342,9 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'agent-on-bot-comments':
       return `Agent is fixing ${plural(bot.agentOn, 'bot thread')}`;
     case 'send-review':
-      return 'Send your review';
+      return move.state === 'rereview'
+        ? 'Send your re-review'
+        : 'Send your review';
     case 'agent-running':
       return `Agent is ${doingOf(agent.event)}`;
     case 'agent-on-threads':

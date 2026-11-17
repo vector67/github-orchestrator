@@ -3368,6 +3368,19 @@
     "mention": {
      "type": "boolean"
     },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_by": {
+     "type": "string"
+    },
     "operations": {
      "items": {
       "$ref": "#/components/schemas/OperationSummary"
@@ -3436,6 +3449,8 @@
     "mention",
     "updated_at",
     "author_kind",
+    "opened_by",
+    "opened_at",
     "unread",
     "record_state",
     "commit_check",
@@ -9376,6 +9391,19 @@
     "mention": {
      "type": "boolean"
     },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_by": {
+     "type": "string"
+    },
     "record_state": {
      "$ref": "#/components/schemas/RecordState"
     },
@@ -9398,6 +9426,8 @@
     "state",
     "record_state",
     "author_kind",
+    "opened_by",
+    "opened_at",
     "updated_at",
     "mention"
    ],

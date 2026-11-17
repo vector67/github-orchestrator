@@ -209,6 +209,8 @@ def test_the_collection_answers_a_threads_stored_facts():
         "mention": False,
         "updated_at": MOMENT,
         "author_kind": "human",
+        "opened_by": "reviewer",
+        "opened_at": EARLIER,
         "unread": False,
         "record_state": "open",
         "commit_check": None,

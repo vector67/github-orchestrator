@@ -64,6 +64,14 @@ export type Phase =
   keyof (typeof RECORDED)['author'] | keyof (typeof RECORDED)['reviewer'];
 
 export function thread(over: Partial<Conversation> = {}): Conversation {
+  const comments = over.comments ?? [
+    {
+      id: 1,
+      author: 'anna',
+      created_at: '2026-09-12T10:00:00Z',
+      review_state: 'CHANGES_REQUESTED',
+    },
+  ];
   return {
     key: 'PRRT_a',
     github_node_id: 'PRRT_a',
@@ -88,18 +96,13 @@ export function thread(over: Partial<Conversation> = {}): Conversation {
       is_outdated: false,
     },
     gist: 'rename the helper',
-    comments: [
-      {
-        id: 1,
-        author: 'anna',
-        created_at: '2026-09-12T10:00:00Z',
-        review_state: 'CHANGES_REQUESTED',
-      },
-    ],
+    comments,
     operations: [],
     mention: false,
     updated_at: null,
     author_kind: 'human',
+    opened_by: comments[0]?.author ?? 'anna',
+    opened_at: comments[0]?.created_at ?? null,
     unread: false,
     record_state: 'open',
     commit_check: null,
@@ -346,8 +349,19 @@ export function threadRow(
   author_kind: AuthorKind,
   updated_at = '2026-10-08T08:00:00Z',
   mention = false,
+  opened_by = 'anna',
+  opened_at: string | null = '2026-09-12T10:00:00Z',
 ): ThreadRow {
-  return { key, state, record_state, author_kind, updated_at, mention };
+  return {
+    key,
+    state,
+    record_state,
+    author_kind,
+    opened_by,
+    opened_at,
+    updated_at,
+    mention,
+  };
 }
 
 export function check(
@@ -1314,6 +1328,8 @@ export class FakeBoard {
         state: row.state,
         record_state: row.record_state,
         author_kind: row.author_kind,
+        opened_by: row.opened_by,
+        opened_at: row.opened_at,
         updated_at: row.updated_at,
         mention: row.mention,
       }),
@@ -1332,6 +1348,8 @@ export class FakeBoard {
           one.author_kind,
           one.updated_at ?? undefined,
           one.mention,
+          one.opened_by,
+          one.opened_at,
         ),
       ),
       unreadable: this.unreadable,

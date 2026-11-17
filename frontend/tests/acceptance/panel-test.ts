@@ -1106,7 +1106,7 @@ module('Acceptance | panel', function (hooks) {
       .hasText('attempt 3 of 3 failed: the agent gave up: tests failed twice');
   });
 
-  test('an assumed done thread on your PR gives the agent’s reason above the footer, then its proposal to skip', async function (assert) {
+  test('an assumed done thread on your PR gives the agent’s proposal to skip, then its reason, in the column beside the diff', async function (assert) {
     board().conversations = [board().threadIn('assumed-done', { key: KEY })];
     board().operations[KEY] = [
       operation({
@@ -1123,18 +1123,10 @@ module('Acceptance | panel', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert
-      .dom('[data-test-agent-reason]')
+      .dom('#panel-fix [data-test-agent-reason]')
       .hasText('thanks the author, asks for nothing');
-    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+    assert.dom('#panel-fix [data-test-agent-proposal]').hasText('Skip');
     assert.dom('[data-test-notes] .verdict').doesNotExist();
-    assert.true(
-      Boolean(
-        document
-          .querySelector('[data-test-agent-line]')
-          ?.nextElementSibling?.matches('#panel-actions'),
-      ),
-      'the agent’s line sits right above the footer',
-    );
     await click('[data-test-decision="confirm"]');
     assert.strictEqual(board().posted[0]!.verb, 'confirm');
   });
@@ -1470,6 +1462,7 @@ module('Acceptance | panel', function (hooks) {
     );
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-fold-all]');
     const panel = document.querySelector('#panel') as HTMLElement;
     const thread = document.querySelector('#panel-thread') as HTMLElement;
     panel.scrollTop = 80;
@@ -1555,6 +1548,7 @@ module('Acceptance | panel | the thread in time', function (hooks) {
       ...Array.from({ length: 60 }, (_, i) => added(i + 1, `line ${i}`)),
     );
     await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-fold-all]');
     const panel = document.querySelector('#panel') as HTMLElement;
     const pane = document.querySelector('#panel-thread') as HTMLElement;
     panel.scrollTop = 80;
