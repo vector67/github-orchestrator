@@ -672,15 +672,31 @@ def test_each_missing_shipped_skill_is_a_warning_fixed_by_the_skill_command(
     assert missing.fix == "github-orchestrator skill"
 
 
-def test_a_connected_atlassian_server_is_ok(machine, run_cli):
-    machine.system.mcp_list = CONNECTED
+JIRA = 'tracker = "jira"\ntracker_project = "PROJ"\n'
+
+
+@pytest.fixture
+def jira(machine):
+    machine.configure(JIRA)
+    return machine
+
+
+def test_without_a_jira_tracker_the_atlassian_server_is_not_asked_about(machine, run_cli):
+    ran = run_cli("doctor")
+
+    assert "Atlassian" not in ran.out
+    assert not [call for call in machine.system.calls if call.cmd[-2:] == ["mcp", "list"]]
+
+
+def test_a_connected_atlassian_server_is_ok(jira, run_cli):
+    jira.system.mcp_list = CONNECTED
 
     ran = run_cli("doctor")
 
     assert _finding(ran.out, "Atlassian MCP server is connected").level == "ok"
 
 
-def test_a_missing_atlassian_server_is_a_warning(machine, run_cli):
+def test_a_missing_atlassian_server_is_a_warning(jira, run_cli):
     ran = run_cli("doctor")
 
     missing = _finding(ran.out, "Atlassian MCP server")
@@ -688,16 +704,16 @@ def test_a_missing_atlassian_server_is_a_warning(machine, run_cli):
     assert "claude mcp add" in missing.fix
 
 
-def test_an_atlassian_server_that_needs_authentication_is_a_warning(machine, run_cli):
-    machine.system.mcp_list = "claude.ai Atlassian MCP: https://mcp.atlassian.com/v2/mcp - ! Needs authentication\n"
+def test_an_atlassian_server_that_needs_authentication_is_a_warning(jira, run_cli):
+    jira.system.mcp_list = "claude.ai Atlassian MCP: https://mcp.atlassian.com/v2/mcp - ! Needs authentication\n"
 
     ran = run_cli("doctor")
 
     assert _finding(ran.out, "Atlassian MCP server is not connected").level == "warn"
 
 
-def test_a_failing_mcp_list_says_the_atlassian_server_could_not_be_checked(machine, run_cli):
-    machine.system.mcp_list_exit = 1
+def test_a_failing_mcp_list_says_the_atlassian_server_could_not_be_checked(jira, run_cli):
+    jira.system.mcp_list_exit = 1
 
     ran = run_cli("doctor")
 
@@ -935,7 +951,7 @@ def test_a_healthy_install_is_all_ok_and_exits_0(machine, run_cli, tmp_path, clo
 
 
 def test_a_claude_command_with_settings_in_front_is_looked_for_by_its_program(machine, run_cli):
-    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n')
+    machine.configure('agent_command = "CLAUDE_CONFIG_DIR=~/.claude-work claude"\n' + JIRA)
     machine.system.mcp_list = CONNECTED
 
     ran = run_cli("doctor")

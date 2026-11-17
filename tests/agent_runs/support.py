@@ -27,7 +27,8 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
                     command: str = "claude", agent: Agent = Agent.CLAUDE,
                     model: str = MODEL, jev: ScriptedJev | None = None,
                     clamp: tuple[str, ...] = (),
-                    working_copies: FakeWorkingCopies | None = None) -> History:
+                    working_copies: FakeWorkingCopies | None = None,
+                    jira_tickets: bool = True) -> History:
     history: History = wire(
         fake_provider(PrProcesses, world.pr_processes),
         fake_provider(WorkingCopies, working_copies or FakeWorkingCopies()),
@@ -37,7 +38,8 @@ def real_agent_runs(world: FakeAgentRuns, claude: ScriptedClaude, data: Path,
         AgentRunsWiring(claude.popen, claude.run, jev.ask if jev else None, agent=agent, command=command, model=model,
                         summary_model=summary_model, pytest_workers=PYTEST_WORKERS,
                         transcripts_dir=data / "transcripts",
-                        runs_log=data / "runs.jsonl", clamp=clamp),
+                        runs_log=data / "runs.jsonl", clamp=clamp,
+                        jira_tickets=jira_tickets),
     ).get(History)
     return history
 

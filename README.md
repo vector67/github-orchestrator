@@ -120,7 +120,7 @@ the wall has pull requests it shows a short tour, which
 
 `github-orchestrator doctor` checks the machine first: the install, whether a
 newer release is out, the command on your `PATH`, the skill, the agent (for
-Claude, whether the Atlassian MCP server is connected; for Codex, whether it is
+Claude with a Jira tracker, whether the Atlassian MCP server is connected; for Codex, whether it is
 logged in) and desktop notifications. Then, for every instance, it checks the
 config, the hub's port, the requirements on your `PATH` and on the service's, the
 service itself, GitHub, each repo's clone, the hub and the watcher. It prints the
