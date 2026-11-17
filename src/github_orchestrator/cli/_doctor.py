@@ -15,7 +15,11 @@ from github_orchestrator.cli._install_checks import (
     agent_findings,
     requirements_for,
 )
-from github_orchestrator.cli._poll_failures import mentions_finding, watcher_finding
+from github_orchestrator.cli._poll_failures import (
+    mentions_finding,
+    watcher_finding,
+    watcher_fix,
+)
 from github_orchestrator.cli._service import RESTART, Service
 from github_orchestrator.cli._skill import skill_findings
 from github_orchestrator.cli._status import ago
@@ -169,7 +173,9 @@ class InstanceChecks:
         if health.last_error is not None:
             good = ("no poll has ever succeeded" if since is None
                     else f"last good poll {ago(since)} ago")
-            return watcher_finding(health.last_error, health.last_error_cause, health.fix, good)
+            fix = watcher_fix(health.last_error_fault, health.account, health.hidden_repo,
+                              health.config_path)
+            return watcher_finding(health.last_error, health.last_error_cause, fix, good)
         if not (answer is not None or health.alive):
             return fail("the watcher is not running", RESTART)
         if since is None:

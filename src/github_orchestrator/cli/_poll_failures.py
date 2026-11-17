@@ -1,5 +1,5 @@
 from github_orchestrator.cli._findings import Finding, fail, warn
-from github_orchestrator.domain import Cause
+from github_orchestrator.domain import Cause, Fault, Repo
 
 RETRYING = "can't reach GitHub, retrying each poll"
 CLEARS_ITSELF = "none needed; the next poll that reaches GitHub clears it"
@@ -8,6 +8,23 @@ WHOLE_ERROR = "github-orchestrator logs shows the whole error"
 
 def one_line(text: str) -> str:
     return " ".join(text.split())
+
+
+def watcher_fix(fault: Fault | None, account: str, hidden_repo: Repo | None,
+                config: str) -> str | None:
+    match fault:
+        case Fault.LOGIN:
+            return (f"GitHub turned down the login for {account}. "
+                    f"Run `gh auth login` as {account}.")
+        case Fault.DISK:
+            return "The disk is full. Free some space and the watcher carries on."
+        case Fault.ACCESS if hidden_repo is not None:
+            return (f"You can't see {hidden_repo} as {account}. Remove it from [[repos]] "
+                    f"in {config}, or ask for access.")
+        case Fault.ACCESS:
+            return (f"GitHub refused a request as {account}. Check [[repos]] and "
+                    f"gh_account in {config}.")
+    return None
 
 
 def poll_failure(error: str, cause: Cause | None, fix: str | None) -> str:

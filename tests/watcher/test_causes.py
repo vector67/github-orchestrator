@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from github_orchestrator.domain import Cause, Repo
+from github_orchestrator.domain import Cause, Fault, Repo
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.watcher.support import health
 
@@ -35,8 +35,8 @@ REAL_ERRORS = [
 ]
 
 
-def _failing(path, error, fix=None):
-    path.write_text(json.dumps({"consecutive": 2, "last_error": error, "fix": fix}))
+def _failing(path, error, **kept):
+    path.write_text(json.dumps({"consecutive": 2, "last_error": error, **kept}))
 
 
 @pytest.mark.parametrize(("error", "cause"), REAL_ERRORS)
@@ -54,11 +54,11 @@ def test_a_failing_mentions_search_names_its_cause_the_same_way(settings, error,
     assert health(settings).mentions_error_cause is cause
 
 
-def test_a_network_fault_carries_no_fix_even_from_a_record_that_kept_one(settings):
-    _failing(settings.watcher_failures, 'Post "https://api.github.com/graphql": unexpected EOF',
-             fix="Log in with `gh auth login`, then this page retries.")
+def test_a_record_that_kept_its_fault_is_read_by_it(settings):
+    _failing(settings.watcher_failures, "watcher cannot search", fault="login")
 
-    assert (health(settings).last_error_cause, health(settings).fix) == (Cause.NETWORK, None)
+    assert (health(settings).last_error_fault, health(settings).last_error_cause) == (
+        Fault.LOGIN, Cause.OPERATOR)
 
 
 TELLING_NAMES = {"gh_account": "tls-timeout-bot",

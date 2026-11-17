@@ -2684,7 +2684,7 @@ module('Acceptance | wall', function (hooks) {
       watcher: {
         last_error: 'gh auth token --user octocat failed (exit 1)',
         last_error_cause: 'operator',
-        fix: 'Run `gh auth login` as octocat.',
+        last_error_fault: 'login',
       },
     });
 
@@ -2697,7 +2697,9 @@ module('Acceptance | wall', function (hooks) {
       .includesText('The watcher’s polls are failing.');
     assert
       .dom('[data-test-wall-fix]')
-      .hasText('Run `gh auth login` as octocat.');
+      .hasText(
+        'GitHub turned down the login for octocat. Run `gh auth login` as octocat.',
+      );
     assert
       .dom('[data-test-wall-error]')
       .hasText('gh auth token --user octocat failed (exit 1)');

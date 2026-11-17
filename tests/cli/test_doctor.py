@@ -426,16 +426,16 @@ def test_a_failing_watcher_names_its_last_error(machine, run_cli):
     assert failing.fix == "github-orchestrator logs shows the whole error"
 
 
-def test_a_watcher_fault_to_fix_gives_the_fix_the_watcher_recorded(machine, run_cli):
+def test_a_watcher_fault_to_fix_gives_what_to_do_about_it(machine, run_cli):
     _beat(machine, 600)
     machine.settings().watcher_failures.write_text(json.dumps(
-        {"consecutive": 3, "last_error": "HTTP 401: Bad credentials",
-         "fix": "run gh auth login as octocat"}))
+        {"consecutive": 3, "last_error": "HTTP 401: Bad credentials", "fault": "login"}))
     with _watcher_lock(machine):
         ran = run_cli("doctor")
 
     failing = _finding(ran.out, "HTTP 401: Bad credentials")
-    assert (failing.level, failing.fix) == ("FAIL", "run gh auth login as octocat")
+    assert (failing.level, failing.fix) == (
+        "FAIL", "GitHub turned down the login for octocat. Run `gh auth login` as octocat.")
 
 
 def test_a_watcher_that_cannot_reach_github_is_a_warning_that_clears_itself(machine, run_cli):

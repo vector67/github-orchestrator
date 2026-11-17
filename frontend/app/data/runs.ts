@@ -51,6 +51,22 @@ function secondsUntil(iso: string, now: number): number {
 
 export const RETRYING = "can't reach GitHub, retrying each poll";
 
+export function fixOf(watcher: WatcherHealth): string | null {
+  const { account, config_path: config, hidden_repo: hidden } = watcher;
+  switch (watcher.last_error_fault) {
+    case 'login':
+      return `GitHub turned down the login for ${account}. Run \`gh auth login\` as ${account}.`;
+    case 'disk':
+      return 'The disk is full. Free some space and the watcher carries on.';
+    case 'access':
+      return hidden
+        ? `You can't see ${hidden} as ${account}. Remove it from [[repos]] in ${config}, or ask for access.`
+        : `GitHub refused a request as ${account}. Check [[repos]] and gh_account in ${config}.`;
+    default:
+      return null;
+  }
+}
+
 export function pollOf(
   watcher: WatcherHealth,
   state: HubState | null,
@@ -63,7 +79,7 @@ export function pollOf(
       return { text: RETRYING, alarm: true };
     }
     return {
-      text: `polls failing: ${watcher.fix ?? watcher.last_error}`,
+      text: `polls failing: ${fixOf(watcher) ?? watcher.last_error}`,
       alarm: true,
     };
   }
@@ -169,8 +185,9 @@ export function factsOf(
       alarm: true,
     });
   }
-  if (watcher.fix) {
-    facts.push({ label: 'Fix', text: watcher.fix, alarm: true });
+  const fix = fixOf(watcher);
+  if (fix) {
+    facts.push({ label: 'Fix', text: fix, alarm: true });
   }
   if (watcher.mentions_error) {
     facts.push({

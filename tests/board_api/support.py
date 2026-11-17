@@ -248,7 +248,7 @@ class Pulse:
 
 
 POLLED = Health(alive=True, polled_at=at(MOMENT)() - timedelta(seconds=20), read_at=at(MOMENT)(),
-                last_error=None, fix=None, polls_every=timedelta(minutes=1))
+                last_error=None, polls_every=timedelta(minutes=1))
 
 
 @dataclass

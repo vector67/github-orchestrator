@@ -8,7 +8,7 @@ import pytest
 
 from github_orchestrator.desktop import Badge, Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
-from github_orchestrator.domain import Repo
+from github_orchestrator.domain import Fault, Repo
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import Runs
 from github_orchestrator.settings.fake import RepoEntry, fake_settings
@@ -374,7 +374,7 @@ def test_the_next_poll_is_due_a_poll_interval_after_the_last(settings):
 
 def test_a_poll_gap_past_two_intervals_and_the_grace_is_overdue():
     late = Health(alive=True, polled_at=NOW - timedelta(seconds=241), read_at=NOW,
-                  last_error=None, fix=None, polls_every=timedelta(minutes=1))
+                  last_error=None, polls_every=timedelta(minutes=1))
 
     assert late.overdue
 
@@ -382,9 +382,9 @@ def test_a_poll_gap_past_two_intervals_and_the_grace_is_overdue():
 def test_the_overdue_threshold_scales_with_the_poll_interval():
     polls_every = timedelta(minutes=5)
     within = Health(alive=True, polled_at=NOW - timedelta(minutes=11), read_at=NOW,
-                    last_error=None, fix=None, polls_every=polls_every)
+                    last_error=None, polls_every=polls_every)
     past = Health(alive=True, polled_at=NOW - timedelta(minutes=13), read_at=NOW,
-                  last_error=None, fix=None, polls_every=polls_every)
+                  last_error=None, polls_every=polls_every)
 
     assert (within.overdue, past.overdue) == (False, True)
 
@@ -420,40 +420,44 @@ def test_an_interrupted_count_keeps_the_old_record_and_leaves_no_partial_file(
     assert list(settings.watcher_failures.parent.glob("*.writing")) == []
 
 
-def test_a_cycle_failing_while_gh_has_no_token_for_the_account_says_to_log_in(settings):
+def _fault(settings):
+    reported = health(settings)
+    return reported.last_error_fault, reported.hidden_repo
+
+
+def test_a_cycle_failing_while_gh_has_no_token_for_the_account_is_a_login_fault(settings):
     _forever(settings, _searches(settings, RuntimeError(NO_TOKEN)), 1)
 
-    account = settings.config.gh_account
-    assert health(settings).fix == (
-        f"GitHub turned down the login for {account}. Run `gh auth login` as {account}.")
+    assert _fault(settings) == (Fault.LOGIN, None)
 
 
-def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo_and_the_account(
-    settings,
-):
+def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo(settings):
     _forever(settings, Searches(settings.config.gh_account, "someone/else"), 1)
 
-    assert health(settings).fix == (
-        f"You can't see octocat/hello-world as {settings.config.gh_account}. Remove it "
-        f"from [[repos]] in {settings.config_path}, or ask for access.")
+    assert _fault(settings) == (Fault.ACCESS, Repo("octocat", "hello-world"))
 
 
-def test_a_refusal_naming_no_repo_the_account_cannot_see_points_at_the_config(settings):
+def test_a_refusal_naming_no_repo_the_account_cannot_see_names_none(settings):
     _forever(settings, _searches(settings, RuntimeError("gh: Not Found (HTTP 404)")), 1)
 
-    account = settings.config.gh_account
-    assert health(settings).fix == (
-        f"GitHub refused a request as {account}. Check [[repos]] and gh_account "
-        f"in {settings.config_path}.")
+    assert _fault(settings) == (Fault.ACCESS, None)
 
 
-def test_a_cycle_failing_for_a_reason_gh_and_github_do_not_explain_has_no_fix(settings):
+def test_a_cycle_failing_for_a_reason_gh_and_github_do_not_explain_is_unknown(settings):
     _forever(settings, _searches(settings, RuntimeError("poll blew up")), 1)
 
-    assert health(settings).fix is None
+    assert _fault(settings) == (Fault.UNKNOWN, None)
 
 
-def test_a_failure_record_written_before_fixes_were_kept_reads_with_no_fix(settings):
-    settings.watcher_failures.write_text(json.dumps({"consecutive": 4, "last_error": "gone"}))
+def test_a_failure_record_written_before_faults_were_kept_is_diagnosed_from_its_error(settings):
+    settings.watcher_failures.write_text(json.dumps(
+        {"consecutive": 4, "last_error": "HTTP 401: Bad credentials", "fix": "log in"}))
 
-    assert health(settings).fix is None
+    assert _fault(settings) == (Fault.LOGIN, None)
+
+
+def test_the_health_names_the_account_and_the_config_a_fix_is_worded_from(settings):
+    reported = health(settings)
+
+    assert (reported.account, reported.config_path) == (
+        settings.config.gh_account, str(settings.config_path))

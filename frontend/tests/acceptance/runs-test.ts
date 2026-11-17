@@ -147,7 +147,7 @@ module('Acceptance | runs', function (hooks) {
         ...polledAt().watcher,
         last_error: 'HTTP 401: Bad credentials',
         last_error_cause: 'operator',
-        fix: 'Run `gh auth login` as octocat.',
+        last_error_fault: 'login',
       },
     });
     clock().now = POLLED + 19_000;
@@ -156,7 +156,7 @@ module('Acceptance | runs', function (hooks) {
 
     assert.strictEqual(
       text('[data-test-health="poll"]'),
-      'polls failing: Run `gh auth login` as octocat.',
+      'polls failing: GitHub turned down the login for octocat. Run `gh auth login` as octocat.',
     );
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
@@ -168,6 +168,7 @@ module('Acceptance | runs', function (hooks) {
         ...polledAt().watcher,
         last_error: 'poll blew up',
         last_error_cause: 'operator',
+        last_error_fault: 'unknown',
       },
     });
     clock().now = POLLED + 19_000;
@@ -520,7 +521,7 @@ module('Acceptance | runs', function (hooks) {
         ...polledAt().watcher,
         last_error: 'HTTP 401: Bad credentials',
         last_error_cause: 'operator',
-        fix: 'Run `gh auth login` as octocat.',
+        last_error_fault: 'login',
       },
     });
 
@@ -528,7 +529,26 @@ module('Acceptance | runs', function (hooks) {
 
     assert.deepEqual(facts(['Last error', 'Fix']), [
       'Last error HTTP 401: Bad credentials',
-      'Fix Run `gh auth login` as octocat.',
+      'Fix GitHub turned down the login for octocat. Run `gh auth login` as octocat.',
+    ]);
+  });
+
+  test('the fix for a repo the account cannot see names the repo and the config', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'gh: Not Found (HTTP 404)',
+        last_error_cause: 'operator',
+        last_error_fault: 'access',
+        hidden_repo: 'acme/widgets',
+      },
+    });
+
+    await visit('/runs');
+
+    assert.deepEqual(facts(['Fix']), [
+      "Fix You can't see acme/widgets as octocat. Remove it from [[repos]] in /home/octocat/config.toml, or ask for access.",
     ]);
   });
 

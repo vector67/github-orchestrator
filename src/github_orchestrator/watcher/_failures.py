@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from github_orchestrator.atomic_write import write_atomically
+from github_orchestrator.domain import Fault
 
 log = logging.getLogger(__name__)
 
@@ -14,21 +15,24 @@ log = logging.getLogger(__name__)
 class WatcherFailures:
     consecutive: int
     last_error: str
-    fix: str | None
+    fault: Fault | None = None
+    hidden_repo: str | None = None
     told: bool = False
 
 
-NO_FAILURES = WatcherFailures(consecutive=0, last_error="", fix=None)
+NO_FAILURES = WatcherFailures(consecutive=0, last_error="")
 
 
 def read_failures(path: Path) -> WatcherFailures:
     try:
         data = json.loads(path.read_text())
-        fix = data.get("fix")
+        fault = data.get("fault")
+        hidden_repo = data.get("hidden_repo")
         return WatcherFailures(
             consecutive=int(data["consecutive"]),
             last_error=str(data["last_error"]),
-            fix=fix if isinstance(fix, str) else None,
+            fault=Fault(fault) if fault in set(Fault) else None,
+            hidden_repo=hidden_repo if isinstance(hidden_repo, str) else None,
             told=data.get("told") is True,
         )
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
@@ -39,15 +43,18 @@ def _write(path: Path, failures: WatcherFailures) -> None:
     write_atomically(path, json.dumps({
         "consecutive": failures.consecutive,
         "last_error": failures.last_error,
-        "fix": failures.fix,
+        "fault": failures.fault,
+        "hidden_repo": failures.hidden_repo,
         "told": failures.told,
     }).encode())
 
 
-def record_failure(path: Path, error: str, fix: str | None) -> WatcherFailures:
+def record_failure(path: Path, error: str, fault: Fault,
+                   hidden_repo: str | None) -> WatcherFailures:
     before = read_failures(path)
     failures = WatcherFailures(
-        consecutive=before.consecutive + 1, last_error=error, fix=fix, told=before.told,
+        consecutive=before.consecutive + 1, last_error=error, fault=fault,
+        hidden_repo=hidden_repo, told=before.told,
     )
     _write(path, failures)
     return failures
@@ -63,9 +70,9 @@ class Streak:
         self._unwritten = 0
         self._told = False
 
-    def failed(self, error: str, fix: str | None) -> int:
+    def failed(self, error: str, fault: Fault, hidden_repo: str | None = None) -> int:
         try:
-            return record_failure(self._path, error, fix).consecutive
+            return record_failure(self._path, error, fault, hidden_repo).consecutive
         except OSError:
             log.exception("Could not count the failure in %s", self._path)
             self._unwritten += 1

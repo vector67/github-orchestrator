@@ -258,5 +258,17 @@ class Cause(StrEnum):
     OPERATOR = "operator"
 
 
-__all__ = ["Cause", "DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+class Fault(StrEnum):
+    NETWORK = "network"
+    LOGIN = "login"
+    ACCESS = "access"
+    DISK = "disk"
+    UNKNOWN = "unknown"
+
+    @property
+    def cause(self) -> Cause:
+        return Cause.NETWORK if self is Fault.NETWORK else Cause.OPERATOR
+
+
+__all__ = ["Cause", "DismissUntil", "Fault","HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]

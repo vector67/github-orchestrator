@@ -4653,6 +4653,16 @@
    ],
    "type": "object"
   },
+  "Fault": {
+   "enum": [
+    "network",
+    "login",
+    "access",
+    "disk",
+    "unknown"
+   ],
+   "type": "string"
+  },
   "FieldError": {
    "properties": {
     "code": {
@@ -9486,7 +9496,13 @@
   },
   "WatcherHealth": {
    "properties": {
-    "fix": {
+    "account": {
+     "type": "string"
+    },
+    "config_path": {
+     "type": "string"
+    },
+    "hidden_repo": {
      "anyOf": [
       {
        "type": "string"
@@ -9516,6 +9532,16 @@
       }
      ]
     },
+    "last_error_fault": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Fault"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "mentions_error": {
      "anyOf": [
       {
@@ -9530,6 +9556,16 @@
      "anyOf": [
       {
        "$ref": "#/components/schemas/Cause"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "mentions_error_fault": {
+     "anyOf": [
+      {
+       "$ref": "#/components/schemas/Fault"
       },
       {
        "type": "null"
@@ -9565,10 +9601,14 @@
     "next_poll_at",
     "overdue",
     "last_error",
-    "fix",
     "mentions_error",
     "last_error_cause",
-    "mentions_error_cause"
+    "mentions_error_cause",
+    "last_error_fault",
+    "mentions_error_fault",
+    "hidden_repo",
+    "account",
+    "config_path"
    ],
    "type": "object"
   },
