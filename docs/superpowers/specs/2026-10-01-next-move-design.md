@@ -124,8 +124,9 @@ A draft's move is whatever the rest of the list gives, shown muted. There is no
 "Mark ready for review" step.
 
 A bot is a comment author on a fixed list: `claude`, `codex`, `copilot`.
-Everyone else is human. Your own comments and unsent drafts don't count toward
-A3 or A5, and drafts are never the next move on your own PR.
+Everyone else is human. On your own PR a thread from your own comment counts
+toward A3 and A5 like a human's; unsent drafts don't, and drafts are never the
+next move on your own PR.
 
 "Waiting on you" in A3 and A5 means one of these: a fix was proposed, the
 agent declined or failed, a push or reply failed, the reviewer answered back,

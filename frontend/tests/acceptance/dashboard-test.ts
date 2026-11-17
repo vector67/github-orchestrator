@@ -2152,6 +2152,27 @@ module('Acceptance | dashboard', function (hooks) {
       .hasText('GitHub 3 more the board does not track');
   });
 
+  test('the ready question lists a fix waiting on a thread from your own comment', async function (assert) {
+    board().conversations = [
+      thread({
+        key: 'PRRT_m',
+        state: 'ready',
+        author_kind: 'mine',
+        gist: 'rename the parser',
+      }),
+    ];
+    onTheHub({ facts: { draft: true } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('r');
+
+    assert
+      .dom(
+        '[data-test-outstanding="board"] [data-test-outstanding-item="PRRT_m"] .outstanding-what',
+      )
+      .hasText('rename the parser');
+  });
+
   test('Close is the last of the controls', async function (assert) {
     onTheHub({ facts: { draft: true } });
     await visit('/pr/o/r/7/dashboard');
