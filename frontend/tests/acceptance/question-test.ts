@@ -454,6 +454,22 @@ module('Acceptance | agent question', function (hooks) {
       .includesText('return clock_timestamp()');
   });
 
+  test('opening the last proposal shows its files open', async function (assert) {
+    seed(board());
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-last-proposal] summary');
+
+    const files = findAll(
+      '[data-test-last-proposal] [data-test-diff-file-fold]',
+    );
+    assert.true(files.length > 0, 'the last proposal draws its files');
+    assert.true(
+      files.every((one) => one.hasAttribute('open')),
+      'every file of the last proposal is open',
+    );
+  });
+
   test('a worktree with nothing past the last proposal says so', async function (assert) {
     seed(board());
     board().worktreeDiffs[KEY] = { ...board().worktreeDiffs[KEY]!, files: [] };

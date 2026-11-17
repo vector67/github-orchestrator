@@ -82,7 +82,7 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
     if (head) this.reveals.reveal(head, path, expand);
   };
 
-  openOf = (path: string): boolean | undefined => this.args.opened?.has(path);
+  openOf = (path: string): boolean => this.args.opened?.has(path) ?? true;
 
   toggled = (path: string, event: Event) => {
     const open = (event.target as HTMLDetailsElement).open;
