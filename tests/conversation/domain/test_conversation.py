@@ -996,6 +996,15 @@ def test_a_thread_you_opened_on_your_own_pr_is_listed_as_yours(settings):
     assert [row.author_kind for row in threads.counts().rows] == [AuthorKind.MINE]
 
 
+def test_each_row_names_who_opened_the_thread_and_when_they_first_commented(settings):
+    here = _here(settings)
+    threads = _open(here, _comment(author="carol"),
+                    _comment(id=5002, author="anna", created_at="2026-09-02T10:00:00Z"))
+
+    assert [(row.opened_by, row.opened_at) for row in threads.counts().rows] == [
+        ("carol", COMMENTED_AT)]
+
+
 def test_a_reply_by_the_opener_is_my_move_until_a_verdict_places_it(settings):
     here = _here(settings)
     threads = _reviewer(here, _comment(author="reviewer"),

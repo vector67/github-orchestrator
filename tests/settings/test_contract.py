@@ -190,3 +190,37 @@ def test_forgetting_a_pr_with_no_reviewer_pick_succeeds(switches):
     switches.picks.forget(a_pr(7, REPO))
 
     assert switches.picks.saved(a_pr(7, REPO)) is None
+
+
+def test_a_pr_has_no_re_request_queued_until_one_is_queued(switches):
+    assert switches.rerequests.queued(a_pr(7, REPO)) == ()
+
+
+def test_a_queued_re_request_waits_until_dropped(switches):
+    switches.rerequests.queue(a_pr(7, REPO), "carol")
+    switches.rerequests.queue(a_pr(7, REPO), "octocat")
+
+    assert switches.rerequests.queued(a_pr(7, REPO)) == ("carol", "octocat")
+
+    switches.rerequests.drop(a_pr(7, REPO), "carol")
+
+    assert switches.rerequests.queued(a_pr(7, REPO)) == ("octocat",)
+
+
+def test_a_reviewer_queued_twice_is_held_once(switches):
+    switches.rerequests.queue(a_pr(7, REPO), "carol")
+    switches.rerequests.queue(a_pr(7, REPO), "carol")
+
+    assert switches.rerequests.queued(a_pr(7, REPO)) == ("carol",)
+
+
+def test_a_re_request_waits_on_its_own_pr_only(switches):
+    switches.rerequests.queue(a_pr(7, REPO), "carol")
+
+    assert switches.rerequests.queued(a_pr(8, REPO)) == ()
+    assert switches.rerequests.queued(a_pr(7, "acme/other")) == ()
+
+
+def test_forgetting_a_pr_with_nothing_queued_succeeds(switches):
+    assert switches.rerequests.forget(a_pr(7, REPO)) is True
+    assert switches.rerequests.queued(a_pr(7, REPO)) == ()

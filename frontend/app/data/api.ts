@@ -242,6 +242,8 @@ export interface Conversation {
   mention: boolean;
   updated_at: string | null;
   author_kind: AuthorKind;
+  opened_by: string;
+  opened_at: string | null;
   unread: boolean;
   record_state: RecordState;
   commit_check: CommitCheck | null;
@@ -814,7 +816,9 @@ export interface PrFacts {
   ended: boolean;
   is_author: boolean | null;
   changes_requested_by: string[];
+  commented_by: string[];
   pending_reviewers: string[];
+  review_requested_at: Record<string, string>;
   ci_status: string;
   checks: CiCheck[];
   merge_state: MergeState | null;
@@ -1288,6 +1292,8 @@ export interface ThreadRow {
   state: ConversationState;
   record_state: RecordState;
   author_kind: AuthorKind;
+  opened_by: string;
+  opened_at: string | null;
   updated_at: string | null;
   mention: boolean;
 }

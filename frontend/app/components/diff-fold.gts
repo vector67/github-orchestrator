@@ -6,7 +6,10 @@ import DiffSlot from 'frontend/components/diff-slot';
 import { modifier } from 'ember-modifier';
 import type { Fold } from 'frontend/data/panel';
 import type KeysService from 'frontend/services/keys';
+import type StoreService from 'frontend/services/store';
 import type { Keymap } from 'frontend/services/keys';
+
+const OPEN_BELOW_LINES = 20;
 
 export interface DiffFoldSignature {
   Element: HTMLDivElement;
@@ -21,6 +24,53 @@ export default class DiffFold extends Component<DiffFoldSignature> {
   @service declare keys: KeysService;
 
   @tracked expanded = false;
+
+  @service declare store: StoreService;
+
+  @tracked private chosen: ReadonlySet<string> | null = null;
+
+  private get files() {
+    return this.store.diff(this.args.fold.commits)?.files ?? [];
+  }
+
+  private get paths(): string[] {
+    return this.files.map((one) => one.path);
+  }
+
+  private get small(): boolean {
+    const changed = this.files.reduce(
+      (sum, one) => sum + one.added + one.removed,
+      0,
+    );
+    return changed < OPEN_BELOW_LINES;
+  }
+
+  get opened(): ReadonlySet<string> {
+    return this.chosen ?? new Set(this.small ? this.paths : []);
+  }
+
+  get anyClosed(): boolean {
+    return this.paths.some((path) => !this.opened.has(path));
+  }
+
+  get anyOpen(): boolean {
+    return this.paths.some((path) => this.opened.has(path));
+  }
+
+  expandAll = () => {
+    this.chosen = new Set(this.paths);
+  };
+
+  collapseAll = () => {
+    this.chosen = new Set();
+  };
+
+  toggled = (path: string, open: boolean) => {
+    const next = new Set(this.opened);
+    if (open) next.add(path);
+    else next.delete(path);
+    this.chosen = next;
+  };
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
 
@@ -64,7 +114,7 @@ export default class DiffFold extends Component<DiffFoldSignature> {
 
   <template>
     <div
-      class="diff-frame"
+      class="diff-frame diff-fold"
       data-test-frame
       data-expanded={{if this.expanded "1"}}
       {{this.inserted}}
@@ -83,6 +133,22 @@ export default class DiffFold extends Component<DiffFoldSignature> {
           {{#if this.expanded}}
             <span class="esc-hint" data-test-esc-hint>Esc to close</span>
           {{/if}}
+          {{#if this.anyClosed}}
+            <button
+              type="button"
+              class="expand-diff"
+              data-test-expand-all
+              {{on "click" this.expandAll}}
+            >Expand all</button>
+          {{/if}}
+          {{#if this.anyOpen}}
+            <button
+              type="button"
+              class="expand-diff"
+              data-test-collapse-all
+              {{on "click" this.collapseAll}}
+            >Collapse all</button>
+          {{/if}}
           <button
             type="button"
             class="expand-diff"
@@ -95,7 +161,9 @@ export default class DiffFold extends Component<DiffFoldSignature> {
       <DiffSlot
         @conversationId={{@conversationId}}
         @commits={{@fold.commits}}
-        @folded={{@fold.files_folded}}
+        @folded={{true}}
+        @opened={{this.opened}}
+        @onToggle={{this.toggled}}
       />
     </div>
   </template>

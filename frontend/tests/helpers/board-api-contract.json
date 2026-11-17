@@ -3368,6 +3368,19 @@
     "mention": {
      "type": "boolean"
     },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_by": {
+     "type": "string"
+    },
     "operations": {
      "items": {
       "$ref": "#/components/schemas/OperationSummary"
@@ -3436,6 +3449,8 @@
     "mention",
     "updated_at",
     "author_kind",
+    "opened_by",
+    "opened_at",
     "unread",
     "record_state",
     "commit_check",
@@ -6784,6 +6799,12 @@
     "ci_status": {
      "type": "string"
     },
+    "commented_by": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
     "draft": {
      "type": "boolean"
     },
@@ -6885,6 +6906,12 @@
       }
      ]
     },
+    "review_requested_at": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "type": "object"
+    },
     "unresolved_threads": {
      "anyOf": [
       {
@@ -6904,7 +6931,9 @@
     "ended",
     "is_author",
     "changes_requested_by",
+    "commented_by",
     "pending_reviewers",
+    "review_requested_at",
     "ci_status",
     "checks",
     "merge_state",
@@ -9376,6 +9405,19 @@
     "mention": {
      "type": "boolean"
     },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_by": {
+     "type": "string"
+    },
     "record_state": {
      "$ref": "#/components/schemas/RecordState"
     },
@@ -9398,6 +9440,8 @@
     "state",
     "record_state",
     "author_kind",
+    "opened_by",
+    "opened_at",
     "updated_at",
     "mention"
    ],

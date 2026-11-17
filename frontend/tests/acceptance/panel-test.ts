@@ -1462,6 +1462,7 @@ module('Acceptance | panel', function (hooks) {
     );
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-expand-all]');
     const panel = document.querySelector('#panel') as HTMLElement;
     const thread = document.querySelector('#panel-thread') as HTMLElement;
     panel.scrollTop = 80;
@@ -1547,6 +1548,7 @@ module('Acceptance | panel | the thread in time', function (hooks) {
       ...Array.from({ length: 60 }, (_, i) => added(i + 1, `line ${i}`)),
     );
     await visit(`/pr/o/r/7/conversations/${KEY}`);
+    await click('[data-test-expand-all]');
     const panel = document.querySelector('#panel') as HTMLElement;
     const pane = document.querySelector('#panel-thread') as HTMLElement;
     panel.scrollTop = 80;

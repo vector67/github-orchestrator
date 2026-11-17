@@ -79,7 +79,8 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
         "notice": {"code": "close-refused", "detail": "gh: Not Found (HTTP 404)"},
         "standing": "answering",
         "facts": {"polled_at": "2026-06-10T10:30:00Z", "ended": False, "is_author": True,
-                  "changes_requested_by": [], "pending_reviewers": ["carol"],
+                  "changes_requested_by": [], "commented_by": [],
+                  "pending_reviewers": ["carol"], "review_requested_at": {},
                   "ci_status": "passing",
                   "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
                               "url": "https://ci/tests", "summary": "tests passed"}],
@@ -105,19 +106,24 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         merge_state="behind", viewer_requested=True, mentioned=True, mentions=(asked,),
         my_review="approved", my_review_at="2026-10-07T12:00:00Z", my_review_sha="c0ffee1",
         force_pushed_at="2026-10-07T13:00:00Z",
-        changes_requested_by=("bob",), review_decision="changes-requested", hidden=True,
+        changes_requested_by=("bob",), commented_by=("erin",),
+        review_requested_at={"carol": "2026-10-07T09:00:00Z"},
+        review_decision="changes-requested", hidden=True,
         importance=Importance.IMPORTANT, nudge_due=True,
         flags_changed_at="2026-10-08T09:01:00Z",
         unreadable_threads=(), threads_listed_at="2026-10-08T08:59:00Z",
         thread_rows=(ThreadRow(key="PRRT_1", standing="ready", state="open",
-                               author_kind=AuthorKind.BOT, updated_at="2026-10-08T08:30:00Z",
+                               author_kind=AuthorKind.BOT, opened_by="copilot[bot]",
+                               opened_at="2026-10-08T08:10:00Z", updated_at="2026-10-08T08:30:00Z",
                                mention=False),))
 
     answer = client_for(manager=FakeManagerPanel(now=drawn)).get("/api/dashboard").json()
 
     assert answer["facts"] == {
         "polled_at": "2026-10-08T09:00:00Z", "ended": False, "is_author": True,
-        "changes_requested_by": ["bob"], "pending_reviewers": ["carol"], "ci_status": "passing",
+        "changes_requested_by": ["bob"], "commented_by": ["erin"],
+        "pending_reviewers": ["carol"],
+        "review_requested_at": {"carol": "2026-10-07T09:00:00Z"}, "ci_status": "passing",
         "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
                     "url": "https://ci/tests", "summary": "tests passed"}],
         "merge_state": "behind", "draft": True, "review_decision": "changes-requested",
@@ -131,7 +137,8 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         "importance": "important", "nudge_due": True,
         "threads_live": 2, "agent_settings": None, "clean_up": None, "changed_at": "2026-10-08T09:01:00Z"}
     assert answer["threads"] == [{"key": "PRRT_1", "state": "ready", "record_state": "open",
-                                  "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z",
+                                  "author_kind": "bot", "opened_by": "copilot[bot]",
+                                  "opened_at": "2026-10-08T08:10:00Z", "updated_at": "2026-10-08T08:30:00Z",
                                   "mention": False}]
     assert answer["listed_at"] == "2026-10-08T08:59:00Z"
 

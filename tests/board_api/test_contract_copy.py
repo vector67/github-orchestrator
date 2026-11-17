@@ -71,6 +71,8 @@ def _ts(schema):
     if kind == "array":
         item = _ts(schema["items"])
         return f"({item})[]" if " | " in item else f"{item}[]"
+    if kind == "object" and isinstance(schema.get("additionalProperties"), dict):
+        return f"Record<string, {_ts(schema['additionalProperties'])}>"
     if kind == "object":
         return "{ " + " ".join(f"{line};" for line in _fields(schema)) + " }"
     return {"string": "string", "integer": "number", "number": "number",

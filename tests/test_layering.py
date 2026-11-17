@@ -363,7 +363,7 @@ PACKAGES = {
     ),
     "settings": Package(
         pinned=frozenset({"ConfigFile", "Dismissals", "Logs", "Holds", "Process",
-                          "ReviewerPicks"}),
+                          "Rerequests", "ReviewerPicks"}),
         wiring_skips=frozenset({"_paths"}),
     ),
     "terminal_sessions": Package(

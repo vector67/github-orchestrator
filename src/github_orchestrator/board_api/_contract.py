@@ -797,6 +797,11 @@ class Conversation(BaseModel):
     author_kind: AuthorKind = Field(
         description="Who opened the thread: the viewer, another person, or "
                     "one of the review bots. The only list of the bots.")
+    opened_by: str = Field(
+        description="The login of who opened the thread; the viewer's on a draft.")
+    opened_at: str | None = Field(
+        description="When the thread's first comment was written; on a draft, "
+                    "when it was drafted. Null on a record that holds neither.")
     unread: bool = Field(
         description="On a pull request the viewer did not write, the thread is "
                     "the viewer's move because no verdict has placed it yet: it "
@@ -2008,8 +2013,14 @@ class PrFacts(BaseModel):
         description="Whether the account is the author, the one answer to "
                     "whose pull request this is. Null where GitHub did not say.")
     changes_requested_by: list[str]
+    commented_by: list[str] = Field(
+        description="Reviewers whose review that stands only commented.")
     pending_reviewers: list[str] = Field(
         description="Reviewers asked for a review who have not given one.")
+    review_requested_at: dict[str, str] = Field(
+        description="When each reviewer was last asked to review: the poll "
+                    "that first saw them pending after they were not. A "
+                    "reviewer with no entry was never seen asked.")
     ci_status: str = Field(description="`passing`, `failing`, `pending`, or `none` when the head has no checks.")
     checks: list[CiCheck] = Field(description="Every check on the head commit.")
     merge_state: MergeState | None = Field(
@@ -2094,6 +2105,8 @@ class ThreadRow(BaseModel):
     state: ConversationState
     record_state: RecordState
     author_kind: AuthorKind
+    opened_by: str
+    opened_at: str | None
     updated_at: str | None = Field(
         description="When the record was last saved. A full conversation "
                     "with the same stamp is the fuller copy.")

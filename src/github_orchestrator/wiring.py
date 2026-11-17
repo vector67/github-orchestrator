@@ -164,6 +164,7 @@ from github_orchestrator.settings import (
     Holds,
     Logs,
     Process,
+    Rerequests,
     ReviewerPicks,
 )
 from github_orchestrator.settings._config import (
@@ -188,6 +189,7 @@ from github_orchestrator.settings._settings import Settings
 from github_orchestrator.settings._switches import (
     FlagFileDismissals,
     FlagFileHolds,
+    JsonFileRerequests,
     JsonFileReviewerPicks,
 )
 from github_orchestrator.terminal_sessions import Terminals, TerminalSessions
@@ -388,6 +390,10 @@ class SwitchesProvider(Provider):
     @provide
     def reviewer_picks(self, wiring: SwitchesWiring) -> ReviewerPicks:
         return JsonFileReviewerPicks(wiring.data_dir / "assign_when_ready")
+
+    @provide
+    def rerequests(self, wiring: SwitchesWiring) -> Rerequests:
+        return JsonFileRerequests(wiring.data_dir / "rerequest_review")
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:

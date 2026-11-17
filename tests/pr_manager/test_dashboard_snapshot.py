@@ -35,6 +35,17 @@ def test_the_dashboard_holds_the_pr_and_its_status_as_values(settings, tmp_path)
     assert dashboard.since_commits is None
 
 
+def test_the_dashboard_names_who_only_commented_and_when_each_pending_reviewer_was_asked(
+        settings, tmp_path):
+    seed(settings, polled_pr(reviews=(Review("bob", ReviewState.CHANGES_REQUESTED),
+                                      Review("erin", ReviewState.COMMENTED))))
+
+    dashboard = _drawn(settings, tmp_path)
+
+    assert (dashboard.changes_requested_by, dashboard.commented_by) == (("bob",), ("erin",))
+    assert dashboard.review_requested_at == {"dave": "2026-06-10T11:00:00Z"}
+
+
 def test_the_dashboard_names_the_branch_the_pr_merges_into(settings, tmp_path):
     seed(settings, polled_pr(base_branch="develop"))
 

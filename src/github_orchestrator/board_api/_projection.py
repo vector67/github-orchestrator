@@ -180,6 +180,8 @@ def conversation_of(conversation: Conversation, account: str) -> contract.Conver
         mention=conversation.mention,
         updated_at=conversation.updated_at,
         author_kind=author_kind_of(conversation.author, account),
+        opened_by=conversation.author,
+        opened_at=conversation.opened_at,
         unread=conversation.unread,
         record_state=contract.RecordState(conversation.state),
         commit_check=_commit_check_of(conversation),
@@ -603,6 +605,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
         threads=[contract.ThreadRow(
             key=row.key, state=domain.ConversationState(row.standing),
             record_state=contract.RecordState(row.state), author_kind=row.author_kind,
+            opened_by=row.opened_by, opened_at=row.opened_at,
             updated_at=row.updated_at, mention=row.mention)
             for row in dashboard.thread_rows],
         unreadable=list(dashboard.unreadable_threads),
@@ -614,7 +617,9 @@ def _facts_of(dashboard: Dashboard) -> contract.PrFacts:
     return contract.PrFacts(
         polled_at=dashboard.polled_at, ended=dashboard.ended, is_author=dashboard.is_author,
         changes_requested_by=list(dashboard.changes_requested_by),
-        pending_reviewers=list(dashboard.pending_reviewers), ci_status=dashboard.ci,
+        commented_by=list(dashboard.commented_by),
+        pending_reviewers=list(dashboard.pending_reviewers),
+        review_requested_at=dict(dashboard.review_requested_at), ci_status=dashboard.ci,
         checks=[contract.CiCheck(name=check.name, passed=check.passed, failed=check.failed,
                                  done=check.done, url=check.url, summary=check.summary)
                 for check in dashboard.checks],

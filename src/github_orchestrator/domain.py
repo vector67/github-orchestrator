@@ -107,6 +107,8 @@ class ThreadRow:
     standing: str
     state: str
     author_kind: AuthorKind
+    opened_by: str
+    opened_at: str | None
     updated_at: str | None
     mention: bool
 

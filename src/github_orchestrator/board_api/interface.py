@@ -231,7 +231,9 @@ class Dashboard:
     changed_files: int | None
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]
+    commented_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
+    review_requested_at: dict[str, str]
     unresolved_threads: int | None
     polled_at: str | None
     ended: bool
