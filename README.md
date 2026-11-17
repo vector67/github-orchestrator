@@ -120,7 +120,7 @@ the wall has pull requests it shows a short tour, which
 
 `github-orchestrator doctor` checks the machine first: the install, whether a
 newer release is out, the command on your `PATH`, the skill, the agent (for
-Claude, whether the Atlassian MCP server is connected; for Codex, whether it is
+Claude with a Jira tracker, whether the Atlassian MCP server is connected; for Codex, whether it is
 logged in) and desktop notifications. Then, for every instance, it checks the
 config, the hub's port, the requirements on your `PATH` and on the service's, the
 service itself, GitHub, each repo's clone, the hub and the watcher. It prints the
@@ -268,8 +268,8 @@ folder. When some are missing and it runs in a terminal, it names each one and
 what the agents use it for, and asks whether to install them; a no writes
 `pr_skill = ""`, and every later update asks again. With no terminal to ask on
 it does what the installer does under `-y`: a missing skill is installed,
-unless an earlier no is recorded. Either way, one that differs from this version's
-is left alone (`github-orchestrator skill --replace` replaces it), and
+except `create-pr` when an earlier no is recorded. Either way, one that differs
+from this version's is left alone (`github-orchestrator skill --replace` replaces it), and
 `github-orchestrator skill` installs the skills and writes `create-pr` back.
 
 ## Uninstall

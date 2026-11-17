@@ -29,8 +29,26 @@ def _findings_as_drafts(draft_command: str, rest: str, changes_file: str) -> str
     )
 
 
+def _context(jira_tickets: bool) -> str:
+    if not jira_tickets:
+        return "Find related PRs for additional context. "
+    return ("Extract the Jira ticket from the branch using regex ([A-Za-z]+-[0-9]+) "
+            "and fetch its context via the Atlassian MCP tools; also find related PRs "
+            "(especially closed ones on the same Jira ticket) for additional context. ")
+
+
+def _broader_context(jira_tickets: bool) -> str:
+    if not jira_tickets:
+        return ("Before drawing conclusions, research the broader context: find related PRs "
+                "to understand prior decisions and constraints.")
+    return ("Before drawing conclusions, research the broader context: extract the Jira "
+            "ticket from the branch using regex ([A-Za-z]+-[0-9]+) and fetch it via the "
+            "Atlassian MCP tools, then find related PRs (especially closed ones on the "
+            "same Jira ticket) to understand prior decisions and constraints.")
+
+
 def review_prompt(commands: ReportCommands, changes_file: str, pr: Pr, title: str, url: str,
-                  branch: str, additions: int, deletions: int) -> str:
+                  branch: str, additions: int, deletions: int, *, jira_tickets: bool) -> str:
     draft_command = _draft_command(commands, pr)
     total_loc = additions + deletions
     if total_loc < LARGE_PR_LOC_THRESHOLD:
@@ -39,9 +57,7 @@ def review_prompt(commands: ReportCommands, changes_file: str, pr: Pr, title: st
             "Start with the tests to understand expected behavior, then walk the "
             "implementation changes against those expectations."
             "\n\n"
-            "Extract the Jira ticket from the branch using regex ([A-Za-z]+-[0-9]+) "
-            "and fetch its context via the Atlassian MCP tools; also find related PRs "
-            "(especially closed ones on the same Jira ticket) for additional context. "
+            + _context(jira_tickets)
             + _findings_as_drafts(draft_command, "anything that is not about one line",
                                   changes_file)
         )
@@ -58,11 +74,8 @@ def review_prompt(commands: ReportCommands, changes_file: str, pr: Pr, title: st
         "the tests; flag any behavior change that lacks a corresponding test, and "
         "note any abstractions that look premature or hard to reason about."
         "\n\n"
-        "Before drawing conclusions, research the broader context: extract the Jira "
-        "ticket from the branch using regex ([A-Za-z]+-[0-9]+) and fetch it via the "
-        "Atlassian MCP tools, then find related PRs (especially closed ones on the "
-        "same Jira ticket) to understand prior decisions and constraints."
-        "\n\n"
+        + _broader_context(jira_tickets)
+        + "\n\n"
         + _findings_as_drafts(
             draft_command,
             "what is not about one line (cross-cutting concerns, "

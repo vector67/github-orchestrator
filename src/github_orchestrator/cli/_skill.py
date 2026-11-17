@@ -1,6 +1,5 @@
 import json
 import shutil
-import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from importlib.resources import as_file, files
@@ -14,6 +13,7 @@ from github_orchestrator.settings import ConfigFile
 State = Literal["missing", "current", "different"]
 
 CREATE_PR = "create-pr"
+REPLACE = "github-orchestrator skill --replace"
 PURPOSES = {
     "create-pr": "agents run it to open a new pull request, such as the one a split carries "
                  "code into; without it they open the pull request themselves",
@@ -34,9 +34,13 @@ def packaged_skill(name: str) -> Iterator[Path]:
         yield source
 
 
+OS_JUNK = frozenset({".DS_Store", "Thumbs.db", "desktop.ini"})
+
+
 def _contents(folder: Path) -> dict[Path, bytes]:
     return {path.relative_to(folder): path.read_bytes()
-            for path in folder.rglob("*") if path.is_file()}
+            for path in folder.rglob("*")
+            if path.is_file() and path.name not in OS_JUNK and not path.name.startswith("._")}
 
 
 def skill_state(skills: Path, name: str) -> State:
@@ -56,22 +60,21 @@ def _remove(target: Path) -> None:
         target.unlink()
 
 
-def _install(skills: Path, name: str, *, replace: bool) -> bool:
+def _install(skills: Path, name: str, *, replace: bool) -> None:
     target = skills / name
     state = skill_state(skills, name)
     if state == "current":
         print(f"The {name} skill in {target} is already this version's.")
-        return True
+        return
     if state == "different":
         if not replace:
             print(f"The {name} skill in {target} differs from this version's, so it was left "
-                  "alone. github-orchestrator skill --replace puts this version's in its place.")
-            return False
+                  f"alone. {REPLACE} puts this version's in its place.")
+            return
         _remove(target)
     with packaged_skill(name) as source:
         shutil.copytree(source, target)
     print(f"Installed the {name} skill in {target}.")
-    return True
 
 
 def _record(config_file: ConfigFile, name: str, why: str) -> None:
@@ -91,10 +94,9 @@ def leave_out(skills: Path, config_file: ConfigFile) -> None:
 
 
 def install_skills(skills: Path, config_file: ConfigFile, *, replace: bool) -> None:
-    installed = [_install(skills, name, replace=replace) for name in shipped_skills()]
+    for name in shipped_skills():
+        _install(skills, name, replace=replace)
     _put_back_create_pr(skills, config_file)
-    if not all(installed):
-        sys.exit(1)
 
 
 def _wanted(skills: Path, missing: list[str], read_line: ReadLine) -> bool:
@@ -112,17 +114,17 @@ def update_skills(skills: Path, config_file: ConfigFile, read_line: ReadLine | N
     names = shipped_skills()
     missing = [name for name in names if skill_state(skills, name) == "missing"]
     if not missing:
-        left_out = False
+        left_out = []
     elif read_line is None:
-        left_out = config_file.pr_skill() == ""
+        left_out = [CREATE_PR] if CREATE_PR in missing and config_file.pr_skill() == "" else []
     else:
-        left_out = not _wanted(skills, missing, read_line)
+        left_out = [] if _wanted(skills, missing, read_line) else missing
     if left_out:
-        print(f"Skills left out: {', '.join(missing)}. github-orchestrator skill installs "
+        print(f"Skills left out: {', '.join(left_out)}. github-orchestrator skill installs "
               "them later.")
         leave_out(skills, config_file)
     for name in names:
-        if not (left_out and name in missing):
+        if name not in left_out:
             _install(skills, name, replace=False)
     if not left_out:
         _put_back_create_pr(skills, config_file)
@@ -140,8 +142,12 @@ def skill(skills: Path, config_file: ConfigFile, *, status: bool, replace: bool,
 
 
 def _skill_finding(skills: Path, name: str, pr_skill: str) -> Finding:
-    if skill_state(skills, name) != "missing":
+    state = skill_state(skills, name)
+    if state == "current":
         return ok(f"the {name} skill is in {skills}")
+    if state == "different":
+        return warn(f"the {name} skill in {skills} differs from this version's, so the "
+                    "orchestrator's agents that run it may not work as you expect", REPLACE)
     if name == CREATE_PR and pr_skill == "":
         return ok(f"the {name} skill was left out (pr_skill = \"\"), so agents open pull requests "
                   "themselves; github-orchestrator skill installs it")

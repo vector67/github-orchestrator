@@ -1,3 +1,5 @@
+import errno
+
 import pytest
 
 from github_orchestrator.desktop.fake import FakeDesktop
@@ -138,3 +140,30 @@ def test_a_record_that_cannot_be_read_or_written_stops_no_notification(tmp_path,
     courier.deliver(LONG_AWAKE, None)
 
     assert _titles(desktop) == ["Run failed on widgets#84"]
+
+
+_ONCE_ONLY = {
+    "run failed": lambda n: n.runs.run_failed(a_pr(84, "acme/widgets"), "ci-failed", 1),
+    "fix failed": lambda n: n.thread_news.fix_failed(a_pr(84, "acme/widgets"), gist="rename it",
+                                                     author="octocat", reason="tests failed"),
+    "agent asked": lambda n: n.thread_news.agent_asked(a_pr(84, "acme/widgets"), "thread-a",
+                                                       question="Rename it everywhere?"),
+}
+
+
+@pytest.mark.parametrize("notice", _ONCE_ONLY.values(), ids=_ONCE_ONLY.keys())
+def test_a_notice_whose_post_failed_is_posted_when_it_comes_again(tmp_path, desktop, clock,
+                                                                  monkeypatch, notice):
+    notifications, courier = opened(tmp_path, desktop, clock)
+
+    def full(path, data):
+        raise OSError(errno.ENOSPC, "No space left on device")
+
+    monkeypatch.setattr("github_orchestrator.notifications._disk.write_atomically", full)
+    with pytest.raises(OSError):
+        notice(notifications)
+    monkeypatch.undo()
+    notice(notifications)
+    courier.deliver(LONG_AWAKE, None)
+
+    assert len(desktop.announcements) == 1

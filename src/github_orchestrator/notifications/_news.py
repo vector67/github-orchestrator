@@ -1,5 +1,5 @@
 import hashlib
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -24,7 +24,7 @@ class Outbox(Protocol):
 
 
 class Sent(Protocol):
-    def first(self, key: str) -> bool: ...
+    def once(self, key: str, send: Callable[[], None]) -> None: ...
 
 
 def _streak(fix: str | None, failed: str, error: str, log_file: Path) -> str:
@@ -70,23 +70,20 @@ class News:
                    f"{author}\n{classification}: {reason}")
 
     def fix_failed(self, pr: Pr, *, gist: str, author: str, reason: str | None) -> None:
-        if not self._first_today(pr, "fix failed"):
-            return
-        self._post(pr, Badge.FAILED, f"Fix failed on {pr.short}", f"{gist or author}: {reason}")
+        self._once_today(pr, "fix failed", lambda: self._post(
+            pr, Badge.FAILED, f"Fix failed on {pr.short}", f"{gist or author}: {reason}"))
 
     def agent_asked(self, pr: Pr, key: str, *, question: str) -> None:
         asked = hashlib.sha1(question.encode()).hexdigest()
-        if not self._sent.first(f"agent asked {pr} {key} {asked}"):
-            return
-        self._post(pr, Badge.NEEDS_YOU, f"Agent question on {pr.short}", question)
+        self._sent.once(f"agent asked {pr} {key} {asked}", lambda: self._post(
+            pr, Badge.NEEDS_YOU, f"Agent question on {pr.short}", question))
 
     def run_failed(self, pr: Pr, kind: str, exit_code: int | None) -> None:
-        if not self._first_today(pr, "run failed"):
-            return
-        self._post(pr, Badge.FAILED, f"Run failed on {pr.short}", f"{kind} exited {exit_code}")
+        self._once_today(pr, "run failed", lambda: self._post(
+            pr, Badge.FAILED, f"Run failed on {pr.short}", f"{kind} exited {exit_code}"))
 
-    def _first_today(self, pr: Pr, kind: str) -> bool:
-        return self._sent.first(f"{kind} {pr} {self._clock():%Y-%m-%d}")
+    def _once_today(self, pr: Pr, kind: str, send: Callable[[], None]) -> None:
+        self._sent.once(f"{kind} {pr} {self._clock():%Y-%m-%d}", send)
 
     def agent_skipped(self, pr: Pr, kind: str) -> None:
         self._outbox.gather(AgentSkipped(pr, kind, self._title_of(pr)))
