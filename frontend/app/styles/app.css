@@ -1598,8 +1598,7 @@ button.copy-directory {
   color: var(--yellow-text);
 }
 
-.decide-dialog > form.hold-warning .note,
-.decide-dialog > form.rerequest-prompt .note {
+.decide-dialog > form.hold-warning .note {
   line-height: 1.5;
   color: var(--text);
 }

@@ -25,7 +25,7 @@ const answering =
 const RerequestPrompt: TOC<RerequestPromptSignature> = <template>
   <div class="decide-dialog">
     <form
-      class="rerequest-prompt"
+      class="hold-warning rerequest-prompt"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="rerequest-prompt-question"
