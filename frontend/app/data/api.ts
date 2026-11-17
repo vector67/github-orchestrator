@@ -450,7 +450,7 @@ export interface Errors {
   errors: ErrorDetail[];
 }
 
-export type Fault = 'network' | 'login' | 'access' | 'disk' | 'unknown';
+export type Fault = 'network' | 'rate-limit' | 'login' | 'access' | 'gh-missing' | 'disk' | 'config' | 'unknown';
 
 export interface FieldError {
   status: number;

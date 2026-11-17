@@ -81,10 +81,8 @@ class CycleSaving:
 
     def mentions_unread(self, exc: BaseException) -> None:
         error = _one_line(exc)
-        fault = diagnose(error, names_in(self._config))
-        consecutive = self._searches.failed(error, fault)
-        if (consecutive >= NOTIFY_AT and fault.cause is Cause.OPERATOR
-                and self._searches.first_telling()):
+        consecutive = self._searches.failed(error, Fault.CONFIG)
+        if consecutive >= NOTIFY_AT and self._searches.first_telling():
             self._polling.mentions_failed(consecutive, error, self._config.log_file)
 
     def mentions_read(self) -> None:
@@ -99,6 +97,9 @@ class CycleSaving:
                         f"Run `gh auth login` as {account}.")
             case Fault.DISK:
                 return "The disk is full. Free some space and the watcher carries on."
+            case Fault.GH_MISSING:
+                return ("The watcher can't run gh. Install it from https://cli.github.com, "
+                        "or put it on the watcher's PATH.")
             case Fault.ACCESS:
                 if hidden is not None:
                     return (f"You can't see {hidden} as {account}. Remove it from [[repos]] "

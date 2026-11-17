@@ -260,14 +260,17 @@ class Cause(StrEnum):
 
 class Fault(StrEnum):
     NETWORK = "network"
+    RATE_LIMIT = "rate-limit"
     LOGIN = "login"
     ACCESS = "access"
+    GH_MISSING = "gh-missing"
     DISK = "disk"
+    CONFIG = "config"
     UNKNOWN = "unknown"
 
     @property
     def cause(self) -> Cause:
-        return Cause.NETWORK if self is Fault.NETWORK else Cause.OPERATOR
+        return Cause.NETWORK if self in (Fault.NETWORK, Fault.RATE_LIMIT) else Cause.OPERATOR
 
 
 __all__ = ["Cause", "DismissUntil", "Fault","HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",

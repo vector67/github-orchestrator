@@ -47,11 +47,39 @@ def test_a_failing_poll_names_whether_the_network_or_the_operator_must_clear_it(
     assert health(settings).last_error_cause is cause
 
 
-@pytest.mark.parametrize(("error", "cause"), REAL_ERRORS)
-def test_a_failing_mentions_search_names_its_cause_the_same_way(settings, error, cause):
+@pytest.mark.parametrize(("error", "fault"), [
+    ("HTTP 403: API rate limit exceeded for user ID 1. (https://api.github.com/graphql)",
+     Fault.RATE_LIMIT),
+    ("HTTP 429: Too Many Requests (https://api.github.com/search/issues)", Fault.RATE_LIMIT),
+    ("HTTP 403: You have exceeded a secondary rate limit.", Fault.RATE_LIMIT),
+    ("GraphQL: was submitted too quickly (createPullRequestReview)", Fault.RATE_LIMIT),
+    ("sh: gh: command not found", Fault.GH_MISSING),
+    ("gh is not on PATH, so nothing can reach GitHub as octocat", Fault.GH_MISSING),
+    ("gh: Not Found (HTTP 404)", Fault.ACCESS),
+    ("fatal: couldn't find remote ref: branch not found", Fault.UNKNOWN),
+])
+def test_a_failing_poll_names_its_fault_from_what_gh_and_github_said(settings, error, fault):
+    _failing(settings.watcher_failures, error)
+
+    assert health(settings).last_error_fault is fault
+
+
+def test_a_rate_limit_clears_on_its_own(settings):
+    _failing(settings.watcher_failures, "HTTP 429: Too Many Requests")
+
+    assert health(settings).last_error_cause is Cause.NETWORK
+
+
+@pytest.mark.parametrize("error", [
+    "config.toml: mentions_start must be in quotes",
+    "Invalid isoformat string: 'yesterday'",
+    "watched timeout: HTTP 401",
+])
+def test_a_failing_mentions_search_is_a_config_that_will_not_read(settings, error):
     _failing(settings.mentions_failure, error)
 
-    assert health(settings).mentions_error_cause is cause
+    assert (health(settings).mentions_error_fault,
+            health(settings).mentions_error_cause) == (Fault.CONFIG, Cause.OPERATOR)
 
 
 def test_a_record_that_kept_its_fault_is_read_by_it(settings):

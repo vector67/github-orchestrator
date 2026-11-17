@@ -462,20 +462,22 @@ def test_a_failing_mentions_search_names_its_reason_and_leaves_the_watcher_ok(ma
     failing = _finding(ran.out, "the mentions search is failing")
     assert failing.level == "FAIL"
     assert failing.reason.endswith("config.toml: mentions_start must be in quotes")
+    assert failing.fix == (f"correct {machine.config_path} where the error points; "
+                           "the next poll searches again")
     assert _finding(ran.out, "the watcher last polled 34s ago").level == "ok"
 
 
-def test_a_mentions_search_that_cannot_reach_github_is_a_warning_that_clears_itself(machine, run_cli):
-    _beat(machine, 34)
-    machine.settings().mentions_failure.write_text(json.dumps(
-        {"consecutive": 2, "last_error": "dial tcp: lookup api.github.com: no such host"}))
+def test_a_rate_limited_watcher_is_a_warning_that_clears_when_the_limit_resets(machine, run_cli):
+    _beat(machine, 600)
+    machine.settings().watcher_failures.write_text(
+        json.dumps({"consecutive": 3, "last_error": "HTTP 429: Too Many Requests"}))
     with _watcher_lock(machine):
         ran = run_cli("doctor")
 
-    assert _finding(ran.out, "mentions search") == Finding(
-        "warn", "the mentions search can't reach GitHub, retrying each poll: "
-                "dial tcp: lookup api.github.com: no such host",
-        "none needed; the next poll that reaches GitHub clears it")
+    assert _finding(ran.out, "HTTP 429") == Finding(
+        "warn", "the watcher is rate limited by GitHub, retrying each poll "
+                "(last good poll 10m ago): HTTP 429: Too Many Requests",
+        "none needed; polls resume once GitHub's rate limit resets")
 
 
 def test_a_watcher_that_stopped_polling_says_to_restart(machine, run_cli):

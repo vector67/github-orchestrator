@@ -5,12 +5,15 @@ from github_orchestrator.domain import Fault
 from github_orchestrator.watcher._config import WatcherConfig
 
 _SIGNS = (
+    (Fault.GH_MISSING, re.compile(
+        r"gh: command not found|command not found: gh|gh is not on PATH"
+        r"|No such file or directory: 'gh'", re.IGNORECASE)),
     (Fault.DISK, re.compile(r"Errno 28|no space left on device", re.IGNORECASE)),
     (Fault.LOGIN, re.compile(r"HTTP 401|bad credentials|no oauth token", re.IGNORECASE)),
-    (Fault.NETWORK, re.compile(r"rate limit|submitted too quickly", re.IGNORECASE)),
+    (Fault.RATE_LIMIT, re.compile(r"rate limit|HTTP 429|submitted too quickly", re.IGNORECASE)),
     (Fault.ACCESS, re.compile(
-        r"HTTP 40[34]|not found|could not resolve to a repository"
-        r"|do not have permission", re.IGNORECASE)),
+        r"HTTP 40[34]|could not resolve to a repository|do not have permission",
+        re.IGNORECASE)),
     (Fault.NETWORK, re.compile(
         r"no such host|could not resolve host|\bTLS\b|unexpected EOF|connection (reset|refused)"
         r"|network is unreachable|\btimeout\b|timed out|deadline exceeded|HTTP 5\d\d",

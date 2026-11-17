@@ -238,6 +238,12 @@ def test_a_network_fault_never_notifies(settings):
     assert health(settings).last_error.endswith(NO_SUCH_HOST)
 
 
+def test_a_rate_limit_never_notifies(settings):
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError("HTTP 429: Too Many Requests")), 4)
+
+    assert desktop.announcements == []
+
+
 def test_a_login_fault_notifies_though_a_watched_repo_is_named_like_a_network_fault(tmp_path):
     named = fake_settings(tmp_path, repos=(
         RepoEntry(Repo("acme", "request-timeout"), "/code/request-timeout"),))
@@ -253,6 +259,8 @@ def test_a_login_fault_notifies_though_a_watched_repo_is_named_like_a_network_fa
     (NO_TOKEN, "GitHub turned down the login for {account}. "
                "Run `gh auth login` as {account}."),
     (DISK_FULL, "The disk is full. Free some space and the watcher carries on."),
+    ("sh: gh: command not found", "The watcher can't run gh. Install it from "
+                                  "https://cli.github.com, or put it on the watcher's PATH."),
 ])
 def test_a_fault_to_fix_notifies_what_to_do_about_it(settings, error, fix):
     desktop, _ = _forever(settings, _searches(settings, RuntimeError(error)), 3)

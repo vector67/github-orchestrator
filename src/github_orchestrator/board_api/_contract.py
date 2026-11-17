@@ -346,8 +346,8 @@ class WatcherHealth(BaseModel):
                     "while they succeed.")
     mentions_error: str | None = Field(
         description="Why the last search for mentions did not run, while polls go on: "
-                    "a `mentions_start` in the config that will not read. Null once "
-                    "a search runs.")
+                    "the config file, or the `mentions_start` in it, will not read. "
+                    "Null once a search runs.")
     last_error_cause: Cause | None = Field(
         description="Who clears `last_error`: `network` for a fault that clears on its "
                     "own (DNS, TLS, a dropped connection, an HTTP 5xx, a timeout or "
@@ -359,12 +359,15 @@ class WatcherHealth(BaseModel):
         description="What kind of fault `last_error` is, read from what gh and GitHub "
                     "said rather than the repos and account the error names, for the "
                     "board to word what to do about it: `network` for one that clears "
-                    "on its own, `login` for GitHub turning down the account's login, "
-                    "`access` for a repo the account cannot see, `disk` for a full disk "
-                    "and `unknown` for anything else. Null while cycles succeed.")
+                    "on its own, `rate-limit` for GitHub limiting the account until the "
+                    "limit resets, `login` for GitHub turning down the account's login, "
+                    "`access` for a repo the account cannot see, `gh-missing` for a gh "
+                    "the watcher cannot run, `disk` for a full disk and `unknown` for "
+                    "anything else. Null while cycles succeed.")
     mentions_error_fault: Fault | None = Field(
-        description="What kind of fault `mentions_error` is, in the same terms as "
-                    "`last_error_fault`. Null once a search runs.")
+        description="What kind of fault `mentions_error` is: always `config`, the "
+                    "config file or its `mentions_start` not reading. Null once a "
+                    "search runs.")
     hidden_repo: str | None = Field(
         description="The watched repo, as owner/name, that the account cannot see, "
                     "when `last_error_fault` is `access` and the watcher found which. "

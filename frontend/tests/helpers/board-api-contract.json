@@ -4656,9 +4656,12 @@
   "Fault": {
    "enum": [
     "network",
+    "rate-limit",
     "login",
     "access",
+    "gh-missing",
     "disk",
+    "config",
     "unknown"
    ],
    "type": "string"

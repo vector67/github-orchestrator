@@ -220,25 +220,6 @@ module('Acceptance | runs', function (hooks) {
     assert.dom('[data-test-health="poll"][data-test-health-alarm]').exists();
   });
 
-  test('a mentions search that cannot reach GitHub says it retries', async function (assert) {
-    onTheHub();
-    board().ledger = runLedger({
-      watcher: {
-        ...polledAt().watcher,
-        mentions_error: 'unexpected EOF',
-        mentions_error_cause: 'network',
-      },
-    });
-    clock().now = POLLED + 19_000;
-
-    await visit('/');
-
-    assert.strictEqual(
-      text('[data-test-health="poll"]'),
-      "mentions search can't reach GitHub, retrying each poll",
-    );
-  });
-
   test('a long failure stays on the bar’s one row and gives its whole text on hover', async function (assert) {
     const failure = `watcher cannot search acme/gadgets-api as vector67 — ${'check [[repos]] and gh_account '.repeat(12)}`;
     onTheHub();
@@ -559,16 +540,55 @@ module('Acceptance | runs', function (hooks) {
         ...polledAt().watcher,
         last_error: 'unexpected EOF',
         last_error_cause: 'network',
-        mentions_error: 'unexpected EOF',
-        mentions_error_cause: 'network',
+        last_error_fault: 'network',
       },
     });
 
     await visit('/runs');
 
-    assert.deepEqual(facts(['Last error', 'Mentions search', 'Fix']), [
+    assert.deepEqual(facts(['Last error', 'Fix']), [
       "Last error can't reach GitHub, retrying each poll: unexpected EOF",
-      "Mentions search can't reach GitHub, retrying each poll: unexpected EOF",
+    ]);
+  });
+
+  test('the facts say a rate limit is GitHub answering, and clears on its own', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'HTTP 429: Too Many Requests',
+        last_error_cause: 'network',
+        last_error_fault: 'rate-limit',
+      },
+    });
+    clock().now = POLLED + 19_000;
+
+    await visit('/runs');
+
+    assert.deepEqual(facts(['Last error', 'Fix']), [
+      'Last error rate limited by GitHub, retrying each poll: HTTP 429: Too Many Requests',
+    ]);
+    assert.strictEqual(
+      text('[data-test-health="poll"]'),
+      'rate limited by GitHub, retrying each poll',
+    );
+  });
+
+  test('the fix for a gh the watcher cannot run says to install it', async function (assert) {
+    onTheHub();
+    board().ledger = runLedger({
+      watcher: {
+        ...polledAt().watcher,
+        last_error: 'sh: gh: command not found',
+        last_error_cause: 'operator',
+        last_error_fault: 'gh-missing',
+      },
+    });
+
+    await visit('/runs');
+
+    assert.deepEqual(facts(['Fix']), [
+      "Fix The watcher can't run gh. Install it from https://cli.github.com, or put it on the watcher's PATH.",
     ]);
   });
 

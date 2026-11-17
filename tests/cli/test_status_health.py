@@ -163,14 +163,22 @@ def test_a_failing_mentions_search_is_named_on_its_own_line_with_its_reason(mach
             "Mentions search: failing — config.toml: mentions_start must be in quotes")
 
 
-def test_a_mentions_search_that_cannot_reach_github_says_it_retries_each_poll(machine, run_cli):
-    _beat(machine, 42)
-    machine.settings().mentions_failure.write_text(json.dumps(
-        {"consecutive": 2, "last_error": "dial tcp: lookup api.github.com: no such host"}))
+def test_a_rate_limit_says_github_answered_and_polls_retry(machine, run_cli):
+    _beat(machine, 300)
+    _fail(machine, "HTTP 429: Too Many Requests", times=3)
     with _lock(machine):
-        assert _line(run_cli, "Mentions search:") == (
-            "Mentions search: can't reach GitHub, retrying each poll: "
-            "dial tcp: lookup api.github.com: no such host")
+        assert _health(run_cli) == (
+            "Watcher: failing — last good poll 5m ago; "
+            "rate limited by GitHub, retrying each poll: HTTP 429: Too Many Requests")
+
+
+def test_a_missing_gh_says_to_install_it(machine, run_cli):
+    _beat(machine, 300)
+    _fail(machine, "sh: gh: command not found", times=3)
+    with _lock(machine):
+        assert _health(run_cli).endswith(
+            "fix: The watcher can't run gh. Install it from https://cli.github.com, "
+            "or put it on the watcher's PATH.")
 
 
 def test_a_multi_line_error_stays_on_one_status_line(machine, run_cli):

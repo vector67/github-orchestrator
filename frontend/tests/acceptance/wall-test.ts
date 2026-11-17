@@ -2728,6 +2728,29 @@ module('Acceptance | wall', function (hooks) {
     assert.dom('[data-test-wall-fix]').doesNotExist();
   });
 
+  test('a wall whose polls are rate limited says GitHub answered and it retries', async function (assert) {
+    onTheHub();
+    board().unheld = { code: 'watcher-failing', detail: 'HTTP 429' };
+    board().ledger = runLedger({
+      watcher: {
+        last_error: 'HTTP 429',
+        last_error_cause: 'network',
+        last_error_fault: 'rate-limit',
+      },
+    });
+
+    await visit('/');
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-unheld="watcher-failing"]')
+      .includesText(
+        'The watcher is rate limited by GitHub, retrying each poll. The wall fills in once a poll gets through.',
+      );
+    assert.dom('[data-test-wall-fix]').doesNotExist();
+  });
+
   test('a wall whose hub went back to setup shows what its config lacks', async function (assert) {
     onTheHub();
     await visit('/');

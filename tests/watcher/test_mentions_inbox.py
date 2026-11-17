@@ -106,17 +106,6 @@ def test_a_mentions_streak_carried_over_past_three_notifies_once(settings):
     assert notification.body.startswith("6 searches in a row failed")
 
 
-def test_a_mentions_search_that_cannot_reach_github_never_notifies(settings):
-    desktop = FakeDesktop()
-    inbox = CountedSearches(StartUnread("Get \"https://api.github.com/search\": unexpected EOF"))
-
-    watcher = watcher_over(settings, desktop=desktop, mentions_inbox=inbox)
-    for _ in range(3):
-        watcher.run_cycle()
-
-    assert desktop.announcements == []
-
-
 def test_a_mentions_search_that_works_again_clears_its_failure(settings):
     inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
     watcher = watcher_over(settings, mentions_inbox=inbox)

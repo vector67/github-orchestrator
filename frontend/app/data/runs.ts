@@ -50,6 +50,17 @@ function secondsUntil(iso: string, now: number): number {
 }
 
 export const RETRYING = "can't reach GitHub, retrying each poll";
+const RATE_LIMITED = 'rate limited by GitHub, retrying each poll';
+
+function retryingOf(watcher: WatcherHealth): string {
+  return watcher.last_error_fault === 'rate-limit' ? RATE_LIMITED : RETRYING;
+}
+
+export function theWatcherRetrying(watcher: WatcherHealth): string {
+  return watcher.last_error_fault === 'rate-limit'
+    ? `is ${RATE_LIMITED}`
+    : RETRYING;
+}
 
 export function fixOf(watcher: WatcherHealth): string | null {
   const { account, config_path: config, hidden_repo: hidden } = watcher;
@@ -58,6 +69,8 @@ export function fixOf(watcher: WatcherHealth): string | null {
       return `GitHub turned down the login for ${account}. Run \`gh auth login\` as ${account}.`;
     case 'disk':
       return 'The disk is full. Free some space and the watcher carries on.';
+    case 'gh-missing':
+      return "The watcher can't run gh. Install it from https://cli.github.com, or put it on the watcher's PATH.";
     case 'access':
       return hidden
         ? `You can't see ${hidden} as ${account}. Remove it from [[repos]] in ${config}, or ask for access.`
@@ -76,7 +89,7 @@ export function pollOf(
   const polled = watcher.polled_at;
   if (watcher.last_error) {
     if (watcher.last_error_cause === 'network') {
-      return { text: RETRYING, alarm: true };
+      return { text: retryingOf(watcher), alarm: true };
     }
     return {
       text: `polls failing: ${fixOf(watcher) ?? watcher.last_error}`,
@@ -84,9 +97,6 @@ export function pollOf(
     };
   }
   if (watcher.mentions_error) {
-    if (watcher.mentions_error_cause === 'network') {
-      return { text: `mentions search ${RETRYING}`, alarm: true };
-    }
     return {
       text: `mentions search failing: ${watcher.mentions_error}`,
       alarm: true,
@@ -180,7 +190,7 @@ export function factsOf(
       label: 'Last error',
       text:
         watcher.last_error_cause === 'network'
-          ? `${RETRYING}: ${watcher.last_error}`
+          ? `${retryingOf(watcher)}: ${watcher.last_error}`
           : watcher.last_error,
       alarm: true,
     });
@@ -192,10 +202,7 @@ export function factsOf(
   if (watcher.mentions_error) {
     facts.push({
       label: 'Mentions search',
-      text:
-        watcher.mentions_error_cause === 'network'
-          ? `${RETRYING}: ${watcher.mentions_error}`
-          : `failing: ${watcher.mentions_error}`,
+      text: `failing: ${watcher.mentions_error}`,
       alarm: true,
     });
   }

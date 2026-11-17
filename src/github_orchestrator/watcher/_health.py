@@ -25,7 +25,7 @@ class HealthFiles:
         failures = read_failures(self._failures)
         fault = self._fault(failures)
         mentions = read_failures(self._mentions_failure)
-        mentions_fault = self._fault(mentions)
+        mentions_fault = Fault.CONFIG if mentions.consecutive else None
         return Health(
             alive=_watcher_lock_held(self._lock) is True,
             polled_at=_polled_at(self._heartbeat),
