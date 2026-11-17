@@ -9,6 +9,8 @@ import type KeysService from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
 import type { Keymap } from 'frontend/services/keys';
 
+const OPEN_BELOW_LINES = 20;
+
 export interface DiffFoldSignature {
   Element: HTMLDivElement;
   Args: {
@@ -25,13 +27,26 @@ export default class DiffFold extends Component<DiffFoldSignature> {
 
   @service declare store: StoreService;
 
-  @tracked opened: ReadonlySet<string> = new Set();
+  @tracked private chosen: ReadonlySet<string> | null = null;
+
+  private get files() {
+    return this.store.diff(this.args.fold.commits)?.files ?? [];
+  }
 
   private get paths(): string[] {
-    return (
-      this.store.diff(this.args.fold.commits)?.files.map((one) => one.path) ??
-      []
+    return this.files.map((one) => one.path);
+  }
+
+  private get small(): boolean {
+    const changed = this.files.reduce(
+      (sum, one) => sum + one.added + one.removed,
+      0,
     );
+    return changed < OPEN_BELOW_LINES;
+  }
+
+  get opened(): ReadonlySet<string> {
+    return this.chosen ?? new Set(this.small ? this.paths : []);
   }
 
   get anyClosed(): boolean {
@@ -43,18 +58,18 @@ export default class DiffFold extends Component<DiffFoldSignature> {
   }
 
   expandAll = () => {
-    this.opened = new Set(this.paths);
+    this.chosen = new Set(this.paths);
   };
 
   collapseAll = () => {
-    this.opened = new Set();
+    this.chosen = new Set();
   };
 
   toggled = (path: string, open: boolean) => {
     const next = new Set(this.opened);
     if (open) next.add(path);
     else next.delete(path);
-    this.opened = next;
+    this.chosen = next;
   };
 
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
