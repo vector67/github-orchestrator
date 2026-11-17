@@ -158,6 +158,15 @@ def test_a_reviewer_who_reviewed_keeps_the_stamp_and_is_stamped_again_when_asked
                       {"carol": "2026-10-08T09:10:00Z"}]
 
 
+def test_a_pr_has_had_checks_from_the_first_poll_that_sees_one_and_never_stops(detection):
+    had = []
+    for checks in ((), (passing(),), ()):
+        detection.advance(THE_PR, poll(pr_state(checks=checks)), set())
+        had.append(detection.facts(THE_PR).had_checks)
+
+    assert had == [False, True, True]
+
+
 def test_the_facts_say_whether_i_am_on_the_requested_list_right_now(detection):
     requested = {}
     for pending in ((ACCOUNT, "erin"), ("erin",)):

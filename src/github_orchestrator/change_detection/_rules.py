@@ -91,6 +91,10 @@ def _review_decision(state: PullRequestState) -> ReviewDecision | None:
     return None
 
 
+def had_checks(snapshot: dict[str, Any]) -> bool:
+    return bool(snapshot.get("had_checks", snapshot.get("checks")))
+
+
 def review_requested_at(snapshot: dict[str, Any]) -> dict[str, str]:
     return dict(snapshot.get("review_requested_at", {}))
 
@@ -168,6 +172,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "merged": state.merged,
         "last_poll_timestamp": poll.polled_at,
         "ci_status": _ci_status(poll).value,
+        "had_checks": bool(state.checks) or had_checks(old or {}),
         "review_ready_at": state.ready_for_review_at,
         "checks": [
             {

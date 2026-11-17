@@ -187,6 +187,7 @@ class Facts:
     needs_rebase: bool
     review_decision: ReviewDecision | None
     checks: tuple[CiCheck, ...]
+    had_checks: bool
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]
     commented_by: tuple[str, ...]

@@ -28,6 +28,7 @@ EXPECTED = (
     '"created_at": "2026-08-29T00:00:00Z", "head_sha": "sha2", "mergeable": true, '
     '"mergeable_state": "clean", "draft": false, "closed": false, "merged": false, '
     '"last_poll_timestamp": "2026-09-01T10:00:00Z", "ci_status": "passing", '
+    '"had_checks": true, '
     '"review_ready_at": "2026-08-30T00:00:00Z", '
     '"checks": [{"name": "tests", "passed": true, "failed": false, "done": true, '
     '"html_url": "https://ci/tests", "summary": "all green"}], '

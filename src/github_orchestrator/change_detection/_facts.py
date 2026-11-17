@@ -1,6 +1,10 @@
 from typing import Any
 
-from github_orchestrator.change_detection._rules import is_closing, review_requested_at
+from github_orchestrator.change_detection._rules import (
+    had_checks,
+    is_closing,
+    review_requested_at,
+)
 from github_orchestrator.change_detection._stored import Words, mentions_of, words_of
 from github_orchestrator.change_detection._unmergeable import REBASE_STATES
 from github_orchestrator.change_detection.interface import (
@@ -85,6 +89,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         needs_rebase=words.mergeability in REBASE_STATES,
         review_decision=words.decision,
         checks=tuple(_check(c) for c in checks),
+        had_checks=had_checks(snapshot),
         approved_by=_reviewers_who(words, ReviewerStatus.APPROVED),
         changes_requested_by=_reviewers_who(words, ReviewerStatus.CHANGES_REQUESTED),
         commented_by=_reviewers_who(words, ReviewerStatus.COMMENTED),
