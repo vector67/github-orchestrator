@@ -97,7 +97,6 @@ body {
 }
 
 :where(
-  button.expand-diff,
   button.linkish,
   .reply-open,
   .commit-edit,
@@ -2050,6 +2049,10 @@ button.copy-directory {
   border: 1px solid var(--hairline);
 }
 
+.diff-frame.diff-fold {
+  --frame-head-height: 41px;
+}
+
 #panel-code {
   --frame-max: min(240px, 30vh);
 
@@ -2094,7 +2097,7 @@ button.copy-directory {
 .diff-frame-tools {
   display: flex;
   flex: none;
-  gap: 14px;
+  gap: 8px;
   align-items: center;
   font-family: var(--body-stack, system-ui, sans-serif);
 }
@@ -2113,6 +2116,7 @@ button.copy-directory {
 
 button.expand-diff {
   font-family: var(--body-stack, system-ui, sans-serif);
+  background: var(--page);
 }
 
 .diff-frame[data-expanded] {
@@ -2323,6 +2327,10 @@ details.diff-file > summary .diff-file-path {
 .diff-frame:not([data-expanded]) > .diff-frame-head {
   box-sizing: border-box;
   height: var(--frame-head-height);
+}
+
+.diff-frame.diff-fold:not([data-expanded]) > .diff-frame-head {
+  padding-block: 3px;
 }
 
 .diff-frame:not([data-expanded]) .diff-row.file {

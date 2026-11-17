@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { waitForPromise } from '@ember/test-waiters';
 import { cached, tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
 import type Owner from '@ember/owner';
 import { service } from '@ember/service';
 import type { Diff } from 'frontend/data/api';
@@ -29,7 +30,8 @@ export interface DiffSlotSignature {
     commits: FoldRange;
     pointable?: boolean;
     folded?: boolean;
-    open?: boolean;
+    opened?: ReadonlySet<string>;
+    onToggle?: (path: string, open: boolean) => void;
   };
 }
 
@@ -78,6 +80,13 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
   reveal = (path: string, expand: Expand) => {
     const head = this.diff?.head;
     if (head) this.reveals.reveal(head, path, expand);
+  };
+
+  openOf = (path: string): boolean | undefined => this.args.opened?.has(path);
+
+  toggled = (path: string, event: Event) => {
+    const open = (event.target as HTMLDetailsElement).open;
+    if (open !== Boolean(this.openOf(path))) this.args.onToggle?.(path, open);
   };
 
   get shown(): boolean {
@@ -170,7 +179,12 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
       {{#if this.files.length}}
         {{#each this.files key="@index" as |file|}}
           {{#if @folded}}
-            <details class="diff-file" open={{@open}} data-test-diff-file-fold>
+            <details
+              class="diff-file"
+              open={{this.openOf file.path}}
+              data-test-diff-file-fold
+              {{on "toggle" (fn this.toggled file.path)}}
+            >
               <summary class="diff-row file">
                 <span
                   class="diff-file-path"
