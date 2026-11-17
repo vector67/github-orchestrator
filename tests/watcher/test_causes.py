@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from github_orchestrator.domain import Cause
+from github_orchestrator.domain import Cause, Repo
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.watcher.support import health
 
 REAL_ERRORS = [
@@ -58,6 +59,36 @@ def test_a_network_fault_carries_no_fix_even_from_a_record_that_kept_one(setting
              fix="Log in with `gh auth login`, then this page retries.")
 
     assert (health(settings).last_error_cause, health(settings).fix) == (Cause.NETWORK, None)
+
+
+TELLING_NAMES = {"gh_account": "tls-timeout-bot",
+                 "repos": (RepoEntry(Repo("acme", "request-timeout"), "/code/request-timeout"),
+                           RepoEntry(Repo("acme", "rustls-bindings"), "/code/rustls-bindings"))}
+
+
+@pytest.mark.parametrize("error", [
+    "watcher cannot search acme/request-timeout, acme/rustls-bindings as tls-timeout-bot: "
+    "gh search prs --repo=acme/request-timeout --repo=acme/rustls-bindings failed (exit 1): "
+    "HTTP 401: Bad credentials (https://api.github.com/search/issues?q=repo%3Aacme%2Frequest-timeout)",
+    "gh repo view acme/rustls-bindings --json nameWithOwner failed (exit 1): "
+    "GraphQL: Could not resolve to a Repository with the name 'acme/rustls-bindings'.",
+    "git -C /code/request-timeout fetch failed: [Errno 28] No space left on device",
+])
+def test_a_fault_to_fix_is_not_taken_for_the_network_by_the_names_the_error_carries(
+        tmp_path, error):
+    named = fake_settings(tmp_path, **TELLING_NAMES)
+    _failing(named.watcher_failures, error)
+
+    assert health(named).last_error_cause is Cause.OPERATOR
+
+
+def test_a_network_fault_still_reads_as_one_beside_names_that_look_like_one(tmp_path):
+    named = fake_settings(tmp_path, **TELLING_NAMES)
+    _failing(named.watcher_failures,
+             "watcher cannot search acme/request-timeout as tls-timeout-bot: "
+             'Post "https://api.github.com/graphql": net/http: TLS handshake timeout')
+
+    assert health(named).last_error_cause is Cause.NETWORK
 
 
 def test_a_poll_that_is_not_failing_has_no_cause(settings):

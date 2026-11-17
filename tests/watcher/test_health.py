@@ -11,6 +11,7 @@ from github_orchestrator.desktop.fake import FakeDesktop
 from github_orchestrator.domain import Repo
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import Runs
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from github_orchestrator.watcher import Health, Watcher
 from tests.builders import a_pr
 from tests.watcher.support import (
@@ -212,6 +213,17 @@ def test_a_network_fault_never_notifies(settings):
 
     assert desktop.announcements == []
     assert health(settings).last_error.endswith(NO_SUCH_HOST)
+
+
+def test_a_login_fault_notifies_though_a_watched_repo_is_named_like_a_network_fault(tmp_path):
+    named = fake_settings(tmp_path, repos=(
+        RepoEntry(Repo("acme", "request-timeout"), "/code/request-timeout"),))
+    github = Searches(named.config.gh_account, "acme/request-timeout",
+                      RuntimeError("HTTP 401: Bad credentials"))
+
+    desktop, _ = _forever(named, github, 3)
+
+    assert len(desktop.announcements) == 1
 
 
 @pytest.mark.parametrize(("error", "fix"), [

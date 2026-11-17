@@ -4,7 +4,7 @@ from pathlib import Path
 
 from github_orchestrator.domain import Cause, UtcClock
 from github_orchestrator.watcher._config import WatcherConfig
-from github_orchestrator.watcher._diagnosis import diagnose
+from github_orchestrator.watcher._diagnosis import diagnose, names_in
 from github_orchestrator.watcher._failures import WatcherFailures, read_failures
 from github_orchestrator.watcher.interface import Health
 
@@ -16,11 +16,12 @@ class HealthFiles:
         self._failures = config.failures
         self._mentions_failure = config.mentions_failure
         self._poll_interval = config.poll_interval
+        self._names = names_in(config)
         self._clock = clock
 
     def health(self) -> Health:
         failures = read_failures(self._failures)
-        cause = _cause(failures)
+        cause = self._cause(failures)
         mentions = read_failures(self._mentions_failure)
         return Health(
             alive=_watcher_lock_held(self._lock) is True,
@@ -29,14 +30,13 @@ class HealthFiles:
             last_error=failures.last_error if cause else None,
             fix=failures.fix if cause is Cause.OPERATOR else None,
             polls_every=datetime.timedelta(seconds=self._poll_interval),
-            mentions_error=mentions.last_error if _cause(mentions) else None,
+            mentions_error=mentions.last_error if self._cause(mentions) else None,
             last_error_cause=cause,
-            mentions_error_cause=_cause(mentions),
+            mentions_error_cause=self._cause(mentions),
         )
 
-
-def _cause(failures: WatcherFailures) -> Cause | None:
-    return diagnose(failures.last_error).cause if failures.consecutive else None
+    def _cause(self, failures: WatcherFailures) -> Cause | None:
+        return diagnose(failures.last_error, self._names).cause if failures.consecutive else None
 
 
 def _watcher_lock_held(path: Path) -> bool | None:

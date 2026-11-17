@@ -8,7 +8,7 @@ from github_orchestrator.notifications import Polling, ThreadNews
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
-from github_orchestrator.watcher._diagnosis import Diagnosis, diagnose
+from github_orchestrator.watcher._diagnosis import Diagnosis, diagnose, names_in
 from github_orchestrator.watcher._failures import Streak
 from github_orchestrator.watcher._poll import Fetched
 from github_orchestrator.watcher._told import ToldFiles
@@ -69,7 +69,7 @@ class CycleSaving:
     def failed(self, exc: BaseException) -> None:
         try:
             error = _one_line(exc)
-            diagnosis = diagnose(error)
+            diagnosis = diagnose(error, names_in(self._config))
             fix = self._fix(diagnosis)
             if (self._cycles.failed(error, fix) == NOTIFY_AT
                     and diagnosis.cause is Cause.OPERATOR):
@@ -80,7 +80,7 @@ class CycleSaving:
     def mentions_unread(self, exc: BaseException) -> None:
         error = _one_line(exc)
         if (self._searches.failed(error, None) == NOTIFY_AT
-                and diagnose(error).cause is Cause.OPERATOR):
+                and diagnose(error, names_in(self._config)).cause is Cause.OPERATOR):
             self._polling.mentions_failed(NOTIFY_AT, error, self._config.log_file)
 
     def mentions_read(self) -> None:
