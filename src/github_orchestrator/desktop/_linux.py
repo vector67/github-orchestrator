@@ -15,7 +15,7 @@ class LinuxDesktop:
     def announce(self, badge: Badge, title: str, body: str, key: str,
                  link: str | None) -> str | None:
         return run_desktop_command(
-            self._run, ["notify-send", "--app-name", "github-orchestrator", title, body],
+            self._run, ["notify-send", "--app-name", "github-orchestrator", "--", title, body],
             missing=None)
 
     def open_url(self, url: str) -> str | None:
