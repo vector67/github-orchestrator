@@ -16,6 +16,7 @@ import {
   heldPr,
   operation,
   proposal,
+  removed,
   setupFakeBoard,
   summary,
   thread,
@@ -915,21 +916,21 @@ module('Acceptance | a commit a reply names', function (hooks) {
       .containsText('if rate is None: raise');
   });
 
-  test('the commit lists its files with their counts, each folded until opened', async function (assert) {
+  test('the commit lists its files with their counts, a small one already open and folded by a click', async function (assert) {
     checked('addressed', 'the guard now raises');
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert
-      .dom('#panel-diff [data-test-diff-file-fold]')
-      .doesNotHaveAttribute('open');
+    assert.dom('#panel-diff [data-test-diff-file-fold]').hasAttribute('open');
     assert
       .dom('#panel-diff [data-test-diff-file-fold] summary')
       .includesText('src/tax.py')
       .includesText('+1')
       .includesText('−0');
     await click('#panel-diff [data-test-diff-file-fold] summary');
-    assert.dom('#panel-diff [data-test-diff-file-fold]').hasAttribute('open');
+    assert
+      .dom('#panel-diff [data-test-diff-file-fold]')
+      .doesNotHaveAttribute('open');
   });
 
   test('a partly addressed commit says so', async function (assert) {
@@ -986,7 +987,12 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
   module('the proposal’s diff, folded by file', function (inner) {
     inner.beforeEach(function () {
       const tax = diffOf('src/tax.py', added(12, '    if rate is None: raise'));
-      const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
+      const units = diffOf(
+        'src/units.py',
+        ...Array.from({ length: 19 }, (_, at) =>
+          added(at + 1, `UNIT_${at} = 1`),
+        ),
+      );
       board().diffs[`${KEY}.1.proposal`] = {
         ...tax,
         files: [...tax.files, ...units.files],
@@ -1003,11 +1009,33 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
         (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
       );
 
-    test('it starts with every file folded and only Expand all beside Full screen', async function (assert) {
+    test('at twenty changed lines it starts with every file folded and only Expand all beside Full screen', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${KEY}`);
 
       assert.deepEqual(opened(), [false, false]);
       assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
+    });
+
+    test('under twenty changed lines it starts with every file open and only Collapse all', async function (assert) {
+      const tax = diffOf(
+        'src/tax.py',
+        added(12, '    if rate is None: raise'),
+        removed(13, '    pass'),
+      );
+      const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
+      board().diffs[`${KEY}.1.proposal`] = {
+        ...tax,
+        files: [...tax.files, ...units.files],
+      };
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert.deepEqual(opened(), [true, true]);
+      assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
+
+      await click('[data-test-collapse-all]');
+
+      assert.deepEqual(opened(), [false, false]);
     });
 
     test('Expand all opens every file and leaves only Collapse all, which folds them again', async function (assert) {
