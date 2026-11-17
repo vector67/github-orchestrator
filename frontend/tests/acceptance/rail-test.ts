@@ -407,6 +407,27 @@ module('Acceptance | rail | what a row says', function (hooks) {
       .hasText("Anna Example · waiting for the pull request's worktree");
   });
 
+  test('a rework waiting on a missing worktree says so', async function (assert) {
+    const rework = board().threadIn('rework');
+    const row = await rowFor({
+      ...rework,
+      operations: rework.operations.map((one) =>
+        one.kind === 'rework'
+          ? {
+              ...one,
+              state: 'pending' as const,
+              reason: 'no worktree holds PROJ-30, the head branch of #7',
+              reason_code: 'worktree-missing' as const,
+            }
+          : one,
+      ),
+    });
+
+    assert
+      .dom(`${row} [data-test-meta]`)
+      .hasText("Your note · waiting for the pull request's worktree");
+  });
+
   test('a verb waiting for the board says what it is doing', async function (assert) {
     const row = await rowFor(
       thread({
