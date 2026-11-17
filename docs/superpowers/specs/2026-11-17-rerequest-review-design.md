@@ -339,15 +339,16 @@ in `frontend/app/data/summaries.ts`.
   operations through `store.readThread` when it is opened, and shows what the
   summaries give until they arrive. **Done** from `panel-actions.gts` and
   `reply-box.gts` (`010575ac`, `8d069397`), with the list and the History
-  row (the commit that records this); `dashboard-tab.gts` is step 9.
+  row (`49ef4d8f`), and from `dashboard-tab.gts`, with the Cancel and Send
+  now controls (the commit that records this).
 
 - **The write.** `rerequest-review` joins `PR_WRITES` in the `reviewers` slot,
   settled once the login is in `rerequest_queued` or `pending_reviewers`;
   `cancel-rerequest` and `send-rerequest` join it in the same slot, settled
   once the login has left `rerequest_queued`. `pr-controls` gains
   `rerequestReview`, `cancelRerequest` and `sendRerequestNow`, each taking
-  the PR and the reviewer. **Done** for `rerequest-review` and
-  `rerequestReview` (the commit that records this).
+  the PR and the reviewer. **Done** (`010575ac` for `rerequest-review` and
+  `rerequestReview`, the commit that records this for the rest).
 
 ## Edge cases
 

@@ -342,10 +342,18 @@ export default class PrControlsService extends Service {
       () => undefined,
     );
 
-  rerequestReview = (on: Controlled, reviewer: string): Promise<void> =>
-    waitForPromise(
-      this.throughTheManager(on, 'rerequest-review', { reviewer }, reviewer),
-    ).then(() => undefined);
+  private aboutAReviewer =
+    (verb: PrVerb) =>
+    (on: Controlled, reviewer: string): Promise<void> =>
+      waitForPromise(
+        this.throughTheManager(on, verb, { reviewer }, reviewer),
+      ).then(() => undefined);
+
+  rerequestReview = this.aboutAReviewer('rerequest-review');
+
+  cancelRerequest = this.aboutAReviewer('cancel-rerequest');
+
+  sendRerequestNow = this.aboutAReviewer('send-rerequest');
 
   dismiss = (on: Controlled, until: DismissUntil): Promise<void> =>
     waitForPromise(this.dismissing(on, until));

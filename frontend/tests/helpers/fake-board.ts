@@ -2281,6 +2281,23 @@ export class FakeBoard {
       };
       this.streamed();
     }
+    if (
+      this.manager &&
+      (verb === 'cancel-rerequest' || verb === 'send-rerequest')
+    ) {
+      const { reviewer } = body as RerequestReviewRequest;
+      const system = this.manager.system;
+      this.manager = {
+        ...this.manager,
+        system: {
+          ...system,
+          rerequest_queued: system.rerequest_queued.filter(
+            (one) => one !== reviewer,
+          ),
+        },
+      };
+      this.streamed();
+    }
     return respond(null, {
       status: 202,
       headers: { Location: '/api/dashboard' },

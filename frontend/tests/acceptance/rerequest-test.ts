@@ -951,4 +951,91 @@ module('Acceptance | re-request review', function (hooks) {
       .dom('[data-test-rerequest-question]')
       .hasText("Re-request erin's review of #7?");
   });
+
+  const QUEUED: DashboardOver = {
+    facts: CAROL_COMMENTED,
+    system: { rerequest_queued: ['carol'] },
+  };
+
+  test('a queued re-request offers "Cancel" and "Send now", and nothing to re-request', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    assert.dom('[data-test-band-move]').hasText('Re-request queued for carol');
+    assert.dom('[data-test-control="cancel-rerequest"]').hasText('Cancel x');
+    assert.dom('[data-test-control="send-rerequest"]').hasText('Send now s');
+    assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
+  });
+
+  test('"Cancel" takes carol off the queue, and the move asks to re-request carol again', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    await click('[data-test-control="cancel-rerequest"]');
+
+    assert.deepEqual(verbs(), ['cancel-rerequest']);
+    assert.strictEqual(
+      board().posted[0]!.url,
+      '/pr/o/r/7/api/manager:cancel-rerequest',
+    );
+    assert.deepEqual(board().posted[0]!.body, { reviewer: 'carol' });
+    assert.dom('[data-test-band-move]').hasText('Re-request review from carol');
+  });
+
+  test('"Send now" asks the manager to send carol\'s re-request at once', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    await click('[data-test-control="send-rerequest"]');
+
+    assert.deepEqual(verbs(), ['send-rerequest']);
+    assert.strictEqual(
+      board().posted[0]!.url,
+      '/pr/o/r/7/api/manager:send-rerequest',
+    );
+    assert.deepEqual(board().posted[0]!.body, { reviewer: 'carol' });
+  });
+
+  test('s sends the first queued re-request now', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    await triggerEvent(document, 'keydown', { key: 's' });
+
+    assert.deepEqual(verbs(), ['send-rerequest']);
+  });
+
+  test('x cancels the first queued re-request', async function (assert) {
+    await onTheDashboard(QUEUED);
+
+    await triggerEvent(document, 'keydown', { key: 'x' });
+
+    assert.deepEqual(verbs(), ['cancel-rerequest']);
+  });
+
+  test('with two reviewers queued, each Cancel and Send now names its login', async function (assert) {
+    serve({
+      facts: { ...CAROL_COMMENTED, commented_by: ['carol', 'erin'] },
+      system: { rerequest_queued: ['carol', 'erin'] },
+    });
+    board().conversations = [
+      closed('PRRT_c1', {}),
+      closed('PRRT_e1', { opened_by: 'erin' }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.deepEqual(
+      [...document.querySelectorAll('[data-test-control$="-rerequest"]')].map(
+        (one) => one.textContent?.replace(/\s+/g, ' ').trim(),
+      ),
+      [
+        'Cancel carol x',
+        'Send now to carol s',
+        'Cancel erin',
+        'Send now to erin',
+      ],
+    );
+
+    await click(
+      '[data-test-control="send-rerequest"][data-test-reviewer="erin"]',
+    );
+
+    assert.deepEqual(board().posted[0]!.body, { reviewer: 'erin' });
+  });
 });

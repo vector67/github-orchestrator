@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
+import { REREQUEST_REVIEW } from 'frontend/data/dashboard';
 import modal from 'frontend/modifiers/modal';
 import type StoreService from 'frontend/services/store';
 import type {
@@ -34,7 +35,7 @@ export default class RerequestPrompt extends Component<RerequestPromptSignature>
 
   get rerequestLabel(): string {
     const label = this.args.label;
-    return label === null ? 'Re-request review' : `${label} and re-request`;
+    return label === null ? REREQUEST_REVIEW : `${label} and re-request`;
   }
 
   get onlyLabel(): string {

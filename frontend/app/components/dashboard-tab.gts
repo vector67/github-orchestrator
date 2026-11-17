@@ -21,9 +21,11 @@ import RerequestPrompt from 'frontend/components/rerequest-prompt';
 import {
   clockOf,
   notLiveOf,
+  queuedControlsOf,
   rerequestControlsOf,
   standingOf,
   threadsWaitingOf,
+  type QueuedControl,
   type Reading,
   type RerequestControl,
 } from 'frontend/data/dashboard';
@@ -385,15 +387,39 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     }
   };
 
+  get queued(): QueuedControl[] {
+    const move = this.summaries?.move;
+    return move ? queuedControlsOf(move) : [];
+  }
+
+  cancelRerequest = (reviewer: string) => () => {
+    const on = this.on;
+    if (on) void this.controls.cancelRerequest(on, reviewer);
+  };
+
+  sendRerequestNow = (reviewer: string) => () => {
+    const on = this.on;
+    if (on) void this.controls.sendRerequestNow(on, reviewer);
+  };
+
+  private takesRerequest(key: string): boolean {
+    if (this.pending) return false;
+    const owed = this.rerequests.find((one) => one.first);
+    const queued = this.queued.find((one) => one.first);
+    if (key === 'e' && owed) this.askRerequest(owed.reviewer)();
+    else if (key === 'x' && queued) this.cancelRerequest(queued.reviewer)();
+    else if (key === 's' && queued) this.sendRerequestNow(queued.reviewer)();
+    else return false;
+    return true;
+  }
+
   private takes(key: string): boolean {
     const reading = this.reading;
     if (!reading || this.controls.dismissedOf(this.here.pr)) return false;
     const control = keyedControl(key, KEYED);
     if (control) return this.press(control);
-    const rerequest = this.rerequests.find((one) => one.first);
-    if (key === 'e' && rerequest && !this.pending) {
-      this.askRerequest(rerequest.reviewer)();
-    } else if (key === 'C') this.flipPane();
+    if (this.takesRerequest(key)) return true;
+    if (key === 'C') this.flipPane();
     else if (key === 't' && !reading.frozen) this.toTerminal();
     else return false;
     return true;
@@ -511,6 +537,26 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   {{on "click" (this.askRerequest rerequest.reviewer)}}
                 >{{rerequest.label}}<Glyphs @opensDialog={{true}} />
                   {{#if rerequest.first}}<kbd>e</kbd>{{/if}}</button>
+              {{/each}}
+              {{#each this.queued key="reviewer" as |queued|}}
+                <button
+                  type="button"
+                  class="btn"
+                  disabled={{this.pending}}
+                  data-test-control="cancel-rerequest"
+                  data-test-reviewer={{queued.reviewer}}
+                  {{on "click" (this.cancelRerequest queued.reviewer)}}
+                >{{queued.cancel}}
+                  {{#if queued.first}}<kbd>x</kbd>{{/if}}</button>
+                <button
+                  type="button"
+                  class="btn"
+                  disabled={{this.pending}}
+                  data-test-control="send-rerequest"
+                  data-test-reviewer={{queued.reviewer}}
+                  {{on "click" (this.sendRerequestNow queued.reviewer)}}
+                >{{queued.send}}
+                  {{#if queued.first}}<kbd>s</kbd>{{/if}}</button>
               {{/each}}
               {{#if this.reading.onHold}}
                 <button

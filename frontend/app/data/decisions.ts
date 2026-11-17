@@ -737,6 +737,13 @@ interface PrWrite extends Carrying {
   ringsOn?: string[];
 }
 
+function leftTheQueue(
+  system: DashboardSystem | null,
+  reviewer: string | null,
+): boolean {
+  return reviewer !== null && !system?.rerequest_queued.includes(reviewer);
+}
+
 const PR_WRITES = {
   hold: { doing: 'putting it on hold', square: null, slot: 'controls' },
   resume: { doing: 'resuming the agent', square: null, slot: 'controls' },
@@ -780,6 +787,18 @@ const PR_WRITES = {
       reviewer !== null &&
       (facts.pending_reviewers.includes(reviewer) ||
         Boolean(system?.rerequest_queued.includes(reviewer))),
+  },
+  'cancel-rerequest': {
+    doing: 'cancelling the re-request',
+    square: null,
+    slot: 'reviewers',
+    until: (_facts, system, reviewer) => leftTheQueue(system, reviewer),
+  },
+  'send-rerequest': {
+    doing: 'sending the re-request',
+    square: null,
+    slot: 'reviewers',
+    until: (_facts, system, reviewer) => leftTheQueue(system, reviewer),
   },
   'check-for-fixes': {
     doing: 'asking for the checks',

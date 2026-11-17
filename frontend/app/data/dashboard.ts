@@ -21,6 +21,25 @@ import type {
   Tally,
 } from 'frontend/services/store';
 
+export const REREQUEST_REVIEW = 'Re-request review';
+
+interface PerReviewer {
+  reviewer: string;
+  first: boolean;
+  named: (label: string, joined?: string) => string;
+}
+
+function perReviewer(move: NextMove, code: Move): PerReviewer[] {
+  if (move.code !== code) return [];
+  const many = move.reviewers.length > 1;
+  return move.reviewers.map((reviewer, at) => ({
+    reviewer,
+    first: at === 0,
+    named: (label, joined = '') =>
+      many ? `${label} ${joined}${reviewer}` : label,
+  }));
+}
+
 export interface RerequestControl {
   reviewer: string;
   label: string;
@@ -28,13 +47,31 @@ export interface RerequestControl {
 }
 
 export function rerequestControlsOf(move: NextMove): RerequestControl[] {
-  if (move.code !== 'rerequest-review') return [];
-  const named = move.reviewers.length > 1;
-  return move.reviewers.map((reviewer, at) => ({
-    reviewer,
-    label: named ? `Re-request review from ${reviewer}` : 'Re-request review',
-    first: at === 0,
-  }));
+  return perReviewer(move, 'rerequest-review').map(
+    ({ reviewer, first, named }) => ({
+      reviewer,
+      first,
+      label: named(REREQUEST_REVIEW, 'from '),
+    }),
+  );
+}
+
+export interface QueuedControl {
+  reviewer: string;
+  cancel: string;
+  send: string;
+  first: boolean;
+}
+
+export function queuedControlsOf(move: NextMove): QueuedControl[] {
+  return perReviewer(move, 'rerequest-queued').map(
+    ({ reviewer, first, named }) => ({
+      reviewer,
+      first,
+      cancel: named('Cancel'),
+      send: named('Send now', 'to '),
+    }),
+  );
 }
 
 const MINUTE = 60;
@@ -137,7 +174,7 @@ const STATE_LABELS: Partial<Record<Move, string>> = {
   closed: 'Tear down PR',
   'fix-ci': 'Fix CI',
   'address-feedback': 'Address review feedback',
-  'rerequest-review': 'Re-request review',
+  'rerequest-review': REREQUEST_REVIEW,
   'rerequest-queued': 'Re-request queued',
   'ready-to-merge': 'Ready to merge',
   'await-review': 'Waiting for review',
@@ -354,7 +391,7 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'address-feedback':
       return `Address changes from ${listed(move.reviewers)}`;
     case 'rerequest-review':
-      return `Re-request review from ${listed(move.reviewers)}`;
+      return `${REREQUEST_REVIEW} from ${listed(move.reviewers)}`;
     case 'rerequest-queued':
       return `Re-request queued for ${listed(move.reviewers)}`;
     case 'agent-question':
