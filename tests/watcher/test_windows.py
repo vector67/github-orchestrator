@@ -20,7 +20,7 @@ from tests.pr_event_queue.support import (
     pending_of,
     queue_of,
 )
-from tests.pr_processes.support import checked_out
+from tests.pr_processes.support import a_worktree, checked_out
 from tests.settings.support import disk_dismissals
 from tests.watcher.support import watcher_over, watching
 
@@ -54,9 +54,7 @@ def copies(notifications):
 
 @pytest.fixture
 def archiving(tmp_path):
-    path = tmp_path / "archiving"
-    path.mkdir()
-    return str(path)
+    return str(a_worktree(tmp_path / "archiving"))
 
 
 def _at_now():
@@ -186,6 +184,21 @@ def test_a_live_manager_whose_worktree_was_deleted_starts_again_in_a_fresh_one(
     assert world.manager(THE_PR) is ManagerPane.RUNNING
 
 
+def test_a_manager_whose_worktree_lost_its_git_file_starts_again_in_a_fresh_one(
+        settings, world, copies, notifications, tmp_path):
+    husk = tmp_path / "husk"
+    husk.mkdir()
+    (husk / "agent-changes.md").write_text("left behind")
+    world.open(THE_PR, husk)
+    world.managers[THE_PR].running = False
+    fresh = checked_out(copies, tmp_path / EXPECTED, EXPECTED)
+
+    _cycle(settings, world, copies, notifications)
+
+    assert world.manager_path(THE_PR) == str(fresh)
+    assert world.manager(THE_PR) is ManagerPane.RUNNING
+
+
 def test_a_dead_manager_with_events_waiting_is_revived_once_its_role_is_known(
         settings, world, copies, notifications, archiving):
     manager = _window(world, copies, running=False, path=archiving)
@@ -267,8 +280,7 @@ def test_the_watchers_own_evidence_starts_the_clock_without_detaching(settings, 
 
 
 def test_a_pane_directory_with_a_colon_is_read_whole(settings, world, copies, notifications, tmp_path):
-    weird = tmp_path / "weird:name"
-    weird.mkdir()
+    weird = a_worktree(tmp_path / "weird:name")
     _window(world, copies, path=str(weird), branch=WANDERED)
 
     _cycle(settings, world, copies, notifications)

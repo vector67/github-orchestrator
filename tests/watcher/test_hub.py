@@ -13,6 +13,7 @@ from github_orchestrator.watcher import Watcher
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import polled_on_disk, seen
+from tests.pr_processes.support import a_worktree
 from tests.settings.support import disk_dismissals, disk_holds
 from tests.watcher.support import (
     ServerSpawns,
@@ -138,7 +139,7 @@ def _told(settings):
 def test_after_a_cycle_the_watcher_tells_the_hub_each_pr_it_holds_and_its_managers_state(
         settings, tmp_path):
     windows = FakePrProcesses()
-    windows.open(MINE, tmp_path)
+    windows.open(MINE, a_worktree(tmp_path))
 
     _resident(settings, pr_processes=windows)
 

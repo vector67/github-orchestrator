@@ -92,6 +92,25 @@ def test_a_prs_checkout_with_its_worktree_says_nothing_is_missing(world, pr_work
     assert world.copies.checkout(THE_PR).no_worktree() is None
 
 
+def test_a_prs_worktree_that_lost_its_git_file_is_missing(world, pr_worktree):
+    checkout = world.copies.checkout(THE_PR)
+    assert checkout.no_worktree() is None
+
+    world.strip_git(pr_worktree)
+
+    assert BRANCH in checkout.no_worktree()
+
+
+def test_a_prs_worktree_that_lost_its_git_file_is_cut_again(world, pr_worktree):
+    world.strip_git(pr_worktree)
+
+    fresh = world.copies.pr_worktree(world.repo_dir, THE_PR, BRANCH, None)
+
+    assert fresh is not None
+    assert world.branch_at(fresh) == BRANCH
+    assert world.copies.checkout(THE_PR).path() == str(fresh)
+
+
 def test_a_worktree_on_its_branch_has_nothing_wrong(world, pr_worktree):
     assert _report(world, pr_worktree, now=1.0, expected=BRANCH) is None
     assert world.copies.verdict(THE_PR, None, expected=BRANCH, window_open=True, now=2.0,
