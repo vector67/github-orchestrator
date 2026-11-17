@@ -8,7 +8,7 @@ are the spec's requirements. Issue #428.
 ## How to work
 
 - Every change follows `.claude/skills/normal-workflow`. Load `tdd` for
-  anything that changes behaviour and `refactor` for reshaping. Steps 6 to 10
+  anything that changes behaviour and `refactor` for reshaping. Steps 6 to 9
   touch `frontend/` and load `frontend-work` first.
 - Each step gets its own branch in its own worktree, cut from local `main`,
   and is merged and restarted before the next step starts.
@@ -33,8 +33,9 @@ are the spec's requirements. Issue #428.
   counts and the prompt's question are computed only in
   `frontend/app/data/summaries.ts`. A second copy anywhere is a miss.
 - **Data on disk.** Snapshots written before step 1 have no
-  `review_requested_at`; read its absence as an empty map in `_facts.py`
-  only. `Rerequests` is new and owned by `settings/`.
+  `review_requested_at` and no `had_checks`; read the first's absence as an
+  empty map and the second's as whether the current head has checks, in
+  `_facts.py` and `_rules.py` only. `Rerequests` is new and owned by `settings/`.
 - **New files.** A new front-end test file gets an entry in
   `frontend/tests/partition-weights.ts`. A new data directory gets its
   helper in `tests/disk_layout.py`. A new settings export goes in
@@ -68,20 +69,37 @@ are the spec's requirements. Issue #428.
   " and re-request"; the secondary is the label followed by " only".
 - **One prompt per click.** The reviewer is the opener of the thread being
   closed (`opened_by`).
+- **Which actions close.** One function in `summaries.ts`, from the action,
+  what it gathered and the thread, replaces a fixed list like
+  `CLOSES_A_MENTION` for this prompt: Accept, Reply and mark done, Resolve,
+  Mark done, Reject, Defer, Confirm and Confirm with resolve always; `place`
+  when its modifier is `waiting` or `not-mine`; a plain `reply` when the
+  thread's `state` is `ready`, or it is `reopened` and `queued` or
+  `working` (the domain's `Conversation.awaits_you`, which decides
+  `ReplyPosted.parks` in `conversation/_application/runner.py`).
+  `CLOSES_A_MENTION` stays as it is for the hold warning.
+- **Queued controls.** One "Cancel" and one "Send now" per queued reviewer,
+  the login in the label only when more than one is queued. Keys `c` and
+  `s` for the first reviewer's pair.
 
 ## Steps
 
-### 1. Commented reviewers and when each was asked
+### 1. Commented reviewers, when each was asked, and whether CI ever ran
 
 `change_detection/_rules.py` writes `review_requested_at` in `snapshot_of`
 from the old snapshot and the poll's `pending_reviewers`, stamped with the
 poll time. `_facts.py` reads it and `commented_by`; `interface.py`'s `Facts`
-gains both. Tests in `tests/change_detection/test_facts.py` and
-`test_changes.py`: a commented reviewer is in `commented_by` and not in
+gains both, and `had_checks`: `snapshot_of` sets it once any poll's head
+has a check and carries it forward, never clearing it. Tests in
+`tests/change_detection/test_facts.py` and `test_changes.py`: a commented
+reviewer is in `commented_by` and not in
 `changes_requested_by`; a comment after a change request leaves them in
 `changes_requested_by`; a login newly pending is stamped with the poll time;
 one still pending keeps its stamp; one that left and came back is
-re-stamped; a snapshot without the field reads as an empty map.
+re-stamped; a snapshot without the field reads as an empty map;
+`had_checks` turns true on the first poll with a check, stays true on a later
+poll with none, and on an old snapshot without it reads as whether the
+current head has checks.
 
 ### 2. Who opened each thread, on every row
 
@@ -113,27 +131,34 @@ and fake: nothing queued at first; a queued login waits until dropped; a
 login queued twice is held once; queues are per PR; forgetting an empty PR
 succeeds. A teardown test asserts the queue is forgotten.
 
-### 5. Queue and send
+### 5. Queue, send, cancel and send now
 
-`Command.REREQUEST_REVIEW` in `_command_file.py`; `ManagerPanel.rerequest_review`
+`Command.REREQUEST_REVIEW`, `Command.CANCEL_REREQUEST` and
+`Command.SEND_REREQUEST_NOW` in `_command_file.py`;
+`ManagerPanel.rerequest_review`, `cancel_rerequest` and `send_rerequest_now`
 in `board_api/interface.py`, `pr_manager/_panel.py` and `board_api/fake.py`;
-`ManagerCommands._rerequest_review` (refused with `not-yours-to-assign` as
-assigning is) and `rerequest_once_due`; `pr_manager/_rerequest.py`;
-`_dashboard_source.py` and `Dashboard.rerequest_queued`; the route
-`POST /manager:rerequest-review` in `_app.py` with a `RerequestReviewRequest`
+the matching `ManagerCommands` methods (each refused with
+`not-yours-to-assign` as assigning is) and `rerequest_once_due`; `pr_manager/_rerequest.py`;
+`_dashboard_source.py` and `Dashboard.rerequest_queued`; the routes
+`POST /manager:rerequest-review`, `/manager:cancel-rerequest` and
+`/manager:send-rerequest` in `_app.py`, each with a `RerequestReviewRequest`
 body and `DashboardSystem.rerequest_queued` in `_contract.py`. `make contract`. Tests:
 
 - `tests/pr_manager/test_rerequest.py` (new), a table over `due`: CI
   passing and nothing in flight asks; CI pending, failing, an Accept pending
   or running, facts polled before the last Accept settled, an open thread
-  from the reviewer, each waits; `none` waits under five minutes after the
-  last Accept and asks after; a pending login is dropped, not asked.
+  from the reviewer, each waits; with `had_checks` true, `none` waits
+  however long; with `had_checks` false, `none` asks once the Accepts have
+  settled and been polled; a pending login is dropped, not asked.
 - `tests/pr_manager/test_manager_panel.py`: a re-request from the board is
   queued, shows on the dashboard, and is asked on GitHub (through
   `github/fake.py`'s `assign_reviewers`) on the first tick it is due, then
   leaves the queue; refused on someone else's PR; a GitHub refusal shows the
-  `assign-reviewers-refused` notice and leaves the queue.
-- `tests/board_api/test_contract_manager.py`: the route hands the reviewer
+  `assign-reviewers-refused` notice and leaves the queue; cancel takes a
+  login off the queue and asks nothing, and cancelling one not queued does
+  nothing; send now asks at once while an Accept is still landing and takes
+  the login off the queue; both are refused on someone else's PR.
+- `tests/board_api/test_contract_manager.py`: each route hands the reviewer
   to the panel and answers 202; an empty reviewer is a 422.
 
 ### 6. The next move
@@ -160,16 +185,17 @@ and `wall-test.ts`:
 Update the A-table in `docs/superpowers/specs/2026-10-01-next-move-design.md`
 in the same commit.
 
-### 7. The prompt on a closing decision
+### 7. The prompt on a closing action
 
 `rerequest-prompt.gts` (new) with kicker, question, badge, summary line, flag
 line and buttons; the accordion row stays empty until step 8.
-`summaries.ts` gains the prompt's question for a thread and a decision with
-what it gathered. `panel-actions.gts` opens it for the six closing decisions
-after any decision dialog, posts on a button, queues the re-request through
+`summaries.ts` gains the closing-action function above and the prompt's
+question for a thread and an action with what it gathered. `panel-actions.gts`
+opens it for every action that closes the thread, after any decision dialog, posts on a button, queues the re-request through
 `pr-controls`' new `rerequestReview` only after the post is accepted, and
-cancels the whole click on × or Escape. `decisions.ts` gains the
-`rerequest-review` PR write. The glyph that marks a button as opening a
+cancels the whole click on × or Escape. `reply-box.gts` opens it for a plain
+Reply that parks the thread, sends the reply on a button and keeps the typed
+words on ×. `decisions.ts` gains the `rerequest-review` PR write. The glyph that marks a button as opening a
 dialog shows on those decisions when the prompt would open. Tests in a new
 `frontend/tests/acceptance/rerequest-test.ts`:
 
@@ -179,9 +205,18 @@ dialog shows on those decisions when the prompt would open. Tests in a new
 - "Mark done only" posts `mark-done` alone, and the next move reads
   "Re-request review from carol";
 - × posts nothing and the thread stays open;
-- Accept, Resolve, Reject, Defer and Reply and mark done show their own dialog
-  first, then the prompt, and post what was gathered;
-- the labels follow the decision ("Resolve and re-request");
+- Accept, Resolve, Reject, Defer, Reply and mark done and Confirm with
+  resolve show their own dialog first, then the prompt, and post what was
+  gathered;
+- Confirm on an assumed-done thread opens the prompt and posts `confirm`;
+- Move to Their move and to Not my conversation open the prompt and post
+  `place`; Move to Needs a fix or My move posts at once with no prompt;
+- a plain Reply on a thread waiting on you opens the prompt, "Reply and
+  re-request" posts `reply` then `manager:rerequest-review`, × sends nothing
+  and leaves the words in the box; a Reply on a thread already Their move
+  posts at once with no prompt;
+- the labels follow the action ("Resolve and re-request", "Confirm and
+  re-request", "Move and re-request", "Reply and re-request");
 - the badge reads "Changes requested" or "Commented";
 - the summary line counts the closing thread's outcome with the others', and
   leaves out zero counts;
@@ -203,24 +238,21 @@ deferred; History lists the reviewer's comment, the fix, the rework with its
 note, the push with its short sha, the reply and the close, oldest first,
 with times.
 
-### 9. The Dashboard control
+### 9. The Dashboard controls
 
 `dashboard-tab.gts` shows "Re-request review" for the `rerequest-review` move;
 it opens the prompt without a decision, with "Re-request review" and "Not yet".
-Tests: the control is shown only for that move; "Re-request review" posts
-`manager:rerequest-review` and the move becomes "Re-request queued for
-carol"; "Not yet" posts nothing.
+For the `rerequest-queued` move it shows "Cancel" and "Send now" per queued
+reviewer. `decisions.ts` gains the `cancel-rerequest` and `send-rerequest` PR
+writes and `pr-controls` `cancelRerequest` and `sendRerequestNow`. Tests in
+`dashboard-test.ts` or `rerequest-test.ts`: "Re-request review" is shown only
+for its move, posts `manager:rerequest-review`, and the move becomes
+"Re-request queued for carol"; "Not yet" posts nothing; "Cancel" posts
+`manager:cancel-rerequest` with `carol` and the move goes back to "Re-request
+review from carol"; "Send now" posts `manager:send-rerequest` with `carol`;
+with two reviewers queued each pair names its login.
 
-### 10. With the hold warning
-
-`panel-actions.gts`: the hold warning first; "Resume this PR" opens the
-prompt, whose buttons post, queue where asked, then resume; × there cancels
-the click and the resume; "Back on hold" posts and opens nothing. Tests in
-`rerequest-test.ts` on a fake-board PR that is both held with one open
-mention and the reviewer's last open thread, since real data does not
-produce one (spec section 6).
-
-### 11. Live check
+### 10. Live check
 
 The coordinator restarts every instance and, on
 [vector67/acme-widgets](https://github.com/vector67/acme-widgets) under the
@@ -228,13 +260,5 @@ The coordinator restarts every instance and, on
 comments on a testbed PR, closes one, then the other with "and re-request",
 and watches the next move read "Re-request queued for <reviewer>" until CI
 passes and GitHub lists the reviewer as requested. Then the same with
-"only", checking the Dashboard control. Both themes, console open.
-
-## For the user to decide
-
-- **CI with no checks.** The plan treats `none` as green only five minutes
-  after the last Accept settled, because a fresh head has no checks until CI
-  starts. Is five minutes right, or should `none` never count as green on a
-  repo that has had checks?
-- **Taking a queued re-request back.** The spec leaves no way to cancel one.
-  Should "Re-request queued" offer one in this version?
+"only", checking the Dashboard control, and once more queued, checking
+Cancel and Send now. Both themes, console open.
