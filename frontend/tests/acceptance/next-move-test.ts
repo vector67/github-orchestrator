@@ -1,7 +1,14 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
 import { find, findAll, visit } from '@ember/test-helpers';
-import type { MentionFact, PrFacts } from 'frontend/data/api';
+import type {
+  AuthorKind,
+  ConversationState,
+  MentionFact,
+  PrFacts,
+  RecordState,
+  ThreadRow,
+} from 'frontend/data/api';
 import {
   dashboard,
   heldPr,
@@ -231,10 +238,10 @@ module('Acceptance | next move', function (hooks) {
       'Fix CI',
     ],
     [
-      'changes owed beat failing ci',
+      'a re-request owed beats failing ci',
       { ...CI_FAILING, changes_requested_by: ['bob'] },
-      'address-feedback',
-      'Address changes from bob',
+      'rerequest-review',
+      'Re-request review from bob',
     ],
     [
       'a requester not asked again',
@@ -244,8 +251,8 @@ module('Acceptance | next move', function (hooks) {
         changes_requested_by: ['carol', 'bob'],
         pending_reviewers: ['carol'],
       },
-      'address-feedback',
-      'Address changes from bob',
+      'rerequest-review',
+      'Re-request review from bob',
     ],
     [
       'every requester asked again',
@@ -718,7 +725,9 @@ module('Acceptance | next move', function (hooks) {
         changes_requested_by: ['carol'],
         pending_reviewers: [],
       },
-      threads: [row('PRRT_1', 'ready', 'open', 'human')],
+      threads: [
+        row('PRRT_1', 'ready', 'open', 'human', undefined, false, 'carol'),
+      ],
     });
 
     assert.deepEqual(
@@ -726,6 +735,235 @@ module('Acceptance | next move', function (hooks) {
       ['address-feedback', 'Address changes from carol'],
     );
   });
+
+  const CAROL_ASKED_FOR_CHANGES: Partial<PrFacts> = {
+    ...PASSING,
+    review_decision: 'changes-requested',
+    changes_requested_by: ['carol'],
+    pending_reviewers: [],
+  };
+
+  const CAROL_COMMENTED: Partial<PrFacts> = {
+    ...PASSING,
+    review_decision: 'review-required',
+    commented_by: ['carol'],
+    pending_reviewers: [],
+  };
+
+  const ASKED_AGAIN_AT = '2026-09-12T12:00:00Z';
+  const BEFORE_SHE_WAS_ASKED = '2026-09-12T10:00:00Z';
+  const SINCE_SHE_WAS_ASKED = '2026-09-12T13:00:00Z';
+
+  function carols(
+    key: string,
+    state: ConversationState,
+    record_state: RecordState = 'open',
+    opened_at = BEFORE_SHE_WAS_ASKED,
+    kind: AuthorKind = 'human',
+  ): ThreadRow {
+    return row(
+      key,
+      state,
+      record_state,
+      kind,
+      undefined,
+      false,
+      'carol',
+      opened_at,
+    );
+  }
+
+  const ALL_CLOSED: ThreadRow[] = [
+    carols('PRRT_1', 'done', 'resolved'),
+    carols('PRRT_2', 'waiting', 'waiting_on_reviewer'),
+    carols('PRRT_3', 'deferred', 'deferred'),
+  ];
+
+  const ROUNDS: [string, DashboardOver, string[]][] = [
+    [
+      'changes requested with a thread still open',
+      {
+        facts: CAROL_ASKED_FOR_CHANGES,
+        threads: [...ALL_CLOSED, carols('PRRT_4', 'queued')],
+      },
+      ['address-feedback', 'needs-you', 'Address changes from carol'],
+    ],
+    [
+      'changes requested, every thread closed',
+      { facts: CAROL_ASKED_FOR_CHANGES, threads: ALL_CLOSED },
+      ['rerequest-review', 'needs-you', 'Re-request review from carol'],
+    ],
+    [
+      'changes requested with no comment at all',
+      { facts: CAROL_ASKED_FOR_CHANGES },
+      ['rerequest-review', 'needs-you', 'Re-request review from carol'],
+    ],
+    [
+      'commented, every thread closed',
+      { facts: CAROL_COMMENTED, threads: ALL_CLOSED },
+      ['rerequest-review', 'needs-you', 'Re-request review from carol'],
+    ],
+    [
+      'commented, with only threads left out of a round',
+      {
+        facts: CAROL_COMMENTED,
+        threads: [
+          carols('PRRT_1', 'done', 'removed'),
+          carols('PRRT_2', 'not-mine', 'not_mine'),
+        ],
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
+    ],
+    [
+      'commented with no threads in the round',
+      {
+        facts: {
+          ...CAROL_COMMENTED,
+          review_requested_at: { carol: ASKED_AGAIN_AT },
+        },
+        threads: ALL_CLOSED,
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
+    ],
+    [
+      'an open thread from before she was asked again is not in her round',
+      {
+        facts: {
+          ...CAROL_ASKED_FOR_CHANGES,
+          review_requested_at: { carol: ASKED_AGAIN_AT },
+        },
+        threads: [carols('PRRT_1', 'ready')],
+      },
+      ['human-comments', 'needs-you', '1 comment · agents finished'],
+    ],
+    [
+      'an open thread since she was asked again is in her round',
+      {
+        facts: {
+          ...CAROL_ASKED_FOR_CHANGES,
+          review_requested_at: { carol: ASKED_AGAIN_AT },
+        },
+        threads: [carols('PRRT_1', 'ready', 'open', SINCE_SHE_WAS_ASKED)],
+      },
+      ['address-feedback', 'needs-you', 'Address changes from carol'],
+    ],
+    [
+      'pending again',
+      {
+        facts: { ...CAROL_ASKED_FOR_CHANGES, pending_reviewers: ['carol'] },
+        threads: ALL_CLOSED,
+      },
+      ['await-rereview', 'waiting-on-others', 'Waiting on carol to re-review'],
+    ],
+    [
+      'approved',
+      {
+        facts: {
+          ...PASSING,
+          review_decision: 'approved',
+          pending_reviewers: [],
+        },
+        threads: ALL_CLOSED,
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
+    ],
+    [
+      'a bot',
+      {
+        facts: CAROL_COMMENTED,
+        threads: [carols('PRRT_1', 'done', 'resolved', undefined, 'bot')],
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
+    ],
+    [
+      'queued',
+      {
+        facts: CAROL_COMMENTED,
+        threads: ALL_CLOSED,
+        system: { rerequest_queued: ['carol'] },
+      },
+      ['rerequest-queued', 'waiting-on-others', 'Re-request queued for carol'],
+    ],
+    [
+      'a thread waiting on you comes before re-requesting',
+      {
+        facts: CAROL_COMMENTED,
+        threads: [...ALL_CLOSED, row('PRRT_9', 'ready', 'open', 'human')],
+      },
+      ['human-comments', 'needs-you', '1 comment · agents finished'],
+    ],
+    [
+      'a re-request owed comes before failing CI',
+      {
+        facts: { ...CAROL_COMMENTED, ci_status: 'failing' },
+        threads: ALL_CLOSED,
+      },
+      ['rerequest-review', 'needs-you', 'Re-request review from carol'],
+    ],
+    [
+      'failing CI comes before a queued re-request',
+      {
+        facts: { ...CAROL_COMMENTED, ci_status: 'failing' },
+        threads: ALL_CLOSED,
+        system: { rerequest_queued: ['carol'] },
+      },
+      ['fix-ci', 'needs-you', 'Fix CI'],
+    ],
+    [
+      'a queued re-request comes before ready to merge',
+      {
+        facts: { ...READY_TO_MERGE, ...CAROL_COMMENTED, merge_state: 'clean' },
+        threads: ALL_CLOSED,
+        system: { rerequest_queued: ['carol'] },
+      },
+      ['rerequest-queued', 'waiting-on-others', 'Re-request queued for carol'],
+    ],
+  ];
+
+  const COMPUTED: [string, DashboardOver['system'], string][] = [
+    [
+      'owed',
+      {},
+      'PR state: Re-request review · Every comment from carol is closed',
+    ],
+    [
+      'queued',
+      { rerequest_queued: ['carol'] },
+      'PR state: Re-request queued · Asks carol once the fixes are pushed and CI is green',
+    ],
+  ];
+
+  for (const [name, system, computed] of COMPUTED) {
+    test(`the Dashboard says why a re-request is owed and when a queued one goes out: ${name}`, async function (assert) {
+      const shown = await onTheDashboard({
+        facts: CAROL_COMMENTED,
+        threads: ALL_CLOSED,
+        system,
+      });
+
+      assert.strictEqual(shown.computed, computed);
+    });
+  }
+
+  for (const system of [{}, { rerequest_queued: ['carol'] }]) {
+    test(`a move that names the reviewer does not repeat her change request as a chip: ${JSON.stringify(system)}`, async function (assert) {
+      const shown = await onTheWall({
+        facts: CAROL_ASKED_FOR_CHANGES,
+        threads: ALL_CLOSED,
+        system,
+      });
+
+      assert.deepEqual(shown.chips, []);
+    });
+  }
+
+  for (const [name, over, wanted] of ROUNDS) {
+    test(`a reviewer whose comments are all closed is owed a re-request: ${name}`, async function (assert) {
+      const shown = await seen(over);
+
+      assert.deepEqual([shown.move, shown.group, shown.verb], wanted);
+    });
+  }
 
   test('an agent on human comments comes before bot comments waiting on you', async function (assert) {
     assert.deepEqual(

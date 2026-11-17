@@ -445,7 +445,7 @@ const FACTS_FOR: Record<string, Partial<PrFacts>> = {
     changes_requested_by: ['carol'],
     pending_reviewers: ['carol'],
   },
-  'address-feedback': { changes_requested_by: ['bob'], pending_reviewers: [] },
+  'rerequest-review': { changes_requested_by: ['bob'], pending_reviewers: [] },
   'request-reviewers': { pending_reviewers: [] },
   'mark-ready-for-review': { pending_reviewers: [], draft: true },
   review: { ...AS_REVIEWER, viewer_requested: true },

@@ -69,6 +69,7 @@ export type Move =
   | 'agent-running'
   | 'agent-on-threads'
   | 'address-feedback'
+  | 'rerequest-review'
   | 'agent-question'
   | 'human-comments'
   | 'agent-on-human-comments'
@@ -76,6 +77,7 @@ export type Move =
   | 'agent-on-bot-comments'
   | 'fix-ci'
   | 'rebase'
+  | 'rerequest-queued'
   | 'ready-to-merge'
   | 'await-ci'
   | 'await-rereview'
@@ -160,6 +162,20 @@ const NOT_YOURS: RecordState[] = [...LEFT_OUT, 'rejected', 'removed'];
 const DONE: ConversationState[] = ['done', 'waiting', 'assumed-done'];
 const PARKED: ConversationState[] = ['waiting', 'deferred'];
 const CLOSED_MENTION: ConversationState[] = ['done', 'deferred'];
+const OUTSIDE_A_ROUND: RecordState[] = [
+  'draft',
+  'enrolled',
+  'discarded',
+  'not_mine',
+  'removed',
+];
+const CLOSED: ConversationState[] = [
+  'done',
+  'waiting',
+  'assumed-done',
+  'not-mine',
+  'deferred',
+];
 
 function read(one: Thread): boolean {
   return 'etag' in one;
@@ -271,6 +287,7 @@ const WAITING: Move[] = [
   'await-rerequest',
   'await-rereview',
   'await-ready',
+  'rerequest-queued',
 ];
 
 const BEFORE_ANYTHING: Move[] = [
@@ -317,7 +334,14 @@ interface Pick {
   mentionedBy?: string[];
 }
 
+interface Rounds {
+  addressing: string[];
+  owed: string[];
+  queued: string[];
+}
+
 interface Board {
+  rounds: Rounds;
   flags: ManagerFlags | null;
   isAuthor: boolean;
   drafts: number;
@@ -346,20 +370,74 @@ function flagsOf(facts: PrFacts | null): Flag[] {
   return holds.filter(([, held]) => held).map(([flag]) => flag);
 }
 
-function ofAuthor(facts: PrFacts): Pick {
-  const requesters = facts.changes_requested_by;
+function inRound(one: Thread, reviewer: string, asked?: string): boolean {
+  return (
+    one.opened_by === reviewer &&
+    !OUTSIDE_A_ROUND.includes(one.record_state) &&
+    (!asked || !one.opened_at || Date.parse(one.opened_at) >= Date.parse(asked))
+  );
+}
+
+function roundOf(all: Thread[], reviewer: string, facts: PrFacts): Thread[] {
+  const asked = facts.review_requested_at[reviewer];
+  return all.filter((one) => inRound(one, reviewer, asked));
+}
+
+function stillOpen(one: Thread): boolean {
+  return !CLOSED.includes(one.state);
+}
+
+function aPerson(all: Thread[], reviewer: string): boolean {
+  return all.every(
+    (one) => one.opened_by !== reviewer || one.author_kind === 'human',
+  );
+}
+
+function roundsOf(
+  facts: PrFacts | null,
+  all: Thread[],
+  queued: string[],
+): Rounds {
+  if (!facts) return { addressing: [], owed: [], queued };
+  const notPending = (login: string) =>
+    !facts.pending_reviewers.includes(login);
+  const requesters = facts.changes_requested_by.filter(notPending);
+  const holdsOpen = (login: string) =>
+    roundOf(all, login, facts).some(stillOpen);
+  const owed = unique([...requesters, ...facts.commented_by]).filter(
+    (login) =>
+      notPending(login) &&
+      aPerson(all, login) &&
+      !queued.includes(login) &&
+      !holdsOpen(login) &&
+      (requesters.includes(login) || roundOf(all, login, facts).length > 0),
+  );
+  return { addressing: requesters.filter(holdsOpen), owed, queued };
+}
+
+function ofAuthor(facts: PrFacts, rounds: Rounds): Pick {
   const pending = facts.pending_reviewers;
-  const owed = requesters.filter((login) => !pending.includes(login));
   const ci = facts.ci_status;
-  if (owed.length) return { move: 'address-feedback', reviewers: owed };
+  if (rounds.addressing.length) {
+    return { move: 'address-feedback', reviewers: rounds.addressing };
+  }
+  if (rounds.owed.length) {
+    return { move: 'rerequest-review', reviewers: rounds.owed };
+  }
   if (ci === 'failing') return { move: 'fix-ci' };
   if (behindMain(facts)) return { move: 'rebase' };
+  if (rounds.queued.length) {
+    return { move: 'rerequest-queued', reviewers: rounds.queued };
+  }
   if (facts.merge_state === 'clean') {
     return { move: facts.draft ? 'mark-ready-for-review' : 'ready-to-merge' };
   }
   if (ci === 'pending') return { move: 'await-ci' };
-  if (requesters.length) {
-    return { move: 'await-rereview', reviewers: requesters };
+  const reRequested = facts.changes_requested_by.filter((login) =>
+    pending.includes(login),
+  );
+  if (reRequested.length) {
+    return { move: 'await-rereview', reviewers: reRequested };
   }
   if (pending.length) return { move: 'await-review', reviewers: pending };
   return { move: facts.draft ? 'mark-ready-for-review' : 'request-reviewers' };
@@ -412,9 +490,11 @@ function ofReviewer(facts: PrFacts): Pick {
   return { move: 'await-rerequest' };
 }
 
-function ofPr(facts: PrFacts): Pick {
+function ofPr(facts: PrFacts, rounds: Rounds): Pick {
   if (facts.ended) return { move: 'closed' };
-  return roleOf(facts) === 'author' ? ofAuthor(facts) : ofReviewer(facts);
+  return roleOf(facts) === 'author'
+    ? ofAuthor(facts, rounds)
+    : ofReviewer(facts);
 }
 
 function agentOf(flags: ManagerFlags | null): Move | null {
@@ -462,7 +542,7 @@ function wallGroupOf(code: Move, muted: boolean): WallGroup | null {
 }
 
 function nextMoveOf(facts: PrFacts | null, board: Board): NextMove {
-  const pick = facts ? ofPr(facts) : null;
+  const pick = facts ? ofPr(facts, board.rounds) : null;
   const state = pick?.move ?? null;
   const code = nudged(onTop(state, board), board);
   const dismissed =
@@ -539,6 +619,7 @@ function summarised(
     bot,
     atWork: atWorkOf(all),
     move: nextMoveOf(facts, {
+      rounds: roundsOf(facts, all, pr?.drawn?.system.rerequest_queued ?? []),
       flags: pr?.flags ?? null,
       isAuthor: role === 'author',
       drafts,

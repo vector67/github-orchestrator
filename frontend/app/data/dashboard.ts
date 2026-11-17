@@ -121,6 +121,8 @@ const STATE_LABELS: Partial<Record<Move, string>> = {
   closed: 'Merged or closed',
   'fix-ci': 'Fix CI',
   'address-feedback': 'Address review feedback',
+  'rerequest-review': 'Re-request review',
+  'rerequest-queued': 'Re-request queued',
   'ready-to-merge': 'Ready to merge',
   'await-review': 'Waiting for review',
   'request-reviewers': 'Request reviewers',
@@ -251,6 +253,10 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
         : `Behind ${baseOf(shown)}`;
     case 'address-feedback':
       return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes · ${unresolvedOf(facts)}`;
+    case 'rerequest-review':
+      return `Every comment from ${listed(move.reviewers)} is closed`;
+    case 'rerequest-queued':
+      return `Asks ${listed(move.reviewers)} once the fixes are pushed and CI is green`;
     case 'ready-to-merge':
       return `${status.approved_by.length ? `Approved by ${listed(status.approved_by)}` : 'No approval needed'} · ${ci}`;
     case 'await-review':
@@ -331,6 +337,10 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
       return 'On hold';
     case 'address-feedback':
       return `Address changes from ${listed(move.reviewers)}`;
+    case 'rerequest-review':
+      return `Re-request review from ${listed(move.reviewers)}`;
+    case 'rerequest-queued':
+      return `Re-request queued for ${listed(move.reviewers)}`;
     case 'agent-question':
       return 'Your move: an agent is asking you a question';
     case 'human-comments':
@@ -523,6 +533,10 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
       return move.reviewers.length === 1
         ? 'requested changes and is not asked to review again'
         : 'requested changes and are not asked to review again';
+    case 'rerequest-review':
+      return 'every comment closed, not asked to review again';
+    case 'rerequest-queued':
+      return 'sent once the fixes are pushed and CI is green';
     case 'fix-ci':
       return failedOf(facts).length
         ? `${listed(failedOf(facts))} failing`
@@ -881,7 +895,13 @@ const BLOCKERS: Partial<Record<Move, string>> = {
   'address-feedback': 'review',
 };
 
-const REVIEW_NAMED: Move[] = ['address-feedback', 'await-rereview', 'review'];
+const REVIEW_NAMED: Move[] = [
+  'address-feedback',
+  'rerequest-review',
+  'rerequest-queued',
+  'await-rereview',
+  'review',
+];
 
 const APPROVAL_NAMED: Move[] = [
   'ready-to-merge',

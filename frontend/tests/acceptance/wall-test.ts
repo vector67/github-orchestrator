@@ -13,7 +13,11 @@ import {
   waitFor,
   waitUntil,
 } from '@ember/test-helpers';
-import type { HeldPullRequest, PrFacts } from 'frontend/data/api';
+import type {
+  DashboardSystem,
+  HeldPullRequest,
+  PrFacts,
+} from 'frontend/data/api';
 import {
   check,
   factsFor,
@@ -568,15 +572,29 @@ module('Acceptance | wall', function (hooks) {
         ],
       }),
       needing(22, {
-        facts: factsFor('address-feedback', {
+        facts: factsFor('rerequest-review', {
           changes_requested_by: ['bob', 'carol'],
         }),
+        threads: [
+          row('a', 'queued', 'open', 'human', undefined, false, 'bob'),
+          row('b', 'queued', 'open', 'human', undefined, false, 'carol'),
+        ],
       }),
       needing(23, { facts: factsFor('await-rereview') }),
       needing(24, {
         facts: factsFor('await-review', {
           pending_reviewers: ['dave', 'erin'],
         }),
+      }),
+      needing(25, {
+        facts: factsFor('rerequest-review', { commented_by: ['carol'] }),
+        threads: [
+          row('a', 'done', 'resolved', 'human', undefined, false, 'carol'),
+        ],
+      }),
+      needing(26, {
+        facts: factsFor('rerequest-review'),
+        system: { rerequest_queued: ['bob'] },
       }),
     );
 
@@ -613,6 +631,10 @@ module('Acceptance | wall', function (hooks) {
         'Waiting on reviewers dave, erin',
       ],
     );
+    assert.deepEqual(verbsOf([25, 26]), [
+      'Re-request review from bob, carol',
+      'Re-request queued for bob',
+    ]);
     assert.deepEqual([2, 3, 4, 5, 6, 7, 19, 20, 21].map(reasonOf), [
       '2 events wait until you resume it',
       'resume it to let events through',
@@ -642,10 +664,13 @@ module('Acceptance | wall', function (hooks) {
       needing(2, { facts: factsFor('fix-ci') }),
       needing(3, { facts: factsFor('rebase') }),
       needing(4, {
-        facts: factsFor('address-feedback', {
+        facts: factsFor('rerequest-review', {
           changes_requested_by: ['erin'],
           unresolved_threads: 3,
         }),
+        threads: [
+          row('a', 'queued', 'open', 'human', undefined, false, 'erin'),
+        ],
       }),
       needing(5, { facts: factsFor('await-rereview') }),
       needing(6, {
@@ -706,10 +731,19 @@ module('Acceptance | wall', function (hooks) {
       needing(19, {
         facts: factsFor('mark-ready-for-review'),
       }),
+      needing(20, { facts: factsFor('rerequest-review') }),
+      needing(21, {
+        facts: factsFor('rerequest-review'),
+        system: { rerequest_queued: ['bob'] },
+      }),
     );
 
     await visit('/');
 
+    assert.deepEqual([20, 21].map(reasonOf), [
+      'every comment closed, not asked to review again',
+      'sent once the fixes are pushed and CI is green',
+    ]);
     assert.deepEqual(
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19].map(
         reasonOf,
@@ -3349,6 +3383,54 @@ module('Acceptance | wall', function (hooks) {
       .dom('[data-test-wall-row="o/r#7"]')
       .exists('the healthy row still shows');
     assert.dom('[data-test-wall]').exists();
+  });
+
+  test('a null map of request stamps in one pull request’s facts still names who is owed a re-request', async function (assert) {
+    onTheHub(heldPr(), heldPr({ number: 8 }));
+    await visit('/');
+
+    const eight = heldPr({
+      number: 8,
+      dashboard: {
+        facts: { changes_requested_by: ['carol'], pending_reviewers: [] },
+      },
+    });
+    wallAnswers(
+      wallOf([
+        heldPr(),
+        {
+          ...eight,
+          dashboard: {
+            ...eight.dashboard,
+            facts: {
+              ...eight.dashboard.facts,
+              polled_at: '2026-09-12T09:30:00Z',
+              review_requested_at: null,
+            },
+          },
+        },
+      ]),
+    );
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-row="o/r#8"] [data-test-wall-lead]')
+      .includesText('Re-request review from carol');
+  });
+
+  test('a wall shelved before the re-request queue does not stop the hub opening', async function (assert) {
+    const shelved = heldPr();
+    const system: Partial<DashboardSystem> = { ...shelved.dashboard.system };
+    delete system.rerequest_queued;
+    localStorage.setItem(
+      'hub-pull-requests',
+      wallOf([{ ...shelved, dashboard: { ...shelved.dashboard, system } }]),
+    );
+    onTheHub(heldPr({ number: 8 }));
+
+    await visit('/');
+
+    assert.deepEqual(rows(), ['o/r#8']);
   });
 
   test('a first paint whose facts have no checks still shows the row', async function (assert) {

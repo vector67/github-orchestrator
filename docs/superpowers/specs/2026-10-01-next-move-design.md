@@ -105,20 +105,27 @@ re-reviews based on the changes.
 Other people's comments come first. Fix CI and Rebase only become the next move
 once nobody's comments are waiting.
 
-| ID  | Question                                                      | Yes                                                    |
-| --- | ------------------------------------------------------------- | ------------------------------------------------------ |
-| A1  | Is it a draft?                                                | Draft group, then carry on: the move below shows muted |
-| A2  | Changes requested, and that reviewer not asked again?         | Needs you: Address changes requested from X            |
-| A3  | Human comments waiting on you?                                | Needs you: Human comments · M/N done · K to decide     |
-| A4  | Agent working on human comments?                              | Agent working: Human comments · M/N done · agent on K  |
-| A5  | Bot comments waiting on you?                                  | Needs you: Bot comments · M/N done · K to decide       |
-| A6  | Agent running on anything else (bot comments, CI, rebase)?    | Agent working                                          |
-| A7  | CI failing?                                                   | Needs you: Fix CI                                      |
-| A8  | Conflicts with main, or behind it when that blocks the merge? | Needs you: Rebase on main                              |
-| A9  | Can you press merge (merge state CLEAN)?                      | Needs you: Ready to merge                              |
-| A10 | CI still running?                                             | Waiting on CI                                          |
-| A11 | Re-requested someone who asked for changes?                   | Waiting on X to re-review                              |
-| —   | Otherwise                                                     | Waiting on reviewers X, Y                              |
+| ID  | Question                                                                        | Yes                                                    |
+| --- | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| A1  | Is it a draft?                                                                  | Draft group, then carry on: the move below shows muted |
+| A2  | Changes requested, that reviewer not asked again, and a thread of theirs open?  | Needs you: Address changes requested from X            |
+| A3  | Human comments waiting on you?                                                  | Needs you: Human comments · M/N done · K to decide     |
+| A4  | Agent working on human comments?                                                | Agent working: Human comments · M/N done · agent on K  |
+| A5  | Bot comments waiting on you?                                                    | Needs you: Bot comments · M/N done · K to decide       |
+| A6  | Agent running on anything else (bot comments, CI, rebase)?                      | Agent working                                          |
+| A6a | A reviewer owed a re-request (every comment in their round closed, not queued)? | Needs you: Re-request review from X                    |
+| A7  | CI failing?                                                                     | Needs you: Fix CI                                      |
+| A8  | Conflicts with main, or behind it when that blocks the merge?                   | Needs you: Rebase on main                              |
+| A8a | A re-request queued, waiting on the push and CI?                                | Waiting on others: Re-request queued for X             |
+| A9  | Can you press merge (merge state CLEAN)?                                        | Needs you: Ready to merge                              |
+| A10 | CI still running?                                                               | Waiting on CI                                          |
+| A11 | Re-requested someone who asked for changes?                                     | Waiting on X to re-review                              |
+| —   | Otherwise                                                                       | Waiting on reviewers X, Y                              |
+
+A6a and A8a come from the
+[re-request review spec](2026-11-17-rerequest-review-design.md), which says
+what a round is and who is owed: a reviewer who requested changes is owed with
+no comment at all, one who only commented once their round holds a thread.
 
 A draft's move is whatever the rest of the list gives, shown muted. There is no
 "Mark ready for review" step.

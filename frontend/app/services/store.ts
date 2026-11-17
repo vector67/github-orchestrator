@@ -368,11 +368,14 @@ function markOf(operations: Operation[]): string {
 
 function listsOf(facts: PrFacts): PrFacts {
   const list = <T>(one: T[]): T[] => (Array.isArray(one) ? one : []);
+  const map = <T>(one: Record<string, T>): Record<string, T> =>
+    one && typeof one === 'object' && !Array.isArray(one) ? one : {};
   return {
     ...facts,
     changes_requested_by: list(facts.changes_requested_by),
     commented_by: list(facts.commented_by),
     pending_reviewers: list(facts.pending_reviewers),
+    review_requested_at: map(facts.review_requested_at),
     mentions: list(facts.mentions),
     checks: list(facts.checks),
   };

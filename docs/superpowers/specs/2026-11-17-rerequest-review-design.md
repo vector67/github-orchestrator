@@ -304,6 +304,8 @@ in `frontend/app/data/summaries.ts`.
   are open, and each thread's outcomes. A reviewer is **owed** a re-request
   when no thread in their round is open, they are not queued, and either
   their review requested changes or their round has at least one thread.
+  **Done** for the round and who is owed (the commit that records this);
+  each thread's outcomes come with the prompt.
 
 - **The prompt's question.** One function answers, for a thread and an
   action with what it gathered, whether the action closes the thread
@@ -327,7 +329,7 @@ in `frontend/app/data/summaries.ts`.
   The order is `address-feedback`, `rerequest-review`, `fix-ci`, `rebase`,
   `rerequest-queued`, then the rest as today. `onYourPr` lets waiting
   comments and agents come before `rerequest-review`, as for every move but
-  `address-feedback`.
+  `address-feedback`. **Done** (the commit that records this).
 
 - **Dialog.** A new component, `rerequest-prompt.gts`, opened from
   `panel-actions.gts` beside the hold warning, from `reply-box.gts` for a
