@@ -95,12 +95,16 @@ def had_checks(snapshot: dict[str, Any]) -> bool:
     return bool(snapshot.get("had_checks", snapshot.get("checks")))
 
 
+def pending_reviewers(snapshot: dict[str, Any]) -> list[str]:
+    return list(snapshot.get("pending_reviewers", []))
+
+
 def review_requested_at(snapshot: dict[str, Any]) -> dict[str, str]:
     return dict(snapshot.get("review_requested_at", {}))
 
 
 def _stamped_requests(old: dict[str, Any], poll: Poll) -> dict[str, str]:
-    asked_before = old.get("pending_reviewers", [])
+    asked_before = pending_reviewers(old)
     return {**review_requested_at(old),
             **{login: poll.polled_at for login in poll.state.pending_reviewers
                if login not in asked_before}}

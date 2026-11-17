@@ -3,6 +3,7 @@ from typing import Any
 from github_orchestrator.change_detection._rules import (
     had_checks,
     is_closing,
+    pending_reviewers,
     review_requested_at,
 )
 from github_orchestrator.change_detection._stored import Words, mentions_of, words_of
@@ -18,10 +19,6 @@ from github_orchestrator.domain import CiCheck
 
 def _reviewers_who(words: Words, status: ReviewerStatus) -> tuple[str, ...]:
     return tuple(login for login, given in words.reviewers.items() if given is status)
-
-
-def _pending_reviewers(snapshot: dict[str, Any]) -> list[str]:
-    return list(snapshot.get("pending_reviewers", []))
 
 
 def _unresolved_threads(snapshot: dict[str, Any]) -> int | None:
@@ -59,7 +56,7 @@ def _role(snapshot: dict[str, Any]) -> bool | None:
 
 
 def _requested(snapshot: dict[str, Any], account: str) -> bool:
-    return account in _pending_reviewers(snapshot) or snapshot.get("review_requested") is True
+    return account in pending_reviewers(snapshot) or snapshot.get("review_requested") is True
 
 
 def _mergeable(snapshot: dict[str, Any], words: Words) -> bool | None:
@@ -93,7 +90,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         approved_by=_reviewers_who(words, ReviewerStatus.APPROVED),
         changes_requested_by=_reviewers_who(words, ReviewerStatus.CHANGES_REQUESTED),
         commented_by=_reviewers_who(words, ReviewerStatus.COMMENTED),
-        pending_reviewers=tuple(_pending_reviewers(snapshot)),
+        pending_reviewers=tuple(pending_reviewers(snapshot)),
         review_requested_at=review_requested_at(snapshot),
         unresolved_threads=_unresolved_threads(snapshot),
         my_review=words.reviewers.get(account),
