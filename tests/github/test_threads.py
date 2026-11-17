@@ -127,6 +127,15 @@ def test_an_author_that_is_no_user_has_no_display_name():
     assert (thread.comments[0].author, thread.comments[0].author_name) == ("dependabot", "")
 
 
+def test_a_bot_author_is_named_with_the_bot_suffix_github_leaves_off_its_login():
+    raw = _comment(1, author="github-actions", name=None)
+    raw["author"]["__typename"] = "Bot"
+
+    [thread] = _threads_answering(_pull(threads=[_thread(comments=[raw])]))
+
+    assert thread.comments[0].author == "github-actions[bot]"
+
+
 def test_a_comment_with_no_body_and_no_edit_time_reads_as_empty_and_unedited():
     raw = {"databaseId": 5, "author": {"login": "reviewer"}, "body": None,
            "createdAt": "2026-04-20T10:00:00Z"}

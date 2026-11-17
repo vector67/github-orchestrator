@@ -579,7 +579,7 @@ class _World:
             return self._pulls(query, variables)
         if "REVIEW_REQUESTED_EVENT" in query:
             return self._asked_to_review(variables)
-        if "__typename" in query:
+        if "__typename" in query and "id" in variables:
             found = self.world.thread(variables["id"])
             return {"data": {"node": None if found is None else _node(found)}}
         if "reviewThreads(" in query:
