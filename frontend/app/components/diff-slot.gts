@@ -28,6 +28,8 @@ export interface DiffSlotSignature {
     conversationId: string;
     commits: FoldRange;
     pointable?: boolean;
+    folded?: boolean;
+    open?: boolean;
   };
 }
 
@@ -167,13 +169,32 @@ export default class DiffSlot extends Component<DiffSlotSignature> {
     >
       {{#if this.files.length}}
         {{#each this.files key="@index" as |file|}}
-          <div class="diff-file">
-            <div class="diff-row file" data-test-diff-file>{{file.path}}</div>
-            <DiffRows
-              @rows={{file.rows}}
-              @reveal={{fn this.reveal file.path}}
-            />
-          </div>
+          {{#if @folded}}
+            <details class="diff-file" open={{@open}} data-test-diff-file-fold>
+              <summary class="diff-row file">
+                <span
+                  class="diff-file-path"
+                  data-test-diff-file
+                >{{file.path}}</span>
+                <span class="diffstat">
+                  <span class="diffstat-added">+{{file.added}}</span>
+                  <span class="diffstat-deleted">−{{file.removed}}</span>
+                </span>
+              </summary>
+              <DiffRows
+                @rows={{file.rows}}
+                @reveal={{fn this.reveal file.path}}
+              />
+            </details>
+          {{else}}
+            <div class="diff-file">
+              <div class="diff-row file" data-test-diff-file>{{file.path}}</div>
+              <DiffRows
+                @rows={{file.rows}}
+                @reveal={{fn this.reveal file.path}}
+              />
+            </div>
+          {{/if}}
         {{/each}}
       {{else if this.shown}}
         <p class="diff-placeholder" data-test-diff-empty>No changes</p>

@@ -120,16 +120,30 @@ const PanelView: TOC<PanelSignature> = <template>
     </div>
     <div id="panel-work">
       <div id="panel-fix">
+        {{#if @panel.agent_line}}
+          <section class="agent-line" data-test-agent-line>
+            <p class="kicker" data-test-agent-kicker>Agent proposal</p>
+            <p
+              class="agent-proposal"
+              data-test-agent-proposal
+            >{{@panel.agent_line.proposal}}</p>
+            {{#if @panel.agent_line.reason}}
+              <div class="agent-reason" data-test-agent-reason>
+                <CommentBody @body={{@panel.agent_line.reason}} />
+              </div>
+            {{/if}}
+          </section>
+        {{/if}}
         {{#if @panel.draft}}{{else if (reviewing @panel)}}
           {{#if @panel.commit_check}}
-            <div class="commit-check" data-test-commit-check>
+            <div class="agent-line commit-check" data-test-commit-check>
               <p class="kicker" data-test-commit-verdict>
                 {{@panel.commit_check.verdict}}
               </p>
               {{#if @panel.commit_check.reasoning}}
-                <p class="note" data-test-commit-reasoning>
-                  {{@panel.commit_check.reasoning}}
-                </p>
+                <div class="agent-reason" data-test-commit-reasoning>
+                  <CommentBody @body={{@panel.commit_check.reasoning}} />
+                </div>
               {{/if}}
             </div>
           {{else if @panel.mention}}{{else if @panel.agent_line}}{{else}}
@@ -363,6 +377,7 @@ const PanelView: TOC<PanelSignature> = <template>
             <DiffSlot
               @conversationId={{@panel.id}}
               @commits={{@panel.last_fold.commits}}
+              @folded={{true}}
             />
           </details>
         {{/if}}
@@ -379,18 +394,6 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
       </div>
     </div>
-    {{#if @panel.agent_line}}
-      <section class="agent-line" data-test-agent-line>
-        {{#if @panel.agent_line.reason}}
-          <p class="agent-reason" data-test-agent-reason>
-            {{@panel.agent_line.reason}}
-          </p>
-        {{/if}}
-        <p class="agent-proposal" data-test-agent-proposal>
-          {{@panel.agent_line.proposal}}
-        </p>
-      </section>
-    {{/if}}
     {{#if (offersAnything @panel)}}
       <PanelActions
         @conversationId={{@panel.id}}

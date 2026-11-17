@@ -50,6 +50,8 @@ export const isHeader = (row: DiffRow): boolean => row.expands !== undefined;
 
 export interface DiffFile {
   path: string;
+  added: number;
+  removed: number;
   rows: DiffRow[];
 }
 
@@ -237,6 +239,8 @@ export function fileOf(file: FileChange, revealed: Revealed): DiffFile {
   const trailing = gapAfter(hunks, file.line_count ?? null);
   return {
     path: file.path,
+    added: file.added,
+    removed: file.removed,
     rows: [
       ...(file.is_binary
         ? [

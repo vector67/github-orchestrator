@@ -217,6 +217,7 @@ class EventCarryOut:
 
     def _rereview(self, review: ReviewRequested, facts: Facts,
                   conversations: ConversationManager) -> Run | str:
+        self._check_for_fixes(facts, conversations)
         since = facts.since_review.sha if facts.since_review else None
         return self._pr_work.rereview(
             self._worktree, self._pr, review.kind, title=_review_title(self._pr, review),
@@ -225,6 +226,18 @@ class EventCarryOut:
             said=_newest_summary(conversations, self._account), since=since,
             commits=self._working_copies.commits_since(self._worktree, since),
             replied=_replied(conversations))
+
+    def _check_for_fixes(self, facts: Facts, conversations: ConversationManager) -> None:
+        checkout = self._working_copies.checkout(self._pr)
+        failed = checkout.fetch(facts.base_branch)
+        head = None if failed is not None else checkout.revisions.origin_head()
+        if head is None:
+            self._note(f"Could not check the threads waiting on the author for fixes: "
+                       f"{failed or 'the checkout has no head fetched from origin'}.")
+            return
+        checks = conversations.check_for_fixes(head)
+        self._note(f"Re-review requested: checking {len(checks.asked)} thread(s) waiting on "
+                   f"the author for fixes.")
 
     def _absorb(self, activity: ThreadActivity, is_author: bool,
                 conversations: ConversationManager) -> None:

@@ -187,9 +187,12 @@ class Facts:
     needs_rebase: bool
     review_decision: ReviewDecision | None
     checks: tuple[CiCheck, ...]
+    had_checks: bool
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]
+    commented_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
+    review_requested_at: dict[str, str]
     unresolved_threads: int | None
     my_review: ReviewerStatus | None
     detailed_reviewer: str | None

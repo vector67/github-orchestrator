@@ -1525,9 +1525,10 @@ function agentLineOf(
   const confirm = actions.find((one) => CONFIRMS.includes(one.decision));
   if (!confirm) return null;
   const steps = confirmStepsOf(confirm, replyTo);
+  const proposal = steps.length ? steps.join(' and ') : 'skip';
   return {
     reason: agentReasonOf(conversation, operations),
-    proposal: `Agent proposal: ${steps.length ? steps.join(' and ') : 'skip'}`,
+    proposal: proposal.charAt(0).toUpperCase() + proposal.slice(1),
   };
 }
 
