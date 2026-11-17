@@ -369,6 +369,11 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
         </p>
       {{else if this.reading}}
         <CleanUpBand />
+        {{#if this.reading.ending}}
+          <p class="dash-ending" role="status" data-test-ending>
+            {{this.reading.ending}}
+          </p>
+        {{/if}}
         <section
           class="actionband {{this.reading.band.state}}"
           data-pending={{if this.pending "true"}}

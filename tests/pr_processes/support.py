@@ -28,7 +28,12 @@ def real_agent_changes() -> AgentChanges:
     return changes
 
 
-def checked_out(copies: FakeWorkingCopies, path: Path, branch: str) -> Path:
+def a_worktree(path: Path) -> Path:
     path.mkdir(parents=True, exist_ok=True)
-    copies.add_worktree(path, branch)
+    (path / ".git").write_text("gitdir: elsewhere\n")
+    return path
+
+
+def checked_out(copies: FakeWorkingCopies, path: Path, branch: str) -> Path:
+    copies.add_worktree(a_worktree(path), branch)
     return path

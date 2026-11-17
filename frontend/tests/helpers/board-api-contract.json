@@ -1964,6 +1964,28 @@
     }
    }
   },
+  "/api/streams": {
+   "get": {
+    "200": {
+     "properties": {
+      "data": {},
+      "path": {
+       "type": "string"
+      },
+      "status": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "path"
+     ],
+     "type": "object"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/summary": {
    "get": {
     "200": {

@@ -258,7 +258,7 @@ class GitWorkingCopies:
 
     def _pr_worktree(self, pr: Pr) -> Located:
         known = self._pr_worktrees.get(pr)
-        if known is not None and known.is_dir():
+        if known is not None and (known / ".git").exists():
             return Located(str(known))
         if pr.repo not in self._clones:
             return Located(None, f"{pr.repo} is not one of the watched repos in [[repos]], "

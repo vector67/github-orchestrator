@@ -118,6 +118,30 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-band-computed]').hasText('No reviewers assigned');
   });
 
+  test('a merged or closed pull request says it is being torn down, in a band of its own and a banner', async function (assert) {
+    onTheHub({ facts: factsFor('closed') });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-band-move]').hasText('Tear down PR');
+    assert
+      .dom('[data-test-action-band]')
+      .hasAttribute('data-test-band', 'ending');
+    assert
+      .dom('[data-test-ending]')
+      .hasText(
+        'PR merged or closed. It is being torn down, and will soon be gone from the orchestrator.',
+      );
+  });
+
+  test('an open pull request has no teardown banner', async function (assert) {
+    onTheHub({ facts: factsFor('request-reviewers') });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-ending]').doesNotExist();
+  });
+
   test('the tab leads with the action band, then status and since you last acted, then system', async function (assert) {
     onTheHub({
       pr: { author: 'anna' },
@@ -591,6 +615,12 @@ module('Acceptance | dashboard', function (hooks) {
       '/pr/o/r/7/api/manager/agent-output/stream',
       '/pr/o/r/7/api/manager/changes/stream',
     ]);
+    assert.deepEqual(
+      board().connections.map(
+        (one) => new URL(one, 'http://127.0.0.1').pathname,
+      ),
+      ['/api/streams'],
+    );
 
     board().changes = 'Split the writer.';
     board().output = [{ text: 'Running the tests', run_boundary: false }];
@@ -630,11 +660,10 @@ module('Acceptance | dashboard', function (hooks) {
     assert.deepEqual(board().openStreams, []);
   });
 
-  test('a dropped stream keeps the last notes on show marked not live, and picks up from the last event it saw', async function (assert) {
+  test('a dropped stream keeps the last notes on show marked not live, and follows them again once the board answers', async function (assert) {
     onTheHub();
     board().changes = 'Split the writer.';
     await visit('/pr/o/r/7/dashboard');
-    const seen = notesStream()?.sent;
 
     board().down = true;
     board().dropStreams();
@@ -649,7 +678,7 @@ module('Acceptance | dashboard', function (hooks) {
     board().down = false;
     await clock().tick(POLL);
 
-    assert.strictEqual(notesStream()?.lastEventId, seen);
+    assert.ok(notesStream());
     assert.dom('[data-test-pane-live]').doesNotExist();
     assert.dom('[data-test-not-live]').doesNotExist();
     assert.dom('[data-test-notes]').hasText('Split the writer.');
@@ -2184,7 +2213,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('close waits for the board while it is down', async function (assert) {
     onTheHub();
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
     await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-control="close"]').isDisabled();
@@ -2265,7 +2294,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('a hold through the hub is pending on the band from the click until the hub answers', async function (assert) {
     onTheHub();
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
     await visit('/pr/o/r/7/dashboard');
     const release = board().hold(/\/api\/pull-requests\/o\/r\/7:hold$/);
 
@@ -2357,7 +2386,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('w releases a frozen worktree through the hub once you say yes, and the band then says it was asked for', async function (assert) {
     onTheHub({ frozen: FROZEN, manager: { frozen_on: FROZEN.here } });
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
     await visit('/pr/o/r/7/dashboard');
 
     await press('w');
@@ -2391,7 +2420,7 @@ module('Acceptance | dashboard', function (hooks) {
 
   test('a board that is down shows the watcher’s dashboard, marked as not live, and holds through the hub', async function (assert) {
     onTheHub();
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
 
     await visit('/pr/o/r/7/dashboard');
 
@@ -2429,7 +2458,7 @@ module('Acceptance | dashboard', function (hooks) {
   test('a board that comes back makes the tab live again', async function (assert) {
     const earlier = { system: { last_run: EARLIER_RUN } };
     onTheHub(earlier);
-    board().broken = /\/stream$/;
+    board().broken = /\/api\/streams\?/;
     await visit('/pr/o/r/7/dashboard');
 
     board().broken = null;

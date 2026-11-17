@@ -5,9 +5,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, FastAPI, Request, Response, WebSocket
+from fastapi import APIRouter, Depends, FastAPI, Query, Request, Response, WebSocket
 from fastapi import Path as PathParameter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
 from github_orchestrator.board_api import _etag as etag
@@ -50,6 +50,7 @@ from github_orchestrator.board_api._errors import (
 )
 from github_orchestrator.board_api._guarded import guard, page_at, target
 from github_orchestrator.board_api._runs import ledger_read, watcher_read
+from github_orchestrator.board_api._streams import FOLLOWABLE, FOLLOWED, Followed
 from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
@@ -198,6 +199,21 @@ async def read_health(desk: Serving) -> Health:
                   font_problem=desk.fonts.problem, state=desk.told.state(), version=desk.version,
                   watcher=watcher_read(desk.pulse.health()),
                   newest_release=_newest(desk))
+
+
+@reads.get("/streams", tags=["hub"], operation_id="followStreams",
+           response_class=StreamingResponse, responses=FOLLOWED,
+           summary="Every pull request stream a browser follows, on one connection.")
+def follow_streams(request: Request,
+                   follow: Annotated[list[str], Query(min_length=1)]) -> Response:
+    """Each `follow` is a stream path under a pull request's prefix, with its
+    query, such as `/pr/acme/widgets/7/api/dashboard/stream`.
+    """
+    for one in follow:
+        if not FOLLOWABLE.match(one):
+            raise Refusal(400, ErrorCode.MALFORMED_REQUEST,
+                          f"{one} is not a pull request's stream")
+    return Followed(request.app.state.served, request.scope, follow)
 
 
 def _newest(desk: Desk) -> NewestRelease | None:

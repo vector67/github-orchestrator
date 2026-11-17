@@ -4703,6 +4703,20 @@ kbd {
   background: var(--grey-fill);
 }
 
+.actionband.ending {
+  background: var(--blue-fill);
+  border-bottom-color: var(--blue);
+}
+
+.dash-ending {
+  flex: none;
+  margin: 0;
+  padding: 10px 24px;
+  font-weight: var(--fw-strong);
+  background: var(--blue-fill);
+  border-bottom: 1px solid var(--blue);
+}
+
 .agent-settings-files {
   display: flex;
   flex-direction: column;

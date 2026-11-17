@@ -100,8 +100,7 @@ def _unguarded(request: Request, port: int) -> Response | None:
 
 def _logged(request: Request, status: int, started: float) -> None:
     elapsed_ms = (time.monotonic() - started) * 1000
-    level = (logging.WARNING if status >= 500 else logging.INFO if status >= 400
-             else logging.DEBUG)
+    level = logging.WARNING if status >= 500 else logging.INFO
     log.log(level, "%s %s -> %d in %.0fms", request.method, request.url.path,
             status, elapsed_ms)
 

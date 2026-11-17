@@ -203,7 +203,7 @@ def worktree_for_branch(repo_dir: Path, branch: str) -> Path | None:
             wt_branch = line.split("refs/heads/", 1)[1]
             if wt_branch == branch:
                 path = Path(current_path)
-                return path if path.is_dir() else None
+                return path if (path / ".git").exists() else None
 
     return None
 
