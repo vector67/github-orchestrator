@@ -727,7 +727,11 @@ export type Slot =
 
 interface PrWrite extends Carrying {
   slot: Slot;
-  until?: (facts: PrFacts, system: DashboardSystem | null) => boolean;
+  until?: (
+    facts: PrFacts,
+    system: DashboardSystem | null,
+    naming: string | null,
+  ) => boolean;
   leaves?: boolean;
   unsent?: string;
   ringsOn?: string[];
@@ -767,6 +771,15 @@ const PR_WRITES = {
     square: null,
     slot: 'reviewers',
     until: (_facts, system) => Boolean(system?.assign_when_ready),
+  },
+  'rerequest-review': {
+    doing: 'queueing the re-request',
+    square: null,
+    slot: 'reviewers',
+    until: (facts, system, reviewer) =>
+      reviewer !== null &&
+      (facts.pending_reviewers.includes(reviewer) ||
+        Boolean(system?.rerequest_queued.includes(reviewer))),
   },
   'check-for-fixes': {
     doing: 'asking for the checks',
@@ -1030,10 +1043,11 @@ export function settledBy(
   facts: PrFacts | null,
   system: DashboardSystem | null,
   answered: boolean,
+  naming: string | null,
 ): boolean {
   const until = prWriteOf(kind)?.until;
   if (!until) return answered;
-  return facts !== null && until(facts, system);
+  return facts !== null && until(facts, system, naming);
 }
 
 export interface Pressed {

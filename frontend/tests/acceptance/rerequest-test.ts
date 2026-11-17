@@ -1,0 +1,345 @@
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'frontend/tests/helpers';
+import { click, fillIn, find, triggerEvent, visit } from '@ember/test-helpers';
+import type { Conversation, PrFacts } from 'frontend/data/api';
+import {
+  dashboard,
+  heldPr,
+  setupFakeBoard,
+  type DashboardOver,
+} from 'frontend/tests/helpers/fake-board';
+import type { Phase } from 'frontend/tests/helpers/fake-board';
+
+const OPENED_AT = '2026-09-12T10:00:00Z';
+
+const CAROL_COMMENTED: Partial<PrFacts> = {
+  is_author: true,
+  review_decision: 'review-required',
+  commented_by: ['carol'],
+  changes_requested_by: [],
+  pending_reviewers: [],
+};
+
+module('Acceptance | re-request review', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  function serve(over: DashboardOver = { facts: CAROL_COMMENTED }): void {
+    board().held = [heldPr({ dashboard: over })];
+    board().manager = dashboard(over);
+  }
+
+  function carols(
+    phase: Phase,
+    over: Partial<Conversation> = {},
+  ): Conversation {
+    return board().threadIn(phase, {
+      key: 'PRRT_c1',
+      opened_by: 'carol',
+      opened_at: OPENED_AT,
+      author_kind: 'human',
+      comments: [
+        {
+          id: 1,
+          author: 'carol',
+          created_at: OPENED_AT,
+          review_state: 'COMMENTED',
+        },
+      ],
+      ...over,
+    });
+  }
+
+  function verbs(): string[] {
+    return board().posted.map((one) => one.verb);
+  }
+
+  hooks.beforeEach(function () {
+    serve();
+  });
+
+  test("Mark done on carol's last open thread opens the prompt and posts nothing", async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    await click('[data-test-decision="mark-done"]');
+
+    assert
+      .dom('[data-test-rerequest-prompt]')
+      .hasAttribute('role', 'alertdialog');
+    assert
+      .dom('[data-test-rerequest-kicker]')
+      .hasText('Last comment from carol');
+    assert
+      .dom('[data-test-rerequest-question]')
+      .hasText("Re-request carol's review of #7?");
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('"Mark done and re-request" posts mark-done, then queues the re-request for carol', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+
+    assert
+      .dom('[data-test-rerequest-and]')
+      .hasText('Mark done and re-request r');
+    await click('[data-test-rerequest-and]');
+
+    assert.deepEqual(verbs(), ['mark-done', 'rerequest-review']);
+    assert.strictEqual(
+      board().posted[1]!.url,
+      '/pr/o/r/7/api/manager:rerequest-review',
+    );
+    assert.deepEqual(board().posted[1]!.body, { reviewer: 'carol' });
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+  });
+
+  test('"Mark done only" posts mark-done alone, and the next move asks to re-request carol', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+    board().conversations = [
+      carols('proposed', { state: 'done', record_state: 'resolved' }),
+    ];
+
+    assert.dom('[data-test-rerequest-only]').hasText('Mark done only o');
+    await click('[data-test-rerequest-only]');
+
+    assert.deepEqual(verbs(), ['mark-done']);
+    await visit('/pr/o/r/7/dashboard');
+    assert
+      .dom('[data-test-your-move] .vb')
+      .hasAttribute('title', 'Re-request review from carol');
+  });
+
+  test('× posts nothing and leaves the thread open', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+
+    await click('[data-test-rerequest-cancel]');
+
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.dom('[data-test-decision="mark-done"]').isEnabled();
+  });
+
+  test('Escape posts nothing, and r and o pick the buttons', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+
+    await triggerEvent(document, 'keydown', { key: 'Escape' });
+
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+
+    await click('[data-test-decision="mark-done"]');
+    await triggerEvent(document, 'keydown', { key: 'o' });
+
+    assert.deepEqual(verbs(), ['mark-done']);
+  });
+
+  const DIALOG_FIRST: [string, Partial<Conversation>, string, unknown][] = [
+    [
+      'approve',
+      {},
+      'Accept and re-request',
+      { reply: 'Fixed.', delete_comment: false, resolve: false },
+    ],
+    [
+      'resolve',
+      {},
+      'Resolve and re-request',
+      { reply: 'Fixed.', delete_comment: false, resolve: true },
+    ],
+    [
+      'reject',
+      {},
+      'Reject and re-request',
+      { reply: 'Fixed.', delete_comment: false },
+    ],
+    ['defer', {}, 'Defer and re-request', { until: 'manual' }],
+    [
+      'reply-and-mark-done',
+      { kind: 'issue' },
+      'Reply and mark done and re-request',
+      { reply: 'Fixed.' },
+    ],
+  ];
+
+  for (const [decision, over, label, body] of DIALOG_FIRST) {
+    test(`${decision} shows its own dialog, then the prompt, and posts what was gathered`, async function (assert) {
+      board().conversations = [carols('proposed', over)];
+      await visit('/pr/o/r/7/conversations/PRRT_c1');
+      await click(`[data-test-decision="${decision}"]`);
+      if (find('[data-test-dialog-body]')) {
+        await fillIn('[data-test-dialog-body]', 'Fixed.');
+      }
+
+      await click('[data-test-dialog-submit]');
+
+      assert.dom('[data-test-dialog]').doesNotExist();
+      assert.dom('[data-test-rerequest-prompt]').exists();
+      assert.deepEqual(verbs(), []);
+
+      assert.dom('[data-test-rerequest-and]').hasText(`${label} r`);
+      await click('[data-test-rerequest-and]');
+
+      assert.deepEqual(verbs(), [
+        decision === 'reply-and-mark-done' ? 'mark-done' : decision,
+        'rerequest-review',
+      ]);
+      assert.deepEqual(board().posted[0]!.body, body);
+    });
+  }
+
+  test('× on the prompt after a dialog posts nothing and keeps the words typed into it', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="resolve"]');
+    await fillIn('[data-test-dialog-body]', 'Fixed.');
+    await click('[data-test-dialog-submit]');
+
+    await click('[data-test-rerequest-cancel]');
+
+    assert.deepEqual(verbs(), []);
+    await click('[data-test-decision="resolve"]');
+    assert.dom('[data-test-dialog-body]').hasValue('Fixed.');
+  });
+
+  test('Confirm on an assumed-done thread opens the prompt and posts confirm', async function (assert) {
+    board().conversations = [carols('assumed-done')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    await click('[data-test-decision="confirm"]');
+
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-and]').hasText('Confirm and re-request r');
+    await click('[data-test-rerequest-and]');
+    assert.deepEqual(verbs(), ['confirm', 'rerequest-review']);
+  });
+
+  async function moveTo(to: string): Promise<void> {
+    board().conversations = [carols('assumed-done')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="place"]');
+    await click(`[data-test-outcome="${to}"]`);
+    await click('[data-test-dialog-submit]');
+  }
+
+  test('Move to Their move opens the prompt, then posts place', async function (assert) {
+    await moveTo('waiting');
+
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-and]').hasText('Move and re-request r');
+    await click('[data-test-rerequest-only]');
+
+    assert.deepEqual(verbs(), ['place']);
+    assert.deepEqual(board().posted[0]!.body, { to: 'waiting' });
+  });
+
+  for (const to of ['queued', 'ready']) {
+    test(`Move to ${to} posts at once with no prompt`, async function (assert) {
+      await moveTo(to);
+
+      assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+      assert.deepEqual(verbs(), ['place']);
+      assert.deepEqual(board().posted[0]!.body, { to });
+    });
+  }
+
+  test('a refused decision queues nothing', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+    board().refusal = {
+      status: 412,
+      code: 'precondition-failed',
+      detail: 'thread PRRT_c1 has moved',
+    };
+
+    await click('[data-test-rerequest-and]');
+
+    assert.deepEqual(verbs(), ['mark-done']);
+  });
+
+  const NO_PROMPT: [string, DashboardOver, () => Conversation[]][] = [
+    [
+      'not the last open thread from carol',
+      { facts: CAROL_COMMENTED },
+      () => [
+        carols('proposed'),
+        carols('proposed', { key: 'PRRT_c2', github_node_id: 'PRRT_c2' }),
+      ],
+    ],
+    [
+      'GitHub lists carol as pending',
+      { facts: { ...CAROL_COMMENTED, pending_reviewers: ['carol'] } },
+      () => [carols('proposed')],
+    ],
+    [
+      'carol approved',
+      {
+        facts: {
+          ...CAROL_COMMENTED,
+          commented_by: [],
+          review_decision: 'approved',
+        },
+      },
+      () => [carols('proposed')],
+    ],
+    [
+      'a bot',
+      { facts: CAROL_COMMENTED },
+      () => [carols('proposed', { author_kind: 'bot' })],
+    ],
+    [
+      'someone else’s pull request',
+      { facts: { ...CAROL_COMMENTED, is_author: false } },
+      () => [carols('waiting')],
+    ],
+  ];
+
+  for (const [name, over, conversations] of NO_PROMPT) {
+    test(`Mark done posts at once with no prompt: ${name}`, async function (assert) {
+      serve(over);
+      board().conversations = conversations();
+      await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+      await click('[data-test-decision="mark-done"]');
+
+      assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+      assert.deepEqual(verbs(), ['mark-done']);
+    });
+  }
+
+  test('Mark done carries the window glyph where it opens the prompt', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    assert
+      .dom('[data-test-decision="mark-done"]')
+      .hasAttribute('data-opens-dialog');
+  });
+
+  test('Mark done carries no window glyph where another thread from carol is open', async function (assert) {
+    board().conversations = NO_PROMPT[0]![2]();
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    assert
+      .dom('[data-test-decision="mark-done"]')
+      .doesNotHaveAttribute('data-opens-dialog');
+  });
+
+  test('the r key posts the decision and queues the re-request', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+
+    await triggerEvent(document, 'keydown', { key: 'r' });
+
+    assert.deepEqual(verbs(), ['mark-done', 'rerequest-review']);
+  });
+});

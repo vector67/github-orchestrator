@@ -28,6 +28,8 @@ import {
   openingOf,
   pressedBy,
   pressingOf,
+  type Decision,
+  type Gathered,
   type Pressed,
   type Pressing,
   type Pressings,
@@ -35,7 +37,7 @@ import {
 import { groupOf, type Role } from 'frontend/data/groups';
 import type { Details, FileStat, WorktreeOf } from 'frontend/data/panel';
 import { referenceOf } from 'frontend/data/rows';
-import { atWork } from 'frontend/data/thread';
+import { atWork, awaitsYou } from 'frontend/data/thread';
 import { saidOf, type ThreadNamed } from 'frontend/data/tried';
 import { levelOf, nameOf, type Level } from 'frontend/data/wall';
 import {
@@ -413,6 +415,59 @@ function roundsOf(
       (requesters.includes(login) || roundOf(all, login, facts).length > 0),
   );
   return { addressing: requesters.filter(holdsOpen), owed, queued };
+}
+
+export type Closing = Decision | 'reply';
+
+const ALWAYS_CLOSES: Closing[] = [
+  'approve',
+  'reply-and-mark-done',
+  'resolve',
+  'mark-done',
+  'reject',
+  'defer',
+  'confirm',
+  'confirm-resolve',
+];
+
+const PLACED_AWAY = ['waiting', 'not-mine'];
+
+function closes(action: Closing, gathered: Gathered, one: Thread): boolean {
+  if (ALWAYS_CLOSES.includes(action)) return true;
+  if (action === 'place') return PLACED_AWAY.includes(gathered.modifier ?? '');
+  return action === 'reply' && awaitsYou(one);
+}
+
+export interface RerequestPrompt {
+  reviewer: string;
+  number: number;
+}
+
+export function rerequestPromptOf(
+  pr: PrEntity | undefined,
+  threads: Threads | undefined,
+  key: string,
+  action: Closing,
+  gathered: Gathered,
+): RerequestPrompt | null {
+  const facts = pr?.facts ?? null;
+  const closing = threads?.[key];
+  if (!pr || !facts || !closing || roleOf(facts) !== 'author') return null;
+  if (!closes(action, gathered, closing)) return null;
+  const all = Object.values(threads ?? {}).map((one) =>
+    one.key === key ? { ...one, state: 'done' as const } : one,
+  );
+  const reviewer = closing.opened_by;
+  const owed = roundsOf(
+    facts,
+    all,
+    pr.drawn?.system.rerequest_queued ?? [],
+  ).owed;
+  const inTheRound = roundOf(all, reviewer, facts).some(
+    (one) => one.key === key,
+  );
+  if (!owed.includes(reviewer) || !inTheRound) return null;
+  return { reviewer, number: pr.number };
 }
 
 function ofAuthor(facts: PrFacts, rounds: Rounds): Pick {

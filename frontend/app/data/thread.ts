@@ -225,6 +225,17 @@ export function atWork(thread: { state: ConversationState }): boolean {
   return AT_WORK.includes(thread.state);
 }
 
+export function awaitsYou(thread: {
+  state: ConversationState;
+  reopened?: boolean;
+}): boolean {
+  return (
+    thread.state === 'ready' ||
+    (Boolean(thread.reopened) &&
+      (thread.state === 'queued' || thread.state === 'working'))
+  );
+}
+
 export function busy(conversation: Conversation): boolean {
   return !atWork(conversation) && outstanding(conversation) !== undefined;
 }

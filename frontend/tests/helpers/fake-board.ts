@@ -1,6 +1,7 @@
 import type {
   ThreadNamesMigration,
   AskedReviewer,
+  RerequestReviewRequest,
   AuthorKind,
   CiCheck,
   Comment,
@@ -2194,6 +2195,17 @@ export class FakeBoard {
         manager: { ...this.manager.manager, on_hold: verb === 'hold' },
       };
       this.streamed();
+    }
+    if (this.manager && verb === 'rerequest-review') {
+      const { reviewer } = body as RerequestReviewRequest;
+      const system = this.manager.system;
+      this.manager = {
+        ...this.manager,
+        system: {
+          ...system,
+          rerequest_queued: [...system.rerequest_queued, reviewer],
+        },
+      };
     }
     return respond(null, {
       status: 202,

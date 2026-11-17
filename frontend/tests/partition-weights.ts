@@ -27,6 +27,7 @@ export const WEIGHTS: Record<string, number> = {
   './acceptance/rail-test.ts': 654,
   './acceptance/reply-test.ts': 214,
   './acceptance/repo-filter-test.ts': 183,
+  './acceptance/rerequest-test.ts': 700,
   './acceptance/report-test.ts': 38,
   './acceptance/review-test.ts': 595,
   './acceptance/reviewer-panel-test.ts': 582,

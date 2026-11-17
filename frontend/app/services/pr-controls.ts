@@ -342,6 +342,11 @@ export default class PrControlsService extends Service {
       () => undefined,
     );
 
+  rerequestReview = (on: Controlled, reviewer: string): Promise<void> =>
+    waitForPromise(
+      this.throughTheManager(on, 'rerequest-review', { reviewer }, reviewer),
+    ).then(() => undefined);
+
   dismiss = (on: Controlled, until: DismissUntil): Promise<void> =>
     waitForPromise(this.dismissing(on, until));
 
@@ -460,6 +465,7 @@ export default class PrControlsService extends Service {
     on: Controlled,
     verb: PrVerb,
     body?: unknown,
+    naming: string | null = null,
   ): Promise<boolean> {
     const taken = await this.store.press(
       on.shown,
@@ -467,6 +473,7 @@ export default class PrControlsService extends Service {
       `manager ${verb}`,
       `${this.prefix(on)}/api/manager:${verb}`,
       body,
+      naming,
     );
     if (!taken.done) {
       if (leavesThePage(verb)) {

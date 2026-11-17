@@ -85,6 +85,7 @@ import {
   opensTerminal,
   settledBy,
   slotOf,
+  type Gathered,
   type Pressed,
   type PrVerb,
   type SetupWrite,
@@ -134,6 +135,7 @@ import {
   placeOf,
   prHeaderOf,
   readOf,
+  rerequestPromptOf,
   resetStandingOf,
   threadNamedIn,
   setupPressedOf,
@@ -152,8 +154,10 @@ import {
   type MentionPage,
   type MentionRow,
   type ThreadCard,
+  type Closing,
   type Outstanding,
   type Place,
+  type RerequestPrompt,
   type PrHeader,
   type ResetStanding,
   type ReviewerGroup,
@@ -188,6 +192,8 @@ export type {
   OutstandingGroup,
   OutstandingItem,
   PrHeader,
+  Closing,
+  RerequestPrompt,
   ResetStanding,
   Reviewer,
   ReviewerGroup,
@@ -522,6 +528,23 @@ export default class StoreService extends Service {
   summary(repo: string, number: number): Summaries | null {
     const key = keyOf(repo, number);
     return summaryOf(this.prs[key], this.threads[key], this.operations[key]);
+  }
+
+  rerequestPrompt(
+    repo: string,
+    number: number,
+    thread: string,
+    action: Closing,
+    gathered: Gathered,
+  ): RerequestPrompt | null {
+    const key = keyOf(repo, number);
+    return rerequestPromptOf(
+      this.prs[key],
+      this.threads[key],
+      thread,
+      action,
+      gathered,
+    );
   }
 
   reading(shown: ShownPr, now: number): Reading | null {
@@ -1668,12 +1691,14 @@ export default class StoreService extends Service {
     where: string,
     path: string,
     body?: unknown,
+    naming: string | null = null,
   ): Promise<Tried<() => void>> {
     const { taken, local } = await this.sendOn(
       pr,
       verb,
       () => handed(path, body),
       where,
+      naming,
     );
     if (!taken.done) return taken;
     return { done: true, body: () => this.settle(pr, local, true) };
@@ -2068,7 +2093,8 @@ export default class StoreService extends Service {
     const held = this.prs[keyOf(pr.repo, pr.number)];
     const facts = held?.facts ?? null;
     const system = held?.drawn?.system ?? null;
-    if (settledBy(one.kind ?? '', facts, system, answered)) this.drop(pr, one);
+    if (settledBy(one.kind ?? '', facts, system, answered, one.body ?? null))
+      this.drop(pr, one);
   }
 
   private sentOn(pr: Numbered, conversation: string | null): string[] {

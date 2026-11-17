@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
+import { waitForPromise } from '@ember/test-waiters';
 import AreYouSure from 'frontend/components/are-you-sure';
 import CheckForFixes from 'frontend/components/check-for-fixes';
 import DecideDialog from 'frontend/components/decide-dialog';
@@ -10,6 +11,7 @@ import Glyphs from 'frontend/components/glyphs';
 import HoldWarning from 'frontend/components/hold-warning';
 import PendingRing from 'frontend/components/pending-ring';
 import RequestSessionAsk from 'frontend/components/request-session-ask';
+import RerequestPrompt from 'frontend/components/rerequest-prompt';
 import ReworkDialog from 'frontend/components/rework-dialog';
 import {
   AGENTS_STOPPED,
@@ -40,6 +42,7 @@ import type PrControlsService from 'frontend/services/pr-controls';
 import type RequestSessionService from 'frontend/services/request-session';
 import type ReworkService from 'frontend/services/rework';
 import type StoreService from 'frontend/services/store';
+import type { RerequestPrompt as Prompt } from 'frontend/services/store';
 
 export interface PanelActionsSignature {
   Element: HTMLElement;
@@ -83,6 +86,12 @@ interface Warned {
   gathered: Gathered;
 }
 
+interface Prompting extends Warned {
+  prompt: Prompt;
+  label: string;
+  settle: (posted: boolean) => void;
+}
+
 export default class PanelActions extends Component<PanelActionsSignature> {
   @service declare board: BoardService;
   @service declare composer: ComposerService;
@@ -97,6 +106,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
   @tracked asking: Decision | null = null;
   @tracked spec: DialogSpec | null = null;
   @tracked warned: Warned | null = null;
+  @tracked prompting: Prompting | null = null;
   @tracked red: { decision: Decision; asking: AreYouSureAsking } | null = null;
   @tracked choosingSession = false;
 
@@ -120,7 +130,9 @@ export default class PanelActions extends Component<PanelActionsSignature> {
   opensDialog = (offered: Offer): boolean =>
     offered.opensDialog ||
     (offered.asks === 'session' && this.requestSession.asks) ||
-    (CLOSES_A_MENTION.includes(offered.decision) && this.lastMentionOnAHeldPr);
+    (CLOSES_A_MENTION.includes(offered.decision) &&
+      this.lastMentionOnAHeldPr) ||
+    this.promptFor(offered.decision, {}) !== null;
 
   get agentsStopped(): boolean {
     const pr = this.here.pr;
@@ -169,6 +181,53 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     return this.board.decide(this.args.conversationId, decision, gathered);
   }
 
+  private promptFor(decision: Decision, gathered: Gathered): Prompt | null {
+    const pr = this.here.pr;
+    if (!pr) return null;
+    return this.store.rerequestPrompt(
+      pr.repo,
+      pr.number,
+      this.args.conversationId,
+      decision,
+      gathered,
+    );
+  }
+
+  private close(decision: Decision, gathered: Gathered): Promise<boolean> {
+    const prompt = this.promptFor(decision, gathered);
+    if (!prompt) return this.post(decision, gathered);
+    const label =
+      this.args.actions.find((one) => one.decision === decision)?.label ?? '';
+    return new Promise((settle) => {
+      this.prompting = { decision, gathered, prompt, label, settle };
+    });
+  }
+
+  private async closeAsked(rerequest: boolean): Promise<void> {
+    const prompting = this.prompting;
+    this.prompting = null;
+    if (!prompting) return;
+    const on = this.controls.onPage;
+    const posted = await this.post(prompting.decision, prompting.gathered);
+    prompting.settle(posted);
+    if (posted && rerequest && on) {
+      await this.controls.rerequestReview(on, prompting.prompt.reviewer);
+    }
+  }
+
+  rerequestToo = () => {
+    void waitForPromise(this.closeAsked(true));
+  };
+
+  closeOnly = () => {
+    void waitForPromise(this.closeAsked(false));
+  };
+
+  cancelPrompt = () => {
+    this.prompting?.settle(false);
+    this.prompting = null;
+  };
+
   get composing(): boolean {
     return this.rework.isOpen(this.args.conversationId);
   }
@@ -198,7 +257,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
       );
     } else if (offered.asks === null) {
       this.warned = this.warningFor(offered.decision, {});
-      if (!this.warned) void this.post(offered.decision);
+      if (!this.warned) void this.close(offered.decision, {});
     } else {
       this.asking = offered.decision;
       this.spec = offered.asks;
@@ -279,7 +338,7 @@ export default class PanelActions extends Component<PanelActionsSignature> {
     this.warned = decision ? this.warningFor(decision, { ...gathered }) : null;
     if (this.warned) return Promise.resolve(true);
     return decision
-      ? this.post(decision, { ...gathered })
+      ? this.close(decision, { ...gathered })
       : Promise.resolve(false);
   };
 
@@ -382,6 +441,15 @@ export default class PanelActions extends Component<PanelActionsSignature> {
         @keep={{this.keepTheHold}}
         @resume={{this.resumeThePr}}
         @cancel={{this.cancelWarning}}
+      />
+    {{/if}}
+    {{#if this.prompting}}
+      <RerequestPrompt
+        @prompt={{this.prompting.prompt}}
+        @label={{this.prompting.label}}
+        @rerequest={{this.rerequestToo}}
+        @only={{this.closeOnly}}
+        @cancel={{this.cancelPrompt}}
       />
     {{/if}}
   </template>
