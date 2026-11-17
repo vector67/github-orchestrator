@@ -55,6 +55,7 @@ class Pr:
 
 
 FORK_PR_BRANCHES = "orchestrator/pr/"
+AGENT_CHANGES_FILE = "agent-changes.md"
 
 
 def fork_pr_branch(pr: Pr) -> str:
@@ -258,5 +259,20 @@ class Cause(StrEnum):
     OPERATOR = "operator"
 
 
-__all__ = ["Cause", "DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+class Fault(StrEnum):
+    NETWORK = "network"
+    RATE_LIMIT = "rate-limit"
+    LOGIN = "login"
+    ACCESS = "access"
+    GH_MISSING = "gh-missing"
+    DISK = "disk"
+    CONFIG = "config"
+    UNKNOWN = "unknown"
+
+    @property
+    def cause(self) -> Cause:
+        return Cause.NETWORK if self in (Fault.NETWORK, Fault.RATE_LIMIT) else Cause.OPERATOR
+
+
+__all__ = ["Cause", "DismissUntil", "Fault","HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]

@@ -23,6 +23,7 @@ from github_orchestrator.board_api._contract import (
     AwaitedPr,
     BranchInTheWay,
     DeferMentionRequest,
+    DismissCleanUpRequest,
     DismissMentionRequest,
     Emoji,
     EmojiList,
@@ -414,6 +415,46 @@ def release(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
     if not desk.holdings.release(pr):
         raise Refusal(409, ErrorCode.NOT_FROZEN,
                       f"{pr}'s manager is not frozen on the wrong branch")
+    return _taken()
+
+
+NO_CLEAN_UP_ASKED = {"description": "No teardown is asking about the pull request's "
+                                    "worktree, so there is nothing to answer.",
+                     "model": Errors}
+
+
+def _nothing_asked(pr: Pr) -> Refusal:
+    return Refusal(409, ErrorCode.NO_CLEAN_UP_ASKED,
+                   f"no teardown is asking about {pr}'s worktree")
+
+
+@writes.post("/pull-requests/{owner}/{name}/{number}:delete-worktree", status_code=202,
+             operation_id="deleteWorktree",
+             responses={**HANDED_TO_THE_WATCHER, 409: NO_CLEAN_UP_ASKED},
+             summary="Let teardown remove a worktree that holds files no agent wrote.")
+def delete_worktree(owner: Owner, name: Name, number: int, desk: Serving) -> Response:
+    """The clean-up banner's Delete this worktree. The watcher's next cycle
+    removes the worktree as teardown always did, with every file in it, and
+    lets the pull request go.
+    """
+    pr = _held(desk, owner, name, number)
+    if not desk.holdings.delete_worktree(pr):
+        raise _nothing_asked(pr)
+    return _taken()
+
+
+@writes.post("/pull-requests/{owner}/{name}/{number}:dismiss-clean-up", status_code=202,
+             operation_id="dismissCleanUp",
+             responses={**HANDED_TO_THE_WATCHER, 409: NO_CLEAN_UP_ASKED},
+             summary="Take a worktree clean-up off the wall until a time.")
+def dismiss_clean_up(owner: Owner, name: Name, number: int, body: DismissCleanUpRequest,
+                     desk: Serving) -> Response:
+    """The clean-up banner's dismiss. A closed pull request gets no events,
+    so only the time brings it back; the worktree stays as it is meanwhile.
+    """
+    pr = _held(desk, owner, name, number)
+    if not desk.holdings.dismiss_clean_up(pr, body.until_at):
+        raise _nothing_asked(pr)
     return _taken()
 
 

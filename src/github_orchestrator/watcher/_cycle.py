@@ -416,7 +416,8 @@ class PollingWatcher:
         torn_down = (self._detect_closed_prs(set(found), endings)
                      + self._tear_down_dismissed(found))
         self._placement.revive_pending()
-        self._saving.polled({pr: self._pr_processes.manager(pr) for pr in held})
+        asking = self._teardown.waiting_for_you(self._clock())
+        self._saving.polled({pr: self._pr_processes.manager(pr) for pr in [*held, *asking]})
         try:
             self._summary_lane.poll()
         except Exception:

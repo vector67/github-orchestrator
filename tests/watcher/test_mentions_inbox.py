@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 
 import pytest
@@ -90,15 +91,19 @@ def test_a_mentions_search_that_fails_is_notified_as_the_mentions_search(setting
          f"Details in {settings.logs_dir / 'watcher.log'}")]
 
 
-def test_a_mentions_search_that_cannot_reach_github_never_notifies(settings):
+def test_a_mentions_streak_carried_over_past_three_notifies_once(settings):
+    settings.mentions_failure.write_text(
+        json.dumps({"consecutive": 5, "last_error": "config.toml: mentions_start must be in quotes",
+                    "fix": None}))
     desktop = FakeDesktop()
-    inbox = CountedSearches(StartUnread("Get \"https://api.github.com/search\": unexpected EOF"))
+    inbox = CountedSearches(StartUnread("config.toml: mentions_start must be in quotes"))
 
     watcher = watcher_over(settings, desktop=desktop, mentions_inbox=inbox)
-    for _ in range(3):
+    for _ in range(2):
         watcher.run_cycle()
 
-    assert desktop.announcements == []
+    [notification] = desktop.announcements
+    assert notification.body.startswith("6 searches in a row failed")
 
 
 def test_a_mentions_search_that_works_again_clears_its_failure(settings):

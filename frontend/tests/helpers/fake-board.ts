@@ -537,6 +537,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
       nudge_due: false,
       threads_live: 0,
       agent_settings: null,
+      clean_up: null,
       changed_at: '2026-09-12T08:30:00Z',
       ...manager,
     },
@@ -607,10 +608,14 @@ export function runLedger(
       next_poll_at: null,
       overdue: false,
       last_error: null,
-      fix: null,
       mentions_error: null,
       last_error_cause: null,
       mentions_error_cause: null,
+      last_error_fault: null,
+      mentions_error_fault: null,
+      hidden_repo: null,
+      account: 'octocat',
+      config_path: '/home/octocat/config.toml',
       ...over.watcher,
     },
     today: { runs: 0, cost_usd: null, unpriced: 0, ...over.today },
@@ -1539,7 +1544,7 @@ export class FakeBoard {
         JSON.parse(init.body as string) as AddToWallRequest,
       );
     }
-    if (side === 'hub') return this.hubWrite(url, headers);
+    if (side === 'hub') return this.hubWrite(url, headers, init.body);
     if (url.endsWith('/api/manager/git')) return this.git(url, init, headers);
     if (url.endsWith('/api/terminal/sessions')) {
       return this.openTerminal(url, init, headers);
@@ -1957,6 +1962,27 @@ export class FakeBoard {
     };
   }
 
+  private cleanUpAnswered(
+    at: number,
+    shown: Dashboard,
+    verb: string,
+  ): Response {
+    if (!shown.manager.clean_up) {
+      return this.json(409, {
+        errors: [
+          { status: 409, code: 'no-clean-up-asked', detail: 'nothing asked' },
+        ],
+      });
+    }
+    if (verb === 'dismiss-clean-up') {
+      this.held = this.held.filter((_, index) => index !== at);
+    }
+    return respond(null, {
+      status: 202,
+      headers: { Location: '/api/pull-requests' },
+    });
+  }
+
   private dismissMention(asked: DismissMentionRequest): Response {
     if (this.refusal) {
       const refusal = this.refusal;
@@ -1976,7 +2002,11 @@ export class FakeBoard {
     return respond(null, { status: 204 });
   }
 
-  private hubWrite(url: string, headers: Headers): Response {
+  private hubWrite(
+    url: string,
+    headers: Headers,
+    sent: BodyInit | null | undefined,
+  ): Response {
     const found = HUB_VERB.exec(url);
     const repo = found?.[1] ?? '';
     const number = Number(found?.[2]);
@@ -1986,7 +2016,7 @@ export class FakeBoard {
       key: `${repo}#${number}`,
       verb,
       ifMatch: headers.get('If-Match'),
-      body: null,
+      body: typeof sent === 'string' ? (JSON.parse(sent) as unknown) : null,
     });
     const at = this.held.findIndex(
       (one) => one.repo === repo && one.number === number,
@@ -2007,6 +2037,9 @@ export class FakeBoard {
       return this.json(409, {
         errors: [{ status: 409, code: 'not-frozen', detail: 'not frozen' }],
       });
+    }
+    if (verb === 'delete-worktree' || verb === 'dismiss-clean-up') {
+      return this.cleanUpAnswered(at, shown, verb);
     }
     const changed: HeldPullRequest = {
       ...pr,

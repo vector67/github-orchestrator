@@ -8,9 +8,10 @@ import pytest
 
 from github_orchestrator.desktop import Badge, Desktop
 from github_orchestrator.desktop.fake import FakeDesktop
-from github_orchestrator.domain import Repo
+from github_orchestrator.domain import Fault, Repo
 from github_orchestrator.github.fake import FakeGitHub
 from github_orchestrator.notifications import Runs
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from github_orchestrator.watcher import Health, Watcher
 from tests.builders import a_pr
 from tests.watcher.support import (
@@ -207,6 +208,29 @@ def test_a_fault_to_fix_notifies_again_after_a_good_cycle_ends_the_streak(settin
     assert len(desktop.announcements) == 2
 
 
+def test_a_streak_that_turns_into_a_fault_to_fix_past_the_third_cycle_notifies_once(settings):
+    desktop = FakeDesktop()
+    for _ in range(3):
+        _fail_once(settings, NO_SUCH_HOST, desktop)
+    for _ in range(2):
+        _fail_once(settings, NO_TOKEN, desktop)
+
+    [notification] = desktop.announcements
+    assert "4 cycles in a row failed" in notification.body
+
+
+def test_a_streak_carried_over_past_three_notifies_once_at_its_next_fault_to_fix(settings):
+    settings.watcher_failures.write_text(
+        json.dumps({"consecutive": 5, "last_error": "poll blew up", "fix": None}))
+    desktop = FakeDesktop()
+
+    for _ in range(2):
+        _fail_once(settings, "poll blew up", desktop)
+
+    [notification] = desktop.announcements
+    assert "6 cycles in a row failed" in notification.body
+
+
 def test_a_network_fault_never_notifies(settings):
     desktop, _ = _forever(settings, _searches(settings, RuntimeError(NO_SUCH_HOST)), 4)
 
@@ -214,10 +238,29 @@ def test_a_network_fault_never_notifies(settings):
     assert health(settings).last_error.endswith(NO_SUCH_HOST)
 
 
+def test_a_rate_limit_never_notifies(settings):
+    desktop, _ = _forever(settings, _searches(settings, RuntimeError("HTTP 429: Too Many Requests")), 4)
+
+    assert desktop.announcements == []
+
+
+def test_a_login_fault_notifies_though_a_watched_repo_is_named_like_a_network_fault(tmp_path):
+    named = fake_settings(tmp_path, repos=(
+        RepoEntry(Repo("acme", "request-timeout"), "/code/request-timeout"),))
+    github = Searches(named.config.gh_account, "acme/request-timeout",
+                      RuntimeError("HTTP 401: Bad credentials"))
+
+    desktop, _ = _forever(named, github, 3)
+
+    assert len(desktop.announcements) == 1
+
+
 @pytest.mark.parametrize(("error", "fix"), [
     (NO_TOKEN, "GitHub turned down the login for {account}. "
                "Run `gh auth login` as {account}."),
     (DISK_FULL, "The disk is full. Free some space and the watcher carries on."),
+    ("sh: gh: command not found", "The watcher can't run gh. Install it from "
+                                  "https://cli.github.com, or put it on the watcher's PATH."),
 ])
 def test_a_fault_to_fix_notifies_what_to_do_about_it(settings, error, fix):
     desktop, _ = _forever(settings, _searches(settings, RuntimeError(error)), 3)
@@ -339,7 +382,7 @@ def test_the_next_poll_is_due_a_poll_interval_after_the_last(settings):
 
 def test_a_poll_gap_past_two_intervals_and_the_grace_is_overdue():
     late = Health(alive=True, polled_at=NOW - timedelta(seconds=241), read_at=NOW,
-                  last_error=None, fix=None, polls_every=timedelta(minutes=1))
+                  last_error=None, polls_every=timedelta(minutes=1))
 
     assert late.overdue
 
@@ -347,9 +390,9 @@ def test_a_poll_gap_past_two_intervals_and_the_grace_is_overdue():
 def test_the_overdue_threshold_scales_with_the_poll_interval():
     polls_every = timedelta(minutes=5)
     within = Health(alive=True, polled_at=NOW - timedelta(minutes=11), read_at=NOW,
-                    last_error=None, fix=None, polls_every=polls_every)
+                    last_error=None, polls_every=polls_every)
     past = Health(alive=True, polled_at=NOW - timedelta(minutes=13), read_at=NOW,
-                  last_error=None, fix=None, polls_every=polls_every)
+                  last_error=None, polls_every=polls_every)
 
     assert (within.overdue, past.overdue) == (False, True)
 
@@ -385,40 +428,44 @@ def test_an_interrupted_count_keeps_the_old_record_and_leaves_no_partial_file(
     assert list(settings.watcher_failures.parent.glob("*.writing")) == []
 
 
-def test_a_cycle_failing_while_gh_has_no_token_for_the_account_says_to_log_in(settings):
+def _fault(settings):
+    reported = health(settings)
+    return reported.last_error_fault, reported.hidden_repo
+
+
+def test_a_cycle_failing_while_gh_has_no_token_for_the_account_is_a_login_fault(settings):
     _forever(settings, _searches(settings, RuntimeError(NO_TOKEN)), 1)
 
-    account = settings.config.gh_account
-    assert health(settings).fix == (
-        f"GitHub turned down the login for {account}. Run `gh auth login` as {account}.")
+    assert _fault(settings) == (Fault.LOGIN, None)
 
 
-def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo_and_the_account(
-    settings,
-):
+def test_a_cycle_failing_on_a_repo_the_account_cannot_see_names_the_repo(settings):
     _forever(settings, Searches(settings.config.gh_account, "someone/else"), 1)
 
-    assert health(settings).fix == (
-        f"You can't see octocat/hello-world as {settings.config.gh_account}. Remove it "
-        f"from [[repos]] in {settings.config_path}, or ask for access.")
+    assert _fault(settings) == (Fault.ACCESS, Repo("octocat", "hello-world"))
 
 
-def test_a_refusal_naming_no_repo_the_account_cannot_see_points_at_the_config(settings):
+def test_a_refusal_naming_no_repo_the_account_cannot_see_names_none(settings):
     _forever(settings, _searches(settings, RuntimeError("gh: Not Found (HTTP 404)")), 1)
 
-    account = settings.config.gh_account
-    assert health(settings).fix == (
-        f"GitHub refused a request as {account}. Check [[repos]] and gh_account "
-        f"in {settings.config_path}.")
+    assert _fault(settings) == (Fault.ACCESS, None)
 
 
-def test_a_cycle_failing_for_a_reason_gh_and_github_do_not_explain_has_no_fix(settings):
+def test_a_cycle_failing_for_a_reason_gh_and_github_do_not_explain_is_unknown(settings):
     _forever(settings, _searches(settings, RuntimeError("poll blew up")), 1)
 
-    assert health(settings).fix is None
+    assert _fault(settings) == (Fault.UNKNOWN, None)
 
 
-def test_a_failure_record_written_before_fixes_were_kept_reads_with_no_fix(settings):
-    settings.watcher_failures.write_text(json.dumps({"consecutive": 4, "last_error": "gone"}))
+def test_a_failure_record_written_before_faults_were_kept_is_diagnosed_from_its_error(settings):
+    settings.watcher_failures.write_text(json.dumps(
+        {"consecutive": 4, "last_error": "HTTP 401: Bad credentials", "fix": "log in"}))
 
-    assert health(settings).fix is None
+    assert _fault(settings) == (Fault.LOGIN, None)
+
+
+def test_the_health_names_the_account_and_the_config_a_fix_is_worded_from(settings):
+    reported = health(settings)
+
+    assert (reported.account, reported.config_path) == (
+        settings.config.gh_account, str(settings.config_path))

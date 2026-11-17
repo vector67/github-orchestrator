@@ -2,9 +2,9 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import AGENT_CHANGES_FILE, Pr
 
-CHANGES_FILE = "agent-changes.md"
+CHANGES_FILE = AGENT_CHANGES_FILE
 
 
 def title(pr: Pr) -> str:

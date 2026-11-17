@@ -2,13 +2,13 @@ import logging
 from collections.abc import Mapping
 from typing import Protocol
 
-from github_orchestrator.domain import Cause, HubState, Pr, Repo, UtcClock
+from github_orchestrator.domain import Cause, Fault, HubState, Pr, Repo, UtcClock
 from github_orchestrator.github import Access
 from github_orchestrator.notifications import Polling, ThreadNews
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.settings import Dismissals
 from github_orchestrator.watcher._config import WatcherConfig
-from github_orchestrator.watcher._diagnosis import Diagnosis, diagnose
+from github_orchestrator.watcher._diagnosis import diagnose, names_in
 from github_orchestrator.watcher._failures import Streak
 from github_orchestrator.watcher._poll import Fetched
 from github_orchestrator.watcher._told import ToldFiles
@@ -69,34 +69,38 @@ class CycleSaving:
     def failed(self, exc: BaseException) -> None:
         try:
             error = _one_line(exc)
-            diagnosis = diagnose(error)
-            fix = self._fix(diagnosis)
-            if (self._cycles.failed(error, fix) == NOTIFY_AT
-                    and diagnosis.cause is Cause.OPERATOR):
-                self._polling.failed(NOTIFY_AT, error, fix, self._config.log_file)
+            fault = diagnose(error, names_in(self._config))
+            hidden = self._hidden_repo() if fault is Fault.ACCESS else None
+            consecutive = self._cycles.failed(error, fault, None if hidden is None else str(hidden))
+            if (consecutive >= NOTIFY_AT and fault.cause is Cause.OPERATOR
+                    and self._cycles.first_telling()):
+                self._polling.failed(consecutive, error, self._fix(fault, hidden),
+                                     self._config.log_file)
         except Exception:
             log.exception("Could not report the failed cycle")
 
     def mentions_unread(self, exc: BaseException) -> None:
         error = _one_line(exc)
-        if (self._searches.failed(error, None) == NOTIFY_AT
-                and diagnose(error).cause is Cause.OPERATOR):
-            self._polling.mentions_failed(NOTIFY_AT, error, self._config.log_file)
+        consecutive = self._searches.failed(error, Fault.CONFIG)
+        if consecutive >= NOTIFY_AT and self._searches.first_telling():
+            self._polling.mentions_failed(consecutive, error, self._config.log_file)
 
     def mentions_read(self) -> None:
         self._searches.ended()
 
-    def _fix(self, diagnosis: Diagnosis) -> str | None:
+    def _fix(self, fault: Fault, hidden: Repo | None) -> str | None:
         account = self._config.gh_account
         where = self._config.config_location
-        match diagnosis:
-            case Diagnosis.LOGIN:
+        match fault:
+            case Fault.LOGIN:
                 return (f"GitHub turned down the login for {account}. "
                         f"Run `gh auth login` as {account}.")
-            case Diagnosis.DISK:
+            case Fault.DISK:
                 return "The disk is full. Free some space and the watcher carries on."
-            case Diagnosis.ACCESS:
-                hidden = self._hidden_repo()
+            case Fault.GH_MISSING:
+                return ("The watcher can't run gh. Install it from https://cli.github.com, "
+                        "or put it on the watcher's PATH.")
+            case Fault.ACCESS:
                 if hidden is not None:
                     return (f"You can't see {hidden} as {account}. Remove it from [[repos]] "
                             f"in {where}, or ask for access.")

@@ -26,7 +26,7 @@ import {
   RELEASE_ASKS,
   runsAgent,
 } from 'frontend/data/decisions';
-import { RETRYING } from 'frontend/data/runs';
+import { RETRYING, fixOf, theWatcherRetrying } from 'frontend/data/runs';
 import { keyOf, pageOf } from 'frontend/data/wall';
 import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
@@ -98,6 +98,16 @@ export default class Wall extends Component<WallSignature> {
 
   get stale(): boolean {
     return this.hub.stale && this.order.length > 0;
+  }
+
+  get watcherRetrying(): string {
+    const watcher = this.store.watcher;
+    return watcher ? theWatcherRetrying(watcher) : RETRYING;
+  }
+
+  get watcherFix(): string | null {
+    const watcher = this.store.watcher;
+    return watcher ? fixOf(watcher) : null;
   }
 
   get chosen(): WallRow | undefined {
@@ -563,11 +573,12 @@ export default class Wall extends Component<WallSignature> {
             <div class="wall-empty" data-test-wall-unheld="watcher-failing">
               {{#if (eq this.store.watcher.last_error_cause "network")}}
                 <p>The watcher
-                  {{RETRYING}}. The wall fills in once a poll gets through.</p>
+                  {{this.watcherRetrying}}. The wall fills in once a poll gets
+                  through.</p>
               {{else}}
                 <p>The watcher’s polls are failing.</p>
-                {{#if this.store.watcher.fix}}
-                  <p data-test-wall-fix>{{this.store.watcher.fix}}</p>
+                {{#if this.watcherFix}}
+                  <p data-test-wall-fix>{{this.watcherFix}}</p>
                 {{/if}}
               {{/if}}
               <p class="mono" data-test-wall-error>

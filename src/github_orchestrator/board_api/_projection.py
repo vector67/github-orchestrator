@@ -596,6 +596,9 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             agent_settings=None if dashboard.agent_settings is None
             else contract.HeldAgentSettings(changed=list(dashboard.agent_settings.changed),
                                             digest=dashboard.agent_settings.digest),
+            clean_up=None if dashboard.clean_up is None
+            else contract.WorktreeCleanUp(worktree=dashboard.clean_up.worktree,
+                                          files=list(dashboard.clean_up.files)),
             changed_at=dashboard.flags_changed_at),
         threads=[contract.ThreadRow(
             key=row.key, state=domain.ConversationState(row.standing),

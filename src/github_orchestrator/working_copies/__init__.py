@@ -1,4 +1,5 @@
 from github_orchestrator.working_copies.interface import (
+    CleanUp,
     Diverged,
     FileDiff,
     PrCheckout,
@@ -8,6 +9,7 @@ from github_orchestrator.working_copies.interface import (
 )
 
 __all__ = [
+    "CleanUp",
     "Diverged",
     "FileDiff",
     "PrCheckout",

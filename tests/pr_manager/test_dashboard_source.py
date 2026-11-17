@@ -10,6 +10,7 @@ from github_orchestrator.board_api.interface import (
     PrImportance,
     Shelves,
     UnpushedCommit,
+    WorktreeCleanUp,
 )
 from github_orchestrator.conversation import ConversationManagerFactory
 from github_orchestrator.domain import AuthorKind
@@ -238,6 +239,19 @@ def test_a_frozen_pr_with_no_manager_asks_for_the_worktree_back(settings, tmp_pa
 
     assert (unmanaged.frozen_on, unmanaged.expected_branch, unmanaged.worktree) == (
         "another-pr", BRANCH, str(tmp_path))
+
+
+def test_a_pr_whose_worktree_clean_up_is_asked_names_the_files_it_would_delete(settings, tmp_path):
+    seed(settings, POLLED)
+    working_copies = FakeWorkingCopies()
+    working_copies.add_worktree(tmp_path, BRANCH)
+    working_copies.edit(tmp_path, ".env", "SECRET=1\n")
+    working_copies.asks_before_removing(tmp_path.parent, THE_PR, BRANCH)
+
+    managed, unmanaged = _both(settings, tmp_path, working_copies=working_copies)
+
+    assert unmanaged.clean_up == WorktreeCleanUp(worktree=str(tmp_path), files=(".env",))
+    assert unmanaged == managed
 
 
 def test_a_pr_no_poll_has_described_says_so_and_carries_no_poll_stamp(settings, tmp_path):

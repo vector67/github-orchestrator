@@ -20,9 +20,12 @@ def watcher_read(pulse: Pulse) -> contract.WatcherHealth:
     return contract.WatcherHealth(
         polled_at=None if polled is None else polled.isoformat(),
         next_poll_at=None if next_at is None else next_at.isoformat(),
-        overdue=pulse.overdue, last_error=pulse.last_error, fix=pulse.fix,
+        overdue=pulse.overdue, last_error=pulse.last_error,
         mentions_error=pulse.mentions_error, last_error_cause=pulse.last_error_cause,
-        mentions_error_cause=pulse.mentions_error_cause)
+        mentions_error_cause=pulse.mentions_error_cause,
+        last_error_fault=pulse.last_error_fault, mentions_error_fault=pulse.mentions_error_fault,
+        hidden_repo=None if pulse.hidden_repo is None else str(pulse.hidden_repo),
+        account=pulse.account, config_path=pulse.config_path)
 
 
 def _today(day: RunDay) -> contract.RunsToday:

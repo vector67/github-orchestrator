@@ -149,7 +149,8 @@ function carryOnHeldBack(shown: ShownPr): string | null {
   return null;
 }
 
-type HubVerb = 'hold' | 'resume' | 'release';
+type HubVerb =
+  'hold' | 'resume' | 'release' | 'delete-worktree' | 'dismiss-clean-up';
 
 function waitingOnAuthor(summaries: Summaries): boolean {
   return (
@@ -351,6 +352,27 @@ export default class PrControlsService extends Service {
     return this.hub.find(pr)?.drawn?.standing === 'answering' ? null : how;
   }
 
+  deleteWorktree = (pr: ShownPr): Promise<void> =>
+    waitForPromise(this.throughTheHub(pr, 'delete-worktree')).then(
+      () => undefined,
+    );
+
+  dismissCleanUp = (pr: ShownPr, untilAt: Date): Promise<void> =>
+    waitForPromise(this.dismissingCleanUp(pr, untilAt));
+
+  private async dismissingCleanUp(pr: ShownPr, untilAt: Date): Promise<void> {
+    if (
+      !(await this.throughTheHub(pr, 'dismiss-clean-up', {
+        until_at: untilAt.toISOString(),
+      }))
+    )
+      return;
+    this.toasts.say(`#${pr.number}’s worktree clean-up is dismissed`, 'done');
+    const here = this.here.pr;
+    if (here !== null && keyOf(here) === keyOf(pr))
+      void this.router.transitionTo('index');
+  }
+
   runGit = (on: Controlled, keys: string): Promise<Tried<GitRun>> =>
     waitForPromise(
       this.store.runGit(on.shown, `${this.prefix(on)}/api/manager/git`, keys),
@@ -459,14 +481,20 @@ export default class PrControlsService extends Service {
     return true;
   }
 
-  private async throughTheHub(row: ShownPr, verb: HubVerb): Promise<void> {
+  private async throughTheHub(
+    row: ShownPr,
+    verb: HubVerb,
+    body?: unknown,
+  ): Promise<boolean> {
     const taken = await this.store.press(
       row,
       verb,
       `hub ${verb}`,
       `/api/pull-requests/${row.repo}/${row.number}:${verb}`,
+      body,
     );
     await this.loader.refreshHub();
     if (taken.done) taken.body();
+    return taken.done;
   }
 }

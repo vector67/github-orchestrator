@@ -38,9 +38,9 @@ stays on the board, which already shows it.
   are: no such host or other DNS failure, a TLS or connection error, an EOF or
   reset, an HTTP 5xx, a timeout, and GitHub's secondary rate limit. The hub's
   banner already shows a watcher that is not polling.
-- A failed cycle whose cause the operator must fix posts once, when the
-  consecutive count reaches 3, and not again until a successful cycle resets
-  the count. These causes are: HTTP 401 (bad or expired credentials), a 403 or
+- A failed cycle whose cause the operator must fix posts once per streak, the
+  first time such a cycle comes at a consecutive count of 3 or more, and not
+  again until a successful cycle resets the count. These causes are: HTTP 401 (bad or expired credentials), a 403 or
   404 that is not rate limiting (a repo the account cannot see), and a full disk
   (`Errno 28`).
 - Its text names that cause and what to do about it. The `[[repos]]` and

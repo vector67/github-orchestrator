@@ -905,6 +905,23 @@ module('Acceptance | a commit a reply names', function (hooks) {
       .containsText('if rate is None: raise');
   });
 
+  test('the commit lists its files with their counts, each folded until opened', async function (assert) {
+    checked('addressed', 'the guard now raises');
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('#panel-diff [data-test-diff-file-fold]')
+      .doesNotHaveAttribute('open');
+    assert
+      .dom('#panel-diff [data-test-diff-file-fold] summary')
+      .includesText('src/tax.py')
+      .includesText('+1')
+      .includesText('−0');
+    await click('#panel-diff [data-test-diff-file-fold] summary');
+    assert.dom('#panel-diff [data-test-diff-file-fold]').hasAttribute('open');
+  });
+
   test('a partly addressed commit says so', async function (assert) {
     checked('partly', 'one caller still skips it');
 
@@ -1006,14 +1023,15 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.deepEqual(offers(), ['confirm-resolve', 'place']);
+    assert.dom('#panel-fix [data-test-agent-kicker]').hasText('Agent proposal');
     assert
-      .dom('[data-test-agent-proposal]')
+      .dom('#panel-fix [data-test-agent-proposal]')
       .hasText(
-        'Agent proposal: resolve the thread on GitHub and put 👍 on Anna Example’s reply',
+        'Resolve the thread on GitHub and put 👍 on Anna Example’s reply',
       );
   });
 
-  test('an assumed done card the commit check settled gives its reasoning as the agent’s line, with no Addressed heading', async function (assert) {
+  test('an assumed done card the commit check settled gives its reasoning beside the commit, as markdown, with no Addressed heading', async function (assert) {
     board().conversations = [
       board().threadIn('assumed-done', {
         key: KEY,
@@ -1021,15 +1039,18 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
           sha: 'b'.repeat(40),
           parent: 'a'.repeat(40),
           verdict: 'addressed',
-          reasoning: 'every line item now goes through in_units()',
+          reasoning: 'every line item now goes through `in_units()`',
         },
       }),
     ];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert
-      .dom('[data-test-agent-reason]')
+      .dom('#panel-fix [data-test-agent-reason]')
       .hasText('every line item now goes through in_units()');
+    assert
+      .dom('#panel-fix [data-test-agent-reason] code')
+      .hasText('in_units()');
     assert.dom('[data-test-commit-check]').doesNotExist();
   });
 
@@ -1043,7 +1064,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     ];
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+    assert.dom('[data-test-agent-proposal]').hasText('Skip');
   });
 
   test('an assumed done conversation comment, which GitHub cannot resolve, confirms on the board alone and proposes to skip', async function (assert) {
@@ -1053,7 +1074,7 @@ module('Acceptance | placing a thread an agent placed', function (hooks) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
     assert.deepEqual(offers(), ['confirm', 'place']);
-    assert.dom('[data-test-agent-proposal]').hasText('Agent proposal: skip');
+    assert.dom('[data-test-agent-proposal]').hasText('Skip');
     await click('[data-test-decision="confirm"]');
     assert.strictEqual(board().posted[0]!.verb, 'confirm');
   });

@@ -365,6 +365,10 @@ export type DiffSide = 'LEFT' | 'RIGHT';
 
 export type DiffSource = 'origin' | 'local';
 
+export interface DismissCleanUpRequest {
+  until_at: string;
+}
+
 export interface DismissMentionRequest {
   repo: string;
   number: number;
@@ -438,7 +442,7 @@ export interface EmojiList {
   emojis: Emoji[];
 }
 
-export type ErrorCode = 'not-found' | 'operation-outstanding' | 'landing-stalled' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'waiting-to-migrate' | 'not-frozen' | 'terminal-refused' | 'manager-down' | 'no-worktree' | 'worktree-frozen' | 'agent-running' | 'fork-pull-request' | 'agent-settings-held' | 'agent-settings-moved' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'repo-not-watched' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'fix-awaits-push' | 'branch-unknown' | 'worktree-missing' | 'no-origin-branch' | 'on-another-branch' | 'head-unreadable' | 'worktree-moved' | 'origin-adds-unknown' | 'untracked-in-the-way' | 'reset-refused' | 'server-error';
+export type ErrorCode = 'not-found' | 'operation-outstanding' | 'landing-stalled' | 'nothing-in-flight' | 'work-in-flight' | 'no-proposal' | 'proposal-exists' | 'nothing-committed' | 'already-closed' | 'parked' | 'not-parked' | 'still-a-draft' | 'not-a-draft' | 'already-enrolled' | 'confirm-again' | 'anchor-not-in-diff' | 'empty-brief' | 'malformed-request' | 'empty-body' | 'body-too-long' | 'comment-gone' | 'not-deletable' | 'bad-wake-condition' | 'precondition-failed' | 'unreadable-record' | 'range-inverted' | 'range-too-wide' | 'not-text' | 'no-such-commit' | 'no-such-path' | 'review-in-flight' | 'nothing-enrolled' | 'git-failed' | 'github-rejected' | 'agents-disabled' | 'internal-refusal' | 'foreign-origin' | 'watcher-starting' | 'watcher-failing' | 'not-watching' | 'waiting-to-migrate' | 'not-frozen' | 'no-clean-up-asked' | 'terminal-refused' | 'manager-down' | 'no-worktree' | 'worktree-frozen' | 'agent-running' | 'fork-pull-request' | 'agent-settings-held' | 'agent-settings-moved' | 'no-gh-token' | 'repo-not-visible' | 'setup-refused' | 'not-broken' | 'repo-not-watched' | 'harvest-extension-missing' | 'agent-working' | 'no-agent-working' | 'uncommitted-changes' | 'not-diverged' | 'fix-awaits-push' | 'branch-unknown' | 'worktree-missing' | 'no-origin-branch' | 'on-another-branch' | 'head-unreadable' | 'worktree-moved' | 'origin-adds-unknown' | 'untracked-in-the-way' | 'reset-refused' | 'server-error';
 
 export interface ErrorDetail {
   status: number;
@@ -449,6 +453,8 @@ export interface ErrorDetail {
 export interface Errors {
   errors: ErrorDetail[];
 }
+
+export type Fault = 'network' | 'rate-limit' | 'login' | 'access' | 'gh-missing' | 'disk' | 'config' | 'unknown';
 
 export interface FieldError {
   status: number;
@@ -632,6 +638,7 @@ export interface ManagerFlags {
   nudge_due: boolean;
   threads_live: number;
   agent_settings: HeldAgentSettings | null;
+  clean_up: WorktreeCleanUp | null;
   changed_at: string | null;
 }
 
@@ -1323,15 +1330,24 @@ export interface WatcherHealth {
   next_poll_at: string | null;
   overdue: boolean;
   last_error: string | null;
-  fix: string | null;
   mentions_error: string | null;
   last_error_cause: Cause | null;
   mentions_error_cause: Cause | null;
+  last_error_fault: Fault | null;
+  mentions_error_fault: Fault | null;
+  hidden_repo: string | null;
+  account: string;
+  config_path: string;
 }
 
 export interface WitnessProgress {
   witness: string;
   done: boolean;
+}
+
+export interface WorktreeCleanUp {
+  worktree: string;
+  files: string[];
 }
 
 export type WriteState = 'cloning' | 'failed' | 'restarting';

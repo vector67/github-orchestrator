@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
-from github_orchestrator.domain import Cause
+from github_orchestrator.domain import Fault, Repo
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.watcher import Health
 from tests.board_api.support import Pulse, holding, served_hub
@@ -15,7 +15,7 @@ NOW = datetime(2026, 9, 28, 10, 0, tzinfo=timezone.utc)
 MINUTE = timedelta(minutes=1)
 
 POLLING = Health(alive=True, polled_at=NOW - timedelta(seconds=19), read_at=NOW, last_error=None,
-                 fix=None, polls_every=MINUTE)
+                 polls_every=MINUTE, account="octocat", config_path="/home/octocat/config.toml")
 
 
 def ledger():
@@ -95,13 +95,14 @@ def test_the_watcher_says_when_it_last_polled_and_when_it_polls_next():
     assert runs_read().json()["watcher"] == {
         "polled_at": "2026-09-28T09:59:41+00:00",
         "next_poll_at": "2026-09-28T10:00:41+00:00", "overdue": False, "last_error": None,
-        "fix": None, "mentions_error": None, "last_error_cause": None,
-        "mentions_error_cause": None}
+        "mentions_error": None, "last_error_cause": None, "mentions_error_cause": None,
+        "last_error_fault": None, "mentions_error_fault": None, "hidden_repo": None,
+        "account": "octocat", "config_path": "/home/octocat/config.toml"}
 
 
 def test_the_poll_time_is_the_heartbeat_stamp_whenever_the_health_was_read():
     read_early = Health(alive=True, polled_at=NOW - timedelta(seconds=19),
-                        read_at=NOW - timedelta(milliseconds=3), last_error=None, fix=None,
+                        read_at=NOW - timedelta(milliseconds=3), last_error=None,
                         polls_every=MINUTE)
 
     watcher = runs_read(health=read_early).json()["watcher"]
@@ -111,7 +112,7 @@ def test_the_poll_time_is_the_heartbeat_stamp_whenever_the_health_was_read():
 
 
 def test_a_watcher_that_never_polled_says_no_time():
-    never = Health(alive=True, polled_at=None, read_at=NOW, last_error=None, fix=None,
+    never = Health(alive=True, polled_at=None, read_at=NOW, last_error=None,
                    polls_every=MINUTE)
 
     watcher = runs_read(health=never).json()["watcher"]
@@ -128,29 +129,35 @@ def test_the_runs_are_not_modified_while_nothing_changes():
     assert again.status_code == 304
 
 
-def test_a_failing_watcher_says_why_and_what_to_do_about_it():
-    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="HTTP 401",
-                     fix="Run `gh auth login` as octocat.", polls_every=MINUTE,
-                     last_error_cause=Cause.OPERATOR)
+def test_a_failing_watcher_names_its_fault_and_the_facts_its_fix_is_worded_from():
+    failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="HTTP 404",
+                     polls_every=MINUTE, last_error_fault=Fault.ACCESS,
+                     hidden_repo=Repo("acme", "widgets"), account="octocat",
+                     config_path="/home/octocat/config.toml")
 
     watcher = runs_read(health=failing).json()["watcher"]
 
-    assert (watcher["last_error"], watcher["last_error_cause"], watcher["fix"]) == (
-        "HTTP 401", "operator", "Run `gh auth login` as octocat.")
+    assert {key: watcher[key] for key in (
+        "last_error", "last_error_cause", "last_error_fault", "hidden_repo", "account",
+        "config_path")} == {
+        "last_error": "HTTP 404", "last_error_cause": "operator", "last_error_fault": "access",
+        "hidden_repo": "acme/widgets", "account": "octocat",
+        "config_path": "/home/octocat/config.toml"}
+    assert "fix" not in watcher
 
 
 def test_a_watcher_that_cannot_reach_github_says_the_network_is_the_cause():
     failing = Health(alive=True, polled_at=None, read_at=NOW, last_error="unexpected EOF",
-                     fix=None, polls_every=MINUTE, last_error_cause=Cause.NETWORK)
+                     polls_every=MINUTE, last_error_fault=Fault.NETWORK)
 
     assert runs_read(health=failing).json()["watcher"]["last_error_cause"] == "network"
 
 
 def test_a_failing_mentions_search_says_why_without_a_failing_poll():
     unread = Health(alive=True, polled_at=NOW - timedelta(seconds=19), read_at=NOW,
-                    last_error=None, fix=None, polls_every=MINUTE,
+                    last_error=None, polls_every=MINUTE,
                     mentions_error="config.toml: mentions_start must be in quotes",
-                    mentions_error_cause=Cause.OPERATOR)
+                    mentions_error_fault=Fault.UNKNOWN)
 
     watcher = runs_read(health=unread).json()["watcher"]
 

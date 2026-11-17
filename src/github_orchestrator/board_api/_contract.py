@@ -30,7 +30,14 @@ from github_orchestrator.conversation import (
     OperationState,
     ReasonCode,
 )
-from github_orchestrator.domain import AuthorKind, Cause, DismissUntil, HubState, Side
+from github_orchestrator.domain import (
+    AuthorKind,
+    Cause,
+    DismissUntil,
+    Fault,
+    HubState,
+    Side,
+)
 
 
 class ErrorCode(StrEnum):
@@ -74,6 +81,11 @@ class ErrorCode(StrEnum):
 
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
+
+    NO_CLEAN_UP_ASKED is the hub asked to delete a worktree, or to dismiss
+    the question, while no teardown is asking about that pull request's
+    worktree: it held nothing but the agents' own changes, it was already
+    allowed, or it is gone.
 
     TERMINAL_REFUSED is a terminal command or question that could not start;
     the detail is what the system said.
@@ -193,6 +205,7 @@ class ErrorCode(StrEnum):
     NOT_WATCHING = "not-watching"
     WAITING_TO_MIGRATE = "waiting-to-migrate"
     NOT_FROZEN = "not-frozen"
+    NO_CLEAN_UP_ASKED = "no-clean-up-asked"
     TERMINAL_REFUSED = "terminal-refused"
     MANAGER_DOWN = "manager-down"
     NO_WORKTREE = "no-worktree"
@@ -337,15 +350,10 @@ class WatcherHealth(BaseModel):
     last_error: str | None = Field(
         description="Why the last cycle failed, while cycles keep failing. Null "
                     "while they succeed.")
-    fix: str | None = Field(
-        description="What to do about `last_error`, in plain words, where the watcher "
-                    "recognises a fault the operator must fix: GitHub turning down "
-                    "the account's login, the account unable to see a watched repo, "
-                    "or a full disk. Null otherwise, and always null for a network fault.")
     mentions_error: str | None = Field(
         description="Why the last search for mentions did not run, while polls go on: "
-                    "a `mentions_start` in the config that will not read. Null once "
-                    "a search runs.")
+                    "the config file, or the `mentions_start` in it, will not read. "
+                    "Null once a search runs.")
     last_error_cause: Cause | None = Field(
         description="Who clears `last_error`: `network` for a fault that clears on its "
                     "own (DNS, TLS, a dropped connection, an HTTP 5xx, a timeout or "
@@ -353,6 +361,25 @@ class WatcherHealth(BaseModel):
                     "cycles succeed.")
     mentions_error_cause: Cause | None = Field(
         description="Who clears `mentions_error`, in the same terms as `last_error_cause`.")
+    last_error_fault: Fault | None = Field(
+        description="What kind of fault `last_error` is, read from what gh and GitHub "
+                    "said rather than the repos and account the error names, for the "
+                    "board to word what to do about it: `network` for one that clears "
+                    "on its own, `rate-limit` for GitHub limiting the account until the "
+                    "limit resets, `login` for GitHub turning down the account's login, "
+                    "`access` for a repo the account cannot see, `gh-missing` for a gh "
+                    "the watcher cannot run, `disk` for a full disk and `unknown` for "
+                    "anything else. Null while cycles succeed.")
+    mentions_error_fault: Fault | None = Field(
+        description="What kind of fault `mentions_error` is: always `config`, the "
+                    "config file or its `mentions_start` not reading. Null once a "
+                    "search runs.")
+    hidden_repo: str | None = Field(
+        description="The watched repo, as owner/name, that the account cannot see, "
+                    "when `last_error_fault` is `access` and the watcher found which. "
+                    "Null otherwise.")
+    account: str = Field(description="The GitHub account the watcher polls as.")
+    config_path: str = Field(description="Where the config file the operator edits is.")
 
 
 class NewestRelease(BaseModel):
@@ -2018,6 +2045,19 @@ class HeldAgentSettings(BaseModel):
         description="Names the files as they are at the head; an answer is given for it.")
 
 
+class WorktreeCleanUp(BaseModel):
+    """The pull request was closed, merged or dismissed forever, and its
+    worktree holds files no agent wrote, so the watcher asks before removing
+    it and keeps the pull request held until you answer."""
+
+    worktree: str = Field(description="The worktree's directory.")
+    files: list[str] = Field(
+        description="Every file removing the worktree deletes or loses changes to, by "
+                    "path, sorted: each one uncommitted or untracked, besides "
+                    "`agent-changes.md`. Files git ignores go too and are not listed. "
+                    "Empty where git could not list them.")
+
+
 class ManagerFlags(BaseModel):
     """What the PR manager holds of the pull request beside GitHub's facts."""
 
@@ -2037,6 +2077,10 @@ class ManagerFlags(BaseModel):
         description="The agent files a pull request held for them changes. Null on "
                     "your own pull requests, ones you took over, and ones whose changes "
                     "you answered or that change none.")
+    clean_up: WorktreeCleanUp | None = Field(
+        description="The worktree teardown asks to delete. Null while the pull request "
+                    "is open, and once its worktree is gone or held only the agents' "
+                    "own changes.")
     changed_at: str | None = Field(
         description="When one of these last changed, as this process saw it. "
                     "Of two copies the one with the later stamp is newer.")
@@ -2542,6 +2586,11 @@ class MentionDeferred(BaseModel):
                                              "pull request instead.")
     until_pr: AwaitedPr | None = Field(description="The pull request it waits on; null when it "
                                                    "waits for a time instead.")
+
+
+class DismissCleanUpRequest(BaseModel):
+    until_at: AwareDatetime = Field(
+        description="When the clean-up comes back to the wall, with its offset.")
 
 
 class DeferMentionRequest(BaseModel):

@@ -13,6 +13,7 @@ from github_orchestrator.domain import (
     Cause,
     CiCheck,
     DismissUntil,
+    Fault,
     HubState,
     Mention,
     Pr,
@@ -197,6 +198,12 @@ class HeldAgentSettings:
 
 
 @dataclass(frozen=True)
+class WorktreeCleanUp:
+    worktree: str
+    files: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Dashboard:
     pr: Pr
     worktree: str
@@ -268,6 +275,7 @@ class Dashboard:
     undismiss_command: str
     notice: Notice | None
     standing: ManagerStanding
+    clean_up: WorktreeCleanUp | None = None
 
 
 class ManagerPanel(Protocol):
@@ -422,6 +430,10 @@ class Holdings(Protocol):
 
     def release(self, pr: Pr) -> bool: ...
 
+    def delete_worktree(self, pr: Pr) -> bool: ...
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool: ...
+
 
 class FinishedRun(Protocol):
     @property
@@ -471,9 +483,6 @@ class Pulse(Protocol):
     def last_error(self) -> str | None: ...
 
     @property
-    def fix(self) -> str | None: ...
-
-    @property
     def mentions_error(self) -> str | None: ...
 
     @property
@@ -481,6 +490,21 @@ class Pulse(Protocol):
 
     @property
     def mentions_error_cause(self) -> Cause | None: ...
+
+    @property
+    def last_error_fault(self) -> Fault | None: ...
+
+    @property
+    def mentions_error_fault(self) -> Fault | None: ...
+
+    @property
+    def hidden_repo(self) -> Repo | None: ...
+
+    @property
+    def account(self) -> str: ...
+
+    @property
+    def config_path(self) -> str: ...
 
     @property
     def overdue(self) -> bool: ...

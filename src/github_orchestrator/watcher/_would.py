@@ -59,6 +59,9 @@ class WouldTearDown:
                 self._say(f"would tear down {pr} (dismissed forever)")
         return True
 
+    def waiting_for_you(self, now: datetime) -> list[Pr]:
+        return []
+
 
 class WouldSave:
     def began(self, state: HubState) -> None:
