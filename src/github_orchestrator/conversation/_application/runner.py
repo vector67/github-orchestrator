@@ -17,6 +17,7 @@ from github_orchestrator.conversation._domain.commands import (
     Resolve,
 )
 from github_orchestrator.conversation._domain.conversation import (
+    QUEUED,
     THUMBS_UP,
     CommitCheck,
     CommitVerdict,
@@ -70,6 +71,7 @@ from github_orchestrator.conversation._domain.events import (
     ReplyFailed,
     ReplyPosted,
     RunRefused,
+    RunWaits,
     SessionRefused,
     ShellRefused,
     ThreadResolved,
@@ -302,9 +304,11 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
     match effect:
         case CutWorkspace():
             cut = thread_workspace(ports, conversation).ensure()
-            if cut.workspace is None:
-                raise WorkspaceRefused(cut.failure)
-            return WorkspaceCut(base_sha=cut.workspace.base_sha)
+            if cut.workspace is not None:
+                return WorkspaceCut(base_sha=cut.workspace.base_sha)
+            if conversation.fix.state == QUEUED:
+                return RunWaits(reason=cut.failure)
+            raise WorkspaceRefused(cut.failure)
         case OpenSession(answers=True):
             refused = ports.agents.answer_in_session(
                 thread_workspace(ports, conversation).path, conversation, effect.steer)

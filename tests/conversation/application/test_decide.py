@@ -481,6 +481,45 @@ def test_a_rework_verb_queues_a_rework_run_carrying_the_brief(settings):
     assert s.taken(asked)
 
 
+def _without_the_pr_worktree(s: Scene) -> dict[Any, str]:
+    placed = dict(s.here.working_copies.placed)
+    s.here.working_copies.placed.clear()
+    return placed
+
+
+def test_a_rework_whose_pr_worktree_is_gone_stays_pending_and_says_why(settings):
+    s = proposed(settings)
+    _without_the_pr_worktree(s)
+    runs = len(s.here.agent_runs.started)
+
+    asked = s.ask("rework", note="use the enum instead")
+    drain(s.threads)
+    drain(s.threads)
+
+    waiting = s.operation(asked)
+    assert (waiting.state, waiting.reason_code) == (OperationState.PENDING,
+                                                    ReasonCode.WORKTREE_MISSING)
+    assert s.stored().fix.decision_error is None
+    assert s.here.agent_runs.started[runs:] == []
+
+
+def test_a_rework_that_waited_on_its_pr_worktree_runs_once_it_is_back(settings):
+    s = proposed(settings)
+    placed = _without_the_pr_worktree(s)
+    runs = len(s.here.agent_runs.started)
+    asked = s.ask("rework", note="use the enum instead")
+    drain(s.threads)
+    s.here.working_copies.placed.update(placed)
+
+    drain(s.threads)
+
+    running = s.operation(asked)
+    assert (running.state, running.reason, running.reason_code) == (
+        OperationState.RUNNING, None, None)
+    [started] = s.here.agent_runs.started[runs:]
+    assert isinstance(started.work, Reworking)
+
+
 def test_nothing_is_sent_back_for_rework_while_claude_is_disabled(settings):
     s = proposed(settings)
     asked = s.ask("rework", note="again")
