@@ -176,3 +176,39 @@ class JsonFileReviewerPicks:
 
     def _path(self, pr: Pr) -> Path:
         return repo_subdir(self._picks_dir, pr.repo) / f"{pr.number}.json"
+
+
+class JsonFileRerequests:
+    def __init__(self, rerequests_dir: Path) -> None:
+        self._rerequests_dir = rerequests_dir
+
+    def queued(self, pr: Pr) -> tuple[str, ...]:
+        try:
+            return tuple(json.loads(self._path(pr).read_text())["reviewers"])
+        except FileNotFoundError:
+            return ()
+        except (OSError, ValueError, KeyError, TypeError):
+            log.warning("%s: unreadable re-request queue at %s", pr, self._path(pr), exc_info=True)
+            return ()
+
+    def queue(self, pr: Pr, login: str) -> None:
+        queued = self.queued(pr)
+        if login not in queued:
+            self._write(pr, (*queued, login))
+
+    def drop(self, pr: Pr, login: str) -> None:
+        queued = self.queued(pr)
+        if login in queued:
+            self._write(pr, tuple(each for each in queued if each != login))
+
+    def forget(self, pr: Pr) -> bool:
+        return _remove(pr, self._path(pr))
+
+    def _write(self, pr: Pr, reviewers: tuple[str, ...]) -> None:
+        if not reviewers:
+            self.forget(pr)
+            return
+        write_atomically(self._path(pr), json.dumps({"reviewers": list(reviewers)}).encode())
+
+    def _path(self, pr: Pr) -> Path:
+        return repo_subdir(self._rerequests_dir, pr.repo) / f"{pr.number}.json"

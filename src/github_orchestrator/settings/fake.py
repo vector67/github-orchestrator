@@ -72,6 +72,25 @@ class FakeReviewerPicks:
         return True
 
 
+class FakeRerequests:
+    def __init__(self) -> None:
+        self._queued: dict[Pr, tuple[str, ...]] = {}
+
+    def queued(self, pr: Pr) -> tuple[str, ...]:
+        return self._queued.get(pr, ())
+
+    def queue(self, pr: Pr, login: str) -> None:
+        if login not in self.queued(pr):
+            self._queued[pr] = (*self.queued(pr), login)
+
+    def drop(self, pr: Pr, login: str) -> None:
+        self._queued[pr] = tuple(each for each in self.queued(pr) if each != login)
+
+    def forget(self, pr: Pr) -> bool:
+        self._queued.pop(pr, None)
+        return True
+
+
 class FakeDismissals:
     def __init__(self) -> None:
         self._dismissed: dict[Pr, DismissUntil] = {}
