@@ -113,6 +113,25 @@ def test_a_draft_says_so(detection):
     assert drafts == {True: True, False: False}
 
 
+def test_a_reviewer_who_only_commented_is_among_the_commenters_and_not_the_change_requesters(detection):
+    detection.advance(THE_PR, poll(pr_state(reviews=(
+        Review("carol", ReviewState.COMMENTED, "2026-09-20T00:00:00Z", "sha0"),))), set())
+
+    facts = detection.facts(THE_PR)
+
+    assert (facts.commented_by, facts.changes_requested_by) == (("carol",), ())
+
+
+def test_a_comment_after_a_change_request_leaves_the_change_request_standing(detection):
+    detection.advance(THE_PR, poll(pr_state(reviews=(
+        Review("carol", ReviewState.CHANGES_REQUESTED, "2026-09-20T00:00:00Z", "sha0"),
+        Review("carol", ReviewState.COMMENTED, "2026-09-21T00:00:00Z", "sha0")))), set())
+
+    facts = detection.facts(THE_PR)
+
+    assert (facts.commented_by, facts.changes_requested_by) == ((), ("carol",))
+
+
 def test_the_facts_say_whether_i_am_on_the_requested_list_right_now(detection):
     requested = {}
     for pending in ((ACCOUNT, "erin"), ("erin",)):

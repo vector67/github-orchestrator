@@ -87,6 +87,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         checks=tuple(_check(c) for c in checks),
         approved_by=_reviewers_who(words, ReviewerStatus.APPROVED),
         changes_requested_by=_reviewers_who(words, ReviewerStatus.CHANGES_REQUESTED),
+        commented_by=_reviewers_who(words, ReviewerStatus.COMMENTED),
         pending_reviewers=tuple(_pending_reviewers(snapshot)),
         unresolved_threads=_unresolved_threads(snapshot),
         my_review=words.reviewers.get(account),

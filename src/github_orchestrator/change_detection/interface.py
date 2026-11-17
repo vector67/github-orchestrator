@@ -189,6 +189,7 @@ class Facts:
     checks: tuple[CiCheck, ...]
     approved_by: tuple[str, ...]
     changes_requested_by: tuple[str, ...]
+    commented_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
     unresolved_threads: int | None
     my_review: ReviewerStatus | None
