@@ -5,13 +5,15 @@ from typing import Any
 from github_orchestrator.agent_runs import PrWork, Run
 from github_orchestrator.board_api.interface import Notice, NoticeCode
 from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewRequested
+from github_orchestrator.conversation import Conversation
 from github_orchestrator.domain import Monotonic, ReviewerPick
 from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._refusals import Conditions, refusal
-from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
+from github_orchestrator.pr_manager._rerequest import due
+from github_orchestrator.settings import Dismissals, Holds, Rerequests, ReviewerPicks
 
 log = logging.getLogger(__name__)
 
@@ -24,9 +26,11 @@ class ManagerCommands:
                  worklist: Worklist,
                  pull_requests: PullRequests, pr_work: PrWork,
                  change_detection: ChangeDetection, intake: Intake,
-                 command_files: CommandFiles, picks: ReviewerPicks) -> None:
+                 command_files: CommandFiles, picks: ReviewerPicks,
+                 rerequests: Rerequests) -> None:
         self._config = config
         self._picks = picks
+        self._rerequests = rerequests
         self._monotonic = monotonic
         self._holds = holds
         self._dismissals = dismissals
@@ -218,6 +222,22 @@ class ManagerCommands:
         log.info("%s: no longer a draft — asking the reviewers picked for when it is ready", pr)
         self._assign_reviewers(list(pick.reviewers), pick.detailed)
         self._picks.forget(pr)
+
+    def rerequest_once_due(self, facts: Facts | None,
+                           conversations: list[Conversation]) -> None:
+        pr = self._config.pr
+        queued = self._rerequests.queued(pr)
+        if not queued:
+            return
+        answer = due(facts, conversations, queued)
+        for login in answer.drop:
+            log.info("%s: %s is already asked to review on GitHub — off the re-request queue",
+                     pr, login)
+            self._rerequests.drop(pr, login)
+        for login in answer.ask:
+            log.info("%s: pushed and green — re-requesting %s's review", pr, login)
+            self._assign_reviewers([login], None)
+            self._rerequests.drop(pr, login)
 
     def _assign_when_ready(self, pick: ReviewerPick) -> None:
         pr = self._config.pr

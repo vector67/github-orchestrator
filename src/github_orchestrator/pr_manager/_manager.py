@@ -256,6 +256,7 @@ class ManagerLoop:
         wrong = self._freeze_on_wrong_branch(state.branch if state else None)
         if wrong is None:
             self._commands.assign_once_ready(state)
+            self._commands.rerequest_once_due(state, self._conversations().all())
         waiting = self._worklist.waiting(pr)
         dashboard = self._written_status(wrong)
         if self._commands.active_run is None:

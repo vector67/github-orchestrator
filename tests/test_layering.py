@@ -803,11 +803,12 @@ def test_the_watcher_names_only_the_conversation_interface():
 
 
 PR_MANAGER_NAMES_FROM_CONVERSATION = frozenset({
-    "ConversationManagerFactory", "ConversationManager", "ThreadActivity",
+    "ConversationManagerFactory", "ConversationManager", "ThreadActivity", "Conversation",
+    "ConversationState", "OperationKind", "OperationState",
 })
 
 
-def test_the_pr_manager_names_only_the_handle_the_roles_and_the_thread_activity():
+def test_the_pr_manager_names_only_the_handle_the_roles_the_thread_activity_and_what_a_rerequest_waits_on():
     walked = 0
     for name, path, _ in _modules(PR_MANAGER):
         walked += 1
@@ -815,7 +816,8 @@ def test_the_pr_manager_names_only_the_handle_the_roles_and_the_thread_activity(
         assert named <= PR_MANAGER_NAMES_FROM_CONVERSATION, (
             f"{name} names {sorted(named - PR_MANAGER_NAMES_FROM_CONVERSATION)} from "
             f"{CONVERSATION}; the manager ticks a PR's threads and hands them the thread "
-            f"activity the watcher found"
+            f"activity the watcher found, and reads their states and Accepts to tell when "
+            f"a queued re-request is due"
         )
     assert walked > 3, "the walk found no pr_manager module to check"
 
