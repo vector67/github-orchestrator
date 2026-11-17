@@ -725,14 +725,22 @@ function comments(count: number): string {
   return count === 1 ? '1 comment' : `${count} comments`;
 }
 
-function summaryLineOf(counted: Outcome[]): string {
+function summaryLineOf(
+  counted: Outcome[],
+  closing: boolean,
+  reviewer: string,
+): string {
+  if (!counted.length) return `${reviewer} left no comments to close.`;
   const counts = COUNTED_IN_ORDER.map(
     (outcome) =>
       [outcome, counted.filter((one) => one === outcome).length] as const,
   )
     .filter(([, count]) => count > 0)
     .map(([outcome, count]) => `${count} ${outcome}`);
-  return `This is the last one open: ${counts.join(', ')}`;
+  const lead = closing
+    ? 'This is the last one open'
+    : 'Every comment is closed';
+  return `${lead}: ${counts.join(', ')}`;
 }
 
 function flagLineOf(
@@ -790,6 +798,33 @@ export function rerequestPromptOf(
         ]
       : outcomesOf(one, operations, pr.author),
   );
+  return promptOf(pr, facts, reviewer, round, outcomes, true);
+}
+
+export function owedPromptOf(
+  pr: PrEntity | undefined,
+  threads: Threads | undefined,
+  operations: Operations,
+  reviewer: string,
+): RerequestPrompt | null {
+  const facts = pr?.facts ?? null;
+  if (!pr || !facts) return null;
+  const all = Object.values(threads ?? {});
+  const queued = pr.drawn?.system.rerequest_queued ?? [];
+  if (!roundsOf(facts, all, queued).owed.includes(reviewer)) return null;
+  const round = roundOf(all, reviewer, facts);
+  const outcomes = round.map((one) => outcomesOf(one, operations, pr.author));
+  return promptOf(pr, facts, reviewer, round, outcomes, false);
+}
+
+function promptOf(
+  pr: PrEntity,
+  facts: PrFacts,
+  reviewer: string,
+  round: Thread[],
+  outcomes: Outcome[][],
+  closing: boolean,
+): RerequestPrompt {
   const counted = outcomes.map(firstOf);
   const rejected = counted.filter((one) => one === 'rejected').length;
   const bare = outcomes.filter(
@@ -807,7 +842,7 @@ export function rerequestPromptOf(
       text: requested ? 'Changes requested' : 'Commented',
       alarm: requested,
     },
-    summary: summaryLineOf(counted),
+    summary: summaryLineOf(counted, closing, reviewer),
     flag: flagLineOf(rejected, bare, reviewer),
     listed: `${round.length === 1 ? 'comment' : 'comments'} from ${reviewer}`,
     comments: round.map((one, at) => ({

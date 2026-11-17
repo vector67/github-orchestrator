@@ -21,6 +21,22 @@ import type {
   Tally,
 } from 'frontend/services/store';
 
+export interface RerequestControl {
+  reviewer: string;
+  label: string;
+  first: boolean;
+}
+
+export function rerequestControlsOf(move: NextMove): RerequestControl[] {
+  if (move.code !== 'rerequest-review') return [];
+  const named = move.reviewers.length > 1;
+  return move.reviewers.map((reviewer, at) => ({
+    reviewer,
+    label: named ? `Re-request review from ${reviewer}` : 'Re-request review',
+    first: at === 0,
+  }));
+}
+
 const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

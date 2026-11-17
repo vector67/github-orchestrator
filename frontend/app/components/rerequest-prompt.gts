@@ -13,7 +13,7 @@ import type {
 interface RerequestPromptSignature {
   Args: {
     prompt: Prompt;
-    label: string;
+    label: string | null;
     rerequest: () => void;
     only: () => void;
     cancel: () => void;
@@ -21,16 +21,30 @@ interface RerequestPromptSignature {
 }
 
 const answering =
-  (rerequest: () => void, only: () => void) =>
+  (rerequest: () => void, only: () => void, onlyKey: string) =>
   (key: string): boolean => {
     if (key === 'r') rerequest();
-    else if (key === 'o') only();
+    else if (key === onlyKey) only();
     else return false;
     return true;
   };
 
 export default class RerequestPrompt extends Component<RerequestPromptSignature> {
   @service declare store: StoreService;
+
+  get rerequestLabel(): string {
+    const label = this.args.label;
+    return label === null ? 'Re-request review' : `${label} and re-request`;
+  }
+
+  get onlyLabel(): string {
+    const label = this.args.label;
+    return label === null ? 'Not yet' : `${label} only`;
+  }
+
+  get onlyKey(): string {
+    return this.args.label === null ? 'n' : 'o';
+  }
 
   storyOf = (key: string): CommentStory =>
     this.store.commentStory(
@@ -68,7 +82,7 @@ export default class RerequestPrompt extends Component<RerequestPromptSignature>
         aria-describedby="rerequest-prompt-note"
         tabindex="-1"
         data-test-rerequest-prompt
-        {{modal @cancel (answering @rerequest @only)}}
+        {{modal @cancel (answering @rerequest @only this.onlyKey)}}
       >
         <header class="dialog-head">
           <p class="dialog-kicker" data-test-rerequest-kicker>Last comment from
@@ -100,95 +114,102 @@ export default class RerequestPrompt extends Component<RerequestPromptSignature>
           <p class="note" data-test-rerequest-flag><strong
             >{{@prompt.flag}}</strong></p>
         {{/if}}
-        <div class="outstanding">
-          <section class="outstanding-kind">
-            <button
-              type="button"
-              class="outstanding-head rerequest-listing"
-              aria-expanded={{if this.listing "true" "false"}}
-              data-test-rerequest-comments
-              {{on "click" this.toggleListing}}
-            ><span aria-hidden="true">{{if this.listing "▼" "▶"}}</span><span
-                class="outstanding-count"
-              >{{@prompt.comments.length}}</span>
-              {{@prompt.listed}}</button>
-            {{#if this.listing}}
-              <ul class="outstanding-items">
-                {{#each @prompt.comments key="key" as |comment|}}
-                  {{#let (this.storyOf comment.key) as |story|}}
-                    <li
-                      class="outstanding-item"
-                      data-test-rerequest-comment={{comment.key}}
-                    >
-                      <span
-                        class="outstanding-where"
-                        data-test-rerequest-where
-                      >{{comment.where}}</span>
-                      {{#if story.what}}
+        {{#if @prompt.comments.length}}
+          <div class="outstanding">
+            <section class="outstanding-kind">
+              <button
+                type="button"
+                class="outstanding-head rerequest-listing"
+                aria-expanded={{if this.listing "true" "false"}}
+                data-test-rerequest-comments
+                {{on "click" this.toggleListing}}
+              ><span aria-hidden="true">{{if this.listing "▼" "▶"}}</span><span
+                  class="outstanding-count"
+                >{{@prompt.comments.length}}</span>
+                {{@prompt.listed}}</button>
+              {{#if this.listing}}
+                <ul class="outstanding-items">
+                  {{#each @prompt.comments key="key" as |comment|}}
+                    {{#let (this.storyOf comment.key) as |story|}}
+                      <li
+                        class="outstanding-item"
+                        data-test-rerequest-comment={{comment.key}}
+                      >
                         <span
-                          class="outstanding-what"
-                          data-test-rerequest-what
-                        >{{story.what}}</span>
-                      {{/if}}
-                      <span class="rerequest-chips">
-                        {{#each comment.outcomes key="@identity" as |outcome|}}
+                          class="outstanding-where"
+                          data-test-rerequest-where
+                        >{{comment.where}}</span>
+                        {{#if story.what}}
                           <span
-                            class="state-chip tone-plain"
-                            data-test-rerequest-chip
-                          >{{outcome}}</span>
-                        {{/each}}
-                      </span>
-                      <button
-                        type="button"
-                        class="rerequest-history"
-                        aria-expanded={{if
-                          (this.isOpen comment.key)
-                          "true"
-                          "false"
-                        }}
-                        data-test-history
-                        {{on "click" (this.toggle comment.key)}}
-                      ><span aria-hidden="true">{{if
-                            (this.isOpen comment.key)
-                            "▼"
-                            "▶"
-                          }}</span>
-                        History</button>
-                      {{#if (this.isOpen comment.key)}}
-                        <ol class="rerequest-history-entries">
-                          {{#each story.history key="@index" as |entry|}}
-                            <li
-                              class="rerequest-history-entry"
-                              data-test-history-entry
-                            >
-                              <time
-                                class="outstanding-where"
-                                datetime={{entry.at}}
-                              >{{entry.when}}</time>
-                              <span data-test-history-what>{{entry.what}}</span>
-                            </li>
+                            class="outstanding-what"
+                            data-test-rerequest-what
+                          >{{story.what}}</span>
+                        {{/if}}
+                        <span class="rerequest-chips">
+                          {{#each
+                            comment.outcomes key="@identity"
+                            as |outcome|
+                          }}
+                            <span
+                              class="state-chip tone-plain"
+                              data-test-rerequest-chip
+                            >{{outcome}}</span>
                           {{/each}}
-                        </ol>
-                      {{/if}}
-                    </li>
-                  {{/let}}
-                {{/each}}
-              </ul>
-            {{/if}}
-          </section>
-        </div>
+                        </span>
+                        <button
+                          type="button"
+                          class="rerequest-history"
+                          aria-expanded={{if
+                            (this.isOpen comment.key)
+                            "true"
+                            "false"
+                          }}
+                          data-test-history
+                          {{on "click" (this.toggle comment.key)}}
+                        ><span aria-hidden="true">{{if
+                              (this.isOpen comment.key)
+                              "▼"
+                              "▶"
+                            }}</span>
+                          History</button>
+                        {{#if (this.isOpen comment.key)}}
+                          <ol class="rerequest-history-entries">
+                            {{#each story.history key="@index" as |entry|}}
+                              <li
+                                class="rerequest-history-entry"
+                                data-test-history-entry
+                              >
+                                <time
+                                  class="outstanding-where"
+                                  datetime={{entry.at}}
+                                >{{entry.when}}</time>
+                                <span
+                                  data-test-history-what
+                                >{{entry.what}}</span>
+                              </li>
+                            {{/each}}
+                          </ol>
+                        {{/if}}
+                      </li>
+                    {{/let}}
+                  {{/each}}
+                </ul>
+              {{/if}}
+            </section>
+          </div>
+        {{/if}}
         <div class="dialog-actions">
           <button
             type="button"
             class="primary"
             data-test-rerequest-and
             {{on "click" @rerequest}}
-          >{{@label}} and re-request <kbd>r</kbd></button>
+          >{{this.rerequestLabel}} <kbd>r</kbd></button>
           <button
             type="button"
             data-test-rerequest-only
             {{on "click" @only}}
-          >{{@label}} only <kbd>o</kbd></button>
+          >{{this.onlyLabel}} <kbd>{{this.onlyKey}}</kbd></button>
         </div>
       </form>
     </div>

@@ -17,12 +17,15 @@ import GitPaletteState from 'frontend/components/git-palette-state';
 import Glyphs from 'frontend/components/glyphs';
 import PendingRing from 'frontend/components/pending-ring';
 import RebaseButton from 'frontend/components/rebase-button';
+import RerequestPrompt from 'frontend/components/rerequest-prompt';
 import {
   clockOf,
   notLiveOf,
+  rerequestControlsOf,
   standingOf,
   threadsWaitingOf,
   type Reading,
+  type RerequestControl,
 } from 'frontend/data/dashboard';
 import {
   areYouSureOf,
@@ -56,6 +59,7 @@ import {
 import type StoreService from 'frontend/services/store';
 import type {
   Outstanding,
+  RerequestPrompt as Prompt,
   ReviewerGroup,
   Summaries,
 } from 'frontend/services/store';
@@ -350,12 +354,46 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     return pr ? this.store.outstanding(pr.repo, pr.number) : null;
   }
 
+  @tracked private rerequesting: string | null = null;
+
+  get rerequests(): RerequestControl[] {
+    const move = this.summaries?.move;
+    return move ? rerequestControlsOf(move) : [];
+  }
+
+  get rerequestPrompt(): Prompt | null {
+    const pr = this.here.pr;
+    const reviewer = this.rerequesting;
+    if (!pr || reviewer === null) return null;
+    return this.store.owedPrompt(pr.repo, pr.number, reviewer);
+  }
+
+  askRerequest = (reviewer: string) => () => {
+    this.rerequesting = reviewer;
+  };
+
+  notYet = () => {
+    this.rerequesting = null;
+  };
+
+  rerequestReview = () => {
+    const reviewer = this.rerequesting;
+    this.rerequesting = null;
+    const on = this.on;
+    if (on && reviewer !== null) {
+      void this.controls.rerequestReview(on, reviewer);
+    }
+  };
+
   private takes(key: string): boolean {
     const reading = this.reading;
     if (!reading || this.controls.dismissedOf(this.here.pr)) return false;
     const control = keyedControl(key, KEYED);
     if (control) return this.press(control);
-    if (key === 'C') this.flipPane();
+    const rerequest = this.rerequests.find((one) => one.first);
+    if (key === 'e' && rerequest && !this.pending) {
+      this.askRerequest(rerequest.reviewer)();
+    } else if (key === 'C') this.flipPane();
     else if (key === 't' && !reading.frozen) this.toTerminal();
     else return false;
     return true;
@@ -462,6 +500,18 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                   {{on "click" this.nudged}}
                 >I nudged them</button>
               {{/if}}
+              {{#each this.rerequests key="reviewer" as |rerequest|}}
+                <button
+                  type="button"
+                  class="btn fill"
+                  disabled={{this.pending}}
+                  data-opens-dialog="true"
+                  data-test-control="rerequest-review"
+                  data-test-reviewer={{rerequest.reviewer}}
+                  {{on "click" (this.askRerequest rerequest.reviewer)}}
+                >{{rerequest.label}}<Glyphs @opensDialog={{true}} />
+                  {{#if rerequest.first}}<kbd>e</kbd>{{/if}}</button>
+              {{/each}}
               {{#if this.reading.onHold}}
                 <button
                   type="button"
@@ -660,6 +710,15 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @asking={{this.yesOrNo}}
             @confirm={{this.confirmYes}}
             @cancel={{this.cancelAsking}}
+          />
+        {{/if}}
+        {{#if this.rerequestPrompt}}
+          <RerequestPrompt
+            @prompt={{this.rerequestPrompt}}
+            @label={{null}}
+            @rerequest={{this.rerequestReview}}
+            @only={{this.notYet}}
+            @cancel={{this.notYet}}
           />
         {{/if}}
         {{#if this.readyAbout}}

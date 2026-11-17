@@ -2279,6 +2279,7 @@ export class FakeBoard {
           rerequest_queued: [...system.rerequest_queued, reviewer],
         },
       };
+      this.streamed();
     }
     return respond(null, {
       status: 202,

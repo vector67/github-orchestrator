@@ -137,6 +137,7 @@ import {
   readOf,
   commentStoryOf,
   rerequestPromptOf,
+  owedPromptOf,
   resetStandingOf,
   threadNamedIn,
   setupPressedOf,
@@ -552,6 +553,20 @@ export default class StoreService extends Service {
       action,
       gathered,
       this.proposal(repo, number, thread)?.kind ?? null,
+    );
+  }
+
+  owedPrompt(
+    repo: string,
+    number: number,
+    reviewer: string,
+  ): RerequestPrompt | null {
+    const key = keyOf(repo, number);
+    return owedPromptOf(
+      this.prs[key],
+      this.threads[key],
+      this.operations[key] ?? {},
+      reviewer,
     );
   }
 

@@ -825,4 +825,130 @@ module('Acceptance | re-request review', function (hooks) {
       ['carol commented', 'Resolved'],
     );
   });
+
+  async function onTheDashboard(over: DashboardOver): Promise<void> {
+    serve(over);
+    board().conversations = [closed('PRRT_c1', {})];
+    await visit('/pr/o/r/7/dashboard');
+  }
+
+  test('the Dashboard offers "Re-request review" only for its move', async function (assert) {
+    await onTheDashboard({ facts: CAROL_COMMENTED });
+
+    assert.dom('[data-test-band-move]').hasText('Re-request review from carol');
+    assert
+      .dom('[data-test-control="rerequest-review"]')
+      .hasText('Re-request review e');
+  });
+
+  test('the Dashboard offers no "Re-request review" once GitHub lists carol as pending', async function (assert) {
+    await onTheDashboard({
+      facts: { ...CAROL_COMMENTED, pending_reviewers: ['carol'] },
+    });
+
+    assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
+  });
+
+  test('"Re-request review" opens the prompt without a decision and posts nothing', async function (assert) {
+    await onTheDashboard({ facts: CAROL_COMMENTED });
+
+    await click('[data-test-control="rerequest-review"]');
+
+    assert
+      .dom('[data-test-rerequest-kicker]')
+      .hasText('Last comment from carol');
+    assert
+      .dom('[data-test-rerequest-question]')
+      .hasText("Re-request carol's review of #7?");
+    assert.dom('[data-test-rerequest-badge]').hasText('Commented');
+    assert
+      .dom('[data-test-rerequest-summary]')
+      .hasText('Every comment is closed: 1 marked done');
+    assert
+      .dom('[data-test-rerequest-comments]')
+      .includesText('1 comment from carol');
+    assert.dom('[data-test-rerequest-and]').hasText('Re-request review r');
+    assert.dom('[data-test-rerequest-only]').hasText('Not yet n');
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('"Re-request review" in the prompt queues carol, and the move says so', async function (assert) {
+    await onTheDashboard({ facts: CAROL_COMMENTED });
+    await click('[data-test-control="rerequest-review"]');
+
+    await click('[data-test-rerequest-and]');
+
+    assert.deepEqual(verbs(), ['rerequest-review']);
+    assert.deepEqual(board().posted[0]!.body, { reviewer: 'carol' });
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.dom('[data-test-band-move]').hasText('Re-request queued for carol');
+  });
+
+  test('"Not yet" closes the prompt and posts nothing', async function (assert) {
+    await onTheDashboard({ facts: CAROL_COMMENTED });
+    await click('[data-test-control="rerequest-review"]');
+
+    await click('[data-test-rerequest-only]');
+
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-band-move]').hasText('Re-request review from carol');
+  });
+
+  test('on the Dashboard, e opens the prompt and r and n pick its buttons', async function (assert) {
+    await onTheDashboard({ facts: CAROL_COMMENTED });
+
+    await triggerEvent(document, 'keydown', { key: 'e' });
+    await triggerEvent(document, 'keydown', { key: 'n' });
+
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.deepEqual(verbs(), []);
+
+    await triggerEvent(document, 'keydown', { key: 'e' });
+    await triggerEvent(document, 'keydown', { key: 'r' });
+
+    assert.deepEqual(verbs(), ['rerequest-review']);
+  });
+
+  test('a change request with no comments opens the prompt with no list', async function (assert) {
+    serve({
+      facts: {
+        ...CAROL_COMMENTED,
+        commented_by: [],
+        changes_requested_by: ['carol'],
+      },
+    });
+    board().conversations = [];
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-control="rerequest-review"]');
+
+    assert.dom('[data-test-rerequest-badge]').hasText('Changes requested');
+    assert
+      .dom('[data-test-rerequest-summary]')
+      .hasText('carol left no comments to close.');
+    assert.dom('[data-test-rerequest-comments]').doesNotExist();
+  });
+
+  test('with two reviewers owed, each "Re-request review" names its login', async function (assert) {
+    serve({ facts: { ...CAROL_COMMENTED, commented_by: ['carol', 'erin'] } });
+    board().conversations = [
+      closed('PRRT_c1', {}),
+      closed('PRRT_e1', { opened_by: 'erin' }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert.dom('[data-test-control="rerequest-review"]').exists({ count: 2 });
+    assert
+      .dom('[data-test-control="rerequest-review"][data-test-reviewer="erin"]')
+      .hasText('Re-request review from erin');
+
+    await click(
+      '[data-test-control="rerequest-review"][data-test-reviewer="erin"]',
+    );
+
+    assert
+      .dom('[data-test-rerequest-question]')
+      .hasText("Re-request erin's review of #7?");
+  });
 });
