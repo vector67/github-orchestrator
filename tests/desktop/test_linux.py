@@ -33,7 +33,17 @@ def test_an_announcement_goes_through_notify_send_without_a_click_action():
 
     assert reason is None
     assert linux.ran == [(["notify-send", "--app-name", "github-orchestrator",
-                           "2 comments on widgets#101", "alice: why?"], None)]
+                           "--", "2 comments on widgets#101", "alice: why?"], None)]
+
+
+def test_a_body_that_starts_with_a_dash_is_passed_after_the_end_of_options():
+    linux = ScriptedLinux()
+
+    _desktop(linux).announce(Badge.COMMENTS, "2 comments on widgets#101",
+                             "-h fix the thing", "n-1", URL)
+
+    [(argv, _)] = linux.ran
+    assert argv.index("--") < argv.index("-h fix the thing")
 
 
 def test_without_notify_send_an_announcement_is_skipped_quietly():

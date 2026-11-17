@@ -574,6 +574,39 @@ module('Acceptance | panel', function (hooks) {
       .doesNotIncludeText('free agent');
   });
 
+  test('a rework waiting on a missing worktree says why in place of re-running', async function (assert) {
+    const waiting = {
+      state: 'pending' as const,
+      reason: 'no worktree holds PROJ-30, the head branch of #7',
+      reason_code: 'worktree-missing' as const,
+    };
+    const rework = board().threadIn('rework', { key: KEY });
+    board().conversations = [
+      {
+        ...rework,
+        operations: rework.operations.map((one) =>
+          one.kind === 'rework' ? { ...one, ...waiting } : one,
+        ),
+      },
+    ];
+    board().operations[KEY] = [
+      operation({
+        id: `${KEY}.1`,
+        conversation: KEY,
+        kind: 'rework',
+        ...waiting,
+      }),
+    ];
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('[data-test-banner-fix]')
+      .includesText("Waiting for the pull request's worktree")
+      .includesText('no worktree holds PROJ-30, the head branch of #7')
+      .doesNotIncludeText('Re-running');
+  });
+
   test('the verdict and the file count are the meta line, each with its detail', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 
