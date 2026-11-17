@@ -136,14 +136,14 @@ const PanelView: TOC<PanelSignature> = <template>
         {{/if}}
         {{#if @panel.draft}}{{else if (reviewing @panel)}}
           {{#if @panel.commit_check}}
-            <div class="commit-check" data-test-commit-check>
+            <div class="agent-line commit-check" data-test-commit-check>
               <p class="kicker" data-test-commit-verdict>
                 {{@panel.commit_check.verdict}}
               </p>
               {{#if @panel.commit_check.reasoning}}
-                <p class="note" data-test-commit-reasoning>
-                  {{@panel.commit_check.reasoning}}
-                </p>
+                <div class="agent-reason" data-test-commit-reasoning>
+                  <CommentBody @body={{@panel.commit_check.reasoning}} />
+                </div>
               {{/if}}
             </div>
           {{else if @panel.mention}}{{else if @panel.agent_line}}{{else}}
