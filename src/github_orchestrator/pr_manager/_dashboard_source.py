@@ -27,7 +27,7 @@ from github_orchestrator.pr_manager._reset_shelf import kept_reset
 from github_orchestrator.pr_manager._snapshot import dashboard_of
 from github_orchestrator.pr_manager._status import STAMP, StatusFiles
 from github_orchestrator.pr_processes import PrProcesses
-from github_orchestrator.settings import Dismissals, Holds, ReviewerPicks
+from github_orchestrator.settings import Dismissals, Holds, Rerequests, ReviewerPicks
 from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 
 ConfigOf = Callable[[Pr, str], ManagerConfig]
@@ -48,9 +48,10 @@ class DashboardSource:
                  dismissals: Dismissals, working_copies: WorkingCopies,
                  conversation_managers: ConversationManagerFactory, pr_processes: PrProcesses,
                  status_files: StatusFiles, told: Told, shelves: Shelves,
-                 picks: ReviewerPicks) -> None:
+                 picks: ReviewerPicks, rerequests: Rerequests) -> None:
         self._config_of = config_of
         self._picks = picks
+        self._rerequests = rerequests
         self._shelves = shelves
         self._told = told
         self._clock = clock
@@ -90,6 +91,7 @@ class DashboardSource:
             hidden=self._dismissals.is_hidden(pr, events_waiting=queued > 0,
                                               draft=facts is None or facts.draft),
             assign_when_ready=self._picks.saved(pr),
+            rerequest_queued=self._rerequests.queued(pr),
             agent_settings=self.agent_settings(pr, config.worktree),
         )
         asked = self._working_copies.clean_up(pr)

@@ -120,6 +120,12 @@ class ManagerCommands:
             case Command.ASSIGN_WHEN_READY:
                 self._assign_when_ready(ReviewerPick(tuple(fields["reviewers"]),
                                                      fields["detailed"]))
+            case Command.REREQUEST_REVIEW:
+                self._rerequest_review(fields["reviewer"])
+            case Command.CANCEL_REREQUEST:
+                self._cancel_rerequest(fields["reviewer"])
+            case Command.SEND_REREQUEST_NOW:
+                self._send_rerequest_now(fields["reviewer"])
             case Command.TAKE_OVER:
                 self._change_detection.take_over(self._config.pr)
                 log.info("%s: taken over — treated as yours from now on", self._config.pr)
@@ -227,7 +233,7 @@ class ManagerCommands:
                            conversations: list[Conversation]) -> None:
         pr = self._config.pr
         queued = self._rerequests.queued(pr)
-        if not queued:
+        if not queued or facts is None or not facts.is_author:
             return
         answer = due(facts, conversations, queued)
         for login in answer.drop:
@@ -236,8 +242,30 @@ class ManagerCommands:
             self._rerequests.drop(pr, login)
         for login in answer.ask:
             log.info("%s: pushed and green — re-requesting %s's review", pr, login)
-            self._assign_reviewers([login], None)
-            self._rerequests.drop(pr, login)
+            self._ask_again(login)
+
+    def _rerequest_review(self, login: str) -> None:
+        if not self._yours_to_assign():
+            return
+        self._rerequests.queue(self._config.pr, login)
+        log.info("%s: %s queued to be asked again once the fixes are pushed and CI is green",
+                 self._config.pr, login)
+
+    def _cancel_rerequest(self, login: str) -> None:
+        if not self._yours_to_assign():
+            return
+        self._rerequests.drop(self._config.pr, login)
+        log.info("%s: re-request of %s cancelled", self._config.pr, login)
+
+    def _send_rerequest_now(self, login: str) -> None:
+        if not self._yours_to_assign():
+            return
+        log.info("%s: re-requesting %s's review now, as asked", self._config.pr, login)
+        self._ask_again(login)
+
+    def _ask_again(self, login: str) -> None:
+        self._assign_reviewers([login], None)
+        self._rerequests.drop(self._config.pr, login)
 
     def _assign_when_ready(self, pick: ReviewerPick) -> None:
         pr = self._config.pr

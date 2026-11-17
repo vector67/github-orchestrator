@@ -256,6 +256,7 @@ class Dashboard:
     queue: tuple[QueuedEvent, ...]
     on_hold: bool
     assign_when_ready: ReviewerPick | None
+    rerequest_queued: tuple[str, ...]
     unpushed_commits: tuple[UnpushedCommit, ...] | None
     diverged: bool
     reset_to_origin: ResetToOrigin | None
@@ -304,6 +305,12 @@ class ManagerPanel(Protocol):
 
     def assign_when_ready(self, reviewers: Sequence[str],
                           detailed: str | None) -> ManagerRefusal | None: ...
+
+    def rerequest_review(self, reviewer: str) -> ManagerRefusal | None: ...
+
+    def cancel_rerequest(self, reviewer: str) -> ManagerRefusal | None: ...
+
+    def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None: ...
 
     def take_over(self) -> ManagerRefusal | None: ...
 

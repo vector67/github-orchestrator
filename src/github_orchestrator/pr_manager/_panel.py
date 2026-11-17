@@ -103,6 +103,15 @@ class FilePanel(ManagerPanel, ManagerWorktree):
         return self._hand(Command.ASSIGN_WHEN_READY,
                           {"reviewers": list(reviewers), "detailed": detailed})
 
+    def rerequest_review(self, reviewer: str) -> ManagerRefusal | None:
+        return self._hand(Command.REREQUEST_REVIEW, {"reviewer": reviewer})
+
+    def cancel_rerequest(self, reviewer: str) -> ManagerRefusal | None:
+        return self._hand(Command.CANCEL_REREQUEST, {"reviewer": reviewer})
+
+    def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None:
+        return self._hand(Command.SEND_REREQUEST_NOW, {"reviewer": reviewer})
+
     def take_over(self) -> ManagerRefusal | None:
         return self._hand(Command.TAKE_OVER, pushes=True)
 

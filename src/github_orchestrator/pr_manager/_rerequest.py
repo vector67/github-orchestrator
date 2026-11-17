@@ -24,10 +24,7 @@ class Due:
     drop: tuple[str, ...]
 
 
-def due(facts: Facts | None, conversations: Sequence[Conversation],
-        queued: Sequence[str]) -> Due:
-    if facts is None:
-        return Due(ask=(), drop=())
+def due(facts: Facts, conversations: Sequence[Conversation], queued: Sequence[str]) -> Due:
     drop = tuple(login for login in queued if login in facts.pending_reviewers)
     if not _pushed_and_green(facts, conversations):
         return Due(ask=(), drop=drop)

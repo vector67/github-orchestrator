@@ -51,7 +51,7 @@ IDLE = Dashboard(
     working_on=None,
     elapsed_seconds=None, silent_seconds=None, last_run_event=None,
     last_run_exit_code=None, last_run_ended_at=None, queue=(), on_hold=False,
-    assign_when_ready=None, unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_live=frozenset(),
+    assign_when_ready=None, rerequest_queued=(), unpushed_commits=(), diverged=False, reset_to_origin=None, base=None, threads_live=frozenset(),
     frozen_on=None, expected_branch=None,
     seconds_left=None, run_working=False, release_requested=False, agent_settings=None,
     hidden=False, importance=None, nudge_due=False, flags_changed_at=None, thread_rows=(), unreadable_threads=(), threads_listed_at=None,
@@ -142,6 +142,27 @@ class FakeManagerPanel:
             self.now = replace(self.now,
                                assign_when_ready=ReviewerPick(tuple(reviewers), detailed))
         return self.refusal
+
+    def rerequest_review(self, reviewer: str) -> ManagerRefusal | None:
+        if self.refusal is None and reviewer not in self.now.rerequest_queued:
+            self.now = replace(self.now,
+                               rerequest_queued=(*self.now.rerequest_queued, reviewer))
+        return self.refusal
+
+    def cancel_rerequest(self, reviewer: str) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self._unqueue(reviewer)
+        return self.refusal
+
+    def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.assigned.append(((reviewer,), None))
+            self._unqueue(reviewer)
+        return self.refusal
+
+    def _unqueue(self, reviewer: str) -> None:
+        self.now = replace(self.now, rerequest_queued=tuple(
+            login for login in self.now.rerequest_queued if login != reviewer))
 
     def take_over(self) -> ManagerRefusal | None:
         if self.refusal is None:

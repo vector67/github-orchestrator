@@ -29,6 +29,9 @@ class Command(StrEnum):
     CONVERT_TO_DRAFT = "convert-to-draft"
     ASSIGN_REVIEWERS = "assign-reviewers"
     ASSIGN_WHEN_READY = "assign-when-ready"
+    REREQUEST_REVIEW = "rerequest-review"
+    CANCEL_REREQUEST = "cancel-rerequest"
+    SEND_REREQUEST_NOW = "send-rerequest-now"
     TAKE_OVER = "take-over"
     HAND_BACK = "hand-back"
 

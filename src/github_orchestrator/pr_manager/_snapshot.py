@@ -49,6 +49,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  threads: ConversationManager, wrong: WrongBranch | None,
                  notice: Notice | None, hidden: bool,
                  assign_when_ready: ReviewerPick | None,
+                 rerequest_queued: tuple[str, ...],
                  agent_settings: HeldAgentSettings | None) -> Dashboard:
     counts = threads.counts()
     facts = None if facts is None else _as_sent(facts, threads)
@@ -107,6 +108,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
         queue=queue,
         on_hold=on_hold,
         assign_when_ready=assign_when_ready,
+        rerequest_queued=rerequest_queued,
         unpushed_commits=None,
         diverged=False,
         reset_to_origin=None,

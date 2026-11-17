@@ -14,7 +14,7 @@ from github_orchestrator.board_api.interface import ManagerRefusal, Notice, Noti
 from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.domain import DismissUntil, ReviewerPick
 from github_orchestrator.github import PullRequestState
-from github_orchestrator.github.fake import FakeGitHub
+from github_orchestrator.github.fake import Check, FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
@@ -29,7 +29,13 @@ from tests.pr_manager.support import (
     run_manager,
     seed_state,
 )
-from tests.settings.support import disk_dismissals, disk_holds, disk_picks
+from tests.settings.support import (
+    disk_dismissals,
+    disk_holds,
+    disk_picks,
+    disk_rerequests,
+)
+from tests.thread_records.support import disk_thread_records, keep, thread
 
 THE_PR = a_pr(PR, REPO)
 URL = "https://github.com/o/n/pull/1"
@@ -701,6 +707,112 @@ def test_reviewers_cannot_wait_for_someone_elses_pr_to_be_ready(settings, tmp_pa
                 is_author=False, board=board)
     assert disk_picks(settings.data_dir).saved(THE_PR) is None
     assert seen == [Notice(NoticeCode.NOT_YOURS_TO_ASSIGN)]
+
+
+RUNNING_CHECKS = (Check("tests", "in_progress", None, "https://ci/tests", "tests running"),)
+PASSING_CHECKS = (Check("tests", "completed", "success", "https://ci/tests", "tests passed"),)
+
+
+def test_a_re_request_from_the_board_waits_in_the_queue_then_is_asked_once_it_is_due(
+        settings, tmp_path):
+    seed_state(settings, checks=RUNNING_CHECKS)
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    board = ServerPanel()
+    seen = []
+
+    def look():
+        seen.append((board.panel.dashboard().rerequest_queued,
+                     github.pr_state(THE_PR).pending_reviewers))
+
+    def look_then_ci_passes():
+        look()
+        seed_state(settings, checks=PASSING_CHECKS)
+
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.rerequest_review("carol"),
+                          look_then_ci_passes, look, board=board, github=github)
+    assert seen == [(("carol",), ()), ((), ("carol",))]
+    assert disk_rerequests(settings.data_dir).queued(THE_PR) == ()
+
+
+@pytest.mark.parametrize("command", ["rerequest_review", "cancel_rerequest",
+                                     "send_rerequest_now"])
+def test_a_re_request_command_is_refused_on_someone_elses_pr(settings, tmp_path, command):
+    seed_state(settings, is_author=False)
+    disk_rerequests(settings.data_dir).queue(THE_PR, "dave")
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    board = ServerPanel()
+    seen = []
+    run_manager(settings, lambda: getattr(board.panel, command)("dave"),
+                lambda: seen.append(board.panel.dashboard().notice), worktree=tmp_path,
+                is_author=False, board=board, github=github)
+    assert seen == [Notice(NoticeCode.NOT_YOURS_TO_ASSIGN)]
+    assert disk_rerequests(settings.data_dir).queued(THE_PR) == ("dave",)
+    assert github.pr_state(THE_PR).pending_reviewers == ()
+
+
+def test_cancel_takes_a_reviewer_off_the_queue_and_asks_nothing(settings, tmp_path):
+    seed_state(settings, checks=RUNNING_CHECKS)
+    rerequests = disk_rerequests(settings.data_dir)
+    rerequests.queue(THE_PR, "carol")
+    rerequests.queue(THE_PR, "dave")
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.cancel_rerequest("carol"),
+                          lambda: seen.append(board.panel.dashboard().rerequest_queued),
+                          board=board, github=github)
+    assert seen == [("dave",)]
+    assert github.pr_state(THE_PR).pending_reviewers == ()
+
+
+def test_cancelling_a_reviewer_not_queued_does_nothing(settings, tmp_path):
+    seed_state(settings, checks=RUNNING_CHECKS)
+    disk_rerequests(settings.data_dir).queue(THE_PR, "dave")
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.cancel_rerequest("carol"),
+                          lambda: seen.append((board.panel.dashboard().rerequest_queued,
+                                               board.panel.dashboard().notice)),
+                          board=board)
+    assert seen == [(("dave",), None)]
+
+
+def test_send_now_asks_at_once_while_an_accept_is_still_landing(settings, tmp_path):
+    seed_state(settings, checks=PASSING_CHECKS)
+    keep(disk_thread_records(settings.threads_dir).of(THE_PR), thread(
+        "t1", kind="review", conversation_state="resolved", author="carol",
+        comment_created_at="2026-06-10T10:00:00Z",
+        operations=[{"id": "t1.1", "kind": "approve", "state": "running",
+                     "requested_at": "2026-06-10T10:30:00Z"}]))
+    disk_rerequests(settings.data_dir).queue(THE_PR, "carol")
+    github = FakeGitHub()
+    github.add_pr(THE_PR, PullRequestState())
+    board = ServerPanel()
+    seen = []
+
+    def look():
+        seen.append((board.panel.dashboard().rerequest_queued,
+                     github.pr_state(THE_PR).pending_reviewers))
+
+    _on_the_browser_front(settings, tmp_path, look,
+                          lambda: board.panel.send_rerequest_now("carol"), look,
+                          board=board, github=github)
+    assert seen == [(("carol",), ()), ((), ("carol",))]
+
+
+def test_a_send_now_github_refuses_says_why_and_leaves_the_queue(settings, tmp_path):
+    seed_state(settings, checks=RUNNING_CHECKS)
+    disk_rerequests(settings.data_dir).queue(THE_PR, "carol")
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.send_rerequest_now("carol"),
+                          lambda: seen.append(board.panel.dashboard().notice), board=board)
+    [notice] = seen
+    assert notice is not None and notice.code is NoticeCode.ASSIGN_REVIEWERS_REFUSED
+    assert disk_rerequests(settings.data_dir).queued(THE_PR) == ()
 
 
 def test_a_command_from_the_board_is_refused_while_the_worktree_holds_another_branch(
