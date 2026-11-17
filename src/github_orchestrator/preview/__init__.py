@@ -363,7 +363,7 @@ def _move_main_on(root: Path) -> None:
 STACK_BRANCH = "split-out-the-header-writer"
 
 SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased", "diverged",
-          "agent-settings", "clean-up")
+          "agent-settings", "clean-up", "rerequest")
 
 LEFT_BEHIND = {
     ".env": "DATABASE_URL=postgres://localhost/widgets\n",
@@ -919,14 +919,24 @@ def _record_the_pr(outside: Outside, repo: Repo, viewer: str, reviewer: bool,
     outside.change_detection.advance(PR, Poll(state=state, polled_at=MOMENT), set())
 
 
+def _rerequest_board(seeding: _Seeding) -> None:
+    seeding.open(FAILED)
+    seeding.run()
+    seeding.report(FAILED, lambda conversation: conversation.not_a_fix(
+        Classification.NEEDS_HUMAN, "only the author can say whether the column stays"))
+
+
 def seed(conversation_managers: ConversationManagerFactory, outside: Outside, viewer: str, repo: Repo,
-         reviewer: bool = False, reviewed_on: str | None = None) -> ConversationManager:
+         reviewer: bool = False, reviewed_on: str | None = None,
+         shape: str | None = None) -> ConversationManager:
     outside.github.add_pr(PR)
     _record_the_pr(outside, repo, viewer, reviewer, reviewed_on)
     outside.pr_processes.open(PR, Path(repo.worktree))
     outside.agent_runs.ran(PR, "ci-failed", 48.0, LAST_RUN_ENDED)
     seeding = _Seeding(conversation_managers, outside, repo)
-    if reviewer:
+    if shape == "rerequest":
+        _rerequest_board(seeding)
+    elif reviewer:
         _reviewer_board(seeding, viewer)
     else:
         _author_board(seeding)
@@ -1006,7 +1016,7 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
     repo = build_repo(worktree_in(directory), reviewer, shape)
     rebased = shape == "rebased"
     conversations = seed(conversation_managers, outside, viewer, repo, reviewer,
-                         repo.head if rebased or shape == "diverged" else None)
+                         repo.head if rebased or shape == "diverged" else None, shape)
     panels.panel = manager_panel(lambda: running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree, working_copies=working_copies)
     if shape == "clean-up":

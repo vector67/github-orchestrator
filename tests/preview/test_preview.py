@@ -215,6 +215,16 @@ def test_the_clean_up_preview_asks_before_deleting_a_closed_pull_requests_worktr
         "files": [".env", "scratch/try-the-new-writer.py"]}
 
 
+def test_the_rerequest_preview_holds_one_comment_from_the_reviewer_who_commented(tmp_path):
+    _, web, board = served_preview(tmp_path, shape="rerequest")
+
+    facts = web.get(f"{board}/dashboard").json()["facts"]
+    listed = web.get(f"{board}/conversations").json()["conversations"]
+
+    assert facts["commented_by"] == ["jo"]
+    assert [(one["opened_by"], one["state"]) for one in listed] == [("jo", "ready")]
+
+
 def served_preview(tmp_path, reviewer=False, shape=None):
     pr_processes = FakePrProcesses()
     github = preview.preview_github()
