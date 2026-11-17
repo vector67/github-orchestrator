@@ -136,7 +136,7 @@ class WindowPlacement:
 
     def _worktree_deleted(self, pr: Pr) -> bool:
         path = self._pr_processes.manager_path(pr)
-        return path is not None and not Path(path).is_dir()
+        return path is not None and not (Path(path) / ".git").exists()
 
     def _other_windows(self, pr: Pr) -> dict[Pr, str]:
         windows = {}

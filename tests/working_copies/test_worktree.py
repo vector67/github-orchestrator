@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from tests.builders import a_pr
+from tests.pr_processes.support import a_worktree
 
 GIT_TIMEOUT = 60
 
@@ -17,7 +18,7 @@ def _porcelain(path, branch):
 
 
 def _fetch(copies, tmp_path, branch, fetched):
-    listed = _completed(_porcelain(tmp_path, branch))
+    listed = _completed(_porcelain(a_worktree(tmp_path), branch))
     still_on_origin = _completed(stdout="")
     with patch("subprocess.run", side_effect=[listed, fetched, still_on_origin]) as run:
         copies.fetch_pr_branch(tmp_path / "repo", a_pr(7, "owner/name"), branch, None)
@@ -61,8 +62,7 @@ def test_a_listed_worktree_whose_directory_was_deleted_is_not_fetched(copies, tm
 
 def test_a_listed_worktree_still_on_disk_is_fetched(copies, tmp_path):
     branch = "dependabot/npm/widgets-minor-patch-1a2b3c4d5e"
-    live = tmp_path / "live"
-    live.mkdir()
+    live = a_worktree(tmp_path / "live")
     with patch("subprocess.run", return_value=_completed(_porcelain(live, branch))) as run:
         copies.fetch_pr_branch(tmp_path, a_pr(7, "owner/name"), branch, None)
     assert run.call_args_list[1].args[0][:3] == ["git", "-C", str(live)]
@@ -70,7 +70,7 @@ def test_a_listed_worktree_still_on_disk_is_fetched(copies, tmp_path):
 
 @pytest.mark.parametrize("base_branch", ["--upload-pack=touch /tmp/pwned", "-x", "a b", ".."])
 def test_a_base_branch_that_is_no_branch_name_is_never_fetched(copies, tmp_path, base_branch):
-    listed = _completed(_porcelain(tmp_path, "feature"))
+    listed = _completed(_porcelain(a_worktree(tmp_path), "feature"))
     with patch("subprocess.run", side_effect=[listed, _completed(stdout="")]) as run:
         copies.fetch_pr_branch(tmp_path / "repo", a_pr(7, "owner/name"), "feature", base_branch)
 

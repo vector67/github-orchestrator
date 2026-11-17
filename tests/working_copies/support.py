@@ -153,6 +153,9 @@ class GitWorld:
     def lose_worktree(self, path: Path | str) -> None:
         git(self.repo_dir, "worktree", "remove", "--force", str(path))
 
+    def strip_git(self, path: Path | str) -> None:
+        (Path(path) / ".git").unlink()
+
     def branch_at(self, worktree: Path | str) -> str | None:
         return branch_at(worktree)
 
@@ -242,6 +245,9 @@ class FakeWorld:
         self.fake.add_worktree(path, branch)
 
     def lose_worktree(self, path: Path | str) -> None:
+        self.fake.lose_worktree(path)
+
+    def strip_git(self, path: Path | str) -> None:
         self.fake.lose_worktree(path)
 
     def branch_at(self, worktree: Path | str) -> str | None:
