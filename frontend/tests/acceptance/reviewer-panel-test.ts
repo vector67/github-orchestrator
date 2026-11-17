@@ -892,6 +892,16 @@ module('Acceptance | a commit a reply names', function (hooks) {
       .hasText('it moves the guard but still skips the rate');
   });
 
+  test('the check’s reasoning renders as markdown, so its code spans read as code', async function (assert) {
+    checked('addressed', 'the guard now raises in `in_units()`');
+
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+    assert
+      .dom('#panel-fix [data-test-commit-reasoning] code')
+      .hasText('in_units()');
+  });
+
   test('the panel draws the commit the reply names', async function (assert) {
     const diff = checked('addressed', 'the guard now raises');
 
