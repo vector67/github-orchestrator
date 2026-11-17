@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from github_orchestrator.domain import Pr
 from github_orchestrator.pr_processes import PrProcesses
@@ -29,3 +30,17 @@ class WatchedHoldings:
                  "requested; the next cycle keeps the old worktree aside and cuts a fresh one"
                  if released else "refused — its manager is not frozen on the wrong branch")
         return released
+
+    def delete_worktree(self, pr: Pr) -> bool:
+        allowed = self._working_copies.allow_clean_up(pr)
+        log.info("hub: deleting the worktree of %s %s", pr,
+                 "allowed; the next cycle removes it with the files it holds"
+                 if allowed else "refused — nothing asked to clean it up")
+        return allowed
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool:
+        dismissed = self._working_copies.dismiss_clean_up(pr, until)
+        log.info("hub: the clean-up of %s %s", pr,
+                 f"dismissed until {until.isoformat()}" if dismissed
+                 else "not dismissed — nothing asked to clean it up")
+        return dismissed

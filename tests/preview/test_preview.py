@@ -204,6 +204,17 @@ def test_the_agent_settings_preview_holds_the_reviewers_pull_request_until_answe
             web.get(f"{board}/dashboard").json()["manager"]["agent_settings"]) == (204, None)
 
 
+def test_the_clean_up_preview_asks_before_deleting_a_closed_pull_requests_worktree(tmp_path):
+    _, web, _ = served_preview(tmp_path, shape="clean-up")
+
+    [row] = web.get("/api/pull-requests").json()["pull_requests"]
+
+    assert row["dashboard"]["facts"]["ended"] is True
+    assert row["dashboard"]["manager"]["clean_up"] == {
+        "worktree": str(tmp_path / "widgets-worktrees" / preview.PR_BRANCH),
+        "files": [".env", "scratch/try-the-new-writer.py"]}
+
+
 def served_preview(tmp_path, reviewer=False, shape=None):
     pr_processes = FakePrProcesses()
     github = preview.preview_github()

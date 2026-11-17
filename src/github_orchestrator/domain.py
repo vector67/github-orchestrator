@@ -55,6 +55,7 @@ class Pr:
 
 
 FORK_PR_BRANCHES = "orchestrator/pr/"
+AGENT_CHANGES_FILE = "agent-changes.md"
 
 
 def fork_pr_branch(pr: Pr) -> str:

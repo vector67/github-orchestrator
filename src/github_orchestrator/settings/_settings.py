@@ -55,6 +55,10 @@ class Settings:
         return self.data_dir / "agent_config"
 
     @property
+    def clean_up_dir(self) -> Path:
+        return self.data_dir / "clean_up"
+
+    @property
     def pr_managers_dir(self) -> Path:
         return self.data_dir / "pr_managers"
 

@@ -82,6 +82,11 @@ class ErrorCode(StrEnum):
     NOT_FROZEN is the hub asked to release a pull request whose manager is
     not frozen on the wrong branch, so there is nothing to let go of.
 
+    NO_CLEAN_UP_ASKED is the hub asked to delete a worktree, or to dismiss
+    the question, while no teardown is asking about that pull request's
+    worktree: it held nothing but the agents' own changes, it was already
+    allowed, or it is gone.
+
     TERMINAL_REFUSED is a terminal command or question that could not start;
     the detail is what the system said.
 
@@ -200,6 +205,7 @@ class ErrorCode(StrEnum):
     NOT_WATCHING = "not-watching"
     WAITING_TO_MIGRATE = "waiting-to-migrate"
     NOT_FROZEN = "not-frozen"
+    NO_CLEAN_UP_ASKED = "no-clean-up-asked"
     TERMINAL_REFUSED = "terminal-refused"
     MANAGER_DOWN = "manager-down"
     NO_WORKTREE = "no-worktree"
@@ -2039,6 +2045,19 @@ class HeldAgentSettings(BaseModel):
         description="Names the files as they are at the head; an answer is given for it.")
 
 
+class WorktreeCleanUp(BaseModel):
+    """The pull request was closed, merged or dismissed forever, and its
+    worktree holds files no agent wrote, so the watcher asks before removing
+    it and keeps the pull request held until you answer."""
+
+    worktree: str = Field(description="The worktree's directory.")
+    files: list[str] = Field(
+        description="Every file removing the worktree deletes or loses changes to, by "
+                    "path, sorted: each one uncommitted or untracked, besides "
+                    "`agent-changes.md`. Files git ignores go too and are not listed. "
+                    "Empty where git could not list them.")
+
+
 class ManagerFlags(BaseModel):
     """What the PR manager holds of the pull request beside GitHub's facts."""
 
@@ -2058,6 +2077,10 @@ class ManagerFlags(BaseModel):
         description="The agent files a pull request held for them changes. Null on "
                     "your own pull requests, ones you took over, and ones whose changes "
                     "you answered or that change none.")
+    clean_up: WorktreeCleanUp | None = Field(
+        description="The worktree teardown asks to delete. Null while the pull request "
+                    "is open, and once its worktree is gone or held only the agents' "
+                    "own changes.")
     changed_at: str | None = Field(
         description="When one of these last changed, as this process saw it. "
                     "Of two copies the one with the later stamp is newer.")
@@ -2563,6 +2586,11 @@ class MentionDeferred(BaseModel):
                                              "pull request instead.")
     until_pr: AwaitedPr | None = Field(description="The pull request it waits on; null when it "
                                                    "waits for a time instead.")
+
+
+class DismissCleanUpRequest(BaseModel):
+    until_at: AwareDatetime = Field(
+        description="When the clean-up comes back to the wall, with its offset.")
 
 
 class DeferMentionRequest(BaseModel):

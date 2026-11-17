@@ -13,6 +13,7 @@ from github_orchestrator.board_api.interface import (
     Shelves,
     Told,
     UnpushedCommit,
+    WorktreeCleanUp,
 )
 from github_orchestrator.change_detection import ChangeDetection
 from github_orchestrator.conversation import (
@@ -32,7 +33,7 @@ from github_orchestrator.working_copies import WorkingCopies, WrongBranch
 ConfigOf = Callable[[Pr, str], ManagerConfig]
 
 Flags = tuple[str | None, bool, str | None, bool, int, Importance | None, bool,
-              HeldAgentSettings | None]
+              HeldAgentSettings | None, WorktreeCleanUp | None]
 
 
 def _unpushed_commit(line: str) -> UnpushedCommit:
@@ -91,9 +92,11 @@ class DashboardSource:
             assign_when_ready=self._picks.saved(pr),
             agent_settings=self.agent_settings(pr, config.worktree),
         )
+        asked = self._working_copies.clean_up(pr)
         return self._stamped(replace(
             drawn, importance=ranked.importance,
-            nudge_due=ranked.nudge_due(drawn.last_event_at, self._clock())))
+            nudge_due=ranked.nudge_due(drawn.last_event_at, self._clock()),
+            clean_up=None if asked is None else WorktreeCleanUp(asked.worktree, asked.files)))
 
     def agent_settings(self, pr: Pr, worktree: str) -> HeldAgentSettings | None:
         facts = self._change_detection.facts(pr)
@@ -141,7 +144,7 @@ class DashboardSource:
     def _stamped(self, dashboard: Dashboard) -> Dashboard:
         flags = (dashboard.frozen_on, dashboard.on_hold, dashboard.working_on,
                  dashboard.hidden, len(dashboard.threads_live), dashboard.importance,
-                 dashboard.nudge_due, dashboard.agent_settings)
+                 dashboard.nudge_due, dashboard.agent_settings, dashboard.clean_up)
         seen = self._flags_seen.get(dashboard.pr)
         if seen is None or seen[0] != flags:
             seen = (flags, self._clock().strftime(STAMP))

@@ -722,7 +722,8 @@ export type Slot =
   | 'summary'
   | 'reviewers'
   | 'importance'
-  | 'agent-settings';
+  | 'agent-settings'
+  | 'clean-up';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -862,6 +863,18 @@ const PR_WRITES = {
     slot: 'agent-settings',
     unsent: 'Not answered',
   },
+  'delete-worktree': {
+    doing: 'asking the watcher to delete it',
+    square: null,
+    slot: 'clean-up',
+    unsent: 'Not deleted',
+  },
+  'dismiss-clean-up': {
+    doing: 'dismissing it',
+    square: null,
+    slot: 'clean-up',
+    unsent: 'Not dismissed',
+  },
   summarise: { doing: 'summarising', square: null, slot: 'summary' },
   'summarise-with-github-api': {
     doing: 'summarising over the GitHub API',
@@ -889,6 +902,17 @@ export function agentSettingsAsks(allowed: boolean, files: number): AreYouSure {
         consequence: `Agents on this pull request run on your user settings only and load none of its project settings, until a push changes ${these(files, 'file')} again.`,
         danger: false,
       };
+}
+
+export function deleteWorktreeAsks(files: number): AreYouSure {
+  return {
+    label: 'Delete this worktree',
+    question: files
+      ? `Delete this worktree and the ${files} ${files === 1 ? 'file' : 'files'} in it?`
+      : 'Delete this worktree and everything in it?',
+    consequence:
+      'The watcher removes the directory on its next poll, with every file in it, the ones git ignores too. Nothing brings them back.',
+  };
 }
 
 export const AGENTS_STOPPED =
@@ -986,6 +1010,7 @@ const SLOTS: Slot[] = [
   'reviewers',
   'importance',
   'agent-settings',
+  'clean-up',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {

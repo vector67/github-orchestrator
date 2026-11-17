@@ -17,6 +17,7 @@ from github_orchestrator.board_api.interface import (
     ResetRefusalCode,
     ResetToOrigin,
     UnpushedCommit,
+    WorktreeCleanUp,
 )
 from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
 from tests.board_api.support import BOARD_PATH, board_contract, client_for
@@ -89,7 +90,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                   "unresolved_threads": 0},
         "manager": {"frozen_on": None, "on_hold": True, "working_on": "new-comments",
                     "hidden": False, "importance": None, "nudge_due": False,
-                    "threads_live": 2, "agent_settings": None, "changed_at": None},
+                    "threads_live": 2, "agent_settings": None, "clean_up": None, "changed_at": None},
         "threads": [],
         "unreadable": [],
         "listed_at": None,
@@ -128,7 +129,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
     assert answer["manager"] == {
         "frozen_on": None, "on_hold": True, "working_on": "new-comments", "hidden": True,
         "importance": "important", "nudge_due": True,
-        "threads_live": 2, "agent_settings": None, "changed_at": "2026-10-08T09:01:00Z"}
+        "threads_live": 2, "agent_settings": None, "clean_up": None, "changed_at": "2026-10-08T09:01:00Z"}
     assert answer["threads"] == [{"key": "PRRT_1", "state": "ready", "record_state": "open",
                                   "author_kind": "bot", "updated_at": "2026-10-08T08:30:00Z",
                                   "mention": False}]
@@ -136,6 +137,15 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
 
 
 HELD = HeldAgentSettings((".claude/settings.json", "CLAUDE.md"), "d1g35t")
+
+
+def test_the_dashboard_ships_the_files_a_worktree_clean_up_asks_about():
+    asked = replace(IDLE, clean_up=WorktreeCleanUp("/work/widgets-7", (".env", "notes.txt")))
+
+    answer = client_for(manager=FakeManagerPanel(now=asked)).get("/api/dashboard").json()
+
+    assert answer["manager"]["clean_up"] == {
+        "worktree": "/work/widgets-7", "files": [".env", "notes.txt"]}
 
 
 def test_the_dashboard_ships_the_agent_files_a_held_pull_request_changes():

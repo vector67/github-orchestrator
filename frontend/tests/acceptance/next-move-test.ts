@@ -537,6 +537,28 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
+  const CLEAN_UP = {
+    worktree: '/work/widgets-worktrees/PROJ-7',
+    files: ['.env', 'notes.txt'],
+  };
+
+  test('a closed pull request whose worktree teardown asks about needs you first', async function (assert) {
+    const shown = await seen({
+      facts: { ...PASSING, ended: true },
+      manager: { clean_up: CLEAN_UP, hidden: true },
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, shown.verb, shown.reason],
+      [
+        'clean-up-worktree',
+        'needs-you',
+        'Delete the worktree?',
+        'closed, its worktree holds 2 files no agent wrote',
+      ],
+    );
+  });
+
   const AGENT_FILES = {
     changed: ['.claude/settings.json', 'CLAUDE.md'],
     digest: 'd1g35t',

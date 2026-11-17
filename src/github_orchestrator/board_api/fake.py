@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 from pathlib import Path
 
 from github_orchestrator.board_api.interface import (
@@ -228,6 +229,9 @@ class FakeHoldings:
     frozen: set[Pr] = field(default_factory=set)
     on_hold: set[Pr] = field(default_factory=set)
     released: set[Pr] = field(default_factory=set)
+    asking: set[Pr] = field(default_factory=set)
+    deleting: set[Pr] = field(default_factory=set)
+    dismissed: dict[Pr, datetime] = field(default_factory=dict)
 
     def hold(self, pr: Pr) -> None:
         self.on_hold.add(pr)
@@ -239,6 +243,18 @@ class FakeHoldings:
         if pr not in self.frozen:
             return False
         self.released.add(pr)
+        return True
+
+    def delete_worktree(self, pr: Pr) -> bool:
+        if pr not in self.asking:
+            return False
+        self.deleting.add(pr)
+        return True
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool:
+        if pr not in self.asking:
+            return False
+        self.dismissed[pr] = until
         return True
 
 

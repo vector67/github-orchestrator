@@ -21,6 +21,12 @@ from github_orchestrator.working_copies import (
     _worktree,
 )
 from github_orchestrator.working_copies._agent_config import AgentConfigs
+from github_orchestrator.working_copies._clean_ups import (
+    CleanUps,
+    DiskShelf,
+    changed_paths,
+    not_the_agents,
+)
 from github_orchestrator.working_copies._diff import PrBase, resolve_pr_base
 from github_orchestrator.working_copies._flags import DiskFlags
 from github_orchestrator.working_copies._handles import (
@@ -34,6 +40,7 @@ from github_orchestrator.working_copies._trouble import BranchTrouble, Grace
 from github_orchestrator.working_copies.interface import (
     AgentConfig,
     BaseStanding,
+    CleanUp,
     FileDiff,
     Picked,
     PrCommit,
@@ -60,8 +67,9 @@ class GitWorkingCopies:
                  mismatched_dir: Path, worktree_conflicts_dir: Path,
                  thread_worktrees_dir: Path, clones: Mapping[Repo, Clone], *, grace_seconds: int,
                  run_idle_seconds: int, agent_config_dir: Path,
-                 agent_config_paths: tuple[str, ...]) -> None:
+                 agent_config_paths: tuple[str, ...], clean_up_dir: Path) -> None:
         self._github = github
+        self._clean_ups = CleanUps(DiskShelf(clean_up_dir))
         self._agent_configs = AgentConfigs(agent_config_dir, agent_config_paths)
         self._clones = clones
         self._pr_worktrees: dict[Pr, Path] = {}
@@ -89,7 +97,38 @@ class GitWorkingCopies:
         forgotten = self._forget_thread_workspaces(repo_dir, pr) and worktree_gone
         if forgotten:
             self._trouble.forget(pr)
+            self._clean_ups.forget(pr)
         return forgotten
+
+    def asks_before_removing(self, repo_dir: Path, pr: Pr, branch: str | None) -> bool:
+        worktree = _worktree.worktree_for_branch(repo_dir, branch) if branch else None
+        if worktree is not None and worktree.resolve() == repo_dir.resolve():
+            worktree = None
+        return self._clean_ups.asks(pr, None if worktree is None else str(worktree),
+                                    None if worktree is None else self._leftovers(worktree))
+
+    def _leftovers(self, worktree: Path) -> tuple[str, ...] | None:
+        try:
+            status = _threads.run_git(str(worktree), "status", "--porcelain=v1", "-z",
+                                      "--untracked-files=all")
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if status.returncode != 0:
+            log.warning("could not list what %s holds: %s", worktree, status.stderr.strip())
+            return None
+        return not_the_agents(changed_paths(status.stdout))
+
+    def clean_up(self, pr: Pr) -> CleanUp | None:
+        return self._clean_ups.clean_up(pr)
+
+    def asked_to_clean_up(self) -> tuple[Pr, ...]:
+        return self._clean_ups.asked()
+
+    def allow_clean_up(self, pr: Pr) -> bool:
+        return self._clean_ups.allow(pr)
+
+    def dismiss_clean_up(self, pr: Pr, until: datetime) -> bool:
+        return self._clean_ups.dismiss(pr, until)
 
     def _forget_pr_worktree(self, repo_dir: Path, pr: Pr,
                             branch: str | None) -> bool:

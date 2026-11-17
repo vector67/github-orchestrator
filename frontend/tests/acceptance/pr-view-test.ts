@@ -667,6 +667,116 @@ module('Acceptance | pr view', function (hooks) {
   });
 });
 
+module('Acceptance | worktree clean-up', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+  const clock = setupFakeClock(hooks);
+
+  const ASKING = {
+    facts: { ended: true },
+    manager: {
+      clean_up: {
+        worktree: '/work/widgets-worktrees/PROJ-7',
+        files: ['.env', 'scratch/notes.txt'],
+      },
+    },
+  };
+
+  hooks.beforeEach(function () {
+    board().held = [heldPr({ dashboard: ASKING })];
+    board().manager = dashboard(ASKING);
+  });
+
+  function answered(): { verb: string; body: unknown }[] {
+    return board()
+      .posted.filter((one) => one.key === 'o/r#7')
+      .map(({ verb, body }) => ({ verb, body }));
+  }
+
+  test('the Dashboard asks for permission and names every file deleting it loses', async function (assert) {
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-clean-up] [data-test-clean-up-heading]')
+      .hasText('Your permission is needed to clean up this worktree');
+    assert
+      .dom('[data-test-clean-up]')
+      .includesText(
+        '/work/widgets-worktrees/PROJ-7 holds 2 files no agent wrote',
+      );
+    assert.deepEqual(
+      findAll('[data-test-clean-up-file]').map((one) =>
+        one.textContent?.trim(),
+      ),
+      ['.env', 'scratch/notes.txt'],
+    );
+    assert.deepEqual(
+      findAll('[data-test-clean-up] .controls button').map((one) =>
+        one.textContent?.trim(),
+      ),
+      ['Delete this worktree', 'Dismiss for a while'],
+    );
+  });
+
+  test('the Dashboard tab carries the red badge', async function (assert) {
+    await visit('/pr/o/r/7/summary');
+
+    assert
+      .dom('[data-test-tab="dashboard"] [data-test-tab-badge]')
+      .hasText('1');
+  });
+
+  test('Delete this worktree asks once more, then tells the watcher', async function (assert) {
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-clean-up-delete]');
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('Delete this worktree and the 2 files in it?');
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.deepEqual(answered(), [{ verb: 'delete-worktree', body: null }]);
+  });
+
+  test('Dismiss for a while takes it off the wall until the time picked', async function (assert) {
+    clock().now = new Date(2026, 10, 17, 10, 0).getTime();
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-clean-up-dismiss]');
+    await click('[data-test-defer-preset="Tomorrow 9:00"]');
+
+    assert.deepEqual(answered(), [
+      {
+        verb: 'dismiss-clean-up',
+        body: { until_at: new Date(2026, 10, 18, 9, 0).toISOString() },
+      },
+    ]);
+    assert.dom('[data-test-wall-row="o/r#7"]').doesNotExist();
+  });
+
+  test('it sits at the top of Needs you, above an important pull request', async function (assert) {
+    board().held = [
+      heldPr({
+        number: 3,
+        dashboard: {
+          facts: { ci_status: 'failing' },
+          manager: { importance: 'important' },
+        },
+      }),
+      heldPr({ dashboard: ASKING }),
+    ];
+
+    await visit('/');
+
+    assert.deepEqual(
+      findAll('[data-test-wall-row][data-flip-group="needs-you"]').map((one) =>
+        one.getAttribute('data-test-wall-row'),
+      ),
+      ['o/r#7', 'o/r#3'],
+    );
+  });
+});
+
 module('Acceptance | agent settings band', function (hooks) {
   setupApplicationTest(hooks);
   const board = setupFakeBoard(hooks);

@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -205,6 +206,39 @@ def holdings(request, settings):
 
 def test_a_pr_that_is_not_frozen_has_nothing_to_release(holdings):
     assert holdings.release(NOBODYS) is False
+
+
+def _asking(copies):
+    copies.add_worktree("/wt/archiving", EXPECTED)
+    copies.edit("/wt/archiving", ".env", "SECRET=1\n")
+    copies.asks_before_removing(Path("/clone"), MINE, EXPECTED)
+
+
+def test_a_worktree_clean_up_can_be_allowed_from_the_hub(settings):
+    copies = FakeWorkingCopies()
+    holdings = _holdings(settings, working_copies=copies)
+    _asking(copies)
+
+    assert holdings.delete_worktree(MINE) is True
+
+    assert copies.clean_up(MINE) is None
+    assert copies.asks_before_removing(Path("/clone"), MINE, EXPECTED) is False
+
+
+def test_a_worktree_clean_up_can_be_dismissed_from_the_hub_until_a_time(settings):
+    copies = FakeWorkingCopies()
+    holdings = _holdings(settings, working_copies=copies)
+    _asking(copies)
+    until = _at_now() + timedelta(days=1)
+
+    assert holdings.dismiss_clean_up(MINE, until) is True
+
+    assert copies.clean_up(MINE).dismissed_until == until
+
+
+def test_a_pr_with_no_clean_up_asked_has_nothing_to_answer(holdings):
+    assert holdings.delete_worktree(NOBODYS) is False
+    assert holdings.dismiss_clean_up(NOBODYS, _at_now()) is False
 
 
 def test_a_hub_waiting_in_setup_drops_the_error_of_cycles_it_no_longer_runs(settings):

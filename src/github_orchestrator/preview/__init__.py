@@ -363,7 +363,12 @@ def _move_main_on(root: Path) -> None:
 STACK_BRANCH = "split-out-the-header-writer"
 
 SHAPES = ("merge", "stacked", "far-behind", "long", "local", "rebased", "diverged",
-          "agent-settings")
+          "agent-settings", "clean-up")
+
+LEFT_BEHIND = {
+    ".env": "DATABASE_URL=postgres://localhost/widgets\n",
+    "scratch/try-the-new-writer.py": "from writer import write_invoice_file\n",
+}
 
 AGENT_FILES = {
     "AGENTS.md": "Run `make deploy-check` before a release.\n",
@@ -966,10 +971,25 @@ def _settle_until(stopped: threading.Event, conversations: ConversationManager) 
         settle(conversations)
 
 
-def preview_hub(panels: PreviewPanels) -> PreviewHub:
+def preview_hub(panels: PreviewPanels, *, cleaning: bool = False) -> PreviewHub:
     return PreviewHub(told=FakeTold(Held(told=True, managers={PR: "running"})),
-                      holdings=FakeHoldings(), setup=FakeSetupDesk(), tour=FakeTour(),
-                      panels=panels)
+                      holdings=FakeHoldings(asking={PR} if cleaning else set()),
+                      setup=FakeSetupDesk(), tour=FakeTour(), panels=panels)
+
+
+def leave_files_behind(directory: Path, repo: Repo, outside: "Outside",
+                       working_copies: WorkingCopies) -> None:
+    root = Path(repo.worktree)
+    _git(root, "checkout", "-q", "--detach")
+    kept = directory / "widgets-worktrees" / PR_BRANCH
+    _git(root, "worktree", "add", "-q", str(kept), PR_BRANCH)
+    for path, text in LEFT_BEHIND.items():
+        (kept / path).parent.mkdir(parents=True, exist_ok=True)
+        (kept / path).write_text(text)
+    working_copies.asks_before_removing(root, PR, PR_BRANCH)
+    state = dataclasses.replace(outside.github.prs[PR].state, closed=True, merged=True)
+    outside.github.prs[PR].state = state
+    outside.change_detection.advance(PR, Poll(state=state, polled_at=MOMENT), set())
 
 
 def page_of(port: int) -> str:
@@ -987,6 +1007,8 @@ def serve(directory: Path, viewer: str, outside: Outside, reviewer: bool = False
                          repo.head if rebased or shape == "diverged" else None)
     panels.panel = manager_panel(lambda: running(dashboards.dashboard(PR)), sessions=sessions,
                                  worktree=repo.worktree, working_copies=working_copies)
+    if shape == "clean-up":
+        leave_files_behind(directory, repo, outside, working_copies)
     if not rebased:
         return [], conversations
     seen = _git(repo.worktree, "rev-list", "--reverse",
@@ -1057,7 +1079,7 @@ def _serve_from(directory: Path, args: argparse.Namespace) -> None:
                                  local_path=worktree_in(directory), github=github,
                                  desktop=desktop, agent_runs=agent_runs,
                                  pr_processes=pr_processes, agents_enabled=agents_enabled,
-                                 hub=preview_hub(panels))
+                                 hub=preview_hub(panels, cleaning=args.shape == "clean-up"))
 
     seeding, viewer = container(True)
     serving = container(False)[0] if args.agents_disabled else seeding

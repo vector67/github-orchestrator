@@ -1,11 +1,12 @@
 import time
+from datetime import UTC, datetime
 
 import pytest
 
 from github_orchestrator.desktop import Badge
-from github_orchestrator.domain import Sha
+from github_orchestrator.domain import AGENT_CHANGES_FILE, Sha
 from github_orchestrator.github import PullRequestState
-from github_orchestrator.working_copies import Diverged
+from github_orchestrator.working_copies import CleanUp, Diverged
 from tests.builders import a_pr
 from tests.disk_layout import thread_branch
 from tests.working_copies.support import (
@@ -672,6 +673,78 @@ def test_forgetting_a_pr_forgets_that_its_worktree_was_shared(world, pr_worktree
 @pytest.mark.parametrize("branch", [BRANCH, None])
 def test_forgetting_a_pr_that_left_nothing_is_fine(world, branch):
     assert world.copies.forget_pr(world.repo_dir, THE_PR, branch) is True
+
+
+LATER = datetime(2026, 11, 20, 9, 0, tzinfo=UTC)
+
+
+def test_a_worktree_holding_only_the_agents_notes_goes_without_asking(world, pr_worktree):
+    world.edit(pr_worktree, AGENT_CHANGES_FILE, "# Agent Changes\n")
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is False
+    assert world.copies.clean_up(THE_PR) is None
+
+
+def test_a_worktree_holding_files_no_agent_wrote_asks_and_names_each_one(world, pr_worktree):
+    world.edit(pr_worktree, AGENT_CHANGES_FILE, "# Agent Changes\n")
+    world.edit(pr_worktree, "g", "changed\n")
+    world.edit(pr_worktree, ".env", "SECRET=1\n")
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is True
+
+    assert world.copies.clean_up(THE_PR) == CleanUp(
+        worktree=str(pr_worktree), files=(".env", "g"), dismissed_until=None)
+    assert world.copies.asked_to_clean_up() == (THE_PR,)
+    assert world.branch_at(pr_worktree) == BRANCH
+
+
+@pytest.mark.parametrize("world", ["git"], indirect=True)
+def test_files_git_ignores_go_without_asking(world, pr_worktree):
+    world.edit(pr_worktree, ".gitignore", "build/\n")
+    world.commit(pr_worktree, {".gitignore": "build/\n"}, "ignore the build")
+    (pr_worktree / "build").mkdir()
+    world.edit(pr_worktree / "build", "out.js", "built\n")
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is False
+
+
+def test_a_worktree_cleaned_by_hand_stops_asking(world, pr_worktree):
+    world.edit(pr_worktree, "notes.txt", "mine\n")
+    world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH)
+    world.discard(pr_worktree, "notes.txt")
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is False
+    assert world.copies.clean_up(THE_PR) is None
+
+
+def test_a_worktree_you_allow_deleting_goes_with_its_files(world, pr_worktree):
+    world.edit(pr_worktree, "notes.txt", "mine\n")
+    world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH)
+
+    assert world.copies.allow_clean_up(THE_PR) is True
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is False
+    assert world.copies.forget_pr(world.repo_dir, THE_PR, BRANCH) is True
+    assert world.branch_at(pr_worktree) is None
+    assert world.copies.clean_up(THE_PR) is None
+    assert world.copies.asked_to_clean_up() == ()
+
+
+def test_nothing_asked_is_neither_allowed_nor_dismissed(world, pr_worktree):
+    assert world.copies.allow_clean_up(THE_PR) is False
+    assert world.copies.dismiss_clean_up(THE_PR, LATER) is False
+
+
+def test_a_dismissed_ask_keeps_its_time_while_it_asks_again(world, pr_worktree):
+    world.edit(pr_worktree, "notes.txt", "mine\n")
+    world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH)
+
+    assert world.copies.dismiss_clean_up(THE_PR, LATER) is True
+    world.edit(pr_worktree, "more.txt", "also mine\n")
+
+    assert world.copies.asks_before_removing(world.repo_dir, THE_PR, BRANCH) is True
+    assert world.copies.clean_up(THE_PR) == CleanUp(
+        worktree=str(pr_worktree), files=("more.txt", "notes.txt"), dismissed_until=LATER)
 
 
 def test_a_workspace_with_nothing_done_has_no_progress(world, cut):

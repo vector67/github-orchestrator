@@ -396,7 +396,8 @@ PACKAGES = {
     ),
     "working_copies": Package(
         pinned=frozenset({
-            "Diverged", "FileDiff", "PrCheckout", "ThreadWorkspace", "WorkingCopies", "WrongBranch",
+            "CleanUp", "Diverged", "FileDiff", "PrCheckout", "ThreadWorkspace", "WorkingCopies",
+            "WrongBranch",
         }),
         may_import=("github", "desktop", "notifications"),
         role="git working copies answer in their own types and review adapts them, never the reverse",
@@ -585,6 +586,8 @@ WORKING_COPIES_MEMBERS = frozenset({
     "forget_pr", "pr_worktree", "fetch_pr_branch", "report_branch",
     "verdict", "handed_off", "request_release", "wrong_branch", "commits_since",
     "checkout", "agent_config", "unanswered_agent_config", "answer_agent_config",
+    "asks_before_removing", "clean_up", "asked_to_clean_up", "allow_clean_up",
+    "dismiss_clean_up",
 })
 PR_CHECKOUT_MEMBERS = frozenset({
     "workspace", "is_clean", "path", "push", "unpick", "fetch", "reset_to_origin", "base_standing",

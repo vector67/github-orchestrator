@@ -582,6 +582,7 @@ class WorkingCopiesWiring(Wiring):
     run_idle_seconds: int
     agent_config_dir: Path
     agent_config_paths: tuple[str, ...]
+    clean_up_dir: Path
 
 
 @wires(WorkingCopiesWiring)
@@ -598,7 +599,8 @@ class WorkingCopiesProvider(Provider):
                                 grace_seconds=wiring.grace_seconds,
                                 run_idle_seconds=wiring.run_idle_seconds,
                                 agent_config_dir=wiring.agent_config_dir,
-                                agent_config_paths=wiring.agent_config_paths)
+                                agent_config_paths=wiring.agent_config_paths,
+                                clean_up_dir=wiring.clean_up_dir)
 
 
 def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
@@ -612,6 +614,7 @@ def working_copies_wiring(settings: Settings) -> WorkingCopiesWiring:
         run_idle_seconds=config.mismatch_run_idle_seconds,
         agent_config_dir=settings.agent_config_dir,
         agent_config_paths=agent_config_paths(),
+        clean_up_dir=settings.clean_up_dir,
     )
 
 

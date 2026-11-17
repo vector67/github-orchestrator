@@ -1,7 +1,9 @@
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 
+from github_orchestrator.board_api.interface import Told
 from github_orchestrator.change_detection import PrClosed
 from github_orchestrator.domain import Repo
 from github_orchestrator.notifications.fake import FakeNotifications
@@ -31,7 +33,13 @@ from tests.disk_layout import (
 from tests.pr_event_queue.support import closed, disk_event_queue
 from tests.pr_processes.support import checked_out
 from tests.thread_records.support import disk_thread_records
-from tests.watcher.support import the_clone, watcher_over, watching
+from tests.watcher.support import (
+    NOW,
+    the_clone,
+    watcher_container,
+    watcher_over,
+    watching,
+)
 
 REPO = "acme/widgets"
 
@@ -198,6 +206,67 @@ def test_a_thread_branch_that_will_not_go_keeps_the_state_and_the_records(settin
     assert "0 torn down" in capsys.readouterr().out
     assert _tracked(settings)
     assert (thread_dir(settings.threads_dir, THE_PR) / "PRRT_123-f.json").exists()
+
+
+def _held(settings, copies):
+    return watcher_container(settings, working_copies=copies).get(Told).held().managers
+
+
+def _yours_left_in(copies, settings):
+    worktree = checked_out(copies, the_clone(settings).parent / BRANCH, BRANCH)
+    copies.edit(worktree, ".env", "SECRET=1\n")
+    return worktree
+
+
+def test_a_closing_pr_whose_worktree_holds_your_files_keeps_it_and_stays_held(settings, capsys):
+    world = _world(settings)
+    copies = FakeWorkingCopies()
+    worktree = _yours_left_in(copies, settings)
+    _closing(settings)
+    _torn_down(settings)
+
+    _cycle(settings, world, copies)
+
+    assert "0 torn down" in capsys.readouterr().out
+    assert copies.branch_at(worktree) == BRANCH
+    assert _tracked(settings)
+    assert copies.clean_up(THE_PR).files == (".env",)
+    assert THE_PR in _held(settings, copies)
+
+
+def test_a_dismissed_clean_up_leaves_the_wall_until_its_time_and_then_comes_back(settings, capsys):
+    world = _world(settings)
+    copies = FakeWorkingCopies()
+    _yours_left_in(copies, settings)
+    _closing(settings)
+    _torn_down(settings)
+    _cycle(settings, world, copies)
+    copies.dismiss_clean_up(THE_PR, NOW + timedelta(hours=1))
+
+    _cycle(settings, world, copies)
+    assert THE_PR not in _held(settings, copies)
+
+    copies.dismiss_clean_up(THE_PR, NOW)
+    _cycle(settings, world, copies)
+    assert THE_PR in _held(settings, copies)
+
+
+def test_a_worktree_you_allowed_deleting_is_torn_down_with_your_files(settings, capsys):
+    world = _world(settings)
+    copies = FakeWorkingCopies()
+    worktree = _yours_left_in(copies, settings)
+    _closing(settings)
+    _torn_down(settings)
+    _cycle(settings, world, copies)
+    capsys.readouterr()
+
+    copies.allow_clean_up(THE_PR)
+    _cycle(settings, world, copies)
+
+    assert "1 torn down" in capsys.readouterr().out
+    assert copies.branch_at(worktree) is None
+    assert not _tracked(settings)
+    assert THE_PR not in _held(settings, copies)
 
 
 def test_a_worktree_that_will_not_go_keeps_the_state_for_a_retry(settings, capsys):

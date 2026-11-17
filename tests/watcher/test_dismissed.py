@@ -1,3 +1,4 @@
+from github_orchestrator.board_api.interface import Told
 from github_orchestrator.domain import DismissUntil
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.pr_processes import ManagerPane
@@ -21,7 +22,7 @@ from tests.pr_event_queue.support import ci_failed, disk_event_queue
 from tests.pr_processes.support import checked_out
 from tests.settings.support import disk_dismissals
 from tests.thread_records.support import disk_thread_records
-from tests.watcher.support import the_clone, watcher_over, watching
+from tests.watcher.support import the_clone, watcher_container, watcher_over, watching
 
 REPO = "octocat/hello-world"
 PR = 61
@@ -100,6 +101,24 @@ def test_a_pr_dismissed_forever_whose_manager_still_runs_is_left_for_the_next_cy
 
     assert list(world.managers) == [THE_PR]
     assert copies.branch_at(worktree) == BRANCH
+
+
+def test_a_pr_dismissed_forever_whose_worktree_holds_your_files_keeps_it_and_stays_held(settings):
+    github = watching(settings)
+    world = FakePrProcesses()
+    copies = FakeWorkingCopies(github)
+    _open_on_github(settings, github)
+    worktree = checked_out(copies, the_clone(settings).parent / BRANCH, BRANCH)
+    copies.edit(worktree, "experiment.py", "print(1)\n")
+    _window(world, worktree)
+    disk_dismissals(settings.data_dir).dismiss_forever(THE_PR)
+
+    _cycle(settings, github, world, copies)
+
+    assert copies.branch_at(worktree) == BRANCH
+    assert list(world.managers) == [THE_PR]
+    assert THE_PR in watcher_container(settings, github=github, working_copies=copies,
+                                       pr_processes=world).get(Told).held().managers
 
 
 def test_a_dismissed_pr_whose_worktree_will_not_go_keeps_its_window_for_a_retry(settings):
