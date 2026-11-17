@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.board_api.support import (
@@ -53,11 +54,12 @@ def test_a_refused_request_is_logged_with_its_answer(caplog):
     assert f"GET {BOARD_PATH}/api/proposals -> 404" in _boards_own(caplog)
 
 
-def test_an_ordinary_request_stays_out_of_the_log_at_info(caplog):
+def test_an_ordinary_request_is_logged_with_its_status_and_time_at_info(caplog):
     with caplog.at_level(logging.INFO):
         client_for().get("/api/pull-request")
 
-    assert "/api/pull-request" not in _boards_own(caplog)
+    assert re.search(rf"GET {BOARD_PATH}/api/pull-request -> 200 in \d+ms",
+                     _boards_own(caplog))
 
 
 def test_health_names_the_process_serving_the_board():
