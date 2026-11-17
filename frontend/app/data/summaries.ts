@@ -443,8 +443,14 @@ function closes(action: Closing, gathered: Gathered, one: Thread): boolean {
   return action === 'reply' && awaitsYou(one);
 }
 
-type Outcome =
-  'rejected' | 'deferred' | 'pushed' | 'replied' | 'resolved' | 'marked done';
+export type Outcome =
+  | 'rejected'
+  | 'deferred'
+  | 'pushed'
+  | 'replied'
+  | 'ticket filed'
+  | 'resolved'
+  | 'marked done';
 
 const FIRST_THAT_APPLIES: Outcome[] = [
   'rejected',
@@ -464,26 +470,83 @@ const COUNTED_IN_ORDER: Outcome[] = [
   'deferred',
 ];
 
-const KEPT_WHEN_CLOSING: Outcome[] = ['pushed', 'replied', 'resolved'];
+const CHIPS_IN_ORDER: Outcome[] = [
+  'pushed',
+  'replied',
+  'ticket filed',
+  'resolved',
+  'marked done',
+  'rejected',
+  'deferred',
+];
+
+const KEPT_WHEN_CLOSING: Outcome[] = [
+  'pushed',
+  'replied',
+  'ticket filed',
+  'resolved',
+];
+
+const MARKS_DONE: Closing[] = [
+  'mark-done',
+  'reply-and-mark-done',
+  'confirm',
+  'place',
+];
 
 export interface Badge {
   text: string;
   alarm: boolean;
 }
 
+export interface PromptComment {
+  key: string;
+  where: string;
+  outcomes: Outcome[];
+}
+
+export interface CommentStory {
+  what: string | null;
+}
+
+function firstSaid(one: Thread): string | null {
+  const first = (one.comments ?? []).find(
+    (said) => said.author === one.opened_by,
+  );
+  return linesOf(first?.body ?? null)[0] ?? null;
+}
+
+export function commentStoryOf(thread: Thread | undefined): CommentStory {
+  if (!thread) return { what: null };
+  return { what: thread.gist ?? firstSaid(thread) };
+}
+
+function leftAt(one: Thread): string {
+  if (one.kind === 'review-summary') return 'review body';
+  if (one.kind === 'issue') return 'PR comment';
+  return whereOf(one);
+}
+
 export interface RerequestPrompt {
   reviewer: string;
+  repo: string;
   number: number;
   badge: Badge;
   summary: string;
   flag: string | null;
+  listed: string;
+  comments: PromptComment[];
 }
 
-function pushedOn(one: Thread, operations: Operations): boolean {
+function acceptedOn(
+  one: Thread,
+  operations: Operations,
+  lands?: ProposalKind,
+): boolean {
   return storedOf(one, operations).some(
     (operation) =>
       operation.kind === 'approve' &&
-      operation.lands === 'commit' &&
+      (!lands || operation.lands === lands) &&
       operation.state !== 'refused',
   );
 }
@@ -505,12 +568,24 @@ function outcomesOf(
   operations: Operations,
   author: string | null,
 ): Outcome[] {
+  const rejected = one.record_state === 'rejected';
+  const deferred = one.state === 'deferred';
+  const resolved = one.github_resolved === true;
   const holds: [Outcome, boolean][] = [
-    ['rejected', one.record_state === 'rejected'],
-    ['deferred', one.state === 'deferred'],
-    ['pushed', pushedOn(one, operations)],
+    ['rejected', rejected],
+    ['deferred', deferred],
+    ['pushed', acceptedOn(one, operations, 'commit')],
     ['replied', repliedOn(one, author)],
-    ['resolved', one.github_resolved === true],
+    ['ticket filed', acceptedOn(one, operations, 'ticket')],
+    ['resolved', resolved],
+    [
+      'marked done',
+      !stillOpen(one) &&
+        !rejected &&
+        !deferred &&
+        !resolved &&
+        !acceptedOn(one, operations),
+    ],
   ];
   return holds.filter(([, held]) => held).map(([outcome]) => outcome);
 }
@@ -538,7 +613,14 @@ function closedAs(
         Boolean(gathered.body) ||
         (action === 'approve' && lands !== 'commit'),
     ],
+    ['ticket filed', action === 'approve' && lands === 'ticket'],
     ['resolved', resolvesOnGitHub(action, gathered)],
+    [
+      'marked done',
+      MARKS_DONE.includes(action) ||
+        ((action === 'resolve' || action === 'confirm-resolve') &&
+          !resolvesOnGitHub(action, gathered)),
+    ],
   ];
   return holds.filter(([, held]) => held).map(([outcome]) => outcome);
 }
@@ -630,6 +712,7 @@ export function rerequestPromptOf(
   const requested = facts.changes_requested_by.includes(reviewer);
   return {
     reviewer,
+    repo: pr.repo,
     number: pr.number,
     badge: {
       text: requested ? 'Changes requested' : 'Commented',
@@ -637,6 +720,14 @@ export function rerequestPromptOf(
     },
     summary: summaryLineOf(counted),
     flag: flagLineOf(rejected, bare, reviewer),
+    listed: `${round.length === 1 ? 'comment' : 'comments'} from ${reviewer}`,
+    comments: round.map((one, at) => ({
+      key: one.key,
+      where: leftAt(one),
+      outcomes: CHIPS_IN_ORDER.filter((outcome) =>
+        outcomes[at]?.includes(outcome),
+      ),
+    })),
   };
 }
 

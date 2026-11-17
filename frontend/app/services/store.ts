@@ -135,6 +135,7 @@ import {
   placeOf,
   prHeaderOf,
   readOf,
+  commentStoryOf,
   rerequestPromptOf,
   resetStandingOf,
   threadNamedIn,
@@ -155,6 +156,7 @@ import {
   type MentionRow,
   type ThreadCard,
   type Closing,
+  type CommentStory,
   type Outstanding,
   type Place,
   type RerequestPrompt,
@@ -193,6 +195,7 @@ export type {
   OutstandingItem,
   PrHeader,
   Closing,
+  CommentStory,
   RerequestPrompt,
   ResetStanding,
   Reviewer,
@@ -550,6 +553,10 @@ export default class StoreService extends Service {
       gathered,
       this.proposal(repo, number, thread)?.kind ?? null,
     );
+  }
+
+  commentStory(repo: string, number: number, thread: string): CommentStory {
+    return commentStoryOf(this.threads[keyOf(repo, number)]?.[thread]);
   }
 
   reading(shown: ShownPr, now: number): Reading | null {

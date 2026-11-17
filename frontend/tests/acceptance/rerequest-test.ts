@@ -3,6 +3,7 @@ import { setupApplicationTest } from 'frontend/tests/helpers';
 import { click, fillIn, find, triggerEvent, visit } from '@ember/test-helpers';
 import type { Conversation, PrFacts } from 'frontend/data/api';
 import {
+  comment,
   dashboard,
   heldPr,
   proposal,
@@ -579,5 +580,93 @@ module('Acceptance | re-request review', function (hooks) {
     assert
       .dom('[data-test-rerequest-summary]')
       .hasText('This is the last one open: 1 replied');
+  });
+
+  test('the list of carol’s comments is one closed row counting the round', async function (assert) {
+    await markedDone([PUSHED, REPLIED]);
+
+    assert
+      .dom('[data-test-rerequest-comments] > summary')
+      .hasText('3 comments from carol');
+    assert.dom('[data-test-rerequest-comments]').doesNotHaveAttribute('open');
+    assert.dom('[data-test-rerequest-comment]').exists({ count: 3 });
+  });
+
+  function said(key: string): string {
+    return `[data-test-rerequest-comment="${key}"]`;
+  }
+
+  test('each comment says where it was left: a line, the review body or the PR at large', async function (assert) {
+    await markedDone([
+      closed('PRRT_c8', { kind: 'review-summary' }),
+      closed('PRRT_c9', { kind: 'issue' }),
+    ]);
+    await click('[data-test-rerequest-comments] > summary');
+
+    assert
+      .dom(`${said('PRRT_c8')} [data-test-rerequest-where]`)
+      .hasText('review body');
+    assert
+      .dom(`${said('PRRT_c9')} [data-test-rerequest-where]`)
+      .hasText('PR comment');
+    assert
+      .dom(`${said('PRRT_c1')} [data-test-rerequest-where]`)
+      .hasText('src/foo.py:42');
+  });
+
+  test('each comment says what it said: the gist, else the first line carol wrote', async function (assert) {
+    board().conversations = [
+      carols('proposed', { gist: null }),
+      closed('PRRT_c2', { gist: 'rename the helper' }),
+      closed('PRRT_c3', { gist: null }),
+    ];
+    board().comments['PRRT_c1'] = [
+      comment({
+        author: 'carol',
+        created_at: OPENED_AT,
+        body: 'Split this function.\nIt does two things.',
+      }),
+    ];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="mark-done"]');
+    await click('[data-test-rerequest-comments] > summary');
+
+    assert
+      .dom(`${said('PRRT_c1')} [data-test-rerequest-what]`)
+      .hasText('Split this function.');
+    assert
+      .dom(`${said('PRRT_c2')} [data-test-rerequest-what]`)
+      .hasText('rename the helper');
+    assert.dom(`${said('PRRT_c3')} [data-test-rerequest-what]`).doesNotExist();
+  });
+
+  function chipsOf(key: string): string[] {
+    return [
+      ...document.querySelectorAll(`${said(key)} [data-test-rerequest-chip]`),
+    ].map((one) => one.textContent?.trim() ?? '');
+  }
+
+  test('each comment carries a chip for every outcome that applies', async function (assert) {
+    const filed = closed('PRRT_c7', {
+      operations: [
+        summary({
+          id: 'PRRT_c7.1',
+          kind: 'approve',
+          state: 'applied',
+          lands: 'ticket',
+          ticket_key: 'PROJ-12',
+        }),
+      ],
+    });
+    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, DEFERRED, filed]);
+    await click('[data-test-rerequest-comments] > summary');
+
+    assert.deepEqual(chipsOf('PRRT_c1'), ['marked done']);
+    assert.deepEqual(chipsOf('PRRT_c2'), ['pushed']);
+    assert.deepEqual(chipsOf('PRRT_c3'), ['replied', 'resolved']);
+    assert.deepEqual(chipsOf('PRRT_c4'), ['resolved']);
+    assert.deepEqual(chipsOf('PRRT_c5'), ['rejected']);
+    assert.deepEqual(chipsOf('PRRT_c6'), ['deferred']);
+    assert.deepEqual(chipsOf('PRRT_c7'), ['ticket filed']);
   });
 });
