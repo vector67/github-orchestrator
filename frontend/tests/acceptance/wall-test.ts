@@ -587,7 +587,7 @@ module('Acceptance | wall', function (hooks) {
       'On hold',
       'On hold',
       '3 comments · agents in progress',
-      'Send your review',
+      'Send your re-review',
       'Re-review',
       'Agent is carrying on',
       'Agent is working on 2 threads',
@@ -2684,7 +2684,7 @@ module('Acceptance | wall', function (hooks) {
       watcher: {
         last_error: 'gh auth token --user octocat failed (exit 1)',
         last_error_cause: 'operator',
-        fix: 'Run `gh auth login` as octocat.',
+        last_error_fault: 'login',
       },
     });
 
@@ -2697,7 +2697,9 @@ module('Acceptance | wall', function (hooks) {
       .includesText('The watcher’s polls are failing.');
     assert
       .dom('[data-test-wall-fix]')
-      .hasText('Run `gh auth login` as octocat.');
+      .hasText(
+        'GitHub turned down the login for octocat. Run `gh auth login` as octocat.',
+      );
     assert
       .dom('[data-test-wall-error]')
       .hasText('gh auth token --user octocat failed (exit 1)');
@@ -2723,6 +2725,29 @@ module('Acceptance | wall', function (hooks) {
         "The watcher can't reach GitHub, retrying each poll. The wall fills in once a poll gets through.",
       );
     assert.dom('[data-test-wall-error]').hasText('unexpected EOF');
+    assert.dom('[data-test-wall-fix]').doesNotExist();
+  });
+
+  test('a wall whose polls are rate limited says GitHub answered and it retries', async function (assert) {
+    onTheHub();
+    board().unheld = { code: 'watcher-failing', detail: 'HTTP 429' };
+    board().ledger = runLedger({
+      watcher: {
+        last_error: 'HTTP 429',
+        last_error_cause: 'network',
+        last_error_fault: 'rate-limit',
+      },
+    });
+
+    await visit('/');
+    await clock().tick(LIST);
+    await clock().tick(LIST);
+
+    assert
+      .dom('[data-test-wall-unheld="watcher-failing"]')
+      .includesText(
+        'The watcher is rate limited by GitHub, retrying each poll. The wall fills in once a poll gets through.',
+      );
     assert.dom('[data-test-wall-fix]').doesNotExist();
   });
 

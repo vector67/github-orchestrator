@@ -1751,7 +1751,7 @@ class PolledInThePreview:
     def health(self) -> Health:
         read_at = datetime.now(timezone.utc)
         return Health(alive=True, polled_at=read_at - timedelta(seconds=20), read_at=read_at,
-                      last_error=None, fix=None, polls_every=timedelta(minutes=1))
+                      last_error=None, polls_every=timedelta(minutes=1))
 
 
 @wires(PreviewHub)

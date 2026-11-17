@@ -450,6 +450,8 @@ export interface Errors {
   errors: ErrorDetail[];
 }
 
+export type Fault = 'network' | 'rate-limit' | 'login' | 'access' | 'gh-missing' | 'disk' | 'config' | 'unknown';
+
 export interface FieldError {
   status: number;
   code: ErrorCode;
@@ -1323,10 +1325,14 @@ export interface WatcherHealth {
   next_poll_at: string | null;
   overdue: boolean;
   last_error: string | null;
-  fix: string | null;
   mentions_error: string | null;
   last_error_cause: Cause | null;
   mentions_error_cause: Cause | null;
+  last_error_fault: Fault | null;
+  mentions_error_fault: Fault | null;
+  hidden_repo: string | null;
+  account: string;
+  config_path: string;
 }
 
 export interface WitnessProgress {
