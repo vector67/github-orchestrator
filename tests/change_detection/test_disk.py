@@ -33,6 +33,7 @@ EXPECTED = (
     '"html_url": "https://ci/tests", "summary": "all green"}], '
     '"review_decision": "changes-requested", "latest_reviewer": "octocat", '
     '"reviewer_status": {"octocat": "changes-requested"}, "pending_reviewers": ["bob"], '
+    '"review_requested_at": {"bob": "2026-09-01T10:00:00Z"}, '
     '"review_requested": true, "unresolved_thread_count": 1, "is_author": false, '
     '"taken_over": false, "review_anchor_at": "2026-08-31T00:00:00Z", "review_anchor_sha": "sha1", '
     '"since_anchor_commits": 1, "since_anchor_force_push": false, '

@@ -91,6 +91,17 @@ def _review_decision(state: PullRequestState) -> ReviewDecision | None:
     return None
 
 
+def review_requested_at(snapshot: dict[str, Any]) -> dict[str, str]:
+    return dict(snapshot.get("review_requested_at", {}))
+
+
+def _stamped_requests(old: dict[str, Any], poll: Poll) -> dict[str, str]:
+    asked_before = old.get("pending_reviewers", [])
+    return {**review_requested_at(old),
+            **{login: poll.polled_at for login in poll.state.pending_reviewers
+               if login not in asked_before}}
+
+
 def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
                 account: str, taken_over: bool) -> dict[str, Any]:
     state = poll.state
@@ -173,6 +184,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "latest_reviewer": latest_reviewer,
         "reviewer_status": {login: status.value for login, status in reviewer_status.items()},
         "pending_reviewers": list(state.pending_reviewers),
+        "review_requested_at": _stamped_requests(old or {}, poll),
         "review_requested": poll.review_requested,
         "unresolved_thread_count": poll.unresolved_thread_count,
         "is_author": is_author_pr,

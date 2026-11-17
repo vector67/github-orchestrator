@@ -132,6 +132,32 @@ def test_a_comment_after_a_change_request_leaves_the_change_request_standing(det
     assert (facts.commented_by, facts.changes_requested_by) == ((), ("carol",))
 
 
+def test_a_reviewer_newly_asked_is_stamped_with_the_poll_that_first_saw_the_request(detection):
+    detection.advance(THE_PR, poll(at="2026-10-08T09:00:00Z"), set())
+    detection.advance(THE_PR, poll(pr_state(pending_reviewers=("carol",)),
+                                   at="2026-10-08T09:05:00Z"), set())
+
+    assert detection.facts(THE_PR).review_requested_at == {"carol": "2026-10-08T09:05:00Z"}
+
+
+def test_a_reviewer_still_asked_keeps_the_stamp_of_the_first_poll_that_saw_it(detection):
+    for at in ("2026-10-08T09:00:00Z", "2026-10-08T09:05:00Z"):
+        detection.advance(THE_PR, poll(pr_state(pending_reviewers=("carol",)), at=at), set())
+
+    assert detection.facts(THE_PR).review_requested_at == {"carol": "2026-10-08T09:00:00Z"}
+
+
+def test_a_reviewer_who_reviewed_keeps_the_stamp_and_is_stamped_again_when_asked_again(detection):
+    stamps = []
+    for pending, at in ((("carol",), "2026-10-08T09:00:00Z"), ((), "2026-10-08T09:05:00Z"),
+                        (("carol",), "2026-10-08T09:10:00Z")):
+        detection.advance(THE_PR, poll(pr_state(pending_reviewers=pending), at=at), set())
+        stamps.append(detection.facts(THE_PR).review_requested_at)
+
+    assert stamps == [{"carol": "2026-10-08T09:00:00Z"}, {"carol": "2026-10-08T09:00:00Z"},
+                      {"carol": "2026-10-08T09:10:00Z"}]
+
+
 def test_the_facts_say_whether_i_am_on_the_requested_list_right_now(detection):
     requested = {}
     for pending in ((ACCOUNT, "erin"), ("erin",)):

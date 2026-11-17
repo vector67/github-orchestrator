@@ -1,6 +1,6 @@
 from typing import Any
 
-from github_orchestrator.change_detection._rules import is_closing
+from github_orchestrator.change_detection._rules import is_closing, review_requested_at
 from github_orchestrator.change_detection._stored import Words, mentions_of, words_of
 from github_orchestrator.change_detection._unmergeable import REBASE_STATES
 from github_orchestrator.change_detection.interface import (
@@ -89,6 +89,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
         changes_requested_by=_reviewers_who(words, ReviewerStatus.CHANGES_REQUESTED),
         commented_by=_reviewers_who(words, ReviewerStatus.COMMENTED),
         pending_reviewers=tuple(_pending_reviewers(snapshot)),
+        review_requested_at=review_requested_at(snapshot),
         unresolved_threads=_unresolved_threads(snapshot),
         my_review=words.reviewers.get(account),
         detailed_reviewer=_text(snapshot, "detailed_reviewer"),

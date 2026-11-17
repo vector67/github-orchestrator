@@ -106,6 +106,22 @@ def test_a_snapshot_from_before_mentions_were_kept_reads_as_never_mentioned(tmp_
     assert (facts.mentions, facts.mentioned, facts.my_review_at) == ((), False, None)
 
 
+def test_a_snapshot_from_before_review_requests_were_stamped_knows_no_request_time(tmp_path):
+    remember(tmp_path, THE_PR, WRITTEN_BY_THE_LAST_RELEASE)
+
+    assert disk_change_detection(tmp_path).facts(THE_PR).review_requested_at == {}
+
+
+def test_a_reviewer_still_asked_since_before_requests_were_stamped_stays_unstamped(tmp_path):
+    remember(tmp_path, THE_PR, WRITTEN_BY_THE_LAST_RELEASE)
+    detection = disk_change_detection(tmp_path)
+
+    detection.advance(THE_PR, poll(pr_state(author="alice", pending_reviewers=("erin", "carol")),
+                                   at="2026-09-23T11:05:00Z"), set())
+
+    assert detection.facts(THE_PR).review_requested_at == {"carol": "2026-09-23T11:05:00Z"}
+
+
 def test_a_closing_mark_on_a_pr_never_polled_still_reads_as_known(tmp_path):
     remember(tmp_path, THE_PR, {"pending_teardown": True})
 

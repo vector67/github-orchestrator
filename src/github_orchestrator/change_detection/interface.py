@@ -191,6 +191,7 @@ class Facts:
     changes_requested_by: tuple[str, ...]
     commented_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
+    review_requested_at: dict[str, str]
     unresolved_threads: int | None
     my_review: ReviewerStatus | None
     detailed_reviewer: str | None
