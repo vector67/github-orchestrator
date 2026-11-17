@@ -35,6 +35,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [],
    "question": null,
    "record_state": "open",
@@ -77,6 +79,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -162,6 +166,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -220,6 +226,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -278,6 +286,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -351,6 +361,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -424,6 +436,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -482,6 +496,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -555,6 +571,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 3,
@@ -613,6 +631,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -701,6 +721,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -796,6 +818,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -869,6 +893,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -942,6 +968,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1015,6 +1043,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1073,6 +1103,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1146,6 +1178,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 0,
@@ -1204,6 +1238,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1292,6 +1328,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1365,6 +1403,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1423,6 +1463,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1503,6 +1545,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1576,6 +1620,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1649,6 +1695,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1722,6 +1770,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1802,6 +1852,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1875,6 +1927,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "anna",
    "operations": [
     {
      "attempts": 1,
@@ -1942,6 +1996,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [],
    "question": null,
    "record_state": "open",
@@ -1991,6 +2047,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [],
    "question": null,
    "record_state": "assumed_done",
@@ -2040,6 +2098,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2105,6 +2165,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2163,6 +2225,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2236,6 +2300,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2294,6 +2360,8 @@ export const RECORDED = {
    "key": "draft_0000000000000001",
    "kind": "draft",
    "mention": false,
+   "opened_at": "2026-09-12T11:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2374,6 +2442,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2432,6 +2502,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "ben",
    "operations": [],
    "question": null,
    "record_state": "not_mine",
@@ -2488,6 +2560,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
@@ -2560,6 +2634,8 @@ export const RECORDED = {
    "key": "PRRT_a",
    "kind": "review",
    "mention": false,
+   "opened_at": "2026-09-12T10:00:00Z",
+   "opened_by": "octocat",
    "operations": [
     {
      "attempts": null,
