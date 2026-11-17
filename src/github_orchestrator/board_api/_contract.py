@@ -30,7 +30,14 @@ from github_orchestrator.conversation import (
     OperationState,
     ReasonCode,
 )
-from github_orchestrator.domain import AuthorKind, Cause, DismissUntil, HubState, Side
+from github_orchestrator.domain import (
+    AuthorKind,
+    Cause,
+    DismissUntil,
+    Fault,
+    HubState,
+    Side,
+)
 
 
 class ErrorCode(StrEnum):
@@ -343,15 +350,10 @@ class WatcherHealth(BaseModel):
     last_error: str | None = Field(
         description="Why the last cycle failed, while cycles keep failing. Null "
                     "while they succeed.")
-    fix: str | None = Field(
-        description="What to do about `last_error`, in plain words, where the watcher "
-                    "recognises a fault the operator must fix: GitHub turning down "
-                    "the account's login, the account unable to see a watched repo, "
-                    "or a full disk. Null otherwise, and always null for a network fault.")
     mentions_error: str | None = Field(
         description="Why the last search for mentions did not run, while polls go on: "
-                    "a `mentions_start` in the config that will not read. Null once "
-                    "a search runs.")
+                    "the config file, or the `mentions_start` in it, will not read. "
+                    "Null once a search runs.")
     last_error_cause: Cause | None = Field(
         description="Who clears `last_error`: `network` for a fault that clears on its "
                     "own (DNS, TLS, a dropped connection, an HTTP 5xx, a timeout or "
@@ -359,6 +361,25 @@ class WatcherHealth(BaseModel):
                     "cycles succeed.")
     mentions_error_cause: Cause | None = Field(
         description="Who clears `mentions_error`, in the same terms as `last_error_cause`.")
+    last_error_fault: Fault | None = Field(
+        description="What kind of fault `last_error` is, read from what gh and GitHub "
+                    "said rather than the repos and account the error names, for the "
+                    "board to word what to do about it: `network` for one that clears "
+                    "on its own, `rate-limit` for GitHub limiting the account until the "
+                    "limit resets, `login` for GitHub turning down the account's login, "
+                    "`access` for a repo the account cannot see, `gh-missing` for a gh "
+                    "the watcher cannot run, `disk` for a full disk and `unknown` for "
+                    "anything else. Null while cycles succeed.")
+    mentions_error_fault: Fault | None = Field(
+        description="What kind of fault `mentions_error` is: always `config`, the "
+                    "config file or its `mentions_start` not reading. Null once a "
+                    "search runs.")
+    hidden_repo: str | None = Field(
+        description="The watched repo, as owner/name, that the account cannot see, "
+                    "when `last_error_fault` is `access` and the watcher found which. "
+                    "Null otherwise.")
+    account: str = Field(description="The GitHub account the watcher polls as.")
+    config_path: str = Field(description="Where the config file the operator edits is.")
 
 
 class NewestRelease(BaseModel):

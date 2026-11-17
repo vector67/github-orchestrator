@@ -889,7 +889,8 @@ function bannerOf(
       tone: 'working',
     };
   }
-  const awaited = phase === 'queued' && worktreeAwaited(conversation);
+  const awaited =
+    (phase === 'queued' || phase === 'rework') && worktreeAwaited(conversation);
   if (awaited) {
     return {
       title: "Waiting for the pull request's worktree",

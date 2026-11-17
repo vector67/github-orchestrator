@@ -980,7 +980,8 @@ def test_a_proposed_fix_is_not_counted_as_answered(settings):
 
 
 @pytest.mark.parametrize("bot", ["claude", "Codex", "copilot[bot]", "vercel[bot]",
-                                 "copilot-pull-request-reviewer[bot]"])
+                                 "copilot-pull-request-reviewer[bot]", "github-actions[bot]",
+                                 "dependabot[bot]", "coderabbitai[bot]"])
 def test_a_thread_a_bot_opened_is_listed_as_a_bot_thread(settings, bot):
     here = _here(settings)
     threads = _open(here, _comment(author=bot))

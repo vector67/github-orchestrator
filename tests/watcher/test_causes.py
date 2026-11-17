@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from github_orchestrator.domain import Cause
+from github_orchestrator.domain import Cause, Fault, Repo
+from github_orchestrator.settings.fake import RepoEntry, fake_settings
 from tests.watcher.support import health
 
 REAL_ERRORS = [
@@ -34,8 +35,8 @@ REAL_ERRORS = [
 ]
 
 
-def _failing(path, error, fix=None):
-    path.write_text(json.dumps({"consecutive": 2, "last_error": error, "fix": fix}))
+def _failing(path, error, **kept):
+    path.write_text(json.dumps({"consecutive": 2, "last_error": error, **kept}))
 
 
 @pytest.mark.parametrize(("error", "cause"), REAL_ERRORS)
@@ -46,18 +47,76 @@ def test_a_failing_poll_names_whether_the_network_or_the_operator_must_clear_it(
     assert health(settings).last_error_cause is cause
 
 
-@pytest.mark.parametrize(("error", "cause"), REAL_ERRORS)
-def test_a_failing_mentions_search_names_its_cause_the_same_way(settings, error, cause):
+@pytest.mark.parametrize(("error", "fault"), [
+    ("HTTP 403: API rate limit exceeded for user ID 1. (https://api.github.com/graphql)",
+     Fault.RATE_LIMIT),
+    ("HTTP 429: Too Many Requests (https://api.github.com/search/issues)", Fault.RATE_LIMIT),
+    ("HTTP 403: You have exceeded a secondary rate limit.", Fault.RATE_LIMIT),
+    ("GraphQL: was submitted too quickly (createPullRequestReview)", Fault.RATE_LIMIT),
+    ("sh: gh: command not found", Fault.GH_MISSING),
+    ("gh is not on PATH, so nothing can reach GitHub as octocat", Fault.GH_MISSING),
+    ("gh: Not Found (HTTP 404)", Fault.ACCESS),
+    ("fatal: couldn't find remote ref: branch not found", Fault.UNKNOWN),
+])
+def test_a_failing_poll_names_its_fault_from_what_gh_and_github_said(settings, error, fault):
+    _failing(settings.watcher_failures, error)
+
+    assert health(settings).last_error_fault is fault
+
+
+def test_a_rate_limit_clears_on_its_own(settings):
+    _failing(settings.watcher_failures, "HTTP 429: Too Many Requests")
+
+    assert health(settings).last_error_cause is Cause.NETWORK
+
+
+@pytest.mark.parametrize("error", [
+    "config.toml: mentions_start must be in quotes",
+    "Invalid isoformat string: 'yesterday'",
+    "watched timeout: HTTP 401",
+])
+def test_a_failing_mentions_search_is_a_config_that_will_not_read(settings, error):
     _failing(settings.mentions_failure, error)
 
-    assert health(settings).mentions_error_cause is cause
+    assert (health(settings).mentions_error_fault,
+            health(settings).mentions_error_cause) == (Fault.CONFIG, Cause.OPERATOR)
 
 
-def test_a_network_fault_carries_no_fix_even_from_a_record_that_kept_one(settings):
-    _failing(settings.watcher_failures, 'Post "https://api.github.com/graphql": unexpected EOF',
-             fix="Log in with `gh auth login`, then this page retries.")
+def test_a_record_that_kept_its_fault_is_read_by_it(settings):
+    _failing(settings.watcher_failures, "watcher cannot search", fault="login")
 
-    assert (health(settings).last_error_cause, health(settings).fix) == (Cause.NETWORK, None)
+    assert (health(settings).last_error_fault, health(settings).last_error_cause) == (
+        Fault.LOGIN, Cause.OPERATOR)
+
+
+TELLING_NAMES = {"gh_account": "tls-timeout-bot",
+                 "repos": (RepoEntry(Repo("acme", "request-timeout"), "/code/request-timeout"),
+                           RepoEntry(Repo("acme", "rustls-bindings"), "/code/rustls-bindings"))}
+
+
+@pytest.mark.parametrize("error", [
+    "watcher cannot search acme/request-timeout, acme/rustls-bindings as tls-timeout-bot: "
+    "gh search prs --repo=acme/request-timeout --repo=acme/rustls-bindings failed (exit 1): "
+    "HTTP 401: Bad credentials (https://api.github.com/search/issues?q=repo%3Aacme%2Frequest-timeout)",
+    "gh repo view acme/rustls-bindings --json nameWithOwner failed (exit 1): "
+    "GraphQL: Could not resolve to a Repository with the name 'acme/rustls-bindings'.",
+    "git -C /code/request-timeout fetch failed: [Errno 28] No space left on device",
+])
+def test_a_fault_to_fix_is_not_taken_for_the_network_by_the_names_the_error_carries(
+        tmp_path, error):
+    named = fake_settings(tmp_path, **TELLING_NAMES)
+    _failing(named.watcher_failures, error)
+
+    assert health(named).last_error_cause is Cause.OPERATOR
+
+
+def test_a_network_fault_still_reads_as_one_beside_names_that_look_like_one(tmp_path):
+    named = fake_settings(tmp_path, **TELLING_NAMES)
+    _failing(named.watcher_failures,
+             "watcher cannot search acme/request-timeout as tls-timeout-bot: "
+             'Post "https://api.github.com/graphql": net/http: TLS handshake timeout')
+
+    assert health(named).last_error_cause is Cause.NETWORK
 
 
 def test_a_poll_that_is_not_failing_has_no_cause(settings):

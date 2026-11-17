@@ -191,6 +191,19 @@ def test_the_review_of_a_pr_nothing_is_known_about(runs, claude, tmp_path):
     assert_pinned("review-untitled", prompt)
 
 
+@pytest.mark.parametrize("additions", [100, 500])
+def test_a_review_without_a_jira_tracker_asks_for_no_ticket(world, claude, tmp_path, additions):
+    runs = real_agent_runs(world, claude, tmp_path, jira_tickets=False)
+
+    prompt = _prompted(runs, claude, runs.review(
+        str(tmp_path), PR_ON_O_N, "review-requested", title="Bump lodash",
+        url="https://example.com/pr/1", branch="lodash-4", additions=additions, deletions=0))
+
+    assert "Jira" not in prompt
+    assert "Atlassian" not in prompt
+    assert "related PRs" in prompt
+
+
 def test_the_re_review_of_a_pr_sets_out_the_last_review_the_commits_since_and_the_replies(
         runs, claude, tmp_path):
     prompt = _prompted(runs, claude, runs.rereview(

@@ -186,8 +186,10 @@ def test_health_says_this_is_the_hub_and_where_it_is():
         "version": "0.1.0",
         "watcher": {"polled_at": "2026-08-28T09:59:40+00:00",
                     "next_poll_at": "2026-08-28T10:00:40+00:00", "overdue": False,
-                    "last_error": None, "fix": None, "mentions_error": None,
-                    "last_error_cause": None, "mentions_error_cause": None},
+                    "last_error": None, "mentions_error": None,
+                    "last_error_cause": None, "mentions_error_cause": None,
+                    "last_error_fault": None, "mentions_error_fault": None,
+                    "hidden_repo": None, "account": "", "config_path": ""},
         "newest_release": None}
 
 
@@ -262,9 +264,7 @@ def test_the_list_is_refused_as_starting_before_the_watcher_tells_its_state():
 
 
 FAILING = Health(alive=True, polled_at=None, read_at=datetime(2026, 9, 28, tzinfo=timezone.utc),
-                 last_error="gh auth token failed",
-                 fix="Log in with `gh auth login`, then this page retries.",
-                 polls_every=timedelta(minutes=1))
+                 last_error="gh auth token failed", polls_every=timedelta(minutes=1))
 
 
 def test_the_list_is_refused_as_failing_with_the_watchers_error_until_a_cycle_succeeds():

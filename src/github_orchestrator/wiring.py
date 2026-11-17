@@ -912,6 +912,7 @@ class AgentRunsWiring(Wiring):
     transcripts_dir: Path
     runs_log: Path
     clamp: tuple[str, ...]
+    jira_tickets: bool
 
 
 @wires(AgentRunsWiring)
@@ -935,7 +936,8 @@ class AgentRunsProvider(Provider):
                                summary_model=wiring.summary_model,
                                pytest_workers=wiring.pytest_workers,
                                transcripts_dir=wiring.transcripts_dir,
-                               runs_log=wiring.runs_log, clamp=wiring.clamp, trust=trust)
+                               runs_log=wiring.runs_log, clamp=wiring.clamp, trust=trust,
+                               jira_tickets=wiring.jira_tickets)
 
     @provide
     def history(self, runs: AgentRuns) -> History:
@@ -1522,6 +1524,7 @@ def cli_config(settings: Settings, home: Path, *, platform: str, uid: int,
         graphical=graphical,
         check_for_updates=config.check_for_updates,
         installer_offers_skills=bool(env.get("GITHUB_ORCHESTRATOR_LEAVE_SKILLS")),
+        jira_tracker=config.tracker is Tracker.JIRA,
         interactive=interactive,
     )
 
@@ -1751,7 +1754,7 @@ class PolledInThePreview:
     def health(self) -> Health:
         read_at = datetime.now(timezone.utc)
         return Health(alive=True, polled_at=read_at - timedelta(seconds=20), read_at=read_at,
-                      last_error=None, fix=None, polls_every=timedelta(minutes=1))
+                      last_error=None, polls_every=timedelta(minutes=1))
 
 
 @wires(PreviewHub)
@@ -1915,6 +1918,7 @@ def make_container(env: Mapping[str, str], home: Path,
             transcripts_dir=settings.transcripts_dir,
             runs_log=settings.runs_log,
             clamp=clamp,
+            jira_tickets=settings.config.tracker is Tracker.JIRA,
         ),
         conversation_wiring(settings),
         watcher_wiring(settings, home, github_token=env.get("GITHUB_ORCHESTRATOR_GITHUB_TOKEN"),

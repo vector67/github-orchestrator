@@ -8,7 +8,11 @@ from github_orchestrator.cli._config import (
     print_agents_disabled_notice,
 )
 from github_orchestrator.cli._hub import HealthBody, HubHealth
-from github_orchestrator.cli._poll_failures import mentions_failure, poll_failure
+from github_orchestrator.cli._poll_failures import (
+    mentions_failure,
+    poll_failure,
+    watcher_fix,
+)
 from github_orchestrator.cli._update import UPDATE, newer_release
 from github_orchestrator.domain import HubState, Pr
 from github_orchestrator.pr_event_queue import Queues
@@ -43,6 +47,11 @@ def ago(elapsed: timedelta) -> str:
     return f"{total // 3600}h"
 
 
+def _fix(health: Health) -> str | None:
+    return watcher_fix(health.last_error_fault, health.account, health.hidden_repo,
+                       health.config_path)
+
+
 def _health_line(health: Health, alive: bool) -> str:
     since = health.since_last_poll
     if health.last_error is not None:
@@ -50,7 +59,7 @@ def _health_line(health: Health, alive: bool) -> str:
                      else f"last good poll {ago(since)} ago")
         state = "failing" if alive else "not running"
         return (f"Watcher: {state} — {succeeded}; "
-                f"{poll_failure(health.last_error, health.last_error_cause, health.fix)}")
+                f"{poll_failure(health.last_error, health.last_error_fault, _fix(health))}")
     every = ago(health.polls_every)
     if since is None:
         return ("Watcher: running but no cycle has ever succeeded — no poll recorded yet"
@@ -108,7 +117,7 @@ def status(config: CliConfig, config_file: ConfigFile, *, queues: Queues, change
     else:
         print(_health_line(health, alive=answer is not None or health.alive))
         if health.mentions_error is not None:
-            print(f"Mentions search: {mentions_failure(health.mentions_error, health.mentions_error_cause)}")
+            print(f"Mentions search: {mentions_failure(health.mentions_error)}")
     print_agents_disabled_notice(config, config_file)
     if config.font_problem is not None:
         print(f"Font: {config.font_problem}")

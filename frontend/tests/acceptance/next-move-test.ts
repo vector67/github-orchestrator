@@ -685,6 +685,31 @@ module('Acceptance | next move', function (hooks) {
     );
   });
 
+  test('fixes on threads from your own comments wait on you before your pull request is ready to merge', async function (assert) {
+    const shown = await seen({
+      facts: READY_TO_MERGE,
+      threads: [
+        row('PRRT_1', 'ready', 'open', 'mine'),
+        row('PRRT_2', 'ready', 'open', 'mine'),
+      ],
+    });
+
+    assert.deepEqual(
+      [shown.move, shown.group, shown.verb],
+      ['human-comments', 'needs-you', '2 comments · agents finished'],
+    );
+  });
+
+  test('an agent on threads from your own comments has the move on your pull request', async function (assert) {
+    assert.deepEqual(
+      await moveAndGroup({
+        facts: READY_TO_MERGE,
+        threads: [row('PRRT_1', 'working', 'open', 'mine')],
+      }),
+      ['agent-on-human-comments', 'agent-working'],
+    );
+  });
+
   test('changes you owe come before human comments', async function (assert) {
     const shown = await onTheDashboard({
       facts: {

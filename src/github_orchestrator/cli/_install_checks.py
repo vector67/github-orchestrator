@@ -55,10 +55,11 @@ def requirement_fixes(which: Which, agent: Agent, agent_program: str,
             for requirement in requirements_for(agent)]
 
 
-def agent_findings(agent: Agent, argv: Sequence[str], run: Run) -> list[Finding]:
+def agent_findings(agent: Agent, argv: Sequence[str], run: Run, *,
+                   jira_tracker: bool) -> list[Finding]:
     if agent is Agent.CODEX:
         return [codex_login_finding(argv, run)]
-    return [atlassian_finding(argv, run)]
+    return [atlassian_finding(argv, run)] if jira_tracker else []
 
 
 def codex_login_finding(codex: Sequence[str], run: Run) -> Finding:

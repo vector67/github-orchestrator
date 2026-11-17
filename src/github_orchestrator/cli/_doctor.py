@@ -15,7 +15,11 @@ from github_orchestrator.cli._install_checks import (
     agent_findings,
     requirements_for,
 )
-from github_orchestrator.cli._poll_failures import mentions_finding, watcher_finding
+from github_orchestrator.cli._poll_failures import (
+    mentions_finding,
+    watcher_finding,
+    watcher_fix,
+)
 from github_orchestrator.cli._service import RESTART, Service
 from github_orchestrator.cli._skill import skill_findings
 from github_orchestrator.cli._status import ago
@@ -106,8 +110,7 @@ class InstanceChecks:
         health = self._watcher_health.health()
         if health.mentions_error is None:
             return []
-        return [mentions_finding(health.mentions_error, health.mentions_error_cause,
-                                 self._config_file.location())]
+        return [mentions_finding(health.mentions_error, self._config_file.location())]
 
     def _github(self) -> list[Finding]:
         if self._config_file.check() is not None or self._which("gh") is None:
@@ -169,7 +172,9 @@ class InstanceChecks:
         if health.last_error is not None:
             good = ("no poll has ever succeeded" if since is None
                     else f"last good poll {ago(since)} ago")
-            return watcher_finding(health.last_error, health.last_error_cause, health.fix, good)
+            fix = watcher_fix(health.last_error_fault, health.account, health.hidden_repo,
+                              health.config_path)
+            return watcher_finding(health.last_error, health.last_error_fault, fix, good)
         if not (answer is not None or health.alive):
             return fail("the watcher is not running", RESTART)
         if since is None:
@@ -239,7 +244,8 @@ class MachineChecks:
             self._command(install),
             *skill_findings(self._config.agent.skill_folder(self._config.home, self._config.agent_command),
                             self._config_file),
-            *agent_findings(self._config.agent, self._config.agent_argv, self._run),
+            *agent_findings(self._config.agent, self._config.agent_argv, self._run,
+                            jira_tracker=self._config.jira_tracker),
             self._notifications(),
         ]
 

@@ -173,6 +173,10 @@ function authorMeta(
           ? "waiting for the pull request's worktree"
           : 'waiting for a free agent',
       );
+    case 'rework':
+      return worktreeAwaited(conversation)
+        ? sentence('Your note', "waiting for the pull request's worktree")
+        : (SAID[phase] ?? '');
     case 'working':
       return sentence(who, 'running', total ? `${done}/${total}` : '');
     case 'answered':

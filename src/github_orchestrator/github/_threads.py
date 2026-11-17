@@ -31,7 +31,7 @@ _SIDES = {word: side for side, word in _WORDS.items()}
 
 MAX_PAGES = 500
 
-AUTHOR_FIELDS = "author { login ... on User { name } }"
+AUTHOR_FIELDS = "author { login __typename ... on User { name } }"
 
 REACTION_FIELDS = "reactionGroups { content viewerHasReacted reactors { totalCount } }"
 
@@ -109,7 +109,8 @@ query($threadId: ID!, $cursor: String) {
 
 def _login(node: dict[str, Any] | None) -> str:
     author = (node or {}).get("author") or {}
-    return author.get("login") or "ghost"
+    login = author.get("login") or "ghost"
+    return f"{login}[bot]" if author.get("__typename") == "Bot" else login
 
 
 def _display_name(node: dict[str, Any] | None) -> str:

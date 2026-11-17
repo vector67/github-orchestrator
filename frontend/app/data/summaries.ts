@@ -503,15 +503,17 @@ function summarised(
   const all = Object.values(threads ?? {});
   const facts = pr?.facts ?? null;
   const role = roleOf(facts);
-  const others = all.filter(
-    (one) => one.author_kind !== 'mine' && !LEFT_OUT.includes(one.record_state),
+  const onYourBoard = all.filter(
+    (one) =>
+      (role === 'author' || one.author_kind !== 'mine') &&
+      !LEFT_OUT.includes(one.record_state),
   );
   const yours = all.filter(
     (one) =>
       one.author_kind === 'mine' && !NOT_YOURS.includes(one.record_state),
   );
-  const human = tallyOf(others.filter((one) => one.author_kind === 'human'));
-  const bot = tallyOf(others.filter((one) => one.author_kind === 'bot'));
+  const human = tallyOf(onYourBoard.filter((one) => one.author_kind !== 'bot'));
+  const bot = tallyOf(onYourBoard.filter((one) => one.author_kind === 'bot'));
   const drafts = all.filter((one) => one.state === 'draft').length;
   const openMentions = all
     .filter((one) => one.mention && !CLOSED_MENTION.includes(one.state))
@@ -742,9 +744,7 @@ function outstandingFrom(
       ? all
           .filter(
             (one) =>
-              one.state === 'ready' &&
-              one.author_kind !== 'mine' &&
-              !LEFT_OUT.includes(one.record_state),
+              one.state === 'ready' && !LEFT_OUT.includes(one.record_state),
           )
           .map((one) => threadItem(one, one.gist ?? 'waiting on you'))
       : [];

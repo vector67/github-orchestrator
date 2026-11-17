@@ -96,7 +96,7 @@ _BOTS = frozenset({"claude", "codex", "copilot", "copilot-pull-request-reviewer"
 def author_kind_of(login: str, account: str) -> AuthorKind:
     if login == account:
         return AuthorKind.MINE
-    if login.lower().removesuffix("[bot]") in _BOTS:
+    if login.endswith("[bot]") or login.lower() in _BOTS:
         return AuthorKind.BOT
     return AuthorKind.HUMAN
 
@@ -259,5 +259,20 @@ class Cause(StrEnum):
     OPERATOR = "operator"
 
 
-__all__ = ["Cause", "DismissUntil", "HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
+class Fault(StrEnum):
+    NETWORK = "network"
+    RATE_LIMIT = "rate-limit"
+    LOGIN = "login"
+    ACCESS = "access"
+    GH_MISSING = "gh-missing"
+    DISK = "disk"
+    CONFIG = "config"
+    UNKNOWN = "unknown"
+
+    @property
+    def cause(self) -> Cause:
+        return Cause.NETWORK if self in (Fault.NETWORK, Fault.RATE_LIMIT) else Cause.OPERATOR
+
+
+__all__ = ["Cause", "DismissUntil", "Fault","HubState", "LabelledComment", "LocalClock", "Location", "Mention", "Monotonic", "Pr", "Repo", "Sha",
            "Side", "Sleep", "ThreadName", "UtcClock"]

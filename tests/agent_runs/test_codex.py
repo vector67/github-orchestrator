@@ -138,6 +138,18 @@ def test_a_review_treats_the_branch_as_an_untrusted_project(runs, codex, tmp_pat
                             *_untrusted(tmp_path), "-"]
 
 
+@pytest.mark.parametrize("jira_tickets", [True, False])
+def test_a_codex_review_asks_for_the_jira_ticket_only_with_a_jira_tracker(
+        world, codex, tmp_path, jira_tickets):
+    runs = real_agent_runs(world, codex, tmp_path, agent=Agent.CODEX, command="codex",
+                           model=MODEL, summary_model=SUMMARY_MODEL, jira_tickets=jira_tickets)
+
+    finish(_review(runs, tmp_path))
+
+    [prompt] = codex.prompts
+    assert ("Atlassian MCP" in prompt) is jira_tickets
+
+
 def test_a_rereview_treats_the_branch_as_an_untrusted_project(runs, codex, tmp_path):
     finish(runs.rereview(str(tmp_path), THE_PR, "review-requested", title="Fix bug", url="",
                          branch="fix", verdict="commented", said=None, since=None,

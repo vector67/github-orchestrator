@@ -123,15 +123,26 @@ def test_a_network_fault_says_github_is_unreachable_and_retried_each_poll(machin
             "can't reach GitHub, retrying each poll: HTTP 502: Bad Gateway")
 
 
-def test_a_fault_to_fix_shows_the_fix_the_watcher_recorded(machine, run_cli):
+def test_a_fault_to_fix_shows_what_to_do_about_it(machine, run_cli):
     _beat(machine, 300)
     machine.settings().watcher_failures.write_text(json.dumps(
-        {"consecutive": 3, "last_error": "HTTP 401: Bad credentials",
-         "fix": "run gh auth login as octocat"}))
+        {"consecutive": 3, "last_error": "HTTP 401: Bad credentials", "fault": "login"}))
     with _lock(machine):
         assert _health(run_cli) == (
             "Watcher: failing — last good poll 5m ago; "
-            "last error: HTTP 401: Bad credentials; fix: run gh auth login as octocat")
+            "last error: HTTP 401: Bad credentials; fix: GitHub turned down the login for "
+            "octocat. Run `gh auth login` as octocat.")
+
+
+def test_a_repo_the_account_cannot_see_is_named_in_what_to_do(machine, run_cli):
+    _beat(machine, 300)
+    machine.settings().watcher_failures.write_text(json.dumps(
+        {"consecutive": 3, "last_error": "gh: Not Found (HTTP 404)", "fault": "access",
+         "hidden_repo": "acme/widgets"}))
+    with _lock(machine):
+        assert _health(run_cli).endswith(
+            "fix: You can't see acme/widgets as octocat. Remove it from [[repos]] in "
+            f"{machine.config_path}, or ask for access.")
 
 
 def test_a_stopped_watcher_with_a_streak_still_says_it_is_not_running(machine, run_cli):
@@ -152,19 +163,27 @@ def test_a_failing_mentions_search_is_named_on_its_own_line_with_its_reason(mach
             "Mentions search: failing — config.toml: mentions_start must be in quotes")
 
 
-def test_a_mentions_search_that_cannot_reach_github_says_it_retries_each_poll(machine, run_cli):
-    _beat(machine, 42)
-    machine.settings().mentions_failure.write_text(json.dumps(
-        {"consecutive": 2, "last_error": "dial tcp: lookup api.github.com: no such host"}))
+def test_a_rate_limit_says_github_answered_and_polls_retry(machine, run_cli):
+    _beat(machine, 300)
+    _fail(machine, "HTTP 429: Too Many Requests", times=3)
     with _lock(machine):
-        assert _line(run_cli, "Mentions search:") == (
-            "Mentions search: can't reach GitHub, retrying each poll: "
-            "dial tcp: lookup api.github.com: no such host")
+        assert _health(run_cli) == (
+            "Watcher: failing — last good poll 5m ago; "
+            "rate limited by GitHub, retrying each poll: HTTP 429: Too Many Requests")
+
+
+def test_a_missing_gh_says_to_install_it(machine, run_cli):
+    _beat(machine, 300)
+    _fail(machine, "sh: gh: command not found", times=3)
+    with _lock(machine):
+        assert _health(run_cli).endswith(
+            "fix: The watcher can't run gh. Install it from https://cli.github.com, "
+            "or put it on the watcher's PATH.")
 
 
 def test_a_multi_line_error_stays_on_one_status_line(machine, run_cli):
     _fail(machine, "gh: Not Found\nrun gh auth login")
-    assert _health(run_cli).endswith("last error: gh: Not Found run gh auth login")
+    assert "last error: gh: Not Found run gh auth login" in _health(run_cli)
 
 
 @pytest.mark.parametrize("seconds,shown", [(59, "59s"), (3599, "59m"), (7300, "2h")])
