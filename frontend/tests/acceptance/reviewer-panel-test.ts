@@ -983,37 +983,69 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
     assert.dom('[data-test-frame]').includesText('if rate is None: raise');
   });
 
-  test('the proposal’s diff starts with every file folded, and Expand all beside Full screen opens and folds them all', async function (assert) {
-    const tax = diffOf('src/tax.py', added(12, '    if rate is None: raise'));
-    const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
-    board().diffs[`${KEY}.1.proposal`] = {
-      ...tax,
-      files: [...tax.files, ...units.files],
-    };
+  module('the proposal’s diff, folded by file', function (inner) {
+    inner.beforeEach(function () {
+      const tax = diffOf('src/tax.py', added(12, '    if rate is None: raise'));
+      const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
+      board().diffs[`${KEY}.1.proposal`] = {
+        ...tax,
+        files: [...tax.files, ...units.files],
+      };
+    });
+
     const opened = () =>
       findAll('[data-test-diff-file-fold]').map((one) =>
         one.hasAttribute('open'),
       );
 
-    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const tools = () =>
+      findAll('.diff-frame-tools button').map((one) =>
+        (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
 
-    assert.deepEqual(opened(), [false, false]);
-    assert.strictEqual(
-      document.querySelector('[data-test-fold-all]')?.nextElementSibling,
-      document.querySelector('[data-test-full-screen]'),
-      'Expand all sits just left of Full screen',
-    );
-    assert.dom('[data-test-fold-all]').hasText('Expand all');
+    test('it starts with every file folded and only Expand all beside Full screen', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-fold-all]');
+      assert.deepEqual(opened(), [false, false]);
+      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
+    });
 
-    assert.deepEqual(opened(), [true, true]);
-    assert.dom('[data-test-fold-all]').hasText('Collapse all');
+    test('Expand all opens every file and leaves only Collapse all, which folds them again', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
 
-    await click('[data-test-fold-all]');
+      await click('[data-test-expand-all]');
 
-    assert.deepEqual(opened(), [false, false]);
-    assert.dom('[data-test-fold-all]').hasText('Expand all');
+      assert.deepEqual(opened(), [true, true]);
+      assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
+
+      await click('[data-test-collapse-all]');
+
+      assert.deepEqual(opened(), [false, false]);
+      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
+    });
+
+    test('opening files by hand shows both buttons while some are open, and only Collapse all once all are', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      const [tax, units] = findAll('[data-test-diff-file-fold] summary');
+
+      await click(tax!);
+
+      assert.deepEqual(opened(), [true, false]);
+      assert.deepEqual(tools(), [
+        'Expand all',
+        'Collapse all',
+        'Full screen z',
+      ]);
+
+      await click(units!);
+
+      assert.deepEqual(opened(), [true, true]);
+      assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
+
+      await click('[data-test-collapse-all]');
+
+      assert.deepEqual(opened(), [false, false]);
+    });
   });
 });
 
