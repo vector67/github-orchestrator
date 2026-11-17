@@ -90,10 +90,13 @@ and asks `Install them? [Y/n]`. Yes installs them. No leaves them out and, while
 `create-pr` is among them, writes `pr_skill = ""`. Every later update in a
 terminal asks again, and a yes then installs them and puts `create-pr` back as
 `pr_skill`. With no terminal to ask on, it follows the installer's `-y` rule
-and installs each missing skill, unless an earlier no is recorded as
-`pr_skill = ""`, which then stands. A skill that differs
-from this version's is left alone, and the output names
-`github-orchestrator skill --replace`. It never guesses from an empty skills
+and installs each missing skill, except `create-pr` when an earlier no is
+recorded as `pr_skill = ""`, which then stands: a skill shipped since that no
+is still installed. A skill that differs from this version's is left alone, and
+the output names `github-orchestrator skill --replace`, as `doctor` does.
+`github-orchestrator skill` leaves it alone too and still exits 0. The
+comparison skips the files an OS leaves behind (`.DS_Store`, `Thumbs.db`,
+`desktop.ini`, `._*`). It never guesses from an empty skills
 folder that you turned the skills down. It updates only the default instance's
 skills folder and config; for another
 instance whose agent reads its skills elsewhere, run

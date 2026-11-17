@@ -268,8 +268,8 @@ folder. When some are missing and it runs in a terminal, it names each one and
 what the agents use it for, and asks whether to install them; a no writes
 `pr_skill = ""`, and every later update asks again. With no terminal to ask on
 it does what the installer does under `-y`: a missing skill is installed,
-unless an earlier no is recorded. Either way, one that differs from this version's
-is left alone (`github-orchestrator skill --replace` replaces it), and
+except `create-pr` when an earlier no is recorded. Either way, one that differs
+from this version's is left alone (`github-orchestrator skill --replace` replaces it), and
 `github-orchestrator skill` installs the skills and writes `create-pr` back.
 
 ## Uninstall

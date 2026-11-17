@@ -2,6 +2,7 @@ import fcntl
 import json
 import os
 import re
+import shutil
 import socket
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -633,9 +634,16 @@ CONNECTED = "atlassian: https://mcp.atlassian.com/v1/mcp (HTTP) - ✔ Connected\
 SKILLS = ("create-pr", "github-orchestrator", "rebase-on-main")
 
 
+SHIPPED = Path(__file__).resolve().parents[2] / "src" / "github_orchestrator" / "cli" / "skills"
+
+
+def _installed(machine, name):
+    return machine.home / ".claude" / "skills" / name
+
+
 def _skills_in_place(machine, *names):
     for name in names:
-        (machine.home / ".claude" / "skills" / name).mkdir(parents=True)
+        shutil.copytree(SHIPPED / name, _installed(machine, name))
 
 
 @pytest.mark.parametrize("name", SKILLS)
@@ -658,6 +666,29 @@ def test_create_pr_left_out_on_purpose_is_ok_and_says_the_agents_open_prs_themse
     assert "agents open pull requests themselves" in ran.out
     assert "github-orchestrator skill installs" in ran.out
     assert _finding(ran.out, "rebase-on-main skill is not in").level == "warn"
+
+
+@pytest.mark.parametrize("name", SKILLS)
+def test_a_skill_of_your_own_under_a_shipped_name_is_a_warning_fixed_by_replace(
+        machine, run_cli, name):
+    _skills_in_place(machine, name)
+    (_installed(machine, name) / "SKILL.md").write_text("my own rules\n")
+
+    ran = run_cli("doctor")
+
+    differs = _finding(ran.out, f"{name} skill in")
+    assert differs.level == "warn"
+    assert "differs from this version's" in differs.reason
+    assert differs.fix == "github-orchestrator skill --replace"
+
+
+def test_a_junk_file_the_os_left_in_a_shipped_skill_is_still_ok(machine, run_cli):
+    _skills_in_place(machine, "rebase-on-main")
+    (_installed(machine, "rebase-on-main") / ".DS_Store").write_bytes(b"Bud1")
+
+    ran = run_cli("doctor")
+
+    assert _finding(ran.out, "rebase-on-main skill is in").level == "ok"
 
 
 @pytest.mark.parametrize("name", SKILLS)
