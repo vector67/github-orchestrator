@@ -30,6 +30,7 @@ import {
 import { KIND_LABELS, nameOf, sentence, type Seen } from 'frontend/data/rows';
 import {
   atWork,
+  awaitsYou,
   busy,
   confirmed,
   heldARun,
@@ -783,7 +784,7 @@ function replyOf(
   }
   return {
     threaded: conversation.kind === 'review',
-    parks: conversation.state === 'ready',
+    parks: awaitsYou(conversation),
     note: context.role === 'reviewer' ? REVIEWER_REPLY_NOTE : '',
     refused: replyRefused(operations),
   };

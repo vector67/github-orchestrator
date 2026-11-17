@@ -1352,6 +1352,21 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-reply-open]').doesNotExist('a done card takes none');
   });
 
+  test('a reply on a reopened card the agent is working on parks it too', async function (assert) {
+    board().conversations = [
+      board().threadIn('working', { key: 'k1', reopened: true }),
+    ];
+
+    await visit('/pr/o/r/7/conversations/k1');
+    await click('[data-test-reply-open]');
+
+    assert
+      .dom('[data-test-composer-note]')
+      .hasText(
+        'No code change; comment moves to "Waiting on reviewer" and the proposal is parked.',
+      );
+  });
+
   test('an outdated thread is read where it was written', async function (assert) {
     board().conversations = [
       thread({

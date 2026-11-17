@@ -1,10 +1,17 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
+import { waitForPromise } from '@ember/test-waiters';
+import RerequestPrompt from 'frontend/components/rerequest-prompt';
 import type { ReplyBox } from 'frontend/data/panel';
 import didInsert from 'frontend/modifiers/did-insert';
 import type BoardService from 'frontend/services/board';
 import type ComposerService from 'frontend/services/composer';
+import type HereService from 'frontend/services/here';
+import type PrControlsService from 'frontend/services/pr-controls';
+import type StoreService from 'frontend/services/store';
+import type { RerequestPrompt as Prompt } from 'frontend/services/store';
 import autocomplete from 'frontend/modifiers/autocomplete';
 
 export interface ReplyBoxSignature {
@@ -25,6 +32,11 @@ const PARKS =
 export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
   @service declare board: BoardService;
   @service declare composer: ComposerService;
+  @service('pr-controls') declare controls: PrControlsService;
+  @service declare here: HereService;
+  @service declare store: StoreService;
+
+  @tracked prompting: { prompt: Prompt; words: string } | null = null;
 
   get open(): boolean {
     return this.composer.isOpen(this.args.conversationId);
@@ -79,8 +91,55 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
     event.preventDefault();
     const words = this.composer.words.trim();
     if (!words) return;
+    const prompt = this.promptFor(words);
+    if (prompt) {
+      this.prompting = { prompt, words };
+      return;
+    }
     this.composer.close();
-    void this.board.decide(this.args.conversationId, 'reply', { body: words });
+    void this.post(words);
+  };
+
+  private promptFor(words: string): Prompt | null {
+    const pr = this.here.pr;
+    if (!pr) return null;
+    return this.store.rerequestPrompt(
+      pr.repo,
+      pr.number,
+      this.args.conversationId,
+      'reply',
+      { body: words },
+    );
+  }
+
+  private post(words: string): Promise<boolean> {
+    return this.board.decide(this.args.conversationId, 'reply', {
+      body: words,
+    });
+  }
+
+  private async sendAsked(rerequest: boolean): Promise<void> {
+    const prompting = this.prompting;
+    this.prompting = null;
+    if (!prompting) return;
+    const on = this.controls.onPage;
+    this.composer.close();
+    const posted = await this.post(prompting.words);
+    if (posted && rerequest && on) {
+      await this.controls.rerequestReview(on, prompting.prompt.reviewer);
+    }
+  }
+
+  rerequestToo = () => {
+    void waitForPromise(this.sendAsked(true));
+  };
+
+  sendOnly = () => {
+    void waitForPromise(this.sendAsked(false));
+  };
+
+  cancelPrompt = () => {
+    this.prompting = null;
   };
 
   <template>
@@ -132,6 +191,15 @@ export default class ReplyBoxComponent extends Component<ReplyBoxSignature> {
         {{on "click" this.expand}}
         ...attributes
       >{{this.label}}</button>
+    {{/if}}
+    {{#if this.prompting}}
+      <RerequestPrompt
+        @prompt={{this.prompting.prompt}}
+        @label="Reply"
+        @rerequest={{this.rerequestToo}}
+        @only={{this.sendOnly}}
+        @cancel={{this.cancelPrompt}}
+      />
     {{/if}}
   </template>
 }

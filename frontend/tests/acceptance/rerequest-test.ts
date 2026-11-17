@@ -342,4 +342,67 @@ module('Acceptance | re-request review', function (hooks) {
 
     assert.deepEqual(verbs(), ['mark-done', 'rerequest-review']);
   });
+
+  async function replied(words: string): Promise<void> {
+    await click('[data-test-reply-open]');
+    await fillIn('[data-test-reply]', words);
+    await click('[data-test-reply-send]');
+  }
+
+  test('a plain Reply on a thread waiting on you opens the prompt and sends nothing yet', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    await replied('Fixed in the next push.');
+
+    assert.dom('[data-test-rerequest-prompt]').exists();
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-and]').hasText('Reply and re-request r');
+  });
+
+  test('"Reply and re-request" posts the reply, then queues the re-request', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await replied('Fixed in the next push.');
+
+    await click('[data-test-rerequest-and]');
+
+    assert.deepEqual(verbs(), ['reply', 'rerequest-review']);
+    assert.deepEqual(board().posted[0]!.body, {
+      body: 'Fixed in the next push.',
+    });
+    assert.deepEqual(board().posted[1]!.body, { reviewer: 'carol' });
+  });
+
+  test('"Reply only" posts the reply alone', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await replied('Fixed in the next push.');
+
+    await click('[data-test-rerequest-only]');
+
+    assert.deepEqual(verbs(), ['reply']);
+  });
+
+  test('× on a Reply sends nothing and leaves the words in the box', async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await replied('Fixed in the next push.');
+
+    await click('[data-test-rerequest-cancel]');
+
+    assert.deepEqual(verbs(), []);
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.dom('[data-test-reply]').hasValue('Fixed in the next push.');
+  });
+
+  test('a Reply on a thread already Their move posts at once', async function (assert) {
+    board().conversations = [carols('waiting')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+
+    await replied('One more thing.');
+
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.deepEqual(verbs(), ['reply']);
+  });
 });
