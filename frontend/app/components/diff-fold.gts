@@ -9,8 +9,6 @@ import type KeysService from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
 import type { Keymap } from 'frontend/services/keys';
 
-const OPEN_BELOW_LINES = 20;
-
 export interface DiffFoldSignature {
   Element: HTMLDivElement;
   Args: {
@@ -29,24 +27,15 @@ export default class DiffFold extends Component<DiffFoldSignature> {
 
   @tracked private chosen: ReadonlySet<string> | null = null;
 
-  private get files() {
-    return this.store.diff(this.args.fold.commits)?.files ?? [];
-  }
-
   private get paths(): string[] {
-    return this.files.map((one) => one.path);
-  }
-
-  private get small(): boolean {
-    const changed = this.files.reduce(
-      (sum, one) => sum + one.added + one.removed,
-      0,
+    return (
+      this.store.diff(this.args.fold.commits)?.files.map((one) => one.path) ??
+      []
     );
-    return changed < OPEN_BELOW_LINES;
   }
 
   get opened(): ReadonlySet<string> {
-    return this.chosen ?? new Set(this.small ? this.paths : []);
+    return this.chosen ?? new Set(this.paths);
   }
 
   get anyClosed(): boolean {

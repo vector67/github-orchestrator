@@ -16,7 +16,6 @@ import {
   heldPr,
   operation,
   proposal,
-  removed,
   setupFakeBoard,
   summary,
   thread,
@@ -916,7 +915,7 @@ module('Acceptance | a commit a reply names', function (hooks) {
       .containsText('if rate is None: raise');
   });
 
-  test('the commit lists its files with their counts, a small one already open and folded by a click', async function (assert) {
+  test('the commit lists its files with their counts, open, and folded by a click', async function (assert) {
     checked('addressed', 'the guard now raises');
 
     await visit(`/pr/o/r/7/conversations/${KEY}`);
@@ -987,12 +986,7 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
   module('the proposal’s diff, folded by file', function (inner) {
     inner.beforeEach(function () {
       const tax = diffOf('src/tax.py', added(12, '    if rate is None: raise'));
-      const units = diffOf(
-        'src/units.py',
-        ...Array.from({ length: 19 }, (_, at) =>
-          added(at + 1, `UNIT_${at} = 1`),
-        ),
-      );
+      const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
       board().diffs[`${KEY}.1.proposal`] = {
         ...tax,
         files: [...tax.files, ...units.files],
@@ -1009,56 +1003,34 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
         (one.textContent ?? '').replace(/\s+/g, ' ').trim(),
       );
 
-    test('at twenty changed lines it starts with every file folded and only Expand all beside Full screen', async function (assert) {
-      await visit(`/pr/o/r/7/conversations/${KEY}`);
-
-      assert.deepEqual(opened(), [false, false]);
-      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
-    });
-
-    test('under twenty changed lines it starts with every file open and only Collapse all', async function (assert) {
-      const tax = diffOf(
-        'src/tax.py',
-        added(12, '    if rate is None: raise'),
-        removed(13, '    pass'),
-      );
-      const units = diffOf('src/units.py', added(3, 'UNITS = {}'));
-      board().diffs[`${KEY}.1.proposal`] = {
-        ...tax,
-        files: [...tax.files, ...units.files],
-      };
-
+    test('it starts with every file open and only Collapse all beside Full screen', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${KEY}`);
 
       assert.deepEqual(opened(), [true, true]);
       assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
+    });
+
+    test('Collapse all folds every file and leaves only Expand all, which opens them again', async function (assert) {
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
 
       await click('[data-test-collapse-all]');
 
       assert.deepEqual(opened(), [false, false]);
-    });
-
-    test('Expand all opens every file and leaves only Collapse all, which folds them again', async function (assert) {
-      await visit(`/pr/o/r/7/conversations/${KEY}`);
+      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
 
       await click('[data-test-expand-all]');
 
       assert.deepEqual(opened(), [true, true]);
       assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
-
-      await click('[data-test-collapse-all]');
-
-      assert.deepEqual(opened(), [false, false]);
-      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
     });
 
-    test('opening files by hand shows both buttons while some are open, and only Collapse all once all are', async function (assert) {
+    test('folding files by hand shows both buttons while some are open, and only Expand all once none are', async function (assert) {
       await visit(`/pr/o/r/7/conversations/${KEY}`);
       const [tax, units] = findAll('[data-test-diff-file-fold] summary');
 
       await click(tax!);
 
-      assert.deepEqual(opened(), [true, false]);
+      assert.deepEqual(opened(), [false, true]);
       assert.deepEqual(tools(), [
         'Expand all',
         'Collapse all',
@@ -1067,12 +1039,12 @@ module('Acceptance | a proposal on a reviewer thread', function (hooks) {
 
       await click(units!);
 
-      assert.deepEqual(opened(), [true, true]);
-      assert.deepEqual(tools(), ['Collapse all', 'Full screen z']);
-
-      await click('[data-test-collapse-all]');
-
       assert.deepEqual(opened(), [false, false]);
+      assert.deepEqual(tools(), ['Expand all', 'Full screen z']);
+
+      await click('[data-test-expand-all]');
+
+      assert.deepEqual(opened(), [true, true]);
     });
   });
 });
