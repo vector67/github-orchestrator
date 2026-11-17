@@ -2013,8 +2013,14 @@ class PrFacts(BaseModel):
         description="Whether the account is the author, the one answer to "
                     "whose pull request this is. Null where GitHub did not say.")
     changes_requested_by: list[str]
+    commented_by: list[str] = Field(
+        description="Reviewers whose review that stands only commented.")
     pending_reviewers: list[str] = Field(
         description="Reviewers asked for a review who have not given one.")
+    review_requested_at: dict[str, str] = Field(
+        description="When each reviewer was last asked to review: the poll "
+                    "that first saw them pending after they were not. A "
+                    "reviewer with no entry was never seen asked.")
     ci_status: str = Field(description="`passing`, `failing`, `pending`, or `none` when the head has no checks.")
     checks: list[CiCheck] = Field(description="Every check on the head commit.")
     merge_state: MergeState | None = Field(

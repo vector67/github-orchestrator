@@ -816,7 +816,9 @@ export interface PrFacts {
   ended: boolean;
   is_author: boolean | null;
   changes_requested_by: string[];
+  commented_by: string[];
   pending_reviewers: string[];
+  review_requested_at: Record<string, string>;
   ci_status: string;
   checks: CiCheck[];
   merge_state: MergeState | null;

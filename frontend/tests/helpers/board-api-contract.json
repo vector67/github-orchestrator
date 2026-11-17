@@ -6799,6 +6799,12 @@
     "ci_status": {
      "type": "string"
     },
+    "commented_by": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
     "draft": {
      "type": "boolean"
     },
@@ -6900,6 +6906,12 @@
       }
      ]
     },
+    "review_requested_at": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "type": "object"
+    },
     "unresolved_threads": {
      "anyOf": [
       {
@@ -6919,7 +6931,9 @@
     "ended",
     "is_author",
     "changes_requested_by",
+    "commented_by",
     "pending_reviewers",
+    "review_requested_at",
     "ci_status",
     "checks",
     "merge_state",

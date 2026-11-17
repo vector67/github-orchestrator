@@ -371,6 +371,7 @@ function listsOf(facts: PrFacts): PrFacts {
   return {
     ...facts,
     changes_requested_by: list(facts.changes_requested_by),
+    commented_by: list(facts.commented_by),
     pending_reviewers: list(facts.pending_reviewers),
     mentions: list(facts.mentions),
     checks: list(facts.checks),

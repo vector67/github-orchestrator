@@ -187,16 +187,18 @@ What the board knows today, and what it lacks.
 
 1. **Commented reviewers.** `reviewer_status` knows them; nothing past
    change detection does. Add `commented_by` to `Facts`, the manager's
-   `Dashboard` and `PrFacts`, beside `changes_requested_by`. In `Facts`:
-   **Done** (`7b06a50b`).
+   `Dashboard` and `PrFacts`, beside `changes_requested_by`. **Done**
+   (`7b06a50b` for `Facts`, the commit that records this for `Dashboard`
+   and `PrFacts`).
 2. **When a reviewer was last asked.** Nothing records it, so a round cannot
    be told from the reviewer's earlier rounds. The snapshot gains
    `review_requested_at`, a map from login to the poll time at which the
    login was first seen in `pending_reviewers` after not being there, carried
    forward from the old snapshot otherwise. `Facts` and `PrFacts` expose it.
    A login with no entry (every PR polled before this change, and reviewers
-   never asked) has every thread they opened in its round. In the snapshot
-   and `Facts`: **Done** (`8435d797`).
+   never asked) has every thread they opened in its round. **Done**
+   (`8435d797` for the snapshot and `Facts`, the commit that records this
+   for `PrFacts`).
 3. **Who opened a thread, on the wall.** `ThreadRow` carries `author_kind`
    but not the login or when the thread was opened, so the next move of a PR
    whose conversations are not loaded cannot group threads by reviewer.

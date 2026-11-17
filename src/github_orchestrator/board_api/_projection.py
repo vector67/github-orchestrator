@@ -617,7 +617,9 @@ def _facts_of(dashboard: Dashboard) -> contract.PrFacts:
     return contract.PrFacts(
         polled_at=dashboard.polled_at, ended=dashboard.ended, is_author=dashboard.is_author,
         changes_requested_by=list(dashboard.changes_requested_by),
-        pending_reviewers=list(dashboard.pending_reviewers), ci_status=dashboard.ci,
+        commented_by=list(dashboard.commented_by),
+        pending_reviewers=list(dashboard.pending_reviewers),
+        review_requested_at=dict(dashboard.review_requested_at), ci_status=dashboard.ci,
         checks=[contract.CiCheck(name=check.name, passed=check.passed, failed=check.failed,
                                  done=check.done, url=check.url, summary=check.summary)
                 for check in dashboard.checks],
