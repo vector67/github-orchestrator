@@ -1,6 +1,12 @@
 import pytest
 
-from github_orchestrator.domain import DismissUntil, Repo, ReviewerPick
+from github_orchestrator.domain import (
+    DismissUntil,
+    IgnoredChecks,
+    IgnoreFor,
+    Repo,
+    ReviewerPick,
+)
 from tests.builders import a_pr
 from tests.settings.support import disk_switches, fake_switches
 
@@ -224,3 +230,66 @@ def test_a_re_request_waits_on_its_own_pr_only(switches):
 def test_forgetting_a_pr_with_nothing_queued_succeeds(switches):
     assert switches.rerequests.forget(a_pr(7, REPO)) is True
     assert switches.rerequests.queued(a_pr(7, REPO)) == ()
+
+
+VERCEL = IgnoredChecks(frozenset({"Vercel"}))
+
+
+def test_no_check_is_ignored_until_one_is(switches):
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == IgnoredChecks()
+
+
+def test_a_check_ignored_for_this_push_is_counted_again_on_the_next_head(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PUSH, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == VERCEL
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "def") == IgnoredChecks()
+
+
+def test_a_check_ignored_on_this_pr_stays_ignored_on_every_head_of_that_pr_only(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "def") == VERCEL
+    assert switches.ci_ignores.ignored(a_pr(8, REPO), "abc") == IgnoredChecks()
+
+
+def test_a_check_ignored_in_this_repo_is_ignored_on_every_pr_of_that_repo_only(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_REPO, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(8, REPO), "def") == VERCEL
+    assert switches.ci_ignores.ignored(a_pr(7, "acme/other"), "abc") == IgnoredChecks()
+
+
+def test_ignoring_every_check_covers_a_check_never_named(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(every=True), IgnoreFor.THIS_PR, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc").covers("added next week")
+
+
+def test_ignores_at_every_scope_add_up(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"lint"})), IgnoreFor.THIS_PUSH, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"e2e"})), IgnoreFor.THIS_REPO, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == IgnoredChecks(
+        frozenset({"Vercel", "lint", "e2e"}))
+
+
+def test_stopping_ignoring_counts_every_check_on_that_pr_again_repo_ignores_included(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"e2e"})), IgnoreFor.THIS_REPO, "abc")
+    switches.ci_ignores.ignore(a_pr(8, REPO), IgnoredChecks(frozenset({"lint"})), IgnoreFor.THIS_PR, "abc")
+
+    switches.ci_ignores.stop_ignoring(a_pr(7, REPO))
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == IgnoredChecks()
+    assert switches.ci_ignores.ignored(a_pr(8, REPO), "abc") == IgnoredChecks(frozenset({"lint"}))
+
+
+def test_forgetting_a_pr_drops_its_own_ignores_and_keeps_the_repos(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"e2e"})), IgnoreFor.THIS_REPO, "abc")
+
+    assert switches.ci_ignores.forget(a_pr(7, REPO)) is True
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == IgnoredChecks(frozenset({"e2e"}))

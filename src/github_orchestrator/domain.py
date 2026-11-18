@@ -250,6 +250,24 @@ class DismissUntil(StrEnum):
     FOREVER = "forever"
 
 
+class IgnoreFor(StrEnum):
+    THIS_PUSH = "this-push"
+    THIS_PR = "this-pr"
+    THIS_REPO = "this-repo"
+
+
+@dataclass(frozen=True)
+class IgnoredChecks:
+    names: frozenset[str] = frozenset()
+    every: bool = False
+
+    def covers(self, name: str) -> bool:
+        return self.every or name in self.names
+
+    def __or__(self, other: IgnoredChecks) -> IgnoredChecks:
+        return IgnoredChecks(self.names | other.names, self.every or other.every)
+
+
 class HubState(StrEnum):
     SETUP = "setup"
     WATCHING = "watching"

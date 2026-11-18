@@ -159,6 +159,7 @@ from github_orchestrator.pr_summaries._lane import Run as SummaryRun
 from github_orchestrator.server._config import ServerConfig
 from github_orchestrator.server._process import Kill, ServerProcess, Spawn, detached
 from github_orchestrator.settings import (
+    CiIgnores,
     ConfigFile,
     Dismissals,
     Holds,
@@ -189,6 +190,7 @@ from github_orchestrator.settings._settings import Settings
 from github_orchestrator.settings._switches import (
     FlagFileDismissals,
     FlagFileHolds,
+    JsonFileCiIgnores,
     JsonFileRerequests,
     JsonFileReviewerPicks,
 )
@@ -394,6 +396,10 @@ class SwitchesProvider(Provider):
     @provide
     def rerequests(self, wiring: SwitchesWiring) -> Rerequests:
         return JsonFileRerequests(wiring.data_dir / "rerequest_review")
+
+    @provide
+    def ci_ignores(self, wiring: SwitchesWiring) -> CiIgnores:
+        return JsonFileCiIgnores(wiring.data_dir / "ci_ignored")
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:

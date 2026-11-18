@@ -9,6 +9,7 @@ import dishka
 
 from github_orchestrator.domain import Pr
 from github_orchestrator.settings import (
+    CiIgnores,
     ConfigFile,
     Dismissals,
     Holds,
@@ -17,6 +18,7 @@ from github_orchestrator.settings import (
 )
 from github_orchestrator.settings.fake import (
     ConfigRow,
+    FakeCiIgnores,
     FakeDismissals,
     FakeHolds,
     FakeRerequests,
@@ -77,12 +79,18 @@ def disk_rerequests(data_dir: Path) -> Rerequests:
     return rerequests
 
 
+def disk_ci_ignores(data_dir: Path) -> CiIgnores:
+    ci_ignores: CiIgnores = _switches(data_dir).get(CiIgnores)
+    return ci_ignores
+
+
 @dataclass
 class AllSwitches:
     holds: Holds
     dismissals: Dismissals
     picks: ReviewerPicks
     rerequests: Rerequests
+    ci_ignores: CiIgnores
 
     def forget(self, pr: Pr) -> bool:
         return all([role.forget(pr) for role in (self.holds, self.dismissals)])
@@ -93,11 +101,12 @@ class AllSwitches:
 
 def disk_switches(data_dir: Path) -> AllSwitches:
     return AllSwitches(disk_holds(data_dir), disk_dismissals(data_dir), disk_picks(data_dir),
-                       disk_rerequests(data_dir))
+                       disk_rerequests(data_dir), disk_ci_ignores(data_dir))
 
 
 def fake_switches() -> AllSwitches:
-    return AllSwitches(FakeHolds(), FakeDismissals(), FakeReviewerPicks(), FakeRerequests())
+    return AllSwitches(FakeHolds(), FakeDismissals(), FakeReviewerPicks(), FakeRerequests(),
+                       FakeCiIgnores())
 
 
 def _environment(config_path: Path, data_dir: Path | None) -> dict[str, str]:

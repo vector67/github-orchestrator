@@ -1,4 +1,5 @@
 from github_orchestrator.settings.interface import (
+    CiIgnores,
     ConfigFile,
     Dismissals,
     Holds,
@@ -9,6 +10,7 @@ from github_orchestrator.settings.interface import (
 )
 
 __all__ = [
+    "CiIgnores",
     "ConfigFile",
     "Dismissals",
     "Logs",
