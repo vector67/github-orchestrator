@@ -1,0 +1,170 @@
+import { module, test } from 'qunit';
+import { setupApplicationTest } from 'frontend/tests/helpers';
+import { click, visit } from '@ember/test-helpers';
+import type { CiCheck } from 'frontend/data/api';
+import {
+  check,
+  dashboard,
+  heldPr,
+  setupFakeBoard,
+  type DashboardOver,
+} from 'frontend/tests/helpers/fake-board';
+
+const VERCEL_FAILING: DashboardOver = {
+  facts: {
+    is_author: true,
+    ci_status: 'failing',
+    checks: [check('Vercel', 'failed'), check('tests')],
+  },
+};
+
+function ignored(one: CiCheck): CiCheck {
+  return { ...one, ignored: true };
+}
+
+const VERCEL_IGNORED: DashboardOver = {
+  facts: {
+    is_author: true,
+    ci_status: 'passing',
+    checks: [ignored(check('Vercel', 'failed')), check('tests')],
+  },
+};
+
+const CI_ROW = '[data-test-status="ci"]';
+
+module('Acceptance | ignore CI', function (hooks) {
+  setupApplicationTest(hooks);
+  const board = setupFakeBoard(hooks);
+
+  async function onTheDashboard(over: DashboardOver): Promise<void> {
+    board().held = [heldPr({ dashboard: over })];
+    board().manager = dashboard(over);
+    await visit('/pr/o/r/7/dashboard');
+  }
+
+  function verbs(): string[] {
+    return board().posted.map((one) => one.verb);
+  }
+
+  function ticked(name: string): HTMLInputElement {
+    return document.querySelector(
+      `[data-test-ignore-check="${name}"] input`,
+    ) as HTMLInputElement;
+  }
+
+  test('a failing CI row offers "Ignore CI" beside the red failing', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+
+    assert.dom(`${CI_ROW} [data-test-value]`).hasText('failing');
+    assert.dom(`${CI_ROW} [data-test-ignore-ci]`).hasText('Ignore CI');
+    assert.dom('[data-test-band-move]').hasText('Fix CI');
+  });
+
+  test('a passing CI row offers no "Ignore CI"', async function (assert) {
+    await onTheDashboard({
+      facts: { is_author: true, checks: [check('tests')] },
+    });
+
+    assert.dom(`${CI_ROW} [data-test-ignore-ci]`).doesNotExist();
+  });
+
+  test('"Ignore CI" opens the dialog with the failing check ticked until the next push, and posts nothing', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+
+    await click('[data-test-ignore-ci]');
+
+    assert
+      .dom('[data-test-ignore-ci-dialog] .question')
+      .hasText('Ignore CI on #7');
+    assert.false(ticked('*').checked);
+    assert.true(ticked('Vercel').checked);
+    assert.false(ticked('tests').checked);
+    assert.dom('[data-test-ignore-for="this-push"] input').isChecked();
+    assert.dom('[data-test-ignore-ci-submit]').hasText('Ignore');
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('Ignore posts the ticked checks and how long, and CI then counts only the rest', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+    await click('[data-test-ignore-ci]');
+
+    await click('[data-test-ignore-for="this-pr"] input');
+    await click('[data-test-ignore-ci-submit]');
+
+    assert.deepEqual(verbs(), ['ignore-ci']);
+    assert.strictEqual(
+      board().posted[0]!.url,
+      '/pr/o/r/7/api/manager:ignore-ci',
+    );
+    assert.deepEqual(board().posted[0]!.body, {
+      checks: ['Vercel'],
+      every: false,
+      for: 'this-pr',
+    });
+    assert.dom('[data-test-ignore-ci-dialog]').doesNotExist();
+    assert.dom(`${CI_ROW} [data-test-value]`).hasText('passing');
+    assert.dom(`${CI_ROW} [data-test-ci-ignored]`).hasText('Vercel ignored');
+    assert.dom('[data-test-band-move]').doesNotHaveTextContaining('Fix CI');
+  });
+
+  test('All checks ticks every check and posts every', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+    await click('[data-test-ignore-ci]');
+
+    await click('[data-test-ignore-check="*"] input');
+
+    assert.true(ticked('tests').checked);
+    await click('[data-test-ignore-ci-submit]');
+    assert.deepEqual(board().posted[0]!.body, {
+      checks: [],
+      every: true,
+      for: 'this-push',
+    });
+  });
+
+  test('with nothing ticked, Ignore cannot be pressed', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+    await click('[data-test-ignore-ci]');
+
+    await click('[data-test-ignore-check="Vercel"] input');
+
+    assert.dom('[data-test-ignore-ci-submit]').isDisabled();
+  });
+
+  test('Cancel and × close the dialog and post nothing', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+
+    await click('[data-test-ignore-ci]');
+    await click('[data-test-ignore-ci-cancel]');
+    assert.dom('[data-test-ignore-ci-dialog]').doesNotExist();
+
+    await click('[data-test-ignore-ci]');
+    await click('[data-test-ignore-ci-dialog] .dialog-close');
+    assert.dom('[data-test-ignore-ci-dialog]').doesNotExist();
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('an ignored check is named in the CI row and left out of what failed', async function (assert) {
+    await onTheDashboard(VERCEL_IGNORED);
+
+    assert.dom(`${CI_ROW} [data-test-value]`).hasText('passing');
+    assert.dom(`${CI_ROW} [data-test-ci-ignored]`).hasText('Vercel ignored');
+    assert.dom(`${CI_ROW} [data-test-ignore-ci]`).doesNotExist();
+    assert.dom('[data-test-band-move]').doesNotHaveTextContaining('Fix CI');
+  });
+
+  test('"Stop ignoring" counts every check again', async function (assert) {
+    await onTheDashboard(VERCEL_IGNORED);
+
+    await click(`${CI_ROW} [data-test-stop-ignoring-ci]`);
+
+    assert.deepEqual(verbs(), ['stop-ignoring-ci']);
+    assert.strictEqual(
+      board().posted[0]!.url,
+      '/pr/o/r/7/api/manager:stop-ignoring-ci',
+    );
+    assert.dom(`${CI_ROW} [data-test-value]`).hasText('failing');
+    assert.dom(`${CI_ROW} [data-test-ci-ignored]`).doesNotExist();
+    assert.dom('[data-test-band-move]').hasText('Fix CI');
+  });
+});

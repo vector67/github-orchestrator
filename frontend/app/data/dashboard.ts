@@ -237,7 +237,27 @@ function polledOf(shown: ShownPr): Polled {
 }
 
 function failedOf(facts: Polled): string[] {
-  return facts.checks.filter((one) => one.failed).map((one) => one.name);
+  return facts.checks
+    .filter((one) => one.failed && !one.ignored)
+    .map((one) => one.name);
+}
+
+function ignoredOf(facts: Polled): string[] {
+  return facts.checks.filter((one) => one.ignored).map((one) => one.name);
+}
+
+export interface IgnorableCheck {
+  name: string;
+  state: 'failed' | 'passed' | 'running';
+  ticked: boolean;
+}
+
+export function ignorableChecksOf(shown: ShownPr): IgnorableCheck[] {
+  return polledOf(shown).checks.map((one) => ({
+    name: one.name,
+    state: one.failed ? 'failed' : one.passed ? 'passed' : 'running',
+    ticked: one.failed && !one.ignored,
+  }));
 }
 
 function checksDoneOf(facts: Polled): { done: number; total: number } {
@@ -688,6 +708,8 @@ export interface Row {
   alarm: boolean;
   quiet: boolean;
   rebase: boolean;
+  ignoreCi: boolean;
+  ciIgnored: string | null;
 }
 
 function row(key: string, label: string, value: string, tone = ''): Row {
@@ -699,6 +721,8 @@ function row(key: string, label: string, value: string, tone = ''): Row {
     alarm: tone === 'alarm',
     quiet: tone === 'quiet',
     rebase: false,
+    ignoreCi: false,
+    ciIgnored: null,
   };
 }
 
@@ -742,14 +766,17 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
   }
   const facts = polledOf(shown);
   const ci = facts.ci_status;
-  rows.push(
-    row(
+  const ignored = ignoredOf(facts);
+  rows.push({
+    ...row(
       'ci',
       'CI',
       ci,
       ci === 'failing' ? 'alarm' : ci === 'passing' ? 'quiet' : '',
     ),
-  );
+    ignoreCi: ci === 'failing',
+    ciIgnored: ignored.length ? `${listed(ignored)} ignored` : null,
+  });
   const merge = facts.merge_state;
   if (merge === null || merge === 'unknown')
     rows.push(row('mergeable', 'Mergeable', 'not known yet', 'quiet'));

@@ -6,6 +6,7 @@ import type {
   AssignReviewersRequest,
   DismissUntil,
   GitRun,
+  IgnoreCiRequest,
 } from 'frontend/data/api';
 import {
   dismissedSaying,
@@ -14,6 +15,7 @@ import {
 } from 'frontend/data/dashboard';
 import {
   AGENTS_STOPPED,
+  EVERY_CHECK,
   asksFirst,
   capOf,
   leavesThePage,
@@ -354,6 +356,21 @@ export default class PrControlsService extends Service {
   cancelRerequest = this.aboutAReviewer('cancel-rerequest');
 
   sendRerequestNow = this.aboutAReviewer('send-rerequest');
+
+  ignoreCi = (on: Controlled, asked: IgnoreCiRequest): Promise<void> =>
+    waitForPromise(
+      this.throughTheManager(
+        on,
+        'ignore-ci',
+        asked,
+        asked.every ? EVERY_CHECK : (asked.checks[0] ?? null),
+      ),
+    ).then(() => undefined);
+
+  stopIgnoringCi = (on: Controlled): Promise<void> =>
+    waitForPromise(this.throughTheManager(on, 'stop-ignoring-ci')).then(
+      () => undefined,
+    );
 
   dismiss = (on: Controlled, until: DismissUntil): Promise<void> =>
     waitForPromise(this.dismissing(on, until));

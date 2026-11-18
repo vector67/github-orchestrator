@@ -2,6 +2,7 @@ import type {
   ThreadNamesMigration,
   AskedReviewer,
   RerequestReviewRequest,
+  IgnoreCiRequest,
   AuthorKind,
   CiCheck,
   Comment,
@@ -816,6 +817,25 @@ export class FakeBoard {
   fixChecks: FixChecks = { asked: [], skipped: [] };
   summary: PrSummary = prSummary();
   anotherSummaryRunning = false;
+
+  private countChecks(ignores: (one: CiCheck) => boolean): void {
+    const facts = this.manager?.facts;
+    if (!this.manager || !facts) return;
+    const checks = facts.checks.map((one) => ({
+      ...one,
+      ignored: ignores(one),
+    }));
+    const counted = checks.filter((one) => !one.ignored);
+    const ci_status: PrFacts['ci_status'] = !counted.length
+      ? 'none'
+      : counted.some((one) => one.failed)
+        ? 'failing'
+        : counted.every((one) => one.passed)
+          ? 'passing'
+          : 'pending';
+    this.manager = { ...this.manager, facts: { ...facts, checks, ci_status } };
+    this.streamed();
+  }
   private managed: Dashboard = dashboard();
   private managerSet = false;
 
@@ -2281,6 +2301,15 @@ export class FakeBoard {
         },
       };
       this.streamed();
+    }
+    if (this.manager && verb === 'ignore-ci') {
+      const asked = body as IgnoreCiRequest;
+      this.countChecks(
+        (one) => one.ignored || asked.every || asked.checks.includes(one.name),
+      );
+    }
+    if (this.manager && verb === 'stop-ignoring-ci') {
+      this.countChecks(() => false);
     }
     if (this.manager && verb === 'cancel-rerequest') {
       const { reviewer } = body as RerequestReviewRequest;
