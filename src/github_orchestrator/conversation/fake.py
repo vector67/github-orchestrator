@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from github_orchestrator.agent_runs.fake import FakeAgentRuns
 from github_orchestrator.change_detection import Poll
-from github_orchestrator.change_detection.fake import FakeChangeDetection
+from github_orchestrator.change_detection.fake import FakeChangeDetection, NoCiIgnores
 from github_orchestrator.conversation._application.settings import ThreadsConfig
 from github_orchestrator.conversation._threads import GitHubConversationManagerFactory
 from github_orchestrator.conversation.interface import ConversationManager
@@ -31,7 +31,7 @@ class FakeConversationManagerFactory:
         self.thread_records = FakeThreadRecords()
         self._clock = clock
         self._change_detection = FakeChangeDetection(config.gh_account, config.poll_interval,
-                                                     clock)
+                                                     clock, NoCiIgnores())
         self._threads = GitHubConversationManagerFactory(
             self.github, self.github, self.github, self.working_copies, agent_runs,
             agent_runs, agent_runs, self.thread_records, self._change_detection, config,

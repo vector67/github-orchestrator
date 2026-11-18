@@ -2,9 +2,17 @@ import json
 import logging
 from collections.abc import Set
 from pathlib import Path
+from typing import Any
 
 from github_orchestrator.atomic_write import write_atomically
-from github_orchestrator.domain import DismissUntil, Pr, Repo, ReviewerPick
+from github_orchestrator.domain import (
+    DismissUntil,
+    IgnoredChecks,
+    IgnoreFor,
+    Pr,
+    Repo,
+    ReviewerPick,
+)
 from github_orchestrator.settings._paths import repo_subdir
 
 log = logging.getLogger(__name__)
@@ -212,3 +220,67 @@ class JsonFileRerequests:
 
     def _path(self, pr: Pr) -> Path:
         return repo_subdir(self._rerequests_dir, pr.repo) / f"{pr.number}.json"
+
+
+def _checks_from(fields: dict[str, Any]) -> IgnoredChecks:
+    return IgnoredChecks(frozenset(fields["names"]), bool(fields["every"]))
+
+
+def _fields_of(checks: IgnoredChecks) -> dict[str, Any]:
+    return {"names": sorted(checks.names), "every": checks.every}
+
+
+class JsonFileCiIgnores:
+    def __init__(self, ci_ignored_dir: Path) -> None:
+        self._ci_ignored_dir = ci_ignored_dir
+
+    def ignored(self, pr: Pr, head_sha: str | None) -> IgnoredChecks:
+        kept = self._read(self._pr_path(pr))
+        this_push = kept.get("this_push")
+        pushed = (_checks_from(this_push) if this_push is not None and head_sha is not None
+                  and this_push["sha"] == head_sha else IgnoredChecks())
+        this_pr = _checks_from(kept["this_pr"]) if "this_pr" in kept else IgnoredChecks()
+        repo = self._read(self._repo_path(pr.repo))
+        this_repo = _checks_from(repo) if repo else IgnoredChecks()
+        return pushed | this_pr | this_repo
+
+    def ignore(self, pr: Pr, checks: IgnoredChecks, ignore_for: IgnoreFor, head_sha: str | None) -> None:
+        if ignore_for is IgnoreFor.THIS_REPO:
+            repo = self._read(self._repo_path(pr.repo))
+            had = _checks_from(repo) if repo else IgnoredChecks()
+            write_atomically(self._repo_path(pr.repo), json.dumps(_fields_of(had | checks)).encode())
+            return
+        kept = self._read(self._pr_path(pr))
+        if ignore_for is IgnoreFor.THIS_PR:
+            had = _checks_from(kept["this_pr"]) if "this_pr" in kept else IgnoredChecks()
+            kept["this_pr"] = _fields_of(had | checks)
+        else:
+            this_push = kept.get("this_push")
+            had = (_checks_from(this_push) if this_push is not None and this_push["sha"] == head_sha
+                   else IgnoredChecks())
+            kept["this_push"] = {"sha": head_sha, **_fields_of(had | checks)}
+        write_atomically(self._pr_path(pr), json.dumps(kept).encode())
+
+    def stop_ignoring(self, pr: Pr) -> None:
+        _remove(pr, self._pr_path(pr), self._repo_path(pr.repo))
+
+    def forget(self, pr: Pr) -> bool:
+        return _remove(pr, self._pr_path(pr))
+
+    def _read(self, path: Path) -> dict[str, Any]:
+        try:
+            kept = json.loads(path.read_text())
+            if not isinstance(kept, dict):
+                raise TypeError("not an object")
+            return kept
+        except FileNotFoundError:
+            return {}
+        except (OSError, ValueError, TypeError):
+            log.warning("unreadable ignored checks at %s; counting every check", path, exc_info=True)
+            return {}
+
+    def _pr_path(self, pr: Pr) -> Path:
+        return repo_subdir(self._ci_ignored_dir, pr.repo) / f"{pr.number}.json"
+
+    def _repo_path(self, repo: Repo) -> Path:
+        return repo_subdir(self._ci_ignored_dir, repo) / "repo.json"

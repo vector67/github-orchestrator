@@ -32,6 +32,8 @@ class Command(StrEnum):
     REREQUEST_REVIEW = "rerequest-review"
     CANCEL_REREQUEST = "cancel-rerequest"
     SEND_REREQUEST_NOW = "send-rerequest-now"
+    IGNORE_CI = "ignore-ci"
+    STOP_IGNORING_CI = "stop-ignoring-ci"
     TAKE_OVER = "take-over"
     HAND_BACK = "hand-back"
 

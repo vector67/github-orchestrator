@@ -31,7 +31,7 @@ EXPECTED = (
     '"had_checks": true, '
     '"review_ready_at": "2026-08-30T00:00:00Z", '
     '"checks": [{"name": "tests", "passed": true, "failed": false, "done": true, '
-    '"html_url": "https://ci/tests", "summary": "all green"}], '
+    '"html_url": "https://ci/tests", "summary": "all green", "ignored": false}], '
     '"review_decision": "changes-requested", "latest_reviewer": "octocat", '
     '"reviewer_status": {"octocat": "changes-requested"}, "pending_reviewers": ["bob"], '
     '"review_requested_at": {"bob": "2026-09-01T10:00:00Z"}, '

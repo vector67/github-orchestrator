@@ -9,6 +9,8 @@ from github_orchestrator.domain import (
     Clone,
     DismissUntil,
     HubState,
+    IgnoredChecks,
+    IgnoreFor,
     Pr,
     Repo,
     ReviewerPick,
@@ -121,6 +123,16 @@ class ReviewerPicks(Protocol):
     def saved(self, pr: Pr) -> ReviewerPick | None: ...
 
     def save(self, pr: Pr, pick: ReviewerPick) -> None: ...
+
+    def forget(self, pr: Pr) -> bool: ...
+
+
+class CiIgnores(Protocol):
+    def ignored(self, pr: Pr, head_sha: str | None) -> IgnoredChecks: ...
+
+    def ignore(self, pr: Pr, checks: IgnoredChecks, ignore_for: IgnoreFor, head_sha: str | None) -> None: ...
+
+    def stop_ignoring(self, pr: Pr) -> None: ...
 
     def forget(self, pr: Pr) -> bool: ...
 

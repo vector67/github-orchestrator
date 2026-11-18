@@ -2,7 +2,14 @@ from collections.abc import Set
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.domain import DismissUntil, Pr, Repo, ReviewerPick
+from github_orchestrator.domain import (
+    DismissUntil,
+    IgnoredChecks,
+    IgnoreFor,
+    Pr,
+    Repo,
+    ReviewerPick,
+)
 from github_orchestrator.settings._config import (
     OrchestratorConfig as OrchestratorConfig,
 )
@@ -88,6 +95,37 @@ class FakeRerequests:
 
     def forget(self, pr: Pr) -> bool:
         self._queued.pop(pr, None)
+        return True
+
+
+class FakeCiIgnores:
+    def __init__(self) -> None:
+        self._this_push: dict[Pr, tuple[str | None, IgnoredChecks]] = {}
+        self._this_pr: dict[Pr, IgnoredChecks] = {}
+        self._this_repo: dict[Repo, IgnoredChecks] = {}
+
+    def ignored(self, pr: Pr, head_sha: str | None) -> IgnoredChecks:
+        sha, pushed = self._this_push.get(pr, (None, IgnoredChecks()))
+        this_push = pushed if sha is not None and sha == head_sha else IgnoredChecks()
+        return this_push | self._this_pr.get(pr, IgnoredChecks()) | self._this_repo.get(pr.repo, IgnoredChecks())
+
+    def ignore(self, pr: Pr, checks: IgnoredChecks, ignore_for: IgnoreFor, head_sha: str | None) -> None:
+        match ignore_for:
+            case IgnoreFor.THIS_PUSH:
+                sha, pushed = self._this_push.get(pr, (None, IgnoredChecks()))
+                self._this_push[pr] = (head_sha, pushed | checks if sha == head_sha else checks)
+            case IgnoreFor.THIS_PR:
+                self._this_pr[pr] = self._this_pr.get(pr, IgnoredChecks()) | checks
+            case IgnoreFor.THIS_REPO:
+                self._this_repo[pr.repo] = self._this_repo.get(pr.repo, IgnoredChecks()) | checks
+
+    def stop_ignoring(self, pr: Pr) -> None:
+        self.forget(pr)
+        self._this_repo.pop(pr.repo, None)
+
+    def forget(self, pr: Pr) -> bool:
+        self._this_push.pop(pr, None)
+        self._this_pr.pop(pr, None)
         return True
 
 

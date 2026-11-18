@@ -12,7 +12,12 @@ from github_orchestrator.agent_runs.fake import (
 )
 from github_orchestrator.board_api.interface import ManagerRefusal, Notice, NoticeCode
 from github_orchestrator.change_detection import PrClosed
-from github_orchestrator.domain import DismissUntil, ReviewerPick
+from github_orchestrator.domain import (
+    DismissUntil,
+    IgnoredChecks,
+    IgnoreFor,
+    ReviewerPick,
+)
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import Check, FakeGitHub
 from github_orchestrator.pr_processes.fake import FakePrProcesses
@@ -32,6 +37,7 @@ from tests.pr_manager.support import (
     seed_state,
 )
 from tests.settings.support import (
+    disk_ci_ignores,
     disk_dismissals,
     disk_holds,
     disk_picks,
@@ -958,3 +964,44 @@ def test_a_command_queued_behind_a_dismiss_is_dropped(settings, tmp_path):
     _on_the_browser_front(settings, tmp_path, dismiss_then_hold, None, board=board)
     assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is DismissUntil.NEXT_EVENT
     assert disk_holds(settings.data_dir).on_hold(THE_PR) is False
+
+
+VERCEL_BLOCKED = (Check("Vercel", "completed", "failure", "https://vercel/1", "Deployment was blocked"),
+                  *PASSING_CHECKS)
+
+
+def test_ignoring_a_failing_check_from_the_board_counts_ci_as_passing_at_once(settings, tmp_path):
+    seed_state(settings, checks=VERCEL_BLOCKED, head_sha="sha1")
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(
+        settings, tmp_path,
+        lambda: board.panel.ignore_ci(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR),
+        lambda: seen.append((board.panel.dashboard().ci,
+                             [(c.name, c.ignored) for c in board.panel.dashboard().checks])),
+        board=board)
+    assert seen == [("passing", [("Vercel", True), ("tests", False)])]
+    assert disk_ci_ignores(settings.data_dir).ignored(THE_PR, "a later head").covers("Vercel")
+
+
+def test_ignoring_a_check_just_this_time_ties_it_to_the_head_the_board_was_showing(settings, tmp_path):
+    seed_state(settings, checks=VERCEL_BLOCKED, head_sha="sha1")
+    board = ServerPanel()
+    _on_the_browser_front(
+        settings, tmp_path,
+        lambda: board.panel.ignore_ci(IgnoredChecks(every=True), IgnoreFor.THIS_PUSH),
+        lambda: None, board=board)
+    ignores = disk_ci_ignores(settings.data_dir)
+    assert ignores.ignored(THE_PR, "sha1") == IgnoredChecks(every=True)
+    assert ignores.ignored(THE_PR, "sha2") == IgnoredChecks()
+
+
+def test_stopping_ignoring_counts_the_failing_check_again(settings, tmp_path):
+    seed_state(settings, checks=VERCEL_BLOCKED, head_sha="sha1")
+    disk_ci_ignores(settings.data_dir).ignore(
+        THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_REPO, "sha1")
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(settings, tmp_path, lambda: board.panel.stop_ignoring_ci(),
+                          lambda: seen.append(board.panel.dashboard().ci), board=board)
+    assert seen == ["failing"]

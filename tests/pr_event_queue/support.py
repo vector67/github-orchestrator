@@ -50,7 +50,7 @@ def disk_event_queue(queues_dir: Path) -> PrEventQueue:
 
 def would_intake(state_dir: Path, said: list[str], *, agents_enabled: bool = True) -> Intake:
     intake: Intake = wire(
-        ChangeDetectionWiring(state_dir, ACCOUNT, 60),
+        ChangeDetectionWiring(state_dir, ACCOUNT, 60, state_dir.parent / "ci_ignored"),
         clocks_of(),
         WouldEnqueueWiring(said.append, agents_enabled),
     ).get(Intake)

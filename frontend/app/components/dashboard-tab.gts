@@ -10,8 +10,13 @@ import type RouterService from '@ember/routing/router-service';
 import AreYouSure from 'frontend/components/are-you-sure';
 import CleanUpBand from 'frontend/components/clean-up-band';
 import DismissConfirm from 'frontend/components/dismiss-confirm';
+import IgnoreCiConfirm from 'frontend/components/ignore-ci-confirm';
 import ImportanceConfirm from 'frontend/components/importance-confirm';
-import type { DismissUntil, Importance } from 'frontend/data/api';
+import type {
+  DismissUntil,
+  IgnoreCiRequest,
+  Importance,
+} from 'frontend/data/api';
 import GitPalette from 'frontend/components/git-palette';
 import GitPaletteState from 'frontend/components/git-palette-state';
 import Glyphs from 'frontend/components/glyphs';
@@ -20,11 +25,13 @@ import RebaseButton from 'frontend/components/rebase-button';
 import RerequestPrompt from 'frontend/components/rerequest-prompt';
 import {
   clockOf,
+  ignorableChecksOf,
   notLiveOf,
   queuedControlsOf,
   rerequestControlsOf,
   standingOf,
   threadsWaitingOf,
+  type IgnorableCheck,
   type QueuedControl,
   type Reading,
   type RerequestControl,
@@ -105,7 +112,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: Control | 'importance' | null = null;
+  @tracked asking: Control | 'importance' | 'ignore-ci' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -269,6 +276,34 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   askImportance = () => {
     this.asking = 'importance';
+  };
+
+  get ignorableChecks(): IgnorableCheck[] {
+    const on = this.on;
+    return on ? ignorableChecksOf(on.shown) : [];
+  }
+
+  get ciPressing(): Pressing | null {
+    return this.summaries?.pressing.ci ?? null;
+  }
+
+  get ciHeld(): boolean {
+    return this.pending || Boolean(this.ciPressing?.pressed);
+  }
+
+  askIgnoreCi = () => {
+    this.asking = 'ignore-ci';
+  };
+
+  ignoreCi = (asked: IgnoreCiRequest) => {
+    this.asking = null;
+    const on = this.on;
+    if (on) void this.controls.ignoreCi(on, asked);
+  };
+
+  stopIgnoringCi = () => {
+    const on = this.on;
+    if (on) void this.controls.stopIgnoringCi(on);
   };
 
   setImportance = (importance: Importance) => {
@@ -812,6 +847,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @cancel={{this.cancelAsking}}
           />
         {{/if}}
+        {{#if (eq this.asking "ignore-ci")}}
+          <IgnoreCiConfirm
+            @number={{this.reading.number}}
+            @checks={{this.ignorableChecks}}
+            @ignore={{this.ignoreCi}}
+            @cancel={{this.cancelAsking}}
+          />
+        {{/if}}
         {{#if (eq this.asking "dismiss")}}
           <DismissConfirm
             @number={{this.reading.number}}
@@ -851,7 +894,33 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                       ></i>{{/if}}<span
                       data-test-value
                     >{{one.value}}</span>{{#if one.rebase}}
-                      <RebaseButton />{{/if}}</span>
+                      <RebaseButton />{{/if}}{{#if one.ignoreCi}}
+                      <button
+                        type="button"
+                        class="btn"
+                        disabled={{this.ciHeld}}
+                        data-opens-dialog="true"
+                        data-test-ignore-ci
+                        {{on "click" this.askIgnoreCi}}
+                      >Ignore CI<Glyphs
+                          @opensDialog={{true}}
+                        /></button>{{/if}}{{#if one.ciIgnored}}
+                      <span
+                        class="quiet"
+                        data-test-ci-ignored
+                      >{{one.ciIgnored}}</span>
+                      <button
+                        type="button"
+                        class="btn"
+                        disabled={{this.ciHeld}}
+                        data-test-stop-ignoring-ci
+                        {{on "click" this.stopIgnoringCi}}
+                      >Stop ignoring</button>{{/if}}{{#if
+                      (eq one.key "ci")
+                    }}{{#if this.ciPressing.refused}}<span
+                          class="refusal"
+                          data-test-ci-refusal
+                        >{{this.ciPressing.refused}}</span>{{/if}}{{/if}}</span>
                 </div>
               {{/each}}
             </section>

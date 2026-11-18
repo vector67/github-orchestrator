@@ -6,14 +6,20 @@ from github_orchestrator.agent_runs import PrWork, Run
 from github_orchestrator.board_api.interface import Notice, NoticeCode
 from github_orchestrator.change_detection import ChangeDetection, Facts, ReviewRequested
 from github_orchestrator.conversation import Conversation
-from github_orchestrator.domain import Monotonic, ReviewerPick
+from github_orchestrator.domain import IgnoredChecks, IgnoreFor, Monotonic, ReviewerPick
 from github_orchestrator.github import PullRequests
 from github_orchestrator.pr_event_queue import Intake, Worklist
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._config import ManagerConfig
 from github_orchestrator.pr_manager._refusals import Conditions, refusal
 from github_orchestrator.pr_manager._rerequest import due
-from github_orchestrator.settings import Dismissals, Holds, Rerequests, ReviewerPicks
+from github_orchestrator.settings import (
+    CiIgnores,
+    Dismissals,
+    Holds,
+    Rerequests,
+    ReviewerPicks,
+)
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +33,9 @@ class ManagerCommands:
                  pull_requests: PullRequests, pr_work: PrWork,
                  change_detection: ChangeDetection, intake: Intake,
                  command_files: CommandFiles, picks: ReviewerPicks,
-                 rerequests: Rerequests) -> None:
+                 rerequests: Rerequests, ci_ignores: CiIgnores) -> None:
         self._config = config
+        self._ci_ignores = ci_ignores
         self._picks = picks
         self._rerequests = rerequests
         self._monotonic = monotonic
@@ -127,6 +134,12 @@ class ManagerCommands:
                 self._cancel_rerequest(fields["reviewer"])
             case Command.SEND_REREQUEST_NOW:
                 self._send_rerequest_now(fields["reviewer"])
+            case Command.IGNORE_CI:
+                self._ignore_ci(IgnoredChecks(frozenset(fields["checks"]), fields["every"]),
+                                IgnoreFor(fields["ignore_for"]))
+            case Command.STOP_IGNORING_CI:
+                self._ci_ignores.stop_ignoring(self._config.pr)
+                log.info("%s: every check counts again", self._config.pr)
             case Command.TAKE_OVER:
                 self._change_detection.take_over(self._config.pr)
                 log.info("%s: taken over — treated as yours from now on", self._config.pr)
@@ -245,6 +258,13 @@ class ManagerCommands:
         for login in answer.ask:
             log.info("%s: pushed and green — re-requesting %s's review", pr, login)
             self._ask_again(login)
+
+    def _ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> None:
+        pr = self._config.pr
+        facts = self._change_detection.facts(pr)
+        self._ci_ignores.ignore(pr, checks, ignore_for, None if facts is None else facts.head_sha)
+        log.info("%s: ignoring %s %s", pr, "every check" if checks.every else sorted(checks.names),
+                 ignore_for)
 
     def _rerequest_review(self, login: str) -> None:
         if not self._yours_to_assign():

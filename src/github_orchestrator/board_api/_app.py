@@ -56,6 +56,7 @@ from github_orchestrator.board_api._contract import (
     GitRequest,
     GitRun,
     Health,
+    IgnoreCiRequest,
     ManagerChanges,
     MarkDoneRequest,
     MentionableList,
@@ -166,7 +167,13 @@ from github_orchestrator.conversation import (
     Denied,
     EditableConversation,
 )
-from github_orchestrator.domain import Location, Pr, UtcClock, fork_pr_number
+from github_orchestrator.domain import (
+    IgnoredChecks,
+    Location,
+    Pr,
+    UtcClock,
+    fork_pr_number,
+)
 from github_orchestrator.domain import Sha as CommitSha
 from github_orchestrator.pr_summaries import PrSummaries, SummaryLane, SummaryRefusal
 from github_orchestrator.terminal_sessions import TerminalSessions
@@ -975,6 +982,31 @@ def send_rerequest_now(board: Serving, asked: RerequestReviewRequest) -> Respons
     notice and drops them at once.
     """
     return _handed_over(board, board.manager.send_rerequest_now(asked.reviewer))
+
+
+@writes.post("/manager:ignore-ci", status_code=202, tags=["manager"],
+             operation_id="ignoreCi", responses=HANDED_TO_THE_MANAGER,
+             summary="Stop counting some checks toward the pull request's CI, for a while or for good.")
+def ignore_ci(board: Serving, asked: IgnoreCiRequest) -> Response:
+    """The manager keeps the ignore on disk; from the next dashboard read the
+    checks show `ignored` in `facts.checks`, count for nothing in
+    `facts.ci_status` and ask for no CI fix. `this-push` lasts until the head
+    moves on from the one the pull request had when the manager carried it out.
+    Ignores add up.
+    """
+    return _handed_over(board, board.manager.ignore_ci(
+        IgnoredChecks(frozenset(asked.checks), asked.every), asked.ignore_for))
+
+
+@writes.post("/manager:stop-ignoring-ci", status_code=202, tags=["manager"],
+             operation_id="stopIgnoringCi", responses=HANDED_TO_THE_MANAGER,
+             summary="Count every check toward the pull request's CI again.")
+def stop_ignoring_ci(board: Serving) -> Response:
+    """The manager drops every ignore that reaches this pull request, its
+    repo's included, so the repo's other pull requests count those checks again
+    too.
+    """
+    return _handed_over(board, board.manager.stop_ignoring_ci())
 
 
 @writes.post("/manager:take-over", status_code=202, tags=["manager"],

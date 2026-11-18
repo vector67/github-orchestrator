@@ -13,6 +13,7 @@ export const WEIGHTS: Record<string, number> = {
   './acceptance/failure-test.ts': 175,
   './acceptance/git-palette-test.ts': 182,
   './acceptance/hub-test.ts': 365,
+  './acceptance/ignore-ci-test.ts': 120,
   './acceptance/kept-dialog-test.ts': 478,
   './acceptance/keyboard-test.ts': 468,
   './acceptance/loading-test.ts': 185,

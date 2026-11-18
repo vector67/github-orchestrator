@@ -724,7 +724,8 @@ export type Slot =
   | 'reviewers'
   | 'importance'
   | 'agent-settings'
-  | 'clean-up';
+  | 'clean-up'
+  | 'ci';
 
 interface PrWrite extends Carrying {
   slot: Slot;
@@ -738,6 +739,8 @@ interface PrWrite extends Carrying {
   ringsOn?: string[];
   refusedBy?: NoticeCode[];
 }
+
+export const EVERY_CHECK = '*';
 
 function leftTheQueue(
   system: DashboardSystem | null,
@@ -804,6 +807,21 @@ const PR_WRITES = {
       (reviewer !== null && facts.pending_reviewers.includes(reviewer)) ||
       leftTheQueue(system, reviewer),
     refusedBy: ['assign-reviewers-refused', 'not-yours-to-assign'],
+  },
+  'ignore-ci': {
+    doing: 'ignoring the checks',
+    square: null,
+    slot: 'ci',
+    until: (facts, _system, check) =>
+      check === EVERY_CHECK
+        ? facts.checks.every((one) => one.ignored)
+        : Boolean(facts.checks.find((one) => one.name === check)?.ignored),
+  },
+  'stop-ignoring-ci': {
+    doing: 'counting every check again',
+    square: null,
+    slot: 'ci',
+    until: (facts) => !facts.checks.some((one) => one.ignored),
   },
   'check-for-fixes': {
     doing: 'asking for the checks',
@@ -1048,6 +1066,7 @@ const SLOTS: Slot[] = [
   'importance',
   'agent-settings',
   'clean-up',
+  'ci',
 ];
 
 function prWriteOf(kind: string): PrWrite | undefined {

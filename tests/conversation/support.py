@@ -30,7 +30,7 @@ from github_orchestrator.notifications import Standing
 from github_orchestrator.notifications.fake import FakeNotifications
 from github_orchestrator.pr_processes import PrProcesses
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.settings.fake import Settings, fake_settings
+from github_orchestrator.settings.fake import FakeCiIgnores, Settings, fake_settings
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.thread_records.fake import FakeThreadRecords
 from github_orchestrator.wiring import (
@@ -173,7 +173,8 @@ def world(settings: Settings, *, github: FakeGitHub | None = None,
     thread_records = thread_records or FakeThreadRecords()
     clocks = _clocks(clock, monotonic)
     change_detection = change_detection or FakeChangeDetection(
-        settings.config.gh_account, settings.config.watcher_poll_interval, clocks.utc)
+        settings.config.gh_account, settings.config.watcher_poll_interval, clocks.utc,
+        FakeCiIgnores())
     container = _container(settings, github, agent_runs, desktop, pr_processes,
                            working_copies, thread_records, clocks, change_detection)
     return World(settings, github, working_copies, agent_runs, thread_records,
