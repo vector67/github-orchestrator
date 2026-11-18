@@ -181,6 +181,7 @@ const STATE_LABELS: Partial<Record<Move, string>> = {
   'request-reviewers': 'Request reviewers',
   'mark-ready-for-review': 'Mark ready for review',
   'await-rereview': 'Waiting for re-review',
+  'await-deferred': 'Waiting on a deferred comment',
   'await-ci': 'CI running',
   'not-reviewing': 'Not reviewing',
   review: 'Review this PR',
@@ -318,6 +319,8 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
       return awaitingReviewOf(status, facts);
     case 'await-rereview':
       return `Waiting on ${listed(move.reviewers)} to re-review`;
+    case 'await-deferred':
+      return `Re-request waits until ${listed(move.reviewers)}'s deferred comment is closed`;
     case 'await-ci':
       return `${checksDoneOf(facts).done}/${checksDoneOf(facts).total} checks complete`;
     case 'review':
@@ -418,6 +421,8 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
       return 'Waiting on CI';
     case 'await-rereview':
       return `Waiting on ${listed(move.reviewers)} to re-review`;
+    case 'await-deferred':
+      return `Waiting on a deferred comment from ${listed(move.reviewers)}`;
     case 'await-review':
     case 'await-reviewers':
       return move.reviewers.length

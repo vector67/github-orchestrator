@@ -90,6 +90,7 @@ export type Move =
   | 'ready-to-merge'
   | 'await-ci'
   | 'await-rereview'
+  | 'await-deferred'
   | 'await-review'
   | 'not-reviewing'
   | 'review'
@@ -298,6 +299,7 @@ const WAITING: Move[] = [
   'await-author',
   'await-rerequest',
   'await-rereview',
+  'await-deferred',
   'await-ready',
   'rerequest-queued',
 ];
@@ -349,6 +351,7 @@ interface Pick {
 interface Rounds {
   addressing: string[];
   owed: string[];
+  deferred: string[];
   queued: string[];
 }
 
@@ -410,7 +413,7 @@ function roundsOf(
   all: Thread[],
   queued: string[],
 ): Rounds {
-  if (!facts) return { addressing: [], owed: [], queued };
+  if (!facts) return { addressing: [], owed: [], deferred: [], queued };
   const notPending = (login: string) =>
     !facts.pending_reviewers.includes(login);
   const requesters = facts.changes_requested_by.filter(notPending);
@@ -428,7 +431,15 @@ function roundsOf(
       !holdsOpen(login) &&
       (requesters.includes(login) || roundOf(all, login, facts).length > 0),
   );
-  return { addressing: requesters.filter(holdsWorkNow), owed, queued };
+  const addressing = requesters.filter(holdsWorkNow);
+  const deferred = unique([...requesters, ...facts.commented_by]).filter(
+    (login) =>
+      notPending(login) &&
+      !queued.includes(login) &&
+      !addressing.includes(login) &&
+      roundOf(all, login, facts).some((one) => one.state === 'deferred'),
+  );
+  return { addressing, owed, deferred, queued };
 }
 
 export type Closing = Decision | 'reply';
@@ -859,6 +870,9 @@ function ofAuthor(facts: PrFacts, rounds: Rounds): Pick {
   if (behindMain(facts)) return { move: 'rebase' };
   if (rounds.queued.length) {
     return { move: 'rerequest-queued', reviewers: rounds.queued };
+  }
+  if (rounds.deferred.length) {
+    return { move: 'await-deferred', reviewers: rounds.deferred };
   }
   if (facts.merge_state === 'clean') {
     return { move: facts.draft ? 'mark-ready-for-review' : 'ready-to-merge' };
