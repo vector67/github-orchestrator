@@ -37,7 +37,7 @@ qualifies when all of these hold:
 Any action on the thread that would leave it closed opens the prompt:
 
 - Accept (whatever it lands: a commit, a reply or a ticket), Reply and mark
-  done, Resolve, Mark done, Reject and Defer, always;
+  done, Resolve, Mark done and Reject, always;
 - Confirm (either form) on a thread an agent placed as assumed done, always;
 - Move, when it moves the thread to Their move (`waiting`) or Not my
   conversation (`not-mine`); a move to Needs a fix or My move leaves it open;
@@ -47,15 +47,21 @@ Any action on the thread that would leave it closed opens the prompt:
   `queued` or `working`), and the front end reads the same condition from
   the thread's `state` and `reopened`.
 
-A deferred or rejected comment counts as addressed.
+A rejected comment counts as addressed. A deferred one does not, whatever
+wakes it: it still needs work once its condition is met. Defer never opens
+the prompt, and while any comment in a reviewer's round is deferred, closing
+their others does not open it, the Dashboard owes them no re-request, and a
+queued re-request is not sent. A deferred comment alone does not make the
+next move "Address changes from <reviewer>" either: there is nothing to do
+until it wakes.
 
 A reviewer's comments are their **round**: every board thread they opened
 since they were last asked to review (section "Data"), the review body
 included as one comment. Threads in the record states `draft`, `enrolled`,
 `discarded`, `not_mine` and `removed` are not part of a round.
 
-A thread is **open** unless its state is `done`, `waiting`, `assumed-done`,
-`not-mine` or `deferred`.
+A thread is **open** unless its state is `done`, `waiting`, `assumed-done` or
+`not-mine`.
 
 ### 2. The dialog
 
@@ -70,7 +76,7 @@ The hold warning's shape (`frontend/app/components/hold-warning.gts`): a
 - A summary line counting outcomes across the round, the comment being
   closed included: "This is the last one open: 2 pushed, 1 replied, 1 marked
   done, 2 rejected". Each comment counts once, under the first that applies:
-  rejected, deferred, pushed, replied, resolved, marked done. Zero counts are
+  rejected, pushed, replied, resolved, marked done. Zero counts are
   left out.
 - A bold flag line, only when comments were rejected or closed with no reply
   and no push: "You rejected 2 comments, and 2 have no reply and no push. Open
@@ -84,12 +90,12 @@ The hold warning's shape (`frontend/app/components/hold-warning.gts`): a
   - what it said: the thread's gist, or the first line of the reviewer's
     comment where there is no gist;
   - outcome chips: pushed, replied, ticket filed, resolved, marked done,
-    rejected, deferred (as many as apply);
+    rejected (as many as apply);
   - a closed "History" row that opens to the full timeline, oldest first,
     each entry with its time: reviewer commented, agent proposed a fix, sent
     back for rework (with the note), accepted and pushed (with the short
-    sha), replied, resolved, marked done, rejected, deferred (with what wakes
-    it).
+    sha), replied, resolved, marked done, rejected, deferred earlier (with
+    what woke it).
 - Buttons: primary "<decision> and re-request", secondary "<decision> only".
   The label follows the thread's own decision: "Mark done and re-request",
   "Resolve and re-request", "Accept and re-request", "Confirm and
@@ -106,7 +112,7 @@ The closing decision is not posted until a button is picked.
 - × or Escape: cancel the whole click. Nothing is posted and the thread
   stays open.
 
-A decision that opens its own dialog first (Accept, Resolve, Reject, Defer,
+A decision that opens its own dialog first (Accept, Resolve, Reject,
 Reply and mark done, Confirm with its resolve choices) shows that dialog,
 then this one, with what was gathered kept until a button is picked. A plain
 Reply keeps the typed words in the reply box until a button is picked, and
@@ -324,8 +330,8 @@ in `frontend/app/data/summaries.ts`.
   the badge, the counts, the flag and the list, the closing thread's outcome
   taken from the action (Accept of a commit is pushed, of a reply or ticket
   replied; a written reply, a plain Reply included, is replied; Resolve
-  resolved; Mark done, Confirm and Move marked done; Reject rejected; Defer
-  deferred). **Done** (`d00168ee`, and the commit that records this for
+  resolved; Mark done, Confirm and Move marked done; Reject rejected).
+  **Done** (`d00168ee`, and the commit that records this for
   the list).
 
 - **Next move.** `ofAuthor` gains two moves and narrows one:

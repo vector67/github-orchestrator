@@ -12,8 +12,7 @@ from github_orchestrator.conversation import (
 
 OUTSIDE_A_ROUND = frozenset({"draft", "enrolled", "discarded", "not_mine", "removed", "unreadable"})
 CLOSED = frozenset({ConversationState.DONE, ConversationState.WAITING,
-                    ConversationState.ASSUMED_DONE, ConversationState.NOT_MINE,
-                    ConversationState.DEFERRED})
+                    ConversationState.ASSUMED_DONE, ConversationState.NOT_MINE})
 ACCEPT_UNDER_WAY = frozenset({OperationState.PENDING, OperationState.RUNNING,
                               OperationState.REQUEUED})
 

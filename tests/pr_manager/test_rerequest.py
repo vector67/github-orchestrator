@@ -92,6 +92,8 @@ WAITING = ((), ("carol",))
                  WAITING, id="facts polled before the last accept settled wait"),
     pytest.param(Case(threads=(SETTLED, _thread("t2", state="open"))), WAITING,
                  id="an open thread from the reviewer waits"),
+    pytest.param(Case(threads=(SETTLED, _thread("t2", state="deferred"))), WAITING,
+                 id="a deferred thread from the reviewer waits"),
     pytest.param(Case(threads=(SETTLED, _thread("t2", by="dave", state="open"))), ASKED,
                  id="an open thread from someone else does not hold the reviewer"),
     pytest.param(Case(polls=(Poll(pending=("carol",), at=ASKED_AT), Poll()),
