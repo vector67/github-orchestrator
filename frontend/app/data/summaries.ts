@@ -183,7 +183,6 @@ const CLOSED: ConversationState[] = [
   'waiting',
   'assumed-done',
   'not-mine',
-  'deferred',
 ];
 
 function read(one: Thread): boolean {
@@ -417,6 +416,10 @@ function roundsOf(
   const requesters = facts.changes_requested_by.filter(notPending);
   const holdsOpen = (login: string) =>
     roundOf(all, login, facts).some(stillOpen);
+  const holdsWorkNow = (login: string) =>
+    roundOf(all, login, facts).some(
+      (one) => stillOpen(one) && one.state !== 'deferred',
+    );
   const owed = unique([...requesters, ...facts.commented_by]).filter(
     (login) =>
       notPending(login) &&
@@ -425,7 +428,7 @@ function roundsOf(
       !holdsOpen(login) &&
       (requesters.includes(login) || roundOf(all, login, facts).length > 0),
   );
-  return { addressing: requesters.filter(holdsOpen), owed, queued };
+  return { addressing: requesters.filter(holdsWorkNow), owed, queued };
 }
 
 export type Closing = Decision | 'reply';
@@ -436,7 +439,6 @@ const ALWAYS_CLOSES: Closing[] = [
   'resolve',
   'mark-done',
   'reject',
-  'defer',
   'confirm',
   'confirm-resolve',
 ];
@@ -451,7 +453,6 @@ function closes(action: Closing, gathered: Gathered, one: Thread): boolean {
 
 export type Outcome =
   | 'rejected'
-  | 'deferred'
   | 'pushed'
   | 'replied'
   | 'ticket filed'
@@ -460,7 +461,6 @@ export type Outcome =
 
 const FIRST_THAT_APPLIES: Outcome[] = [
   'rejected',
-  'deferred',
   'pushed',
   'replied',
   'resolved',
@@ -473,7 +473,6 @@ const COUNTED_IN_ORDER: Outcome[] = [
   'resolved',
   'marked done',
   'rejected',
-  'deferred',
 ];
 
 const CHIPS_IN_ORDER: Outcome[] = [
@@ -483,7 +482,6 @@ const CHIPS_IN_ORDER: Outcome[] = [
   'resolved',
   'marked done',
   'rejected',
-  'deferred',
 ];
 
 const KEPT_WHEN_CLOSING: Outcome[] = [
@@ -658,22 +656,16 @@ function outcomesOf(
   author: string | null,
 ): Outcome[] {
   const rejected = one.record_state === 'rejected';
-  const deferred = one.state === 'deferred';
   const resolved = one.github_resolved === true;
   const holds: [Outcome, boolean][] = [
     ['rejected', rejected],
-    ['deferred', deferred],
     ['pushed', acceptedOn(one, operations, 'commit')],
     ['replied', repliedOn(one, author)],
     ['ticket filed', acceptedOn(one, operations, 'ticket')],
     ['resolved', resolved],
     [
       'marked done',
-      !stillOpen(one) &&
-        !rejected &&
-        !deferred &&
-        !resolved &&
-        !acceptedOn(one, operations),
+      !stillOpen(one) && !rejected && !resolved && !acceptedOn(one, operations),
     ],
   ];
   return holds.filter(([, held]) => held).map(([outcome]) => outcome);
@@ -694,7 +686,6 @@ function closedAs(
 ): Outcome[] {
   const holds: [Outcome, boolean][] = [
     ['rejected', action === 'reject'],
-    ['deferred', action === 'defer'],
     ['pushed', action === 'approve' && lands === 'commit'],
     [
       'replied',

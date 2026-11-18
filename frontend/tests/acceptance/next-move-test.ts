@@ -776,7 +776,6 @@ module('Acceptance | next move', function (hooks) {
   const ALL_CLOSED: ThreadRow[] = [
     carols('PRRT_1', 'done', 'resolved'),
     carols('PRRT_2', 'waiting', 'waiting_on_reviewer'),
-    carols('PRRT_3', 'deferred', 'deferred'),
   ];
 
   const ROUNDS: [string, DashboardOver, string[]][] = [
@@ -792,6 +791,22 @@ module('Acceptance | next move', function (hooks) {
       'changes requested, every thread closed',
       { facts: CAROL_ASKED_FOR_CHANGES, threads: ALL_CLOSED },
       ['rerequest-review', 'needs-you', 'Re-request review from carol'],
+    ],
+    [
+      'changes requested, every thread closed but one deferred',
+      {
+        facts: CAROL_ASKED_FOR_CHANGES,
+        threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
+    ],
+    [
+      'commented, every thread closed but one deferred',
+      {
+        facts: CAROL_COMMENTED,
+        threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
+      },
+      ['request-reviewers', 'needs-you', 'Request reviewers'],
     ],
     [
       'changes requested with no comment at all',

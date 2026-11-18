@@ -172,7 +172,6 @@ module('Acceptance | re-request review', function (hooks) {
       'Reject and re-request',
       { reply: 'Fixed.', delete_comment: false },
     ],
-    ['defer', {}, 'Defer and re-request', { until: 'manual' }],
     [
       'reply-and-mark-done',
       { kind: 'issue' },
@@ -206,6 +205,18 @@ module('Acceptance | re-request review', function (hooks) {
       assert.deepEqual(board().posted[0]!.body, body);
     });
   }
+
+  test("Defer on carol's last open thread posts at once with no prompt", async function (assert) {
+    board().conversations = [carols('proposed')];
+    await visit('/pr/o/r/7/conversations/PRRT_c1');
+    await click('[data-test-decision="defer"]');
+
+    await click('[data-test-dialog-submit]');
+
+    assert.dom('[data-test-rerequest-prompt]').doesNotExist();
+    assert.deepEqual(verbs(), ['defer']);
+    assert.deepEqual(board().posted[0]!.body, { until: 'manual' });
+  });
 
   test('× on the prompt after a dialog posts nothing and keeps the words typed into it', async function (assert) {
     board().conversations = [carols('proposed')];
@@ -284,6 +295,19 @@ module('Acceptance | re-request review', function (hooks) {
       () => [
         carols('proposed'),
         carols('proposed', { key: 'PRRT_c2', github_node_id: 'PRRT_c2' }),
+      ],
+    ],
+    [
+      'another thread from carol is deferred',
+      { facts: CAROL_COMMENTED },
+      () => [
+        carols('proposed'),
+        carols('proposed', {
+          key: 'PRRT_c2',
+          github_node_id: 'PRRT_c2',
+          state: 'deferred',
+          record_state: 'deferred',
+        }),
       ],
     ],
     [
@@ -463,11 +487,6 @@ module('Acceptance | re-request review', function (hooks) {
 
   const REJECTED = closed('PRRT_c5', { record_state: 'rejected' });
 
-  const DEFERRED = closed('PRRT_c6', {
-    state: 'deferred',
-    record_state: 'deferred',
-  });
-
   async function markedDone(others: Conversation[]): Promise<void> {
     board().conversations = [carols('proposed'), ...others];
     await visit('/pr/o/r/7/conversations/PRRT_c1');
@@ -494,12 +513,12 @@ module('Acceptance | re-request review', function (hooks) {
   });
 
   test('the summary line counts the closing comment with the rest of the round, each once', async function (assert) {
-    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, DEFERRED]);
+    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED]);
 
     assert
       .dom('[data-test-rerequest-summary]')
       .hasText(
-        'This is the last one open: 1 pushed, 1 replied, 1 resolved, 1 marked done, 1 rejected, 1 deferred',
+        'This is the last one open: 1 pushed, 1 replied, 1 resolved, 1 marked done, 1 rejected',
       );
   });
 
@@ -512,12 +531,12 @@ module('Acceptance | re-request review', function (hooks) {
   });
 
   test('the flag line names rejected comments and those with no reply and no push', async function (assert) {
-    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, DEFERRED]);
+    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED]);
 
     assert
       .dom('[data-test-rerequest-flag]')
       .hasText(
-        'You rejected 1 comment, and 3 have no reply and no push. Open the list to see them before carol does.',
+        'You rejected 1 comment, and 2 have no reply and no push. Open the list to see them before carol does.',
       );
   });
 
@@ -672,7 +691,7 @@ module('Acceptance | re-request review', function (hooks) {
         }),
       ],
     });
-    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, DEFERRED, filed]);
+    await markedDone([PUSHED, REPLIED, RESOLVED, REJECTED, filed]);
     await click('[data-test-rerequest-comments]');
 
     assert.deepEqual(chipsOf('PRRT_c1'), ['marked done']);
@@ -680,7 +699,6 @@ module('Acceptance | re-request review', function (hooks) {
     assert.deepEqual(chipsOf('PRRT_c3'), ['replied', 'resolved']);
     assert.deepEqual(chipsOf('PRRT_c4'), ['resolved']);
     assert.deepEqual(chipsOf('PRRT_c5'), ['rejected']);
-    assert.deepEqual(chipsOf('PRRT_c6'), ['deferred']);
     assert.deepEqual(chipsOf('PRRT_c7'), ['ticket filed']);
   });
 
@@ -784,10 +802,8 @@ module('Acceptance | re-request review', function (hooks) {
     ]);
   });
 
-  test('History says a comment was rejected, resolved, or deferred and what wakes it', async function (assert) {
+  test('History says a comment was rejected, resolved, or deferred and what woke it', async function (assert) {
     const deferred = closed('PRRT_c6', {
-      state: 'deferred',
-      record_state: 'deferred',
       operations: [
         summary({ id: 'PRRT_c6.1', kind: 'defer', settled_at: AT(11) }),
       ],
@@ -852,6 +868,17 @@ module('Acceptance | re-request review', function (hooks) {
     await onTheDashboard({
       facts: { ...CAROL_COMMENTED, pending_reviewers: ['carol'] },
     });
+
+    assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
+  });
+
+  test('the Dashboard offers no "Re-request review" while a thread from carol is deferred', async function (assert) {
+    serve({ facts: CAROL_COMMENTED });
+    board().conversations = [
+      closed('PRRT_c1', {}),
+      closed('PRRT_c2', { state: 'deferred', record_state: 'deferred' }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
 
     assert.dom('[data-test-control="rerequest-review"]').doesNotExist();
   });
