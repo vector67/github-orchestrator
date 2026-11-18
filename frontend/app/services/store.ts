@@ -2279,8 +2279,34 @@ export default class StoreService extends Service {
     this.diffs = { ...this.diffs, [key]: diff };
   }
 
-  private drawnInto({ repo, number }: Numbered, dashboard: Dashboard): void {
-    const { facts, manager, threads, listed_at, pr } = dashboard;
+  private readonly pagePolls: Record<string, string | null> = {};
+
+  private factsHeard(
+    key: string,
+    facts: Dashboard['facts'],
+    fromTheHub: boolean,
+  ): Dashboard['facts'] {
+    if (!facts) return facts;
+    if (!fromTheHub) {
+      this.pagePolls[key] = facts.polled_at;
+      return facts;
+    }
+    return key in this.pagePolls && this.pagePolls[key] === facts.polled_at
+      ? null
+      : facts;
+  }
+
+  private drawnInto(
+    { repo, number }: Numbered,
+    dashboard: Dashboard,
+    fromTheHub = false,
+  ): void {
+    const { manager, threads, listed_at, pr } = dashboard;
+    const facts = this.factsHeard(
+      keyOf(repo, number),
+      dashboard.facts,
+      fromTheHub,
+    );
     this.mergeThreads(keyOf(repo, number), threads, listed_at, false);
     const drawn: Drawn = {
       polled: dashboard.polled,
@@ -2367,7 +2393,7 @@ export default class StoreService extends Service {
         one.repo.localeCompare(other.repo) || one.number - other.number,
     );
     for (const row of rows) {
-      this.drawnInto(row, row.dashboard);
+      this.drawnInto(row, row.dashboard, true);
       this.changePr(row.repo, row.number, (pr) => ({
         ...pr,
         board_url: row.board_url,

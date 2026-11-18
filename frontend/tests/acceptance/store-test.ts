@@ -8,6 +8,7 @@ import {
   waitUntil,
 } from '@ember/test-helpers';
 import {
+  check,
   dashboard,
   factsFor,
   heldPr,
@@ -313,6 +314,62 @@ module('Acceptance | one store', function (hooks) {
     await settled();
 
     assert.strictEqual(badge(), '2 ready');
+  });
+
+  const FAILING = {
+    is_author: true,
+    ci_status: 'failing' as const,
+    checks: [check('Vercel', 'failed'), check('tests')],
+  };
+  const VERCEL_IGNORED = {
+    ...FAILING,
+    ci_status: 'passing' as const,
+    checks: [{ ...check('Vercel', 'failed'), ignored: true }, check('tests')],
+  };
+
+  async function aHubRowDrawnBeforeTheIgnoreLandsAfterIt(
+    hub: object,
+  ): Promise<void> {
+    onTheHub({});
+    board().manager = dashboard({ facts: FAILING });
+    await visit('/');
+    await visit('/pr/o/r/7/dashboard');
+    board().manager = dashboard({ facts: hub });
+    const asked = board().askedFor(/\/api\/pull-requests$/).length;
+    const land = board().answerLater(/\/api\/pull-requests$/);
+    const reading = clock().tick(LIST);
+    await waitUntil(
+      () => board().askedFor(/\/api\/pull-requests$/).length > asked,
+    );
+    board().manager = dashboard({ facts: VERCEL_IGNORED });
+    board().streamed();
+    await waitUntil(
+      () =>
+        document
+          .querySelector('[data-test-status="ci"] [data-test-value]')
+          ?.textContent?.trim() === 'passing',
+    );
+    land();
+    await reading;
+    await settled();
+  }
+
+  test('a hub row drawn before an ignore, from the same poll, leaves the ignore the page heard', async function (assert) {
+    await aHubRowDrawnBeforeTheIgnoreLandsAfterIt({
+      ...FAILING,
+      pending_reviewers: ['dave'],
+    });
+
+    assert.dom('[data-test-status="ci"] [data-test-value]').hasText('passing');
+  });
+
+  test('a hub row from a later poll replaces the facts the page heard', async function (assert) {
+    await aHubRowDrawnBeforeTheIgnoreLandsAfterIt({
+      ...FAILING,
+      polled_at: '2026-09-12T08:31:00Z',
+    });
+
+    assert.dom('[data-test-status="ci"] [data-test-value]').hasText('failing');
   });
 
   const READ = '2026-09-12T11:00:00Z';

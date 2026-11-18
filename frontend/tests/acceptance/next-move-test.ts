@@ -329,7 +329,13 @@ module('Acceptance | next move', function (hooks) {
 
   test('a draft with nothing to decide is parked with the rest of the list muted', async function (assert) {
     const undrafted = await onTheDashboard({ facts: CI_FAILING });
-    const drafted = await seen({ facts: { ...CI_FAILING, draft: true } });
+    const drafted = await seen({
+      facts: {
+        ...CI_FAILING,
+        draft: true,
+        polled_at: '2026-09-12T08:31:00Z',
+      },
+    });
 
     assert.deepEqual(
       [drafted.move, drafted.group, drafted.muted],

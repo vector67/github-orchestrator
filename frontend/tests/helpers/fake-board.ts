@@ -1030,7 +1030,8 @@ export class FakeBoard {
     ];
   }
 
-  private gates: { pattern: RegExp; open: Promise<void> }[] = [];
+  private gates: { pattern: RegExp; open: Promise<void>; drawn: boolean }[] =
+    [];
   private streams: Streaming[] = [];
 
   get openStreams(): OpenStream[] {
@@ -1162,11 +1163,19 @@ export class FakeBoard {
   private releases: (() => void)[] = [];
 
   hold(pattern: RegExp): () => void {
+    return this.gate(pattern, false);
+  }
+
+  answerLater(pattern: RegExp): () => void {
+    return this.gate(pattern, true);
+  }
+
+  private gate(pattern: RegExp, drawn: boolean): () => void {
     let release = () => {};
     const open = new Promise<void>((resolve) => {
       release = resolve;
     });
-    this.gates.push({ pattern, open });
+    this.gates.push({ pattern, open, drawn });
     const opened = () => {
       this.gates = this.gates.filter((one) => one.open !== open);
       release();
@@ -1184,9 +1193,11 @@ export class FakeBoard {
   fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = input instanceof Request ? input.url : String(input);
     const gate = this.gates.find((one) => one.pattern.test(url));
-    const answering = gate
-      ? gate.open.then(() => this.answer(input, init))
-      : this.answer(input, init);
+    const answering = !gate
+      ? this.answer(input, init)
+      : gate.drawn
+        ? ((drawn) => gate.open.then(() => drawn))(this.answer(input, init))
+        : gate.open.then(() => this.answer(input, init));
     const signal = init?.signal;
     const answered = signal
       ? Promise.race([answering, abortedBy(signal)])
