@@ -286,6 +286,36 @@ def test_stopping_ignoring_counts_every_check_on_that_pr_again_repo_ignores_incl
     assert switches.ci_ignores.ignored(a_pr(8, REPO), "abc") == IgnoredChecks(frozenset({"lint"}))
 
 
+def test_counting_one_check_again_drops_it_from_every_scope_and_keeps_the_rest(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"Vercel", "lint"})), IgnoreFor.THIS_PR, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PUSH, "abc")
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_REPO, "abc")
+
+    switches.ci_ignores.count_again(a_pr(7, REPO), frozenset({"Vercel"}))
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc") == IgnoredChecks(frozenset({"lint"}))
+    assert switches.ci_ignores.ignored(a_pr(8, REPO), "abc") == IgnoredChecks()
+
+
+def test_counting_one_check_again_while_every_check_is_ignored_spares_only_that_one(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(every=True), IgnoreFor.THIS_PR, "abc")
+
+    switches.ci_ignores.count_again(a_pr(7, REPO), frozenset({"Vercel"}))
+
+    ignored = switches.ci_ignores.ignored(a_pr(7, REPO), "abc")
+    assert not ignored.covers("Vercel")
+    assert ignored.covers("added next week")
+
+
+def test_a_spared_check_ignored_again_is_ignored(switches):
+    switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(every=True), IgnoreFor.THIS_REPO, "abc")
+    switches.ci_ignores.count_again(a_pr(7, REPO), frozenset({"Vercel"}))
+
+    switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
+
+    assert switches.ci_ignores.ignored(a_pr(7, REPO), "abc").covers("Vercel")
+
+
 def test_forgetting_a_pr_drops_its_own_ignores_and_keeps_the_repos(switches):
     switches.ci_ignores.ignore(a_pr(7, REPO), VERCEL, IgnoreFor.THIS_PR, "abc")
     switches.ci_ignores.ignore(a_pr(7, REPO), IgnoredChecks(frozenset({"e2e"})), IgnoreFor.THIS_REPO, "abc")

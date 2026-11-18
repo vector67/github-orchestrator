@@ -446,7 +446,18 @@ def test_ignoring_ci_hands_the_checks_and_how_long_to_the_manager():
         "/api/manager:ignore-ci", json={"checks": ["Vercel"], "every": False, "for": "this-pr"})
 
     assert answer.status_code == 202
-    assert panel.ci_ignored == [(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR)]
+    assert panel.ci_ignored == [(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR, frozenset())]
+
+
+def test_an_ignore_ci_may_only_count_checks_again():
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post(
+        "/api/manager:ignore-ci",
+        json={"checks": [], "every": False, "for": "this-pr", "count_again": ["Vercel"]})
+
+    assert answer.status_code == 202
+    assert panel.ci_ignored == [(IgnoredChecks(), IgnoreFor.THIS_PR, frozenset({"Vercel"}))]
 
 
 @pytest.mark.parametrize("body", [

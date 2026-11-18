@@ -223,11 +223,12 @@ class JsonFileRerequests:
 
 
 def _checks_from(fields: dict[str, Any]) -> IgnoredChecks:
-    return IgnoredChecks(frozenset(fields["names"]), bool(fields["every"]))
+    return IgnoredChecks(frozenset(fields["names"]), bool(fields["every"]),
+                         frozenset(fields.get("spared", [])))
 
 
 def _fields_of(checks: IgnoredChecks) -> dict[str, Any]:
-    return {"names": sorted(checks.names), "every": checks.every}
+    return {"names": sorted(checks.names), "every": checks.every, "spared": sorted(checks.spared)}
 
 
 class JsonFileCiIgnores:
@@ -263,6 +264,20 @@ class JsonFileCiIgnores:
 
     def stop_ignoring(self, pr: Pr) -> None:
         _remove(pr, self._pr_path(pr), self._repo_path(pr.repo))
+
+    def count_again(self, pr: Pr, names: frozenset[str]) -> None:
+        kept = self._read(self._pr_path(pr))
+        if "this_push" in kept:
+            kept["this_push"] = {**kept["this_push"],
+                                 **_fields_of(_checks_from(kept["this_push"]).without(names))}
+        if "this_pr" in kept:
+            kept["this_pr"] = _fields_of(_checks_from(kept["this_pr"]).without(names))
+        if kept:
+            write_atomically(self._pr_path(pr), json.dumps(kept).encode())
+        repo = self._read(self._repo_path(pr.repo))
+        if repo:
+            write_atomically(self._repo_path(pr.repo),
+                             json.dumps(_fields_of(_checks_from(repo).without(names))).encode())
 
     def forget(self, pr: Pr) -> bool:
         return _remove(pr, self._pr_path(pr))

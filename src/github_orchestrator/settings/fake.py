@@ -123,6 +123,15 @@ class FakeCiIgnores:
         self.forget(pr)
         self._this_repo.pop(pr.repo, None)
 
+    def count_again(self, pr: Pr, names: frozenset[str]) -> None:
+        if pr in self._this_push:
+            sha, pushed = self._this_push[pr]
+            self._this_push[pr] = (sha, pushed.without(names))
+        if pr in self._this_pr:
+            self._this_pr[pr] = self._this_pr[pr].without(names)
+        if pr.repo in self._this_repo:
+            self._this_repo[pr.repo] = self._this_repo[pr.repo].without(names)
+
     def forget(self, pr: Pr) -> bool:
         self._this_push.pop(pr, None)
         self._this_pr.pop(pr, None)

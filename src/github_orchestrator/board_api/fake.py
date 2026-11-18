@@ -74,7 +74,7 @@ class FakeManagerPanel:
     marked_ready: int = 0
     converted_to_draft: int = 0
     assigned: list[tuple[tuple[str, ...], str | None]] = field(default_factory=list)
-    ci_ignored: list[tuple[IgnoredChecks, IgnoreFor]] = field(default_factory=list)
+    ci_ignored: list[tuple[IgnoredChecks, IgnoreFor, frozenset[str]]] = field(default_factory=list)
     stopped_ignoring_ci: int = 0
     taken_over: int = 0
     handed_back: int = 0
@@ -164,9 +164,10 @@ class FakeManagerPanel:
             self._unqueue(reviewer)
         return self.refusal
 
-    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> ManagerRefusal | None:
+    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor, *,
+                  count_again: frozenset[str]) -> ManagerRefusal | None:
         if self.refusal is None:
-            self.ci_ignored.append((checks, ignore_for))
+            self.ci_ignored.append((checks, ignore_for, count_again))
         return self.refusal
 
     def stop_ignoring_ci(self) -> ManagerRefusal | None:

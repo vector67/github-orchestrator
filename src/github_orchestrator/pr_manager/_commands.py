@@ -136,7 +136,8 @@ class ManagerCommands:
                 self._send_rerequest_now(fields["reviewer"])
             case Command.IGNORE_CI:
                 self._ignore_ci(IgnoredChecks(frozenset(fields["checks"]), fields["every"]),
-                                IgnoreFor(fields["ignore_for"]))
+                                IgnoreFor(fields["ignore_for"]),
+                                frozenset(fields.get("count_again", [])))
             case Command.STOP_IGNORING_CI:
                 self._ci_ignores.stop_ignoring(self._config.pr)
                 log.info("%s: every check counts again", self._config.pr)
@@ -259,8 +260,14 @@ class ManagerCommands:
             log.info("%s: pushed and green — re-requesting %s's review", pr, login)
             self._ask_again(login)
 
-    def _ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> None:
+    def _ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor,
+                   count_again: frozenset[str]) -> None:
         pr = self._config.pr
+        if count_again:
+            self._ci_ignores.count_again(pr, count_again)
+            log.info("%s: counting %s again", pr, sorted(count_again))
+        if not checks.every and not checks.names:
+            return
         facts = self._change_detection.facts(pr)
         self._ci_ignores.ignore(pr, checks, ignore_for, None if facts is None else facts.head_sha)
         log.info("%s: ignoring %s %s", pr, "every check" if checks.every else sorted(checks.names),

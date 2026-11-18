@@ -1925,10 +1925,15 @@ class IgnoreCiRequest(BaseModel):
         alias="for",
         description="How long: `this-push` until the next push, `this-pr` on every commit "
                     "of this pull request, `this-repo` on every pull request of its repo.")
+    count_again: list[str] = Field(
+        default_factory=list,
+        description="The names of ignored checks to count again, dropped from every ignore "
+                    "that reaches this pull request, its repo's included. Under an ignore of "
+                    "every check, only these are counted again.")
 
     @model_validator(mode="after")
     def _names_something(self) -> Self:
-        if not self.every and not self.checks:
+        if not self.every and not self.checks and not self.count_again:
             raise ValueError("name at least one check, or ignore every check")
         return self
 

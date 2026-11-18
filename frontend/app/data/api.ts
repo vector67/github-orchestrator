@@ -612,6 +612,7 @@ export interface IgnoreCiRequest {
   checks: string[];
   every: boolean;
   for: IgnoreFor;
+  count_again?: string[];
 }
 
 export type IgnoreFor = 'this-push' | 'this-pr' | 'this-repo';

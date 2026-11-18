@@ -31,7 +31,7 @@ const SQUARE: Record<IgnorableCheck['state'], string> = {
 export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature> {
   @tracked every = false;
   @tracked ticked: string[] = this.args.checks
-    .filter((one) => one.ticked)
+    .filter((one) => one.ticked || one.ignored)
     .map((one) => one.name);
   @tracked ignoreFor: IgnoreFor = 'this-push';
 
@@ -40,7 +40,7 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
   square = (one: IgnorableCheck): string => SQUARE[one.state];
 
   isTicked = (one: IgnorableCheck): boolean =>
-    one.ignored || this.every || this.ticked.includes(one.name);
+    this.every || this.ticked.includes(one.name);
 
   get anyIgnored(): boolean {
     return this.args.checks.some((one) => one.ignored);
@@ -48,8 +48,24 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
 
   picked = (ignoreFor: IgnoreFor): boolean => this.ignoreFor === ignoreFor;
 
-  get nothingTicked(): boolean {
-    return !this.every && this.ticked.length === 0;
+  get added(): string[] {
+    return this.args.checks
+      .filter((one) => !one.ignored && this.ticked.includes(one.name))
+      .map((one) => one.name);
+  }
+
+  get countAgain(): string[] {
+    return this.every
+      ? []
+      : this.args.checks
+          .filter((one) => one.ignored && !this.ticked.includes(one.name))
+          .map((one) => one.name);
+  }
+
+  get nothingToDo(): boolean {
+    return (
+      !this.every && this.added.length === 0 && this.countAgain.length === 0
+    );
   }
 
   tickEvery = (): void => {
@@ -72,15 +88,12 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
 
   ignore = (event: Event): void => {
     event.preventDefault();
-    if (this.nothingTicked) return;
+    if (this.nothingToDo) return;
     this.args.ignore({
-      checks: this.every
-        ? []
-        : this.args.checks
-            .map((one) => one.name)
-            .filter((name) => this.ticked.includes(name)),
+      checks: this.every ? [] : this.added,
       every: this.every,
       for: this.ignoreFor,
+      count_again: this.countAgain,
     });
   };
 
@@ -123,7 +136,6 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
                 type="checkbox"
                 class="checkbox"
                 checked={{this.isTicked one}}
-                disabled={{one.ignored}}
                 {{on "change" (fn this.tick one.name)}}
               />
               <i class={{this.square one}}></i>
@@ -151,8 +163,8 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
             type="submit"
             class="primary"
             data-test-ignore-ci-submit
-            disabled={{this.nothingTicked}}
-          >Ignore</button>
+            disabled={{this.nothingToDo}}
+          >{{if this.anyIgnored "Save" "Ignore"}}</button>
           {{#if this.anyIgnored}}
             <button
               type="button"

@@ -118,9 +118,11 @@ class FilePanel(ManagerPanel, ManagerWorktree):
     def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None:
         return self._hand(Command.SEND_REREQUEST_NOW, {"reviewer": reviewer})
 
-    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> ManagerRefusal | None:
+    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor, *,
+                  count_again: frozenset[str]) -> ManagerRefusal | None:
         return self._hand(Command.IGNORE_CI, {"checks": sorted(checks.names), "every": checks.every,
-                                              "ignore_for": ignore_for.value})
+                                              "ignore_for": ignore_for.value,
+                                              "count_again": sorted(count_again)})
 
     def stop_ignoring_ci(self) -> ManagerRefusal | None:
         return self._hand(Command.STOP_IGNORING_CI)

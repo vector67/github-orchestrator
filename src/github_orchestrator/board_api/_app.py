@@ -992,10 +992,11 @@ def ignore_ci(board: Serving, asked: IgnoreCiRequest) -> Response:
     checks show `ignored` in `facts.checks`, count for nothing in
     `facts.ci_status` and ask for no CI fix. `this-push` lasts until the head
     moves on from the one the pull request had when the manager carried it out.
-    Ignores add up.
+    Ignores add up. `count_again` is carried out first.
     """
     return _handed_over(board, board.manager.ignore_ci(
-        IgnoredChecks(frozenset(asked.checks), asked.every), asked.ignore_for))
+        IgnoredChecks(frozenset(asked.checks), asked.every), asked.ignore_for,
+        count_again=frozenset(asked.count_again)))
 
 
 @writes.post("/manager:stop-ignoring-ci", status_code=202, tags=["manager"],

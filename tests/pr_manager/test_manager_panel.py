@@ -976,7 +976,8 @@ def test_ignoring_a_failing_check_from_the_board_counts_ci_as_passing_at_once(se
     seen = []
     _on_the_browser_front(
         settings, tmp_path,
-        lambda: board.panel.ignore_ci(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR),
+        lambda: board.panel.ignore_ci(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR,
+                                      count_again=frozenset()),
         lambda: seen.append((board.panel.dashboard().ci,
                              [(c.name, c.ignored) for c in board.panel.dashboard().checks])),
         board=board)
@@ -989,11 +990,26 @@ def test_ignoring_a_check_just_this_time_ties_it_to_the_head_the_board_was_showi
     board = ServerPanel()
     _on_the_browser_front(
         settings, tmp_path,
-        lambda: board.panel.ignore_ci(IgnoredChecks(every=True), IgnoreFor.THIS_PUSH),
+        lambda: board.panel.ignore_ci(IgnoredChecks(every=True), IgnoreFor.THIS_PUSH, count_again=frozenset()),
         lambda: None, board=board)
     ignores = disk_ci_ignores(settings.data_dir)
     assert ignores.ignored(THE_PR, "sha1") == IgnoredChecks(every=True)
     assert ignores.ignored(THE_PR, "sha2") == IgnoredChecks()
+
+
+def test_counting_one_check_again_from_the_board_counts_it_as_failing_and_ignores_the_rest(settings, tmp_path):
+    seed_state(settings, checks=VERCEL_BLOCKED, head_sha="sha1")
+    disk_ci_ignores(settings.data_dir).ignore(
+        THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_REPO, "sha1")
+    board = ServerPanel()
+    seen = []
+    _on_the_browser_front(
+        settings, tmp_path,
+        lambda: board.panel.ignore_ci(IgnoredChecks(frozenset({"tests"})), IgnoreFor.THIS_PR,
+                                      count_again=frozenset({"Vercel"})),
+        lambda: seen.append([(c.name, c.ignored) for c in board.panel.dashboard().checks]),
+        board=board)
+    assert seen == [[("Vercel", False), ("tests", True)]]
 
 
 def test_stopping_ignoring_counts_the_failing_check_again(settings, tmp_path):

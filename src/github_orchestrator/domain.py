@@ -261,12 +261,26 @@ class IgnoreFor(StrEnum):
 class IgnoredChecks:
     names: frozenset[str] = frozenset()
     every: bool = False
+    spared: frozenset[str] = frozenset()
 
     def covers(self, name: str) -> bool:
-        return self.every or name in self.names
+        return name in self.names or (self.every and name not in self.spared)
 
     def __or__(self, other: IgnoredChecks) -> IgnoredChecks:
-        return IgnoredChecks(self.names | other.names, self.every or other.every)
+        names = self.names | other.names
+        if self.every and other.every:
+            spared = self.spared & other.spared
+        elif self.every:
+            spared = self.spared
+        elif other.every:
+            spared = other.spared
+        else:
+            spared = frozenset()
+        return IgnoredChecks(names, self.every or other.every, spared - names)
+
+    def without(self, names: frozenset[str]) -> IgnoredChecks:
+        return IgnoredChecks(self.names - names, self.every,
+                             self.spared | names if self.every else frozenset())
 
 
 class HubState(StrEnum):

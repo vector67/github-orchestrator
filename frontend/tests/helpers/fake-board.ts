@@ -2316,7 +2316,10 @@ export class FakeBoard {
     if (this.manager && verb === 'ignore-ci') {
       const asked = body as IgnoreCiRequest;
       this.countChecks(
-        (one) => one.ignored || asked.every || asked.checks.includes(one.name),
+        (one) =>
+          asked.every ||
+          asked.checks.includes(one.name) ||
+          (one.ignored && !asked.count_again?.includes(one.name)),
       );
     }
     if (this.manager && verb === 'stop-ignoring-ci') {
