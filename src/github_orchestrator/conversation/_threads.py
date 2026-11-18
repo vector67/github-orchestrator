@@ -265,7 +265,8 @@ class _Pr:
                                     tracker_project=config.tracker_project,
                                     pull_requests=self._pull_requests,
                                     pr_skill=config.pr_skill, draft=config.draft,
-                                    pages=self._github)
+                                    pages=self._github,
+                                    others=lambda: self.ports.records.list())
         self.runs = Runs()
         self.ports = self.built()
 

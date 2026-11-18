@@ -316,7 +316,7 @@ def _thread(worktree, **fields):
         "pr": ACME, "key": "PRRT_1", "worktree": str(worktree), "author": "reviewer",
         "path": "src/foo.py", "line": 4, "body": "rename this",
         "comments": (ROOT_COMMENT,), "confidence_levels": ("low", "medium", "high"),
-        **fields})
+        "pr_author": "octocat", **fields})
 
 
 def test_the_fix_of_a_thread(runs, claude, at_wt):

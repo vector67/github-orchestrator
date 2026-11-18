@@ -97,6 +97,8 @@ class ThreadFix:
     ticket_url: str | None = None
     landed_sha: str | None = None
     reviewing: bool = False
+    pr_author: str = ""
+    said_elsewhere: tuple[FixComment, ...] = ()
 
 
 Replied = Sequence[tuple[str | None, int | None, Sequence[FixComment]]]

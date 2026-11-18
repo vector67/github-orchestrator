@@ -403,6 +403,24 @@ def test_asking_the_agent_on_a_reviewers_thread_runs_it_for_a_reply_alone(settin
     assert started.work.fix.reviewing
 
 
+def test_a_run_is_told_the_pr_author_and_what_the_opener_said_on_the_prs_other_threads(
+        settings):
+    here = _here(settings)
+    threads = here.threads()
+    hear(threads)
+    on_github(here.github, "IC_asked", _comment(id=6001, body="what does this file do?"),
+              kind=CommentKind.ISSUE, path=None, line=None)
+    on_github(here.github, "PRRT_anna", _comment(id=6002, author="anna", body="nit: spacing"))
+    _shows(here, ROOT)
+    hear(threads)
+
+    start_run(here, threads)
+
+    [fix] = [run.work.fix for run in here.agent_runs.started if run.work.fix.key == KEY]
+    assert fix.pr_author == "octocat"
+    assert [said.body for said in fix.said_elsewhere] == ["what does this file do?"]
+
+
 def test_asking_the_agent_in_a_session_on_a_reviewers_thread_opens_one_for_a_reply(settings):
     here = _here(settings)
     threads = _reviewer(here)

@@ -90,14 +90,42 @@ def _who(comment: FixComment) -> str:
     return comment.author or "ghost"
 
 
-def _render_thread(fix: ThreadFix) -> str:
-    if not fix.comments:
-        return fix.body
+def _rendered(comments: tuple[FixComment, ...]) -> str:
     return "\n\n".join(
         f"--- {_who(comment)} "
         f"({comment.created_at or 'unknown time'})\n{comment.body}"
-        for comment in fix.comments
+        for comment in comments
     )
+
+
+def _render_thread(fix: ThreadFix) -> str:
+    if not fix.comments:
+        return fix.body
+    return _rendered(fix.comments)
+
+
+def _said_elsewhere(fix: ThreadFix) -> str:
+    if not fix.said_elsewhere:
+        return f"\n{fix.author} said nothing on this PR's other threads.\n"
+    return f"""
+What {fix.author} said on this PR's other threads, oldest first:
+```
+{_rendered(fix.said_elsewhere)}
+```
+"""
+
+
+NOT_FOR_THE_AUTHOR = (
+    "- A comment not addressed to the PR author asks nothing of them: one that "
+    "@-mentions other people and not the PR author, or puts its question to "
+    "someone else. Skip it as an **acknowledgement**, and say in `--reason` who it "
+    "is for.\n"
+    "- A comment that only implies a question (\"will approve once I know what "
+    "this does\") states what the reviewer means to do; it does not ask. Check what "
+    "they said on this PR's other threads: when they ask the question outright "
+    "there, it is answered there, so skip this one as an **acknowledgement** and "
+    "name that thread's question in `--reason`."
+)
 
 
 WITHDRAWN_WITHOUT_A_COMMIT = (
@@ -596,6 +624,7 @@ thread. Every file you read or change, every command you run, and every \
 commit you make happen there, never anywhere else.
 
 ## The thread
+- PR author: {fix.pr_author}
 - Opened by: {fix.author}
 - Path: {path}  (`general` means non-anchored: locate the relevant code from \
 the body, e.g. by grepping and reading `git diff origin/{_pr_base(fix)}...HEAD`)
@@ -608,7 +637,7 @@ the body, e.g. by grepping and reading `git diff origin/{_pr_base(fix)}...HEAD`)
 The last comment is the most recent thing the reviewer said. Earlier comments \
 are the context it was said in — read the whole thread before deciding what is \
 being asked.
-
+{_said_elsewhere(fix)}
 {tracker}## Step 1 — classify the comment before doing any work
 
 - **safe** — address it. Examples: typos, missing types, a rename, extracting a
@@ -642,6 +671,7 @@ Classification rules:
   ask a clarifying question rather than guess; do not hold back a clear, simple
   change just because the author said "I'll".
 {SPLIT_WHEN}
+{NOT_FOR_THE_AUTHOR}
 
 If the comment needs an answer and no code — {replied_as} — change no code, write the reply and report
 it, then stop:

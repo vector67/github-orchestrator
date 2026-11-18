@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from github_orchestrator.agent_runs import (
     FixComment,
@@ -38,7 +38,7 @@ class ThreadAgents:
                  manager_run_alive: Callable[[], bool], *, account: str,
                  tracker: str | None, tracker_project: str | None,
                  pull_requests: PullRequests, pr_skill: str, draft: bool | None,
-                 pages: GitHub) -> None:
+                 pages: GitHub, others: Callable[[], Sequence[Conversation]]) -> None:
         self.thread_work = thread_work
         self.pr = pr
         self.account = account
@@ -48,6 +48,7 @@ class ThreadAgents:
         self.pr_skill = pr_skill
         self.draft = draft
         self.pages = pages
+        self.others = others
         self.manager_run_alive = manager_run_alive
         self.runs: dict[str, Run] = {}
 
@@ -109,7 +110,15 @@ class ThreadAgents:
             ticket_url=fix.ticket_url if existing is None else existing.url,
             landed_sha=None if fix.landed_sha is None else str(fix.landed_sha),
             reviewing=conversation.role == ROLE_REVIEWER,
+            pr_author=self.account,
+            said_elsewhere=self._said_elsewhere(conversation),
         )
+
+    def _said_elsewhere(self, conversation: Conversation) -> tuple[FixComment, ...]:
+        said = [comment for other in self.others()
+                if other.key != conversation.key and not other.is_unreadable
+                for comment in other.comments if comment.author == conversation.author]
+        return tuple(self._said(comment) for comment in sorted(said, key=lambda one: one.created_at or ""))
 
     def _thread_url(self, conversation: Conversation) -> str | None:
         if conversation.comment_id is None:
