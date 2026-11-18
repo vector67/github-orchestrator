@@ -11,6 +11,7 @@ interface IgnoreCiConfirmSignature {
     number: number;
     checks: IgnorableCheck[];
     ignore: (asked: IgnoreCiRequest) => void;
+    stopIgnoring: () => void;
     cancel: () => void;
   };
 }
@@ -38,8 +39,12 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
 
   square = (one: IgnorableCheck): string => SQUARE[one.state];
 
-  isTicked = (name: string): boolean =>
-    this.every || this.ticked.includes(name);
+  isTicked = (one: IgnorableCheck): boolean =>
+    one.ignored || this.every || this.ticked.includes(one.name);
+
+  get anyIgnored(): boolean {
+    return this.args.checks.some((one) => one.ignored);
+  }
 
   picked = (ignoreFor: IgnoreFor): boolean => this.ignoreFor === ignoreFor;
 
@@ -117,7 +122,8 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
               <input
                 type="checkbox"
                 class="checkbox"
-                checked={{this.isTicked one.name}}
+                checked={{this.isTicked one}}
+                disabled={{one.ignored}}
                 {{on "change" (fn this.tick one.name)}}
               />
               <i class={{this.square one}}></i>
@@ -147,6 +153,13 @@ export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature>
             data-test-ignore-ci-submit
             disabled={{this.nothingTicked}}
           >Ignore</button>
+          {{#if this.anyIgnored}}
+            <button
+              type="button"
+              data-test-stop-ignoring-ci
+              {{on "click" @stopIgnoring}}
+            >Stop ignoring</button>
+          {{/if}}
           <button
             type="button"
             class="ghost"

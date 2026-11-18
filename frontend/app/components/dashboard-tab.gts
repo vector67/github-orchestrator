@@ -302,6 +302,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   };
 
   stopIgnoringCi = () => {
+    this.asking = null;
     const on = this.on;
     if (on) void this.controls.stopIgnoringCi(on);
   };
@@ -852,6 +853,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
             @number={{this.reading.number}}
             @checks={{this.ignorableChecks}}
             @ignore={{this.ignoreCi}}
+            @stopIgnoring={{this.stopIgnoringCi}}
             @cancel={{this.cancelAsking}}
           />
         {{/if}}
@@ -902,22 +904,11 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                         data-opens-dialog="true"
                         data-test-ignore-ci
                         {{on "click" this.askIgnoreCi}}
-                      >Ignore CI<Glyphs
+                      >{{one.ignoreCi}}<Glyphs
                           @opensDialog={{true}}
-                        /></button>{{/if}}{{#if one.ciIgnored}}
-                      <span
-                        class="quiet"
-                        data-test-ci-ignored
-                      >{{one.ciIgnored}}</span>
-                      <button
-                        type="button"
-                        class="btn"
-                        disabled={{this.ciHeld}}
-                        data-test-stop-ignoring-ci
-                        {{on "click" this.stopIgnoringCi}}
-                      >Stop ignoring</button>{{/if}}{{#if
-                      (eq one.key "ci")
-                    }}{{#if this.ciPressing.refused}}<span
+                        /></button>{{/if}}{{#if (eq one.key "ci")}}{{#if
+                        this.ciPressing.refused
+                      }}<span
                           class="refusal"
                           data-test-ci-refusal
                         >{{this.ciPressing.refused}}</span>{{/if}}{{/if}}</span>

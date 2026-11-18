@@ -251,6 +251,7 @@ export interface IgnorableCheck {
   name: string;
   state: 'failed' | 'passed' | 'running';
   ticked: boolean;
+  ignored: boolean;
 }
 
 export function ignorableChecksOf(shown: ShownPr): IgnorableCheck[] {
@@ -258,6 +259,7 @@ export function ignorableChecksOf(shown: ShownPr): IgnorableCheck[] {
     name: one.name,
     state: one.failed ? 'failed' : one.passed ? 'passed' : 'running',
     ticked: one.failed && !one.ignored,
+    ignored: one.ignored,
   }));
 }
 
@@ -713,8 +715,7 @@ export interface Row {
   alarm: boolean;
   quiet: boolean;
   rebase: boolean;
-  ignoreCi: boolean;
-  ciIgnored: string | null;
+  ignoreCi: string | null;
 }
 
 function row(key: string, label: string, value: string, tone = ''): Row {
@@ -726,8 +727,7 @@ function row(key: string, label: string, value: string, tone = ''): Row {
     alarm: tone === 'alarm',
     quiet: tone === 'quiet',
     rebase: false,
-    ignoreCi: false,
-    ciIgnored: null,
+    ignoreCi: null,
   };
 }
 
@@ -779,8 +779,11 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
       ci,
       ci === 'failing' ? 'alarm' : ci === 'passing' ? 'quiet' : '',
     ),
-    ignoreCi: ci === 'failing',
-    ciIgnored: ignored.length ? `${listed(ignored)} ignored` : null,
+    ignoreCi: ignored.length
+      ? `${ignored.length} ignored`
+      : ci === 'failing'
+        ? 'Ignore CI'
+        : null,
   });
   const merge = facts.merge_state;
   if (merge === null || merge === 'unknown')
